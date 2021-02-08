@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+README_cache/*
+vignettes/introduction_cache*
+sccomp.Rproj
+Meta
+doc
+dev/*csv
+dev/*rds
+dev/*rda
+dev/*pdf
+dev/dplyr-master/*
