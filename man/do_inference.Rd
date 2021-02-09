@@ -23,7 +23,8 @@ do_inference(
   tol_rel_obj = 0.01,
   write_on_disk = F,
   seed,
-  output_samples = output_samples
+  output_samples = output_samples,
+  chains = 4
 )
 }
 \arguments{

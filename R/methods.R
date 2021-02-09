@@ -16,6 +16,9 @@
 #' @importFrom benchmarkme get_ram
 #' @importFrom magrittr multiply_by
 #' @importFrom magrittr equals
+#' @importFrom purrr map
+#' @importFrom tibble rowid_to_column
+#' @importFrom furrr future_map
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
@@ -57,7 +60,7 @@ sccomp_glm = function(.data,
 
 														 save_generated_quantities = F,
 														 additional_parameters_to_save = c(),  # For development purpose
-														 cores = detect_cores(), # For development purpose,
+														 #cores = detect_cores(), # For development purpose,
 														 pass_fit = F,
 														 do_check_only_on_detrimental = length(parse_formula(formula)) > 0,
 														 tol_rel_obj = 0.01,
@@ -206,7 +209,7 @@ sccomp_glm = function(.data,
 	  distinct(N, M)
 
 
-	# # Claculate how many popential non NB cell_type I should check
+	# # Calculate how many potential non NB cell_type I should check
 	# how_namy_to_exclude = to_exclude %>% nrow
 
 	# # Get the credible intervals for which account in the truncated NB model
@@ -222,6 +225,11 @@ sccomp_glm = function(.data,
 	# 	res_discovery %>%
 	# 	filter(`.variable` != "counts_rng") %>%
 	# 	select(`.variable`, S, G, mean, sd)
+
+	.data_parsed_inliers =
+	  .data_parsed %>%
+	  anti_join(to_exclude,by = c("N", "M")) %>%
+	  select(.value = count, N, M)
 
 	# Dirichlet with missing data
 	fit_imputation =
@@ -243,19 +251,12 @@ sccomp_glm = function(.data,
 	    exposure = exposure
 	  )
 
-
-	.data_parsed_inliers =
-	  .data_parsed %>%
-	  anti_join(to_exclude,by = c("N", "M")) %>%
-	  select(.value = count, N, M)
-
-
 	beta_posterior_corrected =
 	  fit_imputation %>%
 	  draws_to_tibble_x_y("counts", "N", "M") %>%
 	  rename(.draw_imputation = .draw) %>%
 	  nest(data = -c(.chain ,.iteration, .draw_imputation ,.variable)) %>%
-	  sample_n(1:100) %>%
+	  sample_n(100) %>%
 	  mutate(fit = future_map(
 	    data,
 	    ~ .x %>%
@@ -275,13 +276,13 @@ sccomp_glm = function(.data,
 	        pass_fit = T,
 	        tol_rel_obj = tol_rel_obj,
 	        seed = seed,
-	        output_samples = 50
+	        output_samples = 50,
+	        chains = 1
 	      ) %>%
 	      draws_to_tibble_x_y("beta", "C", "M") %>%
 	      filter(C==2)
 
 	  )) %>%
-	  slice(1) %>%
 	  select(.draw_imputation, fit) %>%
 	  unnest(fit) %>%
 	  nest(data = -M) %>%
@@ -295,10 +296,6 @@ sccomp_glm = function(.data,
 	      spread(name, value)
 	  )) %>%
 	  unnest(quantiles)
-
-
-
-
 
 
 	.data_parsed %>%

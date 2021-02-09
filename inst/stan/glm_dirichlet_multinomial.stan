@@ -63,7 +63,7 @@ transformed parameters{
 	  for(c in 1:C)	beta[c] =  sum_to_zero_QR(beta_raw[c], Q_r);
 
 	  // For generated quantities
-	  for(n in 1:N) alpha[,n] = (precision[X[n,2]+1] * 100) * softmax( beta[1] + X[n,2] *  beta[2] );
+	  for(n in 1:N) alpha[,n] = (precision[X[n,2]+1] * 100) * softmax( beta[1] + beta[2] * X[n,2] );
 
 }
 model{

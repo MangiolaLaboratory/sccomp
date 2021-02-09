@@ -45,7 +45,7 @@ transformed parameters{
 		matrix[M, N] alpha; // for generated quantities. It is cell types in the rows and samples as columns
 
 	  // For generated quantities
-	  for(n in 1:N) alpha[,n] = beta[1] + X[n,2] *  beta[2] ;
+	  for(n in 1:N) alpha[,n] = beta[1] + beta[2] * X[n,2];
 
 }
 model{
@@ -72,8 +72,8 @@ generated quantities{
 
   // Get proportions
   for(n in 1:N) for(m in 1:M) {
-      y_rng[N, M] = normal_rng( alpha[m, n],  sigma[X[n,2]+1] );
-      y_simplex[N] = softmax(y_rng[N] );
+      y_rng[n, m] = normal_rng( alpha[m, n],  sigma[X[n,2]+1] );
+      y_simplex[n] = softmax(y_rng[n] );
     }
 
 

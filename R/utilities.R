@@ -422,7 +422,8 @@ do_inference = function(.data,
 												tol_rel_obj = 0.01,
 												write_on_disk = F,
 												seed,
-												output_samples= output_samples) {
+												output_samples= output_samples,
+												chains = 4) {
 
 
 
@@ -434,34 +435,36 @@ do_inference = function(.data,
 
   how_namy_to_exclude = to_exclude %>% nrow
 
-  fit =
-    vb_iterative(
-      stanmodels$glm_dirichlet_multinomial,
-      #pcc_seq_model, #
-      output_samples = output_samples,
-      iter = 5000,
-      tol_rel_obj = 0.01,
-      data = list(
-        N = nrow(.data),
-        M = ncol(.data)-1,
-        y = .data %>% dplyr::select(-N),
-        X = X
-      )
-    )
+  # fit =
+  #   vb_iterative(
+  #     stanmodels$glm_dirichlet_multinomial,
+  #     #pcc_seq_model, #
+  #     output_samples = output_samples,
+  #     iter = 5000,
+  #     tol_rel_obj = 0.01,
+  #     data = list(
+  #       N = nrow(.data),
+  #       M = ncol(.data)-1,
+  #       y = .data %>% dplyr::select(-N),
+  #       X = X
+  #     )
+  #   )
 
-	# fit =
-	#   sampling(
-	#     stanmodels$glm_dirichlet_multinomial,
-	#     #stan_model("glm_dirichlet_multinomial.stan"),
-	#     data = list(
-	#       N = nrow(.data),
-	#       M = ncol(.data)-1,
-	#       y = .data %>% dplyr::select(-N),
-	#       X = X
-	#     ),
-	#     cores = 4
-	#     #, iter = 5000, warmup = 300
-	#   )
+	fit =
+	  sampling(
+	    stanmodels$glm_dirichlet_multinomial,
+	    #stan_model("glm_dirichlet_multinomial.stan"),
+	    data = list(
+	      N = nrow(.data),
+	      M = ncol(.data)-1,
+	      y = .data %>% dplyr::select(-N),
+	      X = X
+	    ),
+	    chains = chains,
+	    cores = chains,
+	    iter = output_samples + 1000,
+	    warmup = 1000
+	  )
 
 	# # Plot results
 	# fit %>%
@@ -554,34 +557,34 @@ do_inference_imputation = function(.data,
   how_namy_to_include = to_include %>% nrow
   I  = precision %>% nrow
 
+  # fit =
+  #   vb_iterative(
+  #     #stanmodels$glm_imputation,
+  #     stan_model("inst/stan/glm_imputation.stan"),
+  #     output_samples = 2000,
+  #     iter = 5000,
+  #     tol_rel_obj = 0.01,
+  #     data = list(
+  #       N = nrow(.data_clr),
+  #       M = ncol(.data_clr)-1,
+  #       y = .data_clr %>% dplyr::select(-N),
+  #       X = X
+  #     )
+  #   )
+
   fit =
-    vb_iterative(
-      #stanmodels$glm_imputation,
-      stan_model("inst/stan/glm_imputation.stan"),
-      output_samples = 2000,
-      iter = 5000,
-      tol_rel_obj = 0.01,
+    sampling(
+      stanmodels$glm_imputation,
+      #stan_model("glm_dirichlet_multinomial.stan"),
       data = list(
         N = nrow(.data_clr),
         M = ncol(.data_clr)-1,
         y = .data_clr %>% dplyr::select(-N),
         X = X
-      )
+      ),
+      cores = 4
+      #, iter = 5000, warmup = 300
     )
-
-  # fit =
-  #   sampling(
-  #     stanmodels$glm_dirichlet_multinomial,
-  #     #stan_model("glm_dirichlet_multinomial.stan"),
-  #     data = list(
-  #       N = nrow(.data),
-  #       M = ncol(.data)-1,
-  #       y = .data %>% dplyr::select(-N),
-  #       X = X
-  #     ),
-  #     cores = 4
-  #     #, iter = 5000, warmup = 300
-  #   )
 
   # # Plot results
   # fit %>%

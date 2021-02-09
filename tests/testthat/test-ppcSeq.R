@@ -2,16 +2,17 @@ context('ppcseq')
 
 test_that("first test",{
 
+  library(furrr)
+  plan(multisession, workers=10)
   library(dplyr)
   library(sccomp)
-  debugonce(sccomp_glm)
+  #debugonce(sccomp_glm)
 
   res =
     sccomp::cell_counts %>%
     sccomp_glm(
       formula = ~ type,
-      sample, cell_type, count,
-      cores=1
+      sample, cell_type, count
     )
 
   expect_equal(

@@ -17,7 +17,6 @@ sccomp_glm(
   draws_after_tail = 10,
   save_generated_quantities = F,
   additional_parameters_to_save = c(),
-  cores = detect_cores(),
   pass_fit = F,
   do_check_only_on_detrimental = length(parse_formula(formula)) > 0,
   tol_rel_obj = 0.01,
@@ -52,8 +51,6 @@ sccomp_glm(
 
 \item{additional_parameters_to_save}{A character vector. Used for development and testing purposes}
 
-\item{cores}{An integer. How many cored to be used with parallel calculations.}
-
 \item{pass_fit}{A boolean. Used for development and testing purposes}
 
 \item{do_check_only_on_detrimental}{A boolean. Whether to test only for detrimental outliers (same direction as the fold change). It allows to test for less cell_type/sample pairs and therefore higher the probability threshold.}
@@ -69,6 +66,8 @@ sccomp_glm(
 \item{.significance}{A column name as symbol. A column with the Pvalue, or other significanc measure (preferred Pvalue over false discovery rate)}
 
 \item{.do_check}{A column name as symbol. A column with a booean indicating whether a cell_type was identified as differentially abundant}
+
+\item{cores}{An integer. How many cored to be used with parallel calculations.}
 }
 \value{
 A nested tibble \code{tbl} with cell_type-wise information: \verb{sample wise data} | plot | \verb{ppc samples failed} | \verb{tot deleterious outliers}
