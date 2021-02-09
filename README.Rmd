@@ -1,0 +1,88 @@
+---
+title: "sccomp - outlier-free compositional analysis"
+output: github_document
+always_allow_html: true
+---
+
+<!-- badges: start -->
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/tidyseurat/actions/)
+<!-- badges: end -->
+
+```{r echo=FALSE}
+knitr::opts_chunk$set( fig.path = "man/figures/")
+```
+
+```{r}
+library(furrr)
+library(dplyr)
+library(sccomp)
+library(tidyr)
+library(ggplot2)
+plan(multisession, workers=10)
+```
+
+
+```{r eval=FALSE, message=FALSE, warning=FALSE}
+
+res = 
+  sccomp::cell_counts %>%
+  sccomp_glm(
+    formula = ~ type,
+    sample, cell_type, count
+  )
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
+
+res = 
+  sccomp::cell_counts %>%
+  sccomp_glm(
+    formula = ~ type,
+    sample, cell_type, count
+  )
+
+```
+
+These are the cell_types for which inference was biased by the presence of outliers
+
+```{r}
+res %>%
+  filter(significant != significant_pre_filtering) %>%
+  distinct(cell_type, phenotype)
+
+```
+
+
+```{r}
+data_for_plot = 
+  res %>%
+  rename(lower = `2.5%`, upper = `97.5%`, median=`50%`) %>%
+  select(cell_type, lower, upper, median, quantiles_pre_filtering, significant, significant_pre_filtering) %>%
+  unnest(quantiles_pre_filtering) %>%
+  distinct() 
+```
+  
+```{r}
+data_for_plot %>%
+  ggplot(aes(x=`50%`, y=cell_type)) +
+  geom_vline(xintercept = 0, colour="grey") +
+  geom_errorbar(aes(xmin=`2.5%`, xmax=`97.5%`, color=significant_pre_filtering)) +
+  geom_point() +
+  theme_bw() +
+  xlab("Credible interval slope") +
+  ggtitle("Before outlier filtering")
+```
+  
+```{r}
+data_for_plot %>%
+  ggplot(aes(x=median, y=cell_type)) +
+  geom_vline(xintercept = 0, colour="grey") +
+  geom_errorbar(aes(xmin=lower, xmax=upper, color=significant)) +
+  geom_point() +
+  theme_bw() +
+  xlab("Credible interval slope") +
+  ggtitle("After outlier filtering")
+```
+
+
