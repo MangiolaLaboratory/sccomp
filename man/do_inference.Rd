@@ -6,12 +6,9 @@
 \usage{
 do_inference(
   .data,
-  formula,
   approximate_posterior_inference = F,
   approximate_posterior_analysis = F,
-  C,
   X,
-  cores,
   additional_parameters_to_save,
   to_exclude = tibble(N = integer(), M = integer()),
   truncation_compensation = 1,
@@ -28,17 +25,11 @@ do_inference(
 )
 }
 \arguments{
-\item{formula}{A formula}
-
 \item{approximate_posterior_inference}{A boolean}
 
 \item{approximate_posterior_analysis}{A boolean}
 
-\item{C}{An integer}
-
 \item{X}{A tibble}
-
-\item{cores}{An integer}
 
 \item{additional_parameters_to_save}{A character vector}
 
@@ -62,6 +53,8 @@ do_inference(
 
 \item{my_df}{A tibble including a cell_type name column | sample name column | read counts column | covariates column}
 
+\item{formula}{A formula}
+
 \item{.sample}{A column name as symbol}
 
 \item{.cell_type}{A column name as symbol}
@@ -72,7 +65,11 @@ do_inference(
 
 \item{.do_check}{A column name as symbol}
 
+\item{C}{An integer}
+
 \item{lambda_mu_mu}{A real}
+
+\item{cores}{An integer}
 
 \item{exposure_rate_multiplier}{A real}
 
