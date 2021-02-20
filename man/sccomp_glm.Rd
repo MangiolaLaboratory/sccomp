@@ -10,20 +10,9 @@ sccomp_glm(
   .sample,
   .cell_type,
   .count,
-  percent_false_positive_genes = 1,
-  how_many_negative_controls = 500,
   approximate_posterior_inference = T,
-  approximate_posterior_analysis = T,
-  draws_after_tail = 10,
-  save_generated_quantities = F,
-  additional_parameters_to_save = c(),
-  pass_fit = F,
-  do_check_only_on_detrimental = length(parse_formula(formula)) > 0,
-  tol_rel_obj = 0.01,
-  just_discovery = F,
-  seed = sample(1:99999, size = 1),
-  adj_prob_theshold_2 = NULL,
-  return_fit = FALSE
+  cores = detect_cores(),
+  seed = sample(1:99999, size = 1)
 )
 }
 \arguments{
@@ -37,37 +26,11 @@ sccomp_glm(
 
 \item{.count}{A column name as symbol. The cell_type abunace (read count)}
 
-\item{percent_false_positive_genes}{A real between 0 and 100. It is the aimed percent of cell_type being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for outlier containing cell_types that has actually not outliers.}
-
-\item{how_many_negative_controls}{An integer. How many cell_type from the bottom non-significant should be taken for inferring the mean-overdispersion trend.}
-
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
-\item{approximate_posterior_analysis}{A boolean. Whether the calculation of the credible intervals should be done semi-analitically, rather than with pure ampling from the posterior. It confers execution time and memory advantage.}
-
-\item{draws_after_tail}{An integer. How many draws should on average be after the tail, in a way to inform CI.}
-
-\item{save_generated_quantities}{A boolean. Used for development and testing purposes}
-
-\item{additional_parameters_to_save}{A character vector. Used for development and testing purposes}
-
-\item{pass_fit}{A boolean. Used for development and testing purposes}
-
-\item{do_check_only_on_detrimental}{A boolean. Whether to test only for detrimental outliers (same direction as the fold change). It allows to test for less cell_type/sample pairs and therefore higher the probability threshold.}
-
-\item{tol_rel_obj}{A real. Used for development and testing purposes}
-
-\item{just_discovery}{A boolean. Used for development and testing purposes}
+\item{cores}{An integer. How many cored to be used with parallel calculations.}
 
 \item{seed}{An integer. Used for development and testing purposes}
-
-\item{adj_prob_theshold_2}{A boolean. Used for development and testing purposes}
-
-\item{.significance}{A column name as symbol. A column with the Pvalue, or other significanc measure (preferred Pvalue over false discovery rate)}
-
-\item{.do_check}{A column name as symbol. A column with a booean indicating whether a cell_type was identified as differentially abundant}
-
-\item{cores}{An integer. How many cored to be used with parallel calculations.}
 }
 \value{
 A nested tibble \code{tbl} with cell_type-wise information: \verb{sample wise data} | plot | \verb{ppc samples failed} | \verb{tot deleterious outliers}

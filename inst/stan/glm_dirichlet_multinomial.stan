@@ -72,6 +72,6 @@ model{
 
 	 for(n in 1:N) y[n] ~ dirichlet_multinomial( alpha[,n] );
 
-	 precision ~ normal(0,1);
-	 for(i in 1:C) beta_raw[i] ~ normal(0, x_raw_sigma);
+	 precision ~ normal(0,5);
+	 for(i in 1:C) beta_raw[i] ~ normal(0, x_raw_sigma * 5);
 }

@@ -76,7 +76,6 @@ generated quantities{
       y_simplex[n] = softmax(y_rng[n] );
     }
 
-
   // Random precision
   for (n in 1:I) if (n > idx) { my_n = n; break; }
 
