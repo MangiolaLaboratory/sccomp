@@ -100,6 +100,11 @@ sccomp_glm = function(.data,
 	  select(-contains("posterior")) %>%
 	  count_in_beta_out_missing_data(!!.count, formula, X, exposure, iteration = 2)
 
+	# .data_parsed_3 =
+	#   .data_parsed_2 %>%
+	#   select(-contains("posterior")) %>%
+	#   count_in_beta_out_missing_data(!!.count, formula, X, exposure, iteration = 3)
+
 	.data_parsed_2 %>%
 
 	  # Join filtered

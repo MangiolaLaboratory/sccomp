@@ -454,7 +454,7 @@ do_inference = function(.data,
 	fit =
 	  sampling(
 	    stanmodels$glm_dirichlet_multinomial,
-	    #stan_model("glm_dirichlet_multinomial.stan"),
+	    #stan_model("~/PostDoc/sccomp/inst/stan/glm_dirichlet_multinomial.stan"),
 	    data = list(
 	      N = nrow(.data),
 	      M = ncol(.data)-1,
@@ -898,6 +898,11 @@ count_in_beta_out_missing_data = function(.my_data, .count, formula, X, exposure
     ) %>%
 
     # Add precision as attribute
-    add_attr( attr(beta_posterior_corrected, "precision"), "precision" )
+    add_attr(
+      beta_posterior_corrected %>%
+        select(precision) %>%
+        unnest(precision) %>%
+        as.matrix(),
+      "precision" )
 
 }

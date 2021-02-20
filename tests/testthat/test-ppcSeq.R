@@ -3,9 +3,10 @@ context('ppcseq')
 test_that("first test",{
 
   library(furrr)
-  plan(multisession, workers=10)
+  plan(multisession, workers=20)
   library(dplyr)
   library(sccomp)
+  library(digest)
   #debugonce(sccomp_glm)
 
   res =
@@ -16,9 +17,11 @@ test_that("first test",{
     )
 
   expect_equal(
-
-    as.integer(unlist(res[,4])),
-    c(0,1,0)
+    res %>%
+      distinct(cell_type, significant) %>%
+      pull(significant) %>%
+      digest(algo="md5"),
+    "f6cef772af43198f586e15c96b2f1239"
   )
 
 })
