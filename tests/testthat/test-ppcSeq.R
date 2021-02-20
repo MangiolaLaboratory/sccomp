@@ -2,8 +2,8 @@ context('ppcseq')
 
 test_that("first test",{
 
-  library(furrr)
-  plan(multisession, workers=20)
+  # library(furrr)
+  # plan(multisession, workers=20)
   library(dplyr)
   library(sccomp)
   library(digest)
