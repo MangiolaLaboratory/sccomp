@@ -68,7 +68,8 @@ parameters{
 	vector[M] precision;
 
 	// To exclude
-
+  real prec_coeff[2];
+  real<lower=0> prec_sd;
 }
 transformed parameters{
 		vector[M] beta[C];
@@ -81,6 +82,10 @@ model{
 
 	 y ~ beta_regression( X, vector_array_to_matrix(beta), exp(precision) );
 
-	 #precision ~ gamma(0.01, 0.01);
+	 precision ~ normal( beta[1] * prec_coeff[2] + prec_coeff[1], prec_sd);
+   prec_sd ~ normal(0,2);
+
 	 for(i in 1:C) beta_raw[i] ~ normal(0, x_raw_sigma * 5);
+
+
 }
