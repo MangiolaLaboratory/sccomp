@@ -2,12 +2,9 @@ context('ppcseq')
 
 test_that("first test",{
 
-  # library(furrr)
-  # plan(multisession, workers=20)
   library(dplyr)
   library(sccomp)
   library(digest)
-  #debugonce(sccomp_glm)
 
   res =
     sccomp::cell_counts %>%
@@ -31,8 +28,11 @@ test_that("multi beta",{
 
 
   library(dplyr)
+  library(tidyr)
+  library(purrr)
   library(sccomp)
   library(digest)
+  library(rstan)
 
   input_df =
     sccomp::cell_counts %>%
@@ -44,42 +44,27 @@ test_that("multi beta",{
     select(-c(count, sample_tot, phenotype)) %>%
     spread(cell_type, frac)
 
-  f3 = stan(file = "inst/stan/glm_multi_beta.stan",
-            data = list(
-              N = 20,
-              M = 36,
-              y = input_df %>% select(-type) %>% nanny::as_matrix(rownames = sample),
-              X = input_df %>% select(sample, type) %>% model.matrix(~ type, data=.)
-            ),
-            cores = 4
-  )
+  f = input_df %>% glm_multi_beta()
 
 })
 
 test_that("multi beta binomial",{
 
   library(dplyr)
+  library(tidyr)
+  library(purrr)
   library(sccomp)
   library(digest)
+  library(rstan)
 
   input_df =
     sccomp::cell_counts %>%
-    mutate(count = count + 1L) %>%
     nest(data = -sample) %>%
     mutate(sample_tot = map_int(data, ~ sum(.x$count))) %>%
     unnest(data) %>%
     select(-c(phenotype)) %>%
     spread(cell_type, count)
 
-  f4 = stan(file = "inst/stan/glm_multi_beta_binomial.stan",
-            data = list(
-              N = 20,
-              M = 36,
-              tot = input_df$sample_tot,
-              y = input_df %>% select(-type, -sample_tot) %>% nanny::as_matrix(rownames = sample),
-              X = input_df %>% select(sample, type) %>% model.matrix(~ type, data=.)
-            ),
-            cores = 4
-  )
+  f = input_df %>% glm_multi_beta_binomial()
 
 })

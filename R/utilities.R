@@ -921,3 +921,35 @@ count_in_beta_out_missing_data = function(.my_data, .count, formula, X, exposure
       "precision" )
 
 }
+
+
+#' @export
+glm_multi_beta = function(input_df){
+
+  sampling(stanmodels$glm_multi_beta,
+       data = list(
+         N = input_df %>% nrow(),
+         M = input_df %>% select(-sample, -type) %>% ncol(),
+         y = input_df %>% select(-type) %>% nanny::as_matrix(rownames = sample),
+         X = input_df %>% select(sample, type) %>% model.matrix(~ type, data=.)
+       ),
+       cores = 4
+  )
+
+}
+
+#' @export
+glm_multi_beta_binomial = function(input_df){
+
+  sampling(stanmodels$glm_multi_beta_binomial,
+       data = list(
+         N = input_df %>% nrow(),
+         M = input_df %>% select(-sample, -type) %>% ncol(),
+         tot = input_df$sample_tot,
+         y = input_df %>% select(-type) %>% nanny::as_matrix(rownames = sample),
+         X = input_df %>% select(sample, type) %>% model.matrix(~ type, data=.)
+       ),
+       cores = 4
+  )
+
+}
