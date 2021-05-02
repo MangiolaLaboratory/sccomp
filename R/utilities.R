@@ -687,18 +687,23 @@ fit_and_generate_quantities = function(.data_wide_no_covariates, X, exposure, it
     as_tibble() %>%
     rowid_to_column("N") %>%
 
+    # Drop values for X
+    select(N) %>%
+
     # Add theoretical data posteiror
     left_join(
       generated_discovery %>%
-        nest(!!as.symbol(sprintf("generated_data_posterior_%s", iteration)) := -c(M, N))
+        nest(!!as.symbol(sprintf("generated_data_posterior_%s", iteration)) := -c(M, N)),
+      by="N"
     ) %>%
 
     # Attach beta posterior
     left_join(
       fit_discovery %>%
         draws_to_tibble_x_y("beta", "C", "M") %>%
-        filter(C==2) %>%
-        nest(!!as.symbol(sprintf("beta_posterior_%s", iteration)) := -M)
+        left_join(tibble(C=1:ncol(X), C_name = colnames(X))) %>%
+        nest(!!as.symbol(sprintf("beta_posterior_%s", iteration)) := -M),
+      by="M"
     ) %>%
 
     # label_deleterious_outliers()
@@ -881,12 +886,22 @@ count_in_beta_out_missing_data = function(.my_data, .count, formula, X, exposure
     mutate(!!as.symbol(sprintf("beta_quantiles_%s", iteration)) := map(
       !!as.symbol(sprintf("beta_posterior_%s", iteration)),
       ~ quantile(
-          .x$.value,
+          .x %>% filter(C==2) %>% pull(.value),
           probs = c(0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975)
         ) %>%
         enframe() %>%
         spread(name, value)
     )) %>%
+
+    # Attach estimate for all parameters
+    mutate(estimates := map(
+      !!as.symbol(sprintf("beta_posterior_%s", iteration)),
+      ~ .x %>% group_by(C_name) %>% summarise(value = median(.value))  %>%
+        spread(C_name, value) %>%
+        setNames(sprintf("estimate_%s", colnames(.)))
+    )) %>%
+    unnest(estimates) %>%
+
 
     select(-data) %>%
 
