@@ -41,9 +41,8 @@ vector Q_sum_to_zero_QR(int N) {
 
 		real lp = 0;
     matrix[num_elements(p[1]), num_elements(p[,1])] mu = (X * beta)';
-
-		for(i in 1:rows(mu)) mu[,i] = softmax(mu[,i]);
-		for(i in 1:rows(mu)) {
+		for(i in 1:cols(mu)) mu[,i] = softmax(mu[,i]);
+		for(i in 1:cols(mu)) {
 
      	lp += beta_lpdf(p[i] | (mu[,i] .* phi), ((1.0 - mu[,i]) .* phi) );
 
@@ -66,7 +65,7 @@ transformed data{
 }
 parameters{
 	vector[M-1] beta_raw[C];
-	vector<lower=0>[M] precision;
+	vector[M] precision;
 
 	// To exclude
 
@@ -80,8 +79,8 @@ transformed parameters{
 model{
 
 
-	 y ~ beta_regression( X, vector_array_to_matrix(beta), precision );
+	 y ~ beta_regression( X, vector_array_to_matrix(beta), exp(precision) );
 
-	 precision ~ normal(0,5);
+	 #precision ~ gamma(0.01, 0.01);
 	 for(i in 1:C) beta_raw[i] ~ normal(0, x_raw_sigma * 5);
 }
