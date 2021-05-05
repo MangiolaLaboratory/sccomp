@@ -3,7 +3,7 @@
 
 #' sccomp_glm main
 #'
-#' @description This function runs the data modeling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
+#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
 #'
 #' @importFrom tibble as_tibble
 #' @import dplyr
@@ -27,7 +27,7 @@
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_type A column name as symbol. The cell_type identifier
-#' @param .count A column name as symbol. The cell_type abunace (read count)
+#' @param .count A column name as symbol. The cell_type abundance (read count)
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
@@ -41,6 +41,7 @@ sccomp_glm = function(.data,
 														 .sample,
 														 .cell_type,
 														 .count,
+														 check_outliers = FALSE,
 														 approximate_posterior_inference = T,
 														 cores = detect_cores(), # For development purpose,
 														 seed = sample(1:99999, size = 1)
@@ -80,9 +81,6 @@ sccomp_glm = function(.data,
 	  arrange(N) %>%
 	  pull(s)
 
-
-
-
 	# Create design matrix
 	X =  model.matrix(object = formula,   data =
 	                    .data_parsed %>%
@@ -91,39 +89,52 @@ sccomp_glm = function(.data,
 	                    arrange(N)
 	                 )
 
-	.data_parsed_1 =
-	  .data_parsed %>%
-	  count_in_beta_out_no_missing_data(!!.count, formula, X, exposure, iteration = 1, chains = 4)
+	if(!check_outliers){
 
-	.data_parsed_2 =
-	  .data_parsed_1 %>%
-	  select(-contains("posterior")) %>%
-	  count_in_beta_out_missing_data(!!.count, formula, X, exposure, iteration = 2)
+	  .data_parsed_0 = .data_parsed %>% count_in_beta(!!.count, formula, X, exposure, iteration = 1, chains = 4)
 
-	# .data_parsed_3 =
-	#   .data_parsed_2 %>%
-	#   select(-contains("posterior")) %>%
-	#   count_in_beta_out_missing_data(!!.count, formula, X, exposure, iteration = 3)
+	  .data_parsed_0 %>%
 
-	.data_parsed_2 %>%
+	    # Join filtered
+	    mutate(significant = !!as.symbol(sprintf(".lower_%s", colnames(X)[2])) * !!as.symbol(sprintf(".upper_%s", colnames(X)[2])) > 0 ) %>%
 
-	  # Join filtered
-	  mutate(significant = map_lgl(
-	    beta_quantiles_2,
-	    ~ .x$`2.5%` * .x$`97.5%` > 0
-	  )) %>%
+	    # Clean
+	    select(-N, -M, -contains("posterior"))
 
-	  #Join unfiltered
-	  mutate(significant_pre_filtering = map_lgl(
-	    beta_quantiles_1,
-	    ~ .x$`2.5%` * .x$`97.5%` > 0
-	  )) %>%
+	}
 
-	  # Define outlier
-	  rename(outlier = outlier_2 ) %>%
+	else{
 
-	  # Clean
-	  select(-N, -M, -contains("posterior"))
+	  .data_parsed_1 =
+	    .data_parsed %>%
+	    count_in_beta_out_no_missing_data(!!.count, formula, X, exposure, iteration = 1, chains = 4)
+
+	  .data_parsed_2 =
+	    .data_parsed_1 %>%
+	    select(-contains("posterior")) %>%
+	    count_in_beta_out_missing_data(!!.count, formula, X, exposure, iteration = 2)
+
+	  .data_parsed_2 %>%
+
+	    # Join filtered
+	    mutate(significant = map_lgl(
+	      beta_quantiles_2,
+	      ~ .x$`2.5%` * .x$`97.5%` > 0
+	    )) %>%
+
+	    #Join unfiltered
+	    mutate(significant_pre_filtering = map_lgl(
+	      beta_quantiles_1,
+	      ~ .x$`2.5%` * .x$`97.5%` > 0
+	    )) %>%
+
+	    # Define outlier
+	    rename(outlier = outlier_2 ) %>%
+
+	    # Clean
+	    select(-N, -M, -contains("posterior"))
+
+	}
 
 
 }

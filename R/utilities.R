@@ -284,6 +284,11 @@ draws_to_tibble_x_y = function(fit, par, x, y) {
 		    ".variable" = character()),
 		  values_to = ".value"
 		) %>%
+
+	  # Warning message:
+	  # Expected 5 pieces. Additional pieces discarded
+	  suppressWarnings() %>%
+
 	  mutate(
 	    !!as.symbol(x) := as.integer(!!as.symbol(x)),
 	    !!as.symbol(y) := as.integer(!!as.symbol(y))
@@ -633,12 +638,10 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
-
-
-fit_and_generate_quantities = function(.data_wide_no_covariates, X, exposure, iteration, chains, output_samples = 5000){
+fit_model = function(.data_wide_no_covariates, X, exposure, iteration, chains, output_samples = 5000){
 
   # Run the first discovery phase with permissive false discovery rate
-  fit_discovery  =
+  fit =
     .data_wide_no_covariates %>%
     do_inference(
       approximate_posterior_inference,
@@ -651,6 +654,24 @@ fit_and_generate_quantities = function(.data_wide_no_covariates, X, exposure, it
       output_samples = output_samples,
       chains = chains
     )
+
+  fit_discovery = fit %>%
+    draws_to_tibble_x_y("beta", "C", "M") %>%
+    left_join(tibble(C=1:ncol(X), C_name = colnames(X))) %>%
+    nest(!!as.symbol(sprintf("beta_posterior_%s", iteration)) := -M)
+
+    # Add precision as attribute
+    fit_discovery =
+      fit_discovery %>%
+      add_attr(
+        fit %>% extract("precision") %$% precision,
+        "precision"
+      )
+
+    fit_discovery
+}
+
+fit_and_generate_quantities = function(.data_wide_no_covariates, X, exposure, iteration, chains, output_samples = 2000){
 
 
   # beta_posterior =
@@ -698,13 +719,7 @@ fit_and_generate_quantities = function(.data_wide_no_covariates, X, exposure, it
     ) %>%
 
     # Attach beta posterior
-    left_join(
-      fit_discovery %>%
-        draws_to_tibble_x_y("beta", "C", "M") %>%
-        left_join(tibble(C=1:ncol(X), C_name = colnames(X))) %>%
-        nest(!!as.symbol(sprintf("beta_posterior_%s", iteration)) := -M),
-      by="M"
-    ) %>%
+    left_join(fit_discovery,  by="M") %>%
 
     # label_deleterious_outliers()
 
@@ -712,10 +727,59 @@ fit_and_generate_quantities = function(.data_wide_no_covariates, X, exposure, it
     add_attr(
       fit_discovery %>% extract("precision") %$% precision,
       "precision"
-    )
+    )  %>%
+
+    # Add precision as attribute
+    add_attr( attr(fit_discovery, "precision"), "precision" )
 
 
 }
+
+#' @importFrom purrr map2_lgl
+#' @importFrom tidyr pivot_wider
+count_in_beta = function(.my_data, .count, formula, X, exposure, iteration, chains){
+
+  .count = enquo(.count)
+
+  .data_wide =
+    .my_data %>%
+    select(N, M, !!.count, parse_formula(formula)) %>%
+    distinct() %>%
+    spread(M, !!.count)
+
+  .data_wide_no_covariates = .data_wide %>% select(-parse_formula(formula))
+
+  # Run the first discovery phase with permissive false discovery rate
+  fitted  = fit_model(.data_wide_no_covariates, X, exposure, iteration, chains= 4)
+
+
+  credible_intervals =
+    fitted %>%
+    unnest(beta_posterior_1) %>%
+    nest(data = -c(M, C, C_name)) %>%
+    # Attach beta
+    mutate(!!as.symbol(sprintf("beta_quantiles_%s", iteration)) := map(
+      data,
+      ~ quantile(
+        .x$.value,
+        probs = c(0.025,  0.5,  0.975)
+      ) %>%
+        enframe() %>%
+        spread(name, value) %>%
+        rename(.lower =  `2.5%`, .median = `50%`, .upper = `97.5%`)
+    )) %>%
+    unnest(!!as.symbol(sprintf("beta_quantiles_%s", iteration))) %>%
+    select(-data, -C) %>%
+    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper))
+
+  # Integrate
+  .my_data %>%
+
+    # Add covariate from design
+    left_join(credible_intervals)
+
+}
+
 
 #' @importFrom purrr map2_lgl
 count_in_beta_out_no_missing_data = function(.my_data, .count, formula, X, exposure, iteration, chains){
@@ -731,7 +795,7 @@ count_in_beta_out_no_missing_data = function(.my_data, .count, formula, X, expos
   .data_wide_no_covariates = .data_wide %>% select(-parse_formula(formula))
 
   # Run the first discovery phase with permissive false discovery rate
-  fit_and_generated  = fit_and_generate_quantities(.data_wide_no_covariates, X, exposure, iteration, chains= 4)
+  fit_and_generated  = fit_and_generate_quantities(.data_wide_no_covariates, X, exposure, iteration, chains= 4, output_samples = 5000)
 
   # Integrate
   .my_data %>%
@@ -838,7 +902,7 @@ count_in_beta_out_missing_data = function(.my_data, .count, formula, X, exposure
         spread(M, .value) %>%
 
         # Run model
-        fit_and_generate_quantities(X, exposure, iteration, chains=1, 200)
+        fit_and_generate_quantities(X, exposure, iteration, chains=1, output_samples = 200)
 
     )) %>%
 
@@ -924,14 +988,17 @@ count_in_beta_out_missing_data = function(.my_data, .count, formula, X, exposure
 
 
 #' @export
-glm_multi_beta = function(input_df){
+glm_multi_beta = function(input_df, formula, .sample, .){
+
+  covariate_names = parse_formula(formula)
+  .sample = enquo(.sample)
 
   sampling(stanmodels$glm_multi_beta,
        data = list(
          N = input_df %>% nrow(),
-         M = input_df %>% select(-sample, -type) %>% ncol(),
-         y = input_df %>% select(-type) %>% nanny::as_matrix(rownames = sample),
-         X = input_df %>% select(sample, type) %>% model.matrix(~ type, data=.)
+         M = input_df %>% select(-!!.sample, -covariate_names) %>% ncol(),
+         y = input_df %>% select(-covariate_names) %>% nanny::as_matrix(rownames = !!.sample),
+         X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
        ),
        cores = 4
   )
@@ -952,4 +1019,21 @@ glm_multi_beta_binomial = function(input_df){
        cores = 4
   )
 
+}
+
+#' .formula parser
+#'
+#' @keywords internal
+#'
+#' @importFrom stats terms
+#'
+#' @param fm a formula
+#' @return A character vector
+#'
+#'
+parse_formula <- function(fm) {
+  if (attr(terms(fm), "response") == 1)
+    stop("tidybulk says: The .formula must be of the kind \"~ covariates\" ")
+  else
+    as.character(attr(terms(fm), "variables"))[-1]
 }

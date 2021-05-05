@@ -1,6 +1,29 @@
 context('ppcseq')
 
-test_that("first test",{
+# test_that("dirichlet multinomial outliers",{
+#
+#   library(dplyr)
+#   library(sccomp)
+#   library(digest)
+#
+#   res =
+#     sccomp::cell_counts %>%
+#     sccomp_glm(
+#       formula = ~ type,
+#       sample, cell_type, count
+#     )
+#
+#   expect_equal(
+#     res %>%
+#       distinct(cell_type, significant) %>%
+#       pull(significant) %>%
+#       digest(algo="md5"),
+#     "f6cef772af43198f586e15c96b2f1239"
+#   )
+#
+# })
+
+test_that("dirichlet multinomial",{
 
   library(dplyr)
   library(sccomp)
@@ -18,7 +41,7 @@ test_that("first test",{
       distinct(cell_type, significant) %>%
       pull(significant) %>%
       digest(algo="md5"),
-    "f6cef772af43198f586e15c96b2f1239"
+    "872b45dd0f77c8a355f767294fb44298"
   )
 
 })
@@ -44,7 +67,7 @@ test_that("multi beta",{
     select(-c(count, sample_tot, phenotype)) %>%
     spread(cell_type, frac)
 
-  f = input_df %>% glm_multi_beta()
+  f = input_df %>% glm_multi_beta(~ type, sample)
 
 })
 

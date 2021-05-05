@@ -10,6 +10,7 @@ sccomp_glm(
   .sample,
   .cell_type,
   .count,
+  check_outliers = FALSE,
   approximate_posterior_inference = T,
   cores = detect_cores(),
   seed = sample(1:99999, size = 1)
@@ -24,7 +25,7 @@ sccomp_glm(
 
 \item{.cell_type}{A column name as symbol. The cell_type identifier}
 
-\item{.count}{A column name as symbol. The cell_type abunace (read count)}
+\item{.count}{A column name as symbol. The cell_type abundance (read count)}
 
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
@@ -36,5 +37,5 @@ sccomp_glm(
 A nested tibble \code{tbl} with cell_type-wise information: \verb{sample wise data} | plot | \verb{ppc samples failed} | \verb{tot deleterious outliers}
 }
 \description{
-This function runs the data modeling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
+This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
 }

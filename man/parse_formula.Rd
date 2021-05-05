@@ -5,13 +5,20 @@
 \title{Formula parser}
 \usage{
 parse_formula(fm)
+
+parse_formula(fm)
 }
 \arguments{
-\item{fm}{A formula}
+\item{fm}{a formula}
 }
 \value{
+A character vector
+
 A character vector
 }
 \description{
 Formula parser
+
+.formula parser
 }
+\keyword{internal}
