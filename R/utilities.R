@@ -988,7 +988,7 @@ count_in_beta_out_missing_data = function(.my_data, .count, formula, X, exposure
 
 
 #' @export
-glm_multi_beta = function(input_df, formula, .sample, .){
+glm_multi_beta = function(input_df, formula, .sample){
 
   covariate_names = parse_formula(formula)
   .sample = enquo(.sample)
@@ -1006,15 +1006,18 @@ glm_multi_beta = function(input_df, formula, .sample, .){
 }
 
 #' @export
-glm_multi_beta_binomial = function(input_df){
+glm_multi_beta_binomial = function(input_df, formula, .sample){
+
+  covariate_names = parse_formula(formula)
+  .sample = enquo(.sample)
 
   sampling(stanmodels$glm_multi_beta_binomial,
        data = list(
          N = input_df %>% nrow(),
-         M = input_df %>% select(-sample, -type) %>% ncol(),
+         M = input_df %>% select(-!!.sample, -covariate_names, -sample_tot) %>% ncol(),
          tot = input_df$sample_tot,
-         y = input_df %>% select(-type) %>% nanny::as_matrix(rownames = sample),
-         X = input_df %>% select(sample, type) %>% model.matrix(~ type, data=.)
+         y = input_df %>% select(-covariate_names, -sample_tot) %>% nanny::as_matrix(rownames = !!.sample),
+         X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
        ),
        cores = 4
   )
