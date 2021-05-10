@@ -59,14 +59,14 @@ test_that("multi beta",{
   library(rstan)
 
   # Get proportions
-  f =
+  res2 =
     sccomp::cell_counts %>%
     mutate(count = count + 1L) %>%
     nest(data = -sample) %>%
-    mutate(sample_tot = map_int(data, ~ sum(.x$count))) %>%
+    mutate(exposure = map_int(data, ~ sum(.x$count))) %>%
     unnest(data) %>%
-    mutate(frac = (count/sample_tot) ) %>%
-    select(-c(count, sample_tot, phenotype)) %>%
+    mutate(frac = (count/exposure) ) %>%
+    select(-c(count, exposure, phenotype)) %>%
 
     sccomp_glm(
       formula = ~ type,

@@ -30,7 +30,7 @@
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
 #'
-#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `tot deleterious outliers`
+#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
 #'
 #' @export
 #'
@@ -66,47 +66,36 @@ sccomp_glm = function(.data,
   #if(my_df %>% distinct(!!.sample, !!.cell_type) %>% count(!!.cell_type) %>% count(n) %>% nrow %>% `>` (1))
   #  stop("The input data frame does not represent a rectangular structure. Each cell_type must be present in all samples.")
 
-  noise_model %>%
+  my_glm =
+    noise_model %>%
     when(
-      equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm(
-        .data = .data,
-        formula = formula,
-        .sample = !!.sample,
-        .cell_type = !!.cell_type,
-        .count = !!.count,
-        check_outliers = check_outliers,
-        approximate_posterior_inference = approximate_posterior_inference,
-        cores = cores,
-        # For development purpose,
-        seed = seed
-      ),
-
-      equals(., "multi_beta") ~ multi_beta_glm(
-        .data = .data,
-        formula = formula,
-        .sample = !!.sample,
-        .cell_type = !!.cell_type,
-        .count = !!.count,
-        check_outliers = check_outliers,
-        approximate_posterior_inference = approximate_posterior_inference,
-        cores = cores,
-        # For development purpose,
-        seed = seed
-      ),
-
-      equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm(
-        .data = .data,
-        formula = formula,
-        .sample = !!.sample,
-        .cell_type = !!.cell_type,
-        .count = !!.count,
-        check_outliers = check_outliers,
-        approximate_posterior_inference = approximate_posterior_inference,
-        cores = cores,
-        # For development purpose,
-        seed = seed
-      )
+      equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm,
+      equals(., "multi_beta") ~ multi_beta_glm,
+      equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm
     )
+
+
+
+  .data %>%
+    nest(data = -!!.sample) %>%
+    mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
+    unnest(data) %>%
+    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula)) %>%
+    spread(!!.cell_type, !!.count) %>%
+    my_glm(
+      formula = formula,
+      .sample = !!.sample,
+      check_outliers = check_outliers,
+      approximate_posterior_inference = approximate_posterior_inference,
+      cores = cores,
+      # For development purpose,
+      seed = seed
+    ) %>%
+
+
+    # Polish
+    rename(!!.cell_type := .cell)
+
 
 
 

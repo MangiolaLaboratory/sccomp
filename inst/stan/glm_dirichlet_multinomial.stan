@@ -40,12 +40,13 @@ vector Q_sum_to_zero_QR(int N) {
 data{
 	int N;
 	int M;
+	int C;
 	int y[N,M];
 	int X[N,2];
 
 }
 transformed data{
-	int C = 2;
+
 	vector[2*M] Q_r = Q_sum_to_zero_QR(M);
   real x_raw_sigma = inv_sqrt(1 - inv(M));
 }

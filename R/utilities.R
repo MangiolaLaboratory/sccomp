@@ -411,9 +411,9 @@ generate_quantities = function(fit, N, M, exposure){
 #' @return A tibble with additional columns
 #'
 do_inference = function(.data,
+                        model,
 												approximate_posterior_inference = F,
 												approximate_posterior_analysis = F,
-												X,
 												additional_parameters_to_save,
 												to_exclude = tibble(N = integer(), M = integer()),
 												truncation_compensation = 1,
@@ -437,9 +437,15 @@ do_inference = function(.data,
 	# how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
 	# additional_parameters_to_save = additional_parameters_to_save %>% c("lambda_log_param", "sigma_raw") %>% unique
 
-  C = X %>% ncol
 
-  how_namy_to_exclude = to_exclude %>% nrow
+  X =
+  sampling(model,
+           data = .data,
+           chains = chains,
+           cores = chains,
+           iter = output_samples + 1000,
+           warmup = 1000
+  )
 
   # fit =
   #   vb_iterative(
@@ -455,39 +461,6 @@ do_inference = function(.data,
   #       X = X
   #     )
   #   )
-
-	fit =
-	  sampling(
-	    stanmodels$glm_dirichlet_multinomial,
-	    #stan_model("~/PostDoc/sccomp/inst/stan/glm_dirichlet_multinomial.stan"),
-	    data = list(
-	      N = nrow(.data),
-	      M = ncol(.data)-1,
-	      y = .data %>% dplyr::select(-N),
-	      X = X
-	    ),
-	    chains = chains,
-	    cores = chains,
-	    iter = output_samples + 1000,
-	    warmup = 1000
-	  )
-
-	# # Plot results
-	# fit %>%
-	#   draws_to_tibble_x_y("beta", "C", "M")
-	#
-	#   tidybayes::gather_draws(beta[C, M]) %>%
-	#   median_qi() %>%
-	#   filter(C==2) %>%
-	#   bind_cols(cell_type = colnames(.data)[-1]) %>%
-	#   ggplot(aes(forcats::fct_reorder(cell_type, .value), .value)) +
-	#   geom_point() +
-	#   geom_errorbar(aes(ymin = .lower, ymax =.upper)) +
-	#   geom_hline(yintercept = 0) +
-	#   theme_bw() +
-	#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-
-  fit
 
 }
 
@@ -638,15 +611,17 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
-fit_model = function(.data_wide_no_covariates, X, exposure, iteration, chains, output_samples = 5000){
+fit_model = function(data_for_model, model, censoring_iteration = 1, chains, output_samples = 5000){
+
+
 
   # Run the first discovery phase with permissive false discovery rate
   fit =
-    .data_wide_no_covariates %>%
+    data_for_model %>%
     do_inference(
+      model,
       approximate_posterior_inference,
       approximate_posterior_analysis = F,
-      X,
       additional_parameters_to_save,
       pass_fit = T,
       tol_rel_obj = tol_rel_obj,
@@ -657,22 +632,25 @@ fit_model = function(.data_wide_no_covariates, X, exposure, iteration, chains, o
 
   fit_discovery = fit %>%
     draws_to_tibble_x_y("beta", "C", "M") %>%
-    left_join(tibble(C=1:ncol(X), C_name = colnames(X))) %>%
-    nest(!!as.symbol(sprintf("beta_posterior_%s", iteration)) := -M)
+    left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X))) %>%
+    nest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration)) := -M)
 
     # Add precision as attribute
-    fit_discovery =
       fit_discovery %>%
       add_attr(
         fit %>% extract("precision") %$% precision,
         "precision"
       )
 
-    fit_discovery
+
 }
 
-fit_and_generate_quantities = function(.data_wide_no_covariates, X, exposure, iteration, chains, output_samples = 2000){
+fit_and_generate_quantities = function(.data_wide_no_covariates, formula, .sample, model, iteration, chains, output_samples = 2000){
 
+  .sample = enquo(.sample)
+
+
+  fit_discovery  = fit_model(.data_wide_no_covariates, formula, !!.sample, model,  iteration, chains= 4, output_samples = output_samples)
 
   # beta_posterior =
   #   fit_discovery %>%
@@ -737,20 +715,12 @@ fit_and_generate_quantities = function(.data_wide_no_covariates, X, exposure, it
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
-count_in_beta = function(.my_data, .count, formula, X, exposure, iteration, chains){
+fit_model_and_parse = function(data_for_model, model, censoring_iteration = 1, chains){
 
-  .count = enquo(.count)
 
-  .data_wide =
-    .my_data %>%
-    select(N, M, !!.count, parse_formula(formula)) %>%
-    distinct() %>%
-    spread(M, !!.count)
-
-  .data_wide_no_covariates = .data_wide %>% select(-parse_formula(formula))
 
   # Run the first discovery phase with permissive false discovery rate
-  fitted  = fit_model(.data_wide_no_covariates, X, exposure, iteration, chains= 4)
+  fitted  = fit_model(data_for_model, model, censoring_iteration, chains= 4)
 
 
   credible_intervals =
@@ -758,7 +728,7 @@ count_in_beta = function(.my_data, .count, formula, X, exposure, iteration, chai
     unnest(beta_posterior_1) %>%
     nest(data = -c(M, C, C_name)) %>%
     # Attach beta
-    mutate(!!as.symbol(sprintf("beta_quantiles_%s", iteration)) := map(
+    mutate(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration)) := map(
       data,
       ~ quantile(
         .x$.value,
@@ -768,34 +738,24 @@ count_in_beta = function(.my_data, .count, formula, X, exposure, iteration, chai
         spread(name, value) %>%
         rename(.lower =  `2.5%`, .median = `50%`, .upper = `97.5%`)
     )) %>%
-    unnest(!!as.symbol(sprintf("beta_quantiles_%s", iteration))) %>%
+    unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%
     pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper))
 
   # Integrate
-  .my_data %>%
-
-    # Add covariate from design
-    left_join(credible_intervals)
+  credible_intervals
 
 }
 
-
 #' @importFrom purrr map2_lgl
-count_in_beta_out_no_missing_data = function(.my_data, .count, formula, X, exposure, iteration, chains){
+fit_model_and_parse_out_no_missing_data = function(.my_data, formula, .sample, iteration, chains){
 
-  .count = enquo(.count)
+  .sample = enquo(.sample)
 
-  .data_wide =
-    .my_data %>%
-    select(N, M, !!.count, parse_formula(formula)) %>%
-    distinct() %>%
-    spread(M, !!.count)
 
-  .data_wide_no_covariates = .data_wide %>% select(-parse_formula(formula))
 
   # Run the first discovery phase with permissive false discovery rate
-  fit_and_generated  = fit_and_generate_quantities(.data_wide_no_covariates, X, exposure, iteration, chains= 4, output_samples = 5000)
+  fit_and_generated  = fit_and_generate_quantities(.my_data, formula,  !!.sample, model, iteration, chains= 4, output_samples = 5000)
 
   # Integrate
   .my_data %>%
@@ -840,7 +800,7 @@ count_in_beta_out_no_missing_data = function(.my_data, .count, formula, X, expos
 
 }
 
-count_in_beta_out_missing_data = function(.my_data, .count, formula, X, exposure, iteration){
+fit_model_and_parse_out_missing_data = function(.my_data, .count, formula, X, exposure, iteration){
 
   .count = enquo(.count)
 
@@ -983,44 +943,6 @@ count_in_beta_out_missing_data = function(.my_data, .count, formula, X, exposure
         unnest(precision) %>%
         as.matrix(),
       "precision" )
-
-}
-
-
-#' @export
-glm_multi_beta = function(input_df, formula, .sample){
-
-  covariate_names = parse_formula(formula)
-  .sample = enquo(.sample)
-
-  sampling(stanmodels$glm_multi_beta,
-       data = list(
-         N = input_df %>% nrow(),
-         M = input_df %>% select(-!!.sample, -covariate_names) %>% ncol(),
-         y = input_df %>% select(-covariate_names) %>% nanny::as_matrix(rownames = !!.sample),
-         X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
-       ),
-       cores = 4
-  )
-
-}
-
-#' @export
-glm_multi_beta_binomial = function(input_df, formula, .sample){
-
-  covariate_names = parse_formula(formula)
-  .sample = enquo(.sample)
-
-  sampling(stanmodels$glm_multi_beta_binomial,
-       data = list(
-         N = input_df %>% nrow(),
-         M = input_df %>% select(-!!.sample, -covariate_names, -sample_tot) %>% ncol(),
-         tot = input_df$sample_tot,
-         y = input_df %>% select(-covariate_names, -sample_tot) %>% nanny::as_matrix(rownames = !!.sample),
-         X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
-       ),
-       cores = 4
-  )
 
 }
 

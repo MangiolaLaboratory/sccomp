@@ -6,9 +6,9 @@
 \usage{
 do_inference(
   .data,
+  model,
   approximate_posterior_inference = F,
   approximate_posterior_analysis = F,
-  X,
   additional_parameters_to_save,
   to_exclude = tibble(N = integer(), M = integer()),
   truncation_compensation = 1,
@@ -28,8 +28,6 @@ do_inference(
 \item{approximate_posterior_inference}{A boolean}
 
 \item{approximate_posterior_analysis}{A boolean}
-
-\item{X}{A tibble}
 
 \item{additional_parameters_to_save}{A character vector}
 
@@ -66,6 +64,8 @@ do_inference(
 \item{.do_check}{A column name as symbol}
 
 \item{C}{An integer}
+
+\item{X}{A tibble}
 
 \item{lambda_mu_mu}{A real}
 

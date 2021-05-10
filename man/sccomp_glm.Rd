@@ -35,7 +35,7 @@ sccomp_glm(
 \item{seed}{An integer. Used for development and testing purposes}
 }
 \value{
-A nested tibble \code{tbl} with cell_type-wise information: \verb{sample wise data} | plot | \verb{ppc samples failed} | \verb{tot deleterious outliers}
+A nested tibble \code{tbl} with cell_type-wise information: \verb{sample wise data} | plot | \verb{ppc samples failed} | \verb{exposure deleterious outliers}
 }
 \description{
 This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
