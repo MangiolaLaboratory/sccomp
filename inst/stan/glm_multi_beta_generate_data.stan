@@ -7,14 +7,14 @@ functions{
                 - lgamma(alpha_plus+sum(y)) - sum(lgamma(alpha));
   }
 
-matrix vector_array_to_matrix(vector[] x) {
+  matrix vector_array_to_matrix(vector[] x) {
 		matrix[size(x), rows(x[1])] y;
 		for (m in 1:size(x))
 		  y[m] = x[m]';
 		return y;
 }
 
-vector Q_sum_to_zero_QR(int N) {
+  vector Q_sum_to_zero_QR(int N) {
     vector [2*N] Q_r;
 
     for(i in 1:N) {

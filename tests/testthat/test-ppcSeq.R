@@ -33,7 +33,8 @@ test_that("dirichlet multinomial",{
     sccomp::cell_counts %>%
     sccomp_glm(
       formula = ~ type,
-      sample, cell_type, count
+      sample, cell_type, count,
+      noise_model = "dirichlet_multinomial"
     )
 
   expect_equal(
@@ -57,17 +58,21 @@ test_that("multi beta",{
   library(digest)
   library(rstan)
 
-  input_df =
+  # Get proportions
+  res2 =
     sccomp::cell_counts %>%
     mutate(count = count + 1L) %>%
     nest(data = -sample) %>%
-    mutate(sample_tot = map_int(data, ~ sum(.x$count))) %>%
+    mutate(exposure = map_int(data, ~ sum(.x$count))) %>%
     unnest(data) %>%
-    mutate(frac = (count/sample_tot) ) %>%
-    select(-c(count, sample_tot, phenotype)) %>%
-    spread(cell_type, frac)
+    mutate(frac = (count/exposure) ) %>%
+    select(-c(count, exposure, phenotype)) %>%
 
-  f = input_df %>% glm_multi_beta(~ type, sample)
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_type, frac,
+      noise_model = "multi_beta"
+    )
 
 })
 
@@ -80,14 +85,12 @@ test_that("multi beta binomial",{
   library(digest)
   library(rstan)
 
-  input_df =
+  res =
     sccomp::cell_counts %>%
-    nest(data = -sample) %>%
-    mutate(sample_tot = map_int(data, ~ sum(.x$count))) %>%
-    unnest(data) %>%
-    select(-c(phenotype)) %>%
-    spread(cell_type, count)
-
-  f = input_df %>% glm_multi_beta_binomial()
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_type, count,
+      noise_model = "multi_beta_binomial"
+    )
 
 })
