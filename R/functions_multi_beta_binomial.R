@@ -45,37 +45,43 @@ multi_beta_binomial_glm = function(.data,
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
-  .count = enquo(.count)
 
-  .data_parsed =
-    .data %>%
-    mutate(
-      N = as.factor(!!.sample) %>% as.integer,
-      M = as.factor(!!.cell_type) %>% as.integer
+  # Produce data list
+  covariate_names = parse_formula(formula)
+  X = .data %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
+  cell_cluster_names = .data %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
+
+  data_for_model =
+    list(
+      N = .data %>% nrow(),
+      M = .data %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
+      exposure = .data$exposure,
+      y = .data %>% select(-covariate_names, -exposure) %>% nanny::as_matrix(rownames = !!.sample),
+      X = X,
+      C = ncol(X)
     )
 
 
-  # Create design matrix
-  X =  model.matrix(object = formula,   data =
-                      .data_parsed %>%
-                      select(N, parse_formula(formula)) %>%
-                      distinct() %>%
-                      arrange(N)
-  )
-
-  fit =
-    .data %>%
-    nest(data = -!!.sample) %>%
-    mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
-    unnest(data) %>%
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula)) %>%
-    spread(!!.cell_type, !!.count) %>%
-    glm_multi_beta_binomial(formula, !!.sample)
-
   if(!check_outliers){
 
-    return(fit)
+    data_for_model %>%
+      fit_model_and_parse(
+        stanmodels$glm_multi_beta_binomial,
+        chains = 4
+      ) %>%
+
+      # Join filtered
+      mutate(
+        significant =
+          !!as.symbol(sprintf(".lower_%s", colnames(X)[2])) *
+          !!as.symbol(sprintf(".upper_%s", colnames(X)[2])) > 0
+      ) %>%
+
+      # Clesn
+      select(-M) %>%
+      mutate(.cell = cell_cluster_names) %>%
+      select(.cell, everything())
+
 
   }
 

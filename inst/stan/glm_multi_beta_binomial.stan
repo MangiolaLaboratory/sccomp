@@ -23,14 +23,14 @@ functions{
     return x;
   }
 
-  real beta_binomial_regression_lpmf(int[,] p, int[] tot, matrix X, matrix beta, vector phi){
+  real beta_binomial_regression_lpmf(int[,] p, int[] exposure, matrix X, matrix beta, vector phi){
 
 		real lp = 0;
     matrix[num_elements(p[1]), num_elements(p[,1])] mu = (X * beta)';
 		for(i in 1:cols(mu)) mu[,i] = softmax(mu[,i]);
 		for(i in 1:cols(mu)) {
 
-     	lp += beta_binomial_lpmf(p[i] | tot[i], (mu[,i] .* phi), ((1.0 - mu[,i]) .* phi) );
+     	lp += beta_binomial_lpmf(p[i] | exposure[i], (mu[,i] .* phi), ((1.0 - mu[,i]) .* phi) );
 
 		}
 		return (lp);
@@ -41,7 +41,7 @@ data{
 	int N;
 	int M;
 	int C;
-	int tot[N];
+	int exposure[N];
 	int y[N,M];
 	matrix[N, C] X;
 
@@ -67,7 +67,7 @@ transformed parameters{
 model{
 
 
-	 y ~ beta_binomial_regression(tot, X, beta, exp(precision) );
+	 y ~ beta_binomial_regression(exposure, X, beta, exp(precision) );
 
 	 precision ~ normal( beta[1] * prec_coeff[2] + prec_coeff[1], prec_sd);
    prec_sd ~ normal(0,2);
