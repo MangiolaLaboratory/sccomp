@@ -77,26 +77,18 @@ sccomp_glm = function(.data,
 
 
   .data %>%
-    nest(data = -!!.sample) %>%
-    mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
-    unnest(data) %>%
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula)) %>%
-    spread(!!.cell_type, !!.count) %>%
+
     my_glm(
       formula = formula,
       .sample = !!.sample,
+      .cell_type = !!.cell_type,
+      .count = !!.count,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       cores = cores,
       # For development purpose,
       seed = seed
-    ) %>%
-
-
-    # Polish
-    rename(!!.cell_type := .cell)
-
-
+    )
 
 
 }
