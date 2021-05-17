@@ -358,7 +358,7 @@ summary_to_tibble = function(fit, par, x, y = NULL) {
 			is.null(y) ~ (.) %>% tidyr::extract(col = .variable, into = c(".variable", x), "(.+)\\[(.+)\\]", convert = T),
 			~ (.) %>% tidyr::extract(col = .variable, into = c(".variable", x, y), "(.+)\\[(.+),(.+)\\]", convert = T)
 		) %>%
-	  filter(.variable == "beta")
+	  filter(.variable == par)
 
 }
 
@@ -676,6 +676,8 @@ data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type
   X = .data_spread %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
   cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
 
+
+
   data_for_model =
     list(
       N = .data_spread %>% nrow(),
@@ -685,6 +687,14 @@ data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type
       X = X,
       C = ncol(X)
     )
+
+  # Add censoring
+  data_for_model$is_truncated = 0
+  data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
+  data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
+
+  # Return
+  data_for_model
 }
 
 data_to_spread = function(.data, formula, .sample, .cell_type, .count){
