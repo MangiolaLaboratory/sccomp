@@ -108,7 +108,7 @@ model{
     for(j in 1:rows(mu)){
 
       // If I have outlier exclusion
-      if(is_truncated == 1) {
+      if(is_truncated == 1 && truncation_down[i, j] != -99) {
         if(truncation_down[i, j] > 0) // If it is < 0 it is an outlier
         target += beta_binomial_truncated_lpmf(
           y[i,j] |

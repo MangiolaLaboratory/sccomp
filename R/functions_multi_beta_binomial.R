@@ -111,9 +111,19 @@ multi_beta_binomial_glm = function(.data,
 
         by = c("sample", "cell_type")
       ) %>%
+
+      # Add truncation
+      mutate(   truncation_down = `2.5%`,   truncation_up =  `97.5%`) %>%
+
+      # Add outlier stats
+      mutate( outlier = !(!!.count > `2.5%` & !!.count < `97.5%`) ) %>%
+      nest(data = -M) %>%
+      mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
+      unnest(data) %>%
+
       mutate(
-        truncation_down = if_else(!!.count > `2.5%` & !!.count < `97.5%`, `2.5%`, -1),
-        truncation_up = if_else(!!.count > `2.5%` & !!.count < `97.5%`, `97.5%`, -1)
+        truncation_down = case_when(!contains_outliers ~ -99, outlier ~ -1, TRUE ~ truncation_down),
+        truncation_up = case_when(!contains_outliers ~ -99, outlier ~ -1, TRUE ~ truncation_up),
       )
 
     # Add censoring
