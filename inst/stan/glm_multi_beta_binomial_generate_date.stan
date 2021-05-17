@@ -2,12 +2,12 @@ functions{
 
   int[,] beta_binomial_regression_rng(int[] exposure, matrix X, matrix beta, vector phi){
 
-		int y[cols(beta),rows(X)];
+		int y[rows(X), cols(beta)];
     matrix[cols(beta),rows(X)] mu = (X * beta)';
 		for(i in 1:cols(mu)) mu[,i] = softmax(mu[,i]);
 		for(i in 1:cols(mu)) {
 
-     	y[,i] = beta_binomial_rng( exposure[i], (mu[,i] .* phi), ((1.0 - mu[,i]) .* phi) );
+     	y[i,] = beta_binomial_rng( exposure[i], (mu[,i] .* phi), ((1.0 - mu[,i]) .* phi) );
 
 		}
 		return (y);
