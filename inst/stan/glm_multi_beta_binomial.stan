@@ -23,19 +23,6 @@ functions{
     return x;
   }
 
-  real beta_binomial_regression_lpmf(int[,] p, int[] exposure, matrix X, matrix beta, vector phi){
-
-		real lp = 0;
-    matrix[num_elements(p[1]), num_elements(p[,1])] mu = (X * beta)';
-		for(i in 1:cols(mu)) mu[,i] = softmax(mu[,i]);
-		for(i in 1:cols(mu)) {
-
-     	lp += beta_binomial_lpmf(p[i] | exposure[i], (mu[,i] .* phi), ((1.0 - mu[,i]) .* phi) );
-
-		}
-		return (lp);
-	}
-
 	 real beta_binomial_truncated_lpmf(int p, int exposure, real alpha, real beta, int lower, int upper){
 
 		real lp = 0;
@@ -89,44 +76,35 @@ transformed parameters{
 }
 model{
 
-   // y ~ beta_binomial_regression(exposure, X, beta, exp(precision) );
-
-//     matrix[num_elements(y[1]), num_elements(y[,1])] mu = (X * beta)';
-// 		for(i in 1:cols(mu)) mu[,i] = softmax(mu[,i]);
-// 		for(i in 1:cols(mu)) {
-//
-//      	target += beta_binomial_lpmf(y[i] | exposure[i], (mu[,i] .* exp(precision)), ((1.0 - mu[,i]) .* exp(precision)) );
-//
-// 		}
-
   matrix[num_elements(y[1]), num_elements(y[,1])] mu = (X * beta)';
+
 
 	for(i in 1:cols(mu)) {
 
     mu[,i] = softmax(mu[,i]);
 
-    for(j in 1:rows(mu)){
+    // Component not censored
+    if(is_truncated == 0 || truncation_down[i, 1] == -99) {
+        mu[,i] = softmax(mu[,i]);
+        y[i] ~ beta_binomial( exposure[i], mu[,i] .* exp(precision),     (1.0 - mu[,i]) .* exp(precision)  );
+    }
+
+    // Component truncated
+    else{
+      for(j in 1:rows(mu)){
 
       // If I have outlier exclusion
-      if(is_truncated == 1 && truncation_down[i, j] != -99) {
         if(truncation_down[i, j] > 0) // If it is < 0 it is an outlier
-        target += beta_binomial_truncated_lpmf(
-          y[i,j] |
-          exposure[i],
-          (mu[j,i] .* exp(precision[j])),
-          ((1.0 - mu[j,i]) .* exp(precision[j])) ,
-          truncation_down[i, j],
-          truncation_up[i, j]
-        );
-
-      }
-
-      // If I don't have any outlier elimination
-      else
-       	target += beta_binomial_lpmf(y[i,j] | exposure[i], (mu[j,i] .* exp(precision[j])), ((1.0 - mu[j,i]) .* exp(precision[j])) );
-
-
-    }
+        //y[i,j] ~  beta_binomial( exposure[i], (mu[j,i] .* exp(precision[j])),   ((1.0 - mu[j,i]) .* exp(precision[j])) ) T[truncation_down[i, j],  truncation_up[i, j]];
+          target += beta_binomial_truncated_lpmf(
+            y[i,j] |
+            exposure[i],
+            (mu[j,i] .* exp(precision[j])),
+            ((1.0 - mu[j,i]) .* exp(precision[j])) ,
+            truncation_down[i, j],
+            truncation_up[i, j]
+          );
+    }}
 
 	}
 
