@@ -99,9 +99,9 @@ f2 %>% plot(pars="precision")
 # Real data
 sccomp::cell_counts %>%
   nest(data = -sample) %>%
-  mutate(sample_tot = map_int(data, ~ sum(.x$count))) %>%
+  mutate(exposure = map_int(data, ~ sum(.x$count))) %>%
   unnest(data) %>%
-  mutate(frac_logit = (count/sample_tot) %>% boot::logit() ) %>%
+  mutate(frac_logit = (count/exposure) %>% boot::logit() ) %>%
 
   group_by(cell_type, type) %>%
   summarise(m=mean(frac_logit), s=sd(frac_logit)) %>%
@@ -114,10 +114,10 @@ input_df =
   sccomp::cell_counts %>%
   mutate(count = count + 1L) %>%
   nest(data = -sample) %>%
-  mutate(sample_tot = map_int(data, ~ sum(.x$count))) %>%
+  mutate(exposure = map_int(data, ~ sum(.x$count))) %>%
   unnest(data) %>%
-  mutate(frac = (count/sample_tot) ) %>%
-  select(-c(count, sample_tot, phenotype)) %>%
+  mutate(frac = (count/exposure) ) %>%
+  select(-c(count, exposure, phenotype)) %>%
   spread(cell_type, frac)
 
 f3 = stan(file = "inst/stan/glm_multi_beta.stan",

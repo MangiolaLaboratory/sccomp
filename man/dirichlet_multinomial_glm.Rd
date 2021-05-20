@@ -8,6 +8,8 @@ dirichlet_multinomial_glm(
   .data,
   formula = ~1,
   .sample,
+  .cell_type,
+  .count,
   check_outliers = FALSE,
   approximate_posterior_inference = T,
   cores = detect_cores(),
@@ -21,15 +23,15 @@ dirichlet_multinomial_glm(
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
+\item{.cell_type}{A column name as symbol. The cell_type identifier}
+
+\item{.count}{A column name as symbol. The cell_type abundance (read count)}
+
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
 \item{seed}{An integer. Used for development and testing purposes}
-
-\item{.cell_type}{A column name as symbol. The cell_type identifier}
-
-\item{.count}{A column name as symbol. The cell_type abundance (read count)}
 }
 \value{
 A nested tibble \code{tbl} with cell_type-wise information: \verb{sample wise data} | plot | \verb{ppc samples failed} | \verb{exposure deleterious outliers}
