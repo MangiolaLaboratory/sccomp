@@ -605,7 +605,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
   fitted = fit %>%
     draws_to_tibble_x_y("beta", "C", "M") %>%
-    left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X))) %>%
+    left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
     nest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration)) := -M)
 
   # Add precision as attribute
@@ -685,7 +685,8 @@ data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type
       exposure = .data_spread$exposure,
       y = .data_spread %>% select(-covariate_names, -exposure) %>% nanny::as_matrix(rownames = !!.sample),
       X = X,
-      C = ncol(X)
+      C = ncol(X),
+      A = 2
     )
 
   # Add censoring

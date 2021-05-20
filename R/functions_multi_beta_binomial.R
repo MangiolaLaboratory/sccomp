@@ -57,8 +57,6 @@ multi_beta_binomial_glm = function(.data,
     data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count)
 
 
-
-
   if(!check_outliers){
 
     data_for_model %>%
@@ -87,12 +85,12 @@ multi_beta_binomial_glm = function(.data,
     fit =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-       fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 500)
-      #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
+      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 500)
+    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
     rng =  rstan::gqs(
-      #stanmodels$generated_quantities,
-      rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+      stanmodels$glm_multi_beta_binomial_generate_date,
+      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
       draws =  as.matrix(fit),
       data = data_for_model
     )
@@ -122,8 +120,8 @@ multi_beta_binomial_glm = function(.data,
       unnest(data) %>%
 
       mutate(
-        truncation_down = case_when(!contains_outliers ~ -99, outlier ~ -1, TRUE ~ truncation_down),
-        truncation_up = case_when(!contains_outliers ~ -99, outlier ~ -1, TRUE ~ truncation_up),
+        truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
+        truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up),
       )
 
     # Add censoring
@@ -131,18 +129,81 @@ multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
 
-    fit_2 =
+    fit2 =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-     # fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 500)
-    fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
+      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 500)
+    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
-    rng =  rstan::gqs(
-      #stanmodels$generated_quantities,
-      rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit),
+    rng2 =  rstan::gqs(
+      stanmodels$glm_multi_beta_binomial_generate_date,
+      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+      draws =  as.matrix(fit2),
       data = data_for_model
     )
+
+    # Detect outliers
+    truncation_df2 =
+      .data %>%
+      left_join(
+        summary_to_tibble(rng2, "counts", "N", "M") %>%
+          nest(data = -N) %>%
+          mutate(!!.sample := rownames(data_for_model$y)) %>%
+          unnest(data) %>%
+          nest(data = -M) %>%
+          mutate(!!.cell_type := colnames(data_for_model$y)) %>%
+          unnest(data) ,
+
+        by = c("sample", "cell_type")
+      ) %>%
+
+      # Add truncation
+      mutate(   truncation_down = `2.5%`,   truncation_up =  `97.5%`) %>%
+
+      # Add outlier stats
+      mutate( outlier = !(!!.count > `2.5%` & !!.count < `97.5%`) ) %>%
+      nest(data = -M) %>%
+      mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
+      unnest(data) %>%
+
+      mutate(
+        truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
+        truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up),
+      )
+
+
+    data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+    data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+
+    fit3 =
+      data_for_model %>%
+      # Run the first discovery phase with permissive false discovery rate
+      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 500)
+    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
+
+    fit3 %>%
+      parse_fit(data_for_model, .) %>%
+      beta_to_CI( ) %>%
+
+      # Join filtered
+      mutate(
+        significant =
+          !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
+          !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
+      ) %>%
+
+      # Clesn
+      select(-M) %>%
+      mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
+      select(!!.cell_type, everything()) %>%
+
+      # join outliers
+      left_join(
+        truncation_df2 %>%
+          select(!!.sample, !!.cell_type, outlier, `2.5%`, `97.5%`) %>%
+          nest(outliers = -!!.cell_type),
+        by = quo_name(.cell_type)
+      )
 
   }
 

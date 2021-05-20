@@ -23,22 +23,7 @@ functions{
     return x;
   }
 
-	 real beta_binomial_truncated_lpmf(int p, int exposure, real alpha, real beta, int lower, int upper){
 
-		real lp = 0;
-
-    lp += beta_binomial_lpmf(p | exposure, alpha, beta );
-    if (p < lower || p > upper)
-      lp += negative_infinity();
-    else
-      lp += -log_sum_exp(
-        beta_binomial_lpmf(lower | exposure, alpha, beta),
-        log_diff_exp(beta_binomial_lcdf(upper | exposure, alpha, beta),
-        beta_binomial_lcdf(lower | exposure, alpha, beta))
-      );
-
-		return (lp);
-	}
 
 }
 data{
@@ -57,12 +42,13 @@ data{
 
 }
 transformed data{
+  int A = 2;
 	vector[2*M] Q_r = Q_sum_to_zero_QR(M);
   real x_raw_sigma = inv_sqrt(1 - inv(M));
 }
 parameters{
 	matrix[C, M-1] beta_raw;
-	vector[M] precision;
+	matrix[A, M] alpha;
 
 	// To exclude
   real prec_coeff[2];
@@ -70,49 +56,49 @@ parameters{
 }
 transformed parameters{
 		matrix[C,M] beta;
+		matrix[A,M] beta_intercept_slope;
+		matrix[A,M] alpha_intercept_slope;
+    matrix[num_elements(y[1]), num_elements(y[,1])] precision = (X[,1:A] * alpha)';
+
 	  for(c in 1:C)	beta[c,] =  sum_to_zero_QR(beta_raw[c,], Q_r);
 
+    beta_intercept_slope[1] = beta[1];
+    beta_intercept_slope[2] = beta[1] + beta[2];
+    alpha_intercept_slope[1] = alpha[1];
+    alpha_intercept_slope[2] = alpha[1] + alpha[2];
 
 }
 model{
 
+  // Calculate MU
   matrix[num_elements(y[1]), num_elements(y[,1])] mu = (X * beta)';
 
+  for(i in 1:cols(mu)) { mu[,i] = softmax(mu[,i]); }
 
-	for(i in 1:cols(mu)) {
+  // NON TRUNCATION
+  if(is_truncated == 0){
+    for(i in 1:cols(mu))
+      y[i,] ~ beta_binomial( exposure[i], (mu[,i] .* exp(precision[,i])), ((1.0 - mu[,i]) .* exp(precision[,i])) );
+  }
 
-    mu[,i] = softmax(mu[,i]);
-
-    // Component not censored
-    if(is_truncated == 0 || truncation_down[i, 1] == -99) {
-        mu[,i] = softmax(mu[,i]);
-        y[i] ~ beta_binomial( exposure[i], mu[,i] .* exp(precision),     (1.0 - mu[,i]) .* exp(precision)  );
+  // YES TRUNCATION
+  else{
+    for(i in 1:cols(mu)) { // SAMPLE
+      for(j in 1:rows(mu)){ // CATEGORY
+        if(truncation_down[i, j] >=0)
+          y[i,j] ~ beta_binomial( exposure[i], (mu[j,i] .* exp(precision[j,i])), ((1.0 - mu[j,i]) .* exp(precision[j,i])) );
+      }
     }
+  }
 
-    // Component truncated
-    else{
-      for(j in 1:rows(mu)){
+  for(i in 1:C) to_vector(beta_raw[i]) ~ student_t (8, 0, x_raw_sigma );
 
-      // If I have outlier exclusion
-        if(truncation_down[i, j] > 0) // If it is < 0 it is an outlier
-        //y[i,j] ~  beta_binomial( exposure[i], (mu[j,i] .* exp(precision[j])),   ((1.0 - mu[j,i]) .* exp(precision[j])) ) T[truncation_down[i, j],  truncation_up[i, j]];
-          target += beta_binomial_truncated_lpmf(
-            y[i,j] |
-            exposure[i],
-            (mu[j,i] .* exp(precision[j])),
-            ((1.0 - mu[j,i]) .* exp(precision[j])) ,
-            truncation_down[i, j],
-            truncation_up[i, j]
-          );
-    }}
+  // PRECISION REGRESSION
+  to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+  prec_sd ~ normal(0,2);
+  prec_coeff ~ normal(0,5);
 
-	}
-
-    precision ~ normal( beta[1] * prec_coeff[2] + prec_coeff[1], prec_sd);
-    prec_sd ~ normal(0,2);
-    prec_coeff ~ normal(0,5);
-
-    for(i in 1:C) to_vector(beta_raw[i]) ~ normal(0, x_raw_sigma );
 
 
 }
+
