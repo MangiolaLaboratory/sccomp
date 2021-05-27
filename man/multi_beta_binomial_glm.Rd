@@ -12,8 +12,10 @@ multi_beta_binomial_glm(
   .count,
   check_outliers = FALSE,
   approximate_posterior_inference = T,
+  variance_association = F,
   cores = detect_cores(),
-  seed = sample(1:99999, size = 1)
+  seed = sample(1:99999, size = 1),
+  verbose = FALSE
 )
 }
 \arguments{

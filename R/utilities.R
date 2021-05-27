@@ -23,10 +23,10 @@ add_attr = function(var, attribute, name) {
 #'
 #'
 parse_formula <- function(fm) {
-	if (attr(terms(fm), "response") == 1)
-		stop("The formula must be of the kind \"~ covariates\" ")
-	else
-		as.character(attr(terms(fm), "variables"))[-1]
+  if (attr(terms(fm), "response") == 1)
+    stop("The formula must be of the kind \"~ covariates\" ")
+  else
+    as.character(attr(terms(fm), "variables"))[-1]
 }
 
 #' Get matrix from tibble
@@ -63,31 +63,31 @@ ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
 #'
 #' @return A matrix
 as_matrix <- function(tbl, rownames = NULL) {
-	tbl %>%
+  tbl %>%
 
-		ifelse_pipe(
-			tbl %>%
-				ifelse_pipe(!is.null(rownames),		~ .x %>% dplyr::select(-contains(rownames))) %>%
-				summarise_all(class) %>%
-				gather(variable, class) %>%
-				pull(class) %>%
-				unique() %>%
-				`%in%`(c("numeric", "integer")) %>% `!`() %>% any(),
-			~ {
-				warning("to_matrix says: there are NON-numerical columns, the matrix will NOT be numerical")
-				.x
-			}
-		) %>%
-		as.data.frame() %>%
+    ifelse_pipe(
+      tbl %>%
+        ifelse_pipe(!is.null(rownames),		~ .x %>% dplyr::select(-contains(rownames))) %>%
+        summarise_all(class) %>%
+        gather(variable, class) %>%
+        pull(class) %>%
+        unique() %>%
+        `%in%`(c("numeric", "integer")) %>% `!`() %>% any(),
+      ~ {
+        warning("to_matrix says: there are NON-numerical columns, the matrix will NOT be numerical")
+        .x
+      }
+    ) %>%
+    as.data.frame() %>%
 
-		# Deal with rownames column if present
-		ifelse_pipe(!is.null(rownames),
-								~ .x  %>%
-									set_rownames(tbl %>% pull(!!rownames)) %>%
-									select(-!!rownames)) %>%
+    # Deal with rownames column if present
+    ifelse_pipe(!is.null(rownames),
+                ~ .x  %>%
+                  set_rownames(tbl %>% pull(!!rownames)) %>%
+                  select(-!!rownames)) %>%
 
-		# Convert to matrix
-		as.matrix()
+    # Convert to matrix
+    as.matrix()
 }
 
 #' vb_iterative
@@ -106,65 +106,65 @@ as_matrix <- function(tbl, rownames = NULL) {
 #' @return A Stan fit object
 #'
 vb_iterative = function(model,
-												output_samples,
-												iter,
-												tol_rel_obj,
-												additional_parameters_to_save = c(),
-												data,
-												...) {
-	res = NULL
-	i = 0
-	while (res %>% is.null | i > 5) {
-		res = tryCatch({
-			my_res = vb(
-				model,
-				data = data,
-				output_samples = output_samples,
-				iter = iter,
-				tol_rel_obj = tol_rel_obj,
-				#seed = 654321,
-				#pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
-				...
-			)
-			boolFalse <- T
-			return(my_res)
-		},
-		error = function(e) {
-			i = i + 1
-			writeLines(sprintf("Further attempt with Variational Bayes: %s", e))
-			return(NULL)
-		},
-		finally = {
-		})
-	}
+                        output_samples,
+                        iter,
+                        tol_rel_obj,
+                        additional_parameters_to_save = c(),
+                        data,
+                        ...) {
+  res = NULL
+  i = 0
+  while (res %>% is.null | i > 5) {
+    res = tryCatch({
+      my_res = vb(
+        model,
+        data = data,
+        output_samples = output_samples,
+        iter = iter,
+        tol_rel_obj = tol_rel_obj,
+        #seed = 654321,
+        #pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
+        ...
+      )
+      boolFalse <- T
+      return(my_res)
+    },
+    error = function(e) {
+      i = i + 1
+      writeLines(sprintf("Further attempt with Variational Bayes: %s", e))
+      return(NULL)
+    },
+    finally = {
+    })
+  }
 
-	return(res)
+  return(res)
 }
 
 #' function to pass initialisation values
 #'
 #' @return A list
 inits_fx =
-	function () {
-		pars =
-			res_discovery %>%
-			filter(`.variable` != "counts_rng") %>%
-			distinct(`.variable`) %>%
-			pull(1)
+  function () {
+    pars =
+      res_discovery %>%
+      filter(`.variable` != "counts_rng") %>%
+      distinct(`.variable`) %>%
+      pull(1)
 
-		foreach(
-			par = pars,
-			.final = function(x)
-				setNames(x, pars)
-		) %do% {
-			res_discovery %>%
-				filter(`.variable` == par) %>%
-				mutate(init = rnorm(n(), mean, sd)) %>%
-				mutate(init = 0) %>%
-				select(`.variable`, S, G, init) %>%
-				pull(init)
-		}
-	}
+    foreach(
+      par = pars,
+      .final = function(x)
+        setNames(x, pars)
+    ) %do% {
+      res_discovery %>%
+        filter(`.variable` == par) %>%
+        mutate(init = rnorm(n(), mean, sd)) %>%
+        mutate(init = 0) %>%
+        select(`.variable`, S, G, init) %>%
+        pull(init)
+    }
+  }
 
 #' Produce generated quantities plots with marked outliers
 #'
@@ -181,82 +181,82 @@ inits_fx =
 #'
 #' @return A ggplot
 produce_plots = function(.x,
-												 symbol,
-												 .count,
-												 .sample,
-												 covariate) {
-	# Set plot theme
-	my_theme =
-		theme_bw() +
-		theme(
-			panel.border = element_blank(),
-			axis.line = element_line(),
-			panel.grid.major = element_line(size = 0.2),
-			panel.grid.minor = element_line(size = 0.1),
-			text = element_text(size = 12),
-			#aspect.ratio = 1,
-			axis.text.x = element_text(
-				angle = 90,
-				hjust = 1,
-				vjust = 0.5
-			),
-			strip.background = element_blank(),
-			axis.title.x  = element_text(margin = margin(
-				t = 10,
-				r = 10,
-				b = 10,
-				l = 10
-			)),
-			axis.title.y  = element_text(margin = margin(
-				t = 10,
-				r = 10,
-				b = 10,
-				l = 10
-			))
-		)
+                         symbol,
+                         .count,
+                         .sample,
+                         covariate) {
+  # Set plot theme
+  my_theme =
+    theme_bw() +
+    theme(
+      panel.border = element_blank(),
+      axis.line = element_line(),
+      panel.grid.major = element_line(size = 0.2),
+      panel.grid.minor = element_line(size = 0.1),
+      text = element_text(size = 12),
+      #aspect.ratio = 1,
+      axis.text.x = element_text(
+        angle = 90,
+        hjust = 1,
+        vjust = 0.5
+      ),
+      strip.background = element_blank(),
+      axis.title.x  = element_text(margin = margin(
+        t = 10,
+        r = 10,
+        b = 10,
+        l = 10
+      )),
+      axis.title.y  = element_text(margin = margin(
+        t = 10,
+        r = 10,
+        b = 10,
+        l = 10
+      ))
+    )
 
-	max_y  = .x %>% summarise(a = max(!!as.symbol(.count)), b = max(.upper_2)) %>% as.numeric %>% max
+  max_y  = .x %>% summarise(a = max(!!as.symbol(.count)), b = max(.upper_2)) %>% as.numeric %>% max
 
-	{
-		ggplot(data = .x, aes(
-			y = !!as.symbol(.count),
-			x = !!as.symbol(.sample)
-		))
-		# +
-		# 	geom_errorbar(
-		# 		aes(ymin = `.lower_1`,
-		# 				ymax = `.upper_1`),
-		# 		width = 0,
-		# 		linetype = "dashed",
-		# 		color = "#D3D3D3"
-		# 	)
-	} %>%
-		when(
-			".lower_2" %in% colnames(.x) ~ (.) +
-				geom_errorbar(aes(
-					ymin = `.lower_2`,
-					ymax = `.upper_2`,
-					color = `deleterious outliers`
-				),
-				width = 0),
-			~ (.)
+  {
+    ggplot(data = .x, aes(
+      y = !!as.symbol(.count),
+      x = !!as.symbol(.sample)
+    ))
+    # +
+    # 	geom_errorbar(
+    # 		aes(ymin = `.lower_1`,
+    # 				ymax = `.upper_1`),
+    # 		width = 0,
+    # 		linetype = "dashed",
+    # 		color = "#D3D3D3"
+    # 	)
+  } %>%
+    when(
+      ".lower_2" %in% colnames(.x) ~ (.) +
+        geom_errorbar(aes(
+          ymin = `.lower_2`,
+          ymax = `.upper_2`,
+          color = `deleterious outliers`
+        ),
+        width = 0),
+      ~ (.)
 
-		) %>%
-		ifelse_pipe(
-			covariate %>% is.null %>% `!`,
-			~ .x + geom_point(aes(
-				size = `exposure rate`, fill = !!as.symbol(covariate)
-			), shape = 21),
-			~ .x + geom_point(
-				aes(size = `exposure rate`),
-				shape = 21,
-				fill = "black"
-			)
-		) +
-		scale_colour_manual(values = c("TRUE" = "red", "FALSE" = "black")) +
-		coord_cartesian(ylim = c(NA, max_y)) +
-		my_theme +
-		ggtitle(symbol)
+    ) %>%
+    ifelse_pipe(
+      covariate %>% is.null %>% `!`,
+      ~ .x + geom_point(aes(
+        size = `exposure rate`, fill = !!as.symbol(covariate)
+      ), shape = 21),
+      ~ .x + geom_point(
+        aes(size = `exposure rate`),
+        shape = 21,
+        fill = "black"
+      )
+    ) +
+    scale_colour_manual(values = c("TRUE" = "red", "FALSE" = "black")) +
+    coord_cartesian(ylim = c(NA, max_y)) +
+    my_theme +
+    ggtitle(symbol)
 }
 
 #' fit_to_counts_rng
@@ -270,21 +270,21 @@ produce_plots = function(.x,
 #'
 fit_to_counts_rng = function(fit, adj_prob_theshold){
 
-	writeLines(sprintf("executing %s", "fit_to_counts_rng"))
+  writeLines(sprintf("executing %s", "fit_to_counts_rng"))
 
-	fit %>%
-		rstan::summary("counts_rng",
-									 prob = c(adj_prob_theshold, 1 - adj_prob_theshold)) %$%
-		summary %>%
-		as_tibble(rownames = ".variable") %>%
-		separate(.variable,
-						 c(".variable", "S", "G"),
-						 sep = "[\\[,\\]]",
-						 extra = "drop") %>%
-		mutate(S = S %>% as.integer, G = G %>% as.integer) %>%
-		select(-one_of(c("n_eff", "Rhat", "khat"))) %>%
-		rename(`.lower` = (.) %>% ncol - 1,
-					 `.upper` = (.) %>% ncol)
+  fit %>%
+    rstan::summary("counts_rng",
+                   prob = c(adj_prob_theshold, 1 - adj_prob_theshold)) %$%
+    summary %>%
+    as_tibble(rownames = ".variable") %>%
+    separate(.variable,
+             c(".variable", "S", "G"),
+             sep = "[\\[,\\]]",
+             extra = "drop") %>%
+    mutate(S = S %>% as.integer, G = G %>% as.integer) %>%
+    select(-one_of(c("n_eff", "Rhat", "khat"))) %>%
+    rename(`.lower` = (.) %>% ncol - 1,
+           `.upper` = (.) %>% ncol)
 }
 
 #' draws_to_tibble_x_y
@@ -293,72 +293,72 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #' @importFrom rstan extract
 draws_to_tibble_x_y = function(fit, par, x, y) {
 
-	par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
+  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
 
-	fit %>%
-		rstan::extract(par_names, permuted=F) %>%
-		as.data.frame %>%
-		as_tibble() %>%
-		mutate(.iteration = 1:n()) %>%
-		pivot_longer(
-		  names_to = c("dummy", ".chain", ".variable", x, y),
-		  cols = contains(par),
-		  names_sep = "\\.|\\[|,|\\]|:",
-		  names_ptypes = list(
-		    ".variable" = character()),
-		  values_to = ".value"
-		) %>%
+  fit %>%
+    rstan::extract(par_names, permuted=F) %>%
+    as.data.frame %>%
+    as_tibble() %>%
+    mutate(.iteration = 1:n()) %>%
+    pivot_longer(
+      names_to = c("dummy", ".chain", ".variable", x, y),
+      cols = contains(par),
+      names_sep = "\\.|\\[|,|\\]|:",
+      names_ptypes = list(
+        ".variable" = character()),
+      values_to = ".value"
+    ) %>%
 
-	  # Warning message:
-	  # Expected 5 pieces. Additional pieces discarded
-	  suppressWarnings() %>%
+    # Warning message:
+    # Expected 5 pieces. Additional pieces discarded
+    suppressWarnings() %>%
 
-	  mutate(
-	    !!as.symbol(x) := as.integer(!!as.symbol(x)),
-	    !!as.symbol(y) := as.integer(!!as.symbol(y))
-	    ) %>%
-		select(-dummy) %>%
-		arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
-		group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
-		mutate(.draw = 1:n()) %>%
-		ungroup() %>%
-		select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
-	  filter(.variable == par)
+    mutate(
+      !!as.symbol(x) := as.integer(!!as.symbol(x)),
+      !!as.symbol(y) := as.integer(!!as.symbol(y))
+    ) %>%
+    select(-dummy) %>%
+    arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
+    group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
+    mutate(.draw = 1:n()) %>%
+    ungroup() %>%
+    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
+    filter(.variable == par)
 
 }
 
 draws_to_tibble_x = function(fit, par, x) {
 
-	par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
+  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
 
-	fit %>%
-		rstan::extract(par_names, permuted=F) %>%
-		as.data.frame %>%
-		as_tibble() %>%
-		mutate(.iteration = 1:n()) %>%
-		pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", names_ptypes = list(".chain" = integer(), ".variable" = character(), "A" = integer(), "C" = integer()), values_to = ".value") %>%
-		select(-dummy) %>%
-		arrange(.variable, !!as.symbol(x), .chain) %>%
-		group_by(.variable, !!as.symbol(x)) %>%
-		mutate(.draw = 1:n()) %>%
-		ungroup() %>%
-		select(!!as.symbol(x), .chain, .iteration, .draw ,.variable ,     .value)
+  fit %>%
+    rstan::extract(par_names, permuted=F) %>%
+    as.data.frame %>%
+    as_tibble() %>%
+    mutate(.iteration = 1:n()) %>%
+    pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", names_ptypes = list(".chain" = integer(), ".variable" = character(), "A" = integer(), "C" = integer()), values_to = ".value") %>%
+    select(-dummy) %>%
+    arrange(.variable, !!as.symbol(x), .chain) %>%
+    group_by(.variable, !!as.symbol(x)) %>%
+    mutate(.draw = 1:n()) %>%
+    ungroup() %>%
+    select(!!as.symbol(x), .chain, .iteration, .draw ,.variable ,     .value)
 
 }
 
 summary_to_tibble = function(fit, par, x, y = NULL) {
 
-	par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
+  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
 
-	fit %>%
-		rstan::summary(par_names) %$%
-		summary %>%
-		as_tibble(rownames = ".variable") %>%
-		when(
-			is.null(y) ~ (.) %>% tidyr::extract(col = .variable, into = c(".variable", x), "(.+)\\[(.+)\\]", convert = T),
-			~ (.) %>% tidyr::extract(col = .variable, into = c(".variable", x, y), "(.+)\\[(.+),(.+)\\]", convert = T)
-		) %>%
-	  filter(.variable == par)
+  fit %>%
+    rstan::summary(par_names) %$%
+    summary %>%
+    as_tibble(rownames = ".variable") %>%
+    when(
+      is.null(y) ~ (.) %>% tidyr::extract(col = .variable, into = c(".variable", x), "(.+)\\[(.+)\\]", convert = T),
+      ~ (.) %>% tidyr::extract(col = .variable, into = c(".variable", x, y), "(.+)\\[(.+),(.+)\\]", convert = T)
+    ) %>%
+    filter(.variable == par)
 
 }
 
@@ -373,9 +373,9 @@ generate_quantities = function(fit, data_for_model){
     #rstan::stan_model("inst/stan/generated_quantities.stan"),
     draws =  as.matrix(fit),
     data = list(
-     N = data_for_model$N,
-     M = data_for_model$M,
-     exposure = data_for_model$exposure
+      N = data_for_model$N,
+      M = data_for_model$M,
+      exposure = data_for_model$exposure
     )
   ) %>%
 
@@ -392,22 +392,22 @@ generate_quantities = function(fit, data_for_model){
 }
 
 do_inference_imputation = function(.data,
-                        approximate_posterior_inference = F,
-                        approximate_posterior_analysis = F,
-                        cores,
-                        additional_parameters_to_save,
-                        to_include = tibble(N = integer(), M = integer()),
-                        truncation_compensation = 1,
-                        save_generated_quantities = F,
-                        inits_fx = "random",
-                        prior_from_discovery = tibble(`.variable` = character(),
-                                                      mean = numeric(),
-                                                      sd = numeric()),
-                        pass_fit = F,
-                        tol_rel_obj = 0.01,
-                        write_on_disk = F,
-                        seed,
-                        precision) {
+                                   approximate_posterior_inference = F,
+                                   approximate_posterior_analysis = F,
+                                   cores,
+                                   additional_parameters_to_save,
+                                   to_include = tibble(N = integer(), M = integer()),
+                                   truncation_compensation = 1,
+                                   save_generated_quantities = F,
+                                   inits_fx = "random",
+                                   prior_from_discovery = tibble(`.variable` = character(),
+                                                                 mean = numeric(),
+                                                                 sd = numeric()),
+                                   pass_fit = F,
+                                   tol_rel_obj = 0.01,
+                                   write_on_disk = F,
+                                   seed,
+                                   precision) {
 
 
 
@@ -454,19 +454,19 @@ do_inference_imputation = function(.data,
   #   )
 
 
-    sampling(
-      stanmodels$glm_imputation,
-      #stan_model("glm_dirichlet_multinomial.stan"),
-      data = .data %>%
-        c(list(
-          precision = precision,
-          to_include= to_include,
-          how_namy_to_include = to_include %>% nrow,
-          I = precision %>% nrow
+  sampling(
+    stanmodels$glm_imputation,
+    #stan_model("glm_dirichlet_multinomial.stan"),
+    data = .data %>%
+      c(list(
+        precision = precision,
+        to_include= to_include,
+        how_namy_to_include = to_include %>% nrow,
+        I = precision %>% nrow
       )),
-      cores = 4
-      #, iter = 5000, warmup = 300
-    )
+    cores = 4
+    #, iter = 5000, warmup = 300
+  )
 
   # # Plot results
   # fit %>%
@@ -514,7 +514,8 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
-fit_model = function(data_for_model, model, censoring_iteration = 1, chains, output_samples = 5000){
+fit_model = function(data_for_model, model, censoring_iteration = 1, chains, output_samples = 5000, approximate_posterior_inference = TRUE, verbose = F)
+  {
 
 
   # # if analysis approximated
@@ -522,34 +523,25 @@ fit_model = function(data_for_model, model, censoring_iteration = 1, chains, out
   # how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
   # additional_parameters_to_save = additional_parameters_to_save %>% c("lambda_log_param", "sigma_raw") %>% unique
 
+  if(!approximate_posterior_inference)
+    sampling(
+      model,
+      data = data_for_model,
+      chains = chains,
+      cores = chains,
+      iter = output_samples + 1000,
+      warmup = 1000, refresh = ifelse(verbose, 1000, 0)
+    )
 
-  sampling(model,
-           data = data_for_model,
-           chains = chains,
-           cores = chains,
-           iter = output_samples + 1000,
-           warmup = 1000
-  )
-
-  # fit =
-  #   vb_iterative(
-  #     stanmodels$glm_dirichlet_multinomial,
-  #     #pcc_seq_model, #
-  #     output_samples = output_samples,
-  #     iter = 5000,
-  #     tol_rel_obj = 0.01,
-  #     data = list(
-  #       N = nrow(.data),
-  #       M = ncol(.data)-1,
-  #       y = .data %>% dplyr::select(-N),
-  #       X = X
-  #     )
-  #   )
-
-
-
-
-
+  else
+    vb_iterative(
+      model,
+      output_samples = output_samples * chains,
+      iter = output_samples,
+      tol_rel_obj = 0.01,
+      data = data_for_model, refresh = ifelse(verbose, 1000, 0)
+    ) %>%
+    suppressWarnings()
 
 
 }
@@ -609,7 +601,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
     nest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration)) := -M)
 
   # Add precision as attribute
-    fitted %>%
+  fitted %>%
     add_attr(
       fit %>% rstan::extract("precision") %$% precision,
       "precision"
@@ -665,7 +657,7 @@ parse_formula <- function(fm) {
     as.character(attr(terms(fm), "variables"))[-1]
 }
 
-data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type, .count){
+data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type, .count, variance_association = F){
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -673,7 +665,18 @@ data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type
   .count = enquo(.count)
 
   covariate_names = parse_formula(formula)
-  X = .data_spread %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
+  X =
+    .data_spread %>%
+    select(!!.sample, covariate_names) %>%
+    model.matrix(formula, data=.) %>%
+    apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=F)))
+
+  XA = variance_association %>%
+    when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,1:2, drop=FALSE]) %>%
+    as_tibble() %>%
+    distinct()
+
+  A = ncol(XA);
   cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
 
 
@@ -685,8 +688,9 @@ data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type
       exposure = .data_spread$exposure,
       y = .data_spread %>% select(-covariate_names, -exposure) %>% nanny::as_matrix(rownames = !!.sample),
       X = X,
+      XA = XA,
       C = ncol(X),
-      A = 2
+      A = A
     )
 
   # Add censoring

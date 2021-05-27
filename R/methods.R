@@ -39,12 +39,13 @@ sccomp_glm = function(.data,
                       .sample,
                       .cell_type,
                       .count,
-                      noise_model = "multi_beta_binomial",
-                      check_outliers = FALSE,
-                      approximate_posterior_inference = T,
-                      cores = detect_cores(), # For development purpose,
-                      seed = sample(1:99999, size = 1)
+                      check_outliers = TRUE,
+                      approximate_posterior_inference = TRUE,
+                      verbose = FALSE,
+                      noise_model = "multi_beta_binomial"
 ) {
+  cores = 4 #detect_cores()
+
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)

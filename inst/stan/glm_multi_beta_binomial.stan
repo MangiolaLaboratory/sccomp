@@ -1,5 +1,4 @@
 functions{
-
   vector Q_sum_to_zero_QR(int N) {
     vector [2*N] Q_r;
 
@@ -30,9 +29,11 @@ data{
 	int N;
 	int M;
 	int C;
+	int A;
 	int exposure[N];
 	int y[N,M];
 	matrix[N, C] X;
+	matrix[A, A] XA;
 
 	// Truncation
 	int is_truncated;
@@ -42,7 +43,6 @@ data{
 
 }
 transformed data{
-  int A = 2;
 	vector[2*M] Q_r = Q_sum_to_zero_QR(M);
   real x_raw_sigma = inv_sqrt(1 - inv(M));
 }
@@ -62,10 +62,11 @@ transformed parameters{
 
 	  for(c in 1:C)	beta[c,] =  sum_to_zero_QR(beta_raw[c,], Q_r);
 
-    beta_intercept_slope[1] = beta[1];
-    beta_intercept_slope[2] = beta[1] + beta[2];
-    alpha_intercept_slope[1] = alpha[1];
-    alpha_intercept_slope[2] = alpha[1] + alpha[2];
+    // All this because if A ==1 we have ocnversion problems
+    if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
+    else beta_intercept_slope = (XA * beta[1:A,])';
+		if(A == 1)  alpha_intercept_slope = alpha;
+		else alpha_intercept_slope = (XA * alpha)';
 
 }
 model{
