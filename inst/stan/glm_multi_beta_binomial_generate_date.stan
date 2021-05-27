@@ -20,7 +20,11 @@ generated quantities{
 
 	for(i in 1:cols(mu)) mu[,i] = softmax(mu[,i]);
 	for(i in 1:cols(mu)) {
-    	counts[i,] = beta_binomial_rng( exposure[i], (mu[,i] .* precision[,i]), ((1.0 - mu[,i]) .* precision[,i]) );
+    	counts[i,] = beta_binomial_rng(
+    	  exposure[i],
+    	  mu[,i] .* exp(precision[,i]),
+    	  (1.0 - mu[,i]) .* exp(precision[,i])
+    	 );
 	}
 
 }

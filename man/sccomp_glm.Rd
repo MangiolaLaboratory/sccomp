@@ -10,11 +10,10 @@ sccomp_glm(
   .sample,
   .cell_type,
   .count,
-  noise_model = "multi_beta_binomial",
-  check_outliers = FALSE,
-  approximate_posterior_inference = T,
-  cores = detect_cores(),
-  seed = sample(1:99999, size = 1)
+  check_outliers = TRUE,
+  approximate_posterior_inference = TRUE,
+  verbose = FALSE,
+  noise_model = "multi_beta_binomial"
 )
 }
 \arguments{

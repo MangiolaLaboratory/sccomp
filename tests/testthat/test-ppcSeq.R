@@ -79,13 +79,15 @@ library(sccomp)
 library(digest)
 library(rstan)
 
-  res =
-    sccomp::cell_counts %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type, count,
-      noise_model = "multi_beta_binomial"
-    )
+debugonce(multi_beta_binomial_glm)
+
+res =
+  sccomp::cell_counts %>%
+  sccomp_glm(
+    formula = ~ type,
+    sample, cell_type, count,
+    noise_model = "multi_beta_binomial"
+  )
 
 })
 
@@ -104,7 +106,15 @@ test_that("multi beta binomial outliers",{
       formula = ~ type,
       sample, cell_type, count,
       noise_model = "multi_beta_binomial",
-      check_outliers = TRUE
+      check_outliers = TRUE, approximate_posterior_inference = F
     )
 
+  res =
+    sccomp::cell_counts %>%
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_type, count,
+      noise_model = "multi_beta_binomial",
+      check_outliers = TRUE, approximate_posterior_inference = T
+    )
 })

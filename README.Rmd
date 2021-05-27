@@ -15,74 +15,88 @@ knitr::opts_chunk$set( fig.path = "man/figures/")
 ```{r}
 library(furrr)
 library(dplyr)
+library(purrr)
 library(sccomp)
 library(tidyr)
 library(ggplot2)
-plan(multisession, workers=10)
 ```
 
 
-```{r eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 
-res = 
-  sccomp::cell_counts %>%
-  sccomp_glm(
-    formula = ~ type,
-    sample, cell_type, count
-  )
-
-```
-
-```{r echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
-
-res = 
-  sccomp::cell_counts %>%
-  sccomp_glm(
-    formula = ~ type,
-    sample, cell_type, count
-  )
+  res =
+    sccomp::cell_counts %>%
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_type, count
+    )
 
 ```
+
+
 
 These are the cell_types for which inference was biased by the presence of outliers
 
 ```{r}
+
+res %>% 
+  unnest(outliers) %>%
+  left_join(sccomp::cell_counts) %>%
+  group_by(sample) %>%
+  mutate(proportion = count/sum(count)) %>%
+  ungroup(sample) %>%
+  ggplot(aes(type, proportion)) +
+  geom_boxplot(aes(fill=significant), outlier.shape = NA) + 
+  geom_jitter(aes(color=outlier), size = 1) + 
+  facet_wrap(~ interaction(cell_type), scale="free_y") +
+  scale_y_continuous(trans="logit") +
+   scale_color_manual(values = c("black", "#e11f28")) +
+  scale_fill_manual(values = c("white", "#E2D379")) +
+  theme_bw()
+
+```
+
+
+
+```{r}
 res %>%
-  filter(significant != significant_pre_filtering) %>%
-  distinct(cell_type, phenotype)
-
-```
-
-
-```{r}
-data_for_plot = 
-  res %>%
-  rename(lower = `2.5%`, upper = `97.5%`, median=`50%`) %>%
-  select(cell_type, lower, upper, median, quantiles_pre_filtering, significant, significant_pre_filtering) %>%
-  unnest(quantiles_pre_filtering) %>%
-  distinct() 
-```
-  
-```{r}
-data_for_plot %>%
-  ggplot(aes(x=`50%`, y=cell_type)) +
+  ggplot(aes(x=`.median_typecancer`, y=cell_type)) +
   geom_vline(xintercept = 0, colour="grey") +
-  geom_errorbar(aes(xmin=`2.5%`, xmax=`97.5%`, color=significant_pre_filtering)) +
-  geom_point() +
-  theme_bw() +
-  xlab("Credible interval slope") +
-  ggtitle("Before outlier filtering")
-```
-  
-```{r}
-data_for_plot %>%
-  ggplot(aes(x=median, y=cell_type)) +
-  geom_vline(xintercept = 0, colour="grey") +
-  geom_errorbar(aes(xmin=lower, xmax=upper, color=significant)) +
+  geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=significant)) +
   geom_point() +
   theme_bw() +
   xlab("Credible interval slope") +
   ggtitle("After outlier filtering")
+```
+
+```{r}
+
+res_with_outliers = 
+  sccomp::cell_counts %>%
+  sccomp_glm(
+    formula = ~ type,
+    sample, cell_type, count,
+    check_outliers = FALSE
+  ) 
+
+res %>%
+  mutate(contains_outliers = map_lgl(outliers, ~ .x %>% filter(outlier) %>% nrow %>% `>` (0))) %>%
+  mutate(contains_outliers = sprintf("Contains outlier %s", contains_outliers)) %>%
+  left_join(res_with_outliers, by = "cell_type") %>%
+  mutate(disagree = xor(significant.x ,significant.y)) %>%
+  mutate(disagree = sprintf("Disagree %s", disagree)) %>%
+  ggplot(aes(`.median_typecancer.x`, `.median_typecancer.y`)) + 
+  geom_abline(linetype = "dashed", color="grey") +
+  geom_errorbar(aes(xmin=`.lower_typecancer.x`, xmax=`.upper_typecancer.x`, color=significant.x)) +
+  geom_errorbar(aes(ymin=`.lower_typecancer.y`, ymax=`.upper_typecancer.y`, color=significant.y)) +
+  geom_point(aes(fill = contains_outliers), shape=21) +
+  scale_fill_manual(values = c("black", "#e11f28")) +
+  scale_color_manual(values = c("black", "#E2D379")) +
+  facet_grid(disagree ~ contains_outliers) +
+  xlab("Estimated change without outliers") +
+  ylab("Estimated change with outliers") +
+  theme_bw() 
+
 ```
 
 
