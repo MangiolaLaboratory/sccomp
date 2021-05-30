@@ -42,7 +42,8 @@ sccomp_glm = function(.data,
                       check_outliers = TRUE,
                       approximate_posterior_inference = TRUE,
                       verbose = FALSE,
-                      noise_model = "multi_beta_binomial"
+                      noise_model = "multi_beta_binomial",
+                      seed = sample(1:99999, size = 1)
 ) {
   cores = 4 #detect_cores()
 

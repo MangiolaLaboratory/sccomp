@@ -50,6 +50,7 @@ multi_beta_binomial_glm = function(.data,
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
 
+
   # Produce data list
   covariate_names = parse_formula(formula)
 
@@ -62,7 +63,7 @@ multi_beta_binomial_glm = function(.data,
 
     data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4,  approximate_posterior_inference = approximate_posterior_inference) %>%
+      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4,  output_samples = 5000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed) %>%
       parse_fit(data_for_model, .) %>%
       beta_to_CI( ) %>%
 
@@ -87,7 +88,7 @@ multi_beta_binomial_glm = function(.data,
 
     fit =
       data_for_model %>%
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 500,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose)
+      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 500,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500,  approximate_posterior_inference = approximate_posterior_inference)
 
     rng =  rstan::gqs(
@@ -101,7 +102,7 @@ multi_beta_binomial_glm = function(.data,
     truncation_df =
       .data %>%
       left_join(
-        summary_to_tibble(rng, "counts", "N", "M") %>%
+        summary_to_tibble(rng, "counts", "N", "M", probs = c(0.05, 0.95)) %>%
           nest(data = -N) %>%
           mutate(!!.sample := rownames(data_for_model$y)) %>%
           unnest(data) %>%
@@ -113,10 +114,10 @@ multi_beta_binomial_glm = function(.data,
       ) %>%
 
       # Add truncation
-      mutate(   truncation_down = `2.5%`,   truncation_up =  `97.5%`) %>%
+      mutate(   truncation_down = `5%`,   truncation_up =  `95%`) %>%
 
       # Add outlier stats
-      mutate( outlier = !(!!.count >= `2.5%` & !!.count <= `97.5%`) ) %>%
+      mutate( outlier = !(!!.count >= `5%` & !!.count <= `95%`) ) %>%
       nest(data = -M) %>%
       mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
       unnest(data) %>%
@@ -135,8 +136,8 @@ multi_beta_binomial_glm = function(.data,
 
     fit2 =
       data_for_model %>%
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 5000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose)
-    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
+      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 5000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = F, verbose = T)
 
     rng2 =  rstan::gqs(
       stanmodels$glm_multi_beta_binomial_generate_date,
@@ -145,11 +146,17 @@ multi_beta_binomial_glm = function(.data,
       data = data_for_model
     )
 
+    CI_step_2 = 0.1 / data_for_model$N / 2 * 2
+
     # Detect outliers
     truncation_df2 =
       .data %>%
       left_join(
-        summary_to_tibble(rng2, "counts", "N", "M") %>%
+        summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 1-CI_step_2)) %>%
+          rename(
+            .lower := !!as.symbol(paste0(CI_step_2*100,"%")) ,
+            .upper := !!as.symbol(paste0((1-CI_step_2)*100,"%"))
+          ) %>%
           nest(data = -N) %>%
           mutate(!!.sample := rownames(data_for_model$y)) %>%
           unnest(data) %>%
@@ -161,10 +168,10 @@ multi_beta_binomial_glm = function(.data,
       ) %>%
 
       # Add truncation
-      mutate(   truncation_down = `2.5%`,   truncation_up =  `97.5%`) %>%
+      mutate(   truncation_down = .lower,   truncation_up =  .upper) %>%
 
       # Add outlier stats
-      mutate( outlier = !(!!.count >= `2.5%` & !!.count <= `97.5%`) ) %>%
+      mutate( outlier = !(!!.count >= .lower & !!.count <= .upper) ) %>%
       nest(data = -M) %>%
       mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
       unnest(data) %>%
@@ -183,7 +190,7 @@ multi_beta_binomial_glm = function(.data,
     fit3 =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 5000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose)
+      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 5000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
     fit3 %>%
@@ -205,7 +212,7 @@ multi_beta_binomial_glm = function(.data,
       # join outliers
       left_join(
         truncation_df2 %>%
-          select(!!.sample, !!.cell_type, outlier, `2.5%`, `97.5%`) %>%
+          select(!!.sample, !!.cell_type, outlier,.lower, .upper) %>%
           nest(outliers = -!!.cell_type),
         by = quo_name(.cell_type)
       )

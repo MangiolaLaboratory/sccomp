@@ -111,6 +111,7 @@ vb_iterative = function(model,
                         tol_rel_obj,
                         additional_parameters_to_save = c(),
                         data,
+                        seed,
                         ...) {
   res = NULL
   i = 0
@@ -122,7 +123,7 @@ vb_iterative = function(model,
         output_samples = output_samples,
         iter = iter,
         tol_rel_obj = tol_rel_obj,
-        #seed = 654321,
+        seed = seed,
         #pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
         ...
       )
@@ -346,12 +347,15 @@ draws_to_tibble_x = function(fit, par, x) {
 
 }
 
-summary_to_tibble = function(fit, par, x, y = NULL) {
+summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
 
+  # Avoid bug
+  if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
+
   fit %>%
-    rstan::summary(par_names) %$%
+    rstan::summary(par_names, probs = probs) %$%
     summary %>%
     as_tibble(rownames = ".variable") %>%
     when(
@@ -514,7 +518,7 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
-fit_model = function(data_for_model, model, censoring_iteration = 1, chains, output_samples = 5000, approximate_posterior_inference = TRUE, verbose = F)
+fit_model = function(data_for_model, model, censoring_iteration = 1, chains, output_samples = 5000, warmup_samples = 200, approximate_posterior_inference = TRUE, verbose = F, seed)
   {
 
 
@@ -529,8 +533,9 @@ fit_model = function(data_for_model, model, censoring_iteration = 1, chains, out
       data = data_for_model,
       chains = chains,
       cores = chains,
-      iter = output_samples + 1000,
-      warmup = 1000, refresh = ifelse(verbose, 1000, 0)
+      iter = output_samples + warmup_samples,
+      warmup = warmup_samples, refresh = ifelse(verbose, 1000, 0),
+      seed = seed
     )
 
   else
@@ -539,7 +544,8 @@ fit_model = function(data_for_model, model, censoring_iteration = 1, chains, out
       output_samples = output_samples * chains,
       iter = output_samples,
       tol_rel_obj = 0.01,
-      data = data_for_model, refresh = ifelse(verbose, 1000, 0)
+      data = data_for_model, refresh = ifelse(verbose, 1000, 0),
+      seed = seed
     ) %>%
     suppressWarnings()
 
@@ -690,7 +696,8 @@ data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type
       X = X,
       XA = XA,
       C = ncol(X),
-      A = A
+      A = A,
+      truncation_ajustment = 1.1
     )
 
   # Add censoring

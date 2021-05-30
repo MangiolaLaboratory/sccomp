@@ -5,6 +5,10 @@ data {
 	int A;
 	int exposure[N];
 	matrix[N, C] X;
+
+	int is_truncated;
+	real<lower=1> truncation_ajustment;
+
 }
 parameters {
 
@@ -16,7 +20,7 @@ generated quantities{
 
   int counts[N, M];
   matrix[M,N] mu = (X * beta)';
-  matrix[M,N] precision = (X[,1:A] * alpha)';
+  matrix[M,N] precision = (X[,1:A] * alpha)'  / (is_truncated ? truncation_ajustment : 1);
 
 	for(i in 1:cols(mu)) mu[,i] = softmax(mu[,i]);
 	for(i in 1:cols(mu)) {

@@ -95,7 +95,7 @@ model{
   for(i in 1:C) to_vector(beta_raw[i]) ~ student_t (8, 0, x_raw_sigma );
 
   // PRECISION REGRESSION
-  to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+  to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
   prec_sd ~ normal(0,2);
   prec_coeff ~ normal(0,5);
 
