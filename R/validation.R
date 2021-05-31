@@ -1,10 +1,5 @@
-check_columns_exist = function(.data, .sample, .cell_type, .covariates){
+check_columns_exist = function(.data, columns){
 
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
-
-  columns = c(quo_name(.sample), quo_name(.cell_type), .covariates)
   if((!columns %in% (.data %>% colnames)) %>% any)
     stop(
       sprintf(
@@ -42,13 +37,8 @@ check_if_count_integer = function(.data, .count){
 #' @param .do_check A column name
 #' @param formula_columns A symbol vector
 #'
-check_if_any_NA = function(.data, .sample, .cell_type, formula_columns){
+check_if_any_NA = function(.data, columns){
 
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
-
-  columns = c(quo_name(.sample), quo_name(.cell_type), formula_columns)
 
   if(
     .data %>%
