@@ -18,7 +18,7 @@ data{
 	int N;
 	int M;
 	vector[M] y[N];
-	int X[N,2];
+	matrix[N,2] X;
 
 	// To exclude
 	int<lower=0> how_namy_to_include;
@@ -34,26 +34,22 @@ transformed data{
 	int C = 2;
 }
 parameters{
-	vector[M] beta[C];
-	real<lower=0> sigma[2];
+		matrix[C,M] beta;
+	vector<lower=0>[2] sigma;
 
 	// // To exclude
 	// vector<lower=0, upper=1>[how_namy_to_exclude] excluded;
 
 }
 transformed parameters{
-		matrix[M, N] alpha; // for generated quantities. It is cell types in the rows and samples as columns
-
-	  // For generated quantities
-	  for(n in 1:N) alpha[,n] = beta[1] + beta[2] * X[n,2];
-
+		matrix[ N,M] alpha = X * beta;; // for generated quantities. It is cell types in the rows and samples as columns
 }
 model{
 
   for(i in 1:how_namy_to_include)
     y[to_include[i,1], to_include[i,2]] ~ normal(
-      alpha[to_include[i,2], to_include[i,1]],
-      sigma[X[to_include[i,1],2]+1]
+      alpha[ to_include[i,1], to_include[i,2]],
+      X[to_include[i,1]] * sigma
     );
 
 
@@ -72,7 +68,7 @@ generated quantities{
 
   // Get proportions
   for(n in 1:N) for(m in 1:M) {
-      y_rng[n, m] = normal_rng( alpha[m, n],  sigma[X[n,2]+1] );
+      y_rng[n, m] = normal_rng( alpha[n,m],  X[n] * sigma  );
       y_simplex[n] = softmax(y_rng[n] );
     }
 
@@ -81,7 +77,7 @@ generated quantities{
 
 
 	for(n in 1:N)
-	  counts[n] = dirichlet_multinomial_rng((precision[my_n, X[n,2]+1] * 100) * y_simplex[n], exposure[n]) ;
+	  counts[n] = dirichlet_multinomial_rng((X[n] * precision[my_n] * 100) * y_simplex[n], exposure[n]) ;
 
 
 

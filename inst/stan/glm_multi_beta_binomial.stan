@@ -58,7 +58,7 @@ transformed parameters{
 		matrix[C,M] beta;
 		matrix[A,M] beta_intercept_slope;
 		matrix[A,M] alpha_intercept_slope;
-    matrix[num_elements(y[1]), num_elements(y[,1])] precision = (X[,1:A] * alpha)';
+    matrix[M, N] precision = (X[,1:A] * alpha)';
 
 	  for(c in 1:C)	beta[c,] =  sum_to_zero_QR(beta_raw[c,], Q_r);
 
@@ -72,13 +72,13 @@ transformed parameters{
 model{
 
   // Calculate MU
-  matrix[num_elements(y[1]), num_elements(y[,1])] mu = (X * beta)';
+  matrix[M, N] mu = (X * beta)';
 
-  for(i in 1:cols(mu)) { mu[,i] = softmax(mu[,i]); }
+  for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
 
   // NON TRUNCATION
   if(is_truncated == 0){
-    for(i in 1:cols(mu))
+    for(i in 1:N)
       y[i,] ~ beta_binomial( exposure[i], (mu[,i] .* exp(precision[,i])), ((1.0 - mu[,i]) .* exp(precision[,i])) );
   }
 

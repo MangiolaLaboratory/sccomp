@@ -14,7 +14,7 @@ matrix vector_array_to_matrix(vector[] x) {
 		return y;
 }
 
-vector Q_sum_to_zero_QR(int N) {
+  vector Q_sum_to_zero_QR(int N) {
     vector [2*N] Q_r;
 
     for(i in 1:N) {
@@ -24,9 +24,9 @@ vector Q_sum_to_zero_QR(int N) {
     return Q_r;
   }
 
-  vector sum_to_zero_QR(vector x_raw, vector Q_r) {
+  row_vector sum_to_zero_QR(row_vector x_raw, vector Q_r) {
     int N = num_elements(x_raw) + 1;
-    vector [N] x;
+    row_vector [N] x;
     real x_aux = 0;
 
     for(i in 1:N-1){
@@ -42,7 +42,7 @@ data{
 	int M;
 	int C;
 	int y[N,M];
-	int X[N,2];
+	matrix[N,2] X;
 
 }
 transformed data{
@@ -51,27 +51,28 @@ transformed data{
   real x_raw_sigma = inv_sqrt(1 - inv(M));
 }
 parameters{
-	vector[M-1] beta_raw[C];
-	real<lower=0> precision[2];
+	matrix[C, M-1] beta_raw;
+	vector<lower=0>[2] precision;
 
 	// To exclude
 
 }
 transformed parameters{
-		vector[M] beta[C];
+		matrix[C,M] beta;
 		real precision_diff = precision[1] - precision[2];
-		matrix[M, N] alpha; // for generated quantities. It is cell types in the rows and samples as columns
+		matrix[ N,M] alpha; // for generated quantities. It is cell types in the rows and samples as columns
 	  for(c in 1:C)	beta[c] =  sum_to_zero_QR(beta_raw[c], Q_r);
 
 	  // For generated quantities
-	  for(n in 1:N) alpha[,n] = (precision[X[n,2]+1] * 100) * softmax( beta[1] + beta[2] * X[n,2] );
+	  alpha = (X * beta);
+	  for(n in 1:N) alpha[n] =  softmax( alpha[n]' )' * (X[n] * precision) * 100;
 
 }
 model{
 
 	 //for(n in 1:N) y[n] ~ dirichlet_multinomial( precision * softmax( vector_array_to_matrix(beta) )) );
 
-	 for(n in 1:N) y[n] ~ dirichlet_multinomial( alpha[,n] );
+	 for(n in 1:N) y[n] ~ dirichlet_multinomial( alpha[n]' );
 
 	 precision ~ normal(0,5);
 	 for(i in 1:C) beta_raw[i] ~ normal(0, x_raw_sigma * 5);

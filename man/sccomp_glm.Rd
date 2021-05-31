@@ -13,7 +13,8 @@ sccomp_glm(
   check_outliers = TRUE,
   approximate_posterior_inference = TRUE,
   verbose = FALSE,
-  noise_model = "multi_beta_binomial"
+  noise_model = "multi_beta_binomial",
+  seed = sample(1:99999, size = 1)
 )
 }
 \arguments{
@@ -29,9 +30,9 @@ sccomp_glm(
 
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
-\item{cores}{An integer. How many cored to be used with parallel calculations.}
-
 \item{seed}{An integer. Used for development and testing purposes}
+
+\item{cores}{An integer. How many cored to be used with parallel calculations.}
 }
 \value{
 A nested tibble \code{tbl} with cell_type-wise information: \verb{sample wise data} | plot | \verb{ppc samples failed} | \verb{exposure deleterious outliers}

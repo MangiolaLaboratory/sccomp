@@ -11,6 +11,7 @@ vb_iterative(
   tol_rel_obj,
   additional_parameters_to_save = c(),
   data,
+  seed,
   ...
 )
 }

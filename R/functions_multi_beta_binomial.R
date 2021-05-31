@@ -57,7 +57,11 @@ multi_beta_binomial_glm = function(.data,
   data_for_model =
     .data %>%
     data_to_spread ( formula, !!.sample, !!.cell_type, !!.count) %>%
-    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, variance_association = variance_association)
+    data_spread_to_model_input(
+      formula, !!.sample, !!.cell_type, !!.count,
+      variance_association = variance_association,
+      data_spread_to_model_input = 1.1
+    )
 
   if(!check_outliers){
 

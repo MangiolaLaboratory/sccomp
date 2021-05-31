@@ -552,13 +552,15 @@ fit_model = function(data_for_model, model, censoring_iteration = 1, chains, out
 
 }
 
-fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000){
+fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed){
 
 
   # fit_discovery  = fit_model(data_for_model, model,  iteration, chains= 4, output_samples = output_samples)
 
   # Run the first discovery phase with permissive false discovery rate
-  fit  = fit_model(data_for_model, model, censoring_iteration, chains= chains, output_samples = output_samples)
+  fit  = fit_model(data_for_model, model, censoring_iteration, chains= chains, output_samples = output_samples, verbose = T, seed = seed)
+
+
   fitted = parse_fit(data_for_model, fit, censoring_iteration = censoring_iteration, chains)
 
   # # For building some figure I just need the discovery run, return prematurely
@@ -590,7 +592,7 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
 
     # Add precision as attribute
     add_attr(
-      fit %>% extract("precision") %$% precision,
+      fit %>% rstan::extract("precision") %$% precision,
       "precision"
     )
 
@@ -663,7 +665,8 @@ parse_formula <- function(fm) {
     as.character(attr(terms(fm), "variables"))[-1]
 }
 
-data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type, .count, variance_association = F){
+data_spread_to_model_input =
+  function(.data_spread, formula, .sample, .cell_type, .count, variance_association = F, truncation_ajustment = 1){
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -697,7 +700,7 @@ data_spread_to_model_input = function(.data_spread, formula, .sample, .cell_type
       XA = XA,
       C = ncol(X),
       A = A,
-      truncation_ajustment = 1.1
+      truncation_ajustment = truncation_ajustment
     )
 
   # Add censoring

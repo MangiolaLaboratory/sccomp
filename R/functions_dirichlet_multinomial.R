@@ -79,12 +79,12 @@ dirichlet_multinomial_glm = function(.data,
 
     .data_1 =
       .data %>%
-      fit_model_and_parse_out_no_missing_data(data_for_model, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4)
+      fit_model_and_parse_out_no_missing_data(data_for_model, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4, seed = seed)
 
     .data_2 =
       .data_1 %>%
       select(-contains("posterior")) %>%
-      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2)
+      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed)
 
     .data_2 %>%
 
@@ -105,7 +105,8 @@ dirichlet_multinomial_glm = function(.data,
       rename(outlier = outlier_2 ) %>%
 
       # Clean
-      select(-N, -M, -contains("posterior"))
+      select(-N, -M, -contains("posterior")) %>%
+      select(!!.cell_type, everything())
 
   }
 
@@ -113,7 +114,7 @@ dirichlet_multinomial_glm = function(.data,
 }
 
 #' @importFrom purrr map2_lgl
-fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formula, .sample, .cell_type, .count, iteration = 1, chains){
+fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formula, .sample, .cell_type, .count, iteration = 1, chains, seed){
 
 
   # Prepare column same enquo
@@ -122,7 +123,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
   .count = enquo(.count)
 
   # Run the first discovery phase with permissive false discovery rate
-  fit_and_generated  = fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains= 4, output_samples = 5000)
+  fit_and_generated  = fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains= 4, output_samples = 5000, seed= seed)
 
   # Integrate
   .data %>%
@@ -169,7 +170,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
 
 }
 
-fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration){
+fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed){
 
 
   # Prepare column same enquo
@@ -245,7 +246,7 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
           as_matrix(rownames = "N")
 
         # Run model
-        fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains=1, output_samples = 200)
+        fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains=1, output_samples = 200, seed = seed)
       }
     )) %>%
 

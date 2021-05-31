@@ -99,33 +99,3 @@ res %>%
 ```
 
 ![](man/figures/unnamed-chunk-5-1.png)<!-- -->
-
-``` r
-res_with_outliers = 
-  sccomp::cell_counts %>%
-  sccomp_glm(
-    formula = ~ type,
-    sample, cell_type, count,
-    check_outliers = FALSE
-  ) 
-
-res %>%
-  mutate(contains_outliers = map_lgl(outliers, ~ .x %>% filter(outlier) %>% nrow %>% `>` (0))) %>%
-  mutate(contains_outliers = sprintf("Contains outlier %s", contains_outliers)) %>%
-  left_join(res_with_outliers, by = "cell_type") %>%
-  mutate(disagree = xor(significant.x ,significant.y)) %>%
-  mutate(disagree = sprintf("Disagree %s", disagree)) %>%
-  ggplot(aes(`.median_typecancer.x`, `.median_typecancer.y`)) + 
-  geom_abline(linetype = "dashed", color="grey") +
-  geom_errorbar(aes(xmin=`.lower_typecancer.x`, xmax=`.upper_typecancer.x`, color=significant.x)) +
-  geom_errorbar(aes(ymin=`.lower_typecancer.y`, ymax=`.upper_typecancer.y`, color=significant.y)) +
-  geom_point(aes(fill = contains_outliers), shape=21) +
-  scale_fill_manual(values = c("black", "#e11f28")) +
-  scale_color_manual(values = c("black", "#E2D379")) +
-  facet_grid(disagree ~ contains_outliers) +
-  xlab("Estimated change without outliers") +
-  ylab("Estimated change with outliers") +
-  theme_bw() 
-```
-
-![](man/figures/unnamed-chunk-6-1.png)<!-- -->

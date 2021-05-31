@@ -22,7 +22,7 @@ generated quantities{
   matrix[M,N] mu = (X * beta)';
   matrix[M,N] precision = (X[,1:A] * alpha)'  / (is_truncated ? truncation_ajustment : 1);
 
-	for(i in 1:cols(mu)) mu[,i] = softmax(mu[,i]);
+	for(i in 1:N) mu[,i] = softmax(mu[,i]);
 	for(i in 1:cols(mu)) {
     	counts[i,] = beta_binomial_rng(
     	  exposure[i],
