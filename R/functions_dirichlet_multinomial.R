@@ -40,6 +40,7 @@ dirichlet_multinomial_glm = function(.data,
                                      .count,
                                      check_outliers = FALSE,
                                      approximate_posterior_inference = T,
+                                     verbose = TRUE,
                                      cores = detect_cores(), # For development purpose,
                                      seed = sample(1:99999, size = 1)
 ) {

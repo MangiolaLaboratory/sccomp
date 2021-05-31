@@ -60,7 +60,7 @@ multi_beta_binomial_glm = function(.data,
     data_spread_to_model_input(
       formula, !!.sample, !!.cell_type, !!.count,
       variance_association = variance_association,
-      data_spread_to_model_input = 1.1
+      truncation_ajustment = 1.1
     )
 
   if(!check_outliers){
@@ -88,7 +88,7 @@ multi_beta_binomial_glm = function(.data,
 
   else{
 
-    message("sccomp says: started fit 1/3")
+    message("sccomp says: outlier identification first pass - step 1/3")
 
     fit =
       data_for_model %>%
@@ -114,7 +114,7 @@ multi_beta_binomial_glm = function(.data,
           mutate(!!.cell_type := colnames(data_for_model$y)) %>%
           unnest(data) ,
 
-        by = c("sample", "cell_type")
+        by = c(quo_name(.sample), quo_name(.cell_type))
       ) %>%
 
       # Add truncation
@@ -136,7 +136,7 @@ multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
 
-    message("sccomp says: started fit 2/3")
+    message("sccomp says: outlier identification second pass - step 2/3")
 
     fit2 =
       data_for_model %>%
@@ -168,7 +168,7 @@ multi_beta_binomial_glm = function(.data,
           mutate(!!.cell_type := colnames(data_for_model$y)) %>%
           unnest(data) ,
 
-        by = c("sample", "cell_type")
+        by = c(quo_name(.sample), quo_name(.cell_type))
       ) %>%
 
       # Add truncation
@@ -189,7 +189,7 @@ multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
 
-    message("sccomp says: started fit 3/3")
+    message("sccomp says: outlier-free model fitting - step 3/3")
 
     fit3 =
       data_for_model %>%

@@ -1,5 +1,11 @@
 context('ppcseq')
 
+library(dplyr)
+library(sccomp)
+data("seurat_obj")
+data("sce_obj")
+data("counts_obj ")
+
 # test_that("dirichlet multinomial outliers",{
 #
 #   library(dplyr)
@@ -7,7 +13,7 @@ context('ppcseq')
 #   library(digest)
 #
 #   res =
-#     sccomp::cell_counts %>%
+#     sccomp::counts_obj  %>%
 #     sccomp_glm(
 #       formula = ~ type,
 #       sample, cell_type, count
@@ -25,15 +31,11 @@ context('ppcseq')
 
 test_that("dirichlet multinomial",{
 
-  library(dplyr)
-  library(sccomp)
-  library(digest)
-
   res =
-    sccomp::cell_counts %>%
+    sccomp::counts_obj  %>%
     sccomp_glm(
       formula = ~ type,
-      sample, cell_type, count,
+      sample, cell_group, count,
       noise_model = "dirichlet_multinomial"
     )
 
@@ -42,51 +44,50 @@ test_that("dirichlet multinomial",{
 })
 
 
-# test_that("multi beta",{
-#
-#
-#   library(dplyr)
-#   library(tidyr)
-#   library(purrr)
-#   library(sccomp)
-#   library(digest)
-#   library(rstan)
-#
-#   # Get proportions
-#   res2 =
-#     sccomp::cell_counts %>%
-#     mutate(count = count + 1L) %>%
-#     nest(data = -sample) %>%
-#     mutate(exposure = map_int(data, ~ sum(.x$count))) %>%
-#     unnest(data) %>%
-#     mutate(frac = (count/exposure) ) %>%
-#     select(-c(count, exposure, phenotype)) %>%
-#
-#     sccomp_glm(
-#       formula = ~ type,
-#       sample, cell_type, frac,
-#       noise_model = "multi_beta"
-#     )
-#
-# })
+test_that("multi beta binomial from Seurat",{
 
-test_that("multi beta binomial",{
+  res =
+    seurat_obj %>%
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_group,
+      check_outliers = FALSE
+    )
 
-library(dplyr)
-library(tidyr)
-library(purrr)
-library(sccomp)
-library(digest)
-library(rstan)
+})
 
-#debugonce(multi_beta_binomial_glm)
+test_that("multi beta binomial from SCE",{
+
+  res =
+    sce_obj %>%
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_group,
+      check_outliers = FALSE
+    )
+
+})
+
+test_that("multi beta binomial from metadata",{
+
+  res =
+    seurat_obj[[]] %>%
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_group,
+      check_outliers = FALSE
+    )
+
+})
+
+
+test_that("multi beta binomial from counts",{
 
 res =
-  sccomp::cell_counts %>%
+  counts_obj  %>%
   sccomp_glm(
     formula = ~ type,
-    sample, cell_type, count,
-    noise_model = "multi_beta_binomial",
+    sample, cell_group, count,
     check_outliers = FALSE
   )
 
@@ -94,27 +95,11 @@ res =
 
 test_that("multi beta binomial outliers",{
 
-  library(dplyr)
-  library(tidyr)
-  library(purrr)
-  library(sccomp)
-  library(digest)
-  library(rstan)
-#debugonce(multi_beta_binomial_glm)
   res =
-    sccomp::cell_counts %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type, count,
-      noise_model = "multi_beta_binomial",
-      approximate_posterior_inference = F
-    )
+    seurat_obj %>%
+    sccomp_glm(formula = ~ type, sample, cell_group,  approximate_posterior_inference = F )
 
   res =
-    sccomp::cell_counts %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type, count,
-      noise_model = "multi_beta_binomial"
-    )
+    seurat_obj %>%
+    sccomp_glm(~ type,  sample, cell_group )
 })

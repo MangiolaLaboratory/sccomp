@@ -1,137 +1,318 @@
 
+
 #' sccomp_glm main
 #'
 #' @description This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
 #'
-#' @importFrom tibble as_tibble
 #' @import dplyr
-#' @importFrom tidyr spread
-#' @import tidybayes
 #' @importFrom magrittr %$%
 #' @importFrom magrittr divide_by
 #' @importFrom magrittr multiply_by
-#' @importFrom purrr map2
-#' @importFrom purrr map_int
-#' @importFrom tidybulk scale_abundance
-#' @importFrom benchmarkme get_ram
-#' @importFrom magrittr multiply_by
 #' @importFrom magrittr equals
-#' @importFrom purrr map
-#' @importFrom tibble rowid_to_column
-#' @importFrom furrr future_map
-#' @importFrom purrr map_lgl
+#' @importFrom rlang quo_is_null
+#' @importFrom SingleCellExperiment colData
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
-#' @param .cell_type A column name as symbol. The cell_type identifier
+#' @param .cell_group A column name as symbol. The cell_type identifier
 #' @param .count A column name as symbol. The cell_type abundance (read count)
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
 #'
-#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
+#' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
 #' @export
 #'
-sccomp_glm = function(.data,
-                      formula = ~ 1,
-                      .sample,
-                      .cell_type,
-                      .count,
-                      check_outliers = TRUE,
-                      approximate_posterior_inference = TRUE,
-                      verbose = FALSE,
-                      noise_model = "multi_beta_binomial",
-                      seed = sample(1:99999, size = 1)
-) {
+#'
+sccomp_glm <- function(.data,
+                       formula ,
+                       .sample,
+                       .cell_group,
+                       .count = NULL,
+                       # Secondary arguments
+                       check_outliers = TRUE,
+                       approximate_posterior_inference = TRUE,
+                       verbose = FALSE,
+                       noise_model = "multi_beta_binomial",
+                       seed = sample(1:99999, size = 1)) {
+  UseMethod("sccomp_glm", .data)
+}
+
+#' @export
+sccomp_glm.Seurat = function(.data,
+                             formula ,
+                             .sample,
+                             .cell_group,
+                             .count = NULL,
+                             # Secondary arguments
+                             check_outliers = TRUE,
+                             approximate_posterior_inference = TRUE,
+                             verbose = FALSE,
+                             noise_model = "multi_beta_binomial",
+                             seed = sample(1:99999, size = 1)) {
+
+  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
+
+
   cores = 4 #detect_cores()
 
   # Prepare column same enquo
   .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
-  .count = enquo(.count)
+  .cell_group = enquo(.cell_group)
 
-  # Get factor of interest
-  #factor_of_interest = ifelse(parse_formula(formula) %>% length %>% `>` (0), parse_formula(formula)[1], "")
-
-  # Check if columns exist
-  check_columns_exist(.data, !!.sample, !!.cell_type, !!.count)
-
-  # Check if any column is NA or null
-  check_if_any_NA(.data, !!.sample, !!.cell_type, !!.count, parse_formula(formula))
-
-  # Check if count column is integer class
-  # check_if_count_integer(.data, !!.count)
-
-  # Check that the dataset is squared
-  #if(my_df %>% distinct(!!.sample, !!.cell_type) %>% count(!!.cell_type) %>% count(n) %>% nrow %>% `>` (1))
-  #  stop("The input data frame does not represent a rectangular structure. Each cell_type must be present in all samples.")
-
-  my_glm =
-    noise_model %>%
-    when(
-      equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm,
-      equals(., "multi_beta") ~ multi_beta_glm,
-      equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm
-    )
-
-
-
-  .data %>%
-
-    my_glm(
-      formula = formula,
-      .sample = !!.sample,
-      .cell_type = !!.cell_type,
-      .count = !!.count,
+  .data[[]] %>%
+    sccomp_glm(
+      formula = formula,!!.sample,!!.cell_group,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
-      cores = cores,
-      # For development purpose,
+      verbose = verbose,
+      noise_model = noise_model,
       seed = seed
     )
 
 
 }
 
-
-#' plot_credible interval for theoretical data distributions
-#'
-#' @description Plot the data along the theoretical data distribution.
-#'
-#' @importFrom tibble as_tibble
-#'
-#' @param .data The tibble returned by sccomp_glm
-#'
-#' @return A tibble with an additional `plot` column
-#'
 #' @export
-#'
-plot_credible_intervals = function(.data){
+sccomp_glm.SingleCellExperiment = function(.data,
+                                           formula ,
+                                           .sample,
+                                           .cell_group,
+                                           .count = NULL,
+                                           # Secondary arguments
+                                           check_outliers = TRUE,
+                                           approximate_posterior_inference = TRUE,
+                                           verbose = FALSE,
+                                           noise_model = "multi_beta_binomial",
+                                           seed = sample(1:99999, size = 1)) {
 
-	.cell_type = .data %>% attr("cell_type_column")
-	.count = .data %>% attr("abundance_column")
-	.sample = .data %>% attr("sample_column")
-	formula = .data %>% attr("formula") %>% as.formula()
+  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
-	.data %>%
+  cores = 4 #detect_cores()
 
-		# Create plots for every tested cell_type
-		mutate(plot =
-					 	pmap(
-					 		list(
-					 			`sample wise data`,
-					 			.cell_type,
-					 			# nested data for plot
-					 			.count,
-					 			# name of value column
-					 			.sample,
-					 			# name of sample column
-					 			parse_formula(formula)[1] # main covariate
-					 		),
-					 		~ produce_plots(..1, ..2, ..3, ..4, ..5)
-					 	))
+  # Prepare column same enquo
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+
+  .data %>%
+    colData() %>%
+    sccomp_glm(
+      formula = formula,!!.sample,!!.cell_group,
+      check_outliers = check_outliers,
+      approximate_posterior_inference = approximate_posterior_inference,
+      verbose = verbose,
+      noise_model = noise_model,
+      seed = seed
+    )
+
+
 }
 
+#' @export
+sccomp_glm.DFrame = function(.data,
+                             formula ,
+                             .sample,
+                             .cell_group,
+                             .count = NULL,
 
+                             # Secondary arguments
+                             check_outliers = TRUE,
+                             approximate_posterior_inference = TRUE,
+                             verbose = FALSE,
+                             noise_model = "multi_beta_binomial",
+                             seed = sample(1:99999, size = 1)) {
+
+  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
+
+  cores = 4 #detect_cores()
+
+  # Prepare column same enquo
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  .count = enquo(.count)
+
+  .data %>%
+    as.data.frame %>%
+    sccomp_glm(
+      formula = formula,!!.sample,!!.cell_group,
+      check_outliers = check_outliers,
+      approximate_posterior_inference = approximate_posterior_inference,
+      verbose = verbose,
+      noise_model = noise_model,
+      seed = seed
+    )
+}
+
+#' @export
+sccomp_glm.data.frame = function(.data,
+                                 formula ,
+                                 .sample,
+                                 .cell_group,
+                                 .count = NULL,
+
+                                 # Secondary arguments
+                                 check_outliers = TRUE,
+                                 approximate_posterior_inference = TRUE,
+                                 verbose = FALSE,
+                                 noise_model = "multi_beta_binomial",
+                                 seed = sample(1:99999, size = 1)) {
+  cores = 4 #detect_cores()
+
+  # Prepare column same enquo
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  .count = enquo(.count)
+
+  # Choose linear model
+  my_glm_model =
+    noise_model %>%
+    when(
+      equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm,
+      equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm
+    )
+
+  .count %>%
+    when(
+      # If the dataframe does not include counts, but is metadata
+      quo_is_null(.) ~ sccomp_glm_data_frame_raw(
+        .data,
+        formula = formula,
+        !!.sample,
+        !!.cell_group,
+        check_outliers = check_outliers,
+        approximate_posterior_inference = approximate_posterior_inference,
+        verbose = verbose,
+        my_glm_model = my_glm_model,
+        seed = seed
+      ),
+
+      # If the dataframe does includes counts
+      ~ sccomp_glm_data_frame_counts(
+        .data,
+        formula = formula,
+        !!.sample,
+        !!.cell_group,
+        !!.count,
+        check_outliers = check_outliers,
+        approximate_posterior_inference = approximate_posterior_inference,
+        verbose = verbose,
+        my_glm_model = my_glm_model,
+        seed = seed
+      )
+    )
+}
+
+sccomp_glm_data_frame_raw = function(.data,
+                                     formula,
+                                     .sample,
+                                     .cell_group,
+                                     my_glm_model,
+                                     # Secondary arguments
+                                     check_outliers = TRUE,
+                                     approximate_posterior_inference = TRUE,
+                                     verbose = FALSE,
+                                     noise_model = "multi_beta_binomial",
+                                     cores = 4,
+                                     seed = sample(1:99999, size = 1)) {
+
+  # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
+  # See https://github.com/tidyverse/tidyr/issues/506
+  .sample_for_tidyr = ensym(.sample)
+  .cell_group_for_tidyr = ensym(.cell_group)
+
+  # Prepare column same enquo
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+
+  # Check if columns exist
+  check_columns_exist(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    parse_formula(formula)
+  ))
+
+  # Check if any column is NA or null
+  check_if_any_NA(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    parse_formula(formula)
+  ))
+
+  # Make counts
+  .data %>%
+    count(!!.sample,
+          !!.cell_group,
+          !!as.symbol(parse_formula(formula)),
+          name = "count") %>%
+    complete(
+      nesting(!!.sample_for_tidyr,!!as.symbol(parse_formula(formula))),!!.cell_group_for_tidyr,
+      fill = list(count = 0)
+    ) %>%
+    mutate(count = as.integer(count)) %>%
+
+    # Return
+    sccomp_glm_data_frame_counts(
+      formula = formula,
+      .sample = !!.sample,
+      .cell_group = !!.cell_group,
+      .count = count,
+      my_glm_model = my_glm_model,
+      check_outliers = check_outliers,
+      approximate_posterior_inference = approximate_posterior_inference,
+      cores = cores,
+      verbose = verbose,
+      seed = seed
+    )
+}
+
+sccomp_glm_data_frame_counts = function(.data,
+                                        formula,
+                                        .sample,
+                                        .cell_group,
+                                        .count,
+                                        my_glm_model,
+                                        # Secondary arguments
+                                        check_outliers = TRUE,
+                                        approximate_posterior_inference = TRUE,
+                                        verbose = FALSE,
+                                        noise_model = "multi_beta_binomial",
+                                        cores = 4,
+                                        seed = sample(1:99999, size = 1)) {
+
+  # Prepare column same enquo
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  .count = enquo(.count)
+
+  # Check if columns exist
+  check_columns_exist(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    quo_name(.count),
+    parse_formula(formula)
+  ))
+
+  # Check if any column is NA or null
+  check_if_any_NA(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    quo_name(.count),
+    parse_formula(formula)
+  ))
+
+  # Return
+  .data %>%
+    my_glm_model(
+      formula = formula,
+      .sample = !!.sample,
+      .cell_type = !!.cell_group,
+      .count = count,
+      check_outliers = check_outliers,
+      approximate_posterior_inference = approximate_posterior_inference,
+      cores = cores,
+      verbose = verbose,
+      seed = seed
+    )
+}
