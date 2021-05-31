@@ -8,8 +8,7 @@ sccomp_glm(
   .data,
   formula = ~1,
   .sample,
-  .cell_type,
-  .count,
+  .cell_group,
   check_outliers = TRUE,
   approximate_posterior_inference = TRUE,
   verbose = FALSE,
@@ -24,13 +23,13 @@ sccomp_glm(
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
-\item{.cell_type}{A column name as symbol. The cell_type identifier}
-
-\item{.count}{A column name as symbol. The cell_type abundance (read count)}
+\item{.cell_group}{A column name as symbol. The cell_type identifier}
 
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
 \item{seed}{An integer. Used for development and testing purposes}
+
+\item{.count}{A column name as symbol. The cell_type abundance (read count)}
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 }

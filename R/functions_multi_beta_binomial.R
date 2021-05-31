@@ -60,7 +60,7 @@ multi_beta_binomial_glm = function(.data,
     data_spread_to_model_input(
       formula, !!.sample, !!.cell_type, !!.count,
       variance_association = variance_association,
-      data_spread_to_model_input = 1.1
+      truncation_ajustment = 1.1
     )
 
   if(!check_outliers){
@@ -114,7 +114,7 @@ multi_beta_binomial_glm = function(.data,
           mutate(!!.cell_type := colnames(data_for_model$y)) %>%
           unnest(data) ,
 
-        by = c("sample", "cell_type")
+        by = c(quo_name(.sample), quo_name(.cell_type))
       ) %>%
 
       # Add truncation
@@ -168,7 +168,7 @@ multi_beta_binomial_glm = function(.data,
           mutate(!!.cell_type := colnames(data_for_model$y)) %>%
           unnest(data) ,
 
-        by = c("sample", "cell_type")
+        by = c(quo_name(.sample), quo_name(.cell_type))
       ) %>%
 
       # Add truncation

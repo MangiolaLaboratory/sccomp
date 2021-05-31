@@ -4,7 +4,7 @@
 \alias{check_if_any_NA}
 \title{Check if NA}
 \usage{
-check_if_any_NA(.data, .sample, .cell_type, .count, formula_columns)
+check_if_any_NA(.data, .sample, .cell_type, formula_columns)
 }
 \arguments{
 \item{.data}{A tibble including a gene name column | sample name column | read counts column | covariates column}
@@ -13,9 +13,9 @@ check_if_any_NA(.data, .sample, .cell_type, .count, formula_columns)
 
 \item{.cell_type}{A column name}
 
-\item{.count}{A column name}
-
 \item{formula_columns}{A symbol vector}
+
+\item{.count}{A column name}
 
 \item{.significance}{A column name}
 

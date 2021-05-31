@@ -24,7 +24,7 @@
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
-#' @param .cell_type A column name as symbol. The cell_type identifier
+#' @param .cell_group A column name as symbol. The cell_type identifier
 #' @param .count A column name as symbol. The cell_type abundance (read count)
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param cores An integer. How many cored to be used with parallel calculations.
@@ -37,101 +37,68 @@
 sccomp_glm = function(.data,
                       formula = ~ 1,
                       .sample,
-                      .cell_type,
-                      .count,
+                      .cell_group,
+
+                      # Main arguments
                       check_outliers = TRUE,
                       approximate_posterior_inference = TRUE,
                       verbose = FALSE,
                       noise_model = "multi_beta_binomial",
                       seed = sample(1:99999, size = 1)
 ) {
+
   cores = 4 #detect_cores()
+
+  # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
+  # See https://github.com/tidyverse/tidyr/issues/506
+  .sample_for_tidyr = enexpr(.sample)
+  .cell_group_for_tidyr = enexpr(.cell_group)
 
   # Prepare column same enquo
   .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
-  .count = enquo(.count)
+  .cell_group = enquo(.cell_group)
 
-  # Get factor of interest
-  #factor_of_interest = ifelse(parse_formula(formula) %>% length %>% `>` (0), parse_formula(formula)[1], "")
+
 
   # Check if columns exist
-  check_columns_exist(.data, !!.sample, !!.cell_type, !!.count)
+  check_columns_exist(.data, !!.sample, !!.cell_group,  parse_formula(formula))
 
   # Check if any column is NA or null
-  check_if_any_NA(.data, !!.sample, !!.cell_type, !!.count, parse_formula(formula))
+  check_if_any_NA(.data, !!.sample, !!.cell_group, parse_formula(formula))
 
-  # Check if count column is integer class
-  # check_if_count_integer(.data, !!.count)
+  # Make counts
+  .data_count =
+    .data %>%
+    count(!!.sample, !!.cell_group, !!as.symbol(parse_formula(formula)), name = "count") %>%
+    complete(
+      nesting( !!.sample_for_tidyr,  !!as.symbol(parse_formula(formula))),
+      !!.cell_group_for_tidyr,
+      fill = list(count = 0)
+    ) %>%
+    mutate(count = as.integer(count))
 
-  # Check that the dataset is squared
-  #if(my_df %>% distinct(!!.sample, !!.cell_type) %>% count(!!.cell_type) %>% count(n) %>% nrow %>% `>` (1))
-  #  stop("The input data frame does not represent a rectangular structure. Each cell_type must be present in all samples.")
-
+  # Choose linear model
   my_glm =
     noise_model %>%
     when(
       equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm,
-      equals(., "multi_beta") ~ multi_beta_glm,
+      #equals(., "multi_beta") ~ multi_beta_glm,
       equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm
     )
 
-
-
-  .data %>%
-
+  # Return
+  .data_count %>%
     my_glm(
       formula = formula,
       .sample = !!.sample,
-      .cell_type = !!.cell_type,
-      .count = !!.count,
+      .cell_type = !!.cell_group,
+      .count = count,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       cores = cores,
-      # For development purpose,
+      verbose = verbose,
       seed = seed
     )
 
 
 }
-
-
-#' plot_credible interval for theoretical data distributions
-#'
-#' @description Plot the data along the theoretical data distribution.
-#'
-#' @importFrom tibble as_tibble
-#'
-#' @param .data The tibble returned by sccomp_glm
-#'
-#' @return A tibble with an additional `plot` column
-#'
-#' @export
-#'
-plot_credible_intervals = function(.data){
-
-	.cell_type = .data %>% attr("cell_type_column")
-	.count = .data %>% attr("abundance_column")
-	.sample = .data %>% attr("sample_column")
-	formula = .data %>% attr("formula") %>% as.formula()
-
-	.data %>%
-
-		# Create plots for every tested cell_type
-		mutate(plot =
-					 	pmap(
-					 		list(
-					 			`sample wise data`,
-					 			.cell_type,
-					 			# nested data for plot
-					 			.count,
-					 			# name of value column
-					 			.sample,
-					 			# name of sample column
-					 			parse_formula(formula)[1] # main covariate
-					 		),
-					 		~ produce_plots(..1, ..2, ..3, ..4, ..5)
-					 	))
-}
-
-

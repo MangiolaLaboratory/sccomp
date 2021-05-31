@@ -101,20 +101,19 @@ test_that("multi beta binomial outliers",{
   library(digest)
   library(rstan)
 #debugonce(multi_beta_binomial_glm)
+
+  data(seurat_obj)
+
+
   res =
-    sccomp::cell_counts %>%
+    seurat_obj %>%
     sccomp_glm(
       formula = ~ type,
-      sample, cell_type, count,
-      noise_model = "multi_beta_binomial",
+      sample, cell_group,
       approximate_posterior_inference = F
     )
 
   res =
-    sccomp::cell_counts %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type, count,
-      noise_model = "multi_beta_binomial"
-    )
+    seurat_obj[[]] %>%
+    sccomp_glm(~ type,  sample, cell_group )
 })
