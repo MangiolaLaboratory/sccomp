@@ -61,7 +61,7 @@ data("counts_obj")
 
   res =
     counts_obj %>%
-    sccomp_glm( ~ type, sample, cell_group, count)
+    sccomp_glm( ~ type, sample, cell_group, count, approximate_posterior_inference = F)
 
 ```
 

@@ -14,6 +14,7 @@ sccomp_glm(
   approximate_posterior_inference = TRUE,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
+  cores = detectCores(),
   seed = 42
 )
 }
@@ -30,9 +31,9 @@ sccomp_glm(
 
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
-\item{seed}{An integer. Used for development and testing purposes}
-
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
+
+\item{seed}{An integer. Used for development and testing purposes}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics

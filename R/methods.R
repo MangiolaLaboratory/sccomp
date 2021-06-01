@@ -11,6 +11,7 @@
 #' @importFrom magrittr equals
 #' @importFrom rlang quo_is_null
 #' @importFrom SingleCellExperiment colData
+#' @importFrom parallel detectCores
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
@@ -36,6 +37,7 @@ sccomp_glm <- function(.data,
                        approximate_posterior_inference = TRUE,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
+                       cores = detectCores(),
                        seed = 42) {
   UseMethod("sccomp_glm", .data)
 }
@@ -51,12 +53,10 @@ sccomp_glm.Seurat = function(.data,
                              approximate_posterior_inference = TRUE,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
+                             cores = detectCores(),
                              seed = 42) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
-
-
-  cores = 4 #detect_cores()
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -69,6 +69,7 @@ sccomp_glm.Seurat = function(.data,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
       noise_model = noise_model,
+      cores = cores,
       seed = seed
     )
 
@@ -86,11 +87,11 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            approximate_posterior_inference = TRUE,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
+                                           cores = detectCores(),
                                            seed = 42) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
-  cores = 4 #detect_cores()
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -104,6 +105,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
       noise_model = noise_model,
+      cores = cores,
       seed = seed
     )
 
@@ -122,11 +124,11 @@ sccomp_glm.DFrame = function(.data,
                              approximate_posterior_inference = TRUE,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
+                             cores = detectCores(),
                              seed = 42) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
-  cores = 4 #detect_cores()
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -141,6 +143,7 @@ sccomp_glm.DFrame = function(.data,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
       noise_model = noise_model,
+      cores = cores,
       seed = seed
     )
 }
@@ -157,8 +160,8 @@ sccomp_glm.data.frame = function(.data,
                                  approximate_posterior_inference = TRUE,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
+                                 cores = detectCores(),
                                  seed = 42) {
-  cores = 4 #detect_cores()
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -185,6 +188,7 @@ sccomp_glm.data.frame = function(.data,
         approximate_posterior_inference = approximate_posterior_inference,
         verbose = verbose,
         my_glm_model = my_glm_model,
+        cores = cores,
         seed = seed
       ),
 
@@ -199,6 +203,7 @@ sccomp_glm.data.frame = function(.data,
         approximate_posterior_inference = approximate_posterior_inference,
         verbose = verbose,
         my_glm_model = my_glm_model,
+        cores = cores,
         seed = seed
       )
     )

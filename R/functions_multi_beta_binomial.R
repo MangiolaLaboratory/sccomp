@@ -41,7 +41,7 @@ multi_beta_binomial_glm = function(.data,
                                    check_outliers = FALSE,
                                    approximate_posterior_inference = T,
                                    variance_association = F,
-                                   cores = detect_cores(), # For development purpose,
+                                   cores = detectCores(), # For development purpose,
                                    seed = sample(1:99999, size = 1),
                                    verbose = FALSE
 ) {
@@ -67,7 +67,7 @@ multi_beta_binomial_glm = function(.data,
 
     data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4,  output_samples = 5000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed) %>%
+      fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = 0.95,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed) %>%
       parse_fit(data_for_model, .) %>%
       beta_to_CI( ) %>%
 
@@ -88,11 +88,11 @@ multi_beta_binomial_glm = function(.data,
 
   else{
 
-    message("sccomp says: outlier identification first pass - step 1/3")
+    message("sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]")
 
     fit =
       data_for_model %>%
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 1000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = 0.95,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500,  approximate_posterior_inference = approximate_posterior_inference)
 
     rng =  rstan::gqs(
@@ -136,11 +136,15 @@ multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
 
-    message("sccomp says: outlier identification second pass - step 2/3")
+    message("sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]")
+
+    my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
+    CI_step_2 = (1-my_quantile_step_2) / 2 * 2
+
 
     fit2 =
       data_for_model %>%
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 5000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = my_quantile_step_2,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = F, verbose = T)
 
     rng2 =  rstan::gqs(
@@ -150,7 +154,6 @@ multi_beta_binomial_glm = function(.data,
       data = data_for_model
     )
 
-    CI_step_2 = 0.1 / data_for_model$N / 2 * 2
 
     # Detect outliers
     truncation_df2 =
@@ -189,12 +192,14 @@ multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
 
-    message("sccomp says: outlier-free model fitting - step 3/3")
+    message("sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]")
+
+    my_quantile_step_3 = 0.95
 
     fit3 =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 5000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = my_quantile_step_3,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
     fit3 %>%

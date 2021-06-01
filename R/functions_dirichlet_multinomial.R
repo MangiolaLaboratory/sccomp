@@ -58,8 +58,15 @@ dirichlet_multinomial_glm = function(.data,
 
     data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4) %>%
+      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision")) %>%
       parse_fit(data_for_model, ., censoring_iteration = 1, chains) %>%
+      {
+        # Add precision as attribute
+          add_attr(.,
+            fit %>% rstan::extract(., "precision") %$% precision,
+            "precision"
+          )
+      } %>%
       beta_to_CI(censoring_iteration = 1 ) %>%
 
       # Join filtered
@@ -310,5 +317,62 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
         unnest(precision) %>%
         as.matrix(),
       "precision" )
+
+}
+
+fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed){
+
+
+  # fit_discovery  = fit_model(data_for_model, model,  iteration, chains= 4, output_samples = output_samples)
+
+  # Run the first discovery phase with permissive false discovery rate
+  fit  = fit_model(
+    data_for_model, model, censoring_iteration, chains= chains,
+    output_samples = output_samples, verbose = T,
+    seed = seed, pars = c("beta", "precision")
+  )
+
+
+  fitted = parse_fit(data_for_model, fit, censoring_iteration = censoring_iteration, chains) %>%
+    {
+      # Add precision as attribute
+      add_attr(.,
+               fit %>% rstan::extract(., "precision") %$% precision,
+               "precision"
+      )
+    }
+
+  # # For building some figure I just need the discovery run, return prematurely
+  # if(just_discovery) return(res_discovery %>% filter(.variable == "counts_rng"))
+
+  # Generate theoretical data
+  generated_discovery = generate_quantities(fit,  data_for_model)
+
+  # Integrate
+  data_for_model$X %>%
+    as.data.frame %>%
+    as_tibble() %>%
+    rowid_to_column("N") %>%
+
+    # Drop values for X
+    select(N) %>%
+
+    # Add theoretical data posteiror
+    left_join(
+      generated_discovery %>%
+        nest(!!as.symbol(sprintf("generated_data_posterior_%s", censoring_iteration)) := -c(M, N)),
+      by="N"
+    ) %>%
+
+    # Attach beta posterior
+    left_join(fitted,  by="M") %>%
+
+    # label_deleterious_outliers()
+
+    # Add precision as attribute
+    add_attr(
+      fit %>% rstan::extract("precision") %$% precision,
+      "precision"
+    )
 
 }

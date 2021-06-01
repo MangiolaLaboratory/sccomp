@@ -518,7 +518,11 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
-fit_model = function(data_for_model, model, censoring_iteration = 1, chains, output_samples = 5000, warmup_samples = 200, approximate_posterior_inference = TRUE, verbose = F, seed)
+fit_model = function(
+  data_for_model, model, censoring_iteration = 1, cores, quantile,
+  warmup_samples = 200, approximate_posterior_inference = TRUE, verbose = F,
+  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd")
+)
   {
 
 
@@ -527,15 +531,29 @@ fit_model = function(data_for_model, model, censoring_iteration = 1, chains, out
   # how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
   # additional_parameters_to_save = additional_parameters_to_save %>% c("lambda_log_param", "sigma_raw") %>% unique
 
+
+  # Find number of draws
+  draws_supporting_quantile = 50
+  output_samples = draws_supporting_quantile/((1-quantile)/2) # /2 because I ave two tails
+
+  # Find optimal number of chains
+  chains =
+    find_optimal_number_of_chains(
+      how_many_posterior_draws = output_samples,
+      warmup = warmup_samples
+    ) %>%
+      min(cores)
+
   if(!approximate_posterior_inference)
     sampling(
       model,
       data = data_for_model,
       chains = chains,
       cores = chains,
-      iter = output_samples + warmup_samples,
+      iter = as.integer(output_samples /chains) + warmup_samples,
       warmup = warmup_samples, refresh = ifelse(verbose, 1000, 0),
-      seed = seed
+      seed = seed,
+      pars = pars
     )
 
   else
@@ -545,77 +563,24 @@ fit_model = function(data_for_model, model, censoring_iteration = 1, chains, out
       iter = output_samples,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
-      seed = seed
+      seed = seed,
+      pars = pars
     ) %>%
     suppressWarnings()
 
 
 }
 
-fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed){
-
-
-  # fit_discovery  = fit_model(data_for_model, model,  iteration, chains= 4, output_samples = output_samples)
-
-  # Run the first discovery phase with permissive false discovery rate
-  fit  = fit_model(data_for_model, model, censoring_iteration, chains= chains, output_samples = output_samples, verbose = T, seed = seed)
-
-
-  fitted = parse_fit(data_for_model, fit, censoring_iteration = censoring_iteration, chains)
-
-  # # For building some figure I just need the discovery run, return prematurely
-  # if(just_discovery) return(res_discovery %>% filter(.variable == "counts_rng"))
-
-  # Generate theoretical data
-  generated_discovery = generate_quantities(fit,  data_for_model)
-
-  # Integrate
-  data_for_model$X %>%
-    as.data.frame %>%
-    as_tibble() %>%
-    rowid_to_column("N") %>%
-
-    # Drop values for X
-    select(N) %>%
-
-    # Add theoretical data posteiror
-    left_join(
-      generated_discovery %>%
-        nest(!!as.symbol(sprintf("generated_data_posterior_%s", censoring_iteration)) := -c(M, N)),
-      by="N"
-    ) %>%
-
-    # Attach beta posterior
-    left_join(fitted,  by="M") %>%
-
-    # label_deleterious_outliers()
-
-    # Add precision as attribute
-    add_attr(
-      fit %>% rstan::extract("precision") %$% precision,
-      "precision"
-    )
-
-}
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
 #' @importFrom rstan extract
 parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
-  fitted = fit %>%
+  fit %>%
     draws_to_tibble_x_y("beta", "C", "M") %>%
     left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
     nest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration)) := -M)
-
-  # Add precision as attribute
-  fitted %>%
-    add_attr(
-      fit %>% rstan::extract("precision") %$% precision,
-      "precision"
-    )
-
-
 
 }
 
@@ -645,8 +610,6 @@ beta_to_CI = function(fitted, censoring_iteration = 1){
 
 
 }
-
-
 
 #' .formula parser
 #'
@@ -725,4 +688,39 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count){
     select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula)) %>%
     spread(!!.cell_type, !!.count)
 
+}
+
+#' Choose the number of chains baed on how many draws we need from the posterior distribution
+#' Because there is a fix cost (warmup) to starting a new chain,
+#' we need to use the minimum amount that we can parallelise
+#' @param how_many_posterior_draws A real number of posterior draws needed
+#' @param max_number_to_check A sane upper plateau
+#'
+#' @keywords internal
+#'
+#'
+#' @return A Stan fit object
+#' @noRd
+find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
+                                         max_number_to_check = 100, warmup = 200) {
+
+  parallelisation_start_penalty = 60
+
+  chains_df =
+    tibble(chains = 1:max_number_to_check) %>%
+    mutate(tot = (how_many_posterior_draws / chains) + warmup + (parallelisation_start_penalty * chains))
+
+  d1 <- diff(chains_df$tot) / diff(1:nrow(chains_df)) # first derivative
+  abs(d1) %>% order() %>% .[1] # Find derivative == 0
+
+
+}
+
+
+get.elbow.points.indices <- function(x, y, threshold) {
+  # From https://stackoverflow.com/questions/41518870/finding-the-elbow-knee-in-a-curve
+  d1 <- diff(y) / diff(x) # first derivative
+  d2 <- diff(d1) / diff(x[-1]) # second derivative
+  indices <- which(abs(d2) > threshold)
+  return(indices)
 }
