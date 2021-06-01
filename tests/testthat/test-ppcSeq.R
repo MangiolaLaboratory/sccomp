@@ -29,10 +29,10 @@ data("counts_obj ")
 #
 # })
 
-test_that("dirichlet multinomial",{
+test_that("counts dirichlet multinomial outlier VB",{
 
   res =
-    sccomp::counts_obj  %>%
+    counts_obj  %>%
     sccomp_glm(
       formula = ~ type,
       sample, cell_group, count,
@@ -43,6 +43,34 @@ test_that("dirichlet multinomial",{
 
 })
 
+test_that("counts multi beta binomial outlier VB",{
+
+  res =
+    counts_obj  %>%
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_group, count,
+      approximate_posterior_inference = T
+    )
+
+  # [1]  TRUE  TRUE FALSE FALSE FALSE  TRUE  TRUE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE
+
+})
+
+test_that("counts multi beta binomial outlier VB",{
+
+  res =
+    counts_obj  %>%
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_group, count,
+      approximate_posterior_inference = F,
+      check_outliers = F
+    )
+
+  # [1]  TRUE  TRUE FALSE FALSE FALSE  TRUE  TRUE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE
+
+})
 
 test_that("multi beta binomial from Seurat",{
 
@@ -51,7 +79,8 @@ test_that("multi beta binomial from Seurat",{
     sccomp_glm(
       formula = ~ type,
       sample, cell_group,
-      check_outliers = FALSE
+      check_outliers = FALSE,
+      approximate_posterior_inference = T
     )
 
 })
@@ -63,7 +92,8 @@ test_that("multi beta binomial from SCE",{
     sccomp_glm(
       formula = ~ type,
       sample, cell_group,
-      check_outliers = FALSE
+      check_outliers = FALSE,
+      approximate_posterior_inference = T
     )
 
 })
@@ -75,31 +105,9 @@ test_that("multi beta binomial from metadata",{
     sccomp_glm(
       formula = ~ type,
       sample, cell_group,
-      check_outliers = FALSE
+      check_outliers = FALSE,
+      approximate_posterior_inference = T
     )
 
 })
 
-
-test_that("multi beta binomial from counts",{
-
-res =
-  counts_obj  %>%
-  sccomp_glm(
-    formula = ~ type,
-    sample, cell_group, count,
-    check_outliers = FALSE
-  )
-
-})
-
-test_that("multi beta binomial outliers",{
-
-  res =
-    seurat_obj %>%
-    sccomp_glm(formula = ~ type, sample, cell_group,  approximate_posterior_inference = F )
-
-  res =
-    seurat_obj %>%
-    sccomp_glm(~ type,  sample, cell_group )
-})

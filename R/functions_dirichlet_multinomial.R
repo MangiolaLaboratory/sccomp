@@ -58,14 +58,14 @@ dirichlet_multinomial_glm = function(.data,
 
     data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, cores=cores, pars = c("beta", "precision")) %>%
+      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision")) %>%
       parse_fit(data_for_model, ., censoring_iteration = 1, chains) %>%
       {
         # Add precision as attribute
-          add_attr(.,
+        add_attr(.,
             fit %>% extract(., "precision") %$% precision,
-            "precision"
-          )
+                 "precision"
+        )
       } %>%
       beta_to_CI(censoring_iteration = 1 ) %>%
 
@@ -87,12 +87,12 @@ dirichlet_multinomial_glm = function(.data,
 
     .data_1 =
       .data %>%
-      fit_model_and_parse_out_no_missing_data(data_for_model, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, cores=cores, seed = seed)
+      fit_model_and_parse_out_no_missing_data(data_for_model, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4, seed = seed)
 
     .data_2 =
       .data_1 %>%
       select(-contains("posterior")) %>%
-      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2,  cores=cores, seed = seed)
+      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed)
 
     .data_2 %>%
 
@@ -122,7 +122,7 @@ dirichlet_multinomial_glm = function(.data,
 }
 
 #' @importFrom purrr map2_lgl
-fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formula, .sample, .cell_type, .count, iteration = 1, chains, seed, cores){
+fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formula, .sample, .cell_type, .count, iteration = 1, chains, seed){
 
 
   # Prepare column same enquo
@@ -131,7 +131,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
   .count = enquo(.count)
 
   # Run the first discovery phase with permissive false discovery rate
-  fit_and_generated  = fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, cores= cores, output_samples = 5000, seed= seed)
+  fit_and_generated  = fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains= 4, output_samples = 5000, seed= seed)
 
   # Integrate
   .data %>%
@@ -178,7 +178,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
 
 }
 
-fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed, cores){
+fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed){
 
 
   # Prepare column same enquo
@@ -320,7 +320,7 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
 
 }
 
-fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed, cores =4){
+fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed){
 
 
   # fit_discovery  = fit_model(data_for_model, model,  iteration, chains= 4, output_samples = output_samples)
@@ -329,7 +329,7 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
   fit  = fit_model(
     data_for_model, model, censoring_iteration, chains= chains,
     output_samples = output_samples, verbose = T,
-    seed = seed, pars = c("beta", "precision")
+    seed = seed, pars = c("beta", "precision", "alpha")
   )
 
 

@@ -14,7 +14,7 @@ always_allow_html: true
 knitr::opts_chunk$set( fig.path = "man/figures/")
 ```
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 library(sccomp)
 library(ggplot2)
@@ -55,7 +55,7 @@ data("counts_obj")
 
 # From counts
 
-```{r}
+```{r warning=FALSE}
 
   res =
     counts_obj %>%
@@ -70,7 +70,7 @@ Outliers identified
 
 res %>% 
   tidyr::unnest(outliers) %>%
-  left_join(counts_obj) %>%
+  left_join(counts_obj, by = c("cell_group", "sample")) %>%
   group_by(sample) %>%
   mutate(proportion = (count+1)/sum(count+1)) %>%
   ungroup(sample) %>%
