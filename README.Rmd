@@ -16,9 +16,7 @@ knitr::opts_chunk$set( fig.path = "man/figures/")
 
 ```{r}
 library(dplyr)
-library(purrr)
 library(sccomp)
-library(tidyr)
 library(ggplot2)
 data("seurat_obj")
 data("sce_obj")
@@ -61,7 +59,7 @@ data("counts_obj")
 
   res =
     counts_obj %>%
-    sccomp_glm( ~ type, sample, cell_group, count, approximate_posterior_inference = F)
+    sccomp_glm( ~ type, sample, cell_group, count)
 
 ```
 
@@ -71,10 +69,10 @@ Outliers identified
 ```{r}
 
 res %>% 
-  unnest(outliers) %>%
+  tidyr::unnest(outliers) %>%
   left_join(counts_obj) %>%
   group_by(sample) %>%
-  mutate(proportion = count/sum(count)) %>%
+  mutate(proportion = (count+1)/sum(count+1)) %>%
   ungroup(sample) %>%
   ggplot(aes(type, proportion)) +
   geom_boxplot(aes(fill=significant), outlier.shape = NA) + 

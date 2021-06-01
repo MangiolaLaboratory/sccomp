@@ -297,7 +297,7 @@ draws_to_tibble_x_y = function(fit, par, x, y) {
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
 
   fit %>%
-    rstan::extract(par_names, permuted=F) %>%
+    extract(par_names, permuted=F) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = 1:n()) %>%
@@ -333,7 +333,7 @@ draws_to_tibble_x = function(fit, par, x) {
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
 
   fit %>%
-    rstan::extract(par_names, permuted=F) %>%
+    extract(par_names, permuted=F) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = 1:n()) %>%
@@ -347,6 +347,7 @@ draws_to_tibble_x = function(fit, par, x) {
 
 }
 
+#' @importFrom tidyr separate
 summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
@@ -359,8 +360,8 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
     summary %>%
     as_tibble(rownames = ".variable") %>%
     when(
-      is.null(y) ~ (.) %>% tidyr::extract(col = .variable, into = c(".variable", x), "(.+)\\[(.+)\\]", convert = T),
-      ~ (.) %>% tidyr::extract(col = .variable, into = c(".variable", x, y), "(.+)\\[(.+),(.+)\\]", convert = T)
+      is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = T, extra="drop"),
+      ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = T, extra="drop")
     ) %>%
     filter(.variable == par)
 
@@ -383,7 +384,7 @@ generate_quantities = function(fit, data_for_model){
     )
   ) %>%
 
-    rstan::extract("counts") %$% counts %>%
+    extract("counts") %$% counts %>%
     as.data.frame() %>%
     as_tibble(rownames = "draw") %>%
     gather(N_M, generated_quantity, -draw) %>%
@@ -519,9 +520,9 @@ label_deleterious_outliers = function(.my_data){
 }
 
 fit_model = function(
-  data_for_model, model, censoring_iteration = 1, cores, quantile,
+  data_for_model, model, censoring_iteration = 1, cores, quantile = 0.95,
   warmup_samples = 200, approximate_posterior_inference = TRUE, verbose = F,
-  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd")
+  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL
 )
   {
 
@@ -534,15 +535,19 @@ fit_model = function(
 
   # Find number of draws
   draws_supporting_quantile = 50
-  output_samples = draws_supporting_quantile/((1-quantile)/2) # /2 because I ave two tails
+  if(is.null(output_samples))
+    output_samples =
+      (draws_supporting_quantile/((1-quantile)/2)) %>% # /2 because I ave two tails
+      max(4000)
 
   # Find optimal number of chains
-  chains =
-    find_optimal_number_of_chains(
-      how_many_posterior_draws = output_samples,
-      warmup = warmup_samples
-    ) %>%
-      min(cores)
+  if(is.null(chains))
+    chains =
+      find_optimal_number_of_chains(
+        how_many_posterior_draws = output_samples,
+        warmup = warmup_samples
+      ) %>%
+        min(cores)
 
   if(!approximate_posterior_inference)
     sampling(
@@ -553,13 +558,14 @@ fit_model = function(
       iter = as.integer(output_samples /chains) + warmup_samples,
       warmup = warmup_samples, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
-      pars = pars
+      pars = pars,
+      save_warmup = F
     )
 
   else
     vb_iterative(
       model,
-      output_samples = output_samples * chains,
+      output_samples = output_samples ,
       iter = output_samples,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
