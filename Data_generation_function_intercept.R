@@ -44,7 +44,11 @@ data_generation_intercept_only(N = 10,
                Tm = 300,
                M = 5,
                p_n = exp(4))
+
+
 # Covariates model
+
+
 logsumexp <- function (x) {
   y = max(x)
   y + log(sum(exp(x - y)))
@@ -55,7 +59,7 @@ softmax <- function (x) {
 }
 #input coefficients must be matrix
 #input design matrix must be matrix that can left-multiple coefficient
-data_generation = function(X, Tm, coefficients, p_n) {
+data_generation = function(X, Tm, coefficients) {
   # Sample N proportions for categories
   N=ncol(coefficients)
   M=nrow(X)
@@ -66,17 +70,28 @@ data_generation = function(X, Tm, coefficients, p_n) {
       mu_raw=rbind(mu_raw,unit)
     }
   mu=mu_raw[1:M+1,]
-  # Generate proportions step 1 
+  # Generate precision, normally sampled from intercept
+  intercept=coefficients[1,]
+  precision=matrix(rep(NA,M*N),nrow = M)
+  for (i in 1:N){
+    precision[1:M,i]=exp(rnorm(M,mean=2.685 + intercept[i] * -0.744, sd=0.1))
+  }
+  # Generate proportions step 1, beta sampling 
   proportion = matrix(rep(NA,M*N),nrow=M, ncol=N)
-  Cmn_md = matrix(c(rep(rep(0, N), M)), nrow = M)
   for (i in 1:M) {
     for (j in 1:N){
-  # Generate proportions step 2
-    proportion[i,j] = rbeta(1,mu[i,j]*p_n,(1-mu[i,j])*p_n)
-  # Generate counts
+    proportion[i,j] = rbeta(1,mu[i,j]*precision[i,j],(1-mu[i,j])*precision[i,j])}}
+  # Generate proportions step 2, make it to unit length 
+  for (i in 1:M){ 
+    proportion[i,]=proportion[i,]/rowSums(proportion)[i]}
+  # Generate counts, binomial sampling 
+  Cmn_md = matrix(c(rep(rep(NA, N), M)), nrow = M)
+  for (i in 1:M) {
+    for (j in 1:N){
     Cmn_md[i,j] =rbinom(1, Tm, proportion[i,j])}
   }
   count = as.data.frame(Cmn_md)
+  # Name the data frame
   colname=character(N)
   for (j in 1:N){
     col_id=j
@@ -92,15 +107,13 @@ data_generation = function(X, Tm, coefficients, p_n) {
   return(count)
 }
 # Example 1
-trial=matrix(runif(40,min = 0,max=10),nrow=5,ncol=2)
+trial=matrix(runif(10,min = 0,max=10),nrow=5,ncol=2)
 data_generation(X=trial,
-               Tm = 50,
-               coefficients=matrix(rep(0.3,20),nrow=2,ncol=10),
-               p_n = exp(3))
+               Tm = 200,
+               coefficients=matrix(rep(0.3,20),nrow=2,ncol=10))
 # Example 2
 X= matrix(c(1, 1, 1, 1, 1, 0, 1, 0, 1, 0), ncol = 2)
 coefficients =matrix(c(1, 2, 3, 4, 5, 1, 2 ,3, 4, 5, 1, 1, 1, -1, -1, -1, 1, 1, 2, -2), nrow=2, byrow = T)
 data_generation(X,
                 Tm = 200,
-                coefficients,
-                p_n = exp(3))
+                coefficients)
