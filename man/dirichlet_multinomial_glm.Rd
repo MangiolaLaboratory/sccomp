@@ -12,6 +12,7 @@ dirichlet_multinomial_glm(
   .count,
   check_outliers = FALSE,
   approximate_posterior_inference = T,
+  verbose = TRUE,
   cores = detect_cores(),
   seed = sample(1:99999, size = 1)
 )

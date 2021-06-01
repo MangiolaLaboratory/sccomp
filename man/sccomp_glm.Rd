@@ -14,7 +14,7 @@ sccomp_glm(
   approximate_posterior_inference = TRUE,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
-  seed = sample(1:99999, size = 1)
+  seed = 42
 )
 }
 \arguments{

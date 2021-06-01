@@ -1,5 +1,5 @@
 Package: sccomp
-Title: What the Package Does (One Line, Title Case)
+Title: Outlier-aware and Count-based Compositional Analysis of Single-cell Data.
 Version: 0.1.0
 Authors@R: 
     person(given = "First",
@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "first.last@example.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: Outlier-aware and count-based compositional analysis of single-cell data.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to
     pick a license
 Encoding: UTF-8

@@ -36,7 +36,7 @@ sccomp_glm <- function(.data,
                        approximate_posterior_inference = TRUE,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
-                       seed = sample(1:99999, size = 1)) {
+                       seed = 42) {
   UseMethod("sccomp_glm", .data)
 }
 
@@ -51,7 +51,7 @@ sccomp_glm.Seurat = function(.data,
                              approximate_posterior_inference = TRUE,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
-                             seed = sample(1:99999, size = 1)) {
+                             seed = 42) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -86,7 +86,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            approximate_posterior_inference = TRUE,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
-                                           seed = sample(1:99999, size = 1)) {
+                                           seed = 42) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -122,7 +122,7 @@ sccomp_glm.DFrame = function(.data,
                              approximate_posterior_inference = TRUE,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
-                             seed = sample(1:99999, size = 1)) {
+                             seed = 42) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -157,7 +157,7 @@ sccomp_glm.data.frame = function(.data,
                                  approximate_posterior_inference = TRUE,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
-                                 seed = sample(1:99999, size = 1)) {
+                                 seed = 42) {
   cores = 4 #detect_cores()
 
   # Prepare column same enquo

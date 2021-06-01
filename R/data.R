@@ -1,4 +1,15 @@
 #' Example data set
 #'
 #'
-"cell_counts"
+"counts_obj"
+
+#' Example data set
+#'
+#'
+"seurat_obj"
+
+
+#' Example data set
+#'
+#'
+"sce_obj"

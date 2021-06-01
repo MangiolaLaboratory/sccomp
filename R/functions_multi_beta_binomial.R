@@ -92,7 +92,7 @@ multi_beta_binomial_glm = function(.data,
 
     fit =
       data_for_model %>%
-      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 500,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      fit_model(stanmodels$glm_multi_beta_binomial, chains= 4, output_samples = 1000,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500,  approximate_posterior_inference = approximate_posterior_inference)
 
     rng =  rstan::gqs(

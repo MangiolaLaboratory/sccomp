@@ -1,5 +1,5 @@
 ---
-title: "sccomp - outlier-free compositional analysis"
+title: "sccomp - Outlier-aware and count-based compositional analysis of single-cell data"
 output: github_document
 always_allow_html: true
 ---
@@ -8,47 +8,78 @@ always_allow_html: true
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/tidyseurat/actions/)
 <!-- badges: end -->
 
+#  <img src="inst/logo-01.png" height="139px" width="120px" />
+
 ```{r echo=FALSE}
 knitr::opts_chunk$set( fig.path = "man/figures/")
 ```
 
 ```{r}
-library(furrr)
 library(dplyr)
 library(purrr)
 library(sccomp)
 library(tidyr)
 library(ggplot2)
+data("seurat_obj")
+data("sce_obj")
+data("counts_obj")
 ```
 
+# From Seurat Object
+
+```{r eval=FALSE}
+
+  res =
+    seurat_obj %>%
+    sccomp_glm(  ~ type, sample, cell_group )
+
+```
+
+# From SingleCellExperiment Object
+
+```{r eval=FALSE}
+
+  res =
+    sce_obj %>%
+    sccomp_glm( ~ type, sample, cell_group)
+
+```
+
+# From data.frame 
+
+```{r eval=FALSE}
+
+  res =
+    seurat_obj[[]] %>%
+    sccomp_glm(~ type, sample, cell_group )
+
+```
+
+# From counts
 
 ```{r}
 
   res =
-    sccomp::cell_counts %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type, count
-    )
+    counts_obj %>%
+    sccomp_glm( ~ type, sample, cell_group, count)
 
 ```
 
 
-
-These are the cell_types for which inference was biased by the presence of outliers
+Outliers identified
 
 ```{r}
 
 res %>% 
   unnest(outliers) %>%
-  left_join(sccomp::cell_counts) %>%
+  left_join(counts_obj) %>%
   group_by(sample) %>%
   mutate(proportion = count/sum(count)) %>%
   ungroup(sample) %>%
   ggplot(aes(type, proportion)) +
   geom_boxplot(aes(fill=significant), outlier.shape = NA) + 
   geom_jitter(aes(color=outlier), size = 1) + 
-  facet_wrap(~ interaction(cell_type), scale="free_y") +
+  facet_wrap(~ interaction(cell_group), scale="free_y") +
   scale_y_continuous(trans="logit") +
    scale_color_manual(values = c("black", "#e11f28")) +
   scale_fill_manual(values = c("white", "#E2D379")) +
@@ -56,11 +87,11 @@ res %>%
 
 ```
 
-
+Credible intervals
 
 ```{r}
 res %>%
-  ggplot(aes(x=`.median_typecancer`, y=cell_type)) +
+  ggplot(aes(x=`.median_typecancer`, y=cell_group)) +
   geom_vline(xintercept = 0, colour="grey") +
   geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=significant)) +
   geom_point() +
