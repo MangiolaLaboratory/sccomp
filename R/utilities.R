@@ -254,6 +254,7 @@ draws_to_tibble_x = function(fit, par, x) {
 }
 
 #' @importFrom tidyr separate
+#' @importFrom purrr when
 summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
@@ -276,6 +277,7 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 #' @importFrom tibble enframe
 #' @importFrom tidyr nest
 #' @importFrom tidyr unnest
+#' @importFrom boot logit
 generate_quantities = function(fit, data_for_model){
 
 
@@ -540,6 +542,7 @@ parse_formula <- function(fm) {
     as.character(attr(terms(fm), "variables"))[-1]
 }
 
+#' @importFrom purrr when
 data_spread_to_model_input =
   function(.data_spread, formula, .sample, .cell_type, .count, variance_association = F, truncation_ajustment = 1){
 
@@ -570,7 +573,7 @@ data_spread_to_model_input =
       N = .data_spread %>% nrow(),
       M = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
       exposure = .data_spread$exposure,
-      y = .data_spread %>% select(-covariate_names, -exposure) %>% nanny::as_matrix(rownames = !!.sample),
+      y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = !!.sample),
       X = X,
       XA = XA,
       C = ncol(X),

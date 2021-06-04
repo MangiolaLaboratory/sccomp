@@ -70,7 +70,7 @@ glm_multi_beta = function(input_df, formula, .sample){
            data = list(
              N = input_df %>% nrow(),
              M = input_df %>% select(-!!.sample, -covariate_names) %>% ncol(),
-             y = input_df %>% select(-covariate_names) %>% nanny::as_matrix(rownames = !!.sample),
+             y = input_df %>% select(-covariate_names) %>% as_matrix(rownames = !!.sample),
              X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
            ),
            cores = 4

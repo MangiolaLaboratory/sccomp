@@ -15,6 +15,7 @@
 #' @importFrom purrr map
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
+#' @importFrom dplyr case_when
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
@@ -239,7 +240,7 @@ glm_multi_beta_binomial = function(input_df, formula, .sample){
              N = input_df %>% nrow(),
              M = input_df %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
              exposure = input_df$exposure,
-             y = input_df %>% select(-covariate_names, -exposure) %>% nanny::as_matrix(rownames = !!.sample),
+             y = input_df %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = !!.sample),
              X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.),
              C = length(covariate_names)
            ),

@@ -148,6 +148,7 @@ sccomp_glm.DFrame = function(.data,
     )
 }
 
+#' @importFrom purrr when
 #' @export
 sccomp_glm.data.frame = function(.data,
                                  formula ,
@@ -209,6 +210,7 @@ sccomp_glm.data.frame = function(.data,
     )
 }
 
+#' @importFrom tidyr complete
 sccomp_glm_data_frame_raw = function(.data,
                                      formula,
                                      .sample,
