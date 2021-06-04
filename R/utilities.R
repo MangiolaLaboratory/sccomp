@@ -36,7 +36,6 @@ parse_formula <- function(fm) {
 #' @keywords internal
 #'
 #' @import dplyr
-#' @import tidyr
 #' @importFrom purrr as_mapper
 #'
 #' @param .x A tibble

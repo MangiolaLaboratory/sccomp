@@ -18,48 +18,57 @@ knitr::opts_chunk$set( fig.path = "man/figures/")
 library(dplyr)
 library(sccomp)
 library(ggplot2)
+library(forcats)
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 ```
 
-# From Seurat Object
+# Installation
+
+```{r}
+devtools::install_github("stemangiola/sccomp")
+```
+
+# Analysis
+
+## From Seurat Object
 
 ```{r eval=FALSE}
 
-  res =
-    seurat_obj %>%
-    sccomp_glm(  ~ type, sample, cell_group )
+res =
+  seurat_obj %>%
+  sccomp_glm(  ~ type, sample, cell_group )
 
 ```
 
-# From SingleCellExperiment Object
+## From SingleCellExperiment Object
 
 ```{r eval=FALSE}
 
-  res =
-    sce_obj %>%
-    sccomp_glm( ~ type, sample, cell_group)
+res =
+  sce_obj %>%
+  sccomp_glm( ~ type, sample, cell_group)
 
 ```
 
-# From data.frame 
+## From data.frame 
 
 ```{r eval=FALSE}
 
-  res =
-    seurat_obj[[]] %>%
-    sccomp_glm(~ type, sample, cell_group )
+res =
+  seurat_obj[[]] %>%
+  sccomp_glm(~ type, sample, cell_group )
 
 ```
 
-# From counts
+## From counts
 
 ```{r warning=FALSE}
 
-  res =
-    counts_obj %>%
-    sccomp_glm( ~ type, sample, cell_group, count)
+res =
+  counts_obj %>%
+  sccomp_glm( ~ type, sample, cell_group, count)
 
 ```
 
@@ -68,34 +77,45 @@ Outliers identified
 
 ```{r}
 
-res %>% 
-  tidyr::unnest(outliers) %>%
-  left_join(counts_obj, by = c("cell_group", "sample")) %>%
-  group_by(sample) %>%
-  mutate(proportion = (count+1)/sum(count+1)) %>%
-  ungroup(sample) %>%
-  ggplot(aes(type, proportion)) +
-  geom_boxplot(aes(fill=significant), outlier.shape = NA) + 
-  geom_jitter(aes(color=outlier), size = 1) + 
+data_for_plot = 
+  res %>% 
+    tidyr::unnest(outliers) %>%
+    left_join(counts_obj, by = c("cell_group", "sample")) %>%
+    group_by(sample) %>%
+    mutate(proportion = (count+1)/sum(count+1)) %>%
+    ungroup(sample) 
+
+ ggplot() +
+  geom_boxplot(
+    aes(type, proportion, fill=significant),
+    outlier.shape = NA, 
+    data = data_for_plot %>% filter(!outlier)
+  ) + 
+  geom_jitter(aes(type, proportion, color=outlier), size = 1, data = data_for_plot) + 
   facet_wrap(~ interaction(cell_group), scale="free_y") +
   scale_y_continuous(trans="logit") +
-   scale_color_manual(values = c("black", "#e11f28")) +
+  scale_color_manual(values = c("black", "#e11f28")) +
   scale_fill_manual(values = c("white", "#E2D379")) +
-  theme_bw()
-
+  xlab("Biological condition") + 
+  ylab("Cell-group proportion") + 
+  theme_bw() +
+  theme(strip.background =element_rect(fill="white"))
 ```
 
 Credible intervals
 
 ```{r}
 res %>%
-  ggplot(aes(x=`.median_typecancer`, y=cell_group)) +
+  ggplot(aes(x=`.median_typecancer`, y=fct_reorder(cell_group, .median_typecancer))) +
   geom_vline(xintercept = 0, colour="grey") +
   geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=significant)) +
   geom_point() +
+  scale_color_brewer(palette = "Set1") +
   theme_bw() +
-  xlab("Credible interval slope") +
-  ggtitle("After outlier filtering")
+  xlab("Credible interval of the slope") +
+  ylab("Cell group") +
+  ggtitle("After outlier filtering") +
+  theme(legend.position = "bottom")
 ```
 
 
