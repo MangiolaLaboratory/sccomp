@@ -573,7 +573,7 @@ data_spread_to_model_input =
       N = .data_spread %>% nrow(),
       M = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
       exposure = .data_spread$exposure,
-      y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = !!.sample),
+      y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = quo_name(.sample)),
       X = X,
       XA = XA,
       C = ncol(X),

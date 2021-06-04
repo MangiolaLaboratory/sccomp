@@ -31,14 +31,15 @@ data("counts_obj ")
 
 test_that("counts dirichlet multinomial outlier VB",{
 
-  res =
-    counts_obj  %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_group, count,
-      noise_model = "dirichlet_multinomial"
-    )
-
+  if(interactive()){
+    res =
+      counts_obj  %>%
+      sccomp_glm(
+        formula = ~ type,
+        sample, cell_group, count,
+        noise_model = "dirichlet_multinomial"
+      )
+  }
   # [1]  TRUE  TRUE FALSE FALSE FALSE  TRUE  TRUE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE
 
 })

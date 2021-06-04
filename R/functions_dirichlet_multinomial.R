@@ -233,13 +233,19 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
       precision = .data %>% attr("precision")
     )
 
+  # Check if package is installed, otherwise install
+  if (find.package("furrr", quiet = TRUE) %>% length %>% equals(0)) {
+    message("Installing furrr")
+    install.packages("furrr", repos = "https://cloud.r-project.org")
+  }
+
   beta_posterior_corrected =
     fit_imputation %>%
     draws_to_tibble_x_y("counts", "N", "M") %>%
     rename(.draw_imputation = .draw) %>%
     nest(data = -c(.chain ,.iteration, .draw_imputation ,.variable)) %>%
     sample_n(100) %>%
-    mutate(fit = future_map(
+    mutate(fit = furrr::future_map(
       data,
       ~ {
         data_for_model$y =
