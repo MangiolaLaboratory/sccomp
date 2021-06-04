@@ -12,7 +12,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Biarch: true
 Depends: 
-    R (>= 3.4.0),
+    R (>= 4.0.0),
     rstan (>= 2.18.1)
 Imports: 
     methods,
@@ -24,7 +24,17 @@ Imports:
     parallel,
     dplyr,
     tidyr,
-    purrr
+    purrr,
+    magrittr,
+    rlang,
+    tibble,
+    lifecycle
+Suggests:
+    BiocStyle,
+    testthat,
+    markdown,
+    ggplot2,
+    knitr
 LinkingTo: 
     BH (>= 1.66.0),
     Rcpp (>= 0.12.0),
@@ -33,3 +43,9 @@ LinkingTo:
     rstan (>= 2.18.1),
     StanHeaders (>= 2.18.0)
 SystemRequirements: GNU make
+VignetteBuilder: 
+    knitr
+RdMacros:
+    lifecycle
+biocViews: AssayDomain, Infrastructure, RNASeq, DifferentialExpression, GeneExpression, Normalization, Clustering, QualityControl, Sequencing, Transcription, Transcriptomics
+LazyDataCompression: xz

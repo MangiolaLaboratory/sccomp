@@ -5,19 +5,15 @@
 #' @importFrom tibble as_tibble
 #' @import dplyr
 #' @importFrom tidyr spread
-#' @import tidybayes
 #' @importFrom magrittr %$%
 #' @importFrom magrittr divide_by
 #' @importFrom magrittr multiply_by
 #' @importFrom purrr map2
 #' @importFrom purrr map_int
-#' @importFrom tidybulk scale_abundance
-#' @importFrom benchmarkme get_ram
 #' @importFrom magrittr multiply_by
 #' @importFrom magrittr equals
 #' @importFrom purrr map
 #' @importFrom tibble rowid_to_column
-#' @importFrom furrr future_map
 #' @importFrom purrr map_lgl
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
