@@ -1,4 +1,4 @@
-context('ppcseq')
+context('sccomp')
 
 library(dplyr)
 library(sccomp)

@@ -1,3 +1,4 @@
+library(testthat)
+library(sccomp)
 
-
-test_check("ppcseq")
+test_check("sccomp")
