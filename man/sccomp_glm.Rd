@@ -27,9 +27,15 @@ sccomp_glm(
 
 \item{.cell_group}{A column name as symbol. The cell_type identifier}
 
-\item{.count}{A column name as symbol. The cell_type abundance (read count)}
+\item{.count}{A column name as symbol. The cell_type abundance (read count). Used ony for data frame count output.}
+
+\item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
 
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
+
+\item{verbose}{A boolean. Prints progression.}
+
+\item{noise_model}{A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.}
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
