@@ -24,6 +24,7 @@
 #' @param .count A column name as symbol. The cell_type abundance (read count)
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
+#' @param variance_association A boolean. Whether the variance should be associated to the factor of interest.
 #' @param verbose A boolean. Prints progression.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
@@ -231,7 +232,6 @@ multi_beta_binomial_glm = function(.data,
 }
 
 
-#' @export
 glm_multi_beta_binomial = function(input_df, formula, .sample){
 
   covariate_names = parse_formula(formula)
