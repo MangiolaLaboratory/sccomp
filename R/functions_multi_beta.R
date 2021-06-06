@@ -59,7 +59,6 @@ multi_beta_glm = function(.data,
 }
 
 
-#' @export
 glm_multi_beta = function(input_df, formula, .sample){
 
   covariate_names = parse_formula(formula)
