@@ -1,0 +1,90 @@
+# Set internal
+.subset = 		function(.data,	 .column)	{
+  # Make col names
+  .column = enquo(.column)
+
+  # Check if column present
+  if(quo_names(.column) %in% colnames(.data) %>% all %>% `!`)
+    stop("nanny says: some of the .column specified do not exist in the input data frame.")
+
+  .data %>%
+
+    # Selecting the right columns
+    select(	!!.column,	get_specific_annotation_columns(.data, !!.column)	) %>%
+    distinct()
+
+}
+
+#' @importFrom dplyr distinct_at
+#' @importFrom rlang enquo
+#' @importFrom magrittr equals
+#' @importFrom dplyr select
+get_specific_annotation_columns = function(.data, .col){
+
+
+  # Comply with CRAN NOTES
+  . = NULL
+
+  # Make col names
+  .col = enquo(.col)
+
+  # x-annotation df
+  n_x = .data %>% distinct_at(vars(!!.col)) %>% nrow
+
+  # element wise columns
+  .data %>%
+    select(-!!.col) %>%
+    colnames %>%
+    map(
+      ~
+        .x %>%
+        ifelse_pipe(
+          .data %>%
+            distinct_at(vars(!!.col, .x)) %>%
+            nrow %>%
+            equals(n_x),
+          ~ .x,
+          ~ NULL
+        )
+    ) %>%
+
+    # Drop NULL
+    {	(.)[lengths((.)) != 0]	} %>%
+    unlist
+
+}
+
+# Set internal
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_names
+#' @importFrom purrr map
+.nest_subset = 		function(.data, ..., .exclude = NULL, .names_sep = NULL)	{
+
+  # Make col names - from tidyr
+  cols = enquos(...)
+  .exclude = enquo(.exclude)
+
+  # Name of the new data column
+  col_name_data  = names(cols)
+
+  # Column names
+  cols <- map(cols, ~ names(eval_select(.x, .data)))
+  cols <- map(cols, set_names)
+  if (!is.null(.names_sep)) cols <- imap(cols, strip_names, .names_sep)
+  asis <- setdiff(names(.data), unlist(cols))
+
+  # Check if column present
+  if(asis %in% colnames(.data) %>% all %>% `!`)
+    stop("nanny says: some of the .column specified do not exist in the input data frame.")
+
+  # Get my subset columns
+  asis_subset = asis %>%
+    c(get_specific_annotation_columns(.data, asis)) %>%
+
+    # Exclude custom columns
+    setdiff(quo_names(.exclude))
+
+  # Apply nest on those
+  tidyr::nest(.data, !!col_name_data := -c(asis_subset))
+
+}

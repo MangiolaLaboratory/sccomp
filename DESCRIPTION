@@ -36,7 +36,6 @@ Suggests:
     markdown,
     ggplot2,
     knitr,
-    nanny,
     furrr
 LinkingTo: 
     BH (>= 1.66.0),
