@@ -28,7 +28,11 @@ dirichlet_multinomial_glm(
 
 \item{.count}{A column name as symbol. The cell_type abundance (read count)}
 
+\item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
+
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
+
+\item{verbose}{A boolean. Prints progression.}
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
