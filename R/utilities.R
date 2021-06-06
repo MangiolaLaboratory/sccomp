@@ -2,6 +2,7 @@
 #' Add attribute to abject
 #'
 #' @keywords internal
+#' @noRd
 #'
 #'
 #' @param var A tibble
@@ -21,7 +22,8 @@ add_attr = function(var, attribute, name) {
 #'
 #' @return A character vector
 #'
-#'
+#' @keywords internal
+#' @noRd
 parse_formula <- function(fm) {
   if (attr(terms(fm), "response") == 1)
     stop("The formula must be of the kind \"~ covariates\" ")
@@ -34,6 +36,7 @@ parse_formula <- function(fm) {
 #' @import dplyr
 #'
 #' @keywords internal
+#' @noRd
 #'
 #' @import dplyr
 #' @importFrom purrr as_mapper
@@ -95,11 +98,16 @@ as_matrix <- function(tbl, rownames = NULL) {
 #'
 #' @importFrom rstan vb
 #'
+#' @keywords internal
+#' @noRd
+#'
 #' @param model A Stan model
 #' @param output_samples An integer of how many samples from posteriors
 #' @param iter An integer of how many max iterations
 #' @param tol_rel_obj A real
 #' @param additional_parameters_to_save A character vector
+#' @param data A data frame
+#' @param seed An integer
 #' @param ... List of paramaters for vb function of Stan
 #'
 #' @return A Stan fit object
@@ -143,6 +151,9 @@ vb_iterative = function(model,
 
 #' function to pass initialisation values
 #'
+#' @keywords internal
+#' @noRd
+#'
 #' @return A list
 inits_fx =
   function () {
@@ -175,6 +186,8 @@ inits_fx =
 #' @param fit A fit object
 #' @param adj_prob_theshold fit real
 #'
+#' @keywords internal
+#' @noRd
 fit_to_counts_rng = function(fit, adj_prob_theshold){
 
   writeLines(sprintf("executing %s", "fit_to_counts_rng"))
@@ -198,6 +211,14 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #'
 #' @importFrom tidyr pivot_longer
 #' @importFrom rstan extract
+#'
+#' @param fit A fit object
+#' @param par A character vector. The parameters to extract.
+#' @param x A character. The first index.
+#' @param y A character. The first index.
+#'
+#' @keywords internal
+#' @noRd
 draws_to_tibble_x_y = function(fit, par, x, y) {
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
@@ -255,6 +276,15 @@ draws_to_tibble_x = function(fit, par, x) {
 
 #' @importFrom tidyr separate
 #' @importFrom purrr when
+#'
+#' @param fit A fit object
+#' @param par A character vector. The parameters to extract.
+#' @param x A character. The first index.
+#' @param y A character. The first index.
+#' @param probs A numrical vector. The quantiles to extract.
+#'
+#' @keywords internal
+#' @noRd
 summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
@@ -278,6 +308,9 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 #' @importFrom tidyr nest
 #' @importFrom tidyr unnest
 #' @importFrom boot logit
+#'
+#' @keywords internal
+#' @noRd
 generate_quantities = function(fit, data_for_model){
 
 
@@ -489,6 +522,9 @@ fit_model = function(
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
 #' @importFrom rstan extract
+#'
+#' @keywords internal
+#' @noRd
 parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
   fit %>%
@@ -500,6 +536,9 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
+#'
+#' @keywords internal
+#' @noRd
 beta_to_CI = function(fitted, censoring_iteration = 1){
 
 
@@ -528,6 +567,7 @@ beta_to_CI = function(fitted, censoring_iteration = 1){
 #' .formula parser
 #'
 #' @keywords internal
+#' @noRd
 #'
 #' @importFrom stats terms
 #'
@@ -612,10 +652,9 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count){
 #' @param max_number_to_check A sane upper plateau
 #'
 #' @keywords internal
-#'
+#' @noRd
 #'
 #' @return A Stan fit object
-#' @noRd
 find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
                                          max_number_to_check = 100, warmup = 200) {
 
