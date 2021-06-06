@@ -14,3 +14,8 @@
 #' Stan Development Team (2020). RStan: the R interface to Stan. R package version 2.21.2. https://mc-stan.org
 #'
 NULL
+if (FALSE) {
+  lifecycle::deprecate_soft()
+  RcppParallel::CxxFlags()
+  rstantools::loo_R2()
+}
