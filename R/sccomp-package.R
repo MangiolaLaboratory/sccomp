@@ -18,4 +18,5 @@ if (FALSE) {
   lifecycle::deprecate_soft()
   RcppParallel::CxxFlags()
   rstantools::loo_R2()
+  SeuratObject::subset()
 }
