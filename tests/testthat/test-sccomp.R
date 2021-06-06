@@ -4,7 +4,7 @@ library(dplyr)
 library(sccomp)
 data("seurat_obj")
 data("sce_obj")
-data("counts_obj ")
+data("counts_obj")
 
 # test_that("dirichlet multinomial outliers",{
 #
