@@ -33,6 +33,8 @@ multi_beta_binomial_glm(
 
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
+\item{variance_association}{A boolean. Whether the variance should be associated to the factor of interest.}
+
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
 \item{seed}{An integer. Used for development and testing purposes}
