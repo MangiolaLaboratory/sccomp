@@ -17,8 +17,11 @@
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
-#' @param .count A column name as symbol. The cell_type abundance (read count)
+#' @param .count A column name as symbol. The cell_type abundance (read count). Used ony for data frame count output.
+#' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
+#' @param verbose A boolean. Prints progression.
+#' @param noise_model A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
 #'

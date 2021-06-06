@@ -30,13 +30,10 @@ check_if_count_integer = function(.data, .count){
 #' @importFrom dplyr enquo
 #'
 #' @param .data A tibble including a gene name column | sample name column | read counts column | covariates column
-#' @param .sample A column name
-#' @param .cell_type A column name
-#' @param .count A column name
-#' @param .significance A column name
-#' @param .do_check A column name
-#' @param formula_columns A symbol vector
+#' @param columns Columns to check
 #'
+#' @keywords internal
+#' @noRd
 check_if_any_NA = function(.data, columns){
 
 
