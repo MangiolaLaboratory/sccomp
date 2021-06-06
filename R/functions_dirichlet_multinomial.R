@@ -272,7 +272,7 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
 
     select(fit) %>%
     unnest(fit) %>%
-    nanny::nest_subset(data = -c(N, M)) %>%
+    .nest_subset(data = -c(N, M)) %>%
 
     # Merge posterior data
     mutate(!!as.symbol(sprintf("generated_data_posterior_%s", iteration)) := map(
