@@ -11,7 +11,6 @@
 #' @importFrom magrittr equals
 #' @importFrom rlang quo_is_null
 #' @importFrom SingleCellExperiment colData
-#' @importFrom SeuratObject [[]]
 #' @importFrom parallel detectCores
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
