@@ -65,9 +65,12 @@ multi_beta_binomial_glm = function(.data,
 
   if(!check_outliers){
 
-    data_for_model %>%
+    fit =
+      data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = 0.95,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed) %>%
+      fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = 0.95,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+
+    fit %>%
       parse_fit(data_for_model, .) %>%
       beta_to_CI( ) %>%
 
@@ -78,7 +81,10 @@ multi_beta_binomial_glm = function(.data,
           !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
       ) %>%
 
-      # Clesn
+      # Join the precision
+      left_join(get_mean_precision(fit)) %>%
+
+      # Clean
       select(-M) %>%
       mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
       select(!!.cell_type, everything())
@@ -213,6 +219,9 @@ multi_beta_binomial_glm = function(.data,
           !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
       ) %>%
 
+      # Join the precision
+      left_join(get_mean_precision(fit3)) %>%
+
       # Clesn
       select(-M) %>%
       mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
@@ -249,4 +258,11 @@ glm_multi_beta_binomial = function(input_df, formula, .sample){
            cores = 4
   )
 
+}
+
+get_mean_precision = function(fit){
+  fit %>%
+    summary_to_tibble("alpha", "C", "M") %>%
+    select( M, mean, `2.5%` , `97.5%`) %>%
+    nest(concentration = -M)
 }
