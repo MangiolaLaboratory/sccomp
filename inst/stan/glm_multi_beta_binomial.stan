@@ -79,7 +79,7 @@ model{
   // NON TRUNCATION
   if(is_truncated == 0){
     for(i in 1:N)
-      y[i,] ~ beta_binomial( exposure[i], (mu[,i] .* exp(precision[,i])), ((1.0 - mu[,i]) .* exp(precision[,i])) );
+      target += beta_binomial_lpmf(y[i,] | exposure[i], (mu[,i] .* exp(precision[,i])), ((1.0 - mu[,i]) .* exp(precision[,i])) );
   }
 
   // YES TRUNCATION
@@ -87,7 +87,7 @@ model{
     for(i in 1:cols(mu)) { // SAMPLE
       for(j in 1:rows(mu)){ // CATEGORY
         if(truncation_down[i, j] >=0)
-          y[i,j] ~ beta_binomial( exposure[i], (mu[j,i] .* exp(precision[j,i])), ((1.0 - mu[j,i]) .* exp(precision[j,i])) );
+          target += beta_binomial_lpmf(y[i,] | exposure[i], (mu[j,i] .* exp(precision[j,i])), ((1.0 - mu[j,i]) .* exp(precision[j,i])) );
       }
     }
   }
@@ -95,7 +95,7 @@ model{
   for(i in 1:C) to_vector(beta_raw[i]) ~ student_t (8, 0, x_raw_sigma );
 
   // PRECISION REGRESSION
-  to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+  to_vector(alpha_intercept_slope) ~ student_t(8,  to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
   prec_sd ~ normal(0,2);
   prec_coeff ~ normal(0,5);
 
