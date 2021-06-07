@@ -478,7 +478,7 @@ fit_model = function(
   draws_supporting_quantile = 50
   if(is.null(output_samples))
     output_samples =
-      (draws_supporting_quantile/((1-quantile)/2)) %>% # /2 because I ave two tails
+      (draws_supporting_quantile/((1-quantile)/2)) %>% # /2 because I hve two tails
       max(4000)
 
   # Find optimal number of chains
@@ -497,7 +497,8 @@ fit_model = function(
       chains = chains,
       cores = chains,
       iter = as.integer(output_samples /chains) + warmup_samples,
-      warmup = warmup_samples, refresh = ifelse(verbose, 1000, 0),
+      warmup = warmup_samples,
+      refresh = ifelse(verbose, 1000, 0),
       seed = seed,
       pars = pars,
       save_warmup = F
