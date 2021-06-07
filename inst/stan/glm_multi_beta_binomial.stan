@@ -54,7 +54,7 @@ parameters{
   real prec_coeff[2];
   real<lower=0> prec_sd;
 
-  real<lower=0, upper=1> mix_p;
+  // real<lower=0, upper=1> mix_p;
 }
 transformed parameters{
 		matrix[C,M] beta;
