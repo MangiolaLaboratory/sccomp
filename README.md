@@ -11,36 +11,49 @@ status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.sv
 
 # <img src="inst/logo-01.png" height="139px" width="120px" />
 
-# From Seurat Object
+# Installation
 
 ``` r
-  res =
-    seurat_obj %>%
-    sccomp_glm(  ~ type, sample, cell_group )
+devtools::install_github("stemangiola/sccomp")
 ```
 
-# From SingleCellExperiment Object
+# Analysis
+
+## From Seurat Object
 
 ``` r
-  res =
-    sce_obj %>%
-    sccomp_glm( ~ type, sample, cell_group)
+res =
+  seurat_obj %>%
+  sccomp_glm(  ~ type, sample, cell_group )
 ```
 
-# From data.frame
-
 ``` r
-  res =
-    seurat_obj[[]] %>%
-    sccomp_glm(~ type, sample, cell_group )
+## From SingleCellExperiment Object
+
+
+res =
+  sce_obj %>%
+  sccomp_glm( ~ type, sample, cell_group)
 ```
 
-# From counts
+## From data.frame
 
 ``` r
-  res =
-    counts_obj %>%
-    sccomp_glm( ~ type, sample, cell_group, count)
+res =
+  seurat_obj[[]] %>%
+  sccomp_glm(~ type, sample, cell_group )
+```
+
+## From counts
+
+``` r
+res =
+  counts_obj %>%
+  sccomp_glm( 
+    ~ type, 
+    sample, cell_group, count, 
+    approximate_posterior_inference = FALSE
+  )
 ```
 
     ## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]
@@ -49,38 +62,52 @@ status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.sv
 
     ## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]
 
+    ## Joining, by = "M"
+
 Outliers identified
 
 ``` r
-res %>% 
-  tidyr::unnest(outliers) %>%
-  left_join(counts_obj, by = c("cell_group", "sample")) %>%
-  group_by(sample) %>%
-  mutate(proportion = (count+1)/sum(count+1)) %>%
-  ungroup(sample) %>%
-  ggplot(aes(type, proportion)) +
-  geom_boxplot(aes(fill=significant), outlier.shape = NA) + 
-  geom_jitter(aes(color=outlier), size = 1) + 
+data_for_plot = 
+  res %>% 
+    tidyr::unnest(outliers) %>%
+    left_join(counts_obj, by = c("cell_group", "sample")) %>%
+    group_by(sample) %>%
+    mutate(proportion = (count+1)/sum(count+1)) %>%
+    ungroup(sample) 
+
+ ggplot() +
+  geom_boxplot(
+    aes(type, proportion, fill=significant),
+    outlier.shape = NA, 
+    data = data_for_plot %>% filter(!outlier)
+  ) + 
+  geom_jitter(aes(type, proportion, color=outlier), size = 1, data = data_for_plot) + 
   facet_wrap(~ interaction(cell_group), scale="free_y") +
   scale_y_continuous(trans="logit") +
-   scale_color_manual(values = c("black", "#e11f28")) +
+  scale_color_manual(values = c("black", "#e11f28")) +
   scale_fill_manual(values = c("white", "#E2D379")) +
-  theme_bw()
+  xlab("Biological condition") + 
+  ylab("Cell-group proportion") + 
+  theme_bw() +
+  theme(strip.background =element_rect(fill="white"))
 ```
 
-![](man/figures/unnamed-chunk-7-1.png)<!-- -->
+![](man/figures/unnamed-chunk-8-1.png)<!-- -->
 
 Credible intervals
 
 ``` r
 res %>%
-  ggplot(aes(x=`.median_typecancer`, y=cell_group)) +
+  ggplot(aes(x=`.median_typecancer`, y=fct_reorder(cell_group, .median_typecancer))) +
   geom_vline(xintercept = 0, colour="grey") +
   geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=significant)) +
   geom_point() +
+  scale_color_brewer(palette = "Set1") +
   theme_bw() +
-  xlab("Credible interval slope") +
-  ggtitle("After outlier filtering")
+  xlab("Credible interval of the slope") +
+  ylab("Cell group") +
+  ggtitle("After outlier filtering") +
+  theme(legend.position = "bottom")
 ```
 
-![](man/figures/unnamed-chunk-8-1.png)<!-- -->
+![](man/figures/unnamed-chunk-9-1.png)<!-- -->
