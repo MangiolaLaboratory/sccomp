@@ -111,6 +111,10 @@ data_generation = function(X, Tm, coefficients) {
 
 # Calibration
 
+# The same total counts per subject (M size vector, where M is the number of subjects)
+bias=matrix(sample(-20:20,30),nrow=30)
+Tm=matrix(rep(1000,30),nrow = 30)+bias
+
 # Number of subjects 30, number of categories 20
 # Setup coefficient to have same intercept (for simplicity), and zero slope
 beta_0=matrix(rep(runif(1,min =  -3.193120, max=2.030292),20),ncol=20)
