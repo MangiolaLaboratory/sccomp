@@ -60,7 +60,8 @@ multi_beta_binomial_glm = function(.data,
     data_spread_to_model_input(
       formula, !!.sample, !!.cell_type, !!.count,
       variance_association = variance_association,
-      truncation_ajustment = 1.1
+      truncation_ajustment = 1.1,
+      approximate_posterior_inference = approximate_posterior_inference
     )
 
   if(!check_outliers){
