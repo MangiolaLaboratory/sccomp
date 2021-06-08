@@ -37,7 +37,7 @@ sccomp_glm <- function(.data,
                        .count = NULL,
                        # Secondary arguments
                        check_outliers = TRUE,
-                       approximate_posterior_inference = FALSE,
+                       approximate_posterior_inference = TRUE,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
                        cores = detectCores(),

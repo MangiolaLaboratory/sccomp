@@ -26,7 +26,7 @@ data("counts_obj")
 
 # Installation
 
-```{r}
+```{r eval=FALSE}
 devtools::install_github("stemangiola/sccomp")
 ```
 
@@ -41,10 +41,10 @@ res =
   sccomp_glm(  ~ type, sample, cell_group )
 
 ```
+```{r eval=FALSE}
 
 ## From SingleCellExperiment Object
 
-```{r eval=FALSE}
 
 res =
   sce_obj %>%
@@ -68,7 +68,11 @@ res =
 
 res =
   counts_obj %>%
-  sccomp_glm( ~ type, sample, cell_group, count)
+  sccomp_glm( 
+    ~ type, 
+    sample, cell_group, count, 
+    approximate_posterior_inference = FALSE
+  )
 
 ```
 
