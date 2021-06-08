@@ -68,6 +68,7 @@ multi_beta_binomial_glm = function(.data,
 
     fit =
       data_for_model %>%
+
       # Run the first discovery phase with permissive false discovery rate
       fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = 0.95,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
 
@@ -88,7 +89,10 @@ multi_beta_binomial_glm = function(.data,
       # Clean
       select(-M) %>%
       mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
-      select(!!.cell_type, everything())
+      select(!!.cell_type, everything()) %>%
+
+      # Attach association mean concentration
+      add_attr("mean_concentration_association", get_mean_precision_association(fit))
 
 
   }
@@ -234,7 +238,10 @@ multi_beta_binomial_glm = function(.data,
           select(!!.sample, !!.cell_type, outlier,.lower, .upper) %>%
           nest(outliers = -!!.cell_type),
         by = quo_name(.cell_type)
-      )
+      ) %>%
+
+      # Attach association mean concentration
+      add_attr("mean_concentration_association", get_mean_precision_association(fit3))
 
   }
 
@@ -266,4 +273,10 @@ get_mean_precision = function(fit){
     summary_to_tibble("alpha", "C", "M") %>%
     select( M, mean, `2.5%` , `97.5%`) %>%
     nest(concentration = -M)
+}
+
+get_mean_precision_association = function(fit){
+  fit %>%
+    summary_to_tibble("prec_coeff", "I") %>%
+    pull(mean)
 }
