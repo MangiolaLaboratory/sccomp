@@ -106,14 +106,46 @@ data_generation = function(X, Tm, coefficients) {
   rownames(count)=rowname
   return(count)
 }
-# Example 1
-trial=matrix(runif(10,min = 0,max=10),nrow=5,ncol=2)
-data_generation(X=trial,
-               Tm = 200,
-               coefficients=matrix(rep(0.3,20),nrow=2,ncol=10))
-# Example 2
-X= matrix(c(1, 1, 1, 1, 1, 0, 1, 0, 1, 0), ncol = 2)
-coefficients =matrix(c(1, 2, 3, 4, 5, 1, 2 ,3, 4, 5, 1, 1, 1, -1, -1, -1, 1, 1, 2, -2), nrow=2, byrow = T)
-data_generation(X,
-                Tm = 200,
-                coefficients)
+
+
+
+# Calibration
+
+# Number of subjects 30, number of categories 20
+# Setup coefficient to have same intercept (for simplicity), and zero slope
+beta_0=matrix(rep(runif(1,min =  -3.193120, max=2.030292),20),ncol=20)
+
+for (k in 1:100){
+  # Create an empty data frame 
+  df = data.frame(matrix(,30,20))
+    # Name the data frame
+  colname=character(20)
+  for (j in 1:20){
+    col_id=j
+    colname[j]=paste("categpry",col_id)
+  }
+  colnames(df)=colname
+  rowname=character(30)
+  for (i in 1:30){
+    row_id=i
+    rowname[i]=paste("subject",row_id)
+  }
+  rownames(df)=rowname
+  
+  # Design matrix would have an intercept column and a factor of interest between -1 and 1
+  X1=matrix(rep(1,30),nrow = 30)
+  X2=matrix(runif(30,min = -1, max=1),nrow=30,ncol=1)
+  # Design matrices are in size of 30*2
+  X=cbind(X1,X2)
+  
+  # create the second row of coefficient
+  beta_1=matrix(rep(runif(1,min =  -3.193120, max=2.030292),20),ncol=20)
+  coefficients=rbind(beta_0,beta_1)
+  
+  df=data_generation(X,
+                  Tm ,
+                  coefficients)
+  
+  # label the output in each iteration
+  assign(paste0("DF", k),df)
+  }
