@@ -89,7 +89,7 @@ model{
     for(i in 1:cols(mu)) { // SAMPLE
       for(j in 1:rows(mu)){ // CATEGORY
         if(truncation_down[i, j] >=0)
-          target += beta_binomial_lpmf(y[i,] | exposure[i], (mu[j,i] .* exp(precision[j,i])), ((1.0 - mu[j,i]) .* exp(precision[j,i])) );
+          target += beta_binomial_lpmf(y[i,j] | exposure[i], (mu[j,i] .* exp(precision[j,i])), ((1.0 - mu[j,i]) .* exp(precision[j,i])) );
       }
     }
   }
