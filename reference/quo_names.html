@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>sccomp_glm main — sccomp_glm • sccomp</title>
+<title>Convert array of quosure (e.g. c(col_a, col_b)) into character vector — quo_names • sccomp</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="sccomp_glm main — sccomp_glm" />
-<meta property="og:description" content="This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate." />
+<meta property="og:title" content="Convert array of quosure (e.g. c(col_a, col_b)) into character vector — quo_names" />
+<meta property="og:description" content="Convert array of quosure (e.g. c(col_a, col_b)) into character vector" />
 
 
 
@@ -105,81 +105,29 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>sccomp_glm main</h1>
+    <h1>Convert array of quosure (e.g. c(col_a, col_b)) into character vector</h1>
     
-    <div class="hidden name"><code>sccomp_glm.Rd</code></div>
+    <div class="hidden name"><code>quo_names.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.</p>
+    <p>Convert array of quosure (e.g. c(col_a, col_b)) into character vector</p>
     </div>
 
-    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>sccomp_glm</span><span class='op'>(</span>
-  <span class='va'>.data</span>,
-  <span class='va'>formula</span>,
-  <span class='va'>.sample</span>,
-  <span class='va'>.cell_group</span>,
-  .count <span class='op'>=</span> <span class='cn'>NULL</span>,
-  check_outliers <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  approximate_posterior_inference <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  verbose <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  noise_model <span class='op'>=</span> <span class='st'>"multi_beta_binomial"</span>,
-  cores <span class='op'>=</span> <span class='fu'>detectCores</span><span class='op'>(</span><span class='op'>)</span>,
-  seed <span class='op'>=</span> <span class='fl'>42</span>
-<span class='op'>)</span></code></pre></div>
+    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>quo_names</span><span class='op'>(</span><span class='va'>v</span><span class='op'>)</span></code></pre></div>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>.data</th>
-      <td><p>A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column</p></td>
-    </tr>
-    <tr>
-      <th>formula</th>
-      <td><p>A formula. The sample formula used to perform the differential cell_type abundance analysis</p></td>
-    </tr>
-    <tr>
-      <th>.sample</th>
-      <td><p>A column name as symbol. The sample identifier</p></td>
-    </tr>
-    <tr>
-      <th>.cell_group</th>
-      <td><p>A column name as symbol. The cell_type identifier</p></td>
-    </tr>
-    <tr>
-      <th>.count</th>
-      <td><p>A column name as symbol. The cell_type abundance (read count). Used ony for data frame count output.</p></td>
-    </tr>
-    <tr>
-      <th>check_outliers</th>
-      <td><p>A boolean. Whether to check for outliers before the fit.</p></td>
-    </tr>
-    <tr>
-      <th>approximate_posterior_inference</th>
-      <td><p>A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.</p></td>
-    </tr>
-    <tr>
-      <th>verbose</th>
-      <td><p>A boolean. Prints progression.</p></td>
-    </tr>
-    <tr>
-      <th>noise_model</th>
-      <td><p>A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.</p></td>
-    </tr>
-    <tr>
-      <th>cores</th>
-      <td><p>An integer. How many cored to be used with parallel calculations.</p></td>
-    </tr>
-    <tr>
-      <th>seed</th>
-      <td><p>An integer. Used for development and testing purposes</p></td>
+      <th>v</th>
+      <td><p>A array of quosures (e.g. c(col_a, col_b))</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A nested tibble <code>tbl</code> with cell_group-wise statistics</p>
+    <p>A character vector</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
