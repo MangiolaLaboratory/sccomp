@@ -130,6 +130,8 @@ res %>%
   geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), color="#4DAF4A", alpha = 0.4) +
   geom_point() +
   geom_abline(intercept = 5.7496330, slope = -0.9650953, linetype = "dashed", color="grey") +
+  xlab("Category logit-proportion mean") +
+  ylab("Category log-concentration") +
     theme_bw() 
 ```
 
