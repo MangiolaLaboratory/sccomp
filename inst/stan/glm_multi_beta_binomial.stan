@@ -40,8 +40,7 @@ data{
 	int truncation_up[N,M];
 	int truncation_down[N,M];
 
-	// Approximation
-	int is_vb;
+	int<lower=0, upper=1> is_vb;
 
 
 }
@@ -100,19 +99,22 @@ model{
   for(i in 1:C) to_vector(beta_raw[i]) ~ student_t (8, 0, x_raw_sigma );
 
   // PRECISION REGRESSION
-  if(is_vb){
-    to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
-  }
-  else {
   // to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+  if(is_vb==0){
   for (a in 1:A) for(m in 1:M)
     target += log_mix(mix_p,
                     normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
                     normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] - 1.1, prec_sd)
                   );
   }
+  else{
+    to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
 
-  mix_p ~ beta(5,1);
+  }
+
+  //
+  mix_p ~ beta(1,5);
+
   prec_sd ~ normal(0,2);
   prec_coeff ~ normal(0,5);
 

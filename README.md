@@ -28,9 +28,6 @@ res =
 ```
 
 ``` r
-## From SingleCellExperiment Object
-
-
 res =
   sce_obj %>%
   sccomp_glm( ~ type, sample, cell_group)
@@ -103,11 +100,27 @@ res %>%
   geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=significant)) +
   geom_point() +
   scale_color_brewer(palette = "Set1") +
-  theme_bw() +
   xlab("Credible interval of the slope") +
   ylab("Cell group") +
   ggtitle("After outlier filtering") +
+  theme_bw() +
   theme(legend.position = "bottom")
 ```
 
 ![](man/figures/unnamed-chunk-9-1.png)<!-- -->
+
+Relation between proportion mean and concentration (variability). The
+regression line is inferred by sccomp.
+
+``` r
+res %>% 
+  unnest(concentration) %>% 
+  ggplot(aes(`.median_(Intercept)`, mean)) + 
+  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`), color="#4DAF4A", alpha = 0.4) +
+  geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), color="#4DAF4A", alpha = 0.4) +
+  geom_point() +
+  geom_abline(intercept = 5.7496330, slope = -0.9650953, linetype = "dashed", color="grey") +
+    theme_bw() 
+```
+
+![](man/figures/unnamed-chunk-10-1.png)<!-- -->
