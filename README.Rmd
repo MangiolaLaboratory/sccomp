@@ -42,11 +42,8 @@ res =
   sccomp_glm(  ~ type, sample, cell_group )
 
 ```
+
 ```{r eval=FALSE}
-
-## From SingleCellExperiment Object
-
-
 res =
   sce_obj %>%
   sccomp_glm( ~ type, sample, cell_group)
@@ -123,7 +120,7 @@ res %>%
   theme(legend.position = "bottom")
 ```
 
-Relation between proportion mean and concentration (variability)
+Relation between proportion mean and concentration (variability). The regression line is inferred by sccomp.
 
 ```{r}
 res %>% 
@@ -132,9 +129,8 @@ res %>%
   geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`), color="#4DAF4A", alpha = 0.4) +
   geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), color="#4DAF4A", alpha = 0.4) +
   geom_point() +
+  geom_abline(intercept = 5.7496330, slope = -0.9650953, linetype = "dashed", color="grey") +
     theme_bw() 
-
-
 ```
 
 

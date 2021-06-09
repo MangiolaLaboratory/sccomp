@@ -92,7 +92,7 @@ multi_beta_binomial_glm = function(.data,
       select(!!.cell_type, everything()) %>%
 
       # Attach association mean concentration
-      add_attr("mean_concentration_association", get_mean_precision_association(fit))
+      add_attr(get_mean_precision_association(fit), "mean_concentration_association")
 
 
   }
@@ -241,7 +241,7 @@ multi_beta_binomial_glm = function(.data,
       ) %>%
 
       # Attach association mean concentration
-      add_attr("mean_concentration_association", get_mean_precision_association(fit3))
+      add_attr(get_mean_precision_association(fit3), "mean_concentration_association")
 
   }
 
