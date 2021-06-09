@@ -60,14 +60,19 @@ multi_beta_binomial_glm = function(.data,
     data_spread_to_model_input(
       formula, !!.sample, !!.cell_type, !!.count,
       variance_association = variance_association,
-      truncation_ajustment = 1.1
+      truncation_ajustment = 1.1,
+      approximate_posterior_inference = approximate_posterior_inference
     )
 
   if(!check_outliers){
 
-    data_for_model %>%
+    fit =
+      data_for_model %>%
+
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = 0.95,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed) %>%
+      fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = 0.95,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+
+    fit %>%
       parse_fit(data_for_model, .) %>%
       beta_to_CI( ) %>%
 
@@ -78,10 +83,16 @@ multi_beta_binomial_glm = function(.data,
           !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
       ) %>%
 
-      # Clesn
+      # Join the precision
+      left_join(get_mean_precision(fit)) %>%
+
+      # Clean
       select(-M) %>%
       mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
-      select(!!.cell_type, everything())
+      select(!!.cell_type, everything()) %>%
+
+      # Attach association mean concentration
+      add_attr(get_mean_precision_association(fit), "mean_concentration_association")
 
 
   }
@@ -213,6 +224,9 @@ multi_beta_binomial_glm = function(.data,
           !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
       ) %>%
 
+      # Join the precision
+      left_join(get_mean_precision(fit3)) %>%
+
       # Clesn
       select(-M) %>%
       mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
@@ -224,7 +238,10 @@ multi_beta_binomial_glm = function(.data,
           select(!!.sample, !!.cell_type, outlier,.lower, .upper) %>%
           nest(outliers = -!!.cell_type),
         by = quo_name(.cell_type)
-      )
+      ) %>%
+
+      # Attach association mean concentration
+      add_attr(get_mean_precision_association(fit3), "mean_concentration_association")
 
   }
 
@@ -249,4 +266,17 @@ glm_multi_beta_binomial = function(input_df, formula, .sample){
            cores = 4
   )
 
+}
+
+get_mean_precision = function(fit){
+  fit %>%
+    summary_to_tibble("alpha", "C", "M") %>%
+    select( M, mean, `2.5%` , `97.5%`) %>%
+    nest(concentration = -M)
+}
+
+get_mean_precision_association = function(fit){
+  fit %>%
+    summary_to_tibble("prec_coeff", "I") %>%
+    pull(mean)
 }
