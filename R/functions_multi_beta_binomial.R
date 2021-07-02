@@ -150,6 +150,9 @@ multi_beta_binomial_glm = function(.data,
     message("sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]")
 
     my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
+
+    # This step gets the credible interval to control for within-category false positive rate
+    # We want a category-wise false positive rate of 0.1, and we have to correct for how many samples we have in each category
     CI_step_2 = (1-my_quantile_step_2) / 2 * 2
 
 
@@ -171,9 +174,12 @@ multi_beta_binomial_glm = function(.data,
       .data %>%
       left_join(
         summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 1-CI_step_2)) %>%
+
+          # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
+          # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
           rename(
-            .lower := !!as.symbol(paste0(CI_step_2*100,"%")) ,
-            .upper := !!as.symbol(paste0((1-CI_step_2)*100,"%"))
+            .lower := !!as.symbol(colnames(.)[7]) ,
+            .upper := !!as.symbol(colnames(.)[8])
           ) %>%
           nest(data = -N) %>%
           mutate(!!.sample := rownames(data_for_model$y)) %>%
