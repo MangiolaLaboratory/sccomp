@@ -479,7 +479,16 @@ fit_model = function(
   if(is.null(output_samples))
     output_samples =
       (draws_supporting_quantile/((1-quantile)/2)) %>% # /2 because I have two tails
-      max(4000)
+      max(4000) %>%
+
+      # If it's bigger than 20K CAP because it would get too extreme
+      when(
+        (.) > 20000 ~ {
+          warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+          20000
+        },
+        (.)
+      )
 
   # Find optimal number of chains
   if(is.null(chains))
