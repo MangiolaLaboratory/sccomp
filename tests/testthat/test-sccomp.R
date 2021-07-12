@@ -53,6 +53,14 @@ test_that("counts multi beta binomial outlier VB",{
       approximate_posterior_inference = T
     )
 
+  res =
+    counts_obj  |>
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_group, count,
+      approximate_posterior_inference = T,
+      percent_false_positive = 10
+    )
 
 })
 
@@ -109,3 +117,16 @@ test_that("multi beta binomial from metadata",{
 
 })
 
+test_that("other percent false positive",{
+
+  res =
+    seurat_obj[[]] |>
+    sccomp_glm(
+      formula = ~ type,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = T,
+      percent_false_positive = 10
+    )
+
+})
