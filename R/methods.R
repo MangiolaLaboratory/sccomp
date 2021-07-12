@@ -13,11 +13,12 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
-#' @param .count A column name as symbol. The cell_type abundance (read count). Used ony for data frame count output.
+#' @param .count A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.
+#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param verbose A boolean. Prints progression.
@@ -36,7 +37,7 @@ sccomp_glm <- function(.data,
                        .cell_group,
                        .count = NULL,
                        # Secondary arguments
-                       false_positive_rate = 0.05,
+                       percent_false_positive = 5,
                        check_outliers = TRUE,
                        approximate_posterior_inference = TRUE,
                        verbose = FALSE,
@@ -53,7 +54,7 @@ sccomp_glm.Seurat = function(.data,
                              .cell_group,
                              .count = NULL,
                              # Secondary arguments
-                             false_positive_rate = 0.05,
+                             percent_false_positive = 5,
                              check_outliers = TRUE,
                              approximate_posterior_inference = TRUE,
                              verbose = FALSE,
@@ -70,7 +71,7 @@ sccomp_glm.Seurat = function(.data,
   .data[[]] %>%
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
-      false_positive_rate = false_positive_rate,
+      percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
@@ -90,7 +91,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            .count = NULL,
 
                                            # Secondary arguments
-                                           false_positive_rate = 0.05,
+                                           percent_false_positive = 5,
                                            check_outliers = TRUE,
                                            approximate_posterior_inference = TRUE,
                                            verbose = FALSE,
@@ -110,7 +111,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
       check_outliers = check_outliers,
-      false_positive_rate = false_positive_rate,
+      percent_false_positive = percent_false_positive ,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
       noise_model = noise_model,
@@ -129,7 +130,7 @@ sccomp_glm.DFrame = function(.data,
                              .count = NULL,
 
                              # Secondary arguments
-                             false_positive_rate = 0.05,
+                             percent_false_positive = 5,
                              check_outliers = TRUE,
                              approximate_posterior_inference = TRUE,
                              verbose = FALSE,
@@ -149,7 +150,7 @@ sccomp_glm.DFrame = function(.data,
     as.data.frame %>%
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
-      false_positive_rate = false_positive_rate,
+      percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
@@ -168,7 +169,7 @@ sccomp_glm.data.frame = function(.data,
                                  .count = NULL,
 
                                  # Secondary arguments
-                                 false_positive_rate =  0.05,
+                                 percent_false_positive =  5,
                                  check_outliers = TRUE,
                                  approximate_posterior_inference = TRUE,
                                  verbose = FALSE,
@@ -197,7 +198,7 @@ sccomp_glm.data.frame = function(.data,
         formula = formula,
         !!.sample,
         !!.cell_group,
-        false_positive_rate = false_positive_rate,
+        percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
         verbose = verbose,
@@ -213,7 +214,7 @@ sccomp_glm.data.frame = function(.data,
         !!.sample,
         !!.cell_group,
         !!.count,
-        false_positive_rate = false_positive_rate,
+        percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
         verbose = verbose,
@@ -233,7 +234,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      my_glm_model,
 
                                      # Secondary arguments
-                                     false_positive_rate =  0.05,
+                                     percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = TRUE,
                                      verbose = FALSE,
@@ -283,7 +284,7 @@ sccomp_glm_data_frame_raw = function(.data,
       .cell_group = !!.cell_group,
       .count = count,
       my_glm_model = my_glm_model,
-      false_positive_rate =  false_positive_rate,
+      percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       cores = cores,
@@ -300,7 +301,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         my_glm_model,
 
                                         # Secondary arguments
-                                        false_positive_rate = 0.05,
+                                        percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = TRUE,
                                         verbose = FALSE,
@@ -336,7 +337,7 @@ sccomp_glm_data_frame_counts = function(.data,
       .sample = !!.sample,
       .cell_type = !!.cell_group,
       .count = count,
-      false_positive_rate = false_positive_rate,
+      percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       cores = cores,

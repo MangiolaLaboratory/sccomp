@@ -38,7 +38,7 @@ multi_beta_binomial_glm = function(.data,
                                    .sample,
                                    .cell_type,
                                    .count,
-                                   false_positive_rate = 0.05,
+                                   percent_false_positive = 5,
                                    check_outliers = FALSE,
                                    approximate_posterior_inference = T,
                                    variance_association = F,
@@ -51,7 +51,7 @@ multi_beta_binomial_glm = function(.data,
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
 
-  CI = 1 - false_positive_rate
+  CI = 1 - (percent_false_positive/100)
 
   # Produce data list
   covariate_names = parse_formula(formula)

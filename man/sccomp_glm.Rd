@@ -10,7 +10,7 @@ sccomp_glm(
   .sample,
   .cell_group,
   .count = NULL,
-  false_positive_rate = 0.05,
+  percent_false_positive = 5,
   check_outliers = TRUE,
   approximate_posterior_inference = TRUE,
   verbose = FALSE,
@@ -20,7 +20,7 @@ sccomp_glm(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column}
+\item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
 \item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
 
@@ -28,7 +28,9 @@ sccomp_glm(
 
 \item{.cell_group}{A column name as symbol. The cell_type identifier}
 
-\item{.count}{A column name as symbol. The cell_type abundance (read count). Used ony for data frame count output.}
+\item{.count}{A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.}
+
+\item{percent_false_positive}{A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.}
 
 \item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
 
