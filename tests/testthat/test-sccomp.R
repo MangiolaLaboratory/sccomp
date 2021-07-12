@@ -13,16 +13,16 @@ data("counts_obj")
 #   library(digest)
 #
 #   res =
-#     sccomp::counts_obj  %>%
+#     sccomp::counts_obj  |>
 #     sccomp_glm(
 #       formula = ~ type,
 #       sample, cell_type, count
 #     )
 #
 #   expect_equal(
-#     res %>%
-#       distinct(cell_type, significant) %>%
-#       pull(significant) %>%
+#     res |>
+#       distinct(cell_type, significant) |>
+#       pull(significant) |>
 #       digest(algo="md5"),
 #     "f6cef772af43198f586e15c96b2f1239"
 #   )
@@ -33,7 +33,7 @@ test_that("counts dirichlet multinomial outlier VB",{
 
   if(interactive()){
     res =
-      counts_obj  %>%
+      counts_obj  |>
       sccomp_glm(
         formula = ~ type,
         sample, cell_group, count,
@@ -46,7 +46,7 @@ test_that("counts dirichlet multinomial outlier VB",{
 test_that("counts multi beta binomial outlier VB",{
 
   res =
-    counts_obj  %>%
+    counts_obj  |>
     sccomp_glm(
       formula = ~ type,
       sample, cell_group, count,
@@ -59,7 +59,7 @@ test_that("counts multi beta binomial outlier VB",{
 test_that("counts multi beta binomial outlier VB",{
 
   res =
-    counts_obj  %>%
+    counts_obj  |>
     sccomp_glm(
       formula = ~ type,
       sample, cell_group, count,
@@ -73,7 +73,7 @@ test_that("counts multi beta binomial outlier VB",{
 test_that("multi beta binomial from Seurat",{
 
   res =
-    seurat_obj %>%
+    seurat_obj |>
     sccomp_glm(
       formula = ~ type,
       sample, cell_group,
@@ -86,7 +86,7 @@ test_that("multi beta binomial from Seurat",{
 test_that("multi beta binomial from SCE",{
 
   res =
-    sce_obj %>%
+    sce_obj |>
     sccomp_glm(
       formula = ~ type,
       sample, cell_group,
@@ -99,7 +99,7 @@ test_that("multi beta binomial from SCE",{
 test_that("multi beta binomial from metadata",{
 
   res =
-    seurat_obj[[]] %>%
+    seurat_obj[[]] |>
     sccomp_glm(
       formula = ~ type,
       sample, cell_group,

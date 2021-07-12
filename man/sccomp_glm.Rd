@@ -10,6 +10,7 @@ sccomp_glm(
   .sample,
   .cell_group,
   .count = NULL,
+  false_positive_rate = 0.05,
   check_outliers = TRUE,
   approximate_posterior_inference = TRUE,
   verbose = FALSE,
