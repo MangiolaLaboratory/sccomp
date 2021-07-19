@@ -32,7 +32,7 @@
 #'
 #'
 sccomp_glm <- function(.data,
-                       formula ,
+                       formula = ~ 1 ,
                        .sample,
                        .cell_group,
                        .count = NULL,
@@ -49,7 +49,7 @@ sccomp_glm <- function(.data,
 
 #' @export
 sccomp_glm.Seurat = function(.data,
-                             formula ,
+                             formula = ~ 1 ,
                              .sample,
                              .cell_group,
                              .count = NULL,
@@ -85,7 +85,7 @@ sccomp_glm.Seurat = function(.data,
 
 #' @export
 sccomp_glm.SingleCellExperiment = function(.data,
-                                           formula ,
+                                           formula = ~ 1 ,
                                            .sample,
                                            .cell_group,
                                            .count = NULL,
@@ -163,7 +163,7 @@ sccomp_glm.DFrame = function(.data,
 #' @importFrom purrr when
 #' @export
 sccomp_glm.data.frame = function(.data,
-                                 formula ,
+                                 formula = ~ 1 ,
                                  .sample,
                                  .cell_group,
                                  .count = NULL,
@@ -228,7 +228,7 @@ sccomp_glm.data.frame = function(.data,
 #' @importFrom tidyr complete
 #' @importFrom tidyr nesting
 sccomp_glm_data_frame_raw = function(.data,
-                                     formula,
+                                     formula = ~ 1,
                                      .sample,
                                      .cell_group,
                                      my_glm_model,
@@ -269,13 +269,19 @@ sccomp_glm_data_frame_raw = function(.data,
   .data %>%
     count(!!.sample,
           !!.cell_group,
-          !!as.symbol(parse_formula(formula)),
           name = "count") %>%
+
     complete(
-      nesting(!!.sample_for_tidyr,!!as.symbol(parse_formula(formula))),!!.cell_group_for_tidyr,
+      nesting(!!.sample_for_tidyr),!!.cell_group_for_tidyr,
       fill = list(count = 0)
     ) %>%
     mutate(count = as.integer(count)) %>%
+
+    # Add formula information
+    when(
+      length(parse_formula(formula))>0 ~ left_join(., .data %>% distinct(!!.sample,!!as.symbol(parse_formula(formula)) )),
+      ~ (.)
+    ) %>%
 
     # Return
     sccomp_glm_data_frame_counts(
