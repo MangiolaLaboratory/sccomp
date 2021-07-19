@@ -6,7 +6,7 @@
 \usage{
 sccomp_glm(
   .data,
-  formula,
+  formula = ~1,
   .sample,
   .cell_group,
   .count = NULL,

@@ -78,11 +78,16 @@ multi_beta_binomial_glm = function(.data,
       parse_fit(data_for_model, .) %>%
       beta_to_CI( ) %>%
 
-      # Join filtered
-      mutate(
-        significant =
-          !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-          !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
+      # Hypothesis test
+      when(
+        ncol(data_for_model$X>1) ~
+          mutate(
+            .,
+            significant =
+              !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
+              !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
+          ),
+        ~ (.)
       ) %>%
 
       # Join the precision
@@ -170,7 +175,6 @@ multi_beta_binomial_glm = function(.data,
       data = data_for_model
     )
 
-
     # Detect outliers
     truncation_df2 =
       .data %>%
@@ -217,17 +221,22 @@ multi_beta_binomial_glm = function(.data,
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
       fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
-    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
+      #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
     fit3 %>%
       parse_fit(data_for_model, .) %>%
       beta_to_CI( ) %>%
 
-      # Join filtered
-      mutate(
-        significant =
-          !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-          !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
+      # Hypothesis test
+      when(
+        ncol(data_for_model$X>1) ~
+          mutate(
+            .,
+            significant =
+              !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
+              !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
+          ),
+        ~ (.)
       ) %>%
 
       # Join the precision
