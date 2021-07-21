@@ -320,6 +320,10 @@ sccomp_glm_data_frame_counts = function(.data,
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
+  # Check that count is integer
+  if(.data %>% pull(!!.count) %>% is("integer") %>% not())
+    stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
+
   # Check if columns exist
   check_columns_exist(.data, c(
     quo_name(.sample),
@@ -342,7 +346,7 @@ sccomp_glm_data_frame_counts = function(.data,
       formula = formula,
       .sample = !!.sample,
       .cell_type = !!.cell_group,
-      .count = count,
+      .count = !!.count,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -350,4 +354,112 @@ sccomp_glm_data_frame_counts = function(.data,
       verbose = verbose,
       seed = seed
     )
+}
+
+
+#' simulate_data
+#'
+#' @description This function simulates counts from a linear model.
+#'
+#' @import dplyr
+#' @importFrom magrittr %$%
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+#' @importFrom magrittr equals
+#' @importFrom rlang quo_is_null
+#' @importFrom SingleCellExperiment colData
+#' @importFrom parallel detectCores
+#'
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
+#' @param .sample A column name as symbol. The sample identifier
+#' @param .cell_group A column name as symbol. The cell_type identifier
+#' @param .count A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.
+#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
+#' @param check_outliers A boolean. Whether to check for outliers before the fit.
+#' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
+#' @param verbose A boolean. Prints progression.
+#' @param noise_model A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.
+#' @param cores An integer. How many cored to be used with parallel calculations.
+#' @param seed An integer. Used for development and testing purposes
+#'
+#' @return A nested tibble `tbl` with cell_group-wise statistics
+#'
+#' @export
+#'
+#'
+simulate_data <- function(.data,
+                       formula = ~ 1 ,
+                       .sample,
+                       .cell_group,
+                       .sample_cell_count,
+                       .coefficients,
+                       # Secondary arguments
+                       percent_false_positive = 5,
+                       check_outliers = TRUE,
+                       approximate_posterior_inference = TRUE,
+                       verbose = FALSE,
+                       noise_model = "multi_beta_binomial",
+                       cores = detectCores(),
+                       seed = 42) {
+  UseMethod("simulate_data", .data)
+}
+
+#' @export
+simulate_data.data.frame = function(.data,
+                                    formula = ~ 1 ,
+                                    .sample,
+                                    .cell_group,
+                                    .sample_cell_count,
+                                    .coefficients,
+                                    # Secondary arguments
+                                    percent_false_positive = 5,
+                                    check_outliers = TRUE,
+                                    approximate_posterior_inference = TRUE,
+                                    verbose = FALSE,
+                                    noise_model = "multi_beta_binomial",
+                                    cores = detectCores(),
+                                    seed = 42){
+
+
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  .sample_cell_count = enquo(.sample_cell_count)
+  .coefficients = enquo(.coefficients)
+
+  model_data =
+    input_data %>%
+    data_simulation_to_model_input(formula, !!.sample, !!.cell_group, !!.sample_cell_count, !!.coefficients )
+
+  model_data$prec_coeff = c( 5.6260004, -0.6940178)
+  model_data$prec_sd  = 0.816423129
+
+    # [1]  5.6260004 -0.6940178
+    # prec_sd  = 0.816423129
+
+  fit =
+    sampling(
+    stanmodels$glm_multi_beta_binomial_simulate_data,
+    #stan_model("inst/stan/glm_multi_beta_binomial_simulate_data.stan"),
+    data = model_data,
+    chains = 1,
+    cores = 1,
+    iter = 151,
+    warmup = 150,
+    #refresh = ifelse(verbose, 1000, 0),
+    seed = seed,
+    #pars = pars,
+    save_warmup = F
+  )
+
+  .data %>%
+    arrange(!!.sample, !!.cell_group) %>%
+    bind_cols(
+      fit %>%
+        tidybayes::gather_draws(counts[N, M]) %>%
+        ungroup() %>%
+        arrange(N, M) %>%
+        select(.value)
+    )
+
 }
