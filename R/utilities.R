@@ -656,6 +656,60 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count){
 
 }
 
+#' @importFrom purrr when
+data_simulation_to_model_input =
+  function(.data, formula, .sample, .cell_type, .exposure, .coefficients, variance_association = F, truncation_ajustment = 1, approximate_posterior_inference ){
+
+    # Prepare column same enquo
+    .sample = enquo(.sample)
+    .cell_type = enquo(.cell_type)
+    .exposure = enquo(.exposure)
+    .coefficients = enquo(.coefficients)
+
+    covariate_names = parse_formula(formula)
+
+    X =
+      .data %>%
+      select(!!.sample, covariate_names) %>%
+      distinct() %>%
+      arrange(!!.sample) %>%
+      model.matrix(formula, data=.) %>%
+      apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=F)))
+
+    XA = variance_association %>%
+      when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,1:2, drop=FALSE]) %>%
+      as_tibble() %>%
+      distinct()
+
+    cell_cluster_names =
+      .data %>%
+      distinct(!!.cell_type) %>%
+      arrange(!!.cell_type) %>%
+      pull(!!.cell_type)
+
+    coefficients =
+      .data %>%
+      select(!!.cell_type, !!.coefficients) %>%
+      unnest(!!.coefficients) %>%
+      distinct() %>%
+      arrange(!!.cell_type) %>%
+      as_matrix(rownames = quo_name(.cell_type)) %>%
+      t()
+
+    list(
+        N = .data %>% distinct(!!.sample) %>% nrow(),
+        M = .data %>% distinct(!!.cell_type) %>% nrow(),
+        exposure = .data %>% distinct(!!.sample, !!.exposure) %>% arrange(!!.sample) %>% pull(!!.exposure),
+        X = X,
+        XA = XA,
+        C = ncol(X),
+        A =  ncol(XA),
+        beta = coefficients
+      )
+
+  }
+
+
 #' Choose the number of chains baed on how many draws we need from the posterior distribution
 #' Because there is a fix cost (warmup) to starting a new chain,
 #' we need to use the minimum amount that we can parallelise
