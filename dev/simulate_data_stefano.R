@@ -35,6 +35,7 @@ sim_data %>%
   facet_wrap(~ cell_type)
 
 
+
 # dmbvs
 source(file.path("dev/dmbvs-master/dmbvs-master/code", "wrapper.R"))
 source(file.path("dev/dmbvs-master/dmbvs-master/code", "helper_functions.R"))
@@ -48,49 +49,93 @@ results = dmbvs(XX = simdata$XX[,-1][,1, drop=FALSE], YY = simdata$YY,
                 bb_alpha = 0.02, bb_beta = 1.98, GG = 1100L, thin = 10L, burn = 100L,
                 exec = file.path(".", "dev/dmbvs-master/dmbvs-master/code", "dmbvs.x"), output_location = "dev/dmbvs-master")
 
-# edgeR
-sim_data %>%
-  mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
-  test_differential_abundance(
-    ~ type,
-    sample, cell_type, .value
-  ) %>%
-  pivot_transcript(cell_type) %>% filter(FDR<0.05)
 
-# Voom Limma
-sim_data %>%
-  mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
-  group_by(sample) %>%
-  mutate(proportion = (.value+1)/sum(.value+1)) %>%
-  ungroup(sample) %>%
-  mutate(rate = proportion %>% boot::logit()) %>%
-  mutate(rate = rate - min(rate)) %>%
-  mutate(counts = rate %>% exp()) %>%
-  test_differential_abundance(
-    ~ type,
-    sample, cell_type, counts,
-    method = "limma_voom",
-  ) %>%
-  pivot_transcript(cell_type) %>%
-  filter(adj.P.Val<0.05)
+# Iterate over runs
+benchmark =
+  tibble(run = 1:10) %>%
+  mutate(data = map(
+    run,
+    ~ simulate_data(input_data,
+                    formula = ~ type ,
+                    sample,
+                    cell_type, tot_count, coefficients,
+                    seed = .x
+    )
+  )) %>%
 
-# Speckle
-library(speckle)
+  # edgeR
+  mutate( results_edger = map(
+    data,
+    ~  .x %>%
+      mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
+      test_differential_abundance(
+        ~ type,
+        sample, cell_type, .value
+      ) %>%
+      pivot_transcript(cell_type) %>%
+      mutate(positive = FDR<0.05)
+  )) %>%
 
-sim_data %>%
-  mutate(cell_number = map(.value, ~ 1:.x)) %>%
-  unnest(cell_number) %>%
-  unite("cell", c(sample, cell_type, cell_number), remove = FALSE) %>%
-  propeller(clusters =  .$cell_type, sample = .$sample, group = .$type) %>%
-  as_tibble(rownames="curated_cell_type")
+  # voom
+  mutate( results_voom = map(
+    data,
+    ~  .x %>%
+      mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
+      group_by(sample) %>%
+      mutate(proportion = (.value+1)/sum(.value+1)) %>%
+      ungroup(sample) %>%
+      mutate(rate = proportion %>% boot::logit()) %>%
+      mutate(rate = rate - min(rate)) %>%
+      mutate(counts = rate %>% exp()) %>%
+      test_differential_abundance(
+        ~ type,
+        sample, cell_type, counts,
+        method = "limma_voom",
+      ) %>%
+      pivot_transcript(cell_type) %>%
+      mutate(positive = adj.P.Val<0.05)
+  )) %>%
 
-# sccomp
-sim_data %>%
-  mutate(.value = as.integer(.value)) %>%
-  sccomp_glm(
-    ~type,
-    sample, cell_type, .value,
-    check_outliers = FALSE,
-    approximate_posterior_inference = FALSE
-  ) %>%
-  dplyr::select(contains("type"))
+  # speckle
+  mutate( results_speckle = map(
+    data,
+    ~  .x %>%
+      mutate(cell_number = map(.value, ~ 1:.x)) %>%
+      unnest(cell_number) %>%
+      unite("cell", c(sample, cell_type, cell_number), remove = FALSE) %>%
+      propeller(clusters =  .$cell_type, sample = .$sample, group = .$type) %>%
+      as_tibble(rownames="cell_type") %>%
+      mutate(positive = FDR<0.05)
+  )) %>%
+
+  # sccomp
+  mutate( results_sccomp = map(
+    data,
+    ~  .x %>%
+      mutate(.value = as.integer(.value)) %>%
+      sccomp_glm(
+        ~type,
+        sample, cell_type, .value,
+        check_outliers = FALSE,
+        approximate_posterior_inference = FALSE,
+        percent_false_positive = 1
+      ) %>%
+      mutate(positive = (.lower_type * .upper_type) > 0)
+  ))
+
+benchmark %>%
+  mutate(accuracy_df = map2(
+    data, results_sccomp             ,
+    ~ left_join(
+
+      .x %>% unnest(coefficients) %>% dplyr::select(cell_type, beta_1) %>% distinct %>% mutate(cell_type = as.character(cell_type)),
+      .y %>% dplyr::select(cell_type, positive),
+      by="cell_type"
+
+    )
+
+  )) %>%
+  mutate(TP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 != 0)) %>% nrow())) %>%
+  mutate(FP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 == 0)) %>% nrow()))
+
+

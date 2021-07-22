@@ -1,4 +1,14 @@
 
+
+# Greater than
+gt = function(a, b){	a > b }
+
+# Smaller than
+st = function(a, b){	a < b }
+
+# Negation
+not = function(is){	!is }
+
 #' Add attribute to abject
 #'
 #' @keywords internal
@@ -549,7 +559,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #'
 #' @keywords internal
 #' @noRd
-beta_to_CI = function(fitted, censoring_iteration = 1){
+beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate){
 
 
   fitted %>%
@@ -560,11 +570,11 @@ beta_to_CI = function(fitted, censoring_iteration = 1){
       data,
       ~ quantile(
         .x$.value,
-        probs = c(0.025,  0.5,  0.975)
+        probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
       ) %>%
         enframe() %>%
         spread(name, value) %>%
-        rename(.lower =  `2.5%`, .median = `50%`, .upper = `97.5%`)
+        setNames(c(".lower", ".median", ".upper"))
     )) %>%
     unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%
@@ -743,3 +753,7 @@ get.elbow.points.indices <- function(x, y, threshold) {
   indices <- which(abs(d2) > threshold)
   return(indices)
 }
+
+
+
+
