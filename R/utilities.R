@@ -573,8 +573,8 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate){
         probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
       ) %>%
         enframe() %>%
-        spread(name, value) %>%
-        setNames(c(".lower", ".median", ".upper"))
+        mutate(name = c(".lower", ".median", ".upper")) %>%
+        spread(name, value)
     )) %>%
     unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%

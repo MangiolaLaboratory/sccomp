@@ -262,7 +262,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       ) %>%
 
       # Join the precision
-      left_join(get_mean_precision(fit)) %>%
+      left_join(get_mean_precision(fit), by="M") %>%
 
       # Clean
       select(-M) %>%
@@ -295,7 +295,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       ) %>%
 
       # Join the precision
-      left_join(get_mean_precision(fit)) %>%
+      left_join(get_mean_precision(fit), by="M") %>%
 
       # Clesn
       select(-M) %>%
