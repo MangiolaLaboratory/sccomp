@@ -29,22 +29,24 @@
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
 #'
-#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
 #'
-#' @export
+#' @noRd
 #'
-multi_beta_binomial_glm = function(.data,
-                                   formula = ~ 1,
-                                   .sample,
-                                   .cell_type,
-                                   .count,
-                                   percent_false_positive = 5,
-                                   check_outliers = FALSE,
-                                   approximate_posterior_inference = T,
-                                   variance_association = F,
-                                   cores = detectCores(), # For development purpose,
-                                   seed = sample(1:99999, size = 1),
-                                   verbose = FALSE
+#' @return A List object
+#'
+#'
+estimate_multi_beta_binomial_glm = function(.data,
+                                            formula = ~ 1,
+                                            .sample,
+                                            .cell_type,
+                                            .count,
+                                            percent_false_positive = 5,
+                                            check_outliers = FALSE,
+                                            approximate_posterior_inference = T,
+                                            variance_association = F,
+                                            cores = detectCores(), # For development purpose,
+                                            seed = sample(1:99999, size = 1),
+                                            verbose = FALSE
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -74,32 +76,7 @@ multi_beta_binomial_glm = function(.data,
       # Run the first discovery phase with permissive false discovery rate
       fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
 
-    fit %>%
-      parse_fit(data_for_model, .) %>%
-      beta_to_CI( ) %>%
-
-      # Hypothesis test
-      when(
-        ncol(data_for_model$X>1) ~
-          mutate(
-            .,
-            significant =
-              !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-              !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-          ),
-        ~ (.)
-      ) %>%
-
-      # Join the precision
-      left_join(get_mean_precision(fit)) %>%
-
-      # Clean
-      select(-M) %>%
-      mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
-      select(!!.cell_type, everything()) %>%
-
-      # Attach association mean concentration
-      add_attr(get_mean_precision_association(fit), "mean_concentration_association")
+    list(fit = fit, data_for_model = data_for_model, truncation_df2 = NULL)
 
 
   }
@@ -221,11 +198,56 @@ multi_beta_binomial_glm = function(.data,
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
       fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
-      #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
+    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
-    fit3 %>%
+    list(fit = fit3, data_for_model = data_for_model, truncation_df2 = truncation_df2)
+
+
+  }
+
+
+}
+
+#' multi_beta_binomial main
+#'
+#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
+#'
+#' @importFrom tibble as_tibble
+#' @import dplyr
+#' @importFrom tidyr spread
+#' @importFrom magrittr %$%
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+#' @importFrom purrr map2
+#' @importFrom purrr map_int
+#' @importFrom magrittr multiply_by
+#' @importFrom magrittr equals
+#' @importFrom purrr map
+#' @importFrom tibble rowid_to_column
+#' @importFrom purrr map_lgl
+#' @importFrom dplyr case_when
+#'
+#' @param fit The fit object
+#' @param data_for_model Parsed data
+#' @param check_outliers A boolean
+#' @param truncation_df2 Truncation data frame
+#'
+#' @noRd
+#'
+#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
+#'
+#'
+hypothesis_test_multi_beta_binomial_glm = function( .sample,
+                                                    .cell_type, fit, data_for_model, percent_false_positive, check_outliers,  truncation_df2 = NULL) {
+
+  .sample = enquo(.sample)
+  .cell_type = enquo(.cell_type)
+
+  if(!check_outliers){
+
+    fit %>%
       parse_fit(data_for_model, .) %>%
-      beta_to_CI( ) %>%
+      beta_to_CI(false_positive_rate = percent_false_positive/100 ) %>%
 
       # Hypothesis test
       when(
@@ -240,7 +262,40 @@ multi_beta_binomial_glm = function(.data,
       ) %>%
 
       # Join the precision
-      left_join(get_mean_precision(fit3)) %>%
+      left_join(get_mean_precision(fit)) %>%
+
+      # Clean
+      select(-M) %>%
+      mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
+      select(!!.cell_type, everything()) %>%
+
+      # Attach association mean concentration
+      add_attr(get_mean_precision_association(fit), "mean_concentration_association")
+
+
+  }
+
+  else{
+
+
+    fit %>%
+      parse_fit(data_for_model, .) %>%
+      beta_to_CI( false_positive_rate = percent_false_positive/100 ) %>%
+
+      # Hypothesis test
+      when(
+        ncol(data_for_model$X>1) ~
+          mutate(
+            .,
+            significant =
+              !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
+              !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
+          ),
+        ~ (.)
+      ) %>%
+
+      # Join the precision
+      left_join(get_mean_precision(fit)) %>%
 
       # Clesn
       select(-M) %>%
@@ -256,10 +311,94 @@ multi_beta_binomial_glm = function(.data,
       ) %>%
 
       # Attach association mean concentration
-      add_attr(get_mean_precision_association(fit3), "mean_concentration_association")
+      add_attr(get_mean_precision_association(fit), "mean_concentration_association")
 
   }
 
+
+}
+
+
+#' multi_beta_binomial main
+#'
+#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
+#'
+#' @importFrom tibble as_tibble
+#' @import dplyr
+#' @importFrom tidyr spread
+#' @importFrom magrittr %$%
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+#' @importFrom purrr map2
+#' @importFrom purrr map_int
+#' @importFrom magrittr multiply_by
+#' @importFrom magrittr equals
+#' @importFrom purrr map
+#' @importFrom tibble rowid_to_column
+#' @importFrom purrr map_lgl
+#' @importFrom dplyr case_when
+#'
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
+#' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
+#' @param .sample A column name as symbol. The sample identifier
+#' @param .cell_type A column name as symbol. The cell_type identifier
+#' @param .count A column name as symbol. The cell_type abundance (read count)
+#' @param check_outliers A boolean. Whether to check for outliers before the fit.
+#' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
+#' @param variance_association A boolean. Whether the variance should be associated to the factor of interest.
+#' @param verbose A boolean. Prints progression.
+#' @param cores An integer. How many cored to be used with parallel calculations.
+#' @param seed An integer. Used for development and testing purposes
+#'
+#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
+#'
+#' @export
+#'
+multi_beta_binomial_glm = function(.data,
+                                   formula = ~ 1,
+                                   .sample,
+                                   .cell_type,
+                                   .count,
+                                   percent_false_positive = 5,
+                                   check_outliers = FALSE,
+                                   approximate_posterior_inference = T,
+                                   variance_association = F,
+                                   cores = detectCores(), # For development purpose,
+                                   seed = sample(1:99999, size = 1),
+                                   verbose = FALSE
+) {
+  # Prepare column same enquo
+  .sample = enquo(.sample)
+  .cell_type = enquo(.cell_type)
+  .count = enquo(.count)
+
+
+  result_list =
+    estimate_multi_beta_binomial_glm(
+    .data = .data,
+    formula = formula,
+    .sample = !!.sample,
+    .cell_type = !!.cell_type,
+    .count = !!.count,
+    percent_false_positive = percent_false_positive,
+    check_outliers = check_outliers,
+    approximate_posterior_inference = approximate_posterior_inference,
+    variance_association = variance_association,
+    cores = cores, # For development purpose,
+    seed = seed,
+    verbose = verbose
+  )
+
+
+  hypothesis_test_multi_beta_binomial_glm(
+    .sample = !!.sample,
+    .cell_type = !!.cell_type,
+    result_list$fit,
+    result_list$data_for_model,
+    percent_false_positive,
+    check_outliers,
+    result_list$truncation_df2
+  )
 
 }
 
