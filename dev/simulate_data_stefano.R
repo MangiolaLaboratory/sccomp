@@ -5,7 +5,6 @@ library(tidybulk)
 library(speckle)
 library(edgeR)
 library(limma)
-library(plotROC)
 
 input_data =
   expand_grid(
@@ -53,18 +52,19 @@ input_data =
 #                 bb_alpha = 0.02, bb_beta = 1.98, GG = 1100L, thin = 10L, burn = 100L,
 #                 exec = file.path(".", "dev/dmbvs-master/dmbvs-master/code", "dmbvs.x"), output_location = "dev/dmbvs-master")
 
-probs = c(0, 0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+#probs = c(0, 0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+probs = seq(0, 0.1,length.out = 20)
 
 # Iterate over runs
 benchmark =
-  tibble(run = 1:5) %>%
+  tibble(run = 1:20) %>%
   mutate(data = map(
     run,
     ~ simulate_data(input_data,
                     formula = ~ type ,
                     sample,
                     cell_type, tot_count, coefficients,
-                    seed = .x
+                    seed = .x * 2
     )
   )) %>%
 
@@ -125,9 +125,11 @@ benchmark =
   ))
 
 
-benchmark =
+
+
+benchmark_hypothesis =
   benchmark %>%
-  mutate(probs = map(run, ~ probs)) %>%
+  mutate(probs = map(run, ~ !!probs)) %>%
   unnest(probs) %>%
   mutate(hypothesis_edger = map2(results_edger, probs, ~ mutate(.x, positive = FDR<.y))) %>%
   mutate(hypothesis_voom = map2(results_voom, probs, ~ mutate(.x, positive = adj.P.Val<.y))) %>%
@@ -143,6 +145,8 @@ benchmark =
     )  %>%
       mutate(positive = (.lower_type * .upper_type) > 0)
   ))
+
+saveRDS(benchmark, "dev/benchmark.rds")
 
 
 benchmark %>%

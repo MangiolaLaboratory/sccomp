@@ -406,6 +406,8 @@ simulate_data <- function(.data,
 }
 
 #' @export
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
 simulate_data.data.frame = function(.data,
                                     formula = ~ 1 ,
                                     .sample,
@@ -460,6 +462,13 @@ simulate_data.data.frame = function(.data,
         ungroup() %>%
         arrange(N, M) %>%
         select(.value)
-    )
+    ) %>%
+
+    # Scale counts for exposure
+    nest(data = -c(sample, tot_count )) %>%
+    mutate(tot_count_simulated = map_dbl(data, ~ sum(.x$.value))) %>%
+    mutate(data = pmap(list(data, tot_count, tot_count_simulated),  ~ ..1 %>%  mutate(.value = .value %>% divide_by(..3) %>% multiply_by(..2) %>% round %>% as.integer ))) %>%
+    unnest(data)
+
 
 }
