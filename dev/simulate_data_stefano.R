@@ -8,11 +8,16 @@ library(limma)
 
 input_data =
   expand_grid(
-    sample = 1:10, cell_type = 1:10
+    sample = 1:12, cell_type = 1:12
   ) %>%
   nest(d = -cell_type) %>%
   mutate(beta_0 = rnorm(n = n(), 0, 1)) %>%
-  mutate(beta_1 = (cell_type == 1) %>% as.integer %>% multiply_by(0.5)) %>%
+  mutate(  beta_1 = case_when(
+      cell_type %in% 1:3 ~ 1,
+      cell_type %in% 4:6 ~ -1,
+      TRUE ~ 0
+    )) %>%
+  mutate(beta_1 = beta_1 %>% multiply_by(0.5)) %>%
   nest(coefficients = starts_with("beta_")) %>%
   unnest(d) %>%
   nest(d = -sample) %>%
@@ -53,7 +58,7 @@ input_data =
 #                 exec = file.path(".", "dev/dmbvs-master/dmbvs-master/code", "dmbvs.x"), output_location = "dev/dmbvs-master")
 
 #probs = c(0, 0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-probs = seq(0, 0.1,length.out = 20)
+probs = seq(0, 0.2,length.out = 20)
 
 # Iterate over runs
 benchmark =
@@ -111,8 +116,8 @@ benchmark =
   )) %>%
 
   # sccomp
-  mutate( results_sccomp = map(
-    data,
+  mutate( results_sccomp = map2(
+    data, run,
     ~  .x %>%
       mutate(.value = as.integer(.value)) %>%
       sccomp:::estimate_multi_beta_binomial_glm(
@@ -120,10 +125,12 @@ benchmark =
         sample, cell_type, .value,
         check_outliers = FALSE,
         approximate_posterior_inference = FALSE,
-        percent_false_positive = 0.001 * 100
+        percent_false_positive = 0.001 * 100,
+        seed = .y * 2
       )
   ))
 
+saveRDS(benchmark, "dev/benchmark.rds")
 
 
 
@@ -144,12 +151,12 @@ benchmark_hypothesis =
       .x$truncation_df2
     )  %>%
       mutate(positive = (.lower_type * .upper_type) > 0)
-  ))
+  )) %>%
+  dplyr::select(-contains("results"))
 
-saveRDS(benchmark, "dev/benchmark.rds")
 
 
-benchmark %>%
+benchmark_hypothesis %>%
   dplyr::select(-contains("results")) %>%
   pivot_longer(contains("hypothesis"),names_prefix = "hypothesis_" ) %>%
   mutate(accuracy_df = map2(
@@ -165,14 +172,15 @@ benchmark %>%
   )) %>%
   mutate(TP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 != 0)) %>% nrow())) %>%
   mutate(FP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 == 0)) %>% nrow())) %>%
-  mutate(total_true_positive = 1, total_true_negative = 9) %>%
+  mutate(total_true_positive = 6, total_true_negative = 6) %>%
   mutate(FP_rate = FP/total_true_negative) %>%
   mutate(TP_rate = TP/total_true_positive) %>%
   group_by(name, probs) %>%
   summarise(mean_FP_rate = mean(FP_rate), mean_TP_rate = mean(TP_rate)) %>%
   arrange(mean_FP_rate) %>%
   ggplot(aes(mean_FP_rate, mean_TP_rate)) +
-  geom_line(aes(color = name))
+  geom_line(aes(color = name)) +
+  xlim(0,0.1)
 
 
 
