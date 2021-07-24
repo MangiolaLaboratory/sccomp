@@ -17,7 +17,7 @@ input_data =
       cell_type %in% 4:6 ~ -1,
       TRUE ~ 0
     )) %>%
-  mutate(beta_1 = beta_1 %>% multiply_by(0.5)) %>%
+  mutate(beta_1 = beta_1 %>% multiply_by(0.2)) %>%
   nest(coefficients = starts_with("beta_")) %>%
   unnest(d) %>%
   nest(d = -sample) %>%
@@ -34,13 +34,6 @@ input_data =
 #                 cell_type, tot_count, coefficients
 #   )
 #
-# sim_data %>%
-#   group_by(sample) %>%
-#   mutate(proportion = (.value+1)/sum(.value+1)) %>%
-#   ungroup(sample) %>%
-#   ggplot(aes(factor(type), proportion)) +
-#   geom_boxplot() +
-#   facet_wrap(~ cell_type)
 
 
 
@@ -58,11 +51,11 @@ input_data =
 #                 exec = file.path(".", "dev/dmbvs-master/dmbvs-master/code", "dmbvs.x"), output_location = "dev/dmbvs-master")
 
 #probs = c(0, 0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-probs = seq(0, 0.2,length.out = 20)
+# probs = seq(0, 0.2,length.out = 20)
 
 # Iterate over runs
 benchmark =
-  tibble(run = 1:1) %>%
+  tibble(run = 1:5) %>%
   mutate(data = map(
     run,
     ~ simulate_data(input_data,
@@ -130,27 +123,39 @@ benchmark =
       )
   ))
 
+
 saveRDS(benchmark, "dev/benchmark.rds")
 
+benchmark %>%
+  pull(data) %>%
+  .[[1]] %>%
+  group_by(sample) %>%
+  mutate(proportion = (.value+1)/sum(.value+1)) %>%
+  ungroup(sample) %>%
+  ggplot(aes(factor(type), proportion)) +
+  geom_boxplot() +
+  facet_wrap(~ cell_type)
 
 
 benchmark_hypothesis =
   benchmark %>%
-  mutate(probs = map(run, ~ !!probs)) %>%
-  unnest(probs) %>%
-  mutate(hypothesis_edger = map2(results_edger, probs, ~ mutate(.x, positive = FDR<.y))) %>%
-  mutate(hypothesis_voom = map2(results_voom, probs, ~ mutate(.x, positive = adj.P.Val<.y))) %>%
-  mutate(hypothesis_speckle = map2(results_speckle, probs, ~ mutate(.x, positive = FDR<.y))) %>%
+  mutate(idx = map(run, ~ 1:(benchmark %>% pull(data) %>% .[[1]] %>% distinct(sample) %>% nrow))) %>%
+  unnest(idx) %>%
+  mutate(hypothesis_edger = map2(results_edger, idx, ~ .x %>% arrange(FDR) %>% mutate(positive = row_number()<.y) %>% mutate(trend = logFC))) %>%
+  mutate(hypothesis_voom = map2(results_voom, idx, ~.x %>% arrange(adj.P.Val) %>% mutate(positive = row_number()<.y) %>% mutate(trend = logFC))) %>%
+  mutate(hypothesis_speckle = map2(results_speckle, idx, ~ .x %>% arrange(FDR) %>% mutate(positive = row_number()<.y) %>% mutate(trend = Tstatistic    ))) %>%
   mutate(hypothesis_sccomp = map2(
-    results_sccomp, probs,
+    results_sccomp, idx,
     ~ sccomp:::hypothesis_test_multi_beta_binomial_glm(
       sample, cell_type,
       .x$fit,
-      .x$data_for_model, percent_false_positive = .y * 100,
+      .x$data_for_model, percent_false_positive = 5,
       check_outliers = F,
       .x$truncation_df2
     )  %>%
-      mutate(positive = (.lower_type * .upper_type) > 0)
+      arrange(prob_non_zero) %>%
+      mutate(positive = row_number()<.y) %>%
+      mutate(trend = .median_type )
   )) %>%
   dplyr::select(-contains("results"))
 
@@ -164,18 +169,25 @@ benchmark_hypothesis %>%
     ~ left_join(
 
       .x %>% unnest(coefficients) %>% dplyr::select(cell_type, beta_1) %>% distinct %>% mutate(cell_type = as.character(cell_type)),
-      .y %>% dplyr::select(cell_type, positive),
+      .y %>% dplyr::select(cell_type, positive, trend),
       by="cell_type"
 
     )
 
   )) %>%
-  mutate(TP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 != 0)) %>% nrow())) %>%
-  mutate(FP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 == 0)) %>% nrow())) %>%
+  mutate(TP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 != 0) & (beta_1 * trend)>0) %>% nrow())) %>%
+  mutate(FP = map_int(accuracy_df, ~ .x %>% filter(
+
+    # Positive when not
+    (positive & (beta_1 == 0)) |
+
+    # Positive when yes but wrong direction
+    (positive & (beta_1 != 0) & (beta_1 * trend)<0)
+  ) %>% nrow())) %>%
   mutate(total_true_positive = 6, total_true_negative = 6) %>%
   mutate(FP_rate = FP/total_true_negative) %>%
   mutate(TP_rate = TP/total_true_positive) %>%
-  group_by(name, probs) %>%
+  group_by(name, idx) %>%
   summarise(mean_FP_rate = mean(FP_rate), mean_TP_rate = mean(TP_rate)) %>%
   arrange(mean_FP_rate) %>%
   ggplot(aes(mean_FP_rate, mean_TP_rate)) +
