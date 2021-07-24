@@ -13,11 +13,12 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
-#' @param .count A column name as symbol. The cell_type abundance (read count). Used ony for data frame count output.
+#' @param .count A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.
+#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param verbose A boolean. Prints progression.
@@ -31,11 +32,12 @@
 #'
 #'
 sccomp_glm <- function(.data,
-                       formula ,
+                       formula = ~ 1 ,
                        .sample,
                        .cell_group,
                        .count = NULL,
                        # Secondary arguments
+                       percent_false_positive = 5,
                        check_outliers = TRUE,
                        approximate_posterior_inference = TRUE,
                        verbose = FALSE,
@@ -47,11 +49,12 @@ sccomp_glm <- function(.data,
 
 #' @export
 sccomp_glm.Seurat = function(.data,
-                             formula ,
+                             formula = ~ 1 ,
                              .sample,
                              .cell_group,
                              .count = NULL,
                              # Secondary arguments
+                             percent_false_positive = 5,
                              check_outliers = TRUE,
                              approximate_posterior_inference = TRUE,
                              verbose = FALSE,
@@ -68,6 +71,7 @@ sccomp_glm.Seurat = function(.data,
   .data[[]] %>%
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
+      percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
@@ -81,11 +85,13 @@ sccomp_glm.Seurat = function(.data,
 
 #' @export
 sccomp_glm.SingleCellExperiment = function(.data,
-                                           formula ,
+                                           formula = ~ 1 ,
                                            .sample,
                                            .cell_group,
                                            .count = NULL,
+
                                            # Secondary arguments
+                                           percent_false_positive = 5,
                                            check_outliers = TRUE,
                                            approximate_posterior_inference = TRUE,
                                            verbose = FALSE,
@@ -105,6 +111,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
       check_outliers = check_outliers,
+      percent_false_positive = percent_false_positive ,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
       noise_model = noise_model,
@@ -123,6 +130,7 @@ sccomp_glm.DFrame = function(.data,
                              .count = NULL,
 
                              # Secondary arguments
+                             percent_false_positive = 5,
                              check_outliers = TRUE,
                              approximate_posterior_inference = TRUE,
                              verbose = FALSE,
@@ -142,6 +150,7 @@ sccomp_glm.DFrame = function(.data,
     as.data.frame %>%
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
+      percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
@@ -154,12 +163,13 @@ sccomp_glm.DFrame = function(.data,
 #' @importFrom purrr when
 #' @export
 sccomp_glm.data.frame = function(.data,
-                                 formula ,
+                                 formula = ~ 1 ,
                                  .sample,
                                  .cell_group,
                                  .count = NULL,
 
                                  # Secondary arguments
+                                 percent_false_positive =  5,
                                  check_outliers = TRUE,
                                  approximate_posterior_inference = TRUE,
                                  verbose = FALSE,
@@ -188,6 +198,7 @@ sccomp_glm.data.frame = function(.data,
         formula = formula,
         !!.sample,
         !!.cell_group,
+        percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
         verbose = verbose,
@@ -203,6 +214,7 @@ sccomp_glm.data.frame = function(.data,
         !!.sample,
         !!.cell_group,
         !!.count,
+        percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
         verbose = verbose,
@@ -216,11 +228,13 @@ sccomp_glm.data.frame = function(.data,
 #' @importFrom tidyr complete
 #' @importFrom tidyr nesting
 sccomp_glm_data_frame_raw = function(.data,
-                                     formula,
+                                     formula = ~ 1,
                                      .sample,
                                      .cell_group,
                                      my_glm_model,
+
                                      # Secondary arguments
+                                     percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = TRUE,
                                      verbose = FALSE,
@@ -255,13 +269,19 @@ sccomp_glm_data_frame_raw = function(.data,
   .data %>%
     count(!!.sample,
           !!.cell_group,
-          !!as.symbol(parse_formula(formula)),
           name = "count") %>%
+
     complete(
-      nesting(!!.sample_for_tidyr,!!as.symbol(parse_formula(formula))),!!.cell_group_for_tidyr,
+      nesting(!!.sample_for_tidyr),!!.cell_group_for_tidyr,
       fill = list(count = 0)
     ) %>%
     mutate(count = as.integer(count)) %>%
+
+    # Add formula information
+    when(
+      length(parse_formula(formula))>0 ~ left_join(., .data %>% distinct(!!.sample,!!as.symbol(parse_formula(formula)) )),
+      ~ (.)
+    ) %>%
 
     # Return
     sccomp_glm_data_frame_counts(
@@ -270,6 +290,7 @@ sccomp_glm_data_frame_raw = function(.data,
       .cell_group = !!.cell_group,
       .count = count,
       my_glm_model = my_glm_model,
+      percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       cores = cores,
@@ -284,7 +305,9 @@ sccomp_glm_data_frame_counts = function(.data,
                                         .cell_group,
                                         .count,
                                         my_glm_model,
+
                                         # Secondary arguments
+                                        percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = TRUE,
                                         verbose = FALSE,
@@ -296,6 +319,10 @@ sccomp_glm_data_frame_counts = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
+
+  # Check that count is integer
+  if(.data %>% pull(!!.count) %>% is("integer") %>% not())
+    stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
 
   # Check if columns exist
   check_columns_exist(.data, c(
@@ -319,11 +346,129 @@ sccomp_glm_data_frame_counts = function(.data,
       formula = formula,
       .sample = !!.sample,
       .cell_type = !!.cell_group,
-      .count = count,
+      .count = !!.count,
+      percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       cores = cores,
       verbose = verbose,
       seed = seed
     )
+}
+
+
+#' simulate_data
+#'
+#' @description This function simulates counts from a linear model.
+#'
+#' @import dplyr
+#' @importFrom magrittr %$%
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+#' @importFrom magrittr equals
+#' @importFrom rlang quo_is_null
+#' @importFrom SingleCellExperiment colData
+#' @importFrom parallel detectCores
+#'
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
+#' @param .sample A column name as symbol. The sample identifier
+#' @param .cell_group A column name as symbol. The cell_type identifier
+#' @param .count A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.
+#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
+#' @param check_outliers A boolean. Whether to check for outliers before the fit.
+#' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
+#' @param verbose A boolean. Prints progression.
+#' @param noise_model A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.
+#' @param cores An integer. How many cored to be used with parallel calculations.
+#' @param seed An integer. Used for development and testing purposes
+#'
+#' @return A nested tibble `tbl` with cell_group-wise statistics
+#'
+#' @export
+#'
+#'
+simulate_data <- function(.data,
+                       formula = ~ 1 ,
+                       .sample,
+                       .cell_group,
+                       .sample_cell_count,
+                       .coefficients,
+                       # Secondary arguments
+                       percent_false_positive = 5,
+                       check_outliers = TRUE,
+                       approximate_posterior_inference = TRUE,
+                       verbose = FALSE,
+                       noise_model = "multi_beta_binomial",
+                       cores = detectCores(),
+                       seed = 42) {
+  UseMethod("simulate_data", .data)
+}
+
+#' @export
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+simulate_data.data.frame = function(.data,
+                                    formula = ~ 1 ,
+                                    .sample,
+                                    .cell_group,
+                                    .sample_cell_count,
+                                    .coefficients,
+                                    # Secondary arguments
+                                    percent_false_positive = 5,
+                                    check_outliers = TRUE,
+                                    approximate_posterior_inference = TRUE,
+                                    verbose = FALSE,
+                                    noise_model = "multi_beta_binomial",
+                                    cores = detectCores(),
+                                    seed = 42){
+
+
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  .sample_cell_count = enquo(.sample_cell_count)
+  .coefficients = enquo(.coefficients)
+
+  model_data =
+    input_data %>%
+    data_simulation_to_model_input(formula, !!.sample, !!.cell_group, !!.sample_cell_count, !!.coefficients )
+
+  model_data$prec_coeff = c( 5.6260004, -0.6940178)
+  model_data$prec_sd  = 0.816423129
+
+    # [1]  5.6260004 -0.6940178
+    # prec_sd  = 0.816423129
+
+  fit =
+    sampling(
+    stanmodels$glm_multi_beta_binomial_simulate_data,
+    #stan_model("inst/stan/glm_multi_beta_binomial_simulate_data.stan"),
+    data = model_data,
+    chains = 1,
+    cores = 1,
+    iter = 151,
+    warmup = 150,
+    #refresh = ifelse(verbose, 1000, 0),
+    seed = seed,
+    #pars = pars,
+    save_warmup = F
+  )
+
+  .data %>%
+    arrange(!!.sample, !!.cell_group) %>%
+    bind_cols(
+      fit %>%
+        tidybayes::gather_draws(counts[N, M]) %>%
+        ungroup() %>%
+        arrange(N, M) %>%
+        select(.value)
+    ) %>%
+
+    # Scale counts for exposure
+    nest(data = -c(sample, tot_count )) %>%
+    mutate(tot_count_simulated = map_dbl(data, ~ sum(.x$.value))) %>%
+    mutate(data = pmap(list(data, tot_count, tot_count_simulated),  ~ ..1 %>%  mutate(.value = .value %>% divide_by(..3) %>% multiply_by(..2) %>% round %>% as.integer ))) %>%
+    unnest(data)
+
+
 }

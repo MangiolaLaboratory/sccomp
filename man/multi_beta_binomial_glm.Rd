@@ -10,6 +10,7 @@ multi_beta_binomial_glm(
   .sample,
   .cell_type,
   .count,
+  percent_false_positive = 5,
   check_outliers = FALSE,
   approximate_posterior_inference = T,
   variance_association = F,

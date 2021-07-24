@@ -1,4 +1,14 @@
 
+
+# Greater than
+gt = function(a, b){	a > b }
+
+# Smaller than
+st = function(a, b){	a < b }
+
+# Negation
+not = function(is){	!is }
+
 #' Add attribute to abject
 #'
 #' @keywords internal
@@ -479,7 +489,16 @@ fit_model = function(
   if(is.null(output_samples))
     output_samples =
       (draws_supporting_quantile/((1-quantile)/2)) %>% # /2 because I have two tails
-      max(4000)
+      max(4000) %>%
+
+      # If it's bigger than 20K CAP because it would get too extreme
+      when(
+        (.) > 20000 ~ {
+          warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+          20000
+        },
+        (.)
+      )
 
   # Find optimal number of chains
   if(is.null(chains))
@@ -540,7 +559,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #'
 #' @keywords internal
 #' @noRd
-beta_to_CI = function(fitted, censoring_iteration = 1){
+beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate){
 
 
   fitted %>%
@@ -551,11 +570,11 @@ beta_to_CI = function(fitted, censoring_iteration = 1){
       data,
       ~ quantile(
         .x$.value,
-        probs = c(0.025,  0.5,  0.975)
+        probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
       ) %>%
         enframe() %>%
-        spread(name, value) %>%
-        rename(.lower =  `2.5%`, .median = `50%`, .upper = `97.5%`)
+        mutate(name = c(".lower", ".median", ".upper")) %>%
+        spread(name, value)
     )) %>%
     unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%
@@ -647,6 +666,60 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count){
 
 }
 
+#' @importFrom purrr when
+data_simulation_to_model_input =
+  function(.data, formula, .sample, .cell_type, .exposure, .coefficients, variance_association = F, truncation_ajustment = 1, approximate_posterior_inference ){
+
+    # Prepare column same enquo
+    .sample = enquo(.sample)
+    .cell_type = enquo(.cell_type)
+    .exposure = enquo(.exposure)
+    .coefficients = enquo(.coefficients)
+
+    covariate_names = parse_formula(formula)
+
+    X =
+      .data %>%
+      select(!!.sample, covariate_names) %>%
+      distinct() %>%
+      arrange(!!.sample) %>%
+      model.matrix(formula, data=.) %>%
+      apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=F)))
+
+    XA = variance_association %>%
+      when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,1:2, drop=FALSE]) %>%
+      as_tibble() %>%
+      distinct()
+
+    cell_cluster_names =
+      .data %>%
+      distinct(!!.cell_type) %>%
+      arrange(!!.cell_type) %>%
+      pull(!!.cell_type)
+
+    coefficients =
+      .data %>%
+      select(!!.cell_type, !!.coefficients) %>%
+      unnest(!!.coefficients) %>%
+      distinct() %>%
+      arrange(!!.cell_type) %>%
+      as_matrix(rownames = quo_name(.cell_type)) %>%
+      t()
+
+    list(
+        N = .data %>% distinct(!!.sample) %>% nrow(),
+        M = .data %>% distinct(!!.cell_type) %>% nrow(),
+        exposure = .data %>% distinct(!!.sample, !!.exposure) %>% arrange(!!.sample) %>% pull(!!.exposure),
+        X = X,
+        XA = XA,
+        C = ncol(X),
+        A =  ncol(XA),
+        beta = coefficients
+      )
+
+  }
+
+
 #' Choose the number of chains baed on how many draws we need from the posterior distribution
 #' Because there is a fix cost (warmup) to starting a new chain,
 #' we need to use the minimum amount that we can parallelise
@@ -680,3 +753,7 @@ get.elbow.points.indices <- function(x, y, threshold) {
   indices <- which(abs(d2) > threshold)
   return(indices)
 }
+
+
+
+
