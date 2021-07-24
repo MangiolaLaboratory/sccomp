@@ -57,7 +57,7 @@ probs = seq(0, 0.1,length.out = 20)
 
 # Iterate over runs
 benchmark =
-  tibble(run = 1:20) %>%
+  tibble(run = 1:1) %>%
   mutate(data = map(
     run,
     ~ simulate_data(input_data,
