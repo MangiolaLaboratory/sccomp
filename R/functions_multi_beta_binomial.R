@@ -243,80 +243,59 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
 
-  if(!check_outliers){
-
+  parsed_fit =
     fit %>%
-      parse_fit(data_for_model, .) %>%
-      beta_to_CI(false_positive_rate = percent_false_positive/100 ) %>%
-
-      # Hypothesis test
-      when(
-        ncol(data_for_model$X>1) ~
-          mutate(
-            .,
-            significant =
-              !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-              !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-          ),
-        ~ (.)
-      ) %>%
-
-      # Join the precision
-      left_join(get_mean_precision(fit), by="M") %>%
-
-      # Clean
-      select(-M) %>%
-      mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
-      select(!!.cell_type, everything()) %>%
-
-      # Attach association mean concentration
-      add_attr(get_mean_precision_association(fit), "mean_concentration_association")
+    parse_fit(data_for_model, .)
 
 
-  }
+  parsed_fit %>%
+    beta_to_CI(false_positive_rate = percent_false_positive/100 ) %>%
 
-  else{
+    # Hypothesis test
+    when(
+      ncol(data_for_model$X) > 1 ~
+        mutate(
+          .,
+          significant =
+            !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
+            !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
+        ) %>%
+
+        # add probability
+        left_join( get_probability_non_zero(parsed_fit), by="M" ),
+      ~ (.)
+    ) %>%
+
+    # Join the precision
+    left_join(get_mean_precision(fit), by="M") %>%
+
+    # Clean
+    select(-M) %>%
+    mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
+    select(!!.cell_type, everything()) %>%
+
+    # Add autlier
+    when(
+      check_outliers ~ (.) %>%
+        left_join(
+          truncation_df2 %>%
+            select(!!.sample, !!.cell_type, outlier,.lower, .upper) %>%
+            nest(outliers = -!!.cell_type),
+          by = quo_name(.cell_type)
+        ),
+      ~ (.)
+    ) %>%
+
+    # Attach association mean concentration
+    add_attr(get_mean_precision_association(fit), "mean_concentration_association")
 
 
-    fit %>%
-      parse_fit(data_for_model, .) %>%
-      beta_to_CI( false_positive_rate = percent_false_positive/100 ) %>%
 
-      # Hypothesis test
-      when(
-        ncol(data_for_model$X>1) ~
-          mutate(
-            .,
-            significant =
-              !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-              !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-          ),
-        ~ (.)
-      ) %>%
 
-      # Join the precision
-      left_join(get_mean_precision(fit), by="M") %>%
-
-      # Clesn
-      select(-M) %>%
-      mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
-      select(!!.cell_type, everything()) %>%
-
-      # join outliers
-      left_join(
-        truncation_df2 %>%
-          select(!!.sample, !!.cell_type, outlier,.lower, .upper) %>%
-          nest(outliers = -!!.cell_type),
-        by = quo_name(.cell_type)
-      ) %>%
-
-      # Attach association mean concentration
-      add_attr(get_mean_precision_association(fit), "mean_concentration_association")
-
-  }
 
 
 }
+
 
 
 #' multi_beta_binomial main

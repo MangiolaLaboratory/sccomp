@@ -754,6 +754,32 @@ get.elbow.points.indices <- function(x, y, threshold) {
   return(indices)
 }
 
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+get_probability_non_zero = function(.data){
 
+
+  .data %>%
+    unnest(beta_posterior_1 ) %>%
+    filter(C ==2) %>%
+    nest(data = -c(M, C_name)) %>%
+    mutate(
+      bigger_zero = map_int(data, ~ .x %>% filter(.value>0) %>% nrow),
+      smaller_zero = map_int(data, ~ .x %>% filter(.value<0) %>% nrow)
+    ) %>%
+    rowwise() %>%
+    mutate(
+      prob_non_zero =
+        min(bigger_zero, smaller_zero) %>%
+        max(1) %>%
+        divide_by(bigger_zero + smaller_zero) %>%
+
+        # Because two sided test
+        multiply_by(2)
+    )  %>%
+    ungroup() %>%
+    select(M, prob_non_zero)
+
+}
 
 
