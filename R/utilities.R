@@ -771,14 +771,18 @@ get_probability_non_zero = function(.data){
     mutate(
       prob_non_zero =
         min(bigger_zero, smaller_zero) %>%
-        max(1) %>%
+        #max(1) %>%
         divide_by(bigger_zero + smaller_zero) %>%
 
         # Because two sided test
         multiply_by(2)
     )  %>%
     ungroup() %>%
-    select(M, prob_non_zero)
+    select(M, prob_non_zero) %>%
+
+    # Calculate false-discovery rate
+    arrange(prob_non_zero) %>%
+    mutate(false_discovery_rate = cummean(prob_non_zero))
 
 }
 
