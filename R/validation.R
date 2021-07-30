@@ -61,3 +61,23 @@ check_if_within_posterior = function(.data, my_df, .do_check, .count){
              (!!.count > mean)) %>%
     ungroup
 }
+
+check_if_columns_right_class = function(.data, .sample, .cell_group){
+
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+
+  # Check that sample and cell_type is chr of factor
+  if(
+    !(
+      .data %>% pull(!!.sample) %>% is("character") |
+      .data %>% pull(!!.sample) %>% is("factor")
+    ) |
+    !(
+      .data %>% pull(!!.cell_group) %>% is("character") |
+      .data %>% pull(!!.cell_group) %>% is("factor")
+    )
+  ) stop(sprintf("sccomp says: the columns %s and %s must be of class character or factor", quo_name(.sample), quo_name(.cell_group)))
+
+
+}
