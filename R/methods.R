@@ -39,7 +39,7 @@ sccomp_glm <- function(.data,
                        # Secondary arguments
                        percent_false_positive = 5,
                        check_outliers = TRUE,
-                       approximate_posterior_inference = TRUE,
+                       approximate_posterior_inference = FALSE,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
                        cores = detectCores(),
@@ -56,7 +56,7 @@ sccomp_glm.Seurat = function(.data,
                              # Secondary arguments
                              percent_false_positive = 5,
                              check_outliers = TRUE,
-                             approximate_posterior_inference = TRUE,
+                             approximate_posterior_inference = FALSE,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              cores = detectCores(),
@@ -93,7 +93,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            # Secondary arguments
                                            percent_false_positive = 5,
                                            check_outliers = TRUE,
-                                           approximate_posterior_inference = TRUE,
+                                           approximate_posterior_inference = FALSE,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
                                            cores = detectCores(),
@@ -132,7 +132,7 @@ sccomp_glm.DFrame = function(.data,
                              # Secondary arguments
                              percent_false_positive = 5,
                              check_outliers = TRUE,
-                             approximate_posterior_inference = TRUE,
+                             approximate_posterior_inference = FALSE,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              cores = detectCores(),
@@ -171,7 +171,7 @@ sccomp_glm.data.frame = function(.data,
                                  # Secondary arguments
                                  percent_false_positive =  5,
                                  check_outliers = TRUE,
-                                 approximate_posterior_inference = TRUE,
+                                 approximate_posterior_inference = FALSE,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
                                  cores = detectCores(),
@@ -236,7 +236,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      # Secondary arguments
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
-                                     approximate_posterior_inference = TRUE,
+                                     approximate_posterior_inference = FALSE,
                                      verbose = FALSE,
                                      noise_model = "multi_beta_binomial",
                                      cores = 4,
@@ -309,7 +309,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         # Secondary arguments
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
-                                        approximate_posterior_inference = TRUE,
+                                        approximate_posterior_inference = FALSE,
                                         verbose = FALSE,
                                         noise_model = "multi_beta_binomial",
                                         cores = 4,
@@ -319,6 +319,9 @@ sccomp_glm_data_frame_counts = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
+
+  #Check column class
+  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
 
   # Check that count is integer
   if(.data %>% pull(!!.count) %>% is("integer") %>% not())
@@ -397,7 +400,7 @@ simulate_data <- function(.data,
                        # Secondary arguments
                        percent_false_positive = 5,
                        check_outliers = TRUE,
-                       approximate_posterior_inference = TRUE,
+                       approximate_posterior_inference = FALSE,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
                        cores = detectCores(),
@@ -417,7 +420,7 @@ simulate_data.data.frame = function(.data,
                                     # Secondary arguments
                                     percent_false_positive = 5,
                                     check_outliers = TRUE,
-                                    approximate_posterior_inference = TRUE,
+                                    approximate_posterior_inference = FALSE,
                                     verbose = FALSE,
                                     noise_model = "multi_beta_binomial",
                                     cores = detectCores(),
@@ -428,6 +431,9 @@ simulate_data.data.frame = function(.data,
   .cell_group = enquo(.cell_group)
   .sample_cell_count = enquo(.sample_cell_count)
   .coefficients = enquo(.coefficients)
+
+  #Check column class
+  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
 
   model_data =
     .data %>%

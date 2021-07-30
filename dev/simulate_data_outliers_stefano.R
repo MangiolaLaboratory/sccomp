@@ -6,8 +6,6 @@ library(speckle)
 library(edgeR)
 library(limma)
 library(DirichletReg)
-library(MGLM)
-
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
 beta_0 = readRDS("dev/beta_0.rds")
 
@@ -30,18 +28,16 @@ beta_0 = readRDS("dev/beta_0.rds")
 #probs = c(0, 0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 # probs = seq(0, 0.2,length.out = 20)
 
-mnreg <-
-  benchmark %>%
-  pull(data) %>%
-  .[[1]] %>%
-  select(type, .value, sample, cell_type) %>%
-  mutate(cell_type = sprintf("C%s", cell_type)) %>%
-  spread(cell_type, .value) %>%
-MGLMreg(
-  formula = cbind(C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21, C22, C23, C24) ~ type,
-  data = .,
-  dist = "DM"
-)
+outliers =
+  readRDS("dev/oligo_estimate_wth_benign.rds") %>%
+  unnest(outliers) %>%
+  filter(outlier) %>%
+  mutate(ratio = (count+1)/.median)
+
+outliers %>% filter(ratio>1) %>% pull(ratio) %>% mean
+outliers %>% filter(ratio>1) %>% pull(ratio) %>% sd
+outliers %>% filter(ratio<1) %>% pull(ratio) %>% mean
+outliers %>% filter(ratio<1) %>% pull(ratio) %>% sd
 
 # Iterate over runs
 benchmark =
@@ -60,21 +56,56 @@ benchmark =
           cell_type %in% c(2, 4, 6) ~ -1,
           TRUE ~ 0
         )) %>%
-        mutate(beta_1 = beta_1 %>% multiply_by(0.6)) %>%
+        mutate(beta_1 = beta_1 %>% multiply_by(0.8)) %>%
         nest(coefficients = starts_with("beta_")) %>%
         unnest(d) %>%
         nest(d = -sample) %>%
         mutate(type = sample(c(0,1), size = n(), replace = TRUE)) %>%
-        mutate(tot_count = sample(400:1000, size = n(), replace = TRUE)) %>%
+        mutate(tot_count = sample(600:4000, size = n(), replace = TRUE)) %>%
         unnest(d) %>%
         mutate(sample = as.character(sample), cell_type = as.character(cell_type))
 
-      simulate_data(input_data,
+      my_simulated_data =
+        simulate_data(input_data,
                     formula = ~ type ,
                     sample,
                     cell_type, tot_count, coefficients,
                     seed = .x * 2
       )
+
+      # Add multipliers
+      ratio_changing =
+        my_simulated_data %>%
+        unnest(coefficients) %>%
+        filter((beta_1<0 & type ==1) | (beta_1>0 & type ==0)) %>%
+        group_by(cell_type) %>%
+        sample_n(1) %>%
+        mutate(ratio =  rnorm(n(), 7.6, 2.9)) %>%
+        ungroup %>%
+        select(sample, cell_type, ratio)
+
+      ratio_NON_changing =
+        my_simulated_data %>%
+        unnest(coefficients) %>%
+        filter(beta_1==0) %>%
+        sample_frac(0.2) %>%
+        mutate(ratio =  rnorm(n()/2, 7.6, 2.9) %>% c(rnorm(n()/2, 0.03572171, 0.01107917)) ) %>%
+        ungroup %>%
+        select(sample, cell_type, ratio)
+
+      my_simulated_data %>%
+        left_join(
+          bind_rows(ratio_changing, ratio_NON_changing),
+          by = c("sample", "cell_type")
+        ) %>%
+        replace_na(list(ratio = 1)) %>%
+        mutate(.value = (.value * ratio) %>% as.integer()) %>%
+        rowwise() %>%
+        mutate(.value = max(0, .value)) %>%
+        ungroup() %>%
+        select(-ratio)
+
+
     }
   )) %>%
 
@@ -128,13 +159,12 @@ benchmark =
       sccomp_glm(
         ~type,
         sample, cell_type, .value,
-        check_outliers = FALSE,
+        check_outliers = TRUE,
         approximate_posterior_inference = FALSE,
         percent_false_positive = 0.001 * 100,
         seed = .y * 2
       )
   )) %>%
-
   mutate( results_DirichletMultinomial = map2(
     data, run,
     ~  .x %>%
@@ -149,7 +179,6 @@ benchmark =
         seed = .y * 2
       )
   ))
-
 
 
 benchmark %>%
@@ -230,11 +259,11 @@ benchmark_hypothesis %>%
   theme_bw() +
   theme(legend.position = "bottom")
 
-saveRDS(benchmark, "dev/benchmark_slope0.6_samples10_celltypes24_noOutliers_max1000exposure_run4_50replicates.rds")
+saveRDS(benchmark, "dev/benchmark_slope0.8_samples10_celltypes24_noOutliers_max2000exposure_50replicates_outlier.rds")
 
 
 ggsave(
-  "dev/roc_slope0.6_samples10_celltypes24_noOutliers_max1000exposure_run4_50replicates.pdf",
+  "dev/roc_slope0.8_samples10_celltypes24_noOutliers_max2000exposure_50replicates_outlier.pdf",
   units = c("mm"),
   width = 183/2 ,
   height = 183/2,
