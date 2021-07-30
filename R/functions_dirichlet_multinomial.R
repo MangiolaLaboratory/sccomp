@@ -50,15 +50,21 @@ dirichlet_multinomial_glm = function(.data,
 
   data_for_model =
     data_to_spread (.data, formula, !!.sample, !!.cell_type, !!.count) %>%
-    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count)
+    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference= approximate_posterior_inference)
 
   # Produce data list
   if(!check_outliers){
 
-    data_for_model %>%
+    fit =
+      data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision")) %>%
-      parse_fit(data_for_model, ., censoring_iteration = 1, chains) %>%
+      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed)
+
+    parsed_fit =
+      fit %>%
+      parse_fit(data_for_model, ., censoring_iteration = 1, chains)
+
+    parsed_fit %>%
       {
         # Add precision as attribute
         add_attr(.,
@@ -66,7 +72,7 @@ dirichlet_multinomial_glm = function(.data,
                  "precision"
         )
       } %>%
-      beta_to_CI(censoring_iteration = 1 ) %>%
+      beta_to_CI(censoring_iteration = 1, false_positive_rate = percent_false_positive/100 ) %>%
 
       # Join filtered
       mutate(
@@ -75,7 +81,10 @@ dirichlet_multinomial_glm = function(.data,
           !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
       ) %>%
 
-      # Clesn
+      # add probability
+      left_join( get_probability_non_zero(parsed_fit), by="M" ) %>%
+
+      # Clean
       select(-M) %>%
       mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
       select(!!.cell_type, everything())
@@ -91,7 +100,7 @@ dirichlet_multinomial_glm = function(.data,
     .data_2 =
       .data_1 %>%
       select(-contains("posterior")) %>%
-      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed)
+      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
 
     .data_2 %>%
 
@@ -177,7 +186,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
 
 }
 
-fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed){
+fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference){
 
 
   # Prepare column same enquo
@@ -189,7 +198,7 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
   data_for_model =
     .data %>%
     data_to_spread (formula, !!.sample, !!.cell_type, !!.count) %>%
-    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count)
+    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference = approximate_posterior_inference)
 
   # .count = enquo(.count)
   #

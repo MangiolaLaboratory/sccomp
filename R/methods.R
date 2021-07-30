@@ -320,6 +320,9 @@ sccomp_glm_data_frame_counts = function(.data,
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
+  #Check column class
+  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
+
   # Check that count is integer
   if(.data %>% pull(!!.count) %>% is("integer") %>% not())
     stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
@@ -428,6 +431,9 @@ simulate_data.data.frame = function(.data,
   .cell_group = enquo(.cell_group)
   .sample_cell_count = enquo(.sample_cell_count)
   .coefficients = enquo(.coefficients)
+
+  #Check column class
+  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
 
   model_data =
     .data %>%

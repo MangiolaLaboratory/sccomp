@@ -156,13 +156,14 @@ estimate_multi_beta_binomial_glm = function(.data,
     truncation_df2 =
       .data %>%
       left_join(
-        summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 1-CI_step_2)) %>%
+        summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 0.5, 1-CI_step_2)) %>%
 
           # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
           # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
           rename(
             .lower := !!as.symbol(colnames(.)[7]) ,
-            .upper := !!as.symbol(colnames(.)[8])
+            .median = `50%`,
+            .upper := !!as.symbol(colnames(.)[9])
           ) %>%
           nest(data = -N) %>%
           mutate(!!.sample := rownames(data_for_model$y)) %>%
@@ -238,10 +239,11 @@ estimate_multi_beta_binomial_glm = function(.data,
 #'
 #'
 hypothesis_test_multi_beta_binomial_glm = function( .sample,
-                                                    .cell_type, fit, data_for_model, percent_false_positive, check_outliers,  truncation_df2 = NULL) {
+                                                    .cell_type, .count, fit, data_for_model, percent_false_positive, check_outliers,  truncation_df2 = NULL) {
 
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
+  .count = enquo(.count)
 
   parsed_fit =
     fit %>%
@@ -274,12 +276,12 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
     mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
     select(!!.cell_type, everything()) %>%
 
-    # Add autlier
+    # Add outlier
     when(
       check_outliers ~ (.) %>%
         left_join(
           truncation_df2 %>%
-            select(!!.sample, !!.cell_type, outlier,.lower, .upper) %>%
+            select(!!.sample, !!.cell_type, outlier, !!.count, .median, .lower, .upper) %>%
             nest(outliers = -!!.cell_type),
           by = quo_name(.cell_type)
         ),
@@ -372,6 +374,7 @@ multi_beta_binomial_glm = function(.data,
   hypothesis_test_multi_beta_binomial_glm(
     .sample = !!.sample,
     .cell_type = !!.cell_type,
+    .count = !!.count,
     result_list$fit,
     result_list$data_for_model,
     percent_false_positive,
