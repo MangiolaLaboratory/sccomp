@@ -430,7 +430,7 @@ simulate_data.data.frame = function(.data,
   .coefficients = enquo(.coefficients)
 
   model_data =
-    input_data %>%
+    .data %>%
     data_simulation_to_model_input(formula, !!.sample, !!.cell_group, !!.sample_cell_count, !!.coefficients )
 
   model_data$prec_coeff = c( 5.6260004, -0.6940178)
