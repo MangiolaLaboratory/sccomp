@@ -261,10 +261,11 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
           significant =
             !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
             !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-        ) %>%
+        ), 
+      #%>%
 
         # add probability
-        left_join( get_probability_non_zero(parsed_fit), by="M" ),
+       # left_join( get_probability_non_zero(parsed_fit), by="M" ),
       ~ (.)
     ) %>%
 
