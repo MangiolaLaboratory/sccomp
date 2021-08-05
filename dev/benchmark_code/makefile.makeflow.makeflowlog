@@ -1,0 +1,614 @@
+# FILE 1628161009192955 dev/benchmark_code/makefile.makeflow.batchlog 1 0
+# STARTED 1628161009198797
+# FILE 1628161009217238 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_20_3000_1.rds 1 1073741824
+1628161009232881 159 1 1794098 159 1 0 0 0 160
+# FILE 1628161009232943 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_20_3000_0.rds 1 1073741824
+1628161009246588 158 1 1794099 158 2 0 0 0 160
+# FILE 1628161009246653 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_20_1000_1.rds 1 1073741824
+1628161009258233 157 1 1794100 157 3 0 0 0 160
+# FILE 1628161009258300 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_20_1000_0.rds 1 1073741824
+1628161009269493 156 1 1794101 156 4 0 0 0 160
+# FILE 1628161009269559 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_10_3000_1.rds 1 1073741824
+1628161009280914 155 1 1794102 155 5 0 0 0 160
+# FILE 1628161009280971 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_10_3000_0.rds 1 1073741824
+1628161009292175 154 1 1794103 154 6 0 0 0 160
+# FILE 1628161009292225 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_10_1000_1.rds 1 1073741824
+1628161009303589 153 1 1794104 153 7 0 0 0 160
+# FILE 1628161009303632 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_10_1000_0.rds 1 1073741824
+1628161009315071 152 1 1794105 152 8 0 0 0 160
+# FILE 1628161009315115 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_20_3000_1.rds 1 1073741824
+1628161009326325 151 1 1794106 151 9 0 0 0 160
+# FILE 1628161009326369 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_20_3000_0.rds 1 1073741824
+1628161009337582 150 1 1794107 150 10 0 0 0 160
+# FILE 1628161009337624 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_20_1000_1.rds 1 1073741824
+1628161009348528 149 1 1794108 149 11 0 0 0 160
+# FILE 1628161009348571 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_20_1000_0.rds 1 1073741824
+1628161009359610 148 1 1794109 148 12 0 0 0 160
+# FILE 1628161009359652 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_10_3000_1.rds 1 1073741824
+1628161009370882 147 1 1794110 147 13 0 0 0 160
+# FILE 1628161009370922 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_10_3000_0.rds 1 1073741824
+1628161009382419 146 1 1794111 146 14 0 0 0 160
+# FILE 1628161009382459 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_10_1000_1.rds 1 1073741824
+1628161009393648 145 1 1794112 145 15 0 0 0 160
+# FILE 1628161009393690 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_10_1000_0.rds 1 1073741824
+1628161009404978 144 1 1794113 144 16 0 0 0 160
+# FILE 1628161009405023 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_20_3000_1.rds 1 1073741824
+1628161009416295 143 1 1794114 143 17 0 0 0 160
+# FILE 1628161009416336 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_20_3000_0.rds 1 1073741824
+1628161009427466 142 1 1794115 142 18 0 0 0 160
+# FILE 1628161009427506 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_20_1000_1.rds 1 1073741824
+1628161009438446 141 1 1794116 141 19 0 0 0 160
+# FILE 1628161009438491 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_20_1000_0.rds 1 1073741824
+1628161009449424 140 1 1794117 140 20 0 0 0 160
+# FILE 1628161009449468 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_10_3000_1.rds 1 1073741824
+1628161009460686 139 1 1794118 139 21 0 0 0 160
+# FILE 1628161009460730 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_10_3000_0.rds 1 1073741824
+1628161009471863 138 1 1794119 138 22 0 0 0 160
+# FILE 1628161009471907 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_10_1000_1.rds 1 1073741824
+1628161009482845 137 1 1794120 137 23 0 0 0 160
+# FILE 1628161009482891 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_10_1000_0.rds 1 1073741824
+1628161009493865 136 1 1794121 136 24 0 0 0 160
+# FILE 1628161009493909 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_20_3000_1.rds 1 1073741824
+1628161009505083 135 1 1794122 135 25 0 0 0 160
+# FILE 1628161009505127 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_20_3000_0.rds 1 1073741824
+1628161009516283 134 1 1794123 134 26 0 0 0 160
+# FILE 1628161009516329 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_20_1000_1.rds 1 1073741824
+1628161009527485 133 1 1794124 133 27 0 0 0 160
+# FILE 1628161009527533 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_20_1000_0.rds 1 1073741824
+1628161009538776 132 1 1794125 132 28 0 0 0 160
+# FILE 1628161009538822 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_10_3000_1.rds 1 1073741824
+1628161009549938 131 1 1794126 131 29 0 0 0 160
+# FILE 1628161009549984 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_10_3000_0.rds 1 1073741824
+1628161009561417 130 1 1794127 130 30 0 0 0 160
+# FILE 1628161009561465 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_10_1000_1.rds 1 1073741824
+1628161009572583 129 1 1794128 129 31 0 0 0 160
+# FILE 1628161009572632 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_10_1000_0.rds 1 1073741824
+1628161009583681 128 1 1794129 128 32 0 0 0 160
+# FILE 1628161009583729 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_20_3000_1.rds 1 1073741824
+1628161009595051 127 1 1794130 127 33 0 0 0 160
+# FILE 1628161009595154 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_20_3000_0.rds 1 1073741824
+1628161009606469 126 1 1794131 126 34 0 0 0 160
+# FILE 1628161009606537 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_20_1000_1.rds 1 1073741824
+1628161009617701 125 1 1794132 125 35 0 0 0 160
+# FILE 1628161009617755 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_20_1000_0.rds 1 1073741824
+1628161009628700 124 1 1794133 124 36 0 0 0 160
+# FILE 1628161009628749 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_10_3000_1.rds 1 1073741824
+1628161009639755 123 1 1794134 123 37 0 0 0 160
+# FILE 1628161009639800 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_10_3000_0.rds 1 1073741824
+1628161009650762 122 1 1794135 122 38 0 0 0 160
+# FILE 1628161009650808 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_10_1000_1.rds 1 1073741824
+1628161011043883 121 1 1794136 121 39 0 0 0 160
+# FILE 1628161011043954 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_10_1000_0.rds 1 1073741824
+1628161011056209 120 1 1794137 120 40 0 0 0 160
+# FILE 1628161011056254 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_20_3000_1.rds 1 1073741824
+1628161011068190 119 1 1794138 119 41 0 0 0 160
+# FILE 1628161011068234 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_20_3000_0.rds 1 1073741824
+1628161011079457 118 1 1794139 118 42 0 0 0 160
+# FILE 1628161011079501 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_20_1000_1.rds 1 1073741824
+1628161011090779 117 1 1794140 117 43 0 0 0 160
+# FILE 1628161011090822 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_20_1000_0.rds 1 1073741824
+1628161011102669 116 1 1794141 116 44 0 0 0 160
+# FILE 1628161011102715 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_10_3000_1.rds 1 1073741824
+1628161011113793 115 1 1794142 115 45 0 0 0 160
+# FILE 1628161011113836 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_10_3000_0.rds 1 1073741824
+1628161011125103 114 1 1794143 114 46 0 0 0 160
+# FILE 1628161011125145 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_10_1000_1.rds 1 1073741824
+1628161011136114 113 1 1794144 113 47 0 0 0 160
+# FILE 1628161011136156 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_10_1000_0.rds 1 1073741824
+1628161011147126 112 1 1794145 112 48 0 0 0 160
+# FILE 1628161011147168 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_20_3000_1.rds 1 1073741824
+1628161011158255 111 1 1794146 111 49 0 0 0 160
+# FILE 1628161011158299 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_20_3000_0.rds 1 1073741824
+1628161011169363 110 1 1794147 110 50 0 0 0 160
+# FILE 1628161011169404 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_20_1000_1.rds 1 1073741824
+1628161011180457 109 1 1794148 109 51 0 0 0 160
+# FILE 1628161011180500 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_20_1000_0.rds 1 1073741824
+1628161011191407 108 1 1794149 108 52 0 0 0 160
+# FILE 1628161011191451 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_10_3000_1.rds 1 1073741824
+1628161011202668 107 1 1794150 107 53 0 0 0 160
+# FILE 1628161011202711 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_10_3000_0.rds 1 1073741824
+1628161011213941 106 1 1794151 106 54 0 0 0 160
+# FILE 1628161011213983 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_10_1000_1.rds 1 1073741824
+1628161011225239 105 1 1794152 105 55 0 0 0 160
+# FILE 1628161011225282 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_10_1000_0.rds 1 1073741824
+1628161011236451 104 1 1794153 104 56 0 0 0 160
+# FILE 1628161011236495 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_20_3000_1.rds 1 1073741824
+1628161011247662 103 1 1794154 103 57 0 0 0 160
+# FILE 1628161011247706 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_20_3000_0.rds 1 1073741824
+1628161011259037 102 1 1794155 102 58 0 0 0 160
+# FILE 1628161011259095 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_20_1000_1.rds 1 1073741824
+1628161011270261 101 1 1794156 101 59 0 0 0 160
+# FILE 1628161011270304 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_20_1000_0.rds 1 1073741824
+1628161011281300 100 1 1794157 100 60 0 0 0 160
+# FILE 1628161011281343 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_10_3000_1.rds 1 1073741824
+1628161011292587 99 1 1794158 99 61 0 0 0 160
+# FILE 1628161011292631 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_10_3000_0.rds 1 1073741824
+1628161011303900 98 1 1794159 98 62 0 0 0 160
+# FILE 1628161011303942 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_10_1000_1.rds 1 1073741824
+1628161011315097 97 1 1794160 97 63 0 0 0 160
+# FILE 1628161011315139 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_10_1000_0.rds 1 1073741824
+1628161011326204 96 1 1794161 96 64 0 0 0 160
+# FILE 1628161011326245 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_20_3000_1.rds 1 1073741824
+1628161011337223 95 1 1794162 95 65 0 0 0 160
+# FILE 1628161011337264 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_20_3000_0.rds 1 1073741824
+1628161011348598 94 1 1794163 94 66 0 0 0 160
+# FILE 1628161011348641 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_20_1000_1.rds 1 1073741824
+1628161011359806 93 1 1794164 93 67 0 0 0 160
+# FILE 1628161011359855 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_20_1000_0.rds 1 1073741824
+1628161011371213 92 1 1794165 92 68 0 0 0 160
+# FILE 1628161011371260 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_10_3000_1.rds 1 1073741824
+1628161011382315 91 1 1794166 91 69 0 0 0 160
+# FILE 1628161011382360 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_10_3000_0.rds 1 1073741824
+1628161011393611 90 1 1794167 90 70 0 0 0 160
+# FILE 1628161011393657 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_10_1000_1.rds 1 1073741824
+1628161011404684 89 1 1794168 89 71 0 0 0 160
+# FILE 1628161011404730 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_10_1000_0.rds 1 1073741824
+1628161011415796 88 1 1794169 88 72 0 0 0 160
+# FILE 1628161011415843 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_20_3000_1.rds 1 1073741824
+1628161011426790 87 1 1794170 87 73 0 0 0 160
+# FILE 1628161011426836 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_20_3000_0.rds 1 1073741824
+1628161011438003 86 1 1794171 86 74 0 0 0 160
+# FILE 1628161011438048 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_20_1000_1.rds 1 1073741824
+1628161011449212 85 1 1794172 85 75 0 0 0 160
+# FILE 1628161011449260 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_20_1000_0.rds 1 1073741824
+1628161011460404 84 1 1794173 84 76 0 0 0 160
+# FILE 1628161011460449 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_10_3000_1.rds 1 1073741824
+1628161011471664 83 1 1794174 83 77 0 0 0 160
+# FILE 1628161011471710 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_10_3000_0.rds 1 1073741824
+1628161011483075 82 1 1794175 82 78 0 0 0 160
+# FILE 1628161011483121 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_10_1000_1.rds 1 1073741824
+1628161011494012 81 1 1794176 81 79 0 0 0 160
+# FILE 1628161011494079 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_10_1000_0.rds 1 1073741824
+1628161011505248 80 1 1794177 80 80 0 0 0 160
+# FILE 1628161011505291 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_20_3000_1.rds 1 1073741824
+1628161011516328 79 1 1794178 79 81 0 0 0 160
+# FILE 1628161011516373 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_20_3000_0.rds 1 1073741824
+1628161011527250 78 1 1794179 78 82 0 0 0 160
+# FILE 1628161011527294 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_20_1000_1.rds 1 1073741824
+1628161011538259 77 1 1794180 77 83 0 0 0 160
+# FILE 1628161011538301 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_20_1000_0.rds 1 1073741824
+1628161011549384 76 1 1794181 76 84 0 0 0 160
+# FILE 1628161011549425 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_10_3000_1.rds 1 1073741824
+1628161011560431 75 1 1794182 75 85 0 0 0 160
+# FILE 1628161011560472 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_10_3000_0.rds 1 1073741824
+1628161011571684 74 1 1794183 74 86 0 0 0 160
+# FILE 1628161011571726 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_10_1000_1.rds 1 1073741824
+1628161011583038 73 1 1794184 73 87 0 0 0 160
+# FILE 1628161011583097 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_10_1000_0.rds 1 1073741824
+1628161011594328 72 1 1794185 72 88 0 0 0 160
+# FILE 1628161011594376 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_20_3000_1.rds 1 1073741824
+1628161011605520 71 1 1794186 71 89 0 0 0 160
+# FILE 1628161011605564 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_20_3000_0.rds 1 1073741824
+1628161011616783 70 1 1794187 70 90 0 0 0 160
+# FILE 1628161011616827 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_20_1000_1.rds 1 1073741824
+1628161011628016 69 1 1794188 69 91 0 0 0 160
+# FILE 1628161011628076 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_20_1000_0.rds 1 1073741824
+1628161011639198 68 1 1794189 68 92 0 0 0 160
+# FILE 1628161011639249 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_10_3000_1.rds 1 1073741824
+1628161011650359 67 1 1794190 67 93 0 0 0 160
+# FILE 1628161011650401 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_10_3000_0.rds 1 1073741824
+1628161011661875 66 1 1794191 66 94 0 0 0 160
+# FILE 1628161011661916 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_10_1000_1.rds 1 1073741824
+1628161011673007 65 1 1794192 65 95 0 0 0 160
+# FILE 1628161011673046 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_10_1000_0.rds 1 1073741824
+1628161011684413 64 1 1794193 64 96 0 0 0 160
+# FILE 1628161011684454 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_20_3000_1.rds 1 1073741824
+1628161011696648 63 1 1794194 63 97 0 0 0 160
+# FILE 1628161011696706 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_20_3000_0.rds 1 1073741824
+1628161011708102 62 1 1794195 62 98 0 0 0 160
+# FILE 1628161011708156 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_20_1000_1.rds 1 1073741824
+1628161011719200 61 1 1794196 61 99 0 0 0 160
+# FILE 1628161011719256 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_20_1000_0.rds 1 1073741824
+1628161011730271 60 1 1794197 60 100 0 0 0 160
+# FILE 1628161011730329 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_10_3000_1.rds 1 1073741824
+1628161011741423 59 1 1794198 59 101 0 0 0 160
+# FILE 1628161011741482 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_10_3000_0.rds 1 1073741824
+1628161011752435 58 1 1794199 58 102 0 0 0 160
+# FILE 1628161011752483 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_10_1000_1.rds 1 1073741824
+1628161011763411 57 1 1794200 57 103 0 0 0 160
+# FILE 1628161011763456 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_10_1000_0.rds 1 1073741824
+1628161011774512 56 1 1794201 56 104 0 0 0 160
+# FILE 1628161011774553 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_20_3000_1.rds 1 1073741824
+1628161011785680 55 1 1794202 55 105 0 0 0 160
+# FILE 1628161011785719 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_20_3000_0.rds 1 1073741824
+1628161011797158 54 1 1794203 54 106 0 0 0 160
+# FILE 1628161011797200 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_20_1000_1.rds 1 1073741824
+1628161011808209 53 1 1794204 53 107 0 0 0 160
+# FILE 1628161011808252 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_20_1000_0.rds 1 1073741824
+1628161011819253 52 1 1794205 52 108 0 0 0 160
+# FILE 1628161011819306 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_10_3000_1.rds 1 1073741824
+1628161011830335 51 1 1794206 51 109 0 0 0 160
+# FILE 1628161011830377 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_10_3000_0.rds 1 1073741824
+1628161011841366 50 1 1794207 50 110 0 0 0 160
+# FILE 1628161011841410 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_10_1000_1.rds 1 1073741824
+1628161011852759 49 1 1794208 49 111 0 0 0 160
+# FILE 1628161011852801 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_10_1000_0.rds 1 1073741824
+1628161011863869 48 1 1794209 48 112 0 0 0 160
+# FILE 1628161011863912 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_20_3000_1.rds 1 1073741824
+1628161011876469 47 1 1794210 47 113 0 0 0 160
+# FILE 1628161011876511 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_20_3000_0.rds 1 1073741824
+1628161011887601 46 1 1794211 46 114 0 0 0 160
+# FILE 1628161011887647 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_20_1000_1.rds 1 1073741824
+1628161011898847 45 1 1794212 45 115 0 0 0 160
+# FILE 1628161011898891 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_20_1000_0.rds 1 1073741824
+1628161011910128 44 1 1794213 44 116 0 0 0 160
+# FILE 1628161011910172 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_10_3000_1.rds 1 1073741824
+1628161011921124 43 1 1794214 43 117 0 0 0 160
+# FILE 1628161011921169 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_10_3000_0.rds 1 1073741824
+1628161011932346 42 1 1794215 42 118 0 0 0 160
+# FILE 1628161011932394 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_10_1000_1.rds 1 1073741824
+1628161011943519 41 1 1794216 41 119 0 0 0 160
+# FILE 1628161011943562 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_10_1000_0.rds 1 1073741824
+1628161011954492 40 1 1794217 40 120 0 0 0 160
+# FILE 1628161011954536 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_20_3000_1.rds 1 1073741824
+1628161011965734 39 1 1794218 39 121 0 0 0 160
+# FILE 1628161011965782 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_20_3000_0.rds 1 1073741824
+1628161011977675 38 1 1794219 38 122 0 0 0 160
+# FILE 1628161011977722 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_20_1000_1.rds 1 1073741824
+1628161011988697 37 1 1794220 37 123 0 0 0 160
+# FILE 1628161011988741 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_20_1000_0.rds 1 1073741824
+1628161011999748 36 1 1794221 36 124 0 0 0 160
+# FILE 1628161011999794 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_10_3000_1.rds 1 1073741824
+1628161012013431 35 1 1794222 35 125 0 0 0 160
+# FILE 1628161012013482 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_10_3000_0.rds 1 1073741824
+1628161012026131 34 1 1794223 34 126 0 0 0 160
+# FILE 1628161012026180 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_10_1000_1.rds 1 1073741824
+1628161012037440 33 1 1794224 33 127 0 0 0 160
+# FILE 1628161012037482 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_10_1000_0.rds 1 1073741824
+1628161014073965 32 1 1794225 32 128 0 0 0 160
+# FILE 1628161014074240 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_20_3000_1.rds 1 1073741824
+1628161014086303 31 1 1794226 31 129 0 0 0 160
+# FILE 1628161014086349 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_20_3000_0.rds 1 1073741824
+1628161014097729 30 1 1794227 30 130 0 0 0 160
+# FILE 1628161014097772 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_20_1000_1.rds 1 1073741824
+1628161014108995 29 1 1794228 29 131 0 0 0 160
+# FILE 1628161014109038 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_20_1000_0.rds 1 1073741824
+1628161014120374 28 1 1794229 28 132 0 0 0 160
+# FILE 1628161014120419 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_10_3000_1.rds 1 1073741824
+1628161014131482 27 1 1794230 27 133 0 0 0 160
+# FILE 1628161014131527 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_10_3000_0.rds 1 1073741824
+1628161014142580 26 1 1794231 26 134 0 0 0 160
+# FILE 1628161014142621 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_10_1000_1.rds 1 1073741824
+1628161014153655 25 1 1794232 25 135 0 0 0 160
+# FILE 1628161014153698 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_10_1000_0.rds 1 1073741824
+1628161014164717 24 1 1794233 24 136 0 0 0 160
+# FILE 1628161014164763 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_10_20_3000_1.rds 1 1073741824
+1628161014175703 23 1 1794234 23 137 0 0 0 160
+# FILE 1628161014175748 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_10_20_3000_0.rds 1 1073741824
+1628161014186903 22 1 1794235 22 138 0 0 0 160
+# FILE 1628161014186945 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_10_20_1000_1.rds 1 1073741824
+1628161014198014 21 1 1794236 21 139 0 0 0 160
+# FILE 1628161014198081 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_10_20_1000_0.rds 1 1073741824
+1628161014209214 20 1 1794237 20 140 0 0 0 160
+# FILE 1628161014209266 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_10_10_3000_1.rds 1 1073741824
+1628161014220305 19 1 1794238 19 141 0 0 0 160
+# FILE 1628161014220350 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_10_10_3000_0.rds 1 1073741824
+1628161014231487 18 1 1794239 18 142 0 0 0 160
+# FILE 1628161014231531 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_10_10_1000_1.rds 1 1073741824
+1628161014242619 17 1 1794240 17 143 0 0 0 160
+# FILE 1628161014242664 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_10_10_1000_0.rds 1 1073741824
+1628161014253720 16 1 1794241 16 144 0 0 0 160
+# FILE 1628161014253765 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_20_20_3000_1.rds 1 1073741824
+1628161014264766 15 1 1794242 15 145 0 0 0 160
+# FILE 1628161014264809 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_20_20_3000_0.rds 1 1073741824
+1628161014276193 14 1 1794243 14 146 0 0 0 160
+# FILE 1628161014276238 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_20_20_1000_1.rds 1 1073741824
+1628161014287487 13 1 1794244 13 147 0 0 0 160
+# FILE 1628161014287533 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_20_20_1000_0.rds 1 1073741824
+1628161014299051 12 1 1794245 12 148 0 0 0 160
+# FILE 1628161014299112 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_20_10_3000_1.rds 1 1073741824
+1628161014310346 11 1 1794246 11 149 0 0 0 160
+# FILE 1628161014310387 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_20_10_3000_0.rds 1 1073741824
+1628161014321344 10 1 1794247 10 150 0 0 0 160
+# FILE 1628161014321387 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_20_10_1000_1.rds 1 1073741824
+1628161014332399 9 1 1794248 9 151 0 0 0 160
+# FILE 1628161014332442 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_20_10_1000_0.rds 1 1073741824
+1628161014343456 8 1 1794249 8 152 0 0 0 160
+# FILE 1628161014343499 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_10_20_3000_1.rds 1 1073741824
+1628161014355287 7 1 1794250 7 153 0 0 0 160
+# FILE 1628161014355330 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_10_20_3000_0.rds 1 1073741824
+1628161014366413 6 1 1794251 6 154 0 0 0 160
+# FILE 1628161014366459 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_10_20_1000_1.rds 1 1073741824
+1628161014378306 5 1 1794252 5 155 0 0 0 160
+# FILE 1628161014378352 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_10_20_1000_0.rds 1 1073741824
+1628161014389288 4 1 1794253 4 156 0 0 0 160
+# FILE 1628161014389332 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_10_10_3000_1.rds 1 1073741824
+1628161014400633 3 1 1794254 3 157 0 0 0 160
+# FILE 1628161014400678 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_10_10_3000_0.rds 1 1073741824
+1628161014411948 2 1 1794255 2 158 0 0 0 160
+# FILE 1628161014411993 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_10_10_1000_1.rds 1 1073741824
+1628161014423092 1 1 1794256 1 159 0 0 0 160
+# FILE 1628161014423135 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.1_10_10_1000_0.rds 1 1073741824
+1628161014434396 0 1 1794257 0 160 0 0 0 160
+# FILE 1628161046044949 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_10_1000_0.rds 2 31839
+1628161046045156 112 2 1794145 0 159 1 0 0 160
+# FILE 1628161048061452 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_10_3000_0.rds 2 31786
+1628161048061610 130 2 1794127 0 158 2 0 0 160
+# FILE 1628161049147514 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_10_3000_0.rds 2 31935
+1628161049147678 114 2 1794143 0 157 3 0 0 160
+# FILE 1628161049152899 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_10_1000_1.rds 2 34103
+1628161049152914 113 2 1794144 0 156 4 0 0 160
+# FILE 1628161049159530 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_10_3000_0.rds 2 31824
+1628161049159547 66 2 1794191 0 155 5 0 0 160
+# FILE 1628161050170447 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_10_3000_1.rds 2 34295
+1628161050170470 147 2 1794110 0 154 6 0 0 160
+# FILE 1628161050175623 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_10_3000_1.rds 2 34003
+1628161050175639 131 2 1794126 0 153 7 0 0 160
+# FILE 1628161051028676 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_10_1000_1.rds 2 34208
+1628161051028696 129 2 1794128 0 152 8 0 0 160
+# FILE 1628161051034601 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_10_3000_1.rds 2 33991
+1628161051034618 115 2 1794142 0 151 9 0 0 160
+# FILE 1628161051040183 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_10_1000_0.rds 2 31899
+1628161051040198 96 2 1794161 0 150 10 0 0 160
+# FILE 1628161051046808 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_10_3000_1.rds 2 34154
+1628161051046824 67 2 1794190 0 149 11 0 0 160
+# FILE 1628161051052777 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_10_1000_1.rds 2 34131
+1628161051052792 65 2 1794192 0 148 12 0 0 160
+# FILE 1628161052063363 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_10_3000_0.rds 2 31904
+1628161052063384 98 2 1794159 0 147 13 0 0 160
+# FILE 1628161052068034 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_10_3000_0.rds 2 31914
+1628161052068049 82 2 1794175 0 146 14 0 0 160
+# FILE 1628161052074187 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_10_1000_0.rds 2 31754
+1628161052074203 80 2 1794177 0 145 15 0 0 160
+# FILE 1628161053089466 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_10_3000_1.rds 2 34237
+1628161053089652 99 2 1794158 0 144 16 0 0 160
+# FILE 1628161053095103 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_10_1000_1.rds 2 34247
+1628161053095121 97 2 1794160 0 143 17 0 0 160
+# FILE 1628161054107859 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_10_3000_1.rds 2 34256
+1628161054107875 83 2 1794174 0 142 18 0 0 160
+# FILE 1628161054115781 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_10_1000_0.rds 2 31732
+1628161054115798 64 2 1794193 0 141 19 0 0 160
+# FILE 1628161054122617 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_10_3000_0.rds 2 31847
+1628161054122633 50 2 1794207 0 140 20 0 0 160
+# FILE 1628161055135455 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_10_1000_1.rds 2 34233
+1628161055135475 81 2 1794176 0 139 21 0 0 160
+# FILE 1628161056193892 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_10_1000_1.rds 2 34411
+1628161056194095 49 2 1794208 0 138 22 0 0 160
+# FILE 1628161057224813 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_10_3000_1.rds 2 34187
+1628161057224832 51 2 1794206 0 137 23 0 0 160
+# FILE 1628161057232219 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_10_1000_0.rds 2 31829
+1628161057232235 48 2 1794209 0 136 24 0 0 160
+# FILE 1628161057237594 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_10_1000_0.rds 2 31991
+1628161057237610 32 2 1794225 0 135 25 0 0 160
+# FILE 1628161058248569 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_10_3000_0.rds 2 63997
+1628161058248591 154 2 1794103 0 134 26 0 0 160
+# FILE 1628161058252971 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_10_1000_0.rds 2 63947
+1628161058252988 152 2 1794105 0 133 27 0 0 160
+# FILE 1628161058263501 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_10_3000_0.rds 2 63793
+1628161058263517 74 2 1794183 0 132 28 0 0 160
+# FILE 1628161058269332 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_10_1000_0.rds 2 63760
+1628161058269347 72 2 1794185 0 131 29 0 0 160
+# FILE 1628161058275312 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_20_3000_0.rds 2 61019
+1628161058275328 70 2 1794187 0 130 30 0 0 160
+# FILE 1628161058281219 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_20_1000_0.rds 2 61015
+1628161058281235 68 2 1794189 0 129 31 0 0 160
+# FILE 1628161058286155 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_10_3000_0.rds 2 31796
+1628161058286170 34 2 1794223 0 128 32 0 0 160
+# FILE 1628161059298114 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_20_3000_0.rds 2 60885
+1628161059298293 86 2 1794171 0 127 33 0 0 160
+# FILE 1628161060309170 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_10_3000_0.rds 2 63848
+1628161060309197 138 2 1794119 0 126 34 0 0 160
+# FILE 1628161060314094 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_20_3000_0.rds 2 60844
+1628161060314112 134 2 1794123 0 125 35 0 0 160
+# FILE 1628161060319381 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_20_1000_0.rds 2 60992
+1628161060319399 132 2 1794125 0 124 36 0 0 160
+# FILE 1628161060324581 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_20_1000_0.rds 2 60784
+1628161060324596 116 2 1794141 0 123 37 0 0 160
+# FILE 1628161060329690 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_10_1000_0.rds 2 63795
+1628161060329706 104 2 1794153 0 122 38 0 0 160
+# FILE 1628161060338437 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_10_1000_0.rds 2 63919
+1628161060338454 88 2 1794169 0 121 39 0 0 160
+# FILE 1628161060344123 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_10_3000_0.rds 2 63765
+1628161060344140 122 2 1794135 0 120 40 0 0 160
+# FILE 1628161060348997 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_10_1000_0.rds 2 63727
+1628161060349014 120 2 1794137 0 119 41 0 0 160
+# FILE 1628161060355043 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_20_3000_1.rds 2 65623
+1628161060355073 71 2 1794186 0 118 42 0 0 160
+# FILE 1628161060360554 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_10_3000_0.rds 2 64110
+1628161060360569 90 2 1794167 0 117 43 0 0 160
+# FILE 1628161060366396 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_10_20_1000_1.rds 2 65842
+1628161060366414 69 2 1794188 0 116 44 0 0 160
+# FILE 1628161060373408 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_10_3000_1.rds 2 34425
+1628161060373425 35 2 1794222 0 115 45 0 0 160
+# FILE 1628161060380358 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_10_1000_1.rds 2 34248
+1628161060380373 33 2 1794224 0 114 46 0 0 160
+# FILE 1628161061392738 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_10_3000_1.rds 2 68661
+1628161061392756 155 2 1794102 0 113 47 0 0 160
+# FILE 1628161061396850 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_10_1000_1.rds 2 68846
+1628161061396865 153 2 1794104 0 112 48 0 0 160
+# FILE 1628161061402518 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_10_1000_1.rds 2 68646
+1628161061402534 137 2 1794120 0 111 49 0 0 160
+# FILE 1628161061408597 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_20_3000_0.rds 2 60838
+1628161061408613 118 2 1794139 0 110 50 0 0 160
+# FILE 1628161061413841 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_10_3000_0.rds 2 63848
+1628161061413857 106 2 1794151 0 109 51 0 0 160
+# FILE 1628161061422766 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_10_1000_1.rds 2 69014
+1628161061422781 73 2 1794184 0 108 52 0 0 160
+# FILE 1628161062434685 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_20_3000_1.rds 2 65128
+1628161062434847 151 2 1794106 0 107 53 0 0 160
+# FILE 1628161062440993 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_20_1000_1.rds 2 65073
+1628161062441009 149 2 1794108 0 106 54 0 0 160
+# FILE 1628161062446995 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_10_3000_0.rds 2 31878
+1628161062447009 146 2 1794111 0 105 55 0 0 160
+# FILE 1628161062452535 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_10_3000_1.rds 2 68803
+1628161062452550 139 2 1794118 0 104 56 0 0 160
+# FILE 1628161062459106 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_20_3000_1.rds 2 65125
+1628161062459123 135 2 1794122 0 103 57 0 0 160
+# FILE 1628161062463785 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_20_1000_1.rds 2 64998
+1628161062463799 133 2 1794124 0 102 58 0 0 160
+# FILE 1628161062468986 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_10_1000_1.rds 2 68668
+1628161062469002 105 2 1794152 0 101 59 0 0 160
+# FILE 1628161062475878 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_20_3000_1.rds 2 65358
+1628161062475895 103 2 1794154 0 100 60 0 0 160
+# FILE 1628161062480760 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_20_3000_0.rds 2 61150
+1628161062480776 102 2 1794155 0 99 61 0 0 160
+# FILE 1628161062488278 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_10_1000_1.rds 2 68944
+1628161062488294 89 2 1794168 0 98 62 0 0 160
+# FILE 1628161062494434 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_20_3000_1.rds 2 65581
+1628161062494451 87 2 1794170 0 97 63 0 0 160
+# FILE 1628161062499171 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_20_1000_1.rds 2 65536
+1628161062499187 85 2 1794172 0 96 64 0 0 160
+# FILE 1628161063507588 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_10_10_1000_0.rds 2 31841
+1628161063507605 128 2 1794129 0 95 65 0 0 160
+# FILE 1628161063523980 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_20_3000_1.rds 2 65583
+1628161063523995 119 2 1794138 0 94 66 0 0 160
+# FILE 1628161063526896 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_10_20_1000_1.rds 2 65499
+1628161063526911 117 2 1794140 0 93 67 0 0 160
+# FILE 1628161063530003 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_10_3000_1.rds 2 68813
+1628161063530019 107 2 1794150 0 92 68 0 0 160
+# FILE 1628161063533361 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_20_1000_0.rds 2 60899
+1628161063533378 100 2 1794157 0 91 69 0 0 160
+# FILE 1628161063536264 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_10_3000_1.rds 2 68928
+1628161063536278 91 2 1794166 0 90 70 0 0 160
+# FILE 1628161063539675 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_10_20_1000_0.rds 2 61021
+1628161063539690 84 2 1794173 0 89 71 0 0 160
+# FILE 1628161064549307 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_10_3000_1.rds 2 68680
+1628161064549325 123 2 1794134 0 88 72 0 0 160
+# FILE 1628161064553991 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_10_1000_1.rds 2 68821
+1628161064554007 121 2 1794136 0 87 73 0 0 160
+# FILE 1628161064559420 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_10_1000_0.rds 2 63777
+1628161064559436 56 2 1794201 0 86 74 0 0 160
+# FILE 1628161064564868 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_20_3000_0.rds 2 60942
+1628161064564883 54 2 1794203 0 85 75 0 0 160
+# FILE 1628161064570144 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_20_1000_0.rds 2 60727
+1628161064570162 52 2 1794205 0 84 76 0 0 160
+# FILE 1628161065580111 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_10_1000_0.rds 2 63806
+1628161065580295 136 2 1794121 0 83 77 0 0 160
+# FILE 1628161065584821 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_10_20_1000_1.rds 2 65260
+1628161065584838 101 2 1794156 0 82 78 0 0 160
+# FILE 1628161066595364 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_10_3000_1.rds 2 68770
+1628161066595382 75 2 1794182 0 81 79 0 0 160
+# FILE 1628161066602651 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_20_3000_1.rds 2 65611
+1628161066602667 55 2 1794202 0 80 80 0 0 160
+# FILE 1628161066607871 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_10_20_1000_1.rds 2 65653
+1628161066607887 53 2 1794204 0 79 81 0 0 160
+# FILE 1628161067617883 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_10_3000_0.rds 2 63762
+1628161067617906 42 2 1794215 0 78 82 0 0 160
+# FILE 1628161067623122 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_10_1000_0.rds 2 63717
+1628161067623137 40 2 1794217 0 77 83 0 0 160
+# FILE 1628161067628166 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_20_3000_0.rds 2 60840
+1628161067628183 38 2 1794219 0 76 84 0 0 160
+# FILE 1628161067633190 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_20_1000_0.rds 2 61051
+1628161067633207 36 2 1794221 0 75 85 0 0 160
+# FILE 1628161067638321 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_10_3000_0.rds 2 63888
+1628161067638336 26 2 1794231 0 74 86 0 0 160
+# FILE 1628161068648499 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_10_1000_1.rds 2 69137
+1628161068648655 25 2 1794232 0 73 87 0 0 160
+# FILE 1628161069658070 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_10_3000_1.rds 2 68768
+1628161069658088 43 2 1794214 0 72 88 0 0 160
+# FILE 1628161069663182 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_20_3000_1.rds 2 65873
+1628161069663199 39 2 1794218 0 71 89 0 0 160
+# FILE 1628161069668365 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_10_20_1000_1.rds 2 65895
+1628161069668380 37 2 1794220 0 70 90 0 0 160
+# FILE 1628161069673677 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_10_3000_1.rds 2 68912
+1628161069673693 27 2 1794230 0 69 91 0 0 160
+# FILE 1628161070683068 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_10_3000_0.rds 2 63773
+1628161070684149 58 2 1794199 0 68 92 0 0 160
+# FILE 1628161070689248 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_10_1000_1.rds 2 68940
+1628161070689265 41 2 1794216 0 67 93 0 0 160
+# FILE 1628161072716381 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_10_3000_1.rds 2 68875
+1628161072716533 59 2 1794198 0 66 94 0 0 160
+# FILE 1628161072721940 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_10_1000_1.rds 2 68815
+1628161072721956 57 2 1794200 0 65 95 0 0 160
+# FILE 1628161073733540 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_10_1000_0.rds 2 31991
+1628161073733558 144 2 1794113 0 64 96 0 0 160
+# FILE 1628161076786754 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_10_1000_1.rds 2 34087
+1628161076786936 145 2 1794112 0 63 97 0 0 160
+# FILE 1628161081815953 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_10_20_1000_0.rds 2 60623
+1628161081816123 148 2 1794109 0 62 98 0 0 160
+# FILE 1628161082825678 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_20_3000_0.rds 2 105105
+1628161082825695 62 2 1794195 0 61 99 0 0 160
+# FILE 1628161083861297 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_20_3000_0.rds 2 104506
+1628161083861317 142 2 1794115 0 60 100 0 0 160
+# FILE 1628161083865451 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_20_1000_0.rds 2 104508
+1628161083865467 140 2 1794117 0 59 101 0 0 160
+# FILE 1628161083869957 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_20_1000_0.rds 2 104752
+1628161083869972 92 2 1794165 0 58 102 0 0 160
+# FILE 1628161084904064 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_20_1000_0.rds 2 105208
+1628161084904266 108 2 1794149 0 57 103 0 0 160
+# FILE 1628161084909409 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_20_3000_1.rds 2 114186
+1628161084909427 63 2 1794194 0 56 104 0 0 160
+# FILE 1628161084914969 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_20_1000_1.rds 2 113795
+1628161084914984 61 2 1794196 0 55 105 0 0 160
+# FILE 1628161085931045 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_20_3000_1.rds 2 113545
+1628161085931073 143 2 1794114 0 54 106 0 0 160
+# FILE 1628161085935885 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.67777777777778_20_20_1000_1.rds 2 113410
+1628161085935902 141 2 1794116 0 53 107 0 0 160
+# FILE 1628161085943092 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_20_3000_0.rds 2 104901
+1628161085943108 110 2 1794147 0 52 108 0 0 160
+# FILE 1628161085947826 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_20_3000_0.rds 2 105087
+1628161085947841 46 2 1794211 0 51 109 0 0 160
+# FILE 1628161085952122 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_20_1000_1.rds 2 113651
+1628161085952138 93 2 1794164 0 50 110 0 0 160
+# FILE 1628161086964688 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_20_3000_1.rds 2 113779
+1628161086964705 111 2 1794146 0 49 111 0 0 160
+# FILE 1628161086968778 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.03333333333333_20_20_1000_1.rds 2 113767
+1628161086968794 109 2 1794148 0 48 112 0 0 160
+# FILE 1628161086973070 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_20_3000_0.rds 2 104853
+1628161086973085 94 2 1794163 0 47 113 0 0 160
+# FILE 1628161086978063 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_20_1000_0.rds 2 104878
+1628161086978079 76 2 1794181 0 46 114 0 0 160
+# FILE 1628161086982645 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_20_1000_0.rds 2 105011
+1628161086982666 44 2 1794213 0 45 115 0 0 160
+# FILE 1628161086989802 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_20_3000_0.rds 2 105044
+1628161086989819 30 2 1794227 0 44 116 0 0 160
+# FILE 1628161086994296 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_20_1000_0.rds 2 105067
+1628161086994313 28 2 1794229 0 43 117 0 0 160
+# FILE 1628161088001144 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_20_3000_0.rds 2 104652
+1628161088001353 126 2 1794131 0 42 118 0 0 160
+# FILE 1628161088008804 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_20_3000_0.rds 2 105061
+1628161088008820 78 2 1794179 0 41 119 0 0 160
+# FILE 1628161089014869 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_20_1000_0.rds 2 104787
+1628161089014887 124 2 1794133 0 40 120 0 0 160
+# FILE 1628161089018923 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.71111111111111_20_20_3000_1.rds 2 113725
+1628161089018939 95 2 1794162 0 39 121 0 0 160
+# FILE 1628161089023647 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_20_3000_1.rds 2 114501
+1628161089023664 47 2 1794210 0 38 122 0 0 160
+# FILE 1628161089028415 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.744444444444444_20_20_1000_1.rds 2 114193
+1628161089028432 45 2 1794212 0 37 123 0 0 160
+# FILE 1628161089033027 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_20_3000_1.rds 2 113958
+1628161089033042 31 2 1794226 0 36 124 0 0 160
+# FILE 1628161089038282 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_0.422222222222222_20_20_1000_1.rds 2 114085
+1628161089038299 29 2 1794228 0 35 125 0 0 160
+# FILE 1628161090044825 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_20_1000_1.rds 2 113970
+1628161090044843 125 2 1794132 0 34 126 0 0 160
+# FILE 1628161090049121 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_20_1000_1.rds 2 113905
+1628161090049136 77 2 1794180 0 33 127 0 0 160
+# FILE 1628161090053877 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.06666666666667_20_20_1000_0.rds 2 104997
+1628161090053894 60 2 1794197 0 32 128 0 0 160
+# FILE 1628161091997095 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_2.35555555555556_20_20_3000_1.rds 2 113649
+1628161091997276 127 2 1794130 0 31 129 0 0 160
+1628161092006646 1 4 1794256 0 30 129 0 1 160
+1628161092015250 0 4 1794257 0 29 129 0 2 160
+1628161092024085 159 4 1794098 0 28 129 0 3 160
+1628161092032545 158 4 1794099 0 27 129 0 4 160
+# FILE 1628161092033218 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_3_20_20_3000_0.rds 4 1073741824
+1628161092041432 157 4 1794100 0 26 129 0 5 160
+1628161092049600 156 4 1794101 0 25 129 0 6 160
+1628161092057670 150 4 1794107 0 24 129 0 7 160
+1628161092065895 79 4 1794178 0 23 129 0 8 160
+# FILE 1628161092068361 /stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/benchmark_results/input_1.38888888888889_20_20_3000_1.rds 4 1073741824
+1628161092076312 24 4 1794233 0 22 129 0 9 160
+1628161092084349 23 4 1794234 0 21 129 0 10 160
+1628161092092109 22 4 1794235 0 20 129 0 11 160
+1628161092100488 21 4 1794236 0 19 129 0 12 160
+1628161092108341 20 4 1794237 0 18 129 0 13 160
+1628161092116088 19 4 1794238 0 17 129 0 14 160
+1628161092124294 18 4 1794239 0 16 129 0 15 160
+1628161092132385 17 4 1794240 0 15 129 0 16 160
+1628161092140227 16 4 1794241 0 14 129 0 17 160
+1628161092148249 15 4 1794242 0 13 129 0 18 160
+1628161092156221 14 4 1794243 0 12 129 0 19 160
+1628161092164274 13 4 1794244 0 11 129 0 20 160
+1628161092172337 12 4 1794245 0 10 129 0 21 160
+1628161092180095 11 4 1794246 0 9 129 0 22 160
+1628161092187810 10 4 1794247 0 8 129 0 23 160
+1628161092195673 9 4 1794248 0 7 129 0 24 160
+1628161092203733 8 4 1794249 0 6 129 0 25 160
+1628161092211601 7 4 1794250 0 5 129 0 26 160
+1628161092219674 6 4 1794251 0 4 129 0 27 160
+1628161092227524 5 4 1794252 0 3 129 0 28 160
+1628161092235872 4 4 1794253 0 2 129 0 29 160
+1628161092244142 3 4 1794254 0 1 129 0 30 160
+1628161092252490 2 4 1794255 0 0 129 0 31 160
+# ABORTED 1628161092252681
