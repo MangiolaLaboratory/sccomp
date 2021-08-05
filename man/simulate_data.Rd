@@ -13,7 +13,7 @@ simulate_data(
   .coefficients,
   percent_false_positive = 5,
   check_outliers = TRUE,
-  approximate_posterior_inference = TRUE,
+  approximate_posterior_inference = FALSE,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
   cores = detectCores(),
