@@ -55,10 +55,10 @@ dirichlet_multinomial_glm = function(.data,
   # Produce data list
   if(!check_outliers){
 
-    fit =
+   fit =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed)
+      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed, approximate_posterior_inference= approximate_posterior_inference)
 
     parsed_fit =
       fit %>%
@@ -343,7 +343,8 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
   fit  = fit_model(
     data_for_model, model, censoring_iteration, chains= chains,
     output_samples = output_samples, verbose = T,
-    seed = seed, pars = c("beta", "precision", "alpha")
+    seed = seed, pars = c("beta", "precision", "alpha"),
+    approximate_posterior_inference= approximate_posterior_inference
   )
 
 
