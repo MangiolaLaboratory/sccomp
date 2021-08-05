@@ -30,18 +30,18 @@ beta_0 = readRDS("dev/beta_0.rds")
 #probs = c(0, 0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 # probs = seq(0, 0.2,length.out = 20)
 
-mnreg <-
-  benchmark %>%
-  pull(data) %>%
-  .[[1]] %>%
-  select(type, .value, sample, cell_type) %>%
-  mutate(cell_type = sprintf("C%s", cell_type)) %>%
-  spread(cell_type, .value) %>%
-MGLMreg(
-  formula = cbind(C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21, C22, C23, C24) ~ type,
-  data = .,
-  dist = "DM"
-)
+# mnreg <-
+#   benchmark %>%
+#   pull(data) %>%
+#   .[[1]] %>%
+#   select(type, .value, sample, cell_type) %>%
+#   mutate(cell_type = sprintf("C%s", cell_type)) %>%
+#   spread(cell_type, .value) %>%
+# MGLMreg(
+#   formula = cbind(C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21, C22, C23, C24) ~ type,
+#   data = .,
+#   dist = "DM"
+# )
 
 # Iterate over runs
 benchmark =
@@ -51,16 +51,16 @@ benchmark =
     ~ {
       input_data =
         expand_grid(
-          sample = 1:10, cell_type = 1:24
+          sample = 1:10, cell_type = 1:10
         ) %>%
         nest(d = -cell_type) %>%
         mutate(beta_0 = sample(beta_0, size = n())) %>% # rnorm(n = n(), 0, 1)) %>%
         mutate(  beta_1 = case_when(
-          cell_type %in% c(1, 3, 5) ~ 1,
-          cell_type %in% c(2, 4, 6) ~ -1,
+          cell_type %in% c(1, 3) ~ 1,
+          cell_type %in% c(2, 4) ~ -1,
           TRUE ~ 0
         )) %>%
-        mutate(beta_1 = beta_1 %>% multiply_by(0.6)) %>%
+        mutate(beta_1 = beta_1 %>% multiply_by(0.4)) %>%
         nest(coefficients = starts_with("beta_")) %>%
         unnest(d) %>%
         nest(d = -sample) %>%
@@ -158,9 +158,25 @@ benchmark %>%
   group_by(sample) %>%
   mutate(proportion = (.value+1)/sum(.value+1)) %>%
   ungroup(sample) %>%
-  ggplot(aes(factor(type), proportion)) +
+  ggplot(aes(factor(type), proportion, fill = cell_type %in% 1:4)) +
   geom_boxplot() +
-  facet_wrap(~ cell_type)
+  geom_jitter(size=0.5) +
+  scale_fill_manual(values = c("white", "#E2D379")) +
+  facet_wrap(~ as.integer(cell_type), ncol=5) +
+  theme_bw() +
+  theme(
+    strip.background =element_rect(fill="white", color="white"),
+    legend.position = "none",
+  )
+
+ggsave(
+  "dev/example_boxplot_no_outliers.pdf",
+  units = c("mm"),
+  width = 183/2 ,
+  height = 183/2,
+  limitsize = FALSE
+)
+
 
 probs = seq(0, 0.1,length.out = 50) %>% c(seq(0.1, 1,length.out = 50))
 
@@ -182,7 +198,7 @@ benchmark_hypothesis =
     results_DirichletMultinomial , (probs) ,
     ~ .x  %>%
       arrange(false_discovery_rate) %>%
-      mutate(positive = false_discovery_rate<(.y/10)) %>%
+      mutate(positive = false_discovery_rate<(.y)) %>%
       mutate(trend = .median_type )
   )) %>%
   dplyr::select(-contains("results"))
@@ -230,11 +246,11 @@ benchmark_hypothesis %>%
   theme_bw() +
   theme(legend.position = "bottom")
 
-saveRDS(benchmark, "dev/benchmark_slope0.6_samples10_celltypes24_noOutliers_max1000exposure_run4_50replicates.rds")
+saveRDS(benchmark, "dev/benchmark_slope0.4_samples10_celltypes10_noOutliers_max1000exposure_50replicates.rds")
 
 
 ggsave(
-  "dev/roc_slope0.6_samples10_celltypes24_noOutliers_max1000exposure_run4_50replicates.pdf",
+  "dev/roc_slope0.4_samples10_celltypes10_noOutliers_max1000exposure_50replicates.pdf",
   units = c("mm"),
   width = 183/2 ,
   height = 183/2,
