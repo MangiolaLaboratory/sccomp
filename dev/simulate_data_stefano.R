@@ -8,6 +8,15 @@ library(limma)
 library(DirichletReg)
 library(MGLM)
 
+
+
+# Read arguments
+args = commandArgs(trailingOnly=TRUE)
+slope = as.numeric(args[1])
+n_samples = as.integer(args[2])
+max_cell_counts_per_sample = as.integer(args[3])
+output_file = args[4]
+
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
 beta_0 = readRDS("dev/beta_0.rds")
 
@@ -150,61 +159,61 @@ benchmark =
       )
   ))
 
+saveRDS(benchmark, output_file)
 
-
-benchmark %>%
-  pull(data) %>%
-  .[[1]] %>%
-  group_by(sample) %>%
-  mutate(proportion = (.value+1)/sum(.value+1)) %>%
-  ungroup(sample) %>%
-  ggplot(aes(factor(type), proportion, fill = cell_type %in% 1:4)) +
-  geom_boxplot() +
-  geom_jitter(size=0.5) +
-  scale_fill_manual(values = c("white", "#E2D379")) +
-  facet_wrap(~ as.integer(cell_type), ncol=5) +
-  theme_bw() +
-  theme(
-    strip.background =element_rect(fill="white", color="white"),
-    legend.position = "none",
-  )
-
-ggsave(
-  "dev/example_boxplot_no_outliers.pdf",
-  units = c("mm"),
-  width = 183/2 ,
-  height = 183/2,
-  limitsize = FALSE
-)
-
-
-probs = seq(0, 0.1,length.out = 50) %>% c(seq(0.1, 1,length.out = 50))
-
-benchmark_hypothesis =
-  benchmark %>%
-  dplyr::mutate(probs  = map(run, ~ !!probs)) %>%
-  unnest((probs) ) %>%
-  mutate(hypothesis_edger = map2(results_edger, (probs) , ~ .x %>% arrange(FDR) %>% mutate(positive = FDR<.y) %>% mutate(trend = logFC))) %>%
-  mutate(hypothesis_voom = map2(results_voom, (probs) , ~.x %>% arrange(adj.P.Val) %>% mutate(positive = adj.P.Val<.y) %>% mutate(trend = logFC))) %>%
-  mutate(hypothesis_speckle = map2(results_speckle, (probs) , ~ .x %>% arrange(FDR) %>% mutate(positive = FDR<.y) %>% mutate(trend = -Tstatistic    ))) %>%
-  mutate(hypothesis_sccomp = map2(
-    results_sccomp, (probs) ,
-    ~ .x  %>%
-      arrange(false_discovery_rate) %>%
-      mutate(positive = false_discovery_rate<.y) %>%
-      mutate(trend = .median_type )
-  )) %>%
-  mutate(hypothesis_DirichletMultinomial  = map2(
-    results_DirichletMultinomial , (probs) ,
-    ~ .x  %>%
-      arrange(false_discovery_rate) %>%
-      mutate(positive = false_discovery_rate<(.y)) %>%
-      mutate(trend = .median_type )
-  )) %>%
-  dplyr::select(-contains("results"))
-
-
-
+# benchmark %>%
+#   pull(data) %>%
+#   .[[1]] %>%
+#   group_by(sample) %>%
+#   mutate(proportion = (.value+1)/sum(.value+1)) %>%
+#   ungroup(sample) %>%
+#   ggplot(aes(factor(type), proportion, fill = cell_type %in% 1:4)) +
+#   geom_boxplot() +
+#   geom_jitter(size=0.5) +
+#   scale_fill_manual(values = c("white", "#E2D379")) +
+#   facet_wrap(~ as.integer(cell_type), ncol=5) +
+#   theme_bw() +
+#   theme(
+#     strip.background =element_rect(fill="white", color="white"),
+#     legend.position = "none",
+#   )
+#
+# ggsave(
+#   "dev/example_boxplot_no_outliers.pdf",
+#   units = c("mm"),
+#   width = 183/2 ,
+#   height = 183/2,
+#   limitsize = FALSE
+# )
+#
+#
+# probs = seq(0, 0.1,length.out = 50) %>% c(seq(0.1, 1,length.out = 50))
+#
+# benchmark_hypothesis =
+#   benchmark %>%
+#   dplyr::mutate(probs  = map(run, ~ !!probs)) %>%
+#   unnest((probs) ) %>%
+#   mutate(hypothesis_edger = map2(results_edger, (probs) , ~ .x %>% arrange(FDR) %>% mutate(positive = FDR<.y) %>% mutate(trend = logFC))) %>%
+#   mutate(hypothesis_voom = map2(results_voom, (probs) , ~.x %>% arrange(adj.P.Val) %>% mutate(positive = adj.P.Val<.y) %>% mutate(trend = logFC))) %>%
+#   mutate(hypothesis_speckle = map2(results_speckle, (probs) , ~ .x %>% arrange(FDR) %>% mutate(positive = FDR<.y) %>% mutate(trend = -Tstatistic    ))) %>%
+#   mutate(hypothesis_sccomp = map2(
+#     results_sccomp, (probs) ,
+#     ~ .x  %>%
+#       arrange(false_discovery_rate) %>%
+#       mutate(positive = false_discovery_rate<.y) %>%
+#       mutate(trend = .median_type )
+#   )) %>%
+#   mutate(hypothesis_DirichletMultinomial  = map2(
+#     results_DirichletMultinomial , (probs) ,
+#     ~ .x  %>%
+#       arrange(false_discovery_rate) %>%
+#       mutate(positive = false_discovery_rate<(.y)) %>%
+#       mutate(trend = .median_type )
+#   )) %>%
+#   dplyr::select(-contains("results"))
+#
+#
+#
 benchmark_hypothesis %>%
   dplyr::select(-contains("results")) %>%
   pivot_longer(contains("hypothesis"),names_prefix = "hypothesis_" ) %>%
@@ -246,15 +255,15 @@ benchmark_hypothesis %>%
   theme_bw() +
   theme(legend.position = "bottom")
 
-saveRDS(benchmark, "dev/benchmark_slope0.4_samples10_celltypes10_noOutliers_max1000exposure_50replicates.rds")
+# "dev/benchmark_slope0.4_samples10_celltypes10_noOutliers_max1000exposure_50replicates.rds")
 
 
-ggsave(
-  "dev/roc_slope0.4_samples10_celltypes10_noOutliers_max1000exposure_50replicates.pdf",
-  units = c("mm"),
-  width = 183/2 ,
-  height = 183/2,
-  limitsize = FALSE
-)
+# ggsave(
+#   "dev/roc_slope0.4_samples10_celltypes10_noOutliers_max1000exposure_50replicates.pdf",
+#   units = c("mm"),
+#   width = 183/2 ,
+#   height = 183/2,
+#   limitsize = FALSE
+# )
 
 
