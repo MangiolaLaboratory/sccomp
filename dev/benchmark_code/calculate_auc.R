@@ -18,3 +18,4 @@ readRDS(input_file) %>%
   select(-data) %>%
   saveRDS(output_file)
 
+

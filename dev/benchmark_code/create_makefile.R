@@ -11,10 +11,10 @@ tab="\t"
 
 commands_df =
   expand_grid(
-  slope =seq(0.1, 3, length.out = 10),
-  n_samples = c(10, 20),
+  slope =seq(0.1, 1, length.out = 10),
+  n_samples = c( 10, 15, 20),
   n_cell_type = c(10, 20),
-  max_cell_counts_per_sample = c(1000, 3000),
+  max_cell_counts_per_sample = c(1000),
   add_outliers = c(0, 1)
 ) %>%
 

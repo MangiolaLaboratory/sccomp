@@ -73,7 +73,7 @@ tibble(run = 1:50) %>%
           unnest(coefficients) %>%
           filter(beta_1==0) %>%
           sample_frac(0.1) %>%
-          mutate(ratio =  rnorm(n()/2, 7.6, 2.9) %>% c(rnorm(n()/2, 0.03572171, 0.01107917)) ) %>%
+          mutate(ratio =  rnorm(ceiling(n()/2), 7.6, 2.9) %>% c(rnorm(floor(n()/2), 0.03572171, 0.01107917)) ) %>%
           ungroup %>%
           select(sample, cell_type, ratio)
 
