@@ -3,6 +3,7 @@ library(tidyverse)
 library(magrittr)
 library(tidybulk)
 
+
 # Read arguments
 args = commandArgs(trailingOnly=TRUE)
 
@@ -18,61 +19,82 @@ readRDS(estimate_file_1) %>%
   left_join(readRDS(estimate_file_2)) %>%
   left_join(readRDS(estimate_file_3))  %>%
 
-  {print(99); (.)} %>%
-
-  # Add probs
-  dplyr::mutate(probs  = map(run, ~ !!probs)) %>%
-  unnest((probs) ) %>%
-
-
-
   # Calculate sgnificance
-  mutate(hypothesis_edger = map2(results_edger, (probs) , ~ .x %>% arrange(FDR) %>% mutate(positive = FDR<=.y) %>% mutate(trend = logFC))) %>%
-  mutate(hypothesis_voom = map2(results_voom, (probs) , ~.x %>% arrange(adj.P.Val) %>% mutate(positive = adj.P.Val<=.y) %>% mutate(trend = logFC))) %>%
-  mutate(hypothesis_speckle = map2(results_speckle, (probs) , ~ .x %>% arrange(FDR) %>% mutate(positive = FDR<=.y) %>% mutate(trend = -Tstatistic    ))) %>%
-  mutate(hypothesis_sccomp = map2(
-    results_sccomp, (probs) ,
+  mutate(hypothesis_edger = map(results_edger , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-PValue) %>% mutate(estimate = logFC))) %>%
+  mutate(hypothesis_voom = map(results_voom , ~.x %>% arrange(adj.P.Val) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = logFC))) %>%
+  mutate(hypothesis_speckle = map(results_speckle , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = -Tstatistic    ))) %>%
+  mutate(hypothesis_sccomp = map(
+    results_sccomp ,
     ~ .x  %>%
       arrange(false_discovery_rate) %>%
-      mutate(positive = false_discovery_rate<=.y) %>%
-      mutate(trend = .median_type )
+      mutate(probability = 1-false_discovery_rate) %>%
+      mutate(estimate = .median_type )
   )) %>%
-  mutate(hypothesis_DirichletMultinomial  = map2(
-    results_DirichletMultinomial , (probs) ,
+  mutate(hypothesis_DirichletMultinomial  = map(
+    results_DirichletMultinomial ,
     ~ .x  %>%
       arrange(false_discovery_rate) %>%
-      mutate(positive = false_discovery_rate<=.y) %>%
-      mutate(trend = .median_type )
+      mutate(probability = 1-false_discovery_rate) %>%
+      mutate(estimate = .median_type )
   )) %>%
 
   # Clean
   dplyr::select(-contains("results")) %>%
 
-  # Calculate accuracy
+  # Reshape
   pivot_longer(contains("hypothesis"),names_prefix = "hypothesis_" ) %>%
-  mutate(accuracy_df = map2(
-    data, value             ,
+
+  # Calculate ROC
+  mutate(df_for_roc = map2(
+    data, value,
     ~ left_join(
+      .x %>%
+        unnest(coefficients) %>%
+        distinct(cell_type, beta_1),
 
-      .x %>% unnest(coefficients) %>% dplyr::select(cell_type, beta_1) %>% distinct %>% mutate(cell_type = as.character(cell_type)),
-      .y %>% dplyr::select(cell_type, positive, trend),
-      by="cell_type"
-
+      .y  %>%
+        select(cell_type,  probability , estimate),
+      by = "cell_type"
     )
-
   )) %>%
-  mutate(TP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 != 0) & (beta_1 * trend)>0) %>% nrow())) %>%
-  mutate(FP = map_int(accuracy_df, ~ .x %>% filter(
+  select(run, name, df_for_roc) %>%
 
-    # Positive when not
-    (positive & (beta_1 == 0)) |
+  unnest(df_for_roc) %>%
+  nest(df_for_roc = -name) %>%
+  mutate(df_for_roc = map(
+    df_for_roc,
+    ~ .x %>%
+      mutate(probability = if_else(beta_1 * estimate < 0, 0, probability)) %>%
+      mutate(significant = (beta_1 != 0) %>% as.factor())
+  )) %>%
 
-      # Positive when yes but wrong direction
-      (positive & (beta_1 != 0) & (beta_1 * trend)<0)
-  ) %>% nrow())) %>%
-  mutate(total_true_positive = 6, total_true_negative = 24-6) %>%
-  mutate(FP_rate = FP/total_true_negative) %>%
-  mutate(TP_rate = TP/total_true_positive) %>%
+
+# NOT USED ANYMORE
+# # Calculate accuracy
+#   pivot_longer(contains("hypothesis"),names_prefix = "hypothesis_" ) %>%
+#   mutate(accuracy_df = map2(
+#     data, value             ,
+#     ~ left_join(
+#
+#       .x %>% unnest(coefficients) %>% dplyr::select(cell_type, beta_1) %>% distinct %>% mutate(cell_type = as.character(cell_type)),
+#       .y %>% dplyr::select(cell_type, positive, trend),
+#       by="cell_type"
+#
+#     )
+#
+#   )) %>%
+#   mutate(TP = map_int(accuracy_df, ~ .x %>% filter(positive & (beta_1 != 0) & (beta_1 * trend)>0) %>% nrow())) %>%
+#   mutate(FP = map_int(accuracy_df, ~ .x %>% filter(
+#
+#     # Positive when not
+#     (positive & (beta_1 == 0)) |
+#
+#       # Positive when yes but wrong direction
+#       (positive & (beta_1 != 0) & (beta_1 * trend)<0)
+#   ) %>% nrow())) %>%
+#   mutate(total_true_positive = 6, total_true_negative = 24-6) %>%
+#   mutate(FP_rate = FP/total_true_negative) %>%
+#   mutate(TP_rate = TP/total_true_positive) %>%
 
 
   mutate(
