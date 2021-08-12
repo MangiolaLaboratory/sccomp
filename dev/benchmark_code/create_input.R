@@ -14,12 +14,18 @@ max_cell_counts_per_sample = as.integer(args[4])
 add_outliers = as.integer(args[5])
 output_file = args[6]
 
+outlier_probability = 0.1
+
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
 beta_0 = readRDS("dev/beta_0.rds")
 
 is_odd = function(x) { ( seq_len(length(x)) %% 2 ) == 1 }
 
 n_differentially_abundant = ceiling(n_cell_type*0.4)
+
+set_factor_of_interest = function(n){
+  c(rep(0, ceiling(n/2)), rep(1, ceiling(n/2))) %>%  sample(size = n) %>% .[1:n]
+}
 
 # Iterate over runs
 tibble(run = 1:50) %>%
@@ -41,7 +47,7 @@ tibble(run = 1:50) %>%
         nest(coefficients = starts_with("beta_")) %>%
         unnest(d) %>%
         nest(d = -sample) %>%
-        mutate(type = sample(c(0,1), size = n(), replace = TRUE)) %>%
+        mutate(type = set_factor_of_interest(n())) %>%
         mutate(tot_count = sample(400:1000, size = n(), replace = TRUE)) %>%
         unnest(d) %>%
         mutate(sample = as.character(sample), cell_type = as.character(cell_type))
@@ -62,17 +68,17 @@ tibble(run = 1:50) %>%
           my_simulated_data %>%
           unnest(coefficients) %>%
           filter((beta_1<0 & type ==1) | (beta_1>0 & type ==0)) %>%
-          group_by(cell_type) %>%
-          sample_n(1) %>%
+
+          # 0.2 because I am just taking half of the samples and I double the outlier probability
+          sample_frac(outlier_probability) %>%
           mutate(ratio =  rnorm(n(), 7.6, 2.9)) %>%
-          ungroup %>%
           select(sample, cell_type, ratio)
 
         ratio_NON_changing =
           my_simulated_data %>%
           unnest(coefficients) %>%
           filter(beta_1==0) %>%
-          sample_frac(0.1) %>%
+          sample_frac(outlier_probability) %>%
           mutate(ratio =  rnorm(ceiling(n()/2), 7.6, 2.9) %>% c(rnorm(floor(n()/2), 0.03572171, 0.01107917)) ) %>%
           ungroup %>%
           select(sample, cell_type, ratio)
