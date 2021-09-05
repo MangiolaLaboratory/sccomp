@@ -412,7 +412,15 @@ get_mean_precision = function(fit){
 }
 
 get_mean_precision_association = function(fit){
-  fit %>%
-    summary_to_tibble("prec_coeff", "I") %>%
-    pull(mean)
+  c(
+    fit %>%
+      summary("prec_coeff") %$%
+      summary %>%
+      .[,1] ,
+
+    fit %>%
+      summary("prec_sd") %$%
+      summary %>%
+      .[,1]
+  )
 }
