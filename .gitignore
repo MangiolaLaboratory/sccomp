@@ -14,3 +14,8 @@ dev/*pdf
 dev/dplyr-master/*
 dev/reproducible_example_beta_binomial_truncated
 src/stanExports*
+slurm*
+makeflow*
+dev/benchmark*
+dev/*.gz
+dev/*csv
