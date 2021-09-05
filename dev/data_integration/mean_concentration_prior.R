@@ -4,7 +4,6 @@ library(sccomp)
 library(job)
 
 load("data/counts_obj.rda")
-library(tidyverse)
 
 counts_obj %>%
   group_by(sample) %>%
@@ -75,3 +74,15 @@ job({
 estimate_UVM %>% attr("mean_concentration_association")
 # [1]  3.0423138 -0.6920534
 # prec_sd  = 0.1987102
+
+intercept = c(4.6424601, 5.6260004, 3.0423138)
+slope = c(-0.8061759, -0.6940178, -0.6920534)
+standard_deviation = c(0.8282289, 0.3312485, 0.1987102)
+
+prior_mean_variable_association = list(
+  intercept = c(mean(intercept), sd(intercept)),
+  slope = c(mean(slope), sd(slope)),
+  standard_deviation = c(mean(standard_deviation), sd(standard_deviation))
+)
+
+save(prior_mean_variable_association, file="data/prior_mean_variable_association.rda", compress = "xz")

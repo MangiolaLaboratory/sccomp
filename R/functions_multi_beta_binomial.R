@@ -40,6 +40,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             .sample,
                                             .cell_type,
                                             .count,
+                                            prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
                                             approximate_posterior_inference = T,
@@ -67,6 +68,16 @@ estimate_multi_beta_binomial_glm = function(.data,
       truncation_ajustment = 1.1,
       approximate_posterior_inference = approximate_posterior_inference
     )
+
+  # Pior
+  data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
+  data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
+  data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+
+  # Original - old
+  # prec_sd ~ normal(0,2);
+  # prec_coeff ~ normal(0,5);
+
 
   if(!check_outliers){
 
@@ -340,6 +351,7 @@ multi_beta_binomial_glm = function(.data,
                                    .sample,
                                    .cell_type,
                                    .count,
+                                   prior_mean_variable_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
                                    approximate_posterior_inference = T,
@@ -361,6 +373,7 @@ multi_beta_binomial_glm = function(.data,
     .sample = !!.sample,
     .cell_type = !!.cell_type,
     .count = !!.count,
+    prior_mean_variable_association = prior_mean_variable_association,
     percent_false_positive = percent_false_positive,
     check_outliers = check_outliers,
     approximate_posterior_inference = approximate_posterior_inference,
