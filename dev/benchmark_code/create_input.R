@@ -70,7 +70,7 @@ tibble(run = 1:50) %>%
           filter((beta_1<0 & type ==1) | (beta_1>0 & type ==0)) %>%
 
           # 0.2 because I am just taking half of the samples and I double the outlier probability
-          sample_frac(outlier_probability) %>%
+          sample_frac(outlier_probability*2) %>%
           mutate(ratio =  rnorm(n(), 7.6, 2.9)) %>%
           select(sample, cell_type, ratio)
 
