@@ -19,3 +19,5 @@ makeflow*
 dev/benchmark*
 dev/*.gz
 dev/*csv
+dmbvs-pid-50624.out
+dmbvs-pid-39940.out
