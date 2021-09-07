@@ -14,3 +14,10 @@ dev/*pdf
 dev/dplyr-master/*
 dev/reproducible_example_beta_binomial_truncated
 src/stanExports*
+slurm*
+makeflow*
+dev/benchmark*
+dev/*.gz
+dev/*csv
+dmbvs-pid-50624.out
+dmbvs-pid-39940.out
