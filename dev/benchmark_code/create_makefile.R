@@ -11,8 +11,8 @@ tab="\t"
 
 commands_df =
   expand_grid(
-  slope =seq(0.1, 1, length.out = 10),
-  n_samples = c(6, 10, 15, 20),
+  slope =seq(0.1, 2, length.out = 20),
+  n_samples = c(2, 4, 6, 10, 15, 20),
   n_cell_type = c(5, 10, 20),
   max_cell_counts_per_sample = c(1000),
   add_outliers = c(0, 1)
@@ -28,8 +28,10 @@ commands_df =
   mutate(parsed_file = glue("parsed_{file_prefix}.rds")) %>%
   mutate(auc_file = glue("auc_{file_prefix}.rds")) %>%
   mutate(create_input_command = glue("{results_directory}{input_file}:\n{tab}Rscript {code_directory}create_input.R {slope} {n_samples} {n_cell_type} {max_cell_counts_per_sample} {add_outliers} {results_directory}{input_file}")) %>%
-  mutate(estimate_command = glue("{results_directory}{output_file}:{results_directory}{input_file}\n{tab}Rscript {code_directory}estimate_{method}.R {results_directory}{input_file} {results_directory}{output_file} {add_outliers}"))
+  mutate(estimate_command = glue("{results_directory}{output_file}:{results_directory}{input_file}\n{tab}Rscript {code_directory}estimate_{method}.R {results_directory}{input_file} {results_directory}{output_file} {add_outliers}")) %>%
 
+  # Filter 2 samples for other methods
+  filter(!(method!="sccomp" & n_samples <3))
 
 # Create input
 "CATEGORY=create_input\nMEMORY=10024\nCORES=4\nWALL_TIME=1500" %>%
