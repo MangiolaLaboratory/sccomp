@@ -55,9 +55,15 @@ commands_df =
   c("CATEGORY=significance\nMEMORY=10024\nCORES=4\nWALL_TIME=1500") %>%
   c(
 
-    commands_df %>%
+      commands_df %>%
+
+      # PArse separately because now I have
+      mutate(output_file = glue("{results_directory}{output_file}")) %>%
+
       pivot_wider(names_from = method, values_from = c(input_file, output_file, estimate_command)) %>%
-      mutate(parse_estimates_command = glue("{results_directory}{parsed_file}:{results_directory}{output_file_sccomp} {results_directory}{output_file_dirichletMultinomial} {results_directory}{output_file_rest}\n{tab}Rscript {code_directory}parse_estimates.R {slope} {n_samples} {n_cell_type} {max_cell_counts_per_sample} {add_outliers} {results_directory}{output_file_sccomp} {results_directory}{output_file_dirichletMultinomial} {results_directory}{output_file_rest} {results_directory}{parsed_file}")) %>%
+      tidyr::unite( "output_files", contains("output_file"), sep=" ", na.rm = TRUE) %>%
+
+      mutate(parse_estimates_command = glue("{results_directory}{parsed_file}:{output_files}\n{tab}Rscript {code_directory}parse_estimates.R {slope} {n_samples} {n_cell_type} {max_cell_counts_per_sample} {add_outliers} {output_files} {results_directory}{parsed_file}")) %>%
       distinct(parse_estimates_command) %>%
       pull(parse_estimates_command)
   ) %>%

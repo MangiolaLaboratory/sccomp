@@ -8,30 +8,51 @@ library(tidybulk)
 args = commandArgs(trailingOnly=TRUE)
 
 estimate_file_1 = args[6]
-estimate_file_2 = args[7]
-estimate_file_3 = args[8]
-output_file = args[9]
+
+# Deal with possibly missing estimates for number of samples = 2 for frequentists methods
+if(length(args)>7) {
+  estimate_file_2 = args[7]
+  estimate_file_3 = args[8]
+  output_file = args[9]
+} else {
+  estimate_file_2 = estimate_file_3 = NULL
+  output_file = args[7]
+}
 
 probs = seq(0, 0.1,length.out = 50) %>% c(seq(0.1, 1,length.out = 50))
 
 # Import files
 readRDS(estimate_file_1) %>%
-  left_join(readRDS(estimate_file_2)) %>%
-  left_join(readRDS(estimate_file_3))  %>%
+
+  # Deal with missing arguments
+  when(
+    !is.null(estimate_file_2) & !is.null(estimate_file_3) ~
+      left_join(., readRDS(estimate_file_2)) %>%
+      left_join(readRDS(estimate_file_3)) ,
+  ~ (.)
+  )%>%
+
 
   # Calculate sgnificance
-  mutate(hypothesis_edger = map(results_edger , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-PValue) %>% mutate(estimate = logFC))) %>%
-  mutate(hypothesis_voom = map(results_voom , ~.x %>% arrange(adj.P.Val) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = logFC))) %>%
-  mutate(hypothesis_speckle = map(results_speckle , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = -Tstatistic    ))) %>%
+  when(
+    !is.null(estimate_file_2) & !is.null(estimate_file_3) ~
+      (.) %>%
+      mutate(hypothesis_edger = map(results_edger , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-PValue) %>% mutate(estimate = logFC))) %>%
+      mutate(hypothesis_edgerRobust = map(results_edgerRobust , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-PValue) %>% mutate(estimate = logFC))) %>%
+      mutate(hypothesis_voom = map(results_voom , ~.x %>% arrange(adj.P.Val) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = logFC))) %>%
+      mutate(hypothesis_speckle = map(results_speckle , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = -Tstatistic    ))) %>%
+      mutate(hypothesis_DirichletMultinomial  = map(
+        results_DirichletMultinomial ,
+        ~ .x  %>%
+          arrange(false_discovery_rate) %>%
+          mutate(probability = 1-false_discovery_rate) %>%
+          mutate(estimate = .median_type )
+      )),
+    ~ (.)
+  )%>%
+
   mutate(hypothesis_sccomp = map(
     results_sccomp ,
-    ~ .x  %>%
-      arrange(false_discovery_rate) %>%
-      mutate(probability = 1-false_discovery_rate) %>%
-      mutate(estimate = .median_type )
-  )) %>%
-  mutate(hypothesis_DirichletMultinomial  = map(
-    results_DirichletMultinomial ,
     ~ .x  %>%
       arrange(false_discovery_rate) %>%
       mutate(probability = 1-false_discovery_rate) %>%
