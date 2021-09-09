@@ -29,7 +29,6 @@
 #'
 #' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
 #'
-#' @export
 #'
 dirichlet_multinomial_glm = function(.data,
                                      formula = ~ 1,

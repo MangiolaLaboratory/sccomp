@@ -3,44 +3,34 @@ library(tidyverse)
 library(magrittr)
 library(tidybulk)
 
+probs = seq(0, 0.1,length.out = 50) %>% c(seq(0.1, 1,length.out = 50))
 
 # Read arguments
 args = commandArgs(trailingOnly=TRUE)
 
-estimate_file_1 = args[6]
+output_file = args[6]
 
-# Deal with possibly missing estimates for number of samples = 2 for frequentists methods
-if(length(args)>7) {
-  estimate_file_2 = args[7]
-  estimate_file_3 = args[8]
-  output_file = args[9]
-} else {
-  estimate_file_2 = estimate_file_3 = NULL
-  output_file = args[7]
-}
+# Estimated files
+estimated_files = args[7:length(args)]
 
-probs = seq(0, 0.1,length.out = 50) %>% c(seq(0.1, 1,length.out = 50))
 
 # Import files
-readRDS(estimate_file_1) %>%
-
-  # Deal with missing arguments
-  when(
-    !is.null(estimate_file_2) & !is.null(estimate_file_3) ~
-      left_join(., readRDS(estimate_file_2)) %>%
-      left_join(readRDS(estimate_file_3)) ,
-  ~ (.)
-  )%>%
+estimated_files %>%
+  map(~ readRDS(.x) ) %>%
+  reduce(left_join) %>%
 
 
   # Calculate sgnificance
   when(
-    !is.null(estimate_file_2) & !is.null(estimate_file_3) ~
+    length(estimated_files) >1 ~
       (.) %>%
       mutate(hypothesis_edger = map(results_edger , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-PValue) %>% mutate(estimate = logFC))) %>%
+      mutate(hypothesis_deseq2 = map(results_deseq2 , ~ .x %>% arrange(padj) %>% mutate(probability = 1-pvalue) %>% mutate(estimate = log2FoldChange))) %>%
       mutate(hypothesis_edgerRobust = map(results_edgerRobust , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-PValue) %>% mutate(estimate = logFC))) %>%
       mutate(hypothesis_voom = map(results_voom , ~.x %>% arrange(adj.P.Val) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = logFC))) %>%
       mutate(hypothesis_speckle = map(results_speckle , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = -Tstatistic    ))) %>%
+      mutate(hypothesis_logitLinear = map(results_logitLinear , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
+      mutate(hypothesis_ttest = map(results_ttest , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
       mutate(hypothesis_DirichletMultinomial  = map(
         results_DirichletMultinomial ,
         ~ .x  %>%
@@ -64,6 +54,9 @@ readRDS(estimate_file_1) %>%
 
   # Reshape
   pivot_longer(contains("hypothesis"),names_prefix = "hypothesis_" ) %>%
+
+  # Drop empty inference because failed
+  filter(map_int(value, ~ nrow(.x))>0) %>%
 
   # Calculate ROC
   mutate(df_for_roc = map2(
