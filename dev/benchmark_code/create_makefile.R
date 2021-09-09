@@ -63,7 +63,7 @@ commands_df =
       pivot_wider(names_from = method, values_from = c(input_file, output_file, estimate_command)) %>%
       tidyr::unite( "output_files", contains("output_file"), sep=" ", na.rm = TRUE) %>%
 
-      mutate(parse_estimates_command = glue("{results_directory}{parsed_file}:{output_files}\n{tab}Rscript {code_directory}parse_estimates.R {slope} {n_samples} {n_cell_type} {max_cell_counts_per_sample} {add_outliers} {output_files} {results_directory}{parsed_file}")) %>%
+      mutate(parse_estimates_command = glue("{results_directory}{parsed_file}:{output_files}\n{tab}Rscript {code_directory}parse_estimates.R {slope} {n_samples} {n_cell_type} {max_cell_counts_per_sample} {add_outliers} {results_directory}{parsed_file} {output_files}")) %>%
       distinct(parse_estimates_command) %>%
       pull(parse_estimates_command)
   ) %>%

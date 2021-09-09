@@ -28,8 +28,10 @@ readRDS(input_file) %>%
         check_outliers = add_outliers==1,
         approximate_posterior_inference = FALSE,
         percent_false_positive = 0.001 * 100,
-        seed = .y * 2
+        seed = .y * 2,
+        prior_mean_variable_association =  list(intercept = c(5.6260004, 0.1), slope = c(-0.6940178,  0.01), standard_deviation = c(0.816423129, 0.01))
       )
   )) %>%
   saveRDS(output_file)
+
 

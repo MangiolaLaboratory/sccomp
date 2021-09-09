@@ -26,21 +26,25 @@ dir("dev/benchmark_results", pattern = "auc", full.names = TRUE) %>%
   mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc))) %>%
   unnest(data) %>%
 
+  filter(name !="edgerRobust" & name !="speckle") %>%
+
   # Choose one mode
   nest(data = -c(add_outliers, max_cell_counts_per_sample)) %>%
   mutate(plot = map(
     data,
     ~ .x %>%
 
-      mutate(`Accuracy (AUC) relative to random` = auc - random_auc) %>%
+      mutate(`Accuracy (AUC)` = auc ) %>%
 
-      ggplot(aes(slope, `Accuracy (AUC) relative to random`, color=name)) +
+      ggplot(aes(slope, `Accuracy (AUC)`, color=name)) +
       geom_line() +
       facet_grid( n_cell_type ~ n_samples, scale="free_y") +
+      geom_hline(yintercept = 0.1) +
+      scale_color_brewer(palette="Set1") +
       theme_bw()
   )) %>%
   pull(plot) %>%
-wrap_plots(ncol = 1)
+  patchwork::wrap_plots(ncol = 1)
 
 
 # readRDS("dev/benchmark_results/output_0.1_15_10_1000_0_rest.rds")  %>%
