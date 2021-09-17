@@ -1,0 +1,50 @@
+---
+title: "latex_equations"
+author: "Stefano Mangiola"
+date: "9/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+de chunks within the document. You can embed an R code chunk like this:
+
+
+\begin{align}
+
+& \textbf{ Intercept-only model } \\
+
+& P\left ( \lambda, \mu, \phi \right ) \prod_{m=1}^{M} P\left ( \sigma | \mu, \lambda, \phi \right ) 
+ \prod_{n=1}^{N} \prod_{m=1}^{M} P\left ( k_{m,n} | n_{n}, \mu_{m}, \sigma_{m} \right ) & \textrm{ (1) } \\
+
+& k_{m,n} \sim \mathit{BetaBinomial^{*}} \left(n_{n}, \mu_{m}, \sigma_{m} \right ); \sum_{m=1}^{M} \mu_{m} = 0 & \textrm{ (2) } \\
+
+& \sigma_{m} \sim \mathit{Normal} \left(8, \lambda_{0} + \lambda * \mu_{m}, \phi \right ) & \textrm{ (3) } \\
+
+& \lambda \sim \mathit{Normal} \left(0,5 \right);  \nu \sim \mathit{Normal} \left(0,2 \right); & \textrm{ (4) }  \\
+\\
+& \textbf{ Regression model } \\
+\\
+& \mu_{m,n} =  \left( \gamma_{m,c} * X_{c,n} \right ); \textrm{For c}\in[1..C] \sum_{m=1}^{M} \gamma_{m, c} = 0 & \textrm{ (5) } \\
+\\
+
+& \textbf{ Beta-binomial reparametrisation } \\
+\\
+& \mathit{BetaBinomial^{*}} \left(n_{n}, \mu_{m}, \sigma_{m} \right ) & \textrm{ Alternative parametrisation (6) } \\
+
+& \pi = \mathit{softmax} \left(\mu \right); =  \frac{exp(\mu)}{\sum_{m=1}^{M} exp(\mu_{m}) } & \textrm{ (7) } \\
+& \omega = e^{\sigma} & \textrm{ (8) } \\
+
+& \alpha_{m} = \pi_{m} * \omega_{m}; \beta_{m} = \left(1 - \pi_{m} \right) * \omega_{m}; & \textrm{ (9) } \\
+
+& \mathit{BetaBinomial} \left(n_{n}, \alpha_{m}, \beta_{m} \right ) & \textrm{ Classic parametrisation (10) } \\
+
+
+
+
+\end{align}
+
+
+
