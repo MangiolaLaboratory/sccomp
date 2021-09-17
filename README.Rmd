@@ -82,7 +82,7 @@ Outliers identified
 data_for_plot = 
   res %>% 
     tidyr::unnest(outliers) %>%
-    left_join(counts_obj, by = c("cell_group", "sample")) %>%
+   left_join(counts_obj %>% distinct(sample, type)) %>%
     group_by(sample) %>%
     mutate(proportion = (count+1)/sum(count+1)) %>%
     ungroup(sample) 

@@ -72,9 +72,9 @@ transformed parameters{
 
     // All this because if A ==1 we have ocnversion problems
     if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
-    else beta_intercept_slope = (XA * beta[1:A,])';
+    else beta_intercept_slope = (XA * beta[1:A,]);
 		if(A == 1)  alpha_intercept_slope = alpha;
-		else alpha_intercept_slope = (XA * alpha)';
+		else alpha_intercept_slope = (XA * alpha);
 
 }
 model{
