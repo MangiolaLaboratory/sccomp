@@ -37,11 +37,13 @@ sccomp_glm <- function(.data,
                        .cell_group,
                        .count = NULL,
                        # Secondary arguments
+                       prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
                        percent_false_positive = 5,
                        check_outliers = TRUE,
                        approximate_posterior_inference = FALSE,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
+                       variance_association = FALSE,
                        cores = detectCores(),
                        seed = 42) {
   UseMethod("sccomp_glm", .data)
@@ -54,11 +56,13 @@ sccomp_glm.Seurat = function(.data,
                              .cell_group,
                              .count = NULL,
                              # Secondary arguments
+                             prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
                              percent_false_positive = 5,
                              check_outliers = TRUE,
                              approximate_posterior_inference = FALSE,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
+                             variance_association = FALSE,
                              cores = detectCores(),
                              seed = 42) {
 
@@ -71,11 +75,13 @@ sccomp_glm.Seurat = function(.data,
   .data[[]] %>%
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
+      prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
       noise_model = noise_model,
+      variance_association = variance_association,
       cores = cores,
       seed = seed
     )
@@ -91,11 +97,13 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            .count = NULL,
 
                                            # Secondary arguments
+                                           prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
                                            percent_false_positive = 5,
                                            check_outliers = TRUE,
                                            approximate_posterior_inference = FALSE,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
+                                           variance_association = FALSE,
                                            cores = detectCores(),
                                            seed = 42) {
 
@@ -111,10 +119,12 @@ sccomp_glm.SingleCellExperiment = function(.data,
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
       check_outliers = check_outliers,
+      prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
       noise_model = noise_model,
+      variance_association = variance_association,
       cores = cores,
       seed = seed
     )
@@ -130,11 +140,13 @@ sccomp_glm.DFrame = function(.data,
                              .count = NULL,
 
                              # Secondary arguments
+                             prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
                              percent_false_positive = 5,
                              check_outliers = TRUE,
                              approximate_posterior_inference = FALSE,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
+                             variance_association = FALSE,
                              cores = detectCores(),
                              seed = 42) {
 
@@ -150,11 +162,13 @@ sccomp_glm.DFrame = function(.data,
     as.data.frame %>%
     sccomp_glm(
       formula = formula,!!.sample,!!.cell_group,
+      prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       verbose = verbose,
       noise_model = noise_model,
+      variance_association = variance_association,
       cores = cores,
       seed = seed
     )
@@ -169,11 +183,13 @@ sccomp_glm.data.frame = function(.data,
                                  .count = NULL,
 
                                  # Secondary arguments
+                                 prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
                                  percent_false_positive =  5,
                                  check_outliers = TRUE,
                                  approximate_posterior_inference = FALSE,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
+                                 variance_association = FALSE,
                                  cores = detectCores(),
                                  seed = 42) {
 
@@ -198,11 +214,13 @@ sccomp_glm.data.frame = function(.data,
         formula = formula,
         !!.sample,
         !!.cell_group,
+        prior_mean_variable_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
         verbose = verbose,
         my_glm_model = my_glm_model,
+        variance_association = variance_association,
         cores = cores,
         seed = seed
       ),
@@ -214,11 +232,13 @@ sccomp_glm.data.frame = function(.data,
         !!.sample,
         !!.cell_group,
         !!.count,
+        prior_mean_variable_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
         verbose = verbose,
         my_glm_model = my_glm_model,
+        variance_association = variance_association,
         cores = cores,
         seed = seed
       )
@@ -234,11 +254,13 @@ sccomp_glm_data_frame_raw = function(.data,
                                      my_glm_model,
 
                                      # Secondary arguments
+                                     prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = FALSE,
                                      verbose = FALSE,
                                      noise_model = "multi_beta_binomial",
+                                     variance_association = FALSE,
                                      cores = 4,
                                      seed = sample(1:99999, size = 1)) {
 
@@ -290,9 +312,11 @@ sccomp_glm_data_frame_raw = function(.data,
       .cell_group = !!.cell_group,
       .count = count,
       my_glm_model = my_glm_model,
+      prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
+      variance_association = variance_association,
       cores = cores,
       verbose = verbose,
       seed = seed
@@ -307,11 +331,13 @@ sccomp_glm_data_frame_counts = function(.data,
                                         my_glm_model,
 
                                         # Secondary arguments
+                                        prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = FALSE,
                                         verbose = FALSE,
                                         noise_model = "multi_beta_binomial",
+                                        variance_association = FALSE,
                                         cores = 4,
                                         seed = sample(1:99999, size = 1)) {
 
@@ -350,9 +376,11 @@ sccomp_glm_data_frame_counts = function(.data,
       .sample = !!.sample,
       .cell_type = !!.cell_group,
       .count = !!.count,
+      prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
+      variance_association = variance_association,
       cores = cores,
       verbose = verbose,
       seed = seed
@@ -398,6 +426,7 @@ simulate_data <- function(.data,
                        .sample_cell_count,
                        .coefficients,
                        # Secondary arguments
+                       mean_variable_association = c( 5.6260004, -0.6940178, 0.816423129),
                        percent_false_positive = 5,
                        check_outliers = TRUE,
                        approximate_posterior_inference = FALSE,
@@ -418,6 +447,7 @@ simulate_data.data.frame = function(.data,
                                     .sample_cell_count,
                                     .coefficients,
                                     # Secondary arguments
+                                    mean_variable_association = c( 5.6260004, -0.6940178, 0.816423129),
                                     percent_false_positive = 5,
                                     check_outliers = TRUE,
                                     approximate_posterior_inference = FALSE,
@@ -439,8 +469,8 @@ simulate_data.data.frame = function(.data,
     .data %>%
     data_simulation_to_model_input(formula, !!.sample, !!.cell_group, !!.sample_cell_count, !!.coefficients )
 
-  model_data$prec_coeff = c( 5.6260004, -0.6940178)
-  model_data$prec_sd  = 0.816423129
+  model_data$prec_coeff = mean_variable_association[1:2]
+  model_data$prec_sd  = mean_variable_association[3]
 
     # [1]  5.6260004 -0.6940178
     # prec_sd  = 0.816423129

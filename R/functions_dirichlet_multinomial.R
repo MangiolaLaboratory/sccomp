@@ -29,13 +29,13 @@
 #'
 #' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
 #'
-#' @export
 #'
 dirichlet_multinomial_glm = function(.data,
                                      formula = ~ 1,
                                      .sample,
                                      .cell_type,
                                      .count,
+                                     prior_mean_variable_association = NULL,
                                      percent_false_positive = 5,
                                      check_outliers = FALSE,
                                      approximate_posterior_inference = T,
@@ -55,10 +55,10 @@ dirichlet_multinomial_glm = function(.data,
   # Produce data list
   if(!check_outliers){
 
-    fit =
+   fit =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed)
+      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed, approximate_posterior_inference= approximate_posterior_inference)
 
     parsed_fit =
       fit %>%
@@ -343,7 +343,8 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
   fit  = fit_model(
     data_for_model, model, censoring_iteration, chains= chains,
     output_samples = output_samples, verbose = T,
-    seed = seed, pars = c("beta", "precision", "alpha")
+    seed = seed, pars = c("beta", "precision", "alpha"),
+    approximate_posterior_inference= approximate_posterior_inference
   )
 
 
