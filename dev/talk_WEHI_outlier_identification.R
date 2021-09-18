@@ -314,6 +314,7 @@ data_for_plot =
 
 plot_composition =
   ggplot() +
+  geom_boxplot(aes(is_benign, generated_proportions ), color="blue", data = data_for_plot %>% unnest(generated_data ) ,  height=0, alpha=0.5) +
   geom_boxplot(
     aes(is_benign, proportion, fill=significant),
     outlier.shape = NA,
