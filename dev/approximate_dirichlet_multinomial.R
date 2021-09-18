@@ -90,23 +90,35 @@ job({
 })
 
 
-rng =  rstan::gqs(
-  sccomp:::stanmodels$glm_multi_beta_binomial_generate_date,
-  #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-  draws =  as.matrix(fit_object$fit),
-  data = fit_object$data_for_model
-)
+# rng =  rstan::gqs(
+#   sccomp:::stanmodels$glm_multi_beta_binomial_generate_date,
+#   #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+#   draws =  as.matrix(fit_object$fit),
+#   data = fit_object$data_for_model
+# )
 
-both_data_sets =
-  sccomp:::draws_to_tibble_x_y(rng, "counts", "N", "M") %>%
-  filter(.draw == 1) %>%
-  rename(sample = N, count = .value) %>%
-  mutate(category = glue("V{M}"), sample = as.character(sample)) %>%
+both_data_sets =estimate  %>%
+  select(category, generated_data ) %>%
+  unnest(generated_data ) %>%
+  distinct() %>%
+  rename(count = generated_counts ) %>%
   mutate(distribution = "Simplex beta binomial") %>%
   bind_rows(
     dirichlet_multinomial_counts %>%
       mutate(distribution = "Dirichlet-multinomial")
   )
+
+
+# both_data_sets =
+#   sccomp:::draws_to_tibble_x_y(rng, "counts", "N", "M") %>%
+#   filter(.draw == 1) %>%
+#   rename(sample = N, count = .value) %>%
+#   mutate(category = glue("V{M}"), sample = as.character(sample)) %>%
+#   mutate(distribution = "Simplex beta binomial") %>%
+#   bind_rows(
+#     dirichlet_multinomial_counts %>%
+#       mutate(distribution = "Dirichlet-multinomial")
+#   )
 
 plot_pairs_beta_binomial =
   sccomp:::draws_to_tibble_x_y(rng, "counts", "N", "M") %>%
