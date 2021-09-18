@@ -17,6 +17,7 @@ sccomp_glm(
   approximate_posterior_inference = FALSE,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
+  variance_association = FALSE,
   cores = detectCores(),
   seed = 42
 )

@@ -11,8 +11,7 @@ simulate_data(
   .cell_group,
   .sample_cell_count,
   .coefficients,
-  prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope =
-    c(-0.73074903, 0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
+  mean_variable_association = c(5.6260004, -0.6940178, 0.816423129),
   percent_false_positive = 5,
   check_outliers = TRUE,
   approximate_posterior_inference = FALSE,
