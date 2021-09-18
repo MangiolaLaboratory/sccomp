@@ -326,7 +326,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
         ) %>%
 
         # add probability
-        left_join( get_probability_non_zero(parsed_fit), by="M" ),
+       # left_join( get_probability_non_zero(parsed_fit), by="M" ),
       ~ (.)
     )
 
