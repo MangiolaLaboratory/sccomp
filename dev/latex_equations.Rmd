@@ -16,12 +16,12 @@ de chunks within the document. You can embed an R code chunk like this:
 
 & \textbf{ Intercept-only model } \\
 
-& P\left ( \lambda, \mu, \phi \right ) \prod_{m=1}^{M} P\left ( \sigma | \mu, \lambda, \phi \right ) 
+& P\left ( \lambda, \mu, \phi \right ) \prod_{m=1}^{M} P\left ( \sigma_{m} | \mu_{m}, \lambda, \phi \right ) 
  \prod_{n=1}^{N} \prod_{m=1}^{M} P\left ( k_{m,n} | n_{n}, \mu_{m}, \sigma_{m} \right ) & \textrm{ (1) } \\
 
 & k_{m,n} \sim \mathit{BetaBinomial^{*}} \left(n_{n}, \mu_{m}, \sigma_{m} \right ); \sum_{m=1}^{M} \mu_{m} = 0 & \textrm{ (2) } \\
 
-& \sigma_{m} \sim \mathit{Normal} \left(8, \lambda_{0} + \lambda * \mu_{m}, \phi \right ) & \textrm{ (3) } \\
+& \sigma_{m} \sim \mathit{Normal} \left(\lambda_{0} + \lambda * \mu_{m}, \phi \right ) & \textrm{ (3) } \\
 
 & \lambda \sim \mathit{Normal} \left(0,5 \right);  \nu \sim \mathit{Normal} \left(0,2 \right); & \textrm{ (4) }  \\
 \\
