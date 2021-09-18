@@ -521,7 +521,8 @@ fit_model = function(
       seed = seed,
       pars = pars,
       save_warmup = F
-    )
+    ) %>%
+    suppressWarnings()
 
   else
     vb_iterative(
