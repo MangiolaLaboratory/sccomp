@@ -2,6 +2,7 @@ library(patchwork)
 library(bayestestR)
 library(yardstick)
 library(forcats)
+library(glue)
 #
 # dir("dev/benchmark_results_f58cd58973261636d29f0462eb9b406d762f3895 345a2afa986458672dd95f5dff3f5d973bf1d994//", pattern = "auc", full.names = TRUE) %>%
 #   map_dfr(~ .x %>% readRDS()) %>%
@@ -29,7 +30,8 @@ plot_auc =
   mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc))) %>%
   unnest(data) %>%
 
-  filter(name !="edgerRobust" & name !="speckle") %>%
+  # filter(name !="edgerRobust" & name !="speckle") %>%
+  filter(name !="edgerRobust") %>%
   filter(n_samples >2) %>%
   mutate(name = if_else(name=="random", "zrandom", name)) %>%
   # Choose one mode
@@ -46,13 +48,12 @@ plot_auc =
       geom_line(size=0.3) +
       facet_grid( fct_reorder(n_cell_type_,n_cell_type)  ~ fct_reorder(n_samples_, n_samples), scale="free_y") +
       geom_hline(yintercept = 0.1, linetype="dashed", color="grey") +
-      scale_color_brewer(palette="Dark2") +
+      scale_color_brewer(palette="Paired") +
       theme_bw() +
       ylab("Accuracy (AUC) up to 0.1 false-positive-rate") +
       xlab("Slope") +
       theme(
-        strip.background =element_rect(fill="white", color="white"),
-         axis.title.y = element_blank()
+        strip.background =element_rect(fill="white", color="white")
       ) +
       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
             panel.background = element_blank(), axis.line = element_line(colour = "black"))
