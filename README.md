@@ -59,15 +59,12 @@ res =
 
     ## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]
 
-    ## Joining, by = "M"
-
 Outliers identified
 
 ``` r
 data_for_plot = 
   res %>% 
-    tidyr::unnest(outliers) %>%
-    left_join(counts_obj, by = c("cell_group", "sample")) %>%
+    tidyr::unnest(count_data ) %>%
     group_by(sample) %>%
     mutate(proportion = (count+1)/sum(count+1)) %>%
     ungroup(sample) 
@@ -96,7 +93,8 @@ Credible intervals
 ``` r
 res %>%
   ggplot(aes(x=`.median_typecancer`, y=fct_reorder(cell_group, .median_typecancer))) +
-  geom_vline(xintercept = 0, colour="grey") +
+  geom_vline(xintercept = 0.2, colour="grey") +
+  geom_vline(xintercept = -0.2, colour="grey") +
   geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=significant)) +
   geom_point() +
   scale_color_brewer(palette = "Set1") +
