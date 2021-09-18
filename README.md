@@ -26,6 +26,7 @@ res =
   seurat_obj %>%
   sccomp_glm(  ~ type, sample, cell_group )
 ```
+## From SingleCellExperiment Object
 
 ``` r
 res =
