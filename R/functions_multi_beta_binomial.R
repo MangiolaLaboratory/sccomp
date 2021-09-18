@@ -237,7 +237,7 @@ estimate_multi_beta_binomial_glm = function(.data,
       data = data_for_model
     )
 
-    generated_quantities =
+    generated_quantities3 =
       parse_generated_quantities(rng3) %>%
 
       # Get sample name
@@ -260,7 +260,7 @@ estimate_multi_beta_binomial_glm = function(.data,
       data_for_model = data_for_model,
       truncation_df2 =
         truncation_df2 %>%
-        left_join(generated_quantities, by = c(quo_name(.sample), quo_name(.cell_type)))
+        left_join(generated_quantities3, by = c(quo_name(.sample), quo_name(.cell_type)))
     )
 
 
@@ -309,6 +309,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
     fit %>%
     parse_fit(data_for_model, .)
 
+  minimum_logit_fold_change = 0.2
 
   parsed_fit %>%
     beta_to_CI(false_positive_rate = percent_false_positive/100 ) %>%
@@ -319,8 +320,9 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
         mutate(
           .,
           significant =
-            !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-            !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
+
+            !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) > minimum_logit_fold_change |
+            !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) < -minimum_logit_fold_change
         ) %>%
 
         # add probability
