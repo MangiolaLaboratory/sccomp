@@ -10,11 +10,14 @@ sccomp_glm(
   .sample,
   .cell_group,
   .count = NULL,
+  prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope =
+    c(-0.73074903, 0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
   percent_false_positive = 5,
   check_outliers = TRUE,
-  approximate_posterior_inference = TRUE,
+  approximate_posterior_inference = FALSE,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
+  variance_association = FALSE,
   cores = detectCores(),
   seed = 42
 )
