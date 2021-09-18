@@ -42,6 +42,10 @@ data{
 
 	int<lower=0, upper=1> is_vb;
 
+// Prior info
+real prior_prec_intercept[2] ;
+real prior_prec_slope[2] ;
+real prior_prec_sd[2] ;
 
 }
 transformed data{
@@ -68,9 +72,9 @@ transformed parameters{
 
     // All this because if A ==1 we have ocnversion problems
     if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
-    else beta_intercept_slope = (XA * beta[1:A,])';
+    else beta_intercept_slope = (XA * beta[1:A,]);
 		if(A == 1)  alpha_intercept_slope = alpha;
-		else alpha_intercept_slope = (XA * alpha)';
+		else alpha_intercept_slope = (XA * alpha);
 
 }
 model{
@@ -115,10 +119,9 @@ model{
   //
   mix_p ~ beta(1,5);
 
-  prec_sd ~ normal(0,2);
-  prec_coeff ~ normal(0,5);
-
-
+  prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
+  prec_coeff[2] ~ normal(prior_prec_slope[1], prior_prec_slope[2]);
+  prec_sd ~ normal(prior_prec_sd[1], prior_prec_sd[2]);
 
 }
 

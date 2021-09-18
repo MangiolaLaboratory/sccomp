@@ -47,13 +47,13 @@ benchmark =
     ~ {
       input_data =
         expand_grid(
-          sample = 1:10, cell_type = 1:24
+          sample = 1:10, cell_type = 1:10
         ) %>%
         nest(d = -cell_type) %>%
         mutate(beta_0 = sample(beta_0, size = n())) %>% # rnorm(n = n(), 0, 1)) %>%
         mutate(  beta_1 = case_when(
-          cell_type %in% c(1, 3, 5) ~ 1,
-          cell_type %in% c(2, 4, 6) ~ -1,
+          cell_type %in% c(1, 3) ~ 1,
+          cell_type %in% c(2, 4) ~ -1,
           TRUE ~ 0
         )) %>%
         mutate(beta_1 = beta_1 %>% multiply_by(0.8)) %>%
@@ -61,7 +61,7 @@ benchmark =
         unnest(d) %>%
         nest(d = -sample) %>%
         mutate(type = sample(c(0,1), size = n(), replace = TRUE)) %>%
-        mutate(tot_count = sample(600:4000, size = n(), replace = TRUE)) %>%
+        mutate(tot_count = sample(600:1000, size = n(), replace = TRUE)) %>%
         unnest(d) %>%
         mutate(sample = as.character(sample), cell_type = as.character(cell_type))
 
@@ -88,7 +88,7 @@ benchmark =
         my_simulated_data %>%
         unnest(coefficients) %>%
         filter(beta_1==0) %>%
-        sample_frac(0.2) %>%
+        sample_frac(0.1) %>%
         mutate(ratio =  rnorm(n()/2, 7.6, 2.9) %>% c(rnorm(n()/2, 0.03572171, 0.01107917)) ) %>%
         ungroup %>%
         select(sample, cell_type, ratio)
@@ -187,9 +187,24 @@ benchmark %>%
   group_by(sample) %>%
   mutate(proportion = (.value+1)/sum(.value+1)) %>%
   ungroup(sample) %>%
-  ggplot(aes(factor(type), proportion)) +
-  geom_boxplot() +
-  facet_wrap(~ cell_type)
+  ggplot(aes(factor(type), proportion, fill = cell_type %in% 1:4)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(size=0.5) +
+  scale_fill_manual(values = c("white", "#E2D379")) +
+  facet_wrap(~ as.integer(cell_type), ncol=5) +
+  theme_bw() +
+  theme(
+    strip.background =element_rect(fill="white", color="white"),
+    legend.position = "none",
+  )
+
+ggsave(
+  "dev/example_boxplot_yes_outliers.pdf",
+  units = c("mm"),
+  width = 183/2 ,
+  height = 183/2,
+  limitsize = FALSE
+)
 
 probs = seq(0, 0.1,length.out = 50) %>% c(seq(0.1, 1,length.out = 50))
 
@@ -252,18 +267,18 @@ benchmark_hypothesis %>%
   distinct() %>%
   ggplot(aes(mean_FP_rate, mean_TP_rate)) +
   geom_line(aes(color = Algorithm)) +
-  scale_x_continuous(limits =c(0,0.15)) +
+  scale_x_continuous(limits =c(0,0.10)) +
   scale_color_brewer(palette="Set1") +
   ylab("Mean true-positive proportion") +
   xlab("Mean false-positive proportion") +
   theme_bw() +
   theme(legend.position = "bottom")
 
-saveRDS(benchmark, "dev/benchmark_slope0.8_samples10_celltypes24_noOutliers_max2000exposure_50replicates_outlier.rds")
+saveRDS(benchmark, "dev/benchmark_slope0.8_samples10_celltypes10_max1000exposure_50replicates_outliers.rds")
 
 
 ggsave(
-  "dev/roc_slope0.8_samples10_celltypes24_noOutliers_max2000exposure_50replicates_outlier.pdf",
+  "dev/roc_slope0.8_samples10_celltypes10_max1000exposure_50replicates_outliers.pdf",
   units = c("mm"),
   width = 183/2 ,
   height = 183/2,
