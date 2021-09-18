@@ -248,12 +248,7 @@ benign_adjusted_cell_type <- readRDS("/stornext/Bioinf/data/bioinf-data/Papenfus
 cancer_counts_alive_seurat <- readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/oligo_breast/expanded_analyses_with_control/cancer_only_analyses/cancer_counts_alive_seurat.rds")
 integrated_counts_curated = readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/oligo_breast/expanded_analyses_with_control/cancer_only_analyses/integrated_counts_curated.rds")
 
-rm(
-  benign_adjusted_cell_type,
-  cancer_counts_alive_seurat,
-  integrated_counts_curated
-)
-gc()
+
 
 glm_input_benign =
   cancer_counts_alive_seurat  %>%
@@ -275,6 +270,13 @@ glm_input_benign =
   mutate(curated_cell_type_pretty = if_else(is.na(curated_cell_type_pretty), "none", curated_cell_type_pretty)) %>%
   mutate(is_benign = type=="benign") %>%
   filter(curated_cell_type_pretty!="none")
+
+rm(
+  benign_adjusted_cell_type,
+  cancer_counts_alive_seurat,
+  integrated_counts_curated
+)
+gc()
 
 job({
   estimate_benign_WEHI_talk =
@@ -303,8 +305,8 @@ data_for_plot =
   estimate_benign_WEHI_talk %>%
   #filter(curated_cell_type_pretty!="none") %>%
   arrange(desc(abs(.median_is_benignTRUE))) %>%
-  tidyr::unnest(outliers) %>%
-  left_join(glm_input_benign %>% distinct(sample, type, is_benign), by = c( "sample")) %>%
+  tidyr::unnest(count_data ) %>%
+  #left_join(glm_input_benign %>% distinct(sample, type, is_benign), by = c( "sample")) %>%
   with_groups(sample, ~ mutate(.x, proportion = (count+1)/sum(count+1)) )
 
 

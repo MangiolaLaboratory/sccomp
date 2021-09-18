@@ -79,34 +79,52 @@ estimate_multi_beta_binomial_glm = function(.data,
   # prec_coeff ~ normal(0,5);
 
 
+  # Start first fit
+  message("sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]")
+
+
+  fit =
+    data_for_model %>%
+
+    # Run the first discovery phase with permissive false discovery rate
+    fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+
+  rng =  rstan::gqs(
+    stanmodels$glm_multi_beta_binomial_generate_date,
+    #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+    draws =  as.matrix(fit),
+    data = data_for_model
+  )
+
   if(!check_outliers){
 
-    fit =
-      data_for_model %>%
+    generated_quantities =
+      parse_generated_quantities(rng) %>%
 
-      # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      # Get sample name
+      nest(data = -N) %>%
+      arrange(N) %>%
+      mutate(!!.sample := rownames(data_for_model$y)) %>%
+      unnest(data) %>%
 
-    list(fit = fit, data_for_model = data_for_model, truncation_df2 = NULL)
+      # get cell type name
+      nest(data = -M) %>%
+      mutate(!!.cell_type := colnames(data_for_model$y)) %>%
+      unnest(data) %>%
 
+      select(-N, -M) %>%
+      nest(generated_data = -c(!!.sample, !!.cell_type))
+
+    list(
+      fit = fit,
+      data_for_model = data_for_model,
+      truncation_df2 =  .data %>% left_join(generated_quantities, by = c(quo_name(.sample), quo_name(.cell_type)))
+    )
 
   }
 
   else{
 
-    message("sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]")
-
-    fit =
-      data_for_model %>%
-      fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = CI ,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
-    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500,  approximate_posterior_inference = approximate_posterior_inference)
-
-    rng =  rstan::gqs(
-      stanmodels$glm_multi_beta_binomial_generate_date,
-      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit),
-      data = data_for_model
-    )
 
     # Detect outliers
     truncation_df =
@@ -212,7 +230,38 @@ estimate_multi_beta_binomial_glm = function(.data,
       fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
-    list(fit = fit3, data_for_model = data_for_model, truncation_df2 = truncation_df2)
+    rng3 =  rstan::gqs(
+      stanmodels$glm_multi_beta_binomial_generate_date,
+      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+      draws =  as.matrix(fit),
+      data = data_for_model
+    )
+
+    generated_quantities =
+      parse_generated_quantities(rng3) %>%
+
+      # Get sample name
+      nest(data = -N) %>%
+      arrange(N) %>%
+      mutate(!!.sample := rownames(data_for_model$y)) %>%
+      unnest(data) %>%
+
+      # get cell type name
+      nest(data = -M) %>%
+      mutate(!!.cell_type := colnames(data_for_model$y)) %>%
+      unnest(data) %>%
+
+      select(-N, -M) %>%
+      nest(generated_data = -c(!!.sample, !!.cell_type))
+
+
+    list(
+      fit = fit3,
+      data_for_model = data_for_model,
+      truncation_df2 =
+        truncation_df2 %>%
+        left_join(generated_quantities, by = c(quo_name(.sample), quo_name(.cell_type)))
+    )
 
 
   }
@@ -277,30 +326,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
         # add probability
         left_join( get_probability_non_zero(parsed_fit), by="M" ),
       ~ (.)
-    ) %>%
-
-    # Join the precision
-    left_join(get_mean_precision(fit), by="M") %>%
-
-    # Clean
-    select(-M) %>%
-    mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
-    select(!!.cell_type, everything()) %>%
-
-    # Add outlier
-    when(
-      check_outliers ~ (.) %>%
-        left_join(
-          truncation_df2 %>%
-            select(!!.sample, !!.cell_type, outlier, !!.count, .median, .lower, .upper) %>%
-            nest(outliers = -!!.cell_type),
-          by = quo_name(.cell_type)
-        ),
-      ~ (.)
-    ) %>%
-
-    # Attach association mean concentration
-    add_attr(get_mean_precision_association(fit), "mean_concentration_association")
+    )
 
 
 
@@ -393,7 +419,34 @@ multi_beta_binomial_glm = function(.data,
     percent_false_positive,
     check_outliers,
     result_list$truncation_df2
-  )
+  ) %>%
+
+    # Join the precision
+    left_join(get_mean_precision(result_list$fit), by="M") %>%
+
+
+    # Clean
+    select(-M) %>%
+    mutate(!!.cell_type := result_list$data_for_model$y %>% colnames()) %>%
+    select(!!.cell_type, everything()) %>%
+
+    # Join generated data
+    # left_join(result_list$generated_quantities, by="M") %>%
+
+    # Add outlier
+    when(
+      check_outliers ~ (.) %>%
+        left_join(
+          result_list$truncation_df2 %>%
+            select(-c(M, N, .variable, mean, se_mean, sd, n_eff, Rhat)) %>%
+            nest(count_data = -!!.cell_type),
+          by = quo_name(.cell_type)
+        ),
+      ~ (.) %>% left_join(result_list$truncation_df2 %>% nest(count_data = -!!.cell_type),  by = quo_name(.cell_type))
+    ) %>%
+
+    # Attach association mean concentration
+    add_attr(get_mean_precision_association(result_list$fit), "mean_concentration_association")
 
 }
 

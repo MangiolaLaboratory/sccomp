@@ -787,3 +787,12 @@ get_probability_non_zero = function(.data){
 }
 
 
+parse_generated_quantities = function(rng){
+
+  draws_to_tibble_x_y(rng, "counts", "N", "M") %>%
+    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/sum(.value))) %>%
+    filter(.draw<11) %>%
+    rename(generated_counts = .value) %>%
+    select(M, N, generated_proportions, generated_counts)
+
+}
