@@ -28,6 +28,17 @@
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#' estimate =
+#'   sccomp_glm(
+#'   counts_obj ,
+#'    ~ type,  sample, cell_group, count,
+#'     approximate_posterior_inference = FALSE
+#'   )
+#'
 #' @export
 #'
 #'
@@ -418,6 +429,16 @@ sccomp_glm_data_frame_counts = function(.data,
 #'
 #' @export
 #'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#' estimate =
+#'   sccomp_glm(
+#'   counts_obj ,
+#'    ~ type,  sample, cell_group, count,
+#'     approximate_posterior_inference = FALSE
+#'   )
 #'
 simulate_data <- function(.data,
                        formula = ~ 1 ,
@@ -440,6 +461,10 @@ simulate_data <- function(.data,
 #' @export
 #' @importFrom magrittr divide_by
 #' @importFrom magrittr multiply_by
+#' @importFrom SingleCellExperiment counts
+#' @importFrom purrr map_dbl
+#' @importFrom purrr pmap
+#'
 simulate_data.data.frame = function(.data,
                                     formula = ~ 1 ,
                                     .sample,
@@ -487,7 +512,7 @@ simulate_data.data.frame = function(.data,
     #refresh = ifelse(verbose, 1000, 0),
     seed = seed,
     #pars = pars,
-    save_warmup = F
+    save_warmup = FALSE
   )
 
   .data %>%

@@ -7,6 +7,10 @@
 #' @aliases sccomp
 #' @useDynLib sccomp, .registration = TRUE
 #' @import methods
+#' @import RcppParallel
+#' @import rstantools
+#' @import SeuratObject
+#' @import lifecycle
 #' @import Rcpp
 #' @importFrom rstan sampling
 #'
