@@ -30,6 +30,12 @@ simulate_data(
 
 \item{.cell_group}{A column name as symbol. The cell_type identifier}
 
+\item{.sample_cell_count}{A integer vector. The total number of cells for each sample.}
+
+\item{.coefficients}{A matrix of coefficients.}
+
+\item{mean_variable_association}{A numeric vector of size 3. The intercept, slope and standard deviation of the proportion mean/variability association.}
+
 \item{percent_false_positive}{A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.}
 
 \item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
@@ -43,8 +49,6 @@ simulate_data(
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
 \item{seed}{An integer. Used for development and testing purposes}
-
-\item{.count}{A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
