@@ -28,7 +28,7 @@ job({
   sccomp_glm(
     formula = ~ is_benign,
     sample, cell_group, count,
-    approximate_posterior_inference = F,
+    approximate_posterior_inference = FALSE,
     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
   )
 })
@@ -43,7 +43,7 @@ job({
   sccomp_glm(
     formula = ~ type,
     sample, cell_type,
-    approximate_posterior_inference = F,
+    approximate_posterior_inference = FALSE,
     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
   )
 })
@@ -58,7 +58,7 @@ job({
     sccomp_glm(
       formula = ~ sex,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })
@@ -73,7 +73,7 @@ job({
     sccomp_glm(
       formula = ~ type,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })
@@ -88,7 +88,7 @@ job({
     sccomp_glm(
       formula = ~ is_critical,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })
@@ -102,7 +102,7 @@ job({
     sccomp_glm(
       formula = ~ time,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })

@@ -52,3 +52,15 @@ A nested tibble \code{tbl} with cell_group-wise statistics
 \description{
 This function simulates counts from a linear model.
 }
+\examples{
+
+data("counts_obj")
+
+estimate =
+  sccomp_glm(
+  counts_obj ,
+   ~ type,  sample, cell_group, count,
+    approximate_posterior_inference = FALSE
+  )
+
+}
