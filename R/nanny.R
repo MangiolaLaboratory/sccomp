@@ -1,7 +1,9 @@
-# Set internal
-.subset = 		function(.data,	 .column)	{
+#' @keywords internal
+#' @noRd
+#'
+.subset <- 		function(.data,	 .column)	{
   # Make col names
-  .column = enquo(.column)
+  .column <- enquo(.column)
 
   # Check if column present
   if(quo_names(.column) %in% colnames(.data) %>% all %>% `!`)
@@ -19,17 +21,22 @@
 #' @importFrom rlang enquo
 #' @importFrom magrittr equals
 #' @importFrom dplyr select
-get_specific_annotation_columns = function(.data, .col){
+#'
+#' @keywords internal
+#' @noRd
+#'
+#'
+get_specific_annotation_columns <- function(.data, .col){
 
 
   # Comply with CRAN NOTES
-  . = NULL
+  . <- NULL
 
   # Make col names
-  .col = enquo(.col)
+  .col <- enquo(.col)
 
   # x-annotation df
-  n_x = .data %>% distinct_at(vars(!!.col)) %>% nrow
+  n_x <- .data %>% distinct_at(vars(!!.col)) %>% nrow
 
   # element wise columns
   .data %>%
@@ -61,28 +68,49 @@ get_specific_annotation_columns = function(.data, .col){
 #' @importFrom rlang quo_name
 #' @importFrom rlang quo_squash
 #'
+#' @keywords internal
+#' @noRd
+#'
 #' @param v A array of quosures (e.g. c(col_a, col_b))
 #'
 #' @return A character vector
 quo_names <- function(v) {
 
-  v = quo_name(quo_squash(v))
+  v <- quo_name(quo_squash(v))
   gsub('^c\\(|`|\\)$', '', v) %>%
     strsplit(', ') %>%
     unlist
 }
 
+# From tidyr
+strip_names <- function(df, base, names_sep) {
+  base <- paste0(base, names_sep)
+  names <- names(df)
+
+  has_prefix <- regexpr(base, names, fixed = TRUE) == 1L
+  names[has_prefix] <- substr(names[has_prefix], nchar(base) + 1, nchar(names[has_prefix]))
+
+  set_names(df, names)
+}
+
 # Set internal
 #' @importFrom rlang enquo
+#' @importFrom rlang set_names
+#' @importFrom rlang :=
 #' @importFrom purrr map
-.nest_subset = 		function(.data, ..., .exclude = NULL, .names_sep = NULL)	{
+#' @importFrom purrr imap
+#'
+#' @keywords internal
+#' @noRd
+#'
+.nest_subset <- 		function(.data, ..., .exclude = NULL, .names_sep = NULL)	{
 
   # Make col names - from tidyr
-  cols = enquos(...)
-  .exclude = enquo(.exclude)
+  cols <- enquos(...)
+  .exclude <- enquo(.exclude)
 
   # Name of the new data column
-  col_name_data  = names(cols)
+  col_name_data  <- names(cols)
 
   # Column names
   cols <- map(cols, ~ names(eval_select(.x, .data)))
@@ -95,7 +123,7 @@ quo_names <- function(v) {
     stop("nanny says: some of the .column specified do not exist in the input data frame.")
 
   # Get my subset columns
-  asis_subset = asis %>%
+  asis_subset <- asis %>%
     c(get_specific_annotation_columns(.data, asis)) %>%
 
     # Exclude custom columns

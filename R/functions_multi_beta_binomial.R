@@ -16,6 +16,7 @@
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
 #' @importFrom dplyr case_when
+#' @importFrom rlang :=
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
@@ -43,8 +44,8 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
-                                            approximate_posterior_inference = T,
-                                            variance_association = F,
+                                            approximate_posterior_inference = TRUE,
+                                            variance_association = FALSE,
                                             cores = detectCores(), # For development purpose,
                                             seed = sample(1:99999, size = 1),
                                             verbose = FALSE
@@ -172,7 +173,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     fit2 =
       data_for_model %>%
       fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = my_quantile_step_2,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
-    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = F, verbose = T)
+    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
 
     rng2 =  rstan::gqs(
       stanmodels$glm_multi_beta_binomial_generate_date,
@@ -357,6 +358,10 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
 #' @importFrom dplyr case_when
+#' @importFrom rlang :=
+#'
+#' @keywords internal
+#' @noRd
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
@@ -372,7 +377,6 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 #'
 #' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
 #'
-#' @export
 #'
 multi_beta_binomial_glm = function(.data,
                                    formula = ~ 1,
@@ -382,8 +386,8 @@ multi_beta_binomial_glm = function(.data,
                                    prior_mean_variable_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
-                                   approximate_posterior_inference = T,
-                                   variance_association = F,
+                                   approximate_posterior_inference = TRUE,
+                                   variance_association = FALSE,
                                    cores = detectCores(), # For development purpose,
                                    seed = sample(1:99999, size = 1),
                                    verbose = FALSE
@@ -452,7 +456,7 @@ multi_beta_binomial_glm = function(.data,
 
 }
 
-
+#' @importFrom stats model.matrix
 glm_multi_beta_binomial = function(input_df, formula, .sample){
 
   covariate_names = parse_formula(formula)
