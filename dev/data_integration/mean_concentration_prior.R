@@ -14,7 +14,7 @@ job({
   sccomp_glm(
     formula = ~ 1,
     .sample = sample, .cell_group = curated_cell_type_pretty,
-    approximate_posterior_inference = F,
+    approximate_posterior_inference = FALSE,
     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
   )
 })
@@ -44,7 +44,7 @@ job({
   sccomp_glm(
     formula = ~ 1,
     sample, cell_group, count,
-    approximate_posterior_inference = F,
+    approximate_posterior_inference = FALSE,
     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
   )
 })
@@ -58,7 +58,7 @@ job({
   sccomp_glm(
     formula = ~ 1,
     sample, cell_type,
-    approximate_posterior_inference = F,
+    approximate_posterior_inference = FALSE,
     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
   )
 })
@@ -73,7 +73,7 @@ job({
     sccomp_glm(
       formula = ~ 1,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })
@@ -87,7 +87,7 @@ job({
     sccomp_glm(
       formula = ~ 1,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })
@@ -101,7 +101,7 @@ job({
     sccomp_glm(
       formula = ~ 1,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })
@@ -115,7 +115,7 @@ job({
     sccomp_glm(
       formula = ~ 1,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })
@@ -210,7 +210,7 @@ estimate_CyTOF =
   sccomp_glm(
     formula = ~ 1,
     sample, cell_cluster,count,
-    approximate_posterior_inference = F,
+    approximate_posterior_inference = FALSE,
     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
   )
 # estimate_CyTOF %>% attr("mean_concentration_association")
