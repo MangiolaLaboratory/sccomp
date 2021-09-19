@@ -9,7 +9,7 @@ multi_beta_glm(
   formula = ~1,
   .sample,
   check_outliers = FALSE,
-  approximate_posterior_inference = T,
+  approximate_posterior_inference = TRUE,
   cores = detect_cores(),
   seed = sample(1:99999, size = 1)
 )

@@ -48,6 +48,6 @@ tibble(
   mutate(quantile(r2, p))
 
 
-sampling = sample(1:nrow(x), 20000, replace = T)
+sampling = sample(1:nrow(x), 20000, replace = TRUE)
 rbb(length(sampling),  N = 500, u =x$alpha[sampling] , v = x$beta[sampling] ) %>%
   quantile(p)
