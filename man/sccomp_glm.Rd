@@ -53,3 +53,15 @@ A nested tibble \code{tbl} with cell_group-wise statistics
 \description{
 This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
 }
+\examples{
+
+data("counts_obj")
+
+estimate =
+  sccomp_glm(
+  counts_obj ,
+   ~ type,  sample, cell_group, count,
+    approximate_posterior_inference = FALSE
+  )
+
+}
