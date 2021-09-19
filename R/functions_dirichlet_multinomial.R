@@ -15,6 +15,7 @@
 #' @importFrom purrr map
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
+#' @importFrom rlang :=
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
@@ -38,7 +39,7 @@ dirichlet_multinomial_glm = function(.data,
                                      prior_mean_variable_association = NULL,
                                      percent_false_positive = 5,
                                      check_outliers = FALSE,
-                                     approximate_posterior_inference = T,
+                                     approximate_posterior_inference = TRUE,
                                      verbose = TRUE,
                                      cores = detect_cores(), # For development purpose,
                                      seed = sample(1:99999, size = 1)
@@ -129,7 +130,9 @@ dirichlet_multinomial_glm = function(.data,
 
 }
 
+#' @importFrom rlang :=
 #' @importFrom purrr map2_lgl
+#' @importFrom stats setNames
 fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formula, .sample, .cell_type, .count, iteration = 1, chains, seed){
 
 
@@ -186,6 +189,8 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
 
 }
 
+#' @importFrom rlang :=
+#' @importFrom stats C
 fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference){
 
 
@@ -232,7 +237,7 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
     do_inference_imputation(
       formula,
       approximate_posterior_inference,
-      approximate_posterior_analysis,
+      FALSE,
       C,
       X,
       cores,
@@ -334,6 +339,7 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
 
 }
 
+#' @importFrom rlang :=
 fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed){
 
 
@@ -342,7 +348,7 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
   # Run the first discovery phase with permissive false discovery rate
   fit  = fit_model(
     data_for_model, model, censoring_iteration, chains= chains,
-    output_samples = output_samples, verbose = T,
+    output_samples = output_samples, verbose = TRUE,
     seed = seed, pars = c("beta", "precision", "alpha"),
     approximate_posterior_inference= approximate_posterior_inference
   )

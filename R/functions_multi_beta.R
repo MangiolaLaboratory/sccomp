@@ -26,13 +26,12 @@
 #'
 #' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
 #'
-#' @export
 #'
 multi_beta_glm = function(.data,
                           formula = ~ 1,
                           .sample,
                           check_outliers = FALSE,
-                          approximate_posterior_inference = T,
+                          approximate_posterior_inference = TRUE,
                           cores = detect_cores(), # For development purpose,
                           seed = sample(1:99999, size = 1)
 ) {
@@ -58,7 +57,7 @@ multi_beta_glm = function(.data,
 
 }
 
-
+#' @importFrom stats model.matrix
 glm_multi_beta = function(input_df, formula, .sample){
 
   covariate_names = parse_formula(formula)

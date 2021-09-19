@@ -17,7 +17,7 @@ job({
     sccomp:::sccomp_glm(
       formula = ~ is_critical,
       sample, cell_type,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2)),
       variance_association = TRUE
     )
