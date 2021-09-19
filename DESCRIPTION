@@ -1,10 +1,10 @@
 Package: sccomp
-Title: Outlier-aware and Count-based Compositional Analysis of Single-cell Data.
+Title: Robust Outlier-aware Estimation of Composition and Heterogeneity for Single-cell Data.
 Version: 0.1.0
 Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
                   role = c("aut", "cre"))
                   )
-Description: Outlier-aware and count-based compositional analysis of single-cell data.
+Description: A robust and outlier-aware method for testing differential tissue composition from single-cell data. This model can also transfer knowledge from a large set of integrated datasets to increase accuracy further.
 License: GPL-3 
 Encoding: UTF-8
 LazyData: true
@@ -12,7 +12,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Biarch: true
 Depends: 
-    R (>= 4.0.0),
+    R (>= 4.1.0),
     rstan (>= 2.18.1)
 Imports: 
     methods,
@@ -29,7 +29,8 @@ Imports:
     rlang,
     tibble,
     boot,
-    lifecycle
+    lifecycle,
+    stats
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),

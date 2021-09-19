@@ -13,7 +13,7 @@ dirichlet_multinomial_glm(
   prior_mean_variable_association = NULL,
   percent_false_positive = 5,
   check_outliers = FALSE,
-  approximate_posterior_inference = T,
+  approximate_posterior_inference = TRUE,
   verbose = TRUE,
   cores = detect_cores(),
   seed = sample(1:99999, size = 1)
