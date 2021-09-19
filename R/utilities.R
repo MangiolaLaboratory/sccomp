@@ -84,7 +84,7 @@ as_matrix <- function(tbl, rownames = NULL) {
         gather(variable, class) %>%
         pull(class) %>%
         unique() %>%
-        `%in%`(c("numeric", "integer")) %>% `!`() %>% any(),
+        `%in%`(c("numeric", "integer")) %>% not() %>% any(),
       ~ {
         warning("to_matrix says: there are NON-numerical columns, the matrix will NOT be numerical")
         .x
@@ -144,7 +144,7 @@ vb_iterative = function(model,
         #pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
         ...
       )
-      boolFalse <- T
+      boolFalse <- TRUE
       return(my_res)
     },
     error = function(e) {
@@ -160,6 +160,10 @@ vb_iterative = function(model,
 }
 
 #' function to pass initialisation values
+#'
+#' @importFrom stats setNames
+#' @importFrom stats rnorm
+#' @importFrom stats sd
 #'
 #' @keywords internal
 #' @noRd
@@ -221,6 +225,7 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #'
 #' @importFrom tidyr pivot_longer
 #' @importFrom rstan extract
+#' @importFrom rlang :=
 #'
 #' @param fit A fit object
 #' @param par A character vector. The parameters to extract.
@@ -231,10 +236,10 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #' @noRd
 draws_to_tibble_x_y = function(fit, par, x, y) {
 
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
+  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   fit %>%
-    extract(par_names, permuted=F) %>%
+    extract(par_names, permuted=FALSE) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = 1:n()) %>%
@@ -267,10 +272,10 @@ draws_to_tibble_x_y = function(fit, par, x, y) {
 
 draws_to_tibble_x = function(fit, par, x) {
 
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
+  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   fit %>%
-    extract(par_names, permuted=F) %>%
+    extract(par_names, permuted=FALSE) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = 1:n()) %>%
@@ -297,7 +302,7 @@ draws_to_tibble_x = function(fit, par, x) {
 #' @noRd
 summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
 
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = T)
+  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   # Avoid bug
   if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
@@ -307,8 +312,8 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
     summary %>%
     as_tibble(rownames = ".variable") %>%
     when(
-      is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = T, extra="drop"),
-      ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = T, extra="drop")
+      is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
+      ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
     ) %>%
     filter(.variable == par)
 
@@ -318,6 +323,7 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 #' @importFrom tidyr nest
 #' @importFrom tidyr unnest
 #' @importFrom boot logit
+#' @importFrom SingleCellExperiment counts
 #'
 #' @keywords internal
 #' @noRd
@@ -348,20 +354,20 @@ generate_quantities = function(fit, data_for_model){
 }
 
 do_inference_imputation = function(.data,
-                                   approximate_posterior_inference = F,
-                                   approximate_posterior_analysis = F,
+                                   approximate_posterior_inference = FALSE,
+                                   approximate_posterior_analysis = FALSE,
                                    cores,
                                    additional_parameters_to_save,
                                    to_include = tibble(N = integer(), M = integer()),
                                    truncation_compensation = 1,
-                                   save_generated_quantities = F,
+                                   save_generated_quantities = FALSE,
                                    inits_fx = "random",
                                    prior_from_discovery = tibble(`.variable` = character(),
                                                                  mean = numeric(),
                                                                  sd = numeric()),
-                                   pass_fit = F,
+                                   pass_fit = FALSE,
                                    tol_rel_obj = 0.01,
-                                   write_on_disk = F,
+                                   write_on_disk = FALSE,
                                    seed,
                                    precision) {
 
@@ -391,7 +397,7 @@ do_inference_imputation = function(.data,
     .data$y %>%
     divide_by(rowSums(.data$y )) %>%
     fix_zeros() %>%
-    apply(1, function(x)  x %>% boot::logit() %>% scale(scale = F) %>% as.numeric) %>%
+    apply(1, function(x)  x %>% boot::logit() %>% scale(scale = FALSE) %>% as.numeric) %>%
     t()
 
   # fit =
@@ -446,6 +452,7 @@ do_inference_imputation = function(.data,
 
 }
 
+#' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
 
   .my_data %>%
@@ -472,7 +479,7 @@ label_deleterious_outliers = function(.my_data){
 
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores, quantile = 0.95,
-  warmup_samples = 200, approximate_posterior_inference = TRUE, verbose = F,
+  warmup_samples = 200, approximate_posterior_inference = TRUE, verbose = FALSE,
   seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL
 )
   {
@@ -520,7 +527,7 @@ fit_model = function(
       refresh = ifelse(verbose, 1000, 0),
       seed = seed,
       pars = pars,
-      save_warmup = F
+      save_warmup = FALSE
     ) %>%
     suppressWarnings()
 
@@ -543,6 +550,7 @@ fit_model = function(
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
 #' @importFrom rstan extract
+#' @importFrom rlang :=
 #'
 #' @keywords internal
 #' @noRd
@@ -557,6 +565,8 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
+#' @importFrom stats C
+#' @importFrom rlang :=
 #'
 #' @keywords internal
 #' @noRd
@@ -604,8 +614,13 @@ parse_formula <- function(fm) {
 }
 
 #' @importFrom purrr when
+#' @importFrom stats model.matrix
+#'
+#' @keywords internal
+#' @noRd
+#'
 data_spread_to_model_input =
-  function(.data_spread, formula, .sample, .cell_type, .count, variance_association = F, truncation_ajustment = 1, approximate_posterior_inference ){
+  function(.data_spread, formula, .sample, .cell_type, .count, variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ){
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -617,7 +632,7 @@ data_spread_to_model_input =
     .data_spread %>%
     select(!!.sample, covariate_names) %>%
     model.matrix(formula, data=.) %>%
-    apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=F)))
+    apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=FALSE)))
 
   XA = variance_association %>%
     when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,1:2, drop=FALSE]) %>%
@@ -668,8 +683,13 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count){
 }
 
 #' @importFrom purrr when
+#' @importFrom stats model.matrix
+#'
+#' @keywords internal
+#' @noRd
+#'
 data_simulation_to_model_input =
-  function(.data, formula, .sample, .cell_type, .exposure, .coefficients, variance_association = F, truncation_ajustment = 1, approximate_posterior_inference ){
+  function(.data, formula, .sample, .cell_type, .exposure, .coefficients, variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ){
 
     # Prepare column same enquo
     .sample = enquo(.sample)
@@ -685,7 +705,7 @@ data_simulation_to_model_input =
       distinct() %>%
       arrange(!!.sample) %>%
       model.matrix(formula, data=.) %>%
-      apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=F)))
+      apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=FALSE)))
 
     XA = variance_association %>%
       when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,1:2, drop=FALSE]) %>%
@@ -757,6 +777,11 @@ get.elbow.points.indices <- function(x, y, threshold) {
 
 #' @importFrom magrittr divide_by
 #' @importFrom magrittr multiply_by
+#' @importFrom stats C
+#'
+#' @keywords internal
+#' @noRd
+#'
 get_probability_non_zero = function(.data){
 
 
@@ -787,7 +812,9 @@ get_probability_non_zero = function(.data){
 
 }
 
-
+#' @keywords internal
+#' @noRd
+#'
 parse_generated_quantities = function(rng){
 
   draws_to_tibble_x_y(rng, "counts", "N", "M") %>%

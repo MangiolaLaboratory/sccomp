@@ -264,7 +264,7 @@ glm_input_benign =
       grepl("Mac M1", curated_cell_type_pretty) ~ "Mac M1",
       curated_cell_type_pretty == "CD4 em high cytokine" ~ "CD4 em",
 
-      T ~ curated_cell_type_pretty
+      TRUE ~ curated_cell_type_pretty
     )
   ) %>%
   mutate(curated_cell_type_pretty = if_else(is.na(curated_cell_type_pretty), "none", curated_cell_type_pretty)) %>%
@@ -282,7 +282,7 @@ job({
   estimate_benign_WEHI_talk =
     glm_input_benign  %>%
     sccomp_glm(~is_benign, sample, curated_cell_type_pretty,
-               approximate_posterior_inference = F,
+               approximate_posterior_inference = FALSE,
                prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 
@@ -293,7 +293,7 @@ job({
     glm_input_benign %>%
     sccomp:::estimate_multi_beta_binomial_glm(
       ~is_benign, sample, curated_cell_type_pretty,
-      approximate_posterior_inference = F,
+      approximate_posterior_inference = FALSE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
     )
 })
@@ -378,10 +378,10 @@ data_for_plot_benign =
   group_by(sample) %>%
   mutate(proportion = (n+1)/sum(n+1)) %>%
   ungroup(sample) %>%
-  mutate(type = case_when(type=="OMBC" ~ "Stable", type=="MBC" ~ "Progressive", T ~ type)) %>%
+  mutate(type = case_when(type=="OMBC" ~ "Stable", type=="MBC" ~ "Progressive", TRUE ~ type)) %>%
   mutate(type = forcats::fct_relevel(type, c("Stable", "Progressive"))) %>%
   mutate(type = forcats::fct_relevel(type, c("benign", "Stable", "Progressive"))) %>%
-  mutate(is_benign = case_when(is_benign ~ "Healthy", T ~ "Cancer")) %>%
+  mutate(is_benign = case_when(is_benign ~ "Healthy", TRUE ~ "Cancer")) %>%
   mutate(is_benign = is_benign %>% factor(levels = c("Healthy", "Cancer"))) %>%
   filter(curated_cell_type_pretty != "Stem") %>%
   filter(curated_cell_type_pretty != "CD4 ribosome")
