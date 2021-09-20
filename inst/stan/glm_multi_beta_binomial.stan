@@ -71,6 +71,7 @@ transformed parameters{
 	  for(c in 1:C)	beta[c,] =  sum_to_zero_QR(beta_raw[c,], Q_r);
 
     // All this because if A ==1 we have ocnversion problems
+    // This works only with two discrete groups
     if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
     else beta_intercept_slope = (XA * beta[1:A,]);
 		if(A == 1)  alpha_intercept_slope = alpha;

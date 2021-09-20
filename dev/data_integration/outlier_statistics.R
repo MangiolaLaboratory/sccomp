@@ -6,106 +6,34 @@ library(patchwork)
 
 
 
-job({
-
-  load("data/counts_obj.rda")
-
-  counts_obj %>%
-    group_by(sample) %>%
-    mutate(proportion = (count+1)/sum(count+1)) %>%
-    ungroup(sample) %>%
-    mutate(proportion_logit = boot::logit(proportion)) %>%
-    group_by(cell_group) %>%
-    summarise(mean = mean(proportion_logit), variance = sd(proportion_logit)) %>%
-    ggplot(aes(mean, variance)) +
-    geom_point() +
-    geom_smooth(method="lm") +
-    theme_bw()
-
-  estimate_oligo =
-  counts_obj  |>
-  mutate(is_benign = type=="benign") |>
-  sccomp_glm(
-    formula = ~ is_benign,
-    sample, cell_group, count,
-    approximate_posterior_inference = FALSE,
-    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-  )
-})
+estimate_oligo = readRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
 estimate_oligo %>% attr("mean_concentration_association")
 # [1]  5.6260004 -0.6940178
 # prec_sd  = 0.3312485
 
-job({
-  estimate_UVM =
-  readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
-    rename(type = `Sample Type`) %>%
-  sccomp_glm(
-    formula = ~ type,
-    sample, cell_type,
-    approximate_posterior_inference = FALSE,
-    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-  )
-})
+estimate_UVM = readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds")
 estimate_UVM %>% attr("mean_concentration_association")
 # [1]  3.0423138 -0.6920534
 # prec_sd  = 0.1987102
 
-job({
-  estimate_renal_cell_carcinoma =
-    readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
-    tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(sex))  |>
-    sccomp_glm(
-      formula = ~ sex,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-    )
-})
+estimate_renal_cell_carcinoma = readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds")
 estimate_renal_cell_carcinoma %>% attr("mean_concentration_association")
 # [1]  4.1541595    -0.7367941
 # prec_sd  =  0.5060364
 
-job({
-  estimate_bc_cells =
-    readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
-    mutate(type = subtype=="TNBC") %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-    )
-})
+estimate_bc_cells =
+  readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>%
+  mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type))))
 estimate_bc_cells %>% attr("mean_concentration_association")
 # [1]  3.2800052 -0.7575131
 # prec_sd  = 1.0363162
 
-job({
-  estimate_COVID =
-    readRDS("dev/data_integration/s41587-020-0602-4_COVID_19.rds")  |>
-    mutate(is_critical = severity=="critical") %>%
-    sccomp_glm(
-      formula = ~ is_critical,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-    )
-})
+estimate_COVID = readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds")
 estimate_COVID %>% attr("mean_concentration_association")
 # [1]  3.8746815    -0.8179763
 # prec_sd  = 0.6306725
 
-job({
-  estimate_melanoma =
-    readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
-    sccomp_glm(
-      formula = ~ time,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-    )
-})
+estimate_melanoma = readRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
 estimate_melanoma %>% attr("mean_concentration_association")
 # [1]  2.2340179    -0.7466973
 # prec_sd  = 0.6198534
@@ -135,7 +63,7 @@ plot_outlier =
   estimate_melanoma %>% mutate(dataset = "estimate_melanoma")
 ) %>%
   reduce(bind_rows) %>%
-  unnest(outliers) %>%
+  unnest(count_data ) %>%
   filter(outlier) %>%
   count(dataset, significant) %>%
   with_groups(dataset, ~ mutate(.x, nn = sum(n))) %>%
