@@ -18,11 +18,13 @@
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
 #' @param .count A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.
+#' @param prior_mean_variable_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param verbose A boolean. Prints progression.
 #' @param noise_model A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.
+#' @param variance_association A boolean. Whether the variance should depend on the factor of interest.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
 #'
@@ -416,7 +418,9 @@ sccomp_glm_data_frame_counts = function(.data,
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
-#' @param .count A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.
+#' @param .sample_cell_count A integer vector. The total number of cells for each sample.
+#' @param .coefficients A matrix of coefficients.
+#' @param mean_variable_association A numeric vector of size 3. The intercept, slope and standard deviation of the proportion mean/variability association.
 #' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
@@ -519,7 +523,7 @@ simulate_data.data.frame = function(.data,
     arrange(!!.sample, !!.cell_group) %>%
     bind_cols(
       fit %>%
-        tidybayes::gather_draws(counts[N, M]) %>%
+        draws_to_tibble_x_y("counts", "N", "M") %>%
         ungroup() %>%
         arrange(N, M) %>%
         select(.value)
