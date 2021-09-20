@@ -394,6 +394,7 @@ multi_beta_binomial_glm = function(.data,
                                    seed = sample(1:99999, size = 1),
                                    verbose = FALSE
 ) {
+
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
@@ -454,7 +455,8 @@ multi_beta_binomial_glm = function(.data,
     ) %>%
 
     # Attach association mean concentration
-    add_attr(get_mean_precision_association(result_list$fit), "mean_concentration_association")
+    add_attr(get_mean_precision_association(result_list$fit), "mean_concentration_association") %>%
+    add_attr(result_list$fit, "fit")
 
 }
 
