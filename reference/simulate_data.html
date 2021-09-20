@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>multi_beta_binomial main — multi_beta_binomial_glm • sccomp</title>
+<title>simulate_data — simulate_data • sccomp</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="multi_beta_binomial main — multi_beta_binomial_glm" />
-<meta property="og:description" content="This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate." />
+<meta property="og:title" content="simulate_data — simulate_data" />
+<meta property="og:description" content="This function simulates counts from a linear model." />
 
 
 
@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.99.1</span>
       </span>
     </div>
 
@@ -88,6 +88,18 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../reference/index.html">Reference</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/introduction.html">Overview of the sccomp package</a>
+    </li>
+  </ul>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -105,27 +117,30 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>multi_beta_binomial main</h1>
+    <h1>simulate_data</h1>
     
-    <div class="hidden name"><code>multi_beta_binomial_glm.Rd</code></div>
+    <div class="hidden name"><code>simulate_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.</p>
+    <p>This function simulates counts from a linear model.</p>
     </div>
 
-    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>multi_beta_binomial_glm</span><span class='op'>(</span>
+    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>simulate_data</span><span class='op'>(</span>
   <span class='va'>.data</span>,
   formula <span class='op'>=</span> <span class='op'>~</span><span class='fl'>1</span>,
   <span class='va'>.sample</span>,
-  <span class='va'>.cell_type</span>,
-  <span class='va'>.count</span>,
-  check_outliers <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  approximate_posterior_inference <span class='op'>=</span> <span class='cn'>T</span>,
-  variance_association <span class='op'>=</span> <span class='cn'>F</span>,
+  <span class='va'>.cell_group</span>,
+  <span class='va'>.sample_cell_count</span>,
+  <span class='va'>.coefficients</span>,
+  mean_variable_association <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>5.6260004</span>, <span class='op'>-</span><span class='fl'>0.6940178</span>, <span class='fl'>0.816423129</span><span class='op'>)</span>,
+  percent_false_positive <span class='op'>=</span> <span class='fl'>5</span>,
+  check_outliers <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  approximate_posterior_inference <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  verbose <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  noise_model <span class='op'>=</span> <span class='st'>"multi_beta_binomial"</span>,
   cores <span class='op'>=</span> <span class='fu'>detectCores</span><span class='op'>(</span><span class='op'>)</span>,
-  seed <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span><span class='op'>(</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>99999</span>, size <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>,
-  verbose <span class='op'>=</span> <span class='cn'>FALSE</span>
+  seed <span class='op'>=</span> <span class='fl'>42</span>
 <span class='op'>)</span></code></pre></div>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -133,7 +148,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>.data</th>
-      <td><p>A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column</p></td>
+      <td><p>A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column</p></td>
     </tr>
     <tr>
       <th>formula</th>
@@ -144,12 +159,24 @@
       <td><p>A column name as symbol. The sample identifier</p></td>
     </tr>
     <tr>
-      <th>.cell_type</th>
+      <th>.cell_group</th>
       <td><p>A column name as symbol. The cell_type identifier</p></td>
     </tr>
     <tr>
-      <th>.count</th>
-      <td><p>A column name as symbol. The cell_type abundance (read count)</p></td>
+      <th>.sample_cell_count</th>
+      <td><p>A integer vector. The total number of cells for each sample.</p></td>
+    </tr>
+    <tr>
+      <th>.coefficients</th>
+      <td><p>A matrix of coefficients.</p></td>
+    </tr>
+    <tr>
+      <th>mean_variable_association</th>
+      <td><p>A numeric vector of size 3. The intercept, slope and standard deviation of the proportion mean/variability association.</p></td>
+    </tr>
+    <tr>
+      <th>percent_false_positive</th>
+      <td><p>A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.</p></td>
     </tr>
     <tr>
       <th>check_outliers</th>
@@ -160,8 +187,12 @@
       <td><p>A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.</p></td>
     </tr>
     <tr>
-      <th>variance_association</th>
-      <td><p>A boolean. Whether the variance should be associated to the factor of interest.</p></td>
+      <th>verbose</th>
+      <td><p>A boolean. Prints progression.</p></td>
+    </tr>
+    <tr>
+      <th>noise_model</th>
+      <td><p>A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.</p></td>
     </tr>
     <tr>
       <th>cores</th>
@@ -171,16 +202,27 @@
       <th>seed</th>
       <td><p>An integer. Used for development and testing purposes</p></td>
     </tr>
-    <tr>
-      <th>verbose</th>
-      <td><p>A boolean. Prints progression.</p></td>
-    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A nested tibble <code>tbl</code> with cell_type-wise information: <code>sample wise data</code> | plot | <code>ppc samples failed</code> | <code>exposure deleterious outliers</code></p>
+    <p>A nested tibble <code>tbl</code> with cell_group-wise statistics</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <div class="ref-examples sourceCode"><pre class='sourceCode r'><code><span class='r-in'></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"counts_obj"</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='va'>estimate</span> <span class='op'>=</span></span>
+<span class='r-in'>  <span class='fu'><a href='sccomp_glm.html'>sccomp_glm</a></span><span class='op'>(</span></span>
+<span class='r-in'>  <span class='va'>counts_obj</span> ,</span>
+<span class='r-in'>   <span class='op'>~</span> <span class='va'>type</span>,  <span class='va'>sample</span>, <span class='va'>cell_group</span>, <span class='va'>count</span>,</span>
+<span class='r-in'>    approximate_posterior_inference <span class='op'>=</span> <span class='cn'>FALSE</span></span>
+<span class='r-in'>  <span class='op'>)</span></span>
+<span class='r-msg co'><span class='r-pr'>#&gt;</span> sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span>
+<span class='r-msg co'><span class='r-pr'>#&gt;</span> sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span>
+<span class='r-msg co'><span class='r-pr'>#&gt;</span> sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span>
+<span class='r-in'></span>
+</code></pre></div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

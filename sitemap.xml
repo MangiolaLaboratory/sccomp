@@ -4,6 +4,12 @@
     <loc>/404.html</loc>
   </url>
   <url>
+    <loc>/articles/index.html</loc>
+  </url>
+  <url>
+    <loc>/articles/introduction.html</loc>
+  </url>
+  <url>
     <loc>/authors.html</loc>
   </url>
   <url>
@@ -13,19 +19,10 @@
     <loc>/reference/counts_obj.html</loc>
   </url>
   <url>
-    <loc>/reference/dirichlet_multinomial_glm.html</loc>
-  </url>
-  <url>
     <loc>/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/multi_beta_binomial_glm.html</loc>
-  </url>
-  <url>
     <loc>/reference/multi_beta_glm.html</loc>
-  </url>
-  <url>
-    <loc>/reference/quo_names.html</loc>
   </url>
   <url>
     <loc>/reference/sccomp-package.html</loc>
@@ -38,5 +35,8 @@
   </url>
   <url>
     <loc>/reference/seurat_obj.html</loc>
+  </url>
+  <url>
+    <loc>/reference/simulate_data.html</loc>
   </url>
 </urlset>
