@@ -47,14 +47,14 @@ devtools::install_github("stemangiola/sccomp")
 
 res =
   seurat_obj |>
-  sccomp_glm(  ~ type, sample, cell_group )
+  sccomp_glm(~ type, sample, cell_group )
 
 ```
 
 ```{r eval=FALSE}
 res =
   sce_obj |>
-  sccomp_glm( ~ type, sample, cell_group)
+  sccomp_glm(~ type, sample, cell_group)
 
 ```
 
