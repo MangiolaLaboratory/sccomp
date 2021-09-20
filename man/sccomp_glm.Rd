@@ -33,6 +33,8 @@ sccomp_glm(
 
 \item{.count}{A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.}
 
+\item{prior_mean_variable_association}{A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
+
 \item{percent_false_positive}{A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.}
 
 \item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
@@ -42,6 +44,8 @@ sccomp_glm(
 \item{verbose}{A boolean. Prints progression.}
 
 \item{noise_model}{A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.}
+
+\item{variance_association}{A boolean. Whether the variance should depend on the factor of interest.}
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
