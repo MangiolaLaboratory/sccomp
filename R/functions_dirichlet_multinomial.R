@@ -22,11 +22,16 @@
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_type A column name as symbol. The cell_type identifier
 #' @param .count A column name as symbol. The cell_type abundance (read count)
+#' @param prior_mean_variable_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
+#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param verbose A boolean. Prints progression.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
+#'
+#' @noRd
+#'
 #'
 #' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
 #'
