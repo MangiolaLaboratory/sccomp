@@ -445,19 +445,10 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   )
 #'
 simulate_data <- function(.data,
-                       formula = ~ 1 ,
-                       .sample,
-                       .cell_group,
-                       .sample_cell_count,
-                       .coefficients,
-                       # Secondary arguments
-                       mean_variable_association = c( 5.6260004, -0.6940178, 0.816423129),
-                       percent_false_positive = 5,
-                       check_outliers = TRUE,
-                       approximate_posterior_inference = FALSE,
-                       verbose = FALSE,
-                       noise_model = "multi_beta_binomial",
-                       cores = detectCores(),
+                       .sample = NULL,
+                       .cell_group = NULL,
+                       .coefficients = NULL,
+                       number_of_draws = 1,
                        seed = 42) {
   UseMethod("simulate_data", .data)
 }
@@ -470,70 +461,75 @@ simulate_data <- function(.data,
 #' @importFrom purrr pmap
 #'
 simulate_data.data.frame = function(.data,
-                                    formula = ~ 1 ,
-                                    .sample,
+                                    .sample ,
                                     .cell_group,
-                                    .sample_cell_count,
-                                    .coefficients,
-                                    # Secondary arguments
-                                    mean_variable_association = c( 5.6260004, -0.6940178, 0.816423129),
-                                    percent_false_positive = 5,
-                                    check_outliers = TRUE,
-                                    approximate_posterior_inference = FALSE,
-                                    verbose = FALSE,
-                                    noise_model = "multi_beta_binomial",
-                                    cores = detectCores(),
+                                    .coefficients = NULL,
+                                    number_of_draws = 1,
                                     seed = 42){
 
 
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
-  .sample_cell_count = enquo(.sample_cell_count)
-  .coefficients = enquo(.coefficients)
 
-  #Check column class
-  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
+  if(is.null(.coefficients))
+    replicate_dataset(
+      attr(.data, "fit"),
+      attr(.data, "model_input"),
+      .sample = !!.sample,
+      .cell_group = !!.cell_group,
+      number_of_draws = number_of_draws
+    )
 
-  model_data =
-    .data %>%
-    data_simulation_to_model_input(formula, !!.sample, !!.cell_group, !!.sample_cell_count, !!.coefficients )
-
-  model_data$prec_coeff = mean_variable_association[1:2]
-  model_data$prec_sd  = mean_variable_association[3]
-
-    # [1]  5.6260004 -0.6940178
-    # prec_sd  = 0.816423129
-
-  fit =
-    sampling(
-    stanmodels$glm_multi_beta_binomial_simulate_data,
-    #stan_model("inst/stan/glm_multi_beta_binomial_simulate_data.stan"),
-    data = model_data,
-    chains = 1,
-    cores = 1,
-    iter = 151,
-    warmup = 150,
-    #refresh = ifelse(verbose, 1000, 0),
-    seed = seed,
-    #pars = pars,
-    save_warmup = FALSE
-  )
-
-  .data %>%
-    arrange(!!.sample, !!.cell_group) %>%
-    bind_cols(
-      fit %>%
-        draws_to_tibble_x_y("counts", "N", "M") %>%
-        ungroup() %>%
-        arrange(N, M) %>%
-        select(.value)
-    ) %>%
-
-    # Scale counts for exposure
-    nest(data = -c(sample, tot_count )) %>%
-    mutate(tot_count_simulated = map_dbl(data, ~ sum(.x$.value))) %>%
-    mutate(data = pmap(list(data, tot_count, tot_count_simulated),  ~ ..1 %>%  mutate(.value = .value %>% divide_by(..3) %>% multiply_by(..2) %>% round %>% as.integer ))) %>%
-    unnest(data)
+  # .sample = enquo(.sample)
+  # .cell_group = enquo(.cell_group)
+  # .sample_cell_count = enquo(.sample_cell_count)
+  # .coefficients = enquo(.coefficients)
+  #
+  # #Check column class
+  # check_if_columns_right_class(.data, !!.sample, !!.cell_group)
+  #
+  # model_data =
+  #   .data %>%
+  #   data_simulation_to_model_input(formula, !!.sample, !!.cell_group, !!.sample_cell_count, !!.coefficients )
+  #
+  # model_data$prec_coeff = mean_variable_association[1:2]
+  # model_data$prec_sd  = mean_variable_association[3]
+  #
+  #   # [1]  5.6260004 -0.6940178
+  #   # prec_sd  = 0.816423129
+  #
+  # fit =
+  #   sampling(
+  #     stanmodels$glm_multi_beta_binomial_simulate_data,
+  #     #stan_model("inst/stan/glm_multi_beta_binomial_simulate_data.stan"),
+  #     data = model_data,
+  #     chains = 1,
+  #     cores = 1,
+  #     iter = 151,
+  #     warmup = 150,
+  #     #refresh = ifelse(verbose, 1000, 0),
+  #     seed = seed,
+  #     #pars = pars,
+  #     save_warmup = FALSE
+  # )
+  #
+  # .data %>%
+  #   arrange(!!.sample, !!.cell_group) %>%
+  #   bind_cols(
+  #     fit %>%
+  #       draws_to_tibble_x_y("counts", "N", "M") %>%
+  #       ungroup() %>%
+  #       arrange(N, M) %>%
+  #       select(.value)
+  #   ) %>%
+  #
+  #   # Scale counts for exposure
+  #   nest(data = -c(sample, tot_count )) %>%
+  #   mutate(tot_count_simulated = map_dbl(data, ~ sum(.x$.value))) %>%
+  #   mutate(data = pmap(list(data, tot_count, tot_count_simulated),  ~ ..1 %>%  mutate(.value = .value %>% divide_by(..3) %>% multiply_by(..2) %>% round %>% as.integer ))) %>%
+  #   unnest(data)
 
 
 }
+
+

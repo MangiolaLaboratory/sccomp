@@ -815,12 +815,44 @@ get_probability_non_zero = function(.data){
 #' @keywords internal
 #' @noRd
 #'
-parse_generated_quantities = function(rng){
+parse_generated_quantities = function(rng, number_of_draws = 1){
 
   draws_to_tibble_x_y(rng, "counts", "N", "M") %>%
     with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/sum(.value))) %>%
-    filter(.draw<11) %>%
-    rename(generated_counts = .value) %>%
-    select(M, N, generated_proportions, generated_counts)
+    filter(.draw<= number_of_draws) %>%
+    rename(generated_counts = .value, replicate = .draw) %>%
+    select(M, N, generated_proportions, generated_counts, replicate)
+
+}
+
+replicate_dataset = function(fit, model_input, .sample, .cell_group, number_of_draws = 1){
+
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+
+  # Generate quantities
+  rstan::gqs(
+    stanmodels$glm_multi_beta_binomial_generate_date,
+    #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+    draws =  as.matrix(fit ),
+    data = model_input
+  ) %>%
+
+    # Parse
+    parse_generated_quantities(number_of_draws = number_of_draws) %>%
+
+    # Get sample name
+    nest(data = -N) %>%
+    arrange(N) %>%
+    mutate(!!.sample := rownames(model_input$y)) %>%
+    unnest(data) %>%
+
+    # get cell type name
+    nest(data = -M) %>%
+    mutate(!!.cell_group := colnames(model_input$y)) %>%
+    unnest(data) %>%
+
+    select(-N, -M) %>%
+    nest(generated_data = -c(!!.sample, !!.cell_group))
 
 }
