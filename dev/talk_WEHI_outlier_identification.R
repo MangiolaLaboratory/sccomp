@@ -25,30 +25,13 @@ job({
 
 
 
-job({
-  fit_object =
-    counts_obj %>%
-    sccomp:::estimate_multi_beta_binomial_glm(
-      ~ type,
-      sample, cell_group, count,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-    )
-})
 
-
-rng =  rstan::gqs(
-  sccomp:::stanmodels$glm_multi_beta_binomial_generate_date,
-  #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-  draws =  as.matrix(fit_object$fit),
-  data = fit_object$data_for_model
-)
 
 
 data_for_plot =
   res %>%
-  tidyr::unnest(outliers) %>%
-  left_join(counts_obj %>% distinct(sample, type), by = c("sample")) %>%
+  tidyr::unnest(count_data) %>%
+  #left_join(counts_obj %>% distinct(sample, type), by = c("sample")) %>%
   group_by(sample) %>%
   mutate(proportion = (count+1)/sum(count+1)) %>%
   ungroup(sample)
@@ -121,27 +104,54 @@ plot_fitted_outlier =
 
 
 
+# rng =  rstan::gqs(
+#   sccomp:::stanmodels$glm_multi_beta_binomial_generate_date,
+#   #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+#   draws =  as.matrix(fit_object$fit),
+#   data = fit_object$data_for_model
+# )
 
-plot_generated =
-  sccomp:::draws_to_tibble_x_y(rng, "counts", "N", "M") %>%
-  filter(.draw == 1) %>%
-  left_join(tibble(N = 1:20, type = factor(fit_object$data_for_model$X[,2]))) %>%
-  mutate(M = as.character(M)) %>%
-  left_join(res %>% select(.median_typecancer) %>% mutate(M = as.character(1:n())), by="M") %>%
-  rename(sample = N, count = .value) %>%
-  with_groups(sample, ~ mutate(.x, proportion = (count+1)/sum(count+1)) ) %>%
-    ggplot() +
+# plot_generated =
+#   sccomp:::draws_to_tibble_x_y(rng, "counts", "N", "M") %>%
+#   filter(.draw == 1) %>%
+#   left_join(tibble(N = 1:20, type = factor(fit_object$data_for_model$X[,2]))) %>%
+#   mutate(M = as.character(M)) %>%
+#   left_join(res %>% select(.median_typecancer) %>% mutate(M = as.character(1:n())), by="M") %>%
+#   rename(sample = N, count = .value) %>%
+#   with_groups(sample, ~ mutate(.x, proportion = (count+1)/sum(count+1)) )
+
+
+job({
+  fit_object =
+    counts_obj %>%
+    sccomp:::sccomp_glm(
+      ~ type,
+      sample, cell_group, count,
+      approximate_posterior_inference = FALSE, variance_association = TRUE,
+      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
+    )
+})
+
+fit_object %>%
+  simulate_data(sample, cell_group) %>%
+  unnest(generated_data) %>%
+
+  # Add type and median
+  left_join(counts_obj %>% distinct(sample, type)) %>%
+  left_join(fit_object %>% distinct(cell_group , .median_typecancer)) %>%
+
+  ggplot() +
   geom_boxplot(
-    aes(type, proportion),
+    aes(type, generated_proportions ),
     outlier.shape = NA
   ) +
-  geom_jitter(aes(type, proportion), size = 1) +
-  facet_wrap(~ forcats::fct_reorder(M, desc(abs(.median_typecancer))), scale="free_y") +
+  geom_jitter(aes(type, generated_proportions ), size = 1) +
+  facet_wrap(~ forcats::fct_reorder(cell_group , desc(abs(.median_typecancer))), scale="free_y") +
   scale_y_continuous(trans="logit") +
   scale_color_manual(values = c("black", "#e11f28")) +
   scale_fill_manual(values = c("white", "#E2D379")) +
   xlab("Biological condition") +
-  ylab("Cell-group proportion") +
+  ylab("Cell-group generated_proportions ") +
   theme_bw() +
   theme(
     strip.background =element_rect(fill="white", color="white"),
