@@ -92,42 +92,25 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Run the first discovery phase with permissive false discovery rate
     fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
 
-  rng =  rstan::gqs(
-    stanmodels$glm_multi_beta_binomial_generate_date,
-    #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-    draws =  as.matrix(fit),
-    data = data_for_model
-  )
 
   if(!check_outliers){
-
-    generated_quantities =
-      parse_generated_quantities(rng) %>%
-
-      # Get sample name
-      nest(data = -N) %>%
-      arrange(N) %>%
-      mutate(!!.sample := rownames(data_for_model$y)) %>%
-      unnest(data) %>%
-
-      # get cell type name
-      nest(data = -M) %>%
-      mutate(!!.cell_type := colnames(data_for_model$y)) %>%
-      unnest(data) %>%
-
-      select(-N, -M) %>%
-      nest(generated_data = -c(!!.sample, !!.cell_type))
 
     list(
       fit = fit,
       data_for_model = data_for_model,
-      truncation_df2 =  .data %>% left_join(generated_quantities, by = c(quo_name(.sample), quo_name(.cell_type)))
+      truncation_df2 =  .data
     )
 
   }
 
   else{
 
+    rng =  rstan::gqs(
+      stanmodels$glm_multi_beta_binomial_generate_date,
+      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+      draws =  as.matrix(fit),
+      data = data_for_model
+    )
 
     # Detect outliers
     truncation_df =
@@ -233,37 +216,11 @@ estimate_multi_beta_binomial_glm = function(.data,
       fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
-    rng3 =  rstan::gqs(
-      stanmodels$glm_multi_beta_binomial_generate_date,
-      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit),
-      data = data_for_model
-    )
-
-    generated_quantities3 =
-      parse_generated_quantities(rng3) %>%
-
-      # Get sample name
-      nest(data = -N) %>%
-      arrange(N) %>%
-      mutate(!!.sample := rownames(data_for_model$y)) %>%
-      unnest(data) %>%
-
-      # get cell type name
-      nest(data = -M) %>%
-      mutate(!!.cell_type := colnames(data_for_model$y)) %>%
-      unnest(data) %>%
-
-      select(-N, -M) %>%
-      nest(generated_data = -c(!!.sample, !!.cell_type))
-
-
     list(
       fit = fit3,
       data_for_model = data_for_model,
       truncation_df2 =
-        truncation_df2 %>%
-        left_join(generated_quantities3, by = c(quo_name(.sample), quo_name(.cell_type)))
+        truncation_df2
     )
 
 
@@ -456,7 +413,8 @@ multi_beta_binomial_glm = function(.data,
 
     # Attach association mean concentration
     add_attr(get_mean_precision_association(result_list$fit), "mean_concentration_association") %>%
-    add_attr(result_list$fit, "fit")
+    add_attr(result_list$fit, "fit") %>%
+    add_attr(result_list$data_for_model, "model_input")
 
 }
 
