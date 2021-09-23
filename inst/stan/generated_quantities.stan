@@ -13,6 +13,6 @@ generated quantities{
   int counts[N, M];
 
 	for(n in 1:N)
-	counts[n] = multinomial_rng(dirichlet_rng(alpha[n]'), exposure[n]) ;
+	counts[n] = multinomial_rng(dirichlet_rng(to_vector(alpha[n])), exposure[n]) ;
 
 }
