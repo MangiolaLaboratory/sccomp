@@ -6,33 +6,27 @@
 \usage{
 simulate_data(
   .data,
-  formula = ~1,
-  .sample,
-  .cell_group,
-  .sample_cell_count,
-  .coefficients,
-  mean_variable_association = c(5.6260004, -0.6940178, 0.816423129),
-  percent_false_positive = 5,
-  check_outliers = TRUE,
-  approximate_posterior_inference = FALSE,
-  verbose = FALSE,
-  noise_model = "multi_beta_binomial",
-  cores = detectCores(),
+  .sample = NULL,
+  .cell_group = NULL,
+  .coefficients = NULL,
+  number_of_draws = 1,
   seed = 42
 )
 }
 \arguments{
 \item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
-\item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
-
 \item{.sample}{A column name as symbol. The sample identifier}
 
 \item{.cell_group}{A column name as symbol. The cell_type identifier}
 
-\item{.sample_cell_count}{A integer vector. The total number of cells for each sample.}
-
 \item{.coefficients}{A matrix of coefficients.}
+
+\item{seed}{An integer. Used for development and testing purposes}
+
+\item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
+
+\item{.sample_cell_count}{A integer vector. The total number of cells for each sample.}
 
 \item{mean_variable_association}{A numeric vector of size 3. The intercept, slope and standard deviation of the proportion mean/variability association.}
 
@@ -47,8 +41,6 @@ simulate_data(
 \item{noise_model}{A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.}
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
-
-\item{seed}{An integer. Used for development and testing purposes}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics

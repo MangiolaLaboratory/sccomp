@@ -42,7 +42,7 @@ data{
 	int M;
 	int C;
 	int y[N,M];
-	matrix[N,2] X;
+	matrix[N,C] X;
 
 }
 transformed data{
@@ -52,7 +52,7 @@ transformed data{
 }
 parameters{
 	matrix[C, M-1] beta_raw;
-	vector[1] precision;
+	vector[C] precision;
 
 	// To exclude
 
@@ -60,18 +60,20 @@ parameters{
 transformed parameters{
   real buffer;
   real plateau = 0.5;
-		matrix[C,M] beta;
-		//real precision_diff = precision[1] - precision[2];
-		matrix[ M, N] alpha; // for generated quantities. It is cell types in the rows and samples as columns
-	  for(c in 1:C)	beta[c] =  sum_to_zero_QR(beta_raw[c], Q_r);
+	matrix[C,M] beta;
+	vector[N] precision_per_sample = X * precision;
 
-	  // For generated quantities
-	  alpha = (X * beta)'; // N x M
+	//real precision_diff = precision[1] - precision[2];
+	matrix[ N, M] alpha; // for generated quantities. It is cell types in the rows and samples as columns
+  for(c in 1:C)	beta[c] =  sum_to_zero_QR(beta_raw[c], Q_r);
+
+  // For generated quantities
+  alpha = (X * beta); // N x M
 
 	for(n in 1:N){
-	  alpha[,n] = softmax(alpha[,n]);
-		buffer = 1.0/min(alpha[,n]) * plateau;
-	  alpha[,n] =  alpha[,n] *  exp(precision[1]) * buffer;
+	  alpha[n] = to_row_vector(softmax(to_vector(alpha[n])));
+		buffer = 1.0/min(alpha[n]) * plateau;
+	  alpha[n] =  alpha[n] *  exp(precision_per_sample[n]) * buffer;
 	}
 
 
@@ -80,7 +82,7 @@ model{
 
 	 //for(n in 1:N) y[n] ~ dirichlet_multinomial( precision * softmax( vector_array_to_matrix(beta) )) );
 
-	 for(n in 1:N) y[n] ~ dirichlet_multinomial( alpha[,n] );
+	 for(n in 1:N) y[n] ~ dirichlet_multinomial( to_vector(alpha[n] ));
 
 	 precision ~ normal(0,2);
 	 for(i in 1:C) beta_raw[i] ~ normal(0, x_raw_sigma );

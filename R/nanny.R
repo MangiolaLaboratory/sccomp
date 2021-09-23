@@ -99,6 +99,7 @@ strip_names <- function(df, base, names_sep) {
 #' @importFrom rlang :=
 #' @importFrom purrr map
 #' @importFrom purrr imap
+#' @importFrom tidyselect eval_select
 #'
 #' @keywords internal
 #' @noRd
