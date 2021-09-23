@@ -42,7 +42,7 @@ parameters{
 
 }
 transformed parameters{
-		matrix[ N,M] alpha = X * beta;; // for generated quantities. It is cell types in the rows and samples as columns
+		matrix[ N,M] alpha = X * beta; // for generated quantities. It is cell types in the rows and samples as columns
 }
 model{
 

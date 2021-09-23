@@ -45,6 +45,7 @@ dirichlet_multinomial_glm = function(.data,
                                      percent_false_positive = 5,
                                      check_outliers = FALSE,
                                      approximate_posterior_inference = TRUE,
+                                     variance_association = FALSE,
                                      verbose = TRUE,
                                      cores = detect_cores(), # For development purpose,
                                      seed = sample(1:99999, size = 1)
@@ -58,6 +59,8 @@ dirichlet_multinomial_glm = function(.data,
     data_to_spread (.data, formula, !!.sample, !!.cell_type, !!.count) %>%
     data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference= approximate_posterior_inference)
 
+  false_positive_rate = percent_false_positive/100
+
   # Produce data list
   if(!check_outliers){
 
@@ -70,7 +73,8 @@ dirichlet_multinomial_glm = function(.data,
       fit %>%
       parse_fit(data_for_model, ., censoring_iteration = 1, chains)
 
-    parsed_fit %>%
+    return_df =
+      parsed_fit %>%
       {
         # Add precision as attribute
         add_attr(.,
@@ -78,7 +82,7 @@ dirichlet_multinomial_glm = function(.data,
                  "precision"
         )
       } %>%
-      beta_to_CI(censoring_iteration = 1, false_positive_rate = percent_false_positive/100 ) %>%
+      beta_to_CI(censoring_iteration = 1, false_positive_rate = false_positive_rate ) %>%
 
       # Join filtered
       mutate(
@@ -101,14 +105,15 @@ dirichlet_multinomial_glm = function(.data,
 
     .data_1 =
       .data %>%
-      fit_model_and_parse_out_no_missing_data(data_for_model, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4, seed = seed)
+      fit_model_and_parse_out_no_missing_data(data_for_model, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
 
     .data_2 =
       .data_1 %>%
       select(-contains("posterior")) %>%
-      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
+      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed, approximate_posterior_inference = approximate_posterior_inference, false_positive_rate = false_positive_rate)
 
-    .data_2 %>%
+    return_df =
+      .data_2 %>%
 
       # Join filtered
       mutate(
@@ -132,13 +137,19 @@ dirichlet_multinomial_glm = function(.data,
 
   }
 
+  return_df %>%
+
+    # Attach association mean concentration
+    add_attr(attr(.data_2, "fit"), "fit") %>%
+    add_attr(data_for_model, "model_input")
+
 
 }
 
 #' @importFrom rlang :=
 #' @importFrom purrr map2_lgl
 #' @importFrom stats setNames
-fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formula, .sample, .cell_type, .count, iteration = 1, chains, seed){
+fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formula, .sample, .cell_type, .count, iteration = 1, chains, seed, approximate_posterior_inference){
 
 
   # Prepare column same enquo
@@ -147,7 +158,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
   .count = enquo(.count)
 
   # Run the first discovery phase with permissive false discovery rate
-  fit_and_generated  = fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains= 4, output_samples = 5000, seed= seed)
+  fit_and_generated  = fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains= 4, output_samples = 5000, seed= seed, approximate_posterior_inference = approximate_posterior_inference)
 
   # Integrate
   .data %>%
@@ -196,7 +207,8 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
 
 #' @importFrom rlang :=
 #' @importFrom stats C
-fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference){
+#' @importFrom rstan sflist2stanfit
+fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference, false_positive_rate){
 
 
   # Prepare column same enquo
@@ -267,7 +279,7 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
     rename(.draw_imputation = .draw) %>%
     nest(data = -c(.chain ,.iteration, .draw_imputation ,.variable)) %>%
     sample_n(100) %>%
-    mutate(fit = furrr::future_map(
+    mutate(fit_list = furrr::future_map(
       data,
       ~ {
         data_for_model$y =
@@ -278,20 +290,43 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
           as_matrix(rownames = "N")
 
         # Run model
-        fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains=1, output_samples = 200, seed = seed)
+        fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains=1, output_samples = 200, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
       }
     )) %>%
 
     # Add precision
     mutate(precision = map(
-      fit,
+      fit_list,
       ~ attr(.x, "precision")
+    )) %>%
+    mutate(fit = map(
+      fit_list,
+      ~ attr(.x, "fit")
     ))
+
+  fit = beta_posterior_corrected %>% pull(fit) %>% sflist2stanfit()
+
+  beta_summary =
+    summary_to_tibble(
+    fit, "beta", "C","M",
+    probs=c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
+  ) %>%
+    select(-.variable, -n_eff, -Rhat, -mean, -se_mean,  -  sd) %>%
+    setNames(c(colnames(.)[1:2], ".lower", ".median", ".upper")) %>%
+    left_join(
+      tibble(
+        C=1:ncol(data_for_model$X),
+        C_name = colnames(data_for_model$X)
+      ),
+    by = "C") %>%
+    select(-C) %>%
+    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper))
+
 
   beta_posterior_corrected %>%
 
-    select(fit) %>%
-    unnest(fit) %>%
+    select(fit_list) %>%
+    unnest(fit_list) %>%
     .nest_subset(data = -c(N, M)) %>%
 
     # Merge posterior data
@@ -314,16 +349,18 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
     )) %>%
 
     # Merge posterior data
-    mutate(!!as.symbol(sprintf("beta_posterior_%s", iteration)) := map(
-      data,
-      ~ .x %>%
-        select( !!as.symbol(sprintf("beta_posterior_%s", iteration))) %>%
-        unnest( !!as.symbol(sprintf("beta_posterior_%s", iteration)))
-    )) %>%
+    left_join( beta_summary, by="M" ) %>%
 
-    left_join(
-      (.) %>% select(N, M, beta_posterior_2) %>% beta_to_CI(iteration)
-    ) %>%
+    # mutate(!!as.symbol(sprintf("beta_posterior_%s", iteration)) := map(
+    #   data,
+    #   ~ .x %>%
+    #     select( !!as.symbol(sprintf("beta_posterior_%s", iteration))) %>%
+    #     unnest( !!as.symbol(sprintf("beta_posterior_%s", iteration)))
+    # )) %>%
+    #
+    # left_join(
+    #   (.) %>% select(N, M, beta_posterior_2) %>% beta_to_CI(iteration, false_positive_rate = false_positive_rate)
+    # ) %>%
 
     select(-data) %>%
 
@@ -340,12 +377,13 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
         select(precision) %>%
         unnest(precision) %>%
         as.matrix(),
-      "precision" )
+      "precision" ) %>%
+    add_attr(  fit,  "fit" )
 
 }
 
 #' @importFrom rlang :=
-fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed){
+fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed, approximate_posterior_inference){
 
 
   # fit_discovery  = fit_model(data_for_model, model,  iteration, chains= 4, output_samples = output_samples)
@@ -359,14 +397,14 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
   )
 
 
-  fitted = parse_fit(data_for_model, fit, censoring_iteration = censoring_iteration, chains) %>%
-    {
-      # Add precision as attribute
-      add_attr(.,
-               fit %>% extract(., "precision") %$% precision,
-               "precision"
-      )
-    }
+  # fitted = parse_fit(data_for_model, fit, censoring_iteration = censoring_iteration, chains) %>%
+  #   {
+  #     # Add precision as attribute
+  #     add_attr(.,
+  #              fit %>% extract(., "precision") %$% precision,
+  #              "precision"
+  #     )
+  #   }
 
   # # For building some figure I just need the discovery run, return prematurely
   # if(just_discovery) return(res_discovery %>% filter(.variable == "counts_rng"))
@@ -390,8 +428,8 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
       by="N"
     ) %>%
 
-    # Attach beta posterior
-    left_join(fitted,  by="M") %>%
+    # # Attach beta posterior
+    # left_join(fitted,  by="M") %>%
 
     # label_deleterious_outliers()
 
@@ -399,6 +437,140 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
     add_attr(
       fit %>% extract("precision") %$% precision,
       "precision"
+    ) %>%
+    add_attr(fit, "fit")
+
+}
+
+do_inference_imputation = function(.data,
+                                   approximate_posterior_inference = FALSE,
+                                   approximate_posterior_analysis = FALSE,
+                                   cores,
+                                   additional_parameters_to_save,
+                                   to_include = tibble(N = integer(), M = integer()),
+                                   truncation_compensation = 1,
+                                   save_generated_quantities = FALSE,
+                                   inits_fx = "random",
+                                   prior_from_discovery = tibble(`.variable` = character(),
+                                                                 mean = numeric(),
+                                                                 sd = numeric()),
+                                   pass_fit = FALSE,
+                                   tol_rel_obj = 0.01,
+                                   write_on_disk = FALSE,
+                                   seed,
+                                   precision) {
+
+
+
+
+  # # if analysis approximated
+  # # If posterior analysis is approximated I just need enough
+  # how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
+  # additional_parameters_to_save = additional_parameters_to_save %>% c("lambda_log_param", "sigma_raw") %>% unique
+
+  # Correct for 0 prop ##############################
+  ###################################################
+
+  #https://www.rdocumentation.org/packages/DirichletReg/versions/0.3-0/topics/DR_data
+  fix_zeros = function(proportions){
+    ( proportions*(nrow(proportions)-1) + (1/ncol(proportions)) ) / nrow(proportions)
+  }
+  # proportions[proportions==0] = min(proportions[proportions>0])
+  # proportions = proportions/apply(proportions,1,sum)
+
+  ###################################################
+  ###################################################
+
+  # Convert to log ratios
+  .data$y  =
+    .data$y %>%
+    divide_by(rowSums(.data$y )) %>%
+    fix_zeros() %>%
+    apply(1, function(x)  x %>% boot::logit() %>% scale(scale = FALSE) %>% as.numeric) %>%
+    t()
+
+  # fit =
+  #   vb_iterative(
+  #     #stanmodels$glm_imputation,
+  #     stan_model("inst/stan/glm_imputation.stan"),
+  #     output_samples = 2000,
+  #     iter = 5000,
+  #     tol_rel_obj = 0.01,
+  #     data = list(
+  #       N = nrow(.data_clr),
+  #       M = ncol(.data_clr)-1,
+  #       y = .data_clr %>% dplyr::select(-N),
+  #       X = X
+  #     )
+  #   )
+
+
+  sampling(
+    stanmodels$glm_imputation,
+    #stan_model("glm_dirichlet_multinomial.stan"),
+    data = .data %>%
+      c(list(
+        precision = precision,
+        to_include= to_include,
+        how_namy_to_include = to_include %>% nrow,
+        I = precision %>% nrow
+      )),
+    cores = 4
+    #, iter = 5000, warmup = 300
+  )
+
+  # # Plot results
+  # fit %>%
+  #   draws_to_tibble_x_y("beta", "C", "M")
+  #
+  #   tidybayes::gather_draws(beta[C, M]) %>%
+  #   median_qi() %>%
+  #   filter(C==2) %>%
+  #   bind_cols(cell_type = colnames(.data)[-1]) %>%
+  #   ggplot(aes(forcats::fct_reorder(cell_type, .value), .value)) +
+  #   geom_point() +
+  #   geom_errorbar(aes(ymin = .lower, ymax =.upper)) +
+  #   geom_hline(yintercept = 0) +
+  #   theme_bw() +
+  #   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+
+
+
+
+
+}
+
+#' @importFrom tibble enframe
+#' @importFrom tidyr nest
+#' @importFrom tidyr unnest
+#' @importFrom boot logit
+#' @importFrom SingleCellExperiment counts
+#'
+#' @keywords internal
+#' @noRd
+generate_quantities = function(fit, data_for_model){
+
+
+  rstan::gqs(
+    stanmodels$generated_quantities,
+    #rstan::stan_model("inst/stan/generated_quantities.stan"),
+    draws =  as.matrix(fit),
+    data = list(
+      N = data_for_model$N,
+      M = data_for_model$M,
+      exposure = data_for_model$exposure
     )
+  ) %>%
+
+    extract("counts") %$% counts %>%
+    as.data.frame() %>%
+    as_tibble(rownames = "draw") %>%
+    gather(N_M, generated_quantity, -draw) %>%
+    nest(data = -N_M) %>%
+    separate(N_M, c("N", "M")) %>%
+    mutate(N = as.integer(N), M = as.integer(M)) %>%
+    unnest(data)
+
 
 }
