@@ -30,7 +30,8 @@ Imports:
     tibble,
     boot,
     lifecycle,
-    stats
+    stats,
+    tidyselect
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
