@@ -63,7 +63,17 @@ glm_multi_beta = function(input_df, formula, .sample){
   covariate_names = parse_formula(formula)
   .sample = enquo(.sample)
 
-  sampling(stanmodels$glm_multi_beta,
+  # Load model
+  if(file.exists("glm_multi_beta.rds"))
+    model_glm_multi_beta = readRDS("glm_multi_beta.rds")
+  else {
+    model_glm_multi_beta = stan_model(model_code = model_glm_multi_beta)
+    model_glm_multi_beta %>% saveRDS("glm_multi_beta.rds")
+
+  }
+
+
+  sampling(model_glm_multi_beta,
            data = list(
              N = input_df %>% nrow(),
              M = input_df %>% select(-!!.sample, -covariate_names) %>% ncol(),
