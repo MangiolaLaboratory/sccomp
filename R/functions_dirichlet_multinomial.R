@@ -16,6 +16,7 @@
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
 #' @importFrom rlang :=
+#' @importFrom rstan stan_model
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
@@ -61,13 +62,23 @@ dirichlet_multinomial_glm = function(.data,
 
   false_positive_rate = percent_false_positive/100
 
+
+  # Load model
+  if(file.exists("model_glm_dirichlet_multinomial.rds"))
+    model_glm_dirichlet_multinomial = readRDS("model_glm_dirichlet_multinomial.rds")
+  else {
+    model_glm_dirichlet_multinomial = stan_model(model_code = model_glm_dirichlet_multinomial)
+    model_glm_dirichlet_multinomial  %>% saveRDS("model_glm_dirichlet_multinomial.rds")
+
+  }
+
   # Produce data list
   if(!check_outliers){
 
    fit =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed, approximate_posterior_inference= approximate_posterior_inference)
+      fit_model(model_glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed, approximate_posterior_inference= approximate_posterior_inference)
 
     parsed_fit =
       fit %>%
@@ -105,12 +116,12 @@ dirichlet_multinomial_glm = function(.data,
 
     .data_1 =
       .data %>%
-      fit_model_and_parse_out_no_missing_data(data_for_model, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
+      fit_model_and_parse_out_no_missing_data(data_for_model, model_glm_dirichlet_multinomial, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
 
     .data_2 =
       .data_1 %>%
       select(-contains("posterior")) %>%
-      fit_model_and_parse_out_missing_data(formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed, approximate_posterior_inference = approximate_posterior_inference, false_positive_rate = false_positive_rate)
+      fit_model_and_parse_out_missing_data(model_glm_dirichlet_multinomial, formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed, approximate_posterior_inference = approximate_posterior_inference, false_positive_rate = false_positive_rate)
 
     return_df =
       .data_2 %>%
@@ -149,7 +160,7 @@ dirichlet_multinomial_glm = function(.data,
 #' @importFrom rlang :=
 #' @importFrom purrr map2_lgl
 #' @importFrom stats setNames
-fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formula, .sample, .cell_type, .count, iteration = 1, chains, seed, approximate_posterior_inference){
+fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration = 1, chains, seed, approximate_posterior_inference){
 
 
   # Prepare column same enquo
@@ -158,7 +169,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
   .count = enquo(.count)
 
   # Run the first discovery phase with permissive false discovery rate
-  fit_and_generated  = fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains= 4, output_samples = 5000, seed= seed, approximate_posterior_inference = approximate_posterior_inference)
+  fit_and_generated  = fit_and_generate_quantities(data_for_model, model_glm_dirichlet_multinomial, iteration, chains= 4, output_samples = 5000, seed= seed, approximate_posterior_inference = approximate_posterior_inference)
 
   # Integrate
   .data %>%
@@ -208,7 +219,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, formul
 #' @importFrom rlang :=
 #' @importFrom stats C
 #' @importFrom rstan sflist2stanfit
-fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference, false_positive_rate){
+fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference, false_positive_rate){
 
 
   # Prepare column same enquo
@@ -290,7 +301,7 @@ fit_model_and_parse_out_missing_data = function(.data, formula, .sample, .cell_t
           as_matrix(rownames = "N")
 
         # Run model
-        fit_and_generate_quantities(data_for_model, stanmodels$glm_dirichlet_multinomial, iteration, chains=1, output_samples = 200, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
+        fit_and_generate_quantities(data_for_model, model_glm_dirichlet_multinomial, iteration, chains=1, output_samples = 200, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
       }
     )) %>%
 
@@ -504,9 +515,17 @@ do_inference_imputation = function(.data,
   #     )
   #   )
 
+  # Load model
+  if(file.exists("model_glm_dirichlet_multinomial_imputation.rds"))
+    model_imputation = readRDS("model_glm_dirichlet_multinomial_imputation.rds")
+  else {
+    model_imputation = stan_model(model_code = glm_dirichlet_multinomial_imputation)
+    model_imputation  %>% saveRDS("model_glm_dirichlet_multinomial_imputation.rds")
+
+  }
 
   sampling(
-    stanmodels$glm_imputation,
+    model_imputation,
     #stan_model("glm_dirichlet_multinomial.stan"),
     data = .data %>%
       c(list(
@@ -551,9 +570,17 @@ do_inference_imputation = function(.data,
 #' @noRd
 generate_quantities = function(fit, data_for_model){
 
+  if(file.exists("model_glm_dirichlet_multinomial_generate_quantities.rds"))
+    model_generate = readRDS("model_glm_dirichlet_multinomial_generate_quantities.rds")
+  else {
+    model_generate = stan_model(model_code = glm_dirichlet_multinomial_generate_quantities)
+    model_generate  %>% saveRDS("model_glm_dirichlet_multinomial_generate_quantities.rds")
+
+  }
+
 
   rstan::gqs(
-    stanmodels$generated_quantities,
+    model_generate,
     #rstan::stan_model("inst/stan/generated_quantities.stan"),
     draws =  as.matrix(fit),
     data = list(
