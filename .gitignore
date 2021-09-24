@@ -21,3 +21,6 @@ dev/*.gz
 dev/*csv
 dmbvs-pid-50624.out
 dmbvs-pid-39940.out
+model_glm_dirichlet_multinomial.rds
+model_glm_dirichlet_multinomial_generate_quantities.rds
+model_glm_dirichlet_multinomial_imputation.rds
