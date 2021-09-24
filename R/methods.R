@@ -397,7 +397,10 @@ sccomp_glm_data_frame_counts = function(.data,
       cores = cores,
       verbose = verbose,
       seed = seed
-    )
+    ) %>%
+    
+    # Track noise model
+    add_attr(noise_model, "noise_model")
 }
 
 
@@ -477,7 +480,8 @@ simulate_data.data.frame = function(.data,
       attr(.data, "model_input"),
       .sample = !!.sample,
       .cell_group = !!.cell_group,
-      number_of_draws = number_of_draws
+      number_of_draws = number_of_draws,
+      noise_model = attr(.data, "noise_model")
     )
 
   # .sample = enquo(.sample)

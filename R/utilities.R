@@ -234,7 +234,7 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #'
 #' @keywords internal
 #' @noRd
-draws_to_tibble_x_y = function(fit, par, x, y) {
+draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
@@ -243,6 +243,7 @@ draws_to_tibble_x_y = function(fit, par, x, y) {
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = 1:n()) %>%
+    sample_n(number_of_draws)%>%
     pivot_longer(
       names_to = c("dummy", ".chain", ".variable", x, y),
       cols = contains(par),
@@ -270,7 +271,7 @@ draws_to_tibble_x_y = function(fit, par, x, y) {
 
 }
 
-draws_to_tibble_x = function(fit, par, x) {
+draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
@@ -688,7 +689,7 @@ get_probability_non_zero = function(.data){
 #'
 parse_generated_quantities = function(rng, number_of_draws = 1){
 
-  draws_to_tibble_x_y(rng, "counts", "N", "M") %>%
+  draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) %>%
     with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/sum(.value))) %>%
     filter(.draw<= number_of_draws) %>%
     rename(generated_counts = .value, replicate = .draw) %>%
@@ -696,15 +697,20 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 
 }
 
-replicate_dataset = function(fit, model_input, .sample, .cell_group, number_of_draws = 1){
+replicate_dataset = function(fit, model_input, .sample, .cell_group, number_of_draws = 1, noise_model){
 
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
 
+  # Select model based on noise model
+  my_model = noise_model %>% when(
+    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date, 
+    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  )
+  
   # Generate quantities
   rstan::gqs(
-    stanmodels$glm_multi_beta_binomial_generate_date,
-    #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+    my_model,
     draws =  as.matrix(fit ),
     data = model_input
   ) %>%

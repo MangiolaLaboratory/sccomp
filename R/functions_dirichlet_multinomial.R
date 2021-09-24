@@ -67,7 +67,7 @@ dirichlet_multinomial_glm = function(.data,
   if(file.exists("model_glm_dirichlet_multinomial.rds"))
     model_glm_dirichlet_multinomial = readRDS("model_glm_dirichlet_multinomial.rds")
   else {
-    model_glm_dirichlet_multinomial = stan_model(model_code = model_glm_dirichlet_multinomial)
+    model_glm_dirichlet_multinomial = stan_model(model_code = glm_dirichlet_multinomial)
     model_glm_dirichlet_multinomial  %>% saveRDS("model_glm_dirichlet_multinomial.rds")
 
   }
@@ -121,7 +121,17 @@ dirichlet_multinomial_glm = function(.data,
     .data_2 =
       .data_1 %>%
       select(-contains("posterior")) %>%
-      fit_model_and_parse_out_missing_data(model_glm_dirichlet_multinomial, formula, !!.sample, !!.cell_type, !!.count, iteration = 2, seed = seed, approximate_posterior_inference = approximate_posterior_inference, false_positive_rate = false_positive_rate)
+      fit_model_and_parse_out_missing_data(
+        model_glm_dirichlet_multinomial,
+        formula, 
+        !!.sample, 
+        !!.cell_type,
+        !!.count, 
+        iteration = 2, 
+        seed = seed,
+        approximate_posterior_inference = approximate_posterior_inference, 
+        false_positive_rate = false_positive_rate
+      )
 
     return_df =
       .data_2 %>%
@@ -131,20 +141,7 @@ dirichlet_multinomial_glm = function(.data,
         significant =
           !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
           !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-      ) %>%
-
-      # #Join unfiltered
-      # mutate(significant_pre_filtering = map_lgl(
-      #   beta_quantiles_1,
-      #   ~ .x$`2.5%` * .x$`97.5%` > 0
-      # )) %>%
-
-      # Define outlier
-      rename(outlier = outlier_2 ) %>%
-
-      # Clean
-      select(-N, -M, -contains("posterior")) %>%
-      select(!!.cell_type, everything())
+      ) 
 
   }
 
@@ -168,8 +165,11 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
 
+  model_generate = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  
+  
   # Run the first discovery phase with permissive false discovery rate
-  fit_and_generated  = fit_and_generate_quantities(data_for_model, model_glm_dirichlet_multinomial, iteration, chains= 4, output_samples = 5000, seed= seed, approximate_posterior_inference = approximate_posterior_inference)
+  fit_and_generated  = fit_and_generate_quantities(data_for_model, model_glm_dirichlet_multinomial, model_generate, iteration, chains= 4, output_samples = 5000, seed= seed, approximate_posterior_inference = approximate_posterior_inference)
 
   # Integrate
   .data %>%
@@ -284,6 +284,9 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     install.packages("furrr", repos = "https://cloud.r-project.org")
   }
 
+  model_generate = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  
+  
   beta_posterior_corrected =
     fit_imputation %>%
     draws_to_tibble_x_y("counts", "N", "M") %>%
@@ -301,7 +304,7 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
           as_matrix(rownames = "N")
 
         # Run model
-        fit_and_generate_quantities(data_for_model, model_glm_dirichlet_multinomial, iteration, chains=1, output_samples = 200, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
+        fit_and_generate_quantities(data_for_model, model_glm_dirichlet_multinomial, model_generate, iteration, chains=1, output_samples = 200, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
       }
     )) %>%
 
@@ -333,24 +336,33 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     select(-C) %>%
     pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper))
 
-
-  beta_posterior_corrected %>%
-
+# Detect outliers
+  outlier_df =
+    beta_posterior_corrected %>%
+    
     select(fit_list) %>%
     unnest(fit_list) %>%
     .nest_subset(data = -c(N, M)) %>%
-
+    
     # Merge posterior data
-    mutate(!!as.symbol(sprintf("generated_data_posterior_%s", iteration)) := map(
-      data,
-      ~ .x %>%
-        select( !!as.symbol(sprintf("generated_data_posterior_%s", iteration))) %>%
-        unnest( !!as.symbol(sprintf("generated_data_posterior_%s", iteration)))
-    )) %>%
-
+    mutate(!!as.symbol(sprintf(
+      "generated_data_posterior_%s", iteration
+    )) := map(data,
+              ~ .x %>%
+                select(!!as.symbol(
+                  sprintf("generated_data_posterior_%s", iteration)
+                )) %>%
+                unnest(!!as.symbol(
+                  sprintf("generated_data_posterior_%s", iteration)
+                )))) %>%
+    
     # Add theoretical data quantiles
-    mutate(!!as.symbol(sprintf("generated_data_quantiles_%s", iteration)) := map(
-      !!as.symbol(sprintf("generated_data_posterior_%s", iteration)),
+    mutate(!!as.symbol(sprintf(
+      "generated_data_quantiles_%s", iteration
+    )) := map(
+      !!as.symbol(sprintf(
+        "generated_data_posterior_%s", iteration
+      )),
       ~ quantile(
         .x$generated_quantity,
         probs = c(0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975)
@@ -358,29 +370,30 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
         enframe() %>%
         spread(name, value)
     )) %>%
-
-    # Merge posterior data
-    left_join( beta_summary, by="M" ) %>%
-
-    # mutate(!!as.symbol(sprintf("beta_posterior_%s", iteration)) := map(
-    #   data,
-    #   ~ .x %>%
-    #     select( !!as.symbol(sprintf("beta_posterior_%s", iteration))) %>%
-    #     unnest( !!as.symbol(sprintf("beta_posterior_%s", iteration)))
-    # )) %>%
-    #
-    # left_join(
-    #   (.) %>% select(N, M, beta_posterior_2) %>% beta_to_CI(iteration, false_positive_rate = false_positive_rate)
-    # ) %>%
-
+    
     select(-data) %>%
+    
+    right_join(.data %>% select(!!.count, N, M)) %>%
+    unnest(!!as.symbol(
+      sprintf("generated_data_quantiles_%s", iteration))) %>%
+  
+  
+    mutate(!!as.symbol(sprintf("outlier_%s", iteration)) := !!.count < `5%` | !!.count > `95%`) %>%
+             
+    select(N, M, outlier = !!as.symbol(sprintf("outlier_%s", iteration)), .lower = `5%`, .median = `50%`, .upper = `95%`)
+  
+count_data = 
+  .data %>%
+  left_join(outlier_df, by = c("N", "M") ) %>%
+  select(-M, -N) %>%
+  nest(count_data = -!!.cell_type)
 
-    right_join( .data) %>%
-
-    mutate(!!as.symbol(sprintf("outlier_%s", iteration)) := map2_lgl(
-      !!.count, !!as.symbol(sprintf("generated_data_quantiles_%s", iteration)),
-      ~ .x < .y$`5%` | .x > .y$`95%`)
-    ) %>%
+beta_summary %>%
+  
+  left_join(.data %>% select(!!.cell_type, M), by = "M") %>%
+  select(-M) %>%
+  left_join(  count_data, by = "cell_group"  ) %>%
+  select(!!.cell_type, everything()) %>%
 
     # Add precision as attribute
     add_attr(
@@ -394,7 +407,7 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
 }
 
 #' @importFrom rlang :=
-fit_and_generate_quantities = function(data_for_model, model, censoring_iteration, chains, output_samples = 2000, seed, approximate_posterior_inference){
+fit_and_generate_quantities = function(data_for_model, model, model_generate, censoring_iteration, chains, output_samples = 2000, seed, approximate_posterior_inference){
 
 
   # fit_discovery  = fit_model(data_for_model, model,  iteration, chains= 4, output_samples = output_samples)
@@ -421,7 +434,7 @@ fit_and_generate_quantities = function(data_for_model, model, censoring_iteratio
   # if(just_discovery) return(res_discovery %>% filter(.variable == "counts_rng"))
 
   # Generate theoretical data
-  generated_discovery = generate_quantities(fit,  data_for_model)
+  generated_discovery = generate_quantities(fit,  data_for_model, model_generate)
 
   # Integrate
   data_for_model$X %>%
@@ -560,6 +573,8 @@ do_inference_imputation = function(.data,
 
 }
 
+
+
 #' @importFrom tibble enframe
 #' @importFrom tidyr nest
 #' @importFrom tidyr unnest
@@ -568,16 +583,7 @@ do_inference_imputation = function(.data,
 #'
 #' @keywords internal
 #' @noRd
-generate_quantities = function(fit, data_for_model){
-
-  if(file.exists("model_glm_dirichlet_multinomial_generate_quantities.rds"))
-    model_generate = readRDS("model_glm_dirichlet_multinomial_generate_quantities.rds")
-  else {
-    model_generate = stan_model(model_code = glm_dirichlet_multinomial_generate_quantities)
-    model_generate  %>% saveRDS("model_glm_dirichlet_multinomial_generate_quantities.rds")
-
-  }
-
+generate_quantities = function(fit, data_for_model, model_generate){
 
   rstan::gqs(
     model_generate,
@@ -600,4 +606,15 @@ generate_quantities = function(fit, data_for_model){
     unnest(data)
 
 
+}
+
+get_model_from_data = function(file_compiled_model, model_code){
+  if(file.exists(file_compiled_model))
+    readRDS(file_compiled_model)
+  else {
+    model_generate = stan_model(model_code = model_code)
+    model_generate  %>% saveRDS(file_compiled_model)
+    model_generate
+    
+  }
 }
