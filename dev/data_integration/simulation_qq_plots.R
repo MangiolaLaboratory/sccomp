@@ -57,6 +57,7 @@ data_for_plot =
             arrange(generated_proportions ) %>%
             mutate(sample = 1:n() )
         )
+
     )) %>%
 
     # Calculate proportion
@@ -87,7 +88,8 @@ data_for_plot =
         broom::tidy() %>%
         filter(term!="(Intercept)") %>%
         pull(estimate )
-    ))
+    )) %>%
+  mutate(median_proportion = map_dbl( data, ~ median(.x$proportion) ))
 
 # Import data
 
@@ -108,9 +110,22 @@ plot_qq =
 plot_slopes =
   data_for_plot  %>%
   ggplot(aes(slope, color=dataset))+
+  geom_vline(xintercept = 1,linetype="dashed", color="grey" ) +
   geom_density() +
   scale_color_brewer(palette="Set1") +
   scale_x_log10() +
+  multipanel_theme
+
+
+plot_slopes_median_proportion =
+  data_for_plot %>%
+  ggplot(aes(median_proportion, slope)) +
+  geom_hline(yintercept  = 1,linetype="dashed", color="grey" ) +
+  geom_point(aes(color=dataset)) +
+  geom_smooth(color="black", aes=0.4, size=0.4) +
+  scale_x_continuous(trans="logit") +
+  scale_y_log10() +
+  scale_color_brewer(palette="Set1")  +
   multipanel_theme
 
 ( plot_qq / plot_slopes ) +
