@@ -392,7 +392,7 @@ beta_summary %>%
   
   left_join(.data %>% select(!!.cell_type, M), by = "M") %>%
   select(-M) %>%
-  left_join(  count_data, by = "cell_group"  ) %>%
+  left_join(  count_data, by = quo_name(.cell_type)  ) %>%
   select(!!.cell_type, everything()) %>%
 
     # Add precision as attribute
