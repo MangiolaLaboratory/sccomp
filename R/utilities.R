@@ -243,7 +243,9 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = 1:n()) %>%
-    sample_n(number_of_draws)%>%
+    
+    when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
+    
     pivot_longer(
       names_to = c("dummy", ".chain", ".variable", x, y),
       cols = contains(par),
