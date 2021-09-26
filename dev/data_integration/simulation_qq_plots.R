@@ -21,19 +21,24 @@ multipanel_theme =
     axis.text.x = element_text(size=6),
     axis.text.y = element_text(size=6),
     strip.text.x = element_text(size = 7),
-    strip.text.y = element_text(size = 7)
+    strip.text.y = element_text(size = 7),
+
+    # legend
+    legend.key.size = unit(5, 'mm'),
+    legend.title = element_text(size=7),
+    legend.text = element_text(size=6)
   )
 
-estimate_beta_binomial = 
-  
+estimate_beta_binomial =
+
   # Import data multi beta
   tribble(
     ~dataset, ~data,
     "oligo",
     readRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds") %>%
       rename(cell_type = cell_group),
-    # "UVM",
-    # readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds"),
+    "UVM",
+    readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds"),
     "renal_cell_carcinoma",
     readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds"),
     "bc_cells",
@@ -44,18 +49,18 @@ estimate_beta_binomial =
     "melanoma",
     readRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
   ) %>%
-  mutate(method = "beta_binomial") 
+  mutate(method = "beta_binomial")
 
-estimate_dirichlet_multinomial = 
-  
+estimate_dirichlet_multinomial =
+
   # Import data multi beta
   tribble(
     ~dataset, ~data,
     "oligo",
     readRDS("dev/data_integration/estimate_dirichlet_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds") %>%
       rename(cell_type = cell_group),
-    # "UVM",
-    # readRDS("dev/data_integration/estimate_dirichlet_GSE139829_uveal_melanoma.rds"),
+    "UVM",
+    readRDS("dev/data_integration/estimate_dirichlet_GSE139829_uveal_melanoma.rds"),
     "renal_cell_carcinoma",
     readRDS("dev/data_integration/estimate_dirichlet_SCP1288_renal_cell_carcinoma.rds"),
     "bc_cells",
@@ -66,14 +71,14 @@ estimate_dirichlet_multinomial =
     "melanoma",
     readRDS("dev/data_integration/estimate_dirichlet_GSE120575_melanoma.rds")
   ) %>%
-  mutate(method = "dirichlet_multinomial") 
+  mutate(method = "dirichlet_multinomial")
 
-data_for_plot =  
+data_for_plot =
   bind_rows(
     estimate_beta_binomial,
     estimate_dirichlet_multinomial
   ) %>%
-  
+
   # Simulate
   mutate(simulation = map(
     data,
@@ -87,7 +92,7 @@ data_for_plot =
           mutate(sample = 1:n() )
       )
   )) %>%
-  
+
   # Calculate proportion
   mutate(data = map(
     data,
@@ -97,7 +102,7 @@ data_for_plot =
       with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) %>%
       with_groups(cell_type, ~.x %>% arrange(proportion) %>%  mutate(sample = 1:n() ))
   )) %>%
-  
+
   # Join data
   mutate(data = map2(
     data, simulation,
@@ -105,8 +110,8 @@ data_for_plot =
       mutate(difference_proportion = generated_proportions - proportion )
   )) %>%
   select(-simulation) %>%
-  
-  
+
+
   # linear model for qq plot
   unnest(data) %>%
   filter(!outlier) %>%
@@ -125,24 +130,28 @@ data_for_plot =
 
 plot_qq =
   data_for_plot %>%
+  filter(method=="beta_binomial") %>%
   unnest(data) %>%
   ggplot(aes(proportion, generated_proportions, group=cell_type)) +
   geom_point(size=0.2, alpha=0.5) +
   geom_smooth(aes(color=dataset), method = "lm", se = FALSE, size=0.2, alpha=0.5) +
-  facet_wrap(method~dataset) +
+  facet_wrap(~dataset) +
   geom_abline(linetype="dashed", color="grey") +
   scale_color_brewer(palette="Set1") +
   scale_x_continuous(trans="logit") +
   scale_y_continuous(trans="logit") +
+  guides(color = "none") +
   multipanel_theme
 
 plot_slopes =
   data_for_plot  %>%
+  filter(method=="beta_binomial") %>%
   ggplot(aes(slope, color=dataset))+
   geom_density() +
-  facet_wrap(~method) +
+  #facet_wrap(~method) +
   scale_color_brewer(palette="Set1") +
-  scale_x_log10() +
+  # scale_x_log10() +
+  guides(color = "none") +
   multipanel_theme
 
 plot_slopes_median_proportion =
@@ -157,6 +166,27 @@ plot_slopes_median_proportion =
   scale_color_brewer(palette="Set1")  +
   multipanel_theme
 
-( plot_qq / plot_slopes ) +
-  plot_layout(guides = 'collect', ) &
+p =
+  ( plot_qq / ( plot_slopes + plot_slopes_median_proportion +  plot_layout(widths = c(1,2)) ) ) +
+  plot_layout(guides = 'collect', heights  = c(2,1)) + plot_annotation(tag_levels = c('A')) &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"),  legend.key.size = unit(0.2, 'cm'), legend.position = "bottom")
+
+p
+
+ggsave(
+  "dev/qq_plot.pdf",
+  plot = p,
+  units = c("mm"),
+  width = 183 ,
+  height = 130 ,
+  limitsize = FALSE
+)
+
+ggsave(
+  "dev/qq_plot.png",
+  plot = p,
+  units = c("mm"),
+  width = 183 ,
+  height = 130 ,
+  limitsize = FALSE
+)
