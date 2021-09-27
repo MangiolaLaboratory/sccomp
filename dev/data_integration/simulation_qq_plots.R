@@ -1,33 +1,21 @@
 # simulation QQ plots
 
-library(tidyverse)
+# library(tidyverse)
+
+library(dplyr)
+library(ggplot2)
+library(tibble)
+library(purrr)
+library(stringr)
+
 library(tidyseurat)
 library(sccomp)
 library(job)
 library(patchwork)
 
-multipanel_theme =
-  theme_bw() +
-  theme(
-    panel.border = element_blank(),
-    axis.line = element_line(size=0.5),
-    panel.grid.major = element_line(size = 0.2),
-    panel.grid.minor = element_line(size = 0.1),
-    legend.position = "bottom",
-    strip.background = element_blank(),
-    axis.title.y = element_text(margin = margin(t = 0, r = 0, b = 0, l = 0), size = 7),
-    axis.title.x = element_text(margin = margin(t = 0, r = 0, b = 0, l = 0), size = 7),
-    panel.spacing.x=unit(0.1, "lines"),
-    axis.text.x = element_text(size=6),
-    axis.text.y = element_text(size=6),
-    strip.text.x = element_text(size = 7),
-    strip.text.y = element_text(size = 7),
+# Load multipanel_theme
+source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/aa32b0d3359a2c5d337c90f526348a3f28c64d5a/ggplot_theme_multipanel")
 
-    # legend
-    legend.key.size = unit(5, 'mm'),
-    legend.title = element_text(size=7),
-    legend.text = element_text(size=6)
-  )
 
 estimate_beta_binomial =
 
@@ -125,7 +113,85 @@ data_for_plot =
   ))  %>%
   mutate(median_proportion = map_dbl( data, ~ median(.x$proportion) ))
 
-# Import data
+# Boxplot posterior predictive check
+data_proportion =
+  readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds") %>%
+  distinct() %>%
+  unnest(count_data) %>%
+  select(cell_type, sample, outlier, count, is_critical, significant, .median_is_criticalTRUE) %>%
+  with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) )
+
+simulated_proportion =
+  readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds") %>%
+  simulate_data(sample, cell_type, number_of_draws = 10) %>%
+  unnest(generated_data) %>%
+  left_join(data_proportion %>% distinct(is_critical, sample, cell_type, .median_is_criticalTRUE))
+
+data_simulation_process =
+  list(
+    data_proportion %>% mutate(step = "Data (proportion representation)") %>% mutate(outlier = FALSE) %>% mutate(.median_is_criticalTRUE = NA),
+    data_proportion %>% mutate(step = "Outlier identification") %>% mutate(.median_is_criticalTRUE = NA),
+    data_proportion %>% mutate(step = "Model fitting"),
+    simulated_proportion %>% rename(proportion = generated_proportions) %>% mutate(step = "Data simulation") %>% filter(replicate==1) %>% mutate(outlier = FALSE) %>% mutate(.median_is_criticalTRUE = NA)
+  ) %>%
+  reduce(bind_rows) %>%
+  filter(cell_type == "Neu") %>%
+  mutate(step = forcats::fct_relevel(step, unique(.$step)))
+
+
+# PLOTS
+
+
+plot_simulation_process =
+  ggplot() +
+
+  geom_boxplot(
+    aes(is_critical, proportion, fill = factor(.median_is_criticalTRUE)),
+    outlier.shape = NA,
+    data = data_simulation_process |> filter(!outlier),
+    fatten = 0.5, size=0.5,
+  ) +
+  geom_point(aes(is_critical, proportion, color=outlier, shape=outlier), position = position_jitter(seed = 41), size = 1, data = data_simulation_process) +
+  facet_wrap(~step, ncol = 1) +
+  scale_color_manual(values = c("black", "#e11f28")) +
+  scale_fill_manual(values = "#dd6572", na.value = "white") +
+  scale_y_continuous(labels = dropLeadingZero) +
+  xlab("Biological condition") +
+  ylab("Cell-group proportion (decimal)") +
+  guides(fill = "none", shape="none", color="none") +
+  coord_cartesian( clip = "off") +
+  multipanel_theme +
+  theme(strip.clip = "off")
+
+
+plot_boxplot =
+  ggplot() +
+
+  geom_boxplot(
+    aes(is_critical, proportion, fill=.median_is_criticalTRUE),
+    outlier.shape = NA,
+    data = data_proportion |> filter(!outlier), fatten = 0.5, size=0.5,
+  ) +
+  geom_jitter(aes(is_critical, proportion, shape=outlier, color = .median_is_criticalTRUE),  data = data_proportion) +
+
+  geom_boxplot(
+    aes(is_critical, generated_proportions),
+    outlier.shape = NA, alpha=0.2,
+    data = simulated_proportion, fatten = 0.5, size=0.5,
+  ) +
+  geom_jitter(aes(is_critical, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
+
+  facet_wrap(~ forcats::fct_reorder(cell_type, abs(.median_is_criticalTRUE), .desc = TRUE), scales = "free_y", nrow = 4) +
+  #scale_color_manual(values = c("black", "#e11f28")) +
+  #scale_fill_manual(values = c("white", "#E2D379")) +
+  scale_fill_distiller(palette = "Spectral") +
+  scale_color_distiller(palette = "Spectral") +
+  scale_y_continuous(labels = dropLeadingZero) +
+  xlab("Biological condition") +
+  ylab("Cell-group proportion") +
+  multipanel_theme +
+  theme(axis.title.y = element_blank())
+
 
 
 plot_qq =
@@ -134,42 +200,63 @@ plot_qq =
   unnest(data) %>%
   ggplot(aes(proportion, generated_proportions, group=cell_type)) +
   geom_point(size=0.2, alpha=0.5) +
-  geom_smooth(aes(color=dataset), method = "lm", se = FALSE, size=0.2, alpha=0.5) +
+  geom_smooth(aes(color=dataset), method = "lm", se = FALSE, size=0.2, alpha=0.3) +
   facet_wrap(~dataset) +
   geom_abline(linetype="dashed", color="grey") +
-  scale_color_brewer(palette="Set1") +
-  scale_x_continuous(trans="logit") +
-  scale_y_continuous(trans="logit") +
+  scale_color_manual(values = friendly_cols) +
+  scale_x_continuous(trans="logit", labels = dropLeadingZero) +
+  scale_y_continuous(trans="logit", labels = dropLeadingZero) +
+  xlab("Observed proportion (decimal)") +
+  ylab("Simulated proportion (decimal)") +
   guides(color = "none") +
   multipanel_theme
 
 plot_slopes =
   data_for_plot  %>%
+  filter(median_proportion > 0) %>%
   filter(method=="beta_binomial") %>%
   ggplot(aes(slope, color=dataset))+
   geom_density() +
   #facet_wrap(~method) +
-  scale_color_brewer(palette="Set1") +
+  scale_color_manual(values = friendly_cols) +
   # scale_x_log10() +
+  xlab("Slope qq-plot") +
+  ylab("Density") +
   guides(color = "none") +
   multipanel_theme
 
 plot_slopes_median_proportion =
   data_for_plot %>%
+  filter(median_proportion > 0) %>%
   ggplot(aes(median_proportion, slope)) +
   geom_hline(yintercept  = 0,linetype="dashed", color="grey" ) +
-  geom_point(aes(color=dataset)) +
+  geom_point(aes(color=dataset), size=0.4) +
   geom_smooth(color="black", aes=0.4, size=0.4, method="lm") +
   facet_wrap(~method) +
-  scale_x_continuous(trans="logit") +
+  scale_x_continuous(trans="logit", labels = dropLeadingZero) +
   #scale_y_log10() +
-  scale_color_brewer(palette="Set1")  +
+  ylab("Slope qq-plot") +
+  xlab("Median observed proportion (decimal)") +
+  scale_color_manual(values = friendly_cols)  +
   multipanel_theme
 
 p =
-  ( plot_qq / ( plot_slopes + plot_slopes_median_proportion +  plot_layout(widths = c(1,2)) ) ) +
-  plot_layout(guides = 'collect', heights  = c(2,1)) + plot_annotation(tag_levels = c('A')) &
-  theme( plot.margin = margin(0, 0, 0, 0, "pt"),  legend.key.size = unit(0.2, 'cm'), legend.position = "bottom")
+
+  (
+    # Boxplots
+    ( ( plot_simulation_process | plot_boxplot )  +  plot_layout(widths = c(1,5)) ) /
+
+
+   (
+     # Dotplot
+     plot_qq +  plot_slopes + plot_slopes_median_proportion  +
+      plot_layout(widths = c(3,1,2))
+   )
+  ) +
+
+  # Style
+  plot_layout(guides = 'collect', heights  = c(2, 1)) + plot_annotation(tag_levels = c('A')) &
+  theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom")
 
 p
 
