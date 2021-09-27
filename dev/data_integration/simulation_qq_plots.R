@@ -14,8 +14,9 @@ library(job)
 library(patchwork)
 
 # Load multipanel_theme
-source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/aa32b0d3359a2c5d337c90f526348a3f28c64d5a/ggplot_theme_multipanel")
+source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/277e451957389155767446e293fcc59b28c58278/ggplot_theme_multipanel")
 
+set.seed(42)
 
 estimate_beta_binomial =
 
@@ -37,7 +38,7 @@ estimate_beta_binomial =
     "melanoma",
     readRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
   ) %>%
-  mutate(method = "beta_binomial")
+  mutate(method = "Simplex Beta-binomial")
 
 estimate_dirichlet_multinomial =
 
@@ -59,13 +60,15 @@ estimate_dirichlet_multinomial =
     "melanoma",
     readRDS("dev/data_integration/estimate_dirichlet_GSE120575_melanoma.rds")
   ) %>%
-  mutate(method = "dirichlet_multinomial")
+  mutate(method = "Dirichlet-multinomial")
 
 data_for_plot =
   bind_rows(
     estimate_beta_binomial,
     estimate_dirichlet_multinomial
   ) %>%
+
+  mutate(method = factor(method, levels = c("Simplex Beta-binomial", "Dirichlet-multinomial"))) %>%
 
   # Simulate
   mutate(simulation = map(
@@ -106,7 +109,7 @@ data_for_plot =
   nest(data = -c(dataset, cell_type, method)) %>%
   mutate(slope = map_dbl(
     data,
-    ~ lm(difference_proportion~proportion, data=.x) %>%
+    ~ lm(generated_proportions~proportion, data=.x) %>%
       broom::tidy() %>%
       filter(term!="(Intercept)") %>%
       pull(estimate )
@@ -196,7 +199,7 @@ plot_boxplot =
 
 plot_qq =
   data_for_plot %>%
-  filter(method=="beta_binomial") %>%
+  filter(method=="Simplex Beta-binomial") %>%
   unnest(data) %>%
   ggplot(aes(proportion, generated_proportions, group=cell_type)) +
   geom_point(size=0.2, alpha=0.5) +
@@ -214,12 +217,13 @@ plot_qq =
 plot_slopes =
   data_for_plot  %>%
   filter(median_proportion > 0) %>%
-  filter(method=="beta_binomial") %>%
+  filter(method=="Simplex Beta-binomial") %>%
   ggplot(aes(slope, color=dataset))+
+  geom_vline(xintercept  = 1,linetype="dashed", color="grey" ) +
   geom_density() +
   #facet_wrap(~method) +
   scale_color_manual(values = friendly_cols) +
-  # scale_x_log10() +
+   scale_x_log10() +
   xlab("Slope qq-plot") +
   ylab("Density") +
   guides(color = "none") +
@@ -229,16 +233,16 @@ plot_slopes_median_proportion =
   data_for_plot %>%
   filter(median_proportion > 0) %>%
   ggplot(aes(median_proportion, slope)) +
-  geom_hline(yintercept  = 0,linetype="dashed", color="grey" ) +
+  geom_hline(yintercept  = 1,linetype="dashed", color="grey" ) +
   geom_point(aes(color=dataset), size=0.4) +
   geom_smooth(color="black", aes=0.4, size=0.4, method="lm") +
   facet_wrap(~method) +
   scale_x_continuous(trans="logit", labels = dropLeadingZero) +
-  #scale_y_log10() +
+  scale_y_log10() +
   ylab("Slope qq-plot") +
   xlab("Median observed proportion (decimal)") +
   scale_color_manual(values = friendly_cols)  +
-  multipanel_theme
+  multipanel_theme + theme(strip.clip = "off")
 
 p =
 
