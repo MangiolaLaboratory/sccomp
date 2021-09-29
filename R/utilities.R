@@ -243,9 +243,9 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = 1:n()) %>%
-    
+
     when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
-    
+
     pivot_longer(
       names_to = c("dummy", ".chain", ".variable", x, y),
       cols = contains(par),
@@ -573,13 +573,20 @@ data_simulation_to_model_input =
 
     covariate_names = parse_formula(formula)
 
-    X =
+    sample_data =
       .data %>%
       select(!!.sample, covariate_names) %>%
       distinct() %>%
-      arrange(!!.sample) %>%
+      arrange(!!.sample)
+    X =
+      sample_data %>%
       model.matrix(formula, data=.) %>%
-      apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=FALSE)))
+      apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=FALSE))) %>%
+      {
+        .x = (.)
+        rownames(.x) = sample_data %>% pull(!!.sample)
+        .x
+      }
 
     XA = variance_association %>%
       when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,1:2, drop=FALSE]) %>%
@@ -699,39 +706,3 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 
 }
 
-replicate_dataset = function(fit, model_input, .sample, .cell_group, number_of_draws = 1, noise_model){
-
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-
-  # Select model based on noise model
-  my_model = noise_model %>% when(
-    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date, 
-    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  )
-  
-  # Generate quantities
-  rstan::gqs(
-    my_model,
-    draws =  as.matrix(fit ),
-    data = model_input
-  ) %>%
-
-    # Parse
-    parse_generated_quantities(number_of_draws = number_of_draws) %>%
-
-    # Get sample name
-    nest(data = -N) %>%
-    arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$y)) %>%
-    unnest(data) %>%
-
-    # get cell type name
-    nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(model_input$y)) %>%
-    unnest(data) %>%
-
-    select(-N, -M) %>%
-    nest(generated_data = -c(!!.sample, !!.cell_group))
-
-}

@@ -6,6 +6,8 @@
 \usage{
 simulate_data(
   .data,
+  .estimate_object,
+  formula,
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
@@ -16,6 +18,8 @@ simulate_data(
 \arguments{
 \item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
+\item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
+
 \item{.sample}{A column name as symbol. The sample identifier}
 
 \item{.cell_group}{A column name as symbol. The cell_type identifier}
@@ -23,8 +27,6 @@ simulate_data(
 \item{.coefficients}{A matrix of coefficients.}
 
 \item{seed}{An integer. Used for development and testing purposes}
-
-\item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
 
 \item{.sample_cell_count}{A integer vector. The total number of cells for each sample.}
 
