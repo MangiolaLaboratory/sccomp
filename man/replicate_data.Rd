@@ -27,7 +27,8 @@ estimate =
   sccomp_glm(
   counts_obj ,
    ~ type,  sample, cell_group, count,
-    approximate_posterior_inference = FALSE
+    approximate_posterior_inference = TRUE,
+    check_outliers = FALSE
   )
 
 }
