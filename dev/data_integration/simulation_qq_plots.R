@@ -74,8 +74,7 @@ data_for_plot =
   mutate(simulation = map(
     data,
     ~  .x %>%
-      simulate_data(sample, cell_type) %>%
-      unnest(generated_data) %>%
+      replicate_data() %>%
       with_groups(
         cell_type,
         ~.x %>%
