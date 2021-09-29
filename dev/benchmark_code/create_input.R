@@ -1,5 +1,11 @@
 library(sccomp)
-library(tidyverse)
+#library(tidyverse)
+
+library(dplyr)
+library(tidyr)
+library(purrr)
+
+
 library(magrittr)
 library(tidybulk)
 
