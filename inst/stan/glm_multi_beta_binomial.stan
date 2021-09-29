@@ -42,10 +42,10 @@ data{
 
 	int<lower=0, upper=1> is_vb;
 
-// Prior info
-real prior_prec_intercept[2] ;
-real prior_prec_slope[2] ;
-real prior_prec_sd[2] ;
+  // Prior info
+  real prior_prec_intercept[2] ;
+  real prior_prec_slope[2] ;
+  real prior_prec_sd[2] ;
 
 }
 transformed data{

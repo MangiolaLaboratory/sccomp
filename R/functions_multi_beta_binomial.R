@@ -290,11 +290,6 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       ~ (.)
     )
 
-
-
-
-
-
 }
 
 
