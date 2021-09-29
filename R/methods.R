@@ -256,7 +256,12 @@ sccomp_glm.data.frame = function(.data,
         cores = cores,
         seed = seed
       )
-    )
+    ) %>%
+
+    # Track input parameters
+    add_attr(noise_model, "noise_model") %>%
+    add_attr(.sample, ".sample") %>%
+    add_attr(.cell_group, ".cell_group")
 }
 
 #' @importFrom tidyr complete
@@ -398,12 +403,83 @@ sccomp_glm_data_frame_counts = function(.data,
       cores = cores,
       verbose = verbose,
       seed = seed
-    ) %>%
-    
-    # Track noise model
-    add_attr(noise_model, "noise_model")
+    )
 }
 
+#' replicate_data
+#'
+#' @description This function replicates counts from a real-world dataset.
+#'
+#'
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
+#' @param seed An integer. Used for development and testing purposes
+#'
+#' @return A nested tibble `tbl` with cell_group-wise statistics
+#'
+#' @export
+#'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#' estimate =
+#'   sccomp_glm(
+#'   counts_obj ,
+#'    ~ type,  sample, cell_group, count,
+#'     approximate_posterior_inference = FALSE
+#'   )
+#'
+replicate_data <- function(.data,
+                           number_of_draws = 1,
+                           seed = 42) {
+  UseMethod("replicate_data", .data)
+}
+
+#' @export
+#'
+replicate_data.data.frame = function(.data,
+                                     number_of_draws = 1,
+                                     seed = 42){
+
+
+  # Select model based on noise model
+  my_model = attr(.data, "noise_model") %>% when(
+    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date,
+    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  )
+
+  model_input = attr(.data, "model_input")
+  .sample = attr(.data, ".sample")
+  .cell_group = attr(.data, ".cell_group")
+
+  # Generate quantities
+  rstan::gqs(
+    my_model,
+    draws =  as.matrix(attr(.data, "fit") ),
+    data = model_input
+  ) %>%
+
+    # Parse
+    parse_generated_quantities(number_of_draws = number_of_draws) %>%
+
+    # Get sample name
+    nest(data = -N) %>%
+    arrange(N) %>%
+    mutate(!!.sample := rownames(model_input$y)) %>%
+    unnest(data) %>%
+
+    # get cell type name
+    nest(data = -M) %>%
+    mutate(!!.cell_group := colnames(model_input$y)) %>%
+    unnest(data) %>%
+
+    select(-N, -M)
+
+  # %>%
+  #   nest(generated_data = -c(!!.sample, !!.cell_group))
+
+}
 
 #' simulate_data
 #'
@@ -449,6 +525,8 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   )
 #'
 simulate_data <- function(.data,
+                          .estimate_object,
+                          formula,
                        .sample = NULL,
                        .cell_group = NULL,
                        .coefficients = NULL,
@@ -465,74 +543,71 @@ simulate_data <- function(.data,
 #' @importFrom purrr pmap
 #'
 simulate_data.data.frame = function(.data,
-                                    .sample ,
-                                    .cell_group,
+                                    .estimate_object,
+                                    formula,
+                                    .sample = NULL,
+                                    .cell_group = NULL,
                                     .coefficients = NULL,
                                     number_of_draws = 1,
-                                    seed = 42){
+                                    seed = 422){
 
 
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
+  .coefficients = enquo(.coefficients)
 
-  if(is.null(.coefficients))
-    replicate_dataset(
-      attr(.data, "fit"),
-      attr(.data, "model_input"),
-      .sample = !!.sample,
-      .cell_group = !!.cell_group,
-      number_of_draws = number_of_draws,
-      noise_model = attr(.data, "noise_model")
+  #Check column class
+  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
+
+  model_data = attr(.estimate_object, "model_input")
+
+  # Select model based on noise model
+  my_model = attr(.estimate_object, "noise_model") %>% when(
+    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_simulate_data,
+    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  )
+
+
+  model_input =
+    .data %>%
+    nest(data___ = -!!.sample) %>%
+    mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) %>%
+    unnest(data___) %>%
+    data_simulation_to_model_input(formula, !!.sample, !!.cell_group, .exposure, !!.coefficients )
+
+
+
+    # [1]  5.6260004 -0.6940178
+    # prec_sd  = 0.816423129
+
+  fit =
+    rstan::gqs(
+    my_model,
+    draws =  as.matrix(attr(.estimate_object, "fit") ),
+    data = model_input
+  )
+
+  parsed_fit =
+    parse_generated_quantities(fit, number_of_draws = number_of_draws) %>%
+
+    # Get sample name
+    nest(data = -N) %>%
+    arrange(N) %>%
+    mutate(!!.sample := rownames(model_input$X)) %>%
+    unnest(data) %>%
+
+    # get cell type name
+    nest(data = -M) %>%
+    mutate(!!.cell_group := colnames(model_input$beta)) %>%
+    unnest(data) %>%
+
+    select(-N, -M)
+
+  .data %>%
+    left_join(
+      parsed_fit,
+      by = c(quo_name(.sample), quo_name(.cell_group))
     )
-
-  # .sample = enquo(.sample)
-  # .cell_group = enquo(.cell_group)
-  # .sample_cell_count = enquo(.sample_cell_count)
-  # .coefficients = enquo(.coefficients)
-  #
-  # #Check column class
-  # check_if_columns_right_class(.data, !!.sample, !!.cell_group)
-  #
-  # model_data =
-  #   .data %>%
-  #   data_simulation_to_model_input(formula, !!.sample, !!.cell_group, !!.sample_cell_count, !!.coefficients )
-  #
-  # model_data$prec_coeff = mean_variable_association[1:2]
-  # model_data$prec_sd  = mean_variable_association[3]
-  #
-  #   # [1]  5.6260004 -0.6940178
-  #   # prec_sd  = 0.816423129
-  #
-  # fit =
-  #   sampling(
-  #     stanmodels$glm_multi_beta_binomial_simulate_data,
-  #     #stan_model("inst/stan/glm_multi_beta_binomial_simulate_data.stan"),
-  #     data = model_data,
-  #     chains = 1,
-  #     cores = 1,
-  #     iter = 151,
-  #     warmup = 150,
-  #     #refresh = ifelse(verbose, 1000, 0),
-  #     seed = seed,
-  #     #pars = pars,
-  #     save_warmup = FALSE
-  # )
-  #
-  # .data %>%
-  #   arrange(!!.sample, !!.cell_group) %>%
-  #   bind_cols(
-  #     fit %>%
-  #       draws_to_tibble_x_y("counts", "N", "M") %>%
-  #       ungroup() %>%
-  #       arrange(N, M) %>%
-  #       select(.value)
-  #   ) %>%
-  #
-  #   # Scale counts for exposure
-  #   nest(data = -c(sample, tot_count )) %>%
-  #   mutate(tot_count_simulated = map_dbl(data, ~ sum(.x$.value))) %>%
-  #   mutate(data = pmap(list(data, tot_count, tot_count_simulated),  ~ ..1 %>%  mutate(.value = .value %>% divide_by(..3) %>% multiply_by(..2) %>% round %>% as.integer ))) %>%
-  #   unnest(data)
 
 
 }
