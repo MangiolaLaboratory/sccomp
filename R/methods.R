@@ -38,7 +38,8 @@
 #'   sccomp_glm(
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
-#'     approximate_posterior_inference = FALSE,
+#'     approximate_posterior_inference = TRUE,
+#'     check_outliers = FALSE
 #'     cores = 1
 #'   )
 #'
@@ -427,7 +428,8 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   sccomp_glm(
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
-#'     approximate_posterior_inference = FALSE
+#'     approximate_posterior_inference = TRUE,
+#'     check_outliers = FALSE
 #'   )
 #'
 replicate_data <- function(.data,
@@ -495,18 +497,12 @@ replicate_data.data.frame = function(.data,
 #' @importFrom parallel detectCores
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properies.
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
-#' @param .sample_cell_count A integer vector. The total number of cells for each sample.
-#' @param .coefficients A matrix of coefficients.
-#' @param mean_variable_association A numeric vector of size 3. The intercept, slope and standard deviation of the proportion mean/variability association.
-#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
-#' @param check_outliers A boolean. Whether to check for outliers before the fit.
-#' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
-#' @param verbose A boolean. Prints progression.
-#' @param noise_model A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.
-#' @param cores An integer. How many cored to be used with parallel calculations.
+#' @param .coefficients Th column names for coefficients, for example, c(b_0, b_1)
+#' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param seed An integer. Used for development and testing purposes
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
@@ -521,7 +517,8 @@ replicate_data.data.frame = function(.data,
 #'   sccomp_glm(
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
-#'     approximate_posterior_inference = FALSE
+#'     approximate_posterior_inference = TRUE,
+#'     check_outliers = FALSE
 #'   )
 #'
 simulate_data <- function(.data,
