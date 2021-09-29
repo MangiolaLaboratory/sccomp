@@ -18,31 +18,19 @@ simulate_data(
 \arguments{
 \item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
+\item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properies.}
+
 \item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
 \item{.cell_group}{A column name as symbol. The cell_type identifier}
 
-\item{.coefficients}{A matrix of coefficients.}
+\item{.coefficients}{Th column names for coefficients, for example, c(b_0, b_1)}
+
+\item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
 \item{seed}{An integer. Used for development and testing purposes}
-
-\item{.sample_cell_count}{A integer vector. The total number of cells for each sample.}
-
-\item{mean_variable_association}{A numeric vector of size 3. The intercept, slope and standard deviation of the proportion mean/variability association.}
-
-\item{percent_false_positive}{A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.}
-
-\item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
-
-\item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
-
-\item{verbose}{A boolean. Prints progression.}
-
-\item{noise_model}{A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.}
-
-\item{cores}{An integer. How many cored to be used with parallel calculations.}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
@@ -58,7 +46,8 @@ estimate =
   sccomp_glm(
   counts_obj ,
    ~ type,  sample, cell_group, count,
-    approximate_posterior_inference = FALSE
+    approximate_posterior_inference = TRUE,
+    check_outliers = FALSE
   )
 
 }
