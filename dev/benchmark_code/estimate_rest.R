@@ -154,5 +154,12 @@ readRDS(input_file) %>%
       propeller(clusters =  .$cell_type, sample = .$sample, group = .$type) %>%
       as_tibble(rownames="cell_type")
   )) %>%
+
+  # Quasi biinomial
+  mutate( results_quasiBinomial = map(
+    data,
+    ~   counts_to_quasi_binomial(.x, sample, cell_type, .value, type)
+  )) %>%
+
   saveRDS(output_file)
 
