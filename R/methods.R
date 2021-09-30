@@ -524,7 +524,7 @@ replicate_data.data.frame = function(.data,
 #'   )
 #'
 simulate_data <- function(.data,
-                          .estimate_object,
+                          .estimate_object = oligo_breast_estimate,
                           formula,
                        .sample = NULL,
                        .cell_group = NULL,
@@ -542,7 +542,7 @@ simulate_data <- function(.data,
 #' @importFrom purrr pmap
 #'
 simulate_data.data.frame = function(.data,
-                                    .estimate_object,
+                                    .estimate_object = oligo_breast_estimate,
                                     formula,
                                     .sample = NULL,
                                     .cell_group = NULL,
