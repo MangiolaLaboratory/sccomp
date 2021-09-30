@@ -1,15 +1,63 @@
-#' Example data set
+#' counts_obj
 #'
+#' Example data set containing cell counts per cell cluster
 #'
+#' @format  A tidy data frame.
+#' @usage data(counts_obj)
 "counts_obj"
 
-#' Example data set
+#' seurat_obj
 #'
+#' Example Seurat data set
 #'
+#' @format  A Seurat object
+#' @usage data(seurat_obj)
 "seurat_obj"
 
 
-#' Example data set
+#' sce_obj
 #'
+#' @format  A SingeCellExperiment object
+#' @usage data(sce_obj)
 #'
 "sce_obj"
+
+#' glm_dirichlet_multinomial
+#'
+#' @format  A text file containing stan code for the Dirichlet model.
+#' @usage data(glm_dirichlet_multinomial)
+#'
+#' @keywords internal
+#' @noRd
+#'
+"glm_dirichlet_multinomial"
+
+#' glm_dirichlet_multinomial_generate_quantities
+#'
+#' @format  A text file containing stan code for the Dirichlet model.
+#' @usage data(glm_dirichlet_multinomial_generate_quantities)
+#'
+#' @keywords internal
+#' @noRd
+#'
+"glm_dirichlet_multinomial_generate_quantities"
+
+#' glm_dirichlet_multinomial_imputation
+#'
+#' @format  A text file containing stan code for the Dirichlet model.
+#' @usage data(glm_dirichlet_multinomial_imputation)
+#'
+#' @keywords internal
+#' @noRd
+#'
+"glm_dirichlet_multinomial_imputation"
+
+#' glm_multi_beta_generate_data
+#'
+#' @format  A text file containing stan code for the Beta only model.
+#' @usage data(glm_multi_beta_generate_data)
+#'
+#' @keywords internal
+#' @noRd
+#'
+"glm_multi_beta_generate_data"

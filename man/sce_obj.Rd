@@ -3,14 +3,14 @@
 \docType{data}
 \name{sce_obj}
 \alias{sce_obj}
-\title{Example data set}
+\title{sce_obj}
 \format{
-An object of class \code{SingleCellExperiment} with 1 rows and 106297 columns.
+A SingeCellExperiment object
 }
 \usage{
-sce_obj
+data(sce_obj)
 }
 \description{
-Example data set
+sce_obj
 }
 \keyword{datasets}
