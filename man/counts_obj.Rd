@@ -3,14 +3,14 @@
 \docType{data}
 \name{counts_obj}
 \alias{counts_obj}
-\title{Example data set}
+\title{counts_obj}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 720 rows and 5 columns.
+A tidy data frame.
 }
 \usage{
-counts_obj
+data(counts_obj)
 }
 \description{
-Example data set
+Example data set containing cell counts per cell cluster
 }
 \keyword{datasets}

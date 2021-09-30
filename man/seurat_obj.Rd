@@ -3,14 +3,14 @@
 \docType{data}
 \name{seurat_obj}
 \alias{seurat_obj}
-\title{Example data set}
+\title{seurat_obj}
 \format{
-An object of class \code{Seurat} with 1 rows and 106297 columns.
+A Seurat object
 }
 \usage{
-seurat_obj
+data(seurat_obj)
 }
 \description{
-Example data set
+Example Seurat data set
 }
 \keyword{datasets}

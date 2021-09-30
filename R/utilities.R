@@ -70,6 +70,9 @@ ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
 #' @importFrom tidyr gather
 #' @importFrom magrittr set_rownames
 #'
+#' @keywords internal
+#' @noRd
+#'
 #' @param tbl A tibble
 #' @param rownames A character string of the rownames
 #'
