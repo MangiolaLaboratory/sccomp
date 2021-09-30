@@ -39,7 +39,7 @@
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
 #'     approximate_posterior_inference = TRUE,
-#'     check_outliers = FALSE
+#'     check_outliers = FALSE,
 #'     cores = 1
 #'   )
 #'
@@ -429,7 +429,8 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
 #'     approximate_posterior_inference = TRUE,
-#'     check_outliers = FALSE
+#'     check_outliers = FALSE,
+#'     cores = 1
 #'   )
 #'
 replicate_data <- function(.data,
@@ -518,7 +519,8 @@ replicate_data.data.frame = function(.data,
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
 #'     approximate_posterior_inference = TRUE,
-#'     check_outliers = FALSE
+#'     check_outliers = FALSE,
+#'     cores = 1
 #'   )
 #'
 simulate_data <- function(.data,
