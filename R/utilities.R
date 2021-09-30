@@ -709,3 +709,39 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 
 }
 
+#' @importFrom dplyr left_join
+#' @importFrom tidyr expand_grid
+#'
+#' @export
+#'
+#'
+#'
+design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficient_matrix){
+
+  design_df = as.data.frame(design_matrix)
+  coefficient_df = as.data.frame(coefficient_matrix)
+
+  rownames(design_df) = sprintf("sample_%s", 1:nrow(design_df))
+  colnames(design_df) = sprintf("covariate_%s", 1:ncol(design_df))
+
+  rownames(coefficient_df) = sprintf("cell_type_%s", 1:nrow(coefficient_df))
+  colnames(coefficient_df) = sprintf("beta_%s", 1:ncol(coefficient_df))
+
+  input_data =
+    expand_grid(
+    sample = rownames(design_df),
+    cell_type = rownames(coefficient_df)
+  ) |>
+    left_join(design_df |> as_tibble(rownames = "sample") , by = "sample") |>
+    left_join(coefficient_df |>as_tibble(rownames = "cell_type"), by = "cell_type")
+
+  simulate_data(.data = input_data,
+                formula = ~ covariate_1 ,
+                .sample = sample,
+                .cell_group = cell_type,
+                .coefficients = c(beta_1, beta_2),
+                seed = sample(1:100000, size = 1)
+  )
+
+
+}
