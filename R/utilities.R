@@ -705,6 +705,8 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
     with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/sum(.value))) %>%
     filter(.draw<= number_of_draws) %>%
     rename(generated_counts = .value, replicate = .draw) %>%
+
+    mutate(generated_counts = as.integer(generated_counts)) %>%
     select(M, N, generated_proportions, generated_counts, replicate)
 
 }
