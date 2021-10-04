@@ -283,10 +283,10 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 
             !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) > minimum_logit_fold_change |
             !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) < -minimum_logit_fold_change
-        ) ,
+        )  %>%
 
         # add probability
-       # left_join( get_probability_non_zero(parsed_fit), by="M" ),
+        left_join( get_probability_non_zero(parsed_fit), by="M" ),
       ~ (.)
     )
 
