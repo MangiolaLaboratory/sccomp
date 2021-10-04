@@ -107,14 +107,14 @@ job({
     readRDS("dev/data_integration/s41587-020-0602-4_COVID_19.rds")  |>
       tidyseurat::mutate(is_critical = severity=="critical") %>%
       tidyseurat::filter(!is.na(cell_type)) %>%
-    adjust_abundance(
-      ~integrate(sample) ,
-      reference_samples =
-        filter(., nCount_RNA == max(nCount_RNA)) %>%
-        pull(sample) %>%
-        unique(),
-      assay = "RNA"
-    ) %>%
+    # adjust_abundance(
+    #   ~integrate(sample) ,
+    #   reference_samples =
+    #     filter(., nCount_RNA == max(nCount_RNA)) %>%
+    #     pull(sample) %>%
+    #     unique(),
+    #   assay = "RNA"
+    # ) %>%
     RunPCA() %>%
     RunUMAP(dims=1:20) %>%
     saveRDS("dev/data_integration/UMAP_s41587-020-0602-4_COVID_19.rds")
