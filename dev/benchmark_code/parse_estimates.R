@@ -63,7 +63,6 @@ estimated_files %>%
     data, value,
     ~ left_join(
       .x %>%
-        unnest(coefficients) %>%
         distinct(cell_type, beta_1),
 
       .y  %>%
