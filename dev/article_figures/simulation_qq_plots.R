@@ -261,8 +261,6 @@ p =
   plot_layout(guides = 'collect', heights  = c(2, 1)) + plot_annotation(tag_levels = c('A')) &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom")
 
-p
-
 ggsave(
   "dev/qq_plot.pdf",
   plot = p,
