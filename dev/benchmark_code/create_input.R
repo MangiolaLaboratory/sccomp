@@ -39,7 +39,7 @@ tibble(run = 1:50) %>%
           sample = 1:n_samples, cell_type = 1:n_cell_type
         ) %>%
         nest(d = -cell_type) %>%
-        mutate(beta_0 = c( rep(-1, n_differentially_abundant) , rep(1, n()- n_differentially_abundant)) ) %>% # rnorm(n = n(), 0, 1)) %>%
+        mutate(beta_0 =  0) %>% # rnorm(n = n(), 0, 1)) %>%
         mutate(  beta_1 = case_when(
           cell_type %in% seq_len(n_differentially_abundant)[is_odd(seq_len(n_differentially_abundant))] ~ 1,
           cell_type %in% seq_len(n_differentially_abundant)[!is_odd(seq_len(n_differentially_abundant))]  ~ -1,
