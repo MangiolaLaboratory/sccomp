@@ -281,7 +281,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
       nest(alpha_1 = -M)
 
-    CI_alpha =
+
   }
 
 
@@ -294,7 +294,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       do_test ~
         mutate(
           .,
-          different_abundant = map_lgl(composition_CI , ~
+          composition_test = map_lgl(composition_CI , ~
 
             pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > minimum_logit_fold_change |
             pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -minimum_logit_fold_change
@@ -303,7 +303,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
     ) %>%
 
     # Add probability if do_test
-    when(do_test ~ left_join(. get_probability_non_zero(parsed_beta), by="M" ), ~ (.)) %>%
+    when(do_test ~ left_join(., get_probability_non_zero(parsed_beta), by="M" ), ~ (.)) %>%
 
     when(do_test & variance_association ~ left_join(.,
                                                     parsed_alpha %>%
@@ -316,7 +316,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       do_test & variance_association  ~
         mutate(
           .,
-          different_abundant = map_lgl(heterogeneity_CI , ~
+          heterogeneity_test = map_lgl(heterogeneity_CI , ~
 
                                          pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > minimum_logit_fold_change |
                                          pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -minimum_logit_fold_change
