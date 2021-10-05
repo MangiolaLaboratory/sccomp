@@ -22,9 +22,12 @@ library(glue)
 #   facet_grid( n_cell_type ~ n_samples, scale="free_y") +
 #   theme_bw()
 
+result_directory = "dev/benchmark_results_e3498c0f9349ba9df28728253b3c1963fcda4b4c"
+result_directory = "dev/benchmark_results"
+
 
 plot_auc =
-  dir("dev/benchmark_results_e3498c0f9349ba9df28728253b3c1963fcda4b4c", pattern = "auc", full.names = TRUE) %>%
+  dir(result_directory, pattern = "auc", full.names = TRUE) %>%
   map_dfr(~ .x %>% readRDS()) %>%
   nest(data = c(name, auc)) %>%
   mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc))) %>%
