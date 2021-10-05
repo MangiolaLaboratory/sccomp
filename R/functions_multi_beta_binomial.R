@@ -259,36 +259,74 @@ estimate_multi_beta_binomial_glm = function(.data,
 #'
 #'
 hypothesis_test_multi_beta_binomial_glm = function( .sample,
-                                                    .cell_type, .count, fit, data_for_model, percent_false_positive, check_outliers,  truncation_df2 = NULL) {
+                                                    .cell_type, .count, fit, data_for_model, percent_false_positive, check_outliers,  truncation_df2 = NULL, variance_association = FALSE) {
 
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
 
-  parsed_fit =
-    fit %>%
-    parse_fit(data_for_model, .)
-
   minimum_logit_fold_change = 0.2
+  do_test = ncol(data_for_model$X) > 1
 
-  parsed_fit %>%
-    beta_to_CI(false_positive_rate = percent_false_positive/100 ) %>%
+  parsed_beta =
+    fit %>%
+    draws_to_tibble_x_y("beta", "C", "M") %>%
+    left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
+    nest(beta_posterior_1 = -M)
 
-    # Hypothesis test
+  if(variance_association) {
+    parsed_alpha =
+      fit %>%
+      draws_to_tibble_x_y("alpha", "C", "M") %>%
+      left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
+      nest(alpha_1 = -M)
+
+    CI_alpha =
+  }
+
+
+  output =
+    parsed_beta %>%
+    beta_to_CI(false_positive_rate = percent_false_positive/100, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) %>%
+
+    # ADD CI beta
     when(
-      ncol(data_for_model$X) > 1 ~
+      do_test ~
         mutate(
           .,
-          significant =
+          different_abundant = map_lgl(composition_CI , ~
 
-            !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) > minimum_logit_fold_change |
-            !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) < -minimum_logit_fold_change
-        )  %>%
+            pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > minimum_logit_fold_change |
+            pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -minimum_logit_fold_change
+        ) )  ,
+      ~ (.)
+    ) %>%
 
-        # add probability
-        left_join( get_probability_non_zero(parsed_fit), by="M" ),
+    # Add probability if do_test
+    when(do_test ~ left_join(. get_probability_non_zero(parsed_beta), by="M" ), ~ (.)) %>%
+
+    when(do_test & variance_association ~ left_join(.,
+                                                    parsed_alpha %>%
+                                                      alpha_to_CI(false_positive_rate = percent_false_positive/100, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) ,
+                                                    by="M"
+                                                    )) %>%
+
+    # ADD CI alpha
+    when(
+      do_test & variance_association  ~
+        mutate(
+          .,
+          different_abundant = map_lgl(heterogeneity_CI , ~
+
+                                         pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > minimum_logit_fold_change |
+                                         pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -minimum_logit_fold_change
+          ) )  ,
       ~ (.)
     )
+
+
+
+
 
 }
 
@@ -378,8 +416,8 @@ multi_beta_binomial_glm = function(.data,
     result_list$fit,
     result_list$data_for_model,
     percent_false_positive,
-    check_outliers,
-    result_list$truncation_df2
+    result_list$truncation_df2,
+    variance_association = variance_association
   ) %>%
 
     # Join the precision
