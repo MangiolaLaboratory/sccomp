@@ -447,8 +447,9 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #'
 #' @keywords internal
 #' @noRd
-beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate){
+beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
+effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
 
   fitted %>%
     unnest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration))) %>%
@@ -466,7 +467,44 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate){
     )) %>%
     unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%
-    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper))
+    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
+    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
+    nest(composition_CI = -c(M, !!effect_column_name))
+
+
+
+}
+
+#' @importFrom purrr map2_lgl
+#' @importFrom tidyr pivot_wider
+#' @importFrom stats C
+#' @importFrom rlang :=
+#'
+#' @keywords internal
+#' @noRd
+alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
+
+  effect_column_name = sprintf("heterogeneity_effect_%s", factor_of_interest) %>% as.symbol()
+
+  fitted %>%
+    unnest(!!as.symbol(sprintf("alpha_%s", censoring_iteration))) %>%
+    nest(data = -c(M, C, C_name)) %>%
+    # Attach beta
+    mutate(!!as.symbol(sprintf("alpha_quantiles_%s", censoring_iteration)) := map(
+      data,
+      ~ quantile(
+        .x$.value,
+        probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
+      ) %>%
+        enframe() %>%
+        mutate(name = c(".lower", ".median", ".upper")) %>%
+        spread(name, value)
+    )) %>%
+    unnest(!!as.symbol(sprintf("alpha_quantiles_%s", censoring_iteration))) %>%
+    select(-data, -C) %>%
+    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
+    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
+    nest(heterogeneity_CI = -c(M, !!effect_column_name))
 
 
 
