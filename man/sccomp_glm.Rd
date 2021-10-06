@@ -15,6 +15,7 @@ sccomp_glm(
   percent_false_positive = 5,
   check_outliers = TRUE,
   approximate_posterior_inference = FALSE,
+  test_composition_above_logit_fold_change = 0.2,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
   variance_association = FALSE,
@@ -40,6 +41,8 @@ sccomp_glm(
 \item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
 
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
+
+\item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
 
 \item{verbose}{A boolean. Prints progression.}
 

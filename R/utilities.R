@@ -447,8 +447,9 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #'
 #' @keywords internal
 #' @noRd
-beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate){
+beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
+effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
 
   fitted %>%
     unnest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration))) %>%
@@ -466,7 +467,44 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate){
     )) %>%
     unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%
-    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper))
+    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
+    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
+    nest(composition_CI = -c(M, !!effect_column_name))
+
+
+
+}
+
+#' @importFrom purrr map2_lgl
+#' @importFrom tidyr pivot_wider
+#' @importFrom stats C
+#' @importFrom rlang :=
+#'
+#' @keywords internal
+#' @noRd
+alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
+
+  effect_column_name = sprintf("heterogeneity_effect_%s", factor_of_interest) %>% as.symbol()
+
+  fitted %>%
+    unnest(!!as.symbol(sprintf("alpha_%s", censoring_iteration))) %>%
+    nest(data = -c(M, C, C_name)) %>%
+    # Attach beta
+    mutate(!!as.symbol(sprintf("alpha_quantiles_%s", censoring_iteration)) := map(
+      data,
+      ~ quantile(
+        .x$.value,
+        probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
+      ) %>%
+        enframe() %>%
+        mutate(name = c(".lower", ".median", ".upper")) %>%
+        spread(name, value)
+    )) %>%
+    unnest(!!as.symbol(sprintf("alpha_quantiles_%s", censoring_iteration))) %>%
+    select(-data, -C) %>%
+    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
+    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
+    nest(heterogeneity_CI = -c(M, !!effect_column_name))
 
 
 
@@ -666,33 +704,33 @@ get.elbow.points.indices <- function(x, y, threshold) {
 #' @keywords internal
 #' @noRd
 #'
-get_probability_non_zero = function(.data){
+get_probability_non_zero = function(.data, prefix = "", test_above_logit_fold_change = 0){
 
+  probability_column_name = sprintf("%s_prob_H0", prefix) %>% as.symbol()
+
+  total_draws = .data %>% pull(2) %>% .[[1]] %>% distinct(.draw) %>% nrow()
 
   .data %>%
-    unnest(beta_posterior_1 ) %>%
+    unnest(2 ) %>%
     filter(C ==2) %>%
     nest(data = -c(M, C_name)) %>%
     mutate(
-      bigger_zero = map_int(data, ~ .x %>% filter(.value>0) %>% nrow),
-      smaller_zero = map_int(data, ~ .x %>% filter(.value<0) %>% nrow)
+      bigger_zero = map_int(data, ~ .x %>% filter(.value>test_above_logit_fold_change) %>% nrow),
+      smaller_zero = map_int(data, ~ .x %>% filter(.value< -test_above_logit_fold_change) %>% nrow)
     ) %>%
     rowwise() %>%
     mutate(
-      prob_non_zero =
-        min(bigger_zero, smaller_zero) %>%
+      !!probability_column_name :=
+        1 - (
+          max(bigger_zero, smaller_zero) %>%
         #max(1) %>%
-        divide_by(bigger_zero + smaller_zero) %>%
-
-        # Because two sided test
-        multiply_by(2)
+        divide_by(total_draws)
+        )
     )  %>%
     ungroup() %>%
-    select(M, prob_non_zero) %>%
-
-    # Calculate false-discovery rate
-    arrange(prob_non_zero) %>%
-    mutate(false_discovery_rate = cummean(prob_non_zero))
+    select(M, !!probability_column_name)
+    # %>%
+    # mutate(false_discovery_rate = cummean(prob_non_zero))
 
 }
 
@@ -705,7 +743,45 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
     with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/sum(.value))) %>%
     filter(.draw<= number_of_draws) %>%
     rename(generated_counts = .value, replicate = .draw) %>%
+
+    mutate(generated_counts = as.integer(generated_counts)) %>%
     select(M, N, generated_proportions, generated_counts, replicate)
 
 }
 
+#' @importFrom dplyr left_join
+#' @importFrom tidyr expand_grid
+#'
+#' @export
+#'
+#'
+#'
+design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficient_matrix){
+
+  design_df = as.data.frame(design_matrix)
+  coefficient_df = as.data.frame(coefficient_matrix)
+
+  rownames(design_df) = sprintf("sample_%s", 1:nrow(design_df))
+  colnames(design_df) = sprintf("covariate_%s", 1:ncol(design_df))
+
+  rownames(coefficient_df) = sprintf("cell_type_%s", 1:nrow(coefficient_df))
+  colnames(coefficient_df) = sprintf("beta_%s", 1:ncol(coefficient_df))
+
+  input_data =
+    expand_grid(
+    sample = rownames(design_df),
+    cell_type = rownames(coefficient_df)
+  ) |>
+    left_join(design_df |> as_tibble(rownames = "sample") , by = "sample") |>
+    left_join(coefficient_df |>as_tibble(rownames = "cell_type"), by = "cell_type")
+
+  simulate_data(.data = input_data,
+                formula = ~ covariate_1 ,
+                .sample = sample,
+                .cell_group = cell_type,
+                .coefficients = c(beta_1, beta_2),
+                seed = sample(1:100000, size = 1)
+  )
+
+
+}

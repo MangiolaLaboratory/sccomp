@@ -6,7 +6,7 @@
 \usage{
 simulate_data(
   .data,
-  .estimate_object,
+  .estimate_object = oligo_breast_estimate,
   formula,
   .sample = NULL,
   .cell_group = NULL,
