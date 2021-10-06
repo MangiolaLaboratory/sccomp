@@ -47,6 +47,7 @@ dirichlet_multinomial_glm = function(.data,
                                      check_outliers = FALSE,
                                      approximate_posterior_inference = TRUE,
                                      variance_association = FALSE,
+                                     test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
                                      cores = detect_cores(), # For development purpose,
                                      seed = sample(1:99999, size = 1)
@@ -103,7 +104,7 @@ dirichlet_multinomial_glm = function(.data,
       ) %>%
 
       # add probability
-      left_join( get_probability_non_zero(parsed_fit), by="M" ) %>%
+      left_join( get_probability_non_zero(parsed_fit, prefix = "composition"), by="M" ) %>%
 
       # Clean
       select(-M) %>%
