@@ -20,7 +20,7 @@ estimated_files %>%
   reduce(left_join) %>%
 
 
-  # Calculate sgnificance
+  # Calculate significance
   when(
     length(estimated_files) >1 ~
       (.) %>%
@@ -31,6 +31,7 @@ estimated_files %>%
       mutate(hypothesis_speckle = map(results_speckle , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = -Tstatistic    ))) %>%
       mutate(hypothesis_logitLinear = map(results_logitLinear , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
       mutate(hypothesis_ttest = map(results_ttest , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
+      mutate(hypothesis_quasiBinomial = map(results_quasiBinomial , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
       mutate(hypothesis_DirichletMultinomial  = map(
         results_DirichletMultinomial ,
         ~ .x  %>%
@@ -63,7 +64,6 @@ estimated_files %>%
     data, value,
     ~ left_join(
       .x %>%
-        unnest(coefficients) %>%
         distinct(cell_type, beta_1),
 
       .y  %>%

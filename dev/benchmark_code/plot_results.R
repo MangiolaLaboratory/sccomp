@@ -3,6 +3,7 @@ library(bayestestR)
 library(yardstick)
 library(forcats)
 library(glue)
+library(purrr)
 #
 # dir("dev/benchmark_results_f58cd58973261636d29f0462eb9b406d762f3895 345a2afa986458672dd95f5dff3f5d973bf1d994//", pattern = "auc", full.names = TRUE) %>%
 #   map_dfr(~ .x %>% readRDS()) %>%
@@ -22,16 +23,19 @@ library(glue)
 #   facet_grid( n_cell_type ~ n_samples, scale="free_y") +
 #   theme_bw()
 
+result_directory = "dev/benchmark_results_e3498c0f9349ba9df28728253b3c1963fcda4b4c"
+result_directory = "dev/benchmark_results"
+
 
 plot_auc =
-  dir("dev/benchmark_results_e3498c0f9349ba9df28728253b3c1963fcda4b4c", pattern = "auc", full.names = TRUE) %>%
+  dir(result_directory, pattern = "auc", full.names = TRUE) %>%
   map_dfr(~ .x %>% readRDS()) %>%
   nest(data = c(name, auc)) %>%
   mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc))) %>%
   unnest(data) %>%
 
   # filter(name !="edgerRobust" & name !="speckle") %>%
-  filter(name !="edgerRobust") %>%
+  filter(name !="edgerRobust" & name !="speckle") %>%
   filter(n_samples >2) %>%
   mutate(name = if_else(name=="random", "zrandom", name)) %>%
   # Choose one mode
@@ -71,7 +75,7 @@ ggsave(
 )
 
 plot_ROC =
-  readRDS("dev/benchmark_results_e3498c0f9349ba9df28728253b3c1963fcda4b4c/parsed_1.3_20_10_1000_1.rds") %>%
+  readRDS(glue("{result_directory}/parsed_1.5_10_10_1000_1.rds")) %>%
   mutate(roc = map(
     df_for_roc,
     ~ .x %>%
@@ -83,10 +87,10 @@ plot_ROC =
   filter(name !="edgerRobust" & name !="speckle") %>%
   rename(Algorithm = name) %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity, color=Algorithm)) +
-  geom_rect( mapping=aes(xmin=0, xmax=0.1, ymin=0, ymax=1), fill="#EBECF0", color="#EBECF0", alpha=0.01) +
+  geom_rect( mapping=aes(xmin=0, xmax=0.1, ymin=0, ymax=1), fill="#EBECF0", color=NA, alpha=0.1) +
   geom_path() +
   geom_abline(lty = 3) +
-  scale_color_brewer(palette="Dark2") +
+  scale_color_brewer(palette="Paired") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
