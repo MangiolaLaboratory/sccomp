@@ -20,6 +20,7 @@ library(sccomp)
 library(ggplot2)
 library(forcats)
 library(tidyr)
+library(rstan)
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
@@ -88,9 +89,9 @@ data_for_plot =
 
  ggplot() +
   geom_boxplot(
-    aes(type, proportion, fill=significant),
+    aes(type, proportion, fill=composition_prob_H0<0.025),
     outlier.shape = NA, 
-    data = data_for_plot |> filter(!outlier)
+    data =  filter(data_for_plot, !outlier)
   ) + 
   geom_jitter(aes(type, proportion, color=outlier), size = 1, data = data_for_plot) + 
   facet_wrap(~ interaction(cell_group), scale="free_y") +
@@ -100,22 +101,22 @@ data_for_plot =
   xlab("Biological condition") + 
   ylab("Cell-group proportion") + 
   theme_bw() +
-  theme(strip.background =element_rect(fill="white"))
+  theme(strip.background =element_rect(fill="white"), legend.position = "bottom")
 ```
 
 Credible intervals
 
 ```{r}
 res |>
+  unnest(composition_CI) |> 
   ggplot(aes(x=`.median_typecancer`, y=fct_reorder(cell_group, .median_typecancer))) +
   geom_vline(xintercept = 0.2, colour="grey") +
   geom_vline(xintercept = -0.2, colour="grey") +
-  geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=significant)) +
+  geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=composition_prob_H0<0.025)) +
   geom_point() +
   scale_color_brewer(palette = "Set1") +
   xlab("Credible interval of the slope") +
-  ylab("Cell group") +
-  ggtitle("After outlier filtering") +
+  ylab("Cell group") + 
   theme_bw() +
   theme(legend.position = "bottom")
 ```
@@ -123,35 +124,35 @@ res |>
 Relation between proportion mean and concentration (variability). The regression line is inferred by sccomp.
 
 ```{r}
+mean_concentration_association = res %>% attr("mean_concentration_association")
+
 res |> 
+  unnest(composition_CI) |>
   unnest(concentration) |> 
   ggplot(aes(`.median_(Intercept)`, mean)) + 
   geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`), color="#4DAF4A", alpha = 0.4) +
   geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), color="#4DAF4A", alpha = 0.4) +
   geom_point() +
-  geom_abline(intercept = 5.7496330, slope = -0.9650953, linetype = "dashed", color="grey") +
+  geom_abline(intercept = mean_concentration_association[1], slope = mean_concentration_association[2], linetype = "dashed", color="grey") +
   xlab("Category logit-proportion mean") +
   ylab("Category log-concentration") +
     theme_bw() 
 ```
 
-We can perform posterior predictive checks of the model. This gives information of how the model "interpret trends" in the data, and gives confidence on the estimates. The blue shades are the model generated data.
+We can perform posterior predictive checks of the model. This gives information of how the model "interprets trends" in the data, and gives confidence on the estimates. The blue shades are the model generated data.
 
-```{r}
-
+```{r, warning=FALSE}
 
 data_proportion =
-      res %>%
-      unnest(count_data) %>%
-      select(cell_group, sample, outlier, count, type, significant) %>%
+      res |>
+      unnest(count_data) |>
+      select(cell_group, sample, outlier, count, type, composition_prob_H0) |>
       with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) 
 
 simulated_proportion = 
-   res %>%
-      simulate_data(sample, cell_group, number_of_draws = 10) %>%
-      unnest(generated_data) %>% 
-
-  left_join(data_proportion %>% distinct(type, sample))
+  res |>
+  replicate_data(number_of_draws = 10) |>
+  left_join(data_proportion |> distinct(type, sample))
   
 ggplot() +
   
@@ -163,9 +164,9 @@ ggplot() +
   geom_jitter(aes(type, generated_proportions), color="blue" ,alpha=0.2, size = 0.6, data = simulated_proportion) + 
   
     geom_boxplot(
-    aes(type, proportion, fill=significant),
+    aes(type, proportion, fill=composition_prob_H0<0.025),
     outlier.shape = NA, 
-    data = data_proportion |> filter(!outlier)
+    data = filter(data_proportion, !outlier)
   ) + 
   geom_jitter(aes(type, proportion, color=outlier), size = 1, data = data_proportion) + 
   
@@ -176,6 +177,14 @@ ggplot() +
   xlab("Biological condition") + 
   ylab("Cell-group proportion") + 
   theme_bw() +
-  theme(strip.background =element_rect(fill="white"))
+  theme(strip.background =element_rect(fill="white"), legend.position = "bottom")
 ```
+
+It is possible to directly evaluate the posterior distribution. In this example we plot the Monte Carlo chain for the slope parameter of the first cell type. We can see that has converged and is negative with probability 1.
+
+```{r}
+res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
+```
+
+
 

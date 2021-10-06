@@ -71,19 +71,6 @@ readRDS(input_file) %>%
     }
   )) %>%
 
-  # robust edgeR
-  mutate( results_edgerRobust = map(
-    data,
-    ~  .x %>%
-      mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
-      test_differential_abundance(
-        ~ type,
-        sample, cell_type, generated_counts,
-        method = "edger_robust_likelihood_ratio"
-      ) %>%
-      pivot_transcript(cell_type)
-  )) %>%
-
   # voom
   mutate( results_voom = map(
     data,
