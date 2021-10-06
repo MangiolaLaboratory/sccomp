@@ -59,7 +59,7 @@ res =
 
     ## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]
 
-Outliers identified
+## Visualise data + inference
 
 ``` r
 data_for_plot = 
@@ -88,7 +88,7 @@ data_for_plot =
 
 ![](man/figures/unnamed-chunk-8-1.png)<!-- -->
 
-Credible intervals
+## Visualise credible intervals of slope parameter
 
 ``` r
 res |>
@@ -107,8 +107,7 @@ res |>
 
 ![](man/figures/unnamed-chunk-9-1.png)<!-- -->
 
-Relation between proportion mean and concentration (variability). The
-regression line is inferred by sccomp.
+## Visualise relation between proportion mean and overdispersion. The regression line is inferred by sccomp.
 
 ``` r
 mean_concentration_association = res %>% attr("mean_concentration_association")
@@ -116,17 +115,19 @@ mean_concentration_association = res %>% attr("mean_concentration_association")
 res |> 
   unnest(composition_CI) |>
   unnest(concentration) |> 
-  ggplot(aes(`.median_(Intercept)`, mean)) + 
-  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`), color="#4DAF4A", alpha = 0.4) +
+  ggplot(aes(`.median_(Intercept)`, -mean)) + 
+  geom_errorbar(aes(ymin = -`2.5%`, ymax=-`97.5%`), color="#4DAF4A", alpha = 0.4) +
   geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), color="#4DAF4A", alpha = 0.4) +
   geom_point() +
   geom_abline(intercept = mean_concentration_association[1], slope = mean_concentration_association[2], linetype = "dashed", color="grey") +
   xlab("Category logit-proportion mean") +
-  ylab("Category log-concentration") +
+  ylab("Category log-overdispersion") +
     theme_bw() 
 ```
 
 ![](man/figures/unnamed-chunk-10-1.png)<!-- -->
+
+## Posterior predictive check
 
 We can perform posterior predictive checks of the model. This gives
 information of how the model “interprets trends” in the data, and gives
@@ -176,6 +177,8 @@ ggplot() +
 ```
 
 ![](man/figures/unnamed-chunk-11-1.png)<!-- -->
+
+## Visualisation of the MCMC chains from the posterior distribution
 
 It is possible to directly evaluate the posterior distribution. In this
 example we plot the Monte Carlo chain for the slope parameter of the
