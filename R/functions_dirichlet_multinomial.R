@@ -47,6 +47,7 @@ dirichlet_multinomial_glm = function(.data,
                                      check_outliers = FALSE,
                                      approximate_posterior_inference = TRUE,
                                      variance_association = FALSE,
+                                     test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
                                      cores = detect_cores(), # For development purpose,
                                      seed = sample(1:99999, size = 1)
@@ -103,7 +104,7 @@ dirichlet_multinomial_glm = function(.data,
       ) %>%
 
       # add probability
-      left_join( get_probability_non_zero(parsed_fit), by="M" ) %>%
+      left_join( get_probability_non_zero(parsed_fit, prefix = "composition"), by="M" ) %>%
 
       # Clean
       select(-M) %>%
@@ -123,13 +124,13 @@ dirichlet_multinomial_glm = function(.data,
       select(-contains("posterior")) %>%
       fit_model_and_parse_out_missing_data(
         model_glm_dirichlet_multinomial,
-        formula, 
-        !!.sample, 
+        formula,
+        !!.sample,
         !!.cell_type,
-        !!.count, 
-        iteration = 2, 
+        !!.count,
+        iteration = 2,
         seed = seed,
-        approximate_posterior_inference = approximate_posterior_inference, 
+        approximate_posterior_inference = approximate_posterior_inference,
         false_positive_rate = false_positive_rate
       )
 
@@ -141,14 +142,14 @@ dirichlet_multinomial_glm = function(.data,
         significant =
           !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
           !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-      ) 
-
+      )
+  fit = attr(.data_2, "fit")
   }
 
   return_df %>%
 
     # Attach association mean concentration
-    add_attr(attr(.data_2, "fit"), "fit") %>%
+    add_attr(fit, "fit") %>%
     add_attr(data_for_model, "model_input")
 
 
@@ -166,8 +167,8 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
   .count = enquo(.count)
 
   model_generate = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  
-  
+
+
   # Run the first discovery phase with permissive false discovery rate
   fit_and_generated  = fit_and_generate_quantities(data_for_model, model_glm_dirichlet_multinomial, model_generate, iteration, chains= 4, output_samples = 5000, seed= seed, approximate_posterior_inference = approximate_posterior_inference)
 
@@ -285,8 +286,8 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
   }
 
   model_generate = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  
-  
+
+
   beta_posterior_corrected =
     fit_imputation %>%
     draws_to_tibble_x_y("counts", "N", "M") %>%
@@ -339,11 +340,11 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
 # Detect outliers
   outlier_df =
     beta_posterior_corrected %>%
-    
+
     select(fit_list) %>%
     unnest(fit_list) %>%
     .nest_subset(data = -c(N, M)) %>%
-    
+
     # Merge posterior data
     mutate(!!as.symbol(sprintf(
       "generated_data_posterior_%s", iteration
@@ -355,7 +356,7 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
                 unnest(!!as.symbol(
                   sprintf("generated_data_posterior_%s", iteration)
                 )))) %>%
-    
+
     # Add theoretical data quantiles
     mutate(!!as.symbol(sprintf(
       "generated_data_quantiles_%s", iteration
@@ -370,26 +371,26 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
         enframe() %>%
         spread(name, value)
     )) %>%
-    
+
     select(-data) %>%
-    
+
     right_join(.data %>% select(!!.count, N, M)) %>%
     unnest(!!as.symbol(
       sprintf("generated_data_quantiles_%s", iteration))) %>%
-  
-  
+
+
     mutate(!!as.symbol(sprintf("outlier_%s", iteration)) := !!.count < `5%` | !!.count > `95%`) %>%
-             
+
     select(N, M, outlier = !!as.symbol(sprintf("outlier_%s", iteration)), .lower = `5%`, .median = `50%`, .upper = `95%`)
-  
-count_data = 
+
+count_data =
   .data %>%
   left_join(outlier_df, by = c("N", "M") ) %>%
   select(-M, -N) %>%
   nest(count_data = -!!.cell_type)
 
 beta_summary %>%
-  
+
   left_join(.data %>% select(!!.cell_type, M), by = "M") %>%
   select(-M) %>%
   left_join(  count_data, by = quo_name(.cell_type)  ) %>%
@@ -615,6 +616,6 @@ get_model_from_data = function(file_compiled_model, model_code){
     model_generate = stan_model(model_code = model_code)
     model_generate  %>% saveRDS(file_compiled_model)
     model_generate
-    
+
   }
 }
