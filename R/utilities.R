@@ -704,33 +704,33 @@ get.elbow.points.indices <- function(x, y, threshold) {
 #' @keywords internal
 #' @noRd
 #'
-get_probability_non_zero = function(.data){
+get_probability_non_zero = function(.data, prefix = "", test_above_logit_fold_change = 0){
 
+  probability_column_name = sprintf("%s_prob_H0", prefix) %>% as.symbol()
+
+  total_draws = .data %>% pull(2) %>% .[[1]] %>% distinct(.draw) %>% nrow()
 
   .data %>%
-    unnest(beta_posterior_1 ) %>%
+    unnest(2 ) %>%
     filter(C ==2) %>%
     nest(data = -c(M, C_name)) %>%
     mutate(
-      bigger_zero = map_int(data, ~ .x %>% filter(.value>0) %>% nrow),
-      smaller_zero = map_int(data, ~ .x %>% filter(.value<0) %>% nrow)
+      bigger_zero = map_int(data, ~ .x %>% filter(.value>test_above_logit_fold_change) %>% nrow),
+      smaller_zero = map_int(data, ~ .x %>% filter(.value< -test_above_logit_fold_change) %>% nrow)
     ) %>%
     rowwise() %>%
     mutate(
-      prob_non_zero =
-        min(bigger_zero, smaller_zero) %>%
+      !!probability_column_name :=
+        1 - (
+          max(bigger_zero, smaller_zero) %>%
         #max(1) %>%
-        divide_by(bigger_zero + smaller_zero) %>%
-
-        # Because two sided test
-        multiply_by(2)
+        divide_by(total_draws)
+        )
     )  %>%
     ungroup() %>%
-    select(M, prob_non_zero) %>%
-
-    # Calculate false-discovery rate
-    arrange(prob_non_zero) %>%
-    mutate(false_discovery_rate = cummean(prob_non_zero))
+    select(M, !!probability_column_name)
+    # %>%
+    # mutate(false_discovery_rate = cummean(prob_non_zero))
 
 }
 
