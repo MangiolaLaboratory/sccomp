@@ -83,8 +83,8 @@ estimate_multi_beta_binomial_glm = function(.data,
 
 
   # Start first fit
-  message("sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]")
-
+  if(check_outliers) message("sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]")
+  else message("sccomp says: estimation [ETA: ~20s]")
 
   fit =
     data_for_model %>%
@@ -259,36 +259,81 @@ estimate_multi_beta_binomial_glm = function(.data,
 #'
 #'
 hypothesis_test_multi_beta_binomial_glm = function( .sample,
-                                                    .cell_type, .count, fit, data_for_model, percent_false_positive, check_outliers,  truncation_df2 = NULL) {
+                                                    .cell_type,
+                                                    .count,
+                                                    fit,
+                                                    data_for_model,
+                                                    percent_false_positive,
+                                                    check_outliers,
+                                                    truncation_df2 = NULL,
+                                                    variance_association = FALSE,
+                                                    test_composition_above_logit_fold_change ) {
 
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
 
-  parsed_fit =
+  do_test = ncol(data_for_model$X) > 1
+
+  parsed_beta =
     fit %>%
-    parse_fit(data_for_model, .)
+    draws_to_tibble_x_y("beta", "C", "M") %>%
+    left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
+    nest(beta_posterior_1 = -M)
 
-  minimum_logit_fold_change = 0.2
+  if(variance_association) {
+    parsed_alpha =
+      fit %>%
+      draws_to_tibble_x_y("alpha", "C", "M") %>%
+      left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
+      nest(alpha_1 = -M)
 
-  parsed_fit %>%
-    beta_to_CI(false_positive_rate = percent_false_positive/100 ) %>%
 
-    # Hypothesis test
-    when(
-      ncol(data_for_model$X) > 1 ~
-        mutate(
-          .,
-          significant =
+  }
 
-            !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) > minimum_logit_fold_change |
-            !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) < -minimum_logit_fold_change
-        ) ,
 
-        # add probability
-       # left_join( get_probability_non_zero(parsed_fit), by="M" ),
-      ~ (.)
-    )
+  parsed_beta %>%
+    beta_to_CI(false_positive_rate = percent_false_positive/100, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) %>%
+
+    # # ADD CI beta
+    # when(
+    #   do_test ~
+    #     mutate(
+    #       .,
+    #       composition_test = map_lgl(composition_CI , ~
+    #
+    #                                    pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > test_composition_above_logit_fold_change |
+    #                                    pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -test_composition_above_logit_fold_change
+    #       ) )  ,
+    #   ~ (.)
+    # ) %>%
+
+    # Add probability if do_test
+    when(do_test ~ left_join(., get_probability_non_zero(parsed_beta, prefix="composition", test_above_logit_fold_change = test_composition_above_logit_fold_change), by="M" ), ~ (.)) %>%
+
+    # Add ALPHA
+    when(do_test & variance_association ~ left_join(.,
+                                                    parsed_alpha %>%
+                                                      alpha_to_CI(false_positive_rate = percent_false_positive/100, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) ,
+                                                    by="M"
+    ), ~(.)) %>%
+
+    # ADD CI alpha
+    when(do_test & variance_association ~ left_join(., get_probability_non_zero(parsed_alpha, prefix="heterogeneity", test_above_logit_fold_change = 0), by="M" ), ~ (.))
+  # %>%
+  #
+  #   when(
+  #     do_test & variance_association  ~
+  #       mutate(
+  #         .,
+  #         heterogeneity_test = map_lgl(heterogeneity_CI , ~
+  #
+  #                                        pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > test_composition_above_logit_fold_change |
+  #                                        pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -test_composition_above_logit_fold_change
+  #         ) )  ,
+  #     ~ (.)
+  #   )
+
 
 }
 
@@ -344,7 +389,8 @@ multi_beta_binomial_glm = function(.data,
                                    variance_association = FALSE,
                                    cores = detectCores(), # For development purpose,
                                    seed = sample(1:99999, size = 1),
-                                   verbose = FALSE
+                                   verbose = FALSE,
+                                   test_composition_above_logit_fold_change
 ) {
 
   # Prepare column same enquo
@@ -355,20 +401,20 @@ multi_beta_binomial_glm = function(.data,
 
   result_list =
     estimate_multi_beta_binomial_glm(
-    .data = .data,
-    formula = formula,
-    .sample = !!.sample,
-    .cell_type = !!.cell_type,
-    .count = !!.count,
-    prior_mean_variable_association = prior_mean_variable_association,
-    percent_false_positive = percent_false_positive,
-    check_outliers = check_outliers,
-    approximate_posterior_inference = approximate_posterior_inference,
-    variance_association = variance_association,
-    cores = cores, # For development purpose,
-    seed = seed,
-    verbose = verbose
-  )
+      .data = .data,
+      formula = formula,
+      .sample = !!.sample,
+      .cell_type = !!.cell_type,
+      .count = !!.count,
+      prior_mean_variable_association = prior_mean_variable_association,
+      percent_false_positive = percent_false_positive,
+      check_outliers = check_outliers,
+      approximate_posterior_inference = approximate_posterior_inference,
+      variance_association = variance_association,
+      cores = cores, # For development purpose,
+      seed = seed,
+      verbose = verbose
+    )
 
 
   hypothesis_test_multi_beta_binomial_glm(
@@ -378,12 +424,13 @@ multi_beta_binomial_glm = function(.data,
     result_list$fit,
     result_list$data_for_model,
     percent_false_positive,
-    check_outliers,
-    result_list$truncation_df2
+    result_list$truncation_df2,
+    variance_association = variance_association,
+    test_composition_above_logit_fold_change = test_composition_above_logit_fold_change
   ) %>%
 
     # Join the precision
-    left_join(get_mean_precision(result_list$fit), by="M") %>%
+    left_join(get_mean_precision(result_list$fit, result_list$data_for_model), by="M") %>%
 
 
     # Clean
@@ -433,11 +480,41 @@ glm_multi_beta_binomial = function(input_df, formula, .sample){
 
 }
 
-get_mean_precision = function(fit){
+get_mean_precision = function(fit, data_for_model){
   fit %>%
     summary_to_tibble("alpha", "C", "M") %>%
+
+    # Just grub intercept of alpha
+    filter(C==1) %>%
     select( M, mean, `2.5%` , `97.5%`) %>%
     nest(concentration = -M)
+
+  # WRONG ATTEMPT TO PLOT ALPHA FROM MULTIPLE COVARIATES
+  # fit %>%
+  #   draws_to_tibble_x_y("alpha", "C", "M") %>%
+  #   nest(data = -c(M)) %>%
+  #
+  #   # Add Design matrix
+  #   left_join(
+  #     as_tibble(data_for_model$X, rownames="M") %>%
+  #       nest(X = -M) %>%
+  #       mutate(M = as.integer(M)),
+  #     by="M"
+  #   ) %>%
+  #   mutate(concentration = map2(
+  #     data, X,
+  #     ~ .x %>%
+  #           select(.draw, C, .value) %>%
+  #           spread(C, .value) %>%
+  #           as_matrix(rownames=".draw") %*%
+  #
+  #         ( .y %>% as_matrix() %>% t() ) %>%
+  #       quantile(c(0.025, 0.5, 0.975)) %>%
+  #       enframe() %>%
+  #       spread(name, value) %>%
+  #       rename(mean = `50%`)
+  #   )) %>%
+  #   select(-data, -X)
 }
 
 get_mean_precision_association = function(fit){
