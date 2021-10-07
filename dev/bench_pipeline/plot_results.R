@@ -24,7 +24,7 @@ library(glue)
 
 
 plot_auc =
-  dir("dev/benchmark_results_e3498c0f9349ba9df28728253b3c1963fcda4b4c", pattern = "auc", full.names = TRUE) %>%
+  dir("dev/benchmark_results", pattern = "auc", full.names = TRUE) %>%
   map_dfr(~ .x %>% readRDS()) %>%
   nest(data = c(name, auc)) %>%
   mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc))) %>%

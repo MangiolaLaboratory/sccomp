@@ -76,6 +76,7 @@ test_that("counts multi beta binomial outlier VB",{
       sample, cell_group, count,
       approximate_posterior_inference = FALSE,
       check_outliers = FALSE,
+      test_composition_above_logit_fold_change = 0,
       cores = 1
     )
 
