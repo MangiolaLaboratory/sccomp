@@ -24,18 +24,21 @@ estimated_files %>%
   when(
     length(estimated_files) >1 ~
       (.) %>%
-      mutate(hypothesis_edger = map(results_edger , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-PValue) %>% mutate(estimate = logFC))) %>%
-      mutate(hypothesis_deseq2 = map(results_deseq2 , ~ .x %>% arrange(padj) %>% mutate(probability = 1-pvalue) %>% mutate(estimate = log2FoldChange))) %>%
-      mutate(hypothesis_voom = map(results_voom , ~.x %>% arrange(adj.P.Val) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = logFC))) %>%
+      #mutate(hypothesis_edger = map(results_edger , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-PValue) %>% mutate(estimate = logFC))) %>%
+      #mutate(hypothesis_deseq2 = map(results_deseq2 , ~ .x %>% arrange(padj) %>% mutate(probability = 1-pvalue) %>% mutate(estimate = log2FoldChange))) %>%
+      #mutate(hypothesis_voom = map(results_voom , ~.x %>% arrange(adj.P.Val) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = logFC))) %>%
       mutate(hypothesis_speckle = map(results_speckle , ~ .x %>% arrange(FDR) %>% mutate(probability = 1-P.Value) %>% mutate(estimate = -Tstatistic    ))) %>%
       mutate(hypothesis_logitLinear = map(results_logitLinear , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
       mutate(hypothesis_ttest = map(results_ttest , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
+      mutate(hypothesis_quasiBinomial = map(results_quasiBinomial , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
+      mutate(hypothesis_rlm = map(results_rlm , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
+
       mutate(hypothesis_DirichletMultinomial  = map(
         results_DirichletMultinomial ,
         ~ .x  %>%
-          arrange(false_discovery_rate) %>%
-          mutate(probability = 1-false_discovery_rate) %>%
-          mutate(estimate = .median_type )
+          arrange(composition_prob_H0) %>%
+          mutate(probability = 1-composition_prob_H0) %>%
+          mutate(estimate = composition_effect_type )
       )),
     ~ (.)
   )%>%
@@ -43,9 +46,9 @@ estimated_files %>%
   mutate(hypothesis_sccomp = map(
     results_sccomp ,
     ~ .x  %>%
-      arrange(false_discovery_rate) %>%
-      mutate(probability = 1-false_discovery_rate) %>%
-      mutate(estimate = .median_type )
+      arrange(composition_prob_H0) %>%
+      mutate(probability = 1-composition_prob_H0) %>%
+      mutate(estimate = composition_effect_type )
   )) %>%
 
   # Clean
@@ -62,7 +65,6 @@ estimated_files %>%
     data, value,
     ~ left_join(
       .x %>%
-        unnest(coefficients) %>%
         distinct(cell_type, beta_1),
 
       .y  %>%

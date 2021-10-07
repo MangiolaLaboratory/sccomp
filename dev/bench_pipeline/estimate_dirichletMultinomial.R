@@ -13,7 +13,7 @@ add_outliers = as.integer(args[3])
 
 
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
-beta_0 = readRDS("dev/beta_0.rds")
+# beta_0 = readRDS("dev/beta_0.rds")
 
 
 # Iterate over runs
@@ -21,10 +21,10 @@ readRDS(input_file) %>%
   mutate( results_DirichletMultinomial = map2(
     data, run,
     ~  .x %>%
-      mutate(.value = as.integer(.value)) %>%
+      mutate(generated_counts = as.integer(generated_counts)) %>%
       sccomp_glm(
         ~type,
-        sample, cell_type, .value,
+        sample, cell_type, generated_counts,
         check_outliers = FALSE,
         approximate_posterior_inference = FALSE,
         percent_false_positive = 0.001 * 100,
