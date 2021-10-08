@@ -756,7 +756,7 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 #'
 #'
 #'
-design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficient_matrix){
+design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficient_matrix, seed = sample(1:100000, size = 1)){
 
   design_df = as.data.frame(design_matrix)
   coefficient_df = as.data.frame(coefficient_matrix)
@@ -780,7 +780,7 @@ design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficie
                 .sample = sample,
                 .cell_group = cell_type,
                 .coefficients = c(beta_1, beta_2),
-                seed = sample(1:100000, size = 1)
+                seed = seed
   )
 
 
