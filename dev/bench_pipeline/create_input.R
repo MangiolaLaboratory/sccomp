@@ -98,8 +98,7 @@ tibble(run = 1:50) %>%
           mutate(generated_counts = (generated_counts * ratio) %>% as.integer()) %>%
           rowwise() %>%
           mutate(generated_counts = max(0, generated_counts) %>% as.integer()) %>%
-          ungroup() %>%
-          select(-ratio)
+          ungroup()
       }
 
       else {

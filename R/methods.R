@@ -298,8 +298,7 @@ sccomp_glm_data_frame_raw = function(.data,
 
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
-  .sample_for_tidyr = ensym(.sample)
-  .cell_group_for_tidyr = ensym(.cell_group)
+
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -319,17 +318,10 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula)
   ))
 
+
   # Make counts
   .data %>%
-    count(!!.sample,
-          !!.cell_group,
-          name = "count") %>%
-
-    complete(
-      nesting(!!.sample_for_tidyr),!!.cell_group_for_tidyr,
-      fill = list(count = 0)
-    ) %>%
-    mutate(count = as.integer(count)) %>%
+    class_list_to_counts(!!.sample, !!.cell_group) %>%
 
     # Add formula information
     when(
@@ -419,7 +411,9 @@ sccomp_glm_data_frame_counts = function(.data,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
       verbose = verbose,
       seed = seed
-    )
+    ) %>%
+    add_attr(.sample, ".sample") %>%
+    add_attr(.cell_group, ".cell_group")
 }
 
 #' replicate_data
