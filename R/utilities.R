@@ -393,6 +393,21 @@ fit_model = function(
       ) %>%
         min(cores)
 
+  # library(VGAM)
+  # ff = VGAM::vglm(
+  #   cbind(a, b) ~ cov,
+  #   dirmultinomial,
+  #   data = tibble(
+  #     a = data_for_model$y[,1],
+  #     b = data_for_model$y[,2],
+  #     cov = data_for_model$X[,2]
+  #   ),
+  #   trace = TRUE
+  # ) %>%
+  # summary()
+  #
+  # print(ff)
+
   if(!approximate_posterior_inference)
     sampling(
       model,
@@ -782,6 +797,33 @@ design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficie
                 .coefficients = c(beta_1, beta_2),
                 seed = seed
   )
+
+
+}
+
+design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, seed = sample(1:100000, size = 1)){
+
+  # design_df = as.data.frame(design_matrix)
+  # coefficient_df = as.data.frame(coefficient_matrix)
+  #
+  # rownames(design_df) = sprintf("sample_%s", 1:nrow(design_df))
+  # colnames(design_df) = sprintf("covariate_%s", 1:ncol(design_df))
+  #
+  # rownames(coefficient_df) = sprintf("cell_type_%s", 1:nrow(coefficient_df))
+  # colnames(coefficient_df) = sprintf("beta_%s", 1:ncol(coefficient_df))
+
+  exposure = 500
+
+  prop.means =
+    matrix(c(rep(1, length(design_matrix)), design_matrix), ncol=2) %*%
+    coefficient_matrix %>%
+    boot::inv.logit()
+
+  extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * 100) %>%
+    as_tibble(.name_repair = "unique", rownames = "sample") %>%
+    mutate(covariate_1= design_matrix) %>%
+    gather(cell_type, generated_counts, -sample, -covariate_1) %>%
+    mutate(generated_counts = as.integer(generated_counts))
 
 
 }
