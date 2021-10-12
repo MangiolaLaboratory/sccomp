@@ -325,7 +325,11 @@ sccomp_glm_data_frame_raw = function(.data,
 
     # Add formula information
     when(
-      length(parse_formula(formula))>0 ~ left_join(., .data %>% distinct(!!.sample,!!as.symbol(parse_formula(formula)) )),
+      length(parse_formula(formula))>0 ~ left_join(.,
+                                                   .data %>%
+                                                     select(!!.sample, parse_formula(formula) ) %>%
+                                                     distinct()
+                                                  ),
       ~ (.)
     ) %>%
 
