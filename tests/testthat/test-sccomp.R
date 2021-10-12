@@ -29,31 +29,22 @@ data("counts_obj")
 #
 # })
 
-test_that("counts dirichlet multinomial outlier VB",{
+# test_that("counts dirichlet multinomial outlier VB",{
+#
+#   if(interactive()){
+#     res =
+#       counts_obj  |>
+#       sccomp_glm(
+#         formula = ~ type,
+#         sample, cell_group, count,
+#         noise_model = "dirichlet_multinomial",
+#         cores = 1
+#       )
+#   }
+#
+# })
 
-  if(interactive()){
-    res =
-      counts_obj  |>
-      sccomp_glm(
-        formula = ~ type,
-        sample, cell_group, count,
-        noise_model = "dirichlet_multinomial",
-        cores = 1
-      )
-  }
-
-})
-
-test_that("counts multi beta binomial outlier VB",{
-
-  res =
-    counts_obj  |>
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_group, count,
-      approximate_posterior_inference = TRUE,
-      cores = 1
-    )
+test_that("multi beta binomial counts",{
 
   res =
     counts_obj  |>
@@ -61,20 +52,6 @@ test_that("counts multi beta binomial outlier VB",{
       formula = ~ type,
       sample, cell_group, count,
       approximate_posterior_inference = TRUE,
-      percent_false_positive = 10,
-      cores = 1
-    )
-
-})
-
-test_that("counts multi beta binomial outlier VB",{
-
-  res =
-    counts_obj  |>
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_group, count,
-      approximate_posterior_inference = FALSE,
       check_outliers = FALSE,
       cores = 1
     )
@@ -124,17 +101,3 @@ test_that("multi beta binomial from metadata",{
 
 })
 
-test_that("other percent false positive",{
-
-  res =
-    seurat_obj[[]] |>
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_group,
-      check_outliers = FALSE,
-      approximate_posterior_inference = TRUE,
-      percent_false_positive = 10,
-      cores = 1
-    )
-
-})
