@@ -27,8 +27,6 @@
 #' @format  A text file containing stan code for the Dirichlet model.
 #' @usage data(glm_dirichlet_multinomial)
 #'
-#' @keywords internal
-#' @noRd
 #'
 "glm_dirichlet_multinomial"
 
@@ -37,8 +35,6 @@
 #' @format  A text file containing stan code for the Dirichlet model.
 #' @usage data(glm_dirichlet_multinomial_generate_quantities)
 #'
-#' @keywords internal
-#' @noRd
 #'
 "glm_dirichlet_multinomial_generate_quantities"
 
@@ -47,8 +43,6 @@
 #' @format  A text file containing stan code for the Dirichlet model.
 #' @usage data(glm_dirichlet_multinomial_imputation)
 #'
-#' @keywords internal
-#' @noRd
 #'
 "glm_dirichlet_multinomial_imputation"
 
@@ -57,7 +51,21 @@
 #' @format  A text file containing stan code for the Beta only model.
 #' @usage data(glm_multi_beta_generate_data)
 #'
-#' @keywords internal
-#' @noRd
 #'
 "glm_multi_beta_generate_data"
+
+#' glm_multi_beta
+#'
+#' @format  A text file containing stan code for the Beta only model.
+#' @usage data(glm_multi_beta)
+#'
+#'
+"glm_multi_beta"
+
+#' oligo_breast_estimate
+#'
+#' @format  A sccomp_glm result.
+#' @usage data(oligo_breast_estimate)
+#'
+#'
+"oligo_breast_estimate"

@@ -297,6 +297,7 @@ draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
 
 #' @importFrom tidyr separate
 #' @importFrom purrr when
+#' @importFrom rstan summary
 #'
 #' @param fit A fit object
 #' @param par A character vector. The parameters to extract.
@@ -754,7 +755,8 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 #'
 #' @export
 #'
-#'
+#' @keywords internal
+#' @noRd
 #'
 design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficient_matrix){
 

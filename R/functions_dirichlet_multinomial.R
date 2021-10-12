@@ -326,7 +326,7 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     fit, "beta", "C","M",
     probs=c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
   ) %>%
-    select(-.variable, -n_eff, -Rhat, -mean, -se_mean,  -  sd) %>%
+    select(-.variable, -n_eff, -`Rhat`, -mean, -se_mean,  -  sd) %>%
     setNames(c(colnames(.)[1:2], ".lower", ".median", ".upper")) %>%
     left_join(
       tibble(
