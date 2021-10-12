@@ -61,11 +61,3 @@
 #'
 #'
 "glm_multi_beta"
-
-#' oligo_breast_estimate
-#'
-#' @format  A sccomp_glm result.
-#' @usage data(oligo_breast_estimate)
-#'
-#'
-"oligo_breast_estimate"
