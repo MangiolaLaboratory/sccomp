@@ -281,10 +281,12 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     )
 
   # Check if package is installed, otherwise install
-  if (find.package("furrr", quiet = TRUE) %>% length %>% equals(0)) {
-    message("Installing furrr")
-    install.packages("furrr", repos = "https://cloud.r-project.org")
-  }
+  # if (find.package("furrr", quiet = TRUE) %>% length %>% equals(0)) {
+  #   message("Installing furrr")
+  #   install.packages("furrr", repos = "https://cloud.r-project.org")
+  # }
+
+  if (!requireNamespace("furrr")) stop("sccomp says: please install furrr to use this function.")
 
   model_generate = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
 
