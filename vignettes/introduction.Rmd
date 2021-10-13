@@ -70,4 +70,7 @@ sccomp_glm(
 )
 
 ```
+```{r}
+sessionInfo()
+```
 
