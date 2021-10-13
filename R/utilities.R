@@ -753,8 +753,6 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 #' @importFrom dplyr left_join
 #' @importFrom tidyr expand_grid
 #'
-#' @export
-#'
 #' @keywords internal
 #' @noRd
 #'
