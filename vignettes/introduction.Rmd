@@ -41,29 +41,17 @@ devtools::install_github("stemangiola/sccomp")
 
 # Analysis
 
-## From Seurat Object
+## From Seurat, SingleCellExperiment and metadata objects
 
 ```{r eval=FALSE}
 
-res =
-  seurat_obj |>
+seurat_obj |>
   sccomp_glm(~ type, sample, cell_group )
 
-```
-
-```{r eval=FALSE}
-res =
-  sce_obj |>
+sce_obj |>
   sccomp_glm(~ type, sample, cell_group)
 
-```
-
-## From data.frame 
-
-```{r eval=FALSE}
-
-res =
-  seurat_obj[[]] |>
+seurat_obj[[]] |>
   sccomp_glm(~ type, sample, cell_group )
 
 ```
