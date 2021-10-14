@@ -139,5 +139,13 @@ job({
 })
 
 
+job({
 
+  data = readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds")
+  colData(data) = colData(data)[,!colnames(colData(data)) %in% c("UMAP1", "UMAP2")]
+  data %>%
+    mutate(cell_type = CellTypesFinal, sample=Sample, UMAP_1 = UMAP1, UMAP_2 = UMAP2 ) %>%
+  saveRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/UMAP_BRCA1_s41467-021-21783-3.rds")
+
+})
 
