@@ -252,6 +252,12 @@ job({
 
 cool_palette = c("#d03161","#ee8080","#bfd8d1","#178a94","#2b374b")
 cool_palette = c("#9cb097", "#e9d6b6", "#8f7b63", "#4c474b", "#415346")
+cool_palette = c("#977b51", "#6a8688", "#714246",  "#233a3c", "#472749", "#d3c1bc", "#9cb097", "#e9d6b6", "#8f7b63", "#4c474b", "#415346")
+
+cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f93", "#9bd18e", "#eece97", "#8f7b63", "#4c474b", "#415346")
+
+color_palette_link = cool_palette %>% setNames(c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))
+show_col(cool_palette)
 
 estimate_plots =
   data_estimates %>%
@@ -261,8 +267,9 @@ estimate_plots =
     ~ .x %>%
       filter(label %>% is.na %>% `!`) %>%
       unite("color", c(label, significant_in_article)) %>%
-      filter(!color %in% c("Non-significant_FALSE", "Diff abundant_TRUE")) %>%
-      mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE")))
+      mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))) %>%
+      filter(!color %in% c("Non-significant_FALSE", "Diff abundant_TRUE"))
+
   )) %>%
 
   filter(map_int(data, ~ nrow(.x))>0) %>%
@@ -286,7 +293,7 @@ estimate_plots =
         facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=2) +
         scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
         scale_color_manual(values = c("black", "#e11f28")) +
-        scale_fill_manual(values = cool_palette) +
+        scale_fill_manual(values = color_palette_link) +
         #scale_fill_brewer(palette="Set1") +
         xlab("Biological condition") +
         ylab("Cell-group proportion (decimal)") +
@@ -298,13 +305,13 @@ estimate_plots =
         geom_boxplot(
           aes(factor_of_interest, proportion, fill=color),
           outlier.shape = NA,
-          data = .x %>% filter(!outlier)
+          data = .x %>% filter(!outlier), lwd =0.5, fatten = 0.5
         ) +
         geom_jitter(aes(factor_of_interest, proportion, color=outlier), size = 0.3, data = .x, height = 0) +
         facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=1) +
         scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
         scale_color_manual(values = c("black", "#e11f28")) +
-        scale_fill_manual(values = cool_palette) +
+        scale_fill_manual(values = color_palette_link) +
         #scale_fill_brewer(palette="Set1") +
         xlab("Biological condition") +
         ylab("Cell-group proportion (decimal)") +
@@ -350,25 +357,84 @@ plot_df =
         aes(UMAP_1, UMAP_2, label = cell_type), size = 2.5
       ) +
       #facet_wrap(~dataset, scale="free") +
-      scale_fill_manual(values = cool_palette) +
+      scale_fill_manual(values = color_palette_link) +
       #scale_fill_brewer(palette="Set1") +
       # scale_fill_manual(values = friendly_cols, na.value = "grey") +
       scale_color_manual(values = friendly_cols, na.value = "grey") +
       guides( fill = "none" ) +
       theme_UMAP +
-      theme(title = element_text(size = 7)) +
+      theme(title = element_text(size = 7),
+            axis.line = element_blank(),
+            axis.ticks = element_blank(),
+            axis.title.x = element_blank(),
+            axis.title.y = element_blank()
+          ) +
       ggtitle(.y)
   )) %>%
 
   # add estimate_plots
   left_join( select(estimate_plots, dataset, estimate_plot)   )
 
+# Statistics on novel findings
+data_estimates %>%
+  mutate(data = map(data, ~ distinct(.x, cell_type, label, significant_in_article))) %>%
+  unnest(data) %>%
+  unite("color", c(label, significant_in_article)) %>%
+  mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))) %>%
 
+  add_count(dataset, name = "dataset_size") %>%
+  count(color, dataset, dataset_size) %>%
+
+  nest(data = -dataset) %>%
+  mutate(sum_interesting = map_int(data, ~ .x %>% filter(!is.na(color)) %>% pull(n) %>% sum)) %>%
+  unnest(data) %>%
+  group_by(color) %>%
+  summarise(n=sum(n)) %>%
+  mutate(prop = n/sum(n))
+
+# How many discrepancies included outliers
+data_estimates %>%
+  mutate(data = map(data, ~ distinct(.x, cell_type, label, significant_in_article))) %>%
+  unnest(data) %>%
+  unite("color", c(label, significant_in_article))  %>%
+
+  # Join outlers
+  left_join(
+    data_estimates %>%
+      mutate(number_of_cell_types = map_int(data, ~ distinct(.x, cell_type) %>% nrow())) %>%
+      mutate(outliers = map(
+        data,
+        ~ .x %>%
+          distinct(cell_type, outlier)
+      )) %>%
+      unnest(outliers) %>% select(cell_type, outlier, dataset)
+  ) %>%
+  filter(color=="Diff abundant_FALSE")
+
+# The comparison between sccomp estimation and the estimation from the selected studies revealed that
+# 15% of the calls that disagreed included one or more outliers.
+data_estimates %>%
+  mutate(data = map(data, ~ distinct(.x, cell_type, label, significant_in_article))) %>%
+  unnest(data) %>%
+  unite("color", c(label, significant_in_article))  %>%
+
+  # Join outlers
+  left_join(
+    data_estimates %>%
+      mutate(number_of_cell_types = map_int(data, ~ distinct(.x, cell_type) %>% nrow())) %>%
+      mutate(outliers = map(
+        data,
+        ~ .x %>%
+          distinct(cell_type, outlier)
+      )) %>%
+      unnest(outliers) %>% select(cell_type, outlier, dataset)
+  ) %>%
+  filter(color %in% c("Diff abundant_FALSE", "Non-significant_TRUE")) %>% count(outlier)
 
 plot_novel_results =
 
   data_estimates %>%
-    mutate(data = map(data, ~ select(.x, sample, cell_type, label, significant_in_article))) %>%
+    mutate(data = map(data, ~ distinct(.x, cell_type, label, significant_in_article))) %>%
     unnest(data) %>%
     unite("color", c(label, significant_in_article)) %>%
     mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))) %>%
@@ -385,13 +451,23 @@ plot_novel_results =
     ggplot() +
     geom_bar(
       aes(forcats::fct_reorder(dataset, sum_interesting, .desc = TRUE ),  n, fill=fct_rev(factor(color,  exclude = NULL)  )),
-      stat = "identity", position = "stack"
+      stat = "identity", position = "stack",lwd =0.5, fatten = 0.5
     )+
-    scale_fill_manual(values = cool_palette) +
+    scale_fill_manual(values = color_palette_link) +
     xlab("Dataset") +
     ylab("Number of cell-types") +
   multipanel_theme +
     theme( axis.text.x = element_text(angle=30, hjust = 1))
+
+# We identified and quarantined outlier observations in all datasets,
+# with an 19% of cell types containing one or more outliers.
+data_estimates %>%
+  mutate(outliers = map(
+    data,
+    ~ .x %>%
+      distinct(cell_type, outlier)
+  )) %>%
+  unnest(outliers) %>% filter(outlier)
 
 plot_outliers =
   data_estimates %>%
@@ -407,19 +483,90 @@ plot_outliers =
   unnest(outliers) %>%
 
   ggplot() +
-  geom_bar(aes(forcats::fct_reorder(dataset, nn, .desc = TRUE ),  n, fill=significant  ), stat = "identity", position = "stack")+
+  geom_bar(
+    aes(forcats::fct_reorder(dataset, nn, .desc = TRUE ),  n, fill=significant  ),
+    stat = "identity", position = "stack", lwd =0.5, fatten = 0.5
+  )+
   geom_point(aes(dataset, number_of_cell_types) ) +
   scale_fill_manual(values = c("grey", "#e11f28")) +
   xlab("Dataset") +
   ylab("Count of outliers") +
+  guides(fill="none") +
   multipanel_theme +
   theme(legend.position = "none", axis.text.x = element_text(angle=30, hjust = 1))
+
+
+# Mean variance association
+job({
+  data_mean_variance_association =
+
+    # Import data multi beta
+    tribble(
+      ~dataset, ~data,
+
+
+      # Comparing Metastasis vs Primary
+      "UVM",
+      readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma_no_heterogeneity.rds"),
+
+      "renal_cell_carcinoma",
+      readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds"),
+
+      # Here factor of interest is subtype== triple-negative versus the rest
+      "bc_cells",
+      readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") ,
+
+      "COVID",
+      readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds"),
+
+
+      "melanoma_time",
+      readRDS("dev/data_integration/estimate_GSE120575_melanoma_pre_vs_post_treatment.rds"),
+
+
+      "melanoma_responder",
+      readRDS("dev/data_integration/estimate_GSE120575_melanoma_responders_vs_not.rds") ,
+
+      "BRCA1_breast",
+      readRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds")
+    )
+})
+
+# Plor trends
+slopes_df =
+  data_mean_variance_association %>%
+  mutate(data = map(
+    data,
+    ~ .x %>%
+      attr("mean_concentration_association") %>%
+      t() %>%
+      as.data.frame %>%
+      setNames(c("intercept", "slope", "standard_deviation"))
+  )) %>%
+  unnest(data)
+
+plot_association_all =
+  data_mean_variance_association %>%
+  mutate(data = map(data,  ~ .x %>% select(composition_CI,concentration)  )) %>%
+  unnest(data) %>%
+  unnest(c(composition_CI ,  concentration  )) %>%
+  ggplot(aes(`.median_(Intercept)`, mean)) +
+  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`, color=dataset),  alpha = 0.4) +
+  geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`, color=dataset), alpha = 0.4) +
+  geom_point(size=0.1) +
+  geom_abline(aes(intercept =  intercept, slope = slope, color = dataset), linetype = "dashed", data = slopes_df) +
+  scale_color_brewer(palette="Set1") +
+  xlab("Category rate") +
+  ylab("Category log-concentration") +
+  multipanel_theme
+
+
 
 # size 1 + 5
 p =
   (
-  ( plot_novel_results / plot_outliers ) |
-(
+  ( plot_novel_results | plot_outliers | plot_association_all ) /
+((
   ( plot_df$UMAP_plot[[4]] + plot_df$estimate_plot[[4]] + plot_df$UMAP_plot[[6]] + plot_df$estimate_plot[[6]] +  plot_layout(widths = c(1, 2.5/2, 1, 2.5/2)) ) / # size 1 + 4
 
     ( plot_df$UMAP_plot[[3]] + plot_df$estimate_plot[[3]] + plot_df$UMAP_plot[[2]] + plot_df$estimate_plot[[2]] +  plot_layout(widths = c(1, 2, 1, 0.50)) ) / # size 1 + 4
@@ -433,8 +580,9 @@ p =
 
   # Style
   plot_layout( nrow=4)
-  ) + plot_layout(guides = 'collect', widths = c(1, 7)) &
-  theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom")
+  ) )+
+  plot_layout(guides = 'collect', height = c(1, 5)) &
+  theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom", legend.key.size = unit(0.2, 'cm'))
 
 ggsave(
   "dev/article_figures/novel_results_plot.pdf",
