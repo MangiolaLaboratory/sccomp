@@ -750,13 +750,26 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 
 }
 
+#' design_matrix_and_coefficients_to_simulation
+#'
+#' @description Create simulation from design matrix and coefficient matrix
+#'
 #' @importFrom dplyr left_join
 #' @importFrom tidyr expand_grid
 #'
 #' @keywords internal
 #' @noRd
 #'
-design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficient_matrix){
+#' @param design_matrix A matrix
+#' @param coefficient_matrix A matrix
+#'
+#' @return A data frame
+#'
+#'
+#'
+design_matrix_and_coefficients_to_simulation = function(
+  design_matrix, coefficient_matrix
+){
 
   design_df = as.data.frame(design_matrix)
   coefficient_df = as.data.frame(coefficient_matrix)
