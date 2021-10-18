@@ -10,12 +10,11 @@ library(patchwork)
 library(forcats)
 
 # Load multipanel_theme
-source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/305ed9ba2af815fdef3214b9e6171008d5917400/ggplot_theme_multipanel")
+source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/15bcd45b7899b2d72ae46619a3e3cdf8fd6c0e5d/ggplot_theme_multipanel")
 
-set.seed(42)
+  set.seed(42)
 
 # Load multipanel_theme
-source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/305ed9ba2af815fdef3214b9e6171008d5917400/ggplot_theme_multipanel")
 theme_UMAP =
   list(
     multipanel_theme,
@@ -115,14 +114,14 @@ job({
   mutate(ptime = scales::rescale(ptime)) %>%
     rename(cell_type = CellTypesFinal) %>%
     rename(sample = Sample) %>%
-  sccomp_glm(
-    formula = ~ ptime,
-    Sample, CellTypesFinal ,
-    approximate_posterior_inference = FALSE,
-    variance_association = FALSE,
-    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-  ) %>%
-  saveRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds")
+    sccomp_glm(
+      formula = ~ ptime,
+      Sample, cell_type ,
+      approximate_posterior_inference = FALSE,
+      variance_association = FALSE,
+      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
+    ) %>%
+    saveRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds")
 })
 
 
@@ -236,17 +235,18 @@ job({
 })
 
 job({
+  library(tidySingleCellExperiment)
   counts  =
     dir("dev/data_integration/", pattern = "^UMAP_", full.names = TRUE) %>%
     grep("UMAP_oligo", ., invert = TRUE, value = TRUE) %>%
     grep("COVID", ., invert = TRUE, value = TRUE) %>%
     c("dev/data_integration/s41587-020-0602-4_COVID_19.rds") %>%
     map(~ readRDS(.x) %>%
-          as_tibble() %>%
+          tidyseurat::as_tibble() %>%
           select(cell, sample, cell_type, UMAP_1, UMAP_2) %>%
           mutate(file = .x)
     ) %>%
-    reduce(bind_rows)
+    purrr::reduce(bind_rows)
 })
 
 
@@ -257,7 +257,7 @@ cool_palette = c("#977b51", "#6a8688", "#714246",  "#233a3c", "#472749", "#d3c1b
 cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f93", "#9bd18e", "#eece97", "#8f7b63", "#4c474b", "#415346")
 
 color_palette_link = cool_palette %>% setNames(c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))
-show_col(cool_palette)
+scales::show_col(cool_palette)
 
 estimate_plots =
   data_estimates %>%
