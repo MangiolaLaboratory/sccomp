@@ -300,6 +300,27 @@ estimate_plots =
         guides(fill="none", color="none") +
         multipanel_theme
 
+      else if(.y == "melanoma_response")
+        ggplot() +
+        geom_boxplot(
+          aes(factor_of_interest, proportion, fill=color),
+          outlier.shape = NA,
+          data = .x %>% filter(!outlier), lwd =0.5, fatten = 0.5
+        ) +
+        geom_jitter(
+          aes(factor_of_interest, proportion, color=outlier, shape = time),
+          size = 0.3, data = .x, height = 0
+        ) +
+        facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=1) +
+        scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
+        scale_color_manual(values = c("black", "#e11f28")) +
+        scale_fill_manual(values = color_palette_link) +
+        #scale_fill_brewer(palette="Set1") +
+        xlab("Biological condition") +
+        ylab("Cell-group proportion (decimal)") +
+        guides(fill="none", color="none") +
+        multipanel_theme
+
       else
         ggplot() +
         geom_boxplot(
@@ -550,14 +571,14 @@ plot_association_all =
   mutate(data = map(data,  ~ .x %>% select(composition_CI,concentration)  )) %>%
   unnest(data) %>%
   unnest(c(composition_CI ,  concentration  )) %>%
-  ggplot(aes(`.median_(Intercept)`, mean)) +
-  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`, color=dataset),  alpha = 0.4) +
+  ggplot(aes(`.median_(Intercept)`, -mean)) +
+  geom_errorbar(aes(ymin = -`2.5%`, ymax=-`97.5%`, color=dataset),  alpha = 0.4) +
   geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`, color=dataset), alpha = 0.4) +
   geom_point(size=0.1) +
-  geom_abline(aes(intercept =  intercept, slope = slope, color = dataset), linetype = "dashed", data = slopes_df) +
+  geom_abline(aes(intercept =  -intercept, slope = -slope, color = dataset), linetype = "dashed", data = slopes_df) +
   scale_color_brewer(palette="Set1") +
-  xlab("Category rate") +
-  ylab("Category log-concentration") +
+  xlab("Category logit mean") +
+  ylab("Category log-overdispersion") +
   multipanel_theme
 
 
@@ -581,7 +602,7 @@ p =
   # Style
   plot_layout( nrow=4)
   ) )+
-  plot_layout(guides = 'collect', height = c(1, 5)) &
+  plot_layout(guides = 'collect', height = c(1, 7)) &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom", legend.key.size = unit(0.2, 'cm'))
 
 ggsave(
@@ -589,7 +610,7 @@ ggsave(
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 183 ,
+  height = 220 ,
   limitsize = FALSE
 )
 
@@ -598,6 +619,6 @@ ggsave(
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 183 ,
+  height = 220 ,
   limitsize = FALSE
 )
