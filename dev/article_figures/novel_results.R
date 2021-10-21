@@ -250,12 +250,10 @@ job({
 })
 
 
-cool_palette = c("#d03161","#ee8080","#bfd8d1","#178a94","#2b374b")
-cool_palette = c("#9cb097", "#e9d6b6", "#8f7b63", "#4c474b", "#415346")
-cool_palette = c("#977b51", "#6a8688", "#714246",  "#233a3c", "#472749", "#d3c1bc", "#9cb097", "#e9d6b6", "#8f7b63", "#4c474b", "#415346")
-
+# cool_palette = c("#d03161","#ee8080","#bfd8d1","#178a94","#2b374b")
+# cool_palette = c("#9cb097", "#e9d6b6", "#8f7b63", "#4c474b", "#415346")
+# cool_palette = c("#977b51", "#6a8688", "#714246",  "#233a3c", "#472749", "#d3c1bc", "#9cb097", "#e9d6b6", "#8f7b63", "#4c474b", "#415346")
 cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f93", "#9bd18e", "#eece97", "#8f7b63", "#4c474b", "#415346")
-
 color_palette_link = cool_palette %>% setNames(c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))
 scales::show_col(cool_palette)
 
@@ -300,21 +298,23 @@ estimate_plots =
         guides(fill="none", color="none") +
         multipanel_theme
 
-      else if(.y == "melanoma_response")
+      else if(.y == "melanoma_responder")
         ggplot() +
         geom_boxplot(
           aes(factor_of_interest, proportion, fill=color),
           outlier.shape = NA,
           data = .x %>% filter(!outlier), lwd =0.5, fatten = 0.5
         ) +
-        geom_jitter(
+        geom_point(
+          position = position_jitter(width = 0.2, height = 0),
           aes(factor_of_interest, proportion, color=outlier, shape = time),
-          size = 0.3, data = .x, height = 0
+          size = 0.7, data = .x
         ) +
         facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=1) +
         scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
         scale_color_manual(values = c("black", "#e11f28")) +
         scale_fill_manual(values = color_palette_link) +
+        #scale_shape_manual(values = c(1, 19)) +
         #scale_fill_brewer(palette="Set1") +
         xlab("Biological condition") +
         ylab("Cell-group proportion (decimal)") +
@@ -590,11 +590,9 @@ p =
 ((
   ( plot_df$UMAP_plot[[4]] + plot_df$estimate_plot[[4]] + plot_df$UMAP_plot[[6]] + plot_df$estimate_plot[[6]] +  plot_layout(widths = c(1, 2.5/2, 1, 2.5/2)) ) / # size 1 + 4
 
-    ( plot_df$UMAP_plot[[3]] + plot_df$estimate_plot[[3]] + plot_df$UMAP_plot[[2]] + plot_df$estimate_plot[[2]] +  plot_layout(widths = c(1, 2, 1, 0.50)) ) / # size 1 + 4
-
-    # size 1 + 1
-
     ( plot_df$UMAP_plot[[5]] + plot_df$estimate_plot[[5]] +  plot_layout(widths = c(1, 3.5)) ) / # size 1 + 9
+
+    ( plot_df$UMAP_plot[[3]] + plot_df$estimate_plot[[3]] + plot_df$UMAP_plot[[2]] + plot_df$estimate_plot[[2]] +  plot_layout(widths = c(1, 2, 1, 0.50)) ) / # size 1 + 4
 
     ( plot_df$UMAP_plot[[1]] + plot_df$estimate_plot[[1]]  +  plot_layout(widths = c(1, 3.5)) )
 ) +
