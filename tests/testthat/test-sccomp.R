@@ -52,7 +52,8 @@ test_that("multi beta binomial from Seurat",{
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = TRUE,
-      cores = 1
+      cores = 1,
+      mcmc_seed = 42
     )  |>
     filter(composition_prob_H0<0.05) |>
     nrow() |>
@@ -68,7 +69,8 @@ test_that("multi beta binomial from SCE",{
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = TRUE,
-      cores = 1
+      cores = 1,
+      mcmc_seed = 42
     )  |>
     filter(composition_prob_H0<0.05) |>
     nrow() |>
@@ -84,7 +86,8 @@ test_that("multi beta binomial from metadata",{
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = TRUE,
-      cores = 1
+      cores = 1,
+      mcmc_seed = 42
     )  |>
     filter(composition_prob_H0<0.05) |>
     nrow() |>
