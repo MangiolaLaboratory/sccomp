@@ -115,7 +115,7 @@ seurat_obj[[]]
 seurat_obj[[]] |>
   sccomp_glm( 
   ~ type, 
-  sample, cell_group, count, 
+  sample, cell_group, 
   approximate_posterior_inference = TRUE, 
   check_outliers = FALSE,
   cores = 1
@@ -124,6 +124,10 @@ seurat_obj[[]] |>
 ```
 
 ## From counts (fast execution)
+
+```{r}
+counts_obj
+```
 
 ```{r warning=FALSE}
 
