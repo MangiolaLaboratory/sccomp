@@ -11,6 +11,6 @@ A text file containing stan code for the Dirichlet model.
 data(glm_dirichlet_multinomial_generate_quantities)
 }
 \description{
-glm_dirichlet_multinomial_generate_quantities
+This object is mostly for internal use and comparative purposes, if the dirichlet_multinomial is chosen as noise model.
 }
-\keyword{datasets}
+\keyword{internal}

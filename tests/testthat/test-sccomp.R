@@ -44,24 +44,8 @@ data("counts_obj")
 #
 # })
 
-test_that("multi beta binomial counts",{
-
-  res =
-    counts_obj  |>
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_group, count,
-      approximate_posterior_inference = TRUE,
-      check_outliers = FALSE,
-      cores = 1
-    )
-
-
-})
-
 test_that("multi beta binomial from Seurat",{
 
-  res =
     seurat_obj |>
     sccomp_glm(
       formula = ~ type,
@@ -69,13 +53,15 @@ test_that("multi beta binomial from Seurat",{
       check_outliers = FALSE,
       approximate_posterior_inference = TRUE,
       cores = 1
-    )
+    )  |>
+    filter(composition_prob_H0<0.05) |>
+    nrow() |>
+    expect_equal(13)
 
 })
 
 test_that("multi beta binomial from SCE",{
 
-  res =
     sce_obj |>
     sccomp_glm(
       formula = ~ type,
@@ -83,13 +69,15 @@ test_that("multi beta binomial from SCE",{
       check_outliers = FALSE,
       approximate_posterior_inference = TRUE,
       cores = 1
-    )
+    )  |>
+    filter(composition_prob_H0<0.05) |>
+    nrow() |>
+    expect_equal(13)
 
 })
 
 test_that("multi beta binomial from metadata",{
 
-  res =
     seurat_obj[[]] |>
     sccomp_glm(
       formula = ~ type,
@@ -97,7 +85,10 @@ test_that("multi beta binomial from metadata",{
       check_outliers = FALSE,
       approximate_posterior_inference = TRUE,
       cores = 1
-    )
+    )  |>
+    filter(composition_prob_H0<0.05) |>
+    nrow() |>
+    expect_equal(13)
 
 })
 
