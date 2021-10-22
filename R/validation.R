@@ -13,10 +13,10 @@ check_if_count_integer = function(.data, .count){
   .count = enquo(.count)
 
   # Check if the counts column is an integer
-  if (.data %>% select(!!.count) %>% sapply(class) != "integer")
+  if (!.data %>% pull(!!.count) %>% is("integer"))
     stop(
       sprintf(
-        "The column %s must be of class integer. You can do as mutate(`%s` = `%s` %%>%% as.integer)",
+        "The column %s must be of class integer. You can do as mutate(`%s` = as.integer(`%s`))",
         quo_name(.count),
         quo_name(.count),
         quo_name(.count)

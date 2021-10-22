@@ -11,6 +11,6 @@ A text file containing stan code for the Beta only model.
 data(glm_multi_beta)
 }
 \description{
-glm_multi_beta
+This object is mostly for internal use and comparative purposes, if the multi_beta is chosen as noise model.
 }
-\keyword{datasets}
+\keyword{internal}

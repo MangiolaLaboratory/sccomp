@@ -50,7 +50,7 @@ dirichlet_multinomial_glm = function(.data,
                                      test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
                                      cores = detect_cores(), # For development purpose,
-                                     seed = sample(1:99999, size = 1)
+                                     seed = seq_len(99999) |> sample(size = 1)
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -174,8 +174,8 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
 
   # Integrate
   .data %>%
-    left_join(tibble(.sample = rownames(data_for_model$y), N = 1:nrow(data_for_model$y)), by = ".sample" %>% setNames(quo_name(.sample))) %>%
-    left_join(tibble(.cell_type = colnames(data_for_model$y), M = 1:ncol(data_for_model$y)), by = ".cell_type" %>% setNames(quo_name(.cell_type))) %>%
+    left_join(tibble(.sample = rownames(data_for_model$y), N = seq_len(nrow(data_for_model$y))), by = ".sample" %>% setNames(quo_name(.sample))) %>%
+    left_join(tibble(.cell_type = colnames(data_for_model$y), M = seq_len(ncol(data_for_model$y))), by = ".cell_type" %>% setNames(quo_name(.cell_type))) %>%
 
     # Add covariate from design
     left_join(fit_and_generated, by = c("M", "N")) %>%
@@ -330,10 +330,10 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     probs=c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
   ) %>%
     select(-.variable, -n_eff, -`Rhat`, -mean, -se_mean,  -  sd) %>%
-    setNames(c(colnames(.)[1:2], ".lower", ".median", ".upper")) %>%
+    setNames(c(colnames(.)[c(1,2)], ".lower", ".median", ".upper")) %>%
     left_join(
       tibble(
-        C=1:ncol(data_for_model$X),
+        C=seq_len(ncol(data_for_model$X)),
         C_name = colnames(data_for_model$X)
       ),
     by = "C") %>%
