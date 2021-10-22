@@ -515,7 +515,7 @@ replicate_data.data.frame = function(.data,
 #' @importFrom parallel detectCores
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
-#' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properies.
+#' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properties.
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
