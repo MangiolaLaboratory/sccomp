@@ -33,7 +33,7 @@ multi_beta_glm = function(.data,
                           check_outliers = FALSE,
                           approximate_posterior_inference = TRUE,
                           cores = detect_cores(), # For development purpose,
-                          seed = seq_len(99999) |> sample(size = 1)
+                          seed = sample(1e5, 1)
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)

@@ -62,7 +62,7 @@ sccomp_glm <- function(.data,
                        noise_model = "multi_beta_binomial",
                        variance_association = FALSE,
                        cores = detectCores(),
-                       mcmc_seed = seq_len(99999) |> sample(size = 1)) {
+                       mcmc_seed = sample(1e5, 1)) {
   UseMethod("sccomp_glm", .data)
 }
 
@@ -82,7 +82,7 @@ sccomp_glm.Seurat = function(.data,
                              noise_model = "multi_beta_binomial",
                              variance_association = FALSE,
                              cores = detectCores(),
-                             mcmc_seed = seq_len(99999) |> sample(size = 1)) {
+                             mcmc_seed = sample(1e5, 1)) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -125,7 +125,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            noise_model = "multi_beta_binomial",
                                            variance_association = FALSE,
                                            cores = detectCores(),
-                                           mcmc_seed = seq_len(99999) |> sample(size = 1)) {
+                                           mcmc_seed = sample(1e5, 1)) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -170,7 +170,7 @@ sccomp_glm.DFrame = function(.data,
                              noise_model = "multi_beta_binomial",
                              variance_association = FALSE,
                              cores = detectCores(),
-                             mcmc_seed = seq_len(99999) |> sample(size = 1)) {
+                             mcmc_seed = sample(1e5, 1)) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -215,7 +215,7 @@ sccomp_glm.data.frame = function(.data,
                                  noise_model = "multi_beta_binomial",
                                  variance_association = FALSE,
                                  cores = detectCores(),
-                                 mcmc_seed = seq_len(99999) |> sample(size = 1)) {
+                                 mcmc_seed = sample(1e5, 1)) {
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -294,7 +294,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      noise_model = "multi_beta_binomial",
                                      variance_association = FALSE,
                                      cores = 4,
-                                     mcmc_seed = seq_len(99999) |> sample(size = 1) ) {
+                                     mcmc_seed = sample(1e5, 1) ) {
 
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
@@ -373,7 +373,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         noise_model = "multi_beta_binomial",
                                         variance_association = FALSE,
                                         cores = 4,
-                                        mcmc_seed = seq_len(99999) |> sample(size = 1)) {
+                                        mcmc_seed = sample(1e5, 1)) {
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -451,7 +451,7 @@ sccomp_glm_data_frame_counts = function(.data,
 #'
 replicate_data <- function(.data,
                            number_of_draws = 1,
-                           mcmc_seed = seq_len(99999) |> sample(size = 1)) {
+                           mcmc_seed = sample(1e5, 1)) {
   UseMethod("replicate_data", .data)
 }
 
@@ -459,7 +459,7 @@ replicate_data <- function(.data,
 #'
 replicate_data.data.frame = function(.data,
                                      number_of_draws = 1,
-                                     mcmc_seed = seq_len(99999) |> sample(size = 1)){
+                                     mcmc_seed = sample(1e5, 1)){
 
 
   # Select model based on noise model
@@ -554,7 +554,7 @@ simulate_data <- function(.data,
                        .cell_group = NULL,
                        .coefficients = NULL,
                        number_of_draws = 1,
-                       mcmc_seed = seq_len(99999) |> sample(size = 1)) {
+                       mcmc_seed = sample(1e5, 1)) {
   UseMethod("simulate_data", .data)
 }
 
@@ -572,7 +572,7 @@ simulate_data.data.frame = function(.data,
                                     .cell_group = NULL,
                                     .coefficients = NULL,
                                     number_of_draws = 1,
-                                    mcmc_seed = seq_len(99999) |> sample(size = 1)){
+                                    mcmc_seed = sample(1e5, 1)){
 
 
   .sample = enquo(.sample)

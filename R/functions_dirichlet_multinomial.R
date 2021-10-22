@@ -50,7 +50,7 @@ dirichlet_multinomial_glm = function(.data,
                                      test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
                                      cores = detect_cores(), # For development purpose,
-                                     seed = seq_len(99999) |> sample(size = 1)
+                                     seed = sample(1e5, 1)
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)

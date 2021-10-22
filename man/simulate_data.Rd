@@ -12,13 +12,13 @@ simulate_data(
   .cell_group = NULL,
   .coefficients = NULL,
   number_of_draws = 1,
-  mcmc_seed = sample(seq_len(99999), size = 1)
+  mcmc_seed = sample(1e+05, 1)
 )
 }
 \arguments{
 \item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
-\item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properies.}
+\item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properties.}
 
 \item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
 

@@ -49,7 +49,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             approximate_posterior_inference = TRUE,
                                             variance_association = FALSE,
                                             cores = detectCores(), # For development purpose,
-                                            seed = seq_len(99999) |> sample(size = 1),
+                                            seed = sample(1e5, 1),
                                             verbose = FALSE
 ) {
   # Prepare column same enquo
@@ -388,7 +388,7 @@ multi_beta_binomial_glm = function(.data,
                                    approximate_posterior_inference = TRUE,
                                    variance_association = FALSE,
                                    cores = detectCores(), # For development purpose,
-                                   seed = seq_len(99999) |> sample(size = 1),
+                                   seed = sample(1e5, 1),
                                    verbose = FALSE,
                                    test_composition_above_logit_fold_change
 ) {
