@@ -793,7 +793,7 @@ design_matrix_and_coefficients_to_simulation = function(
                 .sample = sample,
                 .cell_group = cell_type,
                 .coefficients = c(beta_1, beta_2),
-                seed = seq_len(99999) |> sample(size = 1)
+                mcmc_seed = sample(1e5, 1)
   )
 
 

@@ -4,11 +4,7 @@
 \alias{replicate_data}
 \title{replicate_data}
 \usage{
-replicate_data(
-  .data,
-  number_of_draws = 1,
-  mcmc_seed = sample(seq_len(99999), size = 1)
-)
+replicate_data(.data, number_of_draws = 1, mcmc_seed = sample(1e+05, 1))
 }
 \arguments{
 \item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}

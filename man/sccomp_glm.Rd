@@ -20,7 +20,7 @@ sccomp_glm(
   noise_model = "multi_beta_binomial",
   variance_association = FALSE,
   cores = detectCores(),
-  mcmc_seed = sample(seq_len(99999), size = 1)
+  mcmc_seed = sample(1e+05, 1)
 )
 }
 \arguments{

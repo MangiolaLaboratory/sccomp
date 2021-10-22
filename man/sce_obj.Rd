@@ -11,6 +11,6 @@ A SingeCellExperiment object. SingeCellExperiment data objects can be directly u
 data(sce_obj)
 }
 \description{
-
+Example SingleCellExperiment data set. SingleCellExperiment data objects can be directly used with sccomp_glm function.
 }
 \keyword{datasets}

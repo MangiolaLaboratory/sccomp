@@ -24,6 +24,7 @@
 #' sce_obj
 #'
 #' @description
+#' Example SingleCellExperiment data set. SingleCellExperiment data objects can be directly used with sccomp_glm function.
 #'
 #' @importFrom utils data
 #'
