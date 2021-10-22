@@ -56,6 +56,6 @@ estimate =
 counts_obj = counts_obj |> mutate(b_0 = 1, b_1 = 1)
 
 # Simulate data
-simulate_data(cc, estimate, ~type, sample, cell_group, c(b_0, b_1))
+simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
 
 }
