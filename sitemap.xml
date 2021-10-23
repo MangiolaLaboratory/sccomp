@@ -19,10 +19,28 @@
     <loc>/reference/counts_obj.html</loc>
   </url>
   <url>
+    <loc>/reference/glm_dirichlet_multinomial.html</loc>
+  </url>
+  <url>
+    <loc>/reference/glm_dirichlet_multinomial_generate_quantities.html</loc>
+  </url>
+  <url>
+    <loc>/reference/glm_dirichlet_multinomial_imputation.html</loc>
+  </url>
+  <url>
+    <loc>/reference/glm_multi_beta.html</loc>
+  </url>
+  <url>
+    <loc>/reference/glm_multi_beta_generate_data.html</loc>
+  </url>
+  <url>
     <loc>/reference/index.html</loc>
   </url>
   <url>
     <loc>/reference/multi_beta_glm.html</loc>
+  </url>
+  <url>
+    <loc>/reference/replicate_data.html</loc>
   </url>
   <url>
     <loc>/reference/sccomp-package.html</loc>
