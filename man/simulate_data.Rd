@@ -6,19 +6,19 @@
 \usage{
 simulate_data(
   .data,
-  .estimate_object = oligo_breast_estimate,
+  .estimate_object,
   formula,
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
   number_of_draws = 1,
-  seed = 42
+  mcmc_seed = sample(1e+05, 1)
 )
 }
 \arguments{
 \item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
-\item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properies.}
+\item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properties.}
 
 \item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
 
@@ -30,7 +30,7 @@ simulate_data(
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
-\item{seed}{An integer. Used for development and testing purposes}
+\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
@@ -41,6 +41,7 @@ This function simulates counts from a linear model.
 \examples{
 
 data("counts_obj")
+library(dplyr)
 
 estimate =
   sccomp_glm(
@@ -50,5 +51,11 @@ estimate =
     check_outliers = FALSE,
     cores = 1
   )
+
+# Set coefficients for cell_types. In this case all coefficients are 0 for simplicity.
+counts_obj = counts_obj |> mutate(b_0 = 1, b_1 = 1)
+
+# Simulate data
+simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
 
 }

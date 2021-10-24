@@ -16,24 +16,41 @@ vignette: >
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/tidyseurat/actions/)
 <!-- badges: end -->
 
-#  <img src="inst/logo-01.png" height="139px" width="120px" />
+#  <img src="figures/logo-01.png" height="139px" width="120px" />
 
 ```{r echo=FALSE}
-knitr::opts_chunk$set( fig.path = "man/figures/")
+knitr::opts_chunk$set( fig.path = "figures/")
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+```{r message=FALSE, warning=FALSE}
 library(dplyr)
 library(sccomp)
 library(ggplot2)
 library(forcats)
 library(tidyr)
+library(tidyseurat)
+library(tidySingleCellExperiment)
+
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 ```
 
-# Installation
+Single-cell transcriptomics allows the unbiased characterisation of the cellular composition of tissues. The cellular composition can be compared between biological or clinical conditions to identify potential cellular drivers. This strategy has been critical to unveil drivers of immune response in cancer and pathogen infection from single-cell data. Developing a robust statistical method for differential composition analyses from single-cell data is crucial for driving discoveries. The compositional data from single-cell experiments has four main properties. The data is in count form; counts underlie inversely correlated proportions that sum to one; larger cell groups are more variable across samples than small groups; real-world data is rich in outlier observation. A model that covers more than two of these properties is currently lacking. **Here, we present a robust and outlier-aware method for testing differential tissue composition from single-cell data. This model can also transfer knowledge from a large set of integrated datasets to increase accuracy further. We present how this model can be applied to identify novel compositional and heterogeneity changes in existing studies.**
+
+# Installation 
+
+**Bioconductor**
+
+```{r eval=FALSE}
+if (!requireNamespace("BiocManager")) {
+   install.packages("BiocManager")
+ }
+ BiocManager::install("sccomp")
+```
+
+**Github**
 
 ```{r eval=FALSE}
 devtools::install_github("stemangiola/sccomp")
@@ -41,107 +58,91 @@ devtools::install_github("stemangiola/sccomp")
 
 # Analysis
 
-## From Seurat Object
+In this vignette we use the `tidy` representation of single cell experiment objects using `tisyseurat` and `tidySingleCellExperiment`
 
-```{r eval=FALSE}
+## From Seurat objects
 
-res =
-  seurat_obj |>
-  sccomp_glm(~ type, sample, cell_group )
+This code demonstrates how to estimate differential tissue composition from a Seurat object. `approximate_posterior_inference` is set to TRUE and `check_outliers` is set to false to speed up execution. `cores` is set up to 1 to comply with Bioconductor CHECK.
 
+The tidy data representation nicely shows all information being used for the analysis. **Of course `sccomp_glm` works without loading `tidyseurat` **
+
+```{r}
+seurat_obj
 ```
-
-```{r eval=FALSE}
-res =
-  sce_obj |>
-  sccomp_glm(~ type, sample, cell_group)
-
-```
-
-## From data.frame 
-
-```{r eval=FALSE}
-
-res =
-  seurat_obj[[]] |>
-  sccomp_glm(~ type, sample, cell_group )
-
-```
-
-## From counts
 
 ```{r warning=FALSE}
 
-res =
-  counts_obj |>
+seurat_obj |>
   sccomp_glm( 
-    ~ type, 
-    sample, cell_group, count, 
-    approximate_posterior_inference = FALSE,
-        cores = 1
-  )
-
+  ~ type, 
+  sample, cell_group,
+  approximate_posterior_inference = TRUE, 
+  check_outliers = FALSE,
+  cores = 1
+)
 ```
 
+## From SingleCellExperiment objects
 
-Outliers identified
+This code demonstrates how to estimate differential tissue composition from a SingleCellExperiment object.
+
+The tidy data representation nicely shows all information being used for the analysis. **Of course `sccomp_glm` works without loading `tidySingleCellExperiment`.**
 
 ```{r}
-
-data_for_plot = 
-  res |> 
-    tidyr::unnest(count_data ) |>
-    group_by(sample) |>
-    mutate(proportion = (count+1)/sum(count+1)) |>
-    ungroup(sample) 
-
- ggplot() +
-  geom_boxplot(
-    aes(type, proportion, fill=significant),
-    outlier.shape = NA, 
-    data = data_for_plot |> filter(!outlier)
-  ) + 
-  geom_jitter(aes(type, proportion, color=outlier), size = 1, data = data_for_plot) + 
-  facet_wrap(~ interaction(cell_group), scale="free_y") +
-  scale_y_continuous(trans="logit") +
-  scale_color_manual(values = c("black", "#e11f28")) +
-  scale_fill_manual(values = c("white", "#E2D379")) +
-  xlab("Biological condition") + 
-  ylab("Cell-group proportion") + 
-  theme_bw() +
-  theme(strip.background =element_rect(fill="white"))
+sce_obj
 ```
 
-Credible intervals
+```{r warning=FALSE}
+sce_obj |>
+ sccomp_glm( 
+  ~ type, 
+  sample, cell_group,
+  approximate_posterior_inference = TRUE, 
+  check_outliers = FALSE,
+  cores = 1
+)
+```
+
+## From metadata objects
+
+This code demonstrates how to estimate differential tissue composition from a Seurat object.
 
 ```{r}
-res |>
-  ggplot(aes(x=`.median_typecancer`, y=fct_reorder(cell_group, .median_typecancer))) +
-  geom_vline(xintercept = 0.2, colour="grey") +
-  geom_vline(xintercept = -0.2, colour="grey") +
-  geom_errorbar(aes(xmin=`.lower_typecancer`, xmax=`.upper_typecancer`, color=significant)) +
-  geom_point() +
-  scale_color_brewer(palette = "Set1") +
-  xlab("Credible interval of the slope") +
-  ylab("Cell group") +
-  ggtitle("After outlier filtering") +
-  theme_bw() +
-  theme(legend.position = "bottom")
+seurat_obj[[]]
 ```
 
-Relation between proportion mean and concentration (variability). The regression line is inferred by sccomp.
+```{r warning=FALSE}
+seurat_obj[[]] |>
+  sccomp_glm( 
+  ~ type, 
+  sample, cell_group, 
+  approximate_posterior_inference = TRUE, 
+  check_outliers = FALSE,
+  cores = 1
+)
+
+```
+
+## From counts (fast execution)
 
 ```{r}
-res |> 
-  unnest(concentration) |> 
-  ggplot(aes(`.median_(Intercept)`, mean)) + 
-  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`), color="#4DAF4A", alpha = 0.4) +
-  geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), color="#4DAF4A", alpha = 0.4) +
-  geom_point() +
-  geom_abline(intercept = 5.7496330, slope = -0.9650953, linetype = "dashed", color="grey") +
-  xlab("Category logit-proportion mean") +
-  ylab("Category log-concentration") +
-    theme_bw() 
+counts_obj
 ```
 
+```{r warning=FALSE}
+
+counts_obj |>
+sccomp_glm( 
+  ~ type, 
+  sample, cell_group, count, 
+  approximate_posterior_inference = TRUE, 
+  check_outliers = FALSE,
+  cores = 1
+)
+
+```
+
+```{r}
+sessionInfo()
+```
 

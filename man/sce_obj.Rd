@@ -5,12 +5,12 @@
 \alias{sce_obj}
 \title{sce_obj}
 \format{
-A SingeCellExperiment object
+A SingeCellExperiment object. SingeCellExperiment data objects can be directly used with sccomp_glm function.
 }
 \usage{
 data(sce_obj)
 }
 \description{
-sce_obj
+Example SingleCellExperiment data set. SingleCellExperiment data objects can be directly used with sccomp_glm function.
 }
 \keyword{datasets}

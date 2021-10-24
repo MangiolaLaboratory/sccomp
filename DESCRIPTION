@@ -1,10 +1,10 @@
 Package: sccomp
-Title: Robust Outlier-aware Estimation of Composition and Heterogeneity for Single-cell Data.
-Version: 0.99.2
+Title: Robust Outlier-aware Estimation of Composition and Heterogeneity for Single-cell Data
+Version: 0.99.18
 Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
                   role = c("aut", "cre"))
                   )
-Description: A robust and outlier-aware method for testing differential tissue composition from single-cell data. This model can also transfer knowledge from a large set of integrated datasets to increase accuracy further.
+Description: A robust and outlier-aware method for testing differential tissue composition from single-cell data. This model can infer changes in tissue composition and heterogeneity, and can produce realistic data simulations based on any existing dataset. This model can also transfer knowledge from a large set of integrated datasets to increase accuracy further.
 License: GPL-3 
 Encoding: UTF-8
 LazyData: true
@@ -31,15 +31,19 @@ Imports:
     boot,
     lifecycle,
     stats,
-    tidyselect
+    tidyselect,
+    utils
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
     markdown,
     ggplot2,
     knitr,
-    furrr,
-    forcats
+    forcats,
+    tidyseurat,
+    tidySingleCellExperiment
+Enhances:
+    furrr
 LinkingTo: 
     BH (>= 1.66.0),
     Rcpp (>= 0.12.0),
@@ -64,3 +68,5 @@ biocViews:
     Clustering
 LazyDataCompression: xz
 Config/testthat/edition: 3
+URL: https://github.com/stemangiola/sccomp
+BugReports: https://github.com/stemangiola/sccomp/issues

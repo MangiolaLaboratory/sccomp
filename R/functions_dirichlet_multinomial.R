@@ -50,7 +50,7 @@ dirichlet_multinomial_glm = function(.data,
                                      test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
                                      cores = detect_cores(), # For development purpose,
-                                     seed = sample(1:99999, size = 1)
+                                     seed = sample(1e5, 1)
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -176,8 +176,8 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
 
   # Integrate
   .data %>%
-    left_join(tibble(.sample = rownames(data_for_model$y), N = 1:nrow(data_for_model$y)), by = ".sample" %>% setNames(quo_name(.sample))) %>%
-    left_join(tibble(.cell_type = colnames(data_for_model$y), M = 1:ncol(data_for_model$y)), by = ".cell_type" %>% setNames(quo_name(.cell_type))) %>%
+    left_join(tibble(.sample = rownames(data_for_model$y), N = seq_len(nrow(data_for_model$y))), by = ".sample" %>% setNames(quo_name(.sample))) %>%
+    left_join(tibble(.cell_type = colnames(data_for_model$y), M = seq_len(ncol(data_for_model$y))), by = ".cell_type" %>% setNames(quo_name(.cell_type))) %>%
 
     # Add covariate from design
     left_join(fit_and_generated, by = c("M", "N")) %>%
@@ -222,6 +222,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
 #' @importFrom rlang :=
 #' @importFrom stats C
 #' @importFrom rstan sflist2stanfit
+#' @importFrom rstan Rhat
 fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference, false_positive_rate){
 
 
@@ -282,10 +283,12 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     )
 
   # Check if package is installed, otherwise install
-  if (find.package("furrr", quiet = TRUE) %>% length %>% equals(0)) {
-    message("Installing furrr")
-    install.packages("furrr", repos = "https://cloud.r-project.org")
-  }
+  # if (find.package("furrr", quiet = TRUE) %>% length %>% equals(0)) {
+  #   message("Installing furrr")
+  #   install.packages("furrr", repos = "https://cloud.r-project.org")
+  # }
+
+  if (!requireNamespace("furrr")) stop("sccomp says: please install furrr to use this function.")
 
   model_generate = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
 
@@ -328,11 +331,11 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     fit, "beta", "C","M",
     probs=c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
   ) %>%
-    select(-.variable, -n_eff, -Rhat, -mean, -se_mean,  -  sd) %>%
-    setNames(c(colnames(.)[1:2], ".lower", ".median", ".upper")) %>%
+    select(-.variable, -n_eff, -`Rhat`, -mean, -se_mean,  -  sd) %>%
+    setNames(c(colnames(.)[c(1,2)], ".lower", ".median", ".upper")) %>%
     left_join(
       tibble(
-        C=1:ncol(data_for_model$X),
+        C=seq_len(ncol(data_for_model$X)),
         C_name = colnames(data_for_model$X)
       ),
     by = "C") %>%

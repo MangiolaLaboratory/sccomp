@@ -27,7 +27,7 @@
 #' @param noise_model A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.
 #' @param variance_association A boolean. Whether the variance should depend on the factor of interest.
 #' @param cores An integer. How many cored to be used with parallel calculations.
-#' @param seed An integer. Used for development and testing purposes
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
@@ -62,7 +62,7 @@ sccomp_glm <- function(.data,
                        noise_model = "multi_beta_binomial",
                        variance_association = FALSE,
                        cores = detectCores(),
-                       seed = 42) {
+                       mcmc_seed = sample(1e5, 1)) {
   UseMethod("sccomp_glm", .data)
 }
 
@@ -82,7 +82,7 @@ sccomp_glm.Seurat = function(.data,
                              noise_model = "multi_beta_binomial",
                              variance_association = FALSE,
                              cores = detectCores(),
-                             seed = 42) {
+                             mcmc_seed = sample(1e5, 1)) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -102,7 +102,7 @@ sccomp_glm.Seurat = function(.data,
       noise_model = noise_model,
       variance_association = variance_association,
       cores = cores,
-      seed = seed
+      mcmc_seed = mcmc_seed
     )
 
 
@@ -125,7 +125,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            noise_model = "multi_beta_binomial",
                                            variance_association = FALSE,
                                            cores = detectCores(),
-                                           seed = 42) {
+                                           mcmc_seed = sample(1e5, 1)) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -147,7 +147,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
       noise_model = noise_model,
       variance_association = variance_association,
       cores = cores,
-      seed = seed
+      mcmc_seed = mcmc_seed
     )
 
 
@@ -170,7 +170,7 @@ sccomp_glm.DFrame = function(.data,
                              noise_model = "multi_beta_binomial",
                              variance_association = FALSE,
                              cores = detectCores(),
-                             seed = 42) {
+                             mcmc_seed = sample(1e5, 1)) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -193,7 +193,7 @@ sccomp_glm.DFrame = function(.data,
       noise_model = noise_model,
       variance_association = variance_association,
       cores = cores,
-      seed = seed
+      mcmc_seed = mcmc_seed
     )
 }
 
@@ -215,7 +215,7 @@ sccomp_glm.data.frame = function(.data,
                                  noise_model = "multi_beta_binomial",
                                  variance_association = FALSE,
                                  cores = detectCores(),
-                                 seed = 42) {
+                                 mcmc_seed = sample(1e5, 1)) {
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -247,7 +247,7 @@ sccomp_glm.data.frame = function(.data,
         my_glm_model = my_glm_model,
         variance_association = variance_association,
         cores = cores,
-        seed = seed
+        mcmc_seed = mcmc_seed
       ),
 
       # If the dataframe does includes counts
@@ -266,7 +266,7 @@ sccomp_glm.data.frame = function(.data,
         my_glm_model = my_glm_model,
         variance_association = variance_association,
         cores = cores,
-        seed = seed
+        mcmc_seed = mcmc_seed
       )
     ) %>%
 
@@ -294,7 +294,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      noise_model = "multi_beta_binomial",
                                      variance_association = FALSE,
                                      cores = 4,
-                                     seed = sample(1:99999, size = 1)) {
+                                     mcmc_seed = sample(1e5, 1) ) {
 
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
@@ -348,7 +348,7 @@ sccomp_glm_data_frame_raw = function(.data,
       cores = cores,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
       verbose = verbose,
-      seed = seed
+      mcmc_seed = mcmc_seed
     )
 }
 
@@ -369,7 +369,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         noise_model = "multi_beta_binomial",
                                         variance_association = FALSE,
                                         cores = 4,
-                                        seed = sample(1:99999, size = 1)) {
+                                        mcmc_seed = sample(1e5, 1)) {
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -414,7 +414,7 @@ sccomp_glm_data_frame_counts = function(.data,
       cores = cores,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
       verbose = verbose,
-      seed = seed
+      seed = mcmc_seed
     ) %>%
     add_attr(.sample, ".sample") %>%
     add_attr(.cell_group, ".cell_group")
@@ -427,7 +427,7 @@ sccomp_glm_data_frame_counts = function(.data,
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
-#' @param seed An integer. Used for development and testing purposes
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
@@ -437,18 +437,19 @@ sccomp_glm_data_frame_counts = function(.data,
 #'
 #' data("counts_obj")
 #'
-#' estimate =
 #'   sccomp_glm(
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
 #'     approximate_posterior_inference = TRUE,
 #'     check_outliers = FALSE,
 #'     cores = 1
-#'   )
+#'   ) |>
+#'
+#'   replicate_data()
 #'
 replicate_data <- function(.data,
                            number_of_draws = 1,
-                           seed = 42) {
+                           mcmc_seed = sample(1e5, 1)) {
   UseMethod("replicate_data", .data)
 }
 
@@ -456,7 +457,7 @@ replicate_data <- function(.data,
 #'
 replicate_data.data.frame = function(.data,
                                      number_of_draws = 1,
-                                     seed = 42){
+                                     mcmc_seed = sample(1e5, 1)){
 
 
   # Select model based on noise model
@@ -473,7 +474,8 @@ replicate_data.data.frame = function(.data,
   rstan::gqs(
     my_model,
     draws =  as.matrix(attr(.data, "fit") ),
-    data = model_input
+    data = model_input,
+    seed = mcmc_seed
   ) %>%
 
     # Parse
@@ -511,13 +513,13 @@ replicate_data.data.frame = function(.data,
 #' @importFrom parallel detectCores
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
-#' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properies.
+#' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properties.
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
 #' @param .coefficients Th column names for coefficients, for example, c(b_0, b_1)
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
-#' @param seed An integer. Used for development and testing purposes
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
@@ -526,6 +528,7 @@ replicate_data.data.frame = function(.data,
 #' @examples
 #'
 #' data("counts_obj")
+#' library(dplyr)
 #'
 #' estimate =
 #'   sccomp_glm(
@@ -536,14 +539,20 @@ replicate_data.data.frame = function(.data,
 #'     cores = 1
 #'   )
 #'
+#' # Set coefficients for cell_types. In this case all coefficients are 0 for simplicity.
+#' counts_obj = counts_obj |> mutate(b_0 = 1, b_1 = 1)
+#'
+#' # Simulate data
+#' simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
+#'
 simulate_data <- function(.data,
-                          .estimate_object = oligo_breast_estimate,
+                          .estimate_object,
                           formula,
                        .sample = NULL,
                        .cell_group = NULL,
                        .coefficients = NULL,
                        number_of_draws = 1,
-                       seed = 42) {
+                       mcmc_seed = sample(1e5, 1)) {
   UseMethod("simulate_data", .data)
 }
 
@@ -555,13 +564,13 @@ simulate_data <- function(.data,
 #' @importFrom purrr pmap
 #'
 simulate_data.data.frame = function(.data,
-                                    .estimate_object = oligo_breast_estimate,
+                                    .estimate_object,
                                     formula,
                                     .sample = NULL,
                                     .cell_group = NULL,
                                     .coefficients = NULL,
                                     number_of_draws = 1,
-                                    seed = 422){
+                                    mcmc_seed = sample(1e5, 1)){
 
 
   .sample = enquo(.sample)
@@ -596,7 +605,8 @@ simulate_data.data.frame = function(.data,
     rstan::gqs(
     my_model,
     draws =  as.matrix(attr(.estimate_object, "fit") ),
-    data = model_input
+    data = model_input,
+    seed = mcmc_seed
   )
 
   parsed_fit =

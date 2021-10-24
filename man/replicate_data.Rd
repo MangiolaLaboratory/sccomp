@@ -4,14 +4,14 @@
 \alias{replicate_data}
 \title{replicate_data}
 \usage{
-replicate_data(.data, number_of_draws = 1, seed = 42)
+replicate_data(.data, number_of_draws = 1, mcmc_seed = sample(1e+05, 1))
 }
 \arguments{
 \item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
-\item{seed}{An integer. Used for development and testing purposes}
+\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
@@ -23,13 +23,14 @@ This function replicates counts from a real-world dataset.
 
 data("counts_obj")
 
-estimate =
   sccomp_glm(
   counts_obj ,
    ~ type,  sample, cell_group, count,
     approximate_posterior_inference = TRUE,
     check_outliers = FALSE,
     cores = 1
-  )
+  ) |>
+
+  replicate_data()
 
 }

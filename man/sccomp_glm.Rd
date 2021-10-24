@@ -20,7 +20,7 @@ sccomp_glm(
   noise_model = "multi_beta_binomial",
   variance_association = FALSE,
   cores = detectCores(),
-  seed = 42
+  mcmc_seed = sample(1e+05, 1)
 )
 }
 \arguments{
@@ -52,7 +52,7 @@ sccomp_glm(
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
-\item{seed}{An integer. Used for development and testing purposes}
+\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics

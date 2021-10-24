@@ -49,7 +49,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             approximate_posterior_inference = TRUE,
                                             variance_association = FALSE,
                                             cores = detectCores(), # For development purpose,
-                                            seed = sample(1:99999, size = 1),
+                                            seed = sample(1e5, 1),
                                             verbose = FALSE
 ) {
   # Prepare column same enquo
@@ -331,14 +331,14 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
   parsed_beta =
     fit %>%
     draws_to_tibble_x_y("beta", "C", "M") %>%
-    left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
+    left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
     nest(beta_posterior_1 = -M)
 
   if(variance_association) {
     parsed_alpha =
       fit %>%
       draws_to_tibble_x_y("alpha", "C", "M") %>%
-      left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
+      left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
       nest(alpha_1 = -M)
 
 
@@ -441,7 +441,7 @@ multi_beta_binomial_glm = function(.data,
                                    approximate_posterior_inference = TRUE,
                                    variance_association = FALSE,
                                    cores = detectCores(), # For development purpose,
-                                   seed = sample(1:99999, size = 1),
+                                   seed = sample(1e5, 1),
                                    verbose = FALSE,
                                    test_composition_above_logit_fold_change
 ) {
