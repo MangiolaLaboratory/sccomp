@@ -103,26 +103,7 @@ job({
 # we find an expansion of Tregs suggesting the early establishment of an immuno-suppressive environment
 
 
-job({
 
-  library(tidySingleCellExperiment)
-
-  readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
-  filter(ptime %>% is.na() %>% `!`) %>%
-
-  # Scale ptime
-  mutate(ptime = scales::rescale(ptime)) %>%
-    rename(cell_type = CellTypesFinal) %>%
-    rename(sample = Sample) %>%
-    sccomp_glm(
-      formula = ~ ptime,
-      Sample, cell_type ,
-      approximate_posterior_inference = FALSE,
-      variance_association = FALSE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
-    ) %>%
-    saveRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds")
-})
 
 
 

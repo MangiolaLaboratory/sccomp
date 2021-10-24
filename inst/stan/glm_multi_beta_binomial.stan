@@ -113,24 +113,25 @@ model{
 
   // PRECISION REGRESSION
   // to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
-  if(is_vb==0){
+  // if(is_vb==0){
   for (a in 1:A) for(m in 1:M)
     target += log_mix(mix_p,
                     normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                    normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] - 1.1, prec_sd)
+                    normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * -0.73074903 - 1.1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
                   );
-  }
-  else{
-    to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+  // }
 
-  }
+  // else{
+  //   to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+  //
+  // }
 
   //
   mix_p ~ beta(1,5);
 
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
   prec_coeff[2] ~ normal(prior_prec_slope[1], prior_prec_slope[2]);
-  prec_sd ~ gamma(3,3);
+  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
 
 }
 
