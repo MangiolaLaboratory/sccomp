@@ -328,7 +328,8 @@ sccomp_glm_data_frame_raw = function(.data,
       length(parse_formula(formula))>0 ~ left_join(.,
                                                    .data %>%
                                                      select(!!.sample, parse_formula(formula) ) %>%
-                                                     distinct()
+                                                     distinct(),
+                                                   by = quo_name(.sample)
                                                   ),
       ~ (.)
     ) %>%
