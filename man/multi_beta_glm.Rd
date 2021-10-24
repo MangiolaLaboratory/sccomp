@@ -11,7 +11,7 @@ multi_beta_glm(
   check_outliers = FALSE,
   approximate_posterior_inference = TRUE,
   cores = detect_cores(),
-  seed = sample(1:99999, size = 1)
+  seed = sample(1e+05, 1)
 )
 }
 \arguments{

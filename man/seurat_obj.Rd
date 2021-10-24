@@ -11,6 +11,6 @@ A Seurat object
 data(seurat_obj)
 }
 \description{
-Example Seurat data set
+Example Seurat data set. Seurat data objects can be directly used with sccomp_glm function.
 }
 \keyword{datasets}

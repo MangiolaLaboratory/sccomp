@@ -245,7 +245,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     extract(par_names, permuted=FALSE) %>%
     as.data.frame %>%
     as_tibble() %>%
-    mutate(.iteration = 1:n()) %>%
+    mutate(.iteration = seq_len(n())) %>%
 
     when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
 
@@ -269,7 +269,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     select(-dummy) %>%
     arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
     group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
-    mutate(.draw = 1:n()) %>%
+    mutate(.draw = seq_len(n())) %>%
     ungroup() %>%
     select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
     filter(.variable == par)
@@ -284,12 +284,12 @@ draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
     extract(par_names, permuted=FALSE) %>%
     as.data.frame %>%
     as_tibble() %>%
-    mutate(.iteration = 1:n()) %>%
+    mutate(.iteration = seq_len(n())) %>%
     pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", names_ptypes = list(".chain" = integer(), ".variable" = character(), "A" = integer(), "C" = integer()), values_to = ".value") %>%
     select(-dummy) %>%
     arrange(.variable, !!as.symbol(x), .chain) %>%
     group_by(.variable, !!as.symbol(x)) %>%
-    mutate(.draw = 1:n()) %>%
+    mutate(.draw = seq_len(n())) %>%
     ungroup() %>%
     select(!!as.symbol(x), .chain, .iteration, .draw ,.variable ,     .value)
 
@@ -297,6 +297,7 @@ draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
 
 #' @importFrom tidyr separate
 #' @importFrom purrr when
+#' @importFrom rstan summary
 #'
 #' @param fit A fit object
 #' @param par A character vector. The parameters to extract.
@@ -450,7 +451,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
   fit %>%
     draws_to_tibble_x_y("beta", "C", "M") %>%
-    left_join(tibble(C=1:ncol(data_for_model$X), C_name = colnames(data_for_model$X)), by = "C") %>%
+    left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
     nest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration)) := -M)
 
 }
@@ -565,7 +566,7 @@ data_spread_to_model_input =
     apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=FALSE)))
 
   XA = variance_association %>%
-    when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,1:2, drop=FALSE]) %>%
+    when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
     as_tibble() %>%
     distinct()
 
@@ -645,7 +646,7 @@ data_simulation_to_model_input =
       }
 
     XA = variance_association %>%
-      when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,1:2, drop=FALSE]) %>%
+      when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
       as_tibble() %>%
       distinct()
 
@@ -694,10 +695,10 @@ find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
   parallelisation_start_penalty = 60
 
   chains_df =
-    tibble(chains = 1:max_number_to_check) %>%
+    tibble(chains = seq_len(max_number_to_check)) %>%
     mutate(tot = (how_many_posterior_draws / chains) + warmup + (parallelisation_start_penalty * chains))
 
-  d1 <- diff(chains_df$tot) / diff(1:nrow(chains_df)) # first derivative
+  d1 <- diff(chains_df$tot) / diff(seq_len(nrow(chains_df))) # first derivative
   abs(d1) %>% order() %>% .[1] # Find derivative == 0
 
 
@@ -764,23 +765,35 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 
 }
 
+#' design_matrix_and_coefficients_to_simulation
+#'
+#' @description Create simulation from design matrix and coefficient matrix
+#'
 #' @importFrom dplyr left_join
 #' @importFrom tidyr expand_grid
 #'
-#' @export
+#' @keywords internal
+#' @noRd
+#'
+#' @param design_matrix A matrix
+#' @param coefficient_matrix A matrix
+#'
+#' @return A data frame
 #'
 #'
 #'
-design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficient_matrix, seed = sample(1:100000, size = 1)){
+design_matrix_and_coefficients_to_simulation = function(
+  design_matrix, coefficient_matrix
+){
 
   design_df = as.data.frame(design_matrix)
   coefficient_df = as.data.frame(coefficient_matrix)
 
-  rownames(design_df) = sprintf("sample_%s", 1:nrow(design_df))
-  colnames(design_df) = sprintf("covariate_%s", 1:ncol(design_df))
+  rownames(design_df) = sprintf("sample_%s", seq_len(nrow(design_df)))
+  colnames(design_df) = sprintf("covariate_%s", seq_len(ncol(design_df)))
 
-  rownames(coefficient_df) = sprintf("cell_type_%s", 1:nrow(coefficient_df))
-  colnames(coefficient_df) = sprintf("beta_%s", 1:ncol(coefficient_df))
+  rownames(coefficient_df) = sprintf("cell_type_%s", seq_len(nrow(coefficient_df)))
+  colnames(coefficient_df) = sprintf("beta_%s", seq_len(ncol(coefficient_df)))
 
   input_data =
     expand_grid(
@@ -795,7 +808,7 @@ design_matrix_and_coefficients_to_simulation = function(design_matrix, coefficie
                 .sample = sample,
                 .cell_group = cell_type,
                 .coefficients = c(beta_1, beta_2),
-                seed = seed
+                mcmc_seed = sample(1e5, 1)
   )
 
 
