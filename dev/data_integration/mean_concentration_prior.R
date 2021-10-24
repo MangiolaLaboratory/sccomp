@@ -136,6 +136,18 @@ job({
 
 # save(prior_mean_variable_association, file="data/prior_mean_variable_association.rda", compress = "xz")
 
+# fit.gamma <- fitdist(c(0.8282289, 0.3312485, 0.1987102, 0.5060364, 1.0363162, 0.6306725, 0.6198534), distr = "gamma", method = "mle")
+# $start.arg
+# $start.arg$shape
+# [1] 5.06983
+#
+# $start.arg$rate
+# [1] 8.549324
+#
+#
+# $fix.arg
+# NULL
+
 # Plor trends
 slopes_df =
 
