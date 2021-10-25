@@ -46,7 +46,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
-                                            approximate_posterior_inference = TRUE,
+                                            approximate_posterior_inference = "outlier_detection",
                                             variance_association = FALSE,
                                             cores = detectCores(), # For development purpose,
                                             seed = sample(1e5, 1),
@@ -62,38 +62,42 @@ estimate_multi_beta_binomial_glm = function(.data,
   # Produce data list
   covariate_names = parse_formula(formula)
 
-  data_for_model =
-    .data %>%
-    data_to_spread ( formula, !!.sample, !!.cell_type, !!.count) %>%
-    data_spread_to_model_input(
-      formula, !!.sample, !!.cell_type, !!.count,
-      variance_association = variance_association,
-      truncation_ajustment = 1.1,
-      approximate_posterior_inference = approximate_posterior_inference
-    )
-
-  # Pior
-  data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
-  data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
-  data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
-
   # Original - old
   # prec_sd ~ normal(0,2);
   # prec_coeff ~ normal(0,5);
 
-
-  # Start first fit
-  if(check_outliers) message("sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]")
-  else message("sccomp says: estimation [ETA: ~20s]")
-
-  fit =
-    data_for_model %>%
-
-    # Run the first discovery phase with permissive false discovery rate
-    fit_model(stanmodels$glm_multi_beta_binomial, cores= cores,  quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
-
-
+  # If we are NOT checking outliers
   if(!check_outliers){
+
+    message("sccomp says: estimation [ETA: ~20s]")
+
+    data_for_model =
+      .data %>%
+      data_to_spread ( formula, !!.sample, !!.cell_type, !!.count) %>%
+      data_spread_to_model_input(
+        formula, !!.sample, !!.cell_type, !!.count,
+        variance_association = variance_association,
+        truncation_ajustment = 1.1,
+        approximate_posterior_inference = approximate_posterior_inference == "all"
+      )
+
+    # Pior
+    data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
+    data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
+    data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+
+    fit =
+      data_for_model %>%
+
+      # Run the first discovery phase with permissive false discovery rate
+      fit_model(
+        stanmodels$glm_multi_beta_binomial,
+        cores= cores,
+        quantile = CI,
+        approximate_posterior_inference = approximate_posterior_inference == "all",
+        verbose = verbose,
+        seed = seed
+      )
 
     list(
       fit = fit,
@@ -103,7 +107,40 @@ estimate_multi_beta_binomial_glm = function(.data,
 
   }
 
+  # If we are checking outliers
   else{
+
+    message("sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]")
+
+    # Force variance NOT associated with mean for stringency of outlier detection
+    data_for_model =
+      .data %>%
+      data_to_spread ( formula, !!.sample, !!.cell_type, !!.count) %>%
+      data_spread_to_model_input(
+        formula, !!.sample, !!.cell_type, !!.count,
+        variance_association = FALSE,
+        truncation_ajustment = 1.1,
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all")
+      )
+
+    # Pior
+    data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
+    data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
+    data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+
+
+    fit =
+      data_for_model %>%
+
+      # Run the first discovery phase with permissive false discovery rate
+      fit_model(
+        stanmodels$glm_multi_beta_binomial,
+        cores= cores,
+        quantile = CI,
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
+        verbose = verbose,
+        seed = seed
+      )
 
     rng =  rstan::gqs(
       stanmodels$glm_multi_beta_binomial_generate_date,
@@ -141,6 +178,22 @@ estimate_multi_beta_binomial_glm = function(.data,
         truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up),
       )
 
+    # Allow variance association
+    data_for_model =
+      .data %>%
+      data_to_spread ( formula, !!.sample, !!.cell_type, !!.count) %>%
+      data_spread_to_model_input(
+        formula, !!.sample, !!.cell_type, !!.count,
+        variance_association = variance_association,
+        truncation_ajustment = 1.1,
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all")
+      )
+
+    # Pior
+    data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
+    data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
+    data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+
     # Add censoring
     data_for_model$is_truncated = 1
     data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
@@ -157,7 +210,15 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     fit2 =
       data_for_model %>%
-      fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = my_quantile_step_2,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      fit_model(
+        stanmodels$glm_multi_beta_binomial,
+        cores = cores,
+        quantile = my_quantile_step_2,
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
+        verbose = verbose,
+        seed = seed
+      )
+
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
 
     rng2 =  rstan::gqs(
@@ -213,7 +274,14 @@ estimate_multi_beta_binomial_glm = function(.data,
     fit3 =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      fit_model(
+        stanmodels$glm_multi_beta_binomial,
+        cores = cores,
+        quantile = CI,
+        approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
+        verbose = verbose, seed = seed
+      )
+
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
     list(

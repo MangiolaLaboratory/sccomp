@@ -51,9 +51,17 @@ data{
 transformed data{
 	vector[2*M] Q_r = Q_sum_to_zero_QR(M);
   real x_raw_sigma = inv_sqrt(1 - inv(M));
+
+  matrix[N, C] Q_ast;
+  matrix[C, C] R_ast;
+  matrix[C, C] R_ast_inverse;
+  // thin and scale the QR decomposition
+  Q_ast = qr_thin_Q(X) * sqrt(N - 1);
+  R_ast = qr_thin_R(X) / sqrt(N - 1);
+  R_ast_inverse = inverse(R_ast);
 }
 parameters{
-	matrix[C, M-1] beta_raw;
+	matrix[C, M-1] beta_raw_raw;
 	matrix[A, M] alpha;
 
 	// To exclude
@@ -63,17 +71,17 @@ parameters{
   real<lower=0, upper=1> mix_p;
 }
 transformed parameters{
-		matrix[C,M] beta;
+		matrix[C,M] beta_raw;
 		matrix[A,M] beta_intercept_slope;
 		matrix[A,M] alpha_intercept_slope;
     matrix[M, N] precision = (X[,1:A] * alpha)';
 
-	  for(c in 1:C)	beta[c,] =  sum_to_zero_QR(beta_raw[c,], Q_r);
+	  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
     // All this because if A ==1 we have ocnversion problems
     // This works only with two discrete groups
-    if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
-    else beta_intercept_slope = (XA * beta[1:A,]);
+    if(A == 1) beta_intercept_slope = to_matrix(beta_raw[A,], A, M, 0);
+    else beta_intercept_slope = (XA * beta_raw[1:A,]);
 		if(A == 1)  alpha_intercept_slope = alpha;
 		else alpha_intercept_slope = (XA * alpha);
 
@@ -81,7 +89,7 @@ transformed parameters{
 model{
 
   // Calculate MU
-  matrix[M, N] mu = (X * beta)';
+  matrix[M, N] mu = (Q_ast * beta_raw)';
 
   for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
 
@@ -101,28 +109,33 @@ model{
     }
   }
 
-  for(i in 1:C) to_vector(beta_raw[i]) ~ student_t (8, 0, x_raw_sigma );
+  for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
 
   // PRECISION REGRESSION
   // to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
-  if(is_vb==0){
+  // if(is_vb==0){
   for (a in 1:A) for(m in 1:M)
     target += log_mix(mix_p,
                     normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                    normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] - 1.1, prec_sd)
+                    normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * -0.73074903 - 1.1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
                   );
-  }
-  else{
-    to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+  // }
 
-  }
+  // else{
+  //   to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+  //
+  // }
 
   //
   mix_p ~ beta(1,5);
 
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
   prec_coeff[2] ~ normal(prior_prec_slope[1], prior_prec_slope[2]);
-  prec_sd ~ normal(prior_prec_sd[1], prior_prec_sd[2]);
+  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
 
 }
 
+generated quantities {
+  matrix[C,M] beta;
+  beta = R_ast_inverse * beta_raw; // coefficients on x
+}

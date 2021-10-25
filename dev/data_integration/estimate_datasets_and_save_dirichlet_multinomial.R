@@ -25,9 +25,10 @@ job({
 
     counts_obj  |>
     mutate(is_benign = type=="benign") |>
+      rename(cell_type = cell_group) |>
     sccomp_glm(
       formula = ~ is_benign,
-      sample, cell_group, count,
+      sample, cell_type, count,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2)),

@@ -26,7 +26,7 @@ data("counts_obj")
   sccomp_glm(
   counts_obj ,
    ~ type,  sample, cell_group, count,
-    approximate_posterior_inference = TRUE,
+    approximate_posterior_inference = "all",
     check_outliers = FALSE,
     cores = 1
   ) |>

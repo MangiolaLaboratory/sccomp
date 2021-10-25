@@ -357,7 +357,7 @@ label_deleterious_outliers = function(.my_data){
 
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores, quantile = 0.95,
-  warmup_samples = 200, approximate_posterior_inference = TRUE, verbose = FALSE,
+  warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
   seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL
 )
   {
@@ -393,6 +393,21 @@ fit_model = function(
         warmup = warmup_samples
       ) %>%
         min(cores)
+
+  # library(VGAM)
+  # ff = VGAM::vglm(
+  #   cbind(a, b) ~ cov,
+  #   dirmultinomial,
+  #   data = tibble(
+  #     a = data_for_model$y[,1],
+  #     b = data_for_model$y[,2],
+  #     cov = data_for_model$X[,2]
+  #   ),
+  #   trace = TRUE
+  # ) %>%
+  # summary()
+  #
+  # print(ff)
 
   if(!approximate_posterior_inference)
     sampling(
@@ -797,4 +812,54 @@ design_matrix_and_coefficients_to_simulation = function(
   )
 
 
+}
+
+design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, seed = sample(1:100000, size = 1)){
+
+  # design_df = as.data.frame(design_matrix)
+  # coefficient_df = as.data.frame(coefficient_matrix)
+  #
+  # rownames(design_df) = sprintf("sample_%s", 1:nrow(design_df))
+  # colnames(design_df) = sprintf("covariate_%s", 1:ncol(design_df))
+  #
+  # rownames(coefficient_df) = sprintf("cell_type_%s", 1:nrow(coefficient_df))
+  # colnames(coefficient_df) = sprintf("beta_%s", 1:ncol(coefficient_df))
+
+  exposure = 500
+
+  prop.means =
+    matrix(c(rep(1, length(design_matrix)), design_matrix), ncol=2) %*%
+    coefficient_matrix %>%
+    boot::inv.logit()
+
+  extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * 100) %>%
+    as_tibble(.name_repair = "unique", rownames = "sample") %>%
+    mutate(covariate_1= design_matrix) %>%
+    gather(cell_type, generated_counts, -sample, -covariate_1) %>%
+    mutate(generated_counts = as.integer(generated_counts))
+
+
+}
+
+#' @importFrom rlang ensym
+class_list_to_counts = function(.data, .sample, .cell_group){
+
+  .sample_for_tidyr = ensym(.sample)
+  .cell_group_for_tidyr = ensym(.cell_group)
+
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+
+
+
+  .data %>%
+    count(!!.sample,
+          !!.cell_group,
+          name = "count") %>%
+
+    complete(
+      !!.sample_for_tidyr,!!.cell_group_for_tidyr,
+      fill = list(count = 0)
+    ) %>%
+    mutate(count = as.integer(count))
 }

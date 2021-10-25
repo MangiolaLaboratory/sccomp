@@ -28,7 +28,6 @@ data("counts_obj")
 #   )
 #
 # })
-
 # test_that("counts dirichlet multinomial outlier VB",{
 #
 #   if(interactive()){

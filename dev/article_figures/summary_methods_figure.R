@@ -5,6 +5,7 @@ library(purrr)
 library(stringr)
 
 library(tidyseurat)
+library(tidySingleCellExperiment)
 library(sccomp)
 library(job)
 library(patchwork)
@@ -64,15 +65,16 @@ umap_1 =
 #   multipanel_theme  +
 #   theme_UMAP
 
+oligo_breast_estimate = readRDS("dev/oligo_breast_estimate.rds")
 composition_1 =
-  sccomp::oligo_breast_estimate %>%
+  oligo_breast_estimate %>%
   arrange(desc(abs(.median_typecancer))) %>%
   mutate(rank = 1:n()) %>%
   unnest(count_data) %>%
   with_groups(sample, ~ mutate(.x, proportions = (count)/sum(count))) %>%
   filter(cell_group %in% c("M4", "M5", "M8", "B1")) %>%
   left_join(
-    sccomp::oligo_breast_estimate %>%
+    oligo_breast_estimate %>%
       replicate_data() %>%
       with_groups(sample, ~ mutate(.x, generated_proportions = (generated_counts )/sum(generated_counts ))),
     by = c("cell_group", "sample")
@@ -110,7 +112,7 @@ umap_2 =
   theme_UMAP
 
 observed_proportions =
-  sccomp::oligo_breast_estimate %>%
+  oligo_breast_estimate %>%
   arrange(desc(abs(.median_typecancer))) %>%
   mutate(rank = 1:n()) %>%
   unnest(count_data) %>%
@@ -120,7 +122,7 @@ observed_proportions =
 
 
 generated_proportions =
-  sccomp::oligo_breast_estimate %>%
+  oligo_breast_estimate %>%
   replicate_data(number_of_draws = 100) %>%
   with_groups(c(sample, replicate), ~ mutate(.x, proportion = (generated_counts )/sum(generated_counts ))) %>%
   left_join(observed_proportions %>% distinct(sample, type))  %>%
