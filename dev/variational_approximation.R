@@ -111,7 +111,7 @@ job({
 })
 
 
-data_for_plot =
+data_for_variational_plot =
   bind_rows(
 
     # Import data multi beta
@@ -155,7 +155,7 @@ data_for_plot =
   )
 
 (
-  data_for_plot %>%
+  data_for_variational_plot %>%
     mutate(summary =
              map(
                data,
@@ -177,7 +177,7 @@ data_for_plot =
   plotly::ggplotly()
 
 (
-  data_for_plot %>%
+  data_for_variational_plot %>%
     mutate(summary =
              map(
                data,
@@ -198,8 +198,8 @@ data_for_plot =
 ) %>%
   plotly::ggplotly()
 
-data_for_plot %>%
+data_for_variational_plot %>%
   pull(data) %>%
   .[[1]] %>%
   attr("fit") %>%
-  traceplot("alpha[2,25]")
+  traceplot("beta[2,27]")
