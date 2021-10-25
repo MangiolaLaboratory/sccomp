@@ -814,6 +814,7 @@ design_matrix_and_coefficients_to_simulation = function(
 
 }
 
+
 design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, seed = sample(1:100000, size = 1)){
 
   # design_df = as.data.frame(design_matrix)
