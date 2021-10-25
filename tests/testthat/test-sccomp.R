@@ -51,13 +51,13 @@ test_that("multi beta binomial from Seurat",{
       formula = ~ type,
       sample, cell_group,
       check_outliers = FALSE,
-      approximate_posterior_inference = TRUE,
+      approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
     )  |>
     filter(composition_prob_H0<0.05) |>
     nrow() |>
-    expect_equal(13)
+    expect_equal(14)
 
 })
 
@@ -68,13 +68,13 @@ test_that("multi beta binomial from SCE",{
       formula = ~ type,
       sample, cell_group,
       check_outliers = FALSE,
-      approximate_posterior_inference = TRUE,
+      approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
     )  |>
     filter(composition_prob_H0<0.05) |>
     nrow() |>
-    expect_equal(13)
+    expect_equal(14)
 
 })
 
@@ -85,13 +85,13 @@ test_that("multi beta binomial from metadata",{
       formula = ~ type,
       sample, cell_group,
       check_outliers = FALSE,
-      approximate_posterior_inference = TRUE,
+      approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
     )  |>
     filter(composition_prob_H0<0.05) |>
     nrow() |>
-    expect_equal(13)
+    expect_equal(14)
 
 })
 
