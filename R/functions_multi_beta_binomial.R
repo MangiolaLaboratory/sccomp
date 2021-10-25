@@ -46,7 +46,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
-                                            approximate_posterior_inference = TRUE,
+                                            approximate_posterior_inference = "outlier_detection",
                                             variance_association = FALSE,
                                             cores = detectCores(), # For development purpose,
                                             seed = sample(1e5, 1),
@@ -78,7 +78,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference
+        approximate_posterior_inference = approximate_posterior_inference == "all"
       )
 
     # Pior
@@ -94,7 +94,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         stanmodels$glm_multi_beta_binomial,
         cores= cores,
         quantile = CI,
-        approximate_posterior_inference = approximate_posterior_inference,
+        approximate_posterior_inference = approximate_posterior_inference == "all",
         verbose = verbose,
         seed = seed
       )
@@ -120,7 +120,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = FALSE,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all")
       )
 
     # Pior
@@ -137,7 +137,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         stanmodels$glm_multi_beta_binomial,
         cores= cores,
         quantile = CI,
-        approximate_posterior_inference = approximate_posterior_inference,
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         verbose = verbose,
         seed = seed
       )
@@ -186,7 +186,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all")
       )
 
     # Pior
@@ -210,7 +210,15 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     fit2 =
       data_for_model %>%
-      fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = my_quantile_step_2,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      fit_model(
+        stanmodels$glm_multi_beta_binomial,
+        cores = cores,
+        quantile = my_quantile_step_2,
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
+        verbose = verbose,
+        seed = seed
+      )
+
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
 
     rng2 =  rstan::gqs(
@@ -270,9 +278,10 @@ estimate_multi_beta_binomial_glm = function(.data,
         stanmodels$glm_multi_beta_binomial,
         cores = cores,
         quantile = CI,
-        approximate_posterior_inference = FALSE,
+        approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
         verbose = verbose, seed = seed
       )
+
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
     list(
