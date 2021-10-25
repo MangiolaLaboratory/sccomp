@@ -78,7 +78,7 @@
       <h1 data-toc-skip>Overview of the sccomp package</h1>
                         <h4 data-toc-skip class="author">Stefano Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2021-10-23</h4>
+            <h4 data-toc-skip class="date">2021-10-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/master/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="hidden name"><code>introduction.Rmd</code></div>
@@ -155,21 +155,20 @@
   check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,
   cores <span class="op">=</span> <span class="fl">1</span>
 <span class="op">)</span></code></pre></div>
-<pre><code>## Joining, by = "sample"
-## sccomp says: estimation [ETA: ~20s]</code></pre>
+<pre><code>## sccomp says: estimation [ETA: ~20s]</code></pre>
 <pre><code>##  [38;5;246m# A tibble: 30 × 6 [39m
 ##    cell_group   composition_effec… composition_CI composition_pro… concentration
 ##     [3m [38;5;246m&lt;chr&gt; [39m [23m                      [3m [38;5;246m&lt;dbl&gt; [39m [23m  [3m [38;5;246m&lt;list&gt; [39m [23m                     [3m [38;5;246m&lt;dbl&gt; [39m [23m  [3m [38;5;246m&lt;list&gt; [39m [23m       
-##  [38;5;250m 1 [39m B immature                1.20   [38;5;246m&lt;tibble [1 ×  [0m…         0.000 [4m2 [24m [4m5 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 2 [39m B mem                     1.64   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 3 [39m CD4 cm high…             - [31m1 [39m [31m. [39m [31m41 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.000 [4m7 [24m [4m5 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 4 [39m CD4 cm ribo…             - [31m1 [39m [31m. [39m [31m0 [39m [31m5 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.001 [4m2 [24m [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 5 [39m CD4 cm S100…              0.925  [38;5;246m&lt;tibble [1 ×  [0m…         0.001 [4m2 [24m [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 6 [39m CD4 em high…             - [31m1 [39m [31m. [39m [31m20 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.000 [4m5 [24m [4m0 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 7 [39m CD4 naive                 0.893  [38;5;246m&lt;tibble [1 ×  [0m…         0.002 [4m5 [24m [4m0 [24m   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 8 [39m CD4 ribosome              1.53   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 9 [39m CD8 em 1                  0.349  [38;5;246m&lt;tibble [1 ×  [0m…         0.296     [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m10 [39m CD8 em 2                 - [31m0 [39m [31m. [39m [31m797 [39m  [38;5;246m&lt;tibble [1 ×  [0m…         0.061 [4m7 [24m    [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 1 [39m B immature                1.39   [38;5;246m&lt;tibble [1 ×  [0m…         0.000 [4m2 [24m [4m5 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 2 [39m B mem                     1.78   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 3 [39m CD4 cm high…             - [31m1 [39m [31m. [39m [31m72 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.000 [4m2 [24m [4m5 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 4 [39m CD4 cm ribo…             - [31m1 [39m [31m. [39m [31m10 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.006 [4m7 [24m [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 5 [39m CD4 cm S100…              1.00   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 6 [39m CD4 em high…             - [31m1 [39m [31m. [39m [31m19 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.008 [4m5 [24m [4m0 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 7 [39m CD4 naive                 1.07   [38;5;246m&lt;tibble [1 ×  [0m…         0.002 [4m2 [24m [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 8 [39m CD4 ribosome              1.64   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 9 [39m CD8 em 1                  0.361  [38;5;246m&lt;tibble [1 ×  [0m…         0.308     [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m10 [39m CD8 em 2                 - [31m0 [39m [31m. [39m [31m805 [39m  [38;5;246m&lt;tibble [1 ×  [0m…         0.119     [38;5;246m&lt;tibble [1 × [0m…
 ##  [38;5;246m# … with 20 more rows, and 1 more variable: count_data &lt;list&gt; [39m</code></pre>
 </div>
 <div class="section level2">
@@ -203,21 +202,20 @@
   check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,
   cores <span class="op">=</span> <span class="fl">1</span>
 <span class="op">)</span></code></pre></div>
-<pre><code>## Joining, by = "sample"
-## sccomp says: estimation [ETA: ~20s]</code></pre>
+<pre><code>## sccomp says: estimation [ETA: ~20s]</code></pre>
 <pre><code>##  [38;5;246m# A tibble: 30 × 6 [39m
 ##    cell_group   composition_effec… composition_CI composition_pro… concentration
 ##     [3m [38;5;246m&lt;chr&gt; [39m [23m                      [3m [38;5;246m&lt;dbl&gt; [39m [23m  [3m [38;5;246m&lt;list&gt; [39m [23m                     [3m [38;5;246m&lt;dbl&gt; [39m [23m  [3m [38;5;246m&lt;list&gt; [39m [23m       
-##  [38;5;250m 1 [39m B immature                1.36   [38;5;246m&lt;tibble [1 ×  [0m…          0        [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 2 [39m B mem                     1.65   [38;5;246m&lt;tibble [1 ×  [0m…          0        [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 3 [39m CD4 cm high…             - [31m1 [39m [31m. [39m [31m39 [39m   [38;5;246m&lt;tibble [1 ×  [0m…          0.002 [4m5 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 4 [39m CD4 cm ribo…             - [31m0 [39m [31m. [39m [31m940 [39m  [38;5;246m&lt;tibble [1 ×  [0m…          0.001 [4m7 [24m [4m5 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 5 [39m CD4 cm S100…              0.824  [38;5;246m&lt;tibble [1 ×  [0m…          0.008 [4m7 [24m [4m5 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 6 [39m CD4 em high…             - [31m1 [39m [31m. [39m [31m0 [39m [31m5 [39m   [38;5;246m&lt;tibble [1 ×  [0m…          0.008 [4m0 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 7 [39m CD4 naive                 0.976  [38;5;246m&lt;tibble [1 ×  [0m…          0.004 [4m0 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 8 [39m CD4 ribosome              1.47   [38;5;246m&lt;tibble [1 ×  [0m…          0        [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 9 [39m CD8 em 1                  0.338  [38;5;246m&lt;tibble [1 ×  [0m…          0.363    [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m10 [39m CD8 em 2                 - [31m0 [39m [31m. [39m [31m717 [39m  [38;5;246m&lt;tibble [1 ×  [0m…          0.082 [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 1 [39m B immature                1.39   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 2 [39m B mem                     1.78   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 3 [39m CD4 cm high…             - [31m1 [39m [31m. [39m [31m73 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.001 [4m5 [24m [4m0 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 4 [39m CD4 cm ribo…             - [31m1 [39m [31m. [39m [31m12 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.006 [4m5 [24m [4m0 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 5 [39m CD4 cm S100…              1.00   [38;5;246m&lt;tibble [1 ×  [0m…         0.000 [4m2 [24m [4m5 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 6 [39m CD4 em high…             - [31m1 [39m [31m. [39m [31m20 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.008 [4m7 [24m [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 7 [39m CD4 naive                 1.07   [38;5;246m&lt;tibble [1 ×  [0m…         0.002 [4m5 [24m [4m0 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 8 [39m CD4 ribosome              1.65   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 9 [39m CD8 em 1                  0.351  [38;5;246m&lt;tibble [1 ×  [0m…         0.333     [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m10 [39m CD8 em 2                 - [31m0 [39m [31m. [39m [31m805 [39m  [38;5;246m&lt;tibble [1 ×  [0m…         0.129     [38;5;246m&lt;tibble [1 × [0m…
 ##  [38;5;246m# … with 20 more rows, and 1 more variable: count_data &lt;list&gt; [39m</code></pre>
 </div>
 <div class="section level2">
@@ -40236,21 +40234,20 @@
   check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,
   cores <span class="op">=</span> <span class="fl">1</span>
 <span class="op">)</span></code></pre></div>
-<pre><code>## Joining, by = "sample"
-## sccomp says: estimation [ETA: ~20s]</code></pre>
+<pre><code>## sccomp says: estimation [ETA: ~20s]</code></pre>
 <pre><code>##  [38;5;246m# A tibble: 30 × 6 [39m
 ##    cell_group   composition_effec… composition_CI composition_pro… concentration
 ##     [3m [38;5;246m&lt;chr&gt; [39m [23m                      [3m [38;5;246m&lt;dbl&gt; [39m [23m  [3m [38;5;246m&lt;list&gt; [39m [23m                     [3m [38;5;246m&lt;dbl&gt; [39m [23m  [3m [38;5;246m&lt;list&gt; [39m [23m       
-##  [38;5;250m 1 [39m B immature                1.07   [38;5;246m&lt;tibble [1 ×  [0m…         0.007 [4m7 [24m [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 2 [39m B mem                     1.18   [38;5;246m&lt;tibble [1 ×  [0m…         0.001 [4m2 [24m [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 3 [39m CD4 cm high…             - [31m1 [39m [31m. [39m [31m22 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.013 [4m8 [24m    [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 4 [39m CD4 cm ribo…             - [31m0 [39m [31m. [39m [31m891 [39m  [38;5;246m&lt;tibble [1 ×  [0m…         0.032 [4m7 [24m    [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 5 [39m CD4 cm S100…              0.850  [38;5;246m&lt;tibble [1 ×  [0m…         0.021 [4m0 [24m    [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 6 [39m CD4 em high…             - [31m0 [39m [31m. [39m [31m830 [39m  [38;5;246m&lt;tibble [1 ×  [0m…         0.056 [4m7 [24m    [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 7 [39m CD4 naive                 0.807  [38;5;246m&lt;tibble [1 ×  [0m…         0.041 [4m3 [24m    [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 8 [39m CD4 ribosome              1.32   [38;5;246m&lt;tibble [1 ×  [0m…         0.000 [4m5 [24m [4m0 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 9 [39m CD8 em 1                  0.185  [38;5;246m&lt;tibble [1 ×  [0m…         0.516     [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m10 [39m CD8 em 2                 - [31m0 [39m [31m. [39m [31m735 [39m  [38;5;246m&lt;tibble [1 ×  [0m…         0.139     [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 1 [39m B immature                1.39   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 2 [39m B mem                     1.79   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 3 [39m CD4 cm high…             - [31m1 [39m [31m. [39m [31m74 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.001 [4m0 [24m [4m0 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 4 [39m CD4 cm ribo…             - [31m1 [39m [31m. [39m [31m10 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.007 [4m2 [24m [4m5 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 5 [39m CD4 cm S100…              0.998  [38;5;246m&lt;tibble [1 ×  [0m…         0.000 [4m2 [24m [4m5 [24m [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 6 [39m CD4 em high…             - [31m1 [39m [31m. [39m [31m20 [39m   [38;5;246m&lt;tibble [1 ×  [0m…         0.007 [4m0 [24m [4m0 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 7 [39m CD4 naive                 1.06   [38;5;246m&lt;tibble [1 ×  [0m…         0.003 [4m5 [24m [4m0 [24m   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 8 [39m CD4 ribosome              1.64   [38;5;246m&lt;tibble [1 ×  [0m…         0         [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 9 [39m CD8 em 1                  0.355  [38;5;246m&lt;tibble [1 ×  [0m…         0.333     [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m10 [39m CD8 em 2                 - [31m0 [39m [31m. [39m [31m807 [39m  [38;5;246m&lt;tibble [1 ×  [0m…         0.115     [38;5;246m&lt;tibble [1 × [0m…
 ##  [38;5;246m# … with 20 more rows, and 1 more variable: count_data &lt;list&gt; [39m</code></pre>
 </div>
 <div class="section level2">
@@ -40285,16 +40282,16 @@
 <pre><code>##  [38;5;246m# A tibble: 36 × 6 [39m
 ##    cell_group composition_effect… composition_CI  composition_pro… concentration
 ##     [3m [38;5;246m&lt;chr&gt; [39m [23m                     [3m [38;5;246m&lt;dbl&gt; [39m [23m  [3m [38;5;246m&lt;list&gt; [39m [23m                      [3m [38;5;246m&lt;dbl&gt; [39m [23m  [3m [38;5;246m&lt;list&gt; [39m [23m       
-##  [38;5;250m 1 [39m B1                     - [31m0 [39m [31m. [39m [31m568 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.111   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 2 [39m B2                     - [31m0 [39m [31m. [39m [31m541 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.143   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 3 [39m B3                     - [31m0 [39m [31m. [39m [31m255 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.422   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 4 [39m BM                     - [31m0 [39m [31m. [39m [31m0 [39m [31m73 [4m3 [24m [39m  [38;5;246m&lt;tibble [1 × 6 [0m…           0.637   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 5 [39m CD4 1                   0.173   [38;5;246m&lt;tibble [1 × 6 [0m…           0.540   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 6 [39m CD4 2                   0.402   [38;5;246m&lt;tibble [1 × 6 [0m…           0.238   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 7 [39m CD4 3                  - [31m0 [39m [31m. [39m [31m741 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.032 [4m2 [24m  [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 8 [39m CD4 4                   0.052 [4m2 [24m  [38;5;246m&lt;tibble [1 × 6 [0m…           0.649   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m 9 [39m CD4 5                   0.077 [4m8 [24m  [38;5;246m&lt;tibble [1 × 6 [0m…           0.676   [38;5;246m&lt;tibble [1 × [0m…
-##  [38;5;250m10 [39m CD8 1                   0.132   [38;5;246m&lt;tibble [1 × 6 [0m…           0.606   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 1 [39m B1                     - [31m0 [39m [31m. [39m [31m586 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.025 [4m2 [24m  [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 2 [39m B2                     - [31m0 [39m [31m. [39m [31m621 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.044 [4m0 [24m  [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 3 [39m B3                     - [31m0 [39m [31m. [39m [31m269 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.36    [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 4 [39m BM                     - [31m0 [39m [31m. [39m [31m288 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.331   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 5 [39m CD4 1                   0.218   [38;5;246m&lt;tibble [1 × 6 [0m…           0.448   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 6 [39m CD4 2                   0.481   [38;5;246m&lt;tibble [1 × 6 [0m…           0.063 [4m3 [24m  [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 7 [39m CD4 3                  - [31m0 [39m [31m. [39m [31m708 [39m   [38;5;246m&lt;tibble [1 × 6 [0m…           0.021 [4m8 [24m  [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 8 [39m CD4 4                   0.036 [4m2 [24m  [38;5;246m&lt;tibble [1 × 6 [0m…           0.730   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m 9 [39m CD4 5                   0.129   [38;5;246m&lt;tibble [1 × 6 [0m…           0.642   [38;5;246m&lt;tibble [1 × [0m…
+##  [38;5;250m10 [39m CD8 1                   0.209   [38;5;246m&lt;tibble [1 × 6 [0m…           0.476   [38;5;246m&lt;tibble [1 × [0m…
 ##  [38;5;246m# … with 26 more rows, and 1 more variable: count_data &lt;list&gt; [39m</code></pre>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>

@@ -66,10 +66,10 @@
   <span class="va">.cell_group</span>,
   .count <span class="op">=</span> <span class="cn">NULL</span>,
   prior_mean_variable_association <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4.436925</span>, <span class="fl">1.304049</span><span class="op">)</span>, slope <span class="op">=</span>
-    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.73074903</span>, <span class="fl">0.06532897</span><span class="op">)</span>, standard_deviation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.4527292</span>, <span class="fl">0.3318759</span><span class="op">)</span><span class="op">)</span>,
+    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.73074903</span>, <span class="fl">0.06532897</span><span class="op">)</span>, standard_deviation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5.06983</span>, <span class="fl">8.549324</span><span class="op">)</span><span class="op">)</span>,
   percent_false_positive <span class="op">=</span> <span class="fl">5</span>,
   check_outliers <span class="op">=</span> <span class="cn">TRUE</span>,
-  approximate_posterior_inference <span class="op">=</span> <span class="cn">FALSE</span>,
+  approximate_posterior_inference <span class="op">=</span> <span class="st">"outlier_detection"</span>,
   test_composition_above_logit_fold_change <span class="op">=</span> <span class="fl">0.2</span>,
   verbose <span class="op">=</span> <span class="cn">FALSE</span>,
   noise_model <span class="op">=</span> <span class="st">"multi_beta_binomial"</span>,
@@ -88,7 +88,7 @@
 </dl><dl><dt>.sample</dt><dd><p>A column name as symbol. The sample identifier</p></dd>
 </dl><dl><dt>.cell_group</dt><dd><p>A column name as symbol. The cell_type identifier</p></dd>
 </dl><dl><dt>.count</dt><dd><p>A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.</p></dd>
-</dl><dl><dt>prior_mean_variable_association</dt><dd><p>A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.</p></dd>
+</dl><dl><dt>prior_mean_variable_association</dt><dd><p>A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.</p></dd>
 </dl><dl><dt>percent_false_positive</dt><dd><p>A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.</p></dd>
 </dl><dl><dt>check_outliers</dt><dd><p>A boolean. Whether to check for outliers before the fit.</p></dd>
 </dl><dl><dt>approximate_posterior_inference</dt><dd><p>A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.</p></dd>
@@ -114,7 +114,7 @@
 <span class="r-in">  <span class="fu">sccomp_glm</span><span class="op">(</span></span>
 <span class="r-in">  <span class="va">counts_obj</span> ,</span>
 <span class="r-in">   <span class="op">~</span> <span class="va">type</span>,  <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span>
-<span class="r-in">    approximate_posterior_inference <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span class="r-in">    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span>
 <span class="r-in">    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span class="r-in">    cores <span class="op">=</span> <span class="fl">1</span></span>
 <span class="r-in">  <span class="op">)</span></span>
