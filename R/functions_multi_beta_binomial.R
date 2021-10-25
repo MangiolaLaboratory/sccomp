@@ -266,7 +266,13 @@ estimate_multi_beta_binomial_glm = function(.data,
     fit3 =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(stanmodels$glm_multi_beta_binomial, cores = cores, quantile = CI,  approximate_posterior_inference = approximate_posterior_inference, verbose = verbose, seed = seed)
+      fit_model(
+        stanmodels$glm_multi_beta_binomial,
+        cores = cores,
+        quantile = CI,
+        approximate_posterior_inference = FALSE,
+        verbose = verbose, seed = seed
+      )
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
     list(
