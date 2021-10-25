@@ -14,7 +14,7 @@ sccomp_glm(
     c(-0.73074903, 0.06532897), standard_deviation = c(5.06983, 8.549324)),
   percent_false_positive = 5,
   check_outliers = TRUE,
-  approximate_posterior_inference = TRUE,
+  approximate_posterior_inference = "outlier_detection",
   test_composition_above_logit_fold_change = 0.2,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
@@ -68,7 +68,7 @@ estimate =
   sccomp_glm(
   counts_obj ,
    ~ type,  sample, cell_group, count,
-    approximate_posterior_inference = TRUE,
+    approximate_posterior_inference = "all",
     check_outliers = FALSE,
     cores = 1
   )
