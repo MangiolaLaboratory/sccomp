@@ -4,7 +4,7 @@ library(tidyverse)
 library(glue)
 
 root_directory = "/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/"
-code_directory = glue("{root_directory}benchmark_code/")
+code_directory = glue("{root_directory}bench_pipeline/")
 results_directory = glue("{root_directory}benchmark_results/")
 
 tab="\t"

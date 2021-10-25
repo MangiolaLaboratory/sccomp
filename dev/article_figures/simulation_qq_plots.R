@@ -14,58 +14,52 @@ library(job)
 library(patchwork)
 
 # Load multipanel_theme
-source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/277e451957389155767446e293fcc59b28c58278/ggplot_theme_multipanel")
+source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/305ed9ba2af815fdef3214b9e6171008d5917400/ggplot_theme_multipanel")
 
 set.seed(42)
 
-estimate_beta_binomial =
-
-  # Import data multi beta
-  tribble(
-    ~dataset, ~data,
-    "oligo",
-    readRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds") %>%
-      rename(cell_type = cell_group),
-    "UVM",
-    readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds"),
-    "renal_cell_carcinoma",
-    readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds"),
-    "bc_cells",
-    readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>%
-      mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
-    "COVID",
-    readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds"),
-    "melanoma",
-    readRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
-  ) %>%
-  mutate(method = "Simplex Beta-binomial")
-
-estimate_dirichlet_multinomial =
-
-  # Import data multi beta
-  tribble(
-    ~dataset, ~data,
-    "oligo",
-    readRDS("dev/data_integration/estimate_dirichlet_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds") %>%
-      rename(cell_type = cell_group),
-    "UVM",
-    readRDS("dev/data_integration/estimate_dirichlet_GSE139829_uveal_melanoma.rds"),
-    "renal_cell_carcinoma",
-    readRDS("dev/data_integration/estimate_dirichlet_SCP1288_renal_cell_carcinoma.rds"),
-    "bc_cells",
-    readRDS("dev/data_integration/estimate_dirichlet_SCP1039_bc_cells.rds") %>%
-      mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
-    "COVID",
-    readRDS("dev/data_integration/estimate_dirichlet_s41587-020-0602-4_COVID_19.rds"),
-    "melanoma",
-    readRDS("dev/data_integration/estimate_dirichlet_GSE120575_melanoma.rds")
-  ) %>%
-  mutate(method = "Dirichlet-multinomial")
 
 data_for_plot =
   bind_rows(
-    estimate_beta_binomial,
-    estimate_dirichlet_multinomial
+
+    # Import data multi beta
+    tribble(
+      ~dataset, ~data,
+      "oligo",
+      readRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds") ,
+      "UVM",
+      readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds"),
+      "renal_cell_carcinoma",
+      readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds"),
+      "bc_cells",
+      readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>%
+        mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
+      "COVID",
+      readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds"),
+      "melanoma",
+      readRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
+    ) %>%
+      mutate(method = "Simplex Beta-binomial"),
+
+
+    # Import data multi beta
+    tribble(
+      ~dataset, ~data,
+      "oligo",
+      readRDS("dev/data_integration/estimate_dirichlet_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds"),
+      "UVM",
+      readRDS("dev/data_integration/estimate_dirichlet_GSE139829_uveal_melanoma.rds"),
+      "renal_cell_carcinoma",
+      readRDS("dev/data_integration/estimate_dirichlet_SCP1288_renal_cell_carcinoma.rds"),
+      "bc_cells",
+      readRDS("dev/data_integration/estimate_dirichlet_SCP1039_bc_cells.rds") %>%
+        mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
+      "COVID",
+      readRDS("dev/data_integration/estimate_dirichlet_s41587-020-0602-4_COVID_19.rds"),
+      "melanoma",
+      readRDS("dev/data_integration/estimate_dirichlet_GSE120575_melanoma.rds")
+    ) %>%
+      mutate(method = "Dirichlet-multinomial")
   ) %>%
 
   mutate(method = factor(method, levels = c("Simplex Beta-binomial", "Dirichlet-multinomial"))) %>%
@@ -120,21 +114,21 @@ data_proportion =
   readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds") %>%
   distinct() %>%
   unnest(count_data) %>%
-  select(cell_type, sample, outlier, count, is_critical, significant, .median_is_criticalTRUE) %>%
+  mutate(significant = composition_prob_H0 < 0.025) %>%
+  select(cell_type, sample, outlier, count, is_critical, significant, composition_effect_is_criticalTRUE) %>%
   with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) )
 
 simulated_proportion =
   readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds") %>%
-  simulate_data(sample, cell_type, number_of_draws = 10) %>%
-  unnest(generated_data) %>%
-  left_join(data_proportion %>% distinct(is_critical, sample, cell_type, .median_is_criticalTRUE))
+  replicate_data( number_of_draws = 10) %>%
+  left_join(data_proportion %>% distinct(is_critical, sample, cell_type, composition_effect_is_criticalTRUE))
 
 data_simulation_process =
   list(
-    data_proportion %>% mutate(step = "Data (proportion representation)") %>% mutate(outlier = FALSE) %>% mutate(.median_is_criticalTRUE = NA),
-    data_proportion %>% mutate(step = "Outlier identification") %>% mutate(.median_is_criticalTRUE = NA),
+    data_proportion %>% mutate(step = "Data (proportion representation)") %>% mutate(outlier = FALSE) %>% mutate(composition_effect_is_criticalTRUE = NA),
+    data_proportion %>% mutate(step = "Outlier identification") %>% mutate(composition_effect_is_criticalTRUE = NA),
     data_proportion %>% mutate(step = "Model fitting"),
-    simulated_proportion %>% rename(proportion = generated_proportions) %>% mutate(step = "Data simulation") %>% filter(replicate==1) %>% mutate(outlier = FALSE) %>% mutate(.median_is_criticalTRUE = NA)
+    simulated_proportion %>% rename(proportion = generated_proportions) %>% mutate(step = "Data simulation") %>% filter(replicate==1) %>% mutate(outlier = FALSE) %>% mutate(composition_effect_is_criticalTRUE = NA)
   ) %>%
   reduce(bind_rows) %>%
   filter(cell_type == "Neu") %>%
@@ -148,7 +142,7 @@ plot_simulation_process =
   ggplot() +
 
   geom_boxplot(
-    aes(is_critical, proportion, fill = factor(.median_is_criticalTRUE)),
+    aes(is_critical, proportion, fill = factor(composition_effect_is_criticalTRUE)),
     outlier.shape = NA,
     data = data_simulation_process |> filter(!outlier),
     fatten = 0.5, size=0.5,
@@ -157,24 +151,25 @@ plot_simulation_process =
   facet_wrap(~step, ncol = 1) +
   scale_color_manual(values = c("black", "#e11f28")) +
   scale_fill_manual(values = "#dd6572", na.value = "white") +
-  scale_y_continuous(labels = dropLeadingZero) +
+  scale_y_continuous(labels = dropLeadingZero, trans="logit") +
   xlab("Biological condition") +
   ylab("Cell-group proportion (decimal)") +
   guides(fill = "none", shape="none", color="none") +
   coord_cartesian( clip = "off") +
-  multipanel_theme +
-  theme(strip.clip = "off")
+  multipanel_theme
+# +
+#   theme(strip.clip = "off")
 
 
 plot_boxplot =
   ggplot() +
 
   geom_boxplot(
-    aes(is_critical, proportion, fill=.median_is_criticalTRUE),
+    aes(is_critical, proportion, fill=composition_effect_is_criticalTRUE),
     outlier.shape = NA,
     data = data_proportion |> filter(!outlier), fatten = 0.5, size=0.5,
   ) +
-  geom_jitter(aes(is_critical, proportion, shape=outlier, color = .median_is_criticalTRUE),  data = data_proportion) +
+  geom_jitter(aes(is_critical, proportion, shape=outlier, color = composition_effect_is_criticalTRUE),  data = data_proportion) +
 
   geom_boxplot(
     aes(is_critical, generated_proportions),
@@ -183,12 +178,12 @@ plot_boxplot =
   ) +
   geom_jitter(aes(is_critical, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
 
-  facet_wrap(~ forcats::fct_reorder(cell_type, abs(.median_is_criticalTRUE), .desc = TRUE), scales = "free_y", nrow = 4) +
+  facet_wrap(~ forcats::fct_reorder(cell_type, abs(composition_effect_is_criticalTRUE), .desc = TRUE), scales = "free_y", nrow = 4) +
   #scale_color_manual(values = c("black", "#e11f28")) +
   #scale_fill_manual(values = c("white", "#E2D379")) +
   scale_fill_distiller(palette = "Spectral") +
   scale_color_distiller(palette = "Spectral") +
-  scale_y_continuous(labels = dropLeadingZero) +
+  scale_y_continuous(labels = dropLeadingZero, trans="logit") +
   xlab("Biological condition") +
   ylab("Cell-group proportion") +
   multipanel_theme +
@@ -241,7 +236,8 @@ plot_slopes_median_proportion =
   ylab("Slope qq-plot") +
   xlab("Median observed proportion (decimal)") +
   scale_color_manual(values = friendly_cols)  +
-  multipanel_theme + theme(strip.clip = "off")
+  multipanel_theme
+# + theme(strip.clip = "off")
 
 p =
 
@@ -262,7 +258,7 @@ p =
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom")
 
 ggsave(
-  "dev/qq_plot.pdf",
+  "dev/article_figures/qq_plot.pdf",
   plot = p,
   units = c("mm"),
   width = 183 ,
@@ -271,7 +267,7 @@ ggsave(
 )
 
 ggsave(
-  "dev/qq_plot.png",
+  "dev/article_figures/qq_plot.png",
   plot = p,
   units = c("mm"),
   width = 183 ,

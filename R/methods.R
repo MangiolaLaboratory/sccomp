@@ -18,7 +18,7 @@
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_type identifier
 #' @param .count A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.
-#' @param prior_mean_variable_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
+#' @param prior_mean_variable_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
@@ -39,7 +39,7 @@
 #'   sccomp_glm(
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
-#'     approximate_posterior_inference = TRUE,
+#'     approximate_posterior_inference = "all",
 #'     check_outliers = FALSE,
 #'     cores = 1
 #'   )
@@ -53,10 +53,10 @@ sccomp_glm <- function(.data,
                        .cell_group,
                        .count = NULL,
                        # Secondary arguments
-                       prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
+                       prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)),
                        percent_false_positive = 5,
                        check_outliers = TRUE,
-                       approximate_posterior_inference = FALSE,
+                       approximate_posterior_inference = "outlier_detection",
                        test_composition_above_logit_fold_change = 0.2,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
@@ -73,10 +73,10 @@ sccomp_glm.Seurat = function(.data,
                              .cell_group,
                              .count = NULL,
                              # Secondary arguments
-                             prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
+                             prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)),
                              percent_false_positive = 5,
                              check_outliers = TRUE,
-                             approximate_posterior_inference = FALSE,
+                             approximate_posterior_inference = "outlier_detection",
                              test_composition_above_logit_fold_change = 0.2,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
@@ -116,10 +116,10 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            .count = NULL,
 
                                            # Secondary arguments
-                                           prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
+                                           prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)),
                                            percent_false_positive = 5,
                                            check_outliers = TRUE,
-                                           approximate_posterior_inference = FALSE,
+                                           approximate_posterior_inference = "outlier_detection",
                                            test_composition_above_logit_fold_change = 0.2,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
@@ -161,10 +161,10 @@ sccomp_glm.DFrame = function(.data,
                              .count = NULL,
 
                              # Secondary arguments
-                             prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
+                             prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)),
                              percent_false_positive = 5,
                              check_outliers = TRUE,
-                             approximate_posterior_inference = FALSE,
+                             approximate_posterior_inference = "outlier_detection",
                              test_composition_above_logit_fold_change = 0.2,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
@@ -206,10 +206,10 @@ sccomp_glm.data.frame = function(.data,
                                  .count = NULL,
 
                                  # Secondary arguments
-                                 prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
+                                 prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)),
                                  percent_false_positive =  5,
                                  check_outliers = TRUE,
-                                 approximate_posterior_inference = FALSE,
+                                 approximate_posterior_inference = "outlier_detection",
                                  test_composition_above_logit_fold_change = 0.2,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
@@ -285,10 +285,10 @@ sccomp_glm_data_frame_raw = function(.data,
                                      my_glm_model,
 
                                      # Secondary arguments
-                                     prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
+                                     prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
-                                     approximate_posterior_inference = FALSE,
+                                     approximate_posterior_inference = "outlier_detection",
                                      test_composition_above_logit_fold_change = 0.2,
                                      verbose = FALSE,
                                      noise_model = "multi_beta_binomial",
@@ -298,8 +298,7 @@ sccomp_glm_data_frame_raw = function(.data,
 
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
-  .sample_for_tidyr = ensym(.sample)
-  .cell_group_for_tidyr = ensym(.cell_group)
+
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -319,21 +318,19 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula)
   ))
 
+
   # Make counts
   .data %>%
-    count(!!.sample,
-          !!.cell_group,
-          name = "count") %>%
-
-    complete(
-      nesting(!!.sample_for_tidyr),!!.cell_group_for_tidyr,
-      fill = list(count = 0)
-    ) %>%
-    mutate(count = as.integer(count)) %>%
+    class_list_to_counts(!!.sample, !!.cell_group) %>%
 
     # Add formula information
     when(
-      length(parse_formula(formula))>0 ~ left_join(., .data %>% distinct(!!.sample,!!as.symbol(parse_formula(formula)) )),
+      length(parse_formula(formula))>0 ~ left_join(.,
+                                                   .data %>%
+                                                     select(!!.sample, parse_formula(formula) ) %>%
+                                                     distinct(),
+                                                   by = quo_name(.sample)
+                                                  ),
       ~ (.)
     ) %>%
 
@@ -364,10 +361,10 @@ sccomp_glm_data_frame_counts = function(.data,
                                         my_glm_model,
 
                                         # Secondary arguments
-                                        prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)),
+                                        prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
-                                        approximate_posterior_inference = FALSE,
+                                        approximate_posterior_inference = "outlier_detection",
                                         test_composition_above_logit_fold_change = 0.2,
                                         verbose = FALSE,
                                         noise_model = "multi_beta_binomial",
@@ -419,7 +416,9 @@ sccomp_glm_data_frame_counts = function(.data,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
       verbose = verbose,
       seed = mcmc_seed
-    )
+    ) %>%
+    add_attr(.sample, ".sample") %>%
+    add_attr(.cell_group, ".cell_group")
 }
 
 #' replicate_data
@@ -442,7 +441,7 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   sccomp_glm(
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
-#'     approximate_posterior_inference = TRUE,
+#'     approximate_posterior_inference = "all",
 #'     check_outliers = FALSE,
 #'     cores = 1
 #'   ) |>
@@ -536,7 +535,7 @@ replicate_data.data.frame = function(.data,
 #'   sccomp_glm(
 #'   counts_obj ,
 #'    ~ type,  sample, cell_group, count,
-#'     approximate_posterior_inference = TRUE,
+#'     approximate_posterior_inference = "all",
 #'     check_outliers = FALSE,
 #'     cores = 1
 #'   )

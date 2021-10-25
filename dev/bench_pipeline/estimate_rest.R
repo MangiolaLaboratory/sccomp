@@ -15,79 +15,80 @@ add_outliers = as.integer(args[3])
 
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
 beta_0 = readRDS("dev/beta_0.rds")
-
+source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/quasi_binomial/counts_to_quasi_binomial_estimate.R", echo=TRUE)
+source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/rlm_robust/rlm_estimate.R", echo=TRUE)
 
 # Iterate over runs
 readRDS(input_file) %>%
 
-  # edgeR
-  mutate( results_edger = map(
-    data,
-    ~  .x %>%
-      mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
-      test_differential_abundance(
-        ~ type,
-        sample, cell_type, .value
-      ) %>%
-      pivot_transcript(cell_type)
-  )) %>%
-
-  # deseq2
-  mutate( results_deseq2 = map(
-    data,
-    ~ {
-      input =  .x %>%
-        mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
-        mutate(type = factor(type))
-
-      # Sometimes gives error for non inversability
-      tryCatch({
-        test_differential_abundance(
-          input,
-          ~ type,
-          sample, cell_type, .value,
-          method = "deseq2"
-        ) %>%
-        pivot_transcript(cell_type)
-      },
-        error=function(cond) {
-
-          # Return empty dataset
-          return(
-            tibble(
-              cell_type = character(),
-              coefficients = list(),
-              baseMean = numeric(),
-              log2FoldChange = numeric(),
-              lfcSE    = numeric(),
-              stat  = numeric(),
-              pvalue  = numeric(),
-              padj = numeric()
-            )
-          )
-      })
-
-    }
-  )) %>%
-
-  # voom
-  mutate( results_voom = map(
-    data,
-    ~  .x %>%
-      mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
-      # group_by(sample) %>%
-      # mutate(proportion = (.value+1)/sum(.value+1)) %>%
-      # ungroup(sample) %>%
-      # mutate(rate = proportion %>% boot::logit()) %>%
-      # mutate(rate = rate - min(rate)) %>%
-      # mutate(counts = rate %>% exp()) %>%
-      test_differential_abundance(
-        ~ type,
-        sample, cell_type, .value,
-        method = "limma_voom",
-      ) %>%
-      pivot_transcript(cell_type)
-  )) %>%
+  # # edgeR
+  # mutate( results_edger = map(
+  #   data,
+  #   ~  .x %>%
+  #     mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
+  #     test_differential_abundance(
+  #       ~ type,
+  #       sample, cell_type, generated_counts
+  #     ) %>%
+  #     pivot_transcript(cell_type)
+  # )) %>%
+  #
+  # # deseq2
+  # mutate( results_deseq2 = map(
+  #   data,
+  #   ~ {
+  #     input =  .x %>%
+  #       mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
+  #       mutate(type = factor(type))
+  #
+  #     # Sometimes gives error for non inversability
+  #     tryCatch({
+  #       test_differential_abundance(
+  #         input,
+  #         ~ type,
+  #         sample, cell_type, generated_counts,
+  #         method = "deseq2"
+  #       ) %>%
+  #       pivot_transcript(cell_type)
+  #     },
+  #       error=function(cond) {
+  #
+  #         # Return empty dataset
+  #         return(
+  #           tibble(
+  #             cell_type = character(),
+  #             coefficients = list(),
+  #             baseMean = numeric(),
+  #             log2FoldChange = numeric(),
+  #             lfcSE    = numeric(),
+  #             stat  = numeric(),
+  #             pvalue  = numeric(),
+  #             padj = numeric()
+  #           )
+  #         )
+  #     })
+  #
+  #   }
+  # )) %>%
+  #
+  # # voom
+  # mutate( results_voom = map(
+  #   data,
+  #   ~  .x %>%
+  #     mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
+  #     # group_by(sample) %>%
+  #     # mutate(proportion = (generated_counts+1)/sum(generated_counts+1)) %>%
+  #     # ungroup(sample) %>%
+  #     # mutate(rate = proportion %>% boot::logit()) %>%
+  #     # mutate(rate = rate - min(rate)) %>%
+  #     # mutate(counts = rate %>% exp()) %>%
+  #     test_differential_abundance(
+  #       ~ type,
+  #       sample, cell_type, generated_counts,
+  #       method = "limma_voom",
+  #     ) %>%
+  #     pivot_transcript(cell_type)
+  # )) %>%
 
   # logit linear
   mutate( results_logitLinear = map(
@@ -95,7 +96,7 @@ readRDS(input_file) %>%
     ~  .x %>%
       mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
       group_by(sample) %>%
-      mutate(proportion = (.value+1)/sum(.value+1)) %>%
+      mutate(proportion = (generated_counts+1)/sum(generated_counts+1)) %>%
       ungroup(sample) %>%
       mutate(rate = proportion %>% boot::logit()) %>%
       nest(data = -cell_type) %>%
@@ -115,7 +116,7 @@ readRDS(input_file) %>%
     ~  .x %>%
       mutate(across(c(sample, cell_type), ~ as.character(.x))) %>%
       group_by(sample) %>%
-      mutate(proportion = (.value+1)/sum(.value+1)) %>%
+      mutate(proportion = (generated_counts+1)/sum(generated_counts+1)) %>%
       ungroup(sample) %>%
       nest(data = -cell_type) %>%
       mutate(fit = map(
@@ -135,7 +136,7 @@ readRDS(input_file) %>%
   mutate( results_speckle = map(
     data,
     ~  .x %>%
-      mutate(cell_number = map(.value, ~ 1:.x)) %>%
+      mutate(cell_number = map(generated_counts, ~ 1:.x)) %>%
       unnest(cell_number) %>%
       unite("cell", c(sample, cell_type, cell_number), remove = FALSE) %>%
       propeller(clusters =  .$cell_type, sample = .$sample, group = .$type) %>%
@@ -145,8 +146,15 @@ readRDS(input_file) %>%
   # Quasi biinomial
   mutate( results_quasiBinomial = map(
     data,
-    ~   counts_to_quasi_binomial(.x, sample, cell_type, .value, type)
+    ~   counts_to_quasi_binomial(.x, sample, cell_type, generated_counts, type)
   )) %>%
+
+  # rlm
+  mutate( results_rlm = map(
+    data,
+    ~   counts_to_rlm(.x, sample, cell_type, generated_counts, type)
+  )) %>%
+
 
   saveRDS(output_file)
 

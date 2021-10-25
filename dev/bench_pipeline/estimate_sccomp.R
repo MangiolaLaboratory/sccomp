@@ -21,10 +21,10 @@ readRDS(input_file) %>%
   mutate( results_sccomp = map2(
     data, run,
     ~  .x %>%
-      mutate(.value = as.integer(.value)) %>%
+      mutate(generated_counts = as.integer(generated_counts)) %>%
       sccomp_glm(
         ~type,
-        sample, cell_type, .value,
+        sample, cell_type, generated_counts,
         check_outliers = add_outliers==1,
         approximate_posterior_inference = FALSE,
         percent_false_positive = 0.001 * 100,
