@@ -61,11 +61,12 @@ tibble(run = 1:50) %>%
 
       my_simulated_data =
         simulate_data(input_data,
+                      readRDS("dev/oligo_breast_estimate.rds"),
                       formula = ~ type ,
                       .sample = sample,
                       .cell_group = cell_type,
                       .coefficients = c(beta_0, beta_1),
-                      seed = .x * 2
+                      mcmc_seed = .x * 2
         )
 
       # Add outliers

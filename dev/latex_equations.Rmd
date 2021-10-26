@@ -11,40 +11,77 @@ knitr::opts_chunk$set(echo = TRUE)
 
 de chunks within the document. You can embed an R code chunk like this:
 
+# Simplest model
 
+
+
+```{=tex}
 \begin{align}
+
+& \mathit{BetaBinomial}\left ( k_{m,s} | n_{s}, \alpha_{m}, \beta_{m} \right ) = {n_{s} \choose k_{m,s}}{\frac {\mathrm {B} (k_{m,s}+\alpha_{m} ,n_{s}-k_{m,s}+\beta_{m} )}{\mathrm {B} (\alpha_{m} ,\beta_{m} )}}  & \textrm{ (1) } \\
+
+& \alpha_{m} = \pi_{m} * \sigma_{m}; \beta_{m} = (1-\pi_{m}) * \sigma_{m} \textbf{ for } 0 \leq \pi \leq 1 \textbf{ and } \sigma \leq 0 & \textrm{ (2) } \\
+
+& \mathit{BetaBinomial^{*}}\left ( k_{m,s} | n_{s}, \pi_{m}, \sigma_{m} \right ) = {n_{s} \choose k_{m,s}}{\frac {\mathrm {B} (k_{m,s}+(\pi_{m} * \sigma_{m}) ,n_{s}-k_{m,s}+((1-\pi_{m}) * \sigma_{m}) )}{\mathrm {B} (\pi_{m} * \sigma_{m} , (1-\pi_{m}) * \sigma_{m} )}}  & \textrm{ (3) } \\
+
+
+
+
 
 & \textbf{ Intercept-only model } \\
 
-& P\left ( \lambda, \mu, \phi \right ) \prod_{m=1}^{M} P\left ( \sigma_{m} | \mu_{m}, \lambda, \phi \right ) 
- \prod_{n=1}^{N} \prod_{m=1}^{M} P\left ( k_{m,n} | n_{n}, \mu_{m}, \sigma_{m} \right ) & \textrm{ (1) } \\
+& P\left ( \pi, \sigma \right ) 
+ \prod_{s=1}^{S} \prod_{m=1}^{M} P\left ( k_{m,s} | n_{s}, \pi_{m}, \sigma_{m} \right ) & \textrm{ (4) } \\
 
-& k_{m,n} \sim \mathit{BetaBinomial^{*}} \left(n_{n}, \mu_{m}, \sigma_{m} \right ); \sum_{m=1}^{M} \mu_{m} = 0 & \textrm{ (2) } \\
+& k_{m,s} \sim \mathit{BetaBinomial^{*}} \left(n_{s}, \pi_{m}, \sigma_{m} \right ) \textbf{ for } \sum_{m=1}^{M} \pi_{m} = 1 & \textrm{ (5) } \\
 
-& \sigma_{m} \sim \mathit{Normal} \left(\lambda_{0} + \lambda * \mu_{m}, \phi \right ) & \textrm{ (3) } \\
-
-& \lambda \sim \mathit{Normal} \left(0,5 \right);  \nu \sim \mathit{Normal} \left(0,2 \right); & \textrm{ (4) }  \\
-\\
-& \textbf{ Regression model } \\
-\\
-& \mu_{m,n} =  \left( \gamma_{m,c} * X_{c,n} \right ); \textrm{For c}\in[1..C] \sum_{m=1}^{M} \gamma_{m, c} = 0 & \textrm{ (5) } \\
-\\
-
-& \textbf{ Beta-binomial reparametrisation } \\
-\\
-& \mathit{BetaBinomial^{*}} \left(n_{n}, \mu_{m}, \sigma_{m} \right ) & \textrm{ Alternative parametrisation (6) } \\
-
-& \pi = \mathit{softmax} \left(\mu \right); =  \frac{exp(\mu)}{\sum_{m=1}^{M} exp(\mu_{m}) } & \textrm{ (7) } \\
-& \omega = e^{\sigma} & \textrm{ (8) } \\
-
-& \alpha_{m} = \pi_{m} * \omega_{m}; \beta_{m} = \left(1 - \pi_{m} \right) * \omega_{m}; & \textrm{ (9) } \\
-
-& \mathit{BetaBinomial} \left(n_{n}, \alpha_{m}, \beta_{m} \right ) & \textrm{ Classic parametrisation (10) } \\
+& \pi_{m} \sim \mathit{Beta} \left(1,1 \right ) & \textrm{ (6) } \\
+& \sigma_{m} \sim \mathit{Normal} \left(1,1 \right ) & \textrm{ (7) } \\
 
 
 
+
+
+
+
+& \pi = \mathit{softmax} \left(\mu \right) =  \frac{exp(\mu)}{\sum_{m=1}^{M} exp(\mu_{m}) } \textbf{ for } \sum_{m=1}^{M} \mu_{m} = 0  & \textrm{ (8) } \\
+
+& \sigma = e^{\omega}  & \textrm{ (9) } \\
+
+& \omega = \lambda_{0} + \lambda_{1} * \mu & \textrm{ (10) } \\
+
+
+
+
+
+& \textbf{ Intercept-only hierarchical model } \\
+
+& P\left ( \mu, \lambda_{0}, \lambda \right )  \prod_{m=1}^{M} P\left ( \omega_{m} | \mu_{m}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{m=1}^{M} P\left ( k_{m,s} | n_{s}, \mu_{m}, \omega_{m} \right ) & \textrm{ (11) } \\
+
+& k_{m,s} \sim \mathit{BetaBinomial^{*}} \left(n_{s}, \mathit{softmax}(\mu)_{m}, e^{\omega}_{m} \right ) \textrm{ for } \sum_{m=1}^{M} \mu_{m} = 0 & \textrm{ (12) } \\
+
+& \omega_{m} \sim \mathit{Normal} \left(\lambda_{0} + \lambda * \mu_{m}, \phi \right ) & \textrm{ (13) } \\
+& \mu_{m} \sim \mathit{Normal} \left(0,5 \right ) & \textrm{ (14) } \\
+& \lambda_{0,m}, \lambda_{m} \sim \mathit{Normal} \left(0,5 \right ) & \textrm{ (15) } \\
+
+& \mu_{m,condition} = \mathit{intercept_{m}} + \mathit{effect_{m}} * x_{s} \textrm{ for } \sum_{m=1}^{M} \mathit{intercept_{m}} = 0 \textrm{ and } \sum_{m=1}^{M} \mathit{effect_{m}} = 0 & \textrm{ (16) } \\
+
+
+& \gamma_{M,C} * X_{C,S} \textrm{ for } c \in[1..C] \sum_{m=1}^{M} \gamma_{m, c} = 0 & \textrm{ (17) } \\
+
+
+
+
+& \textbf{ Regression hierarchical model } \\
+
+& P\left (\gamma, \lambda_{0}, \lambda, \phi \right )  \prod_{m=1}^{M} P\left ( \omega_{m} | \gamma_{m,1}, \lambda_{0}, \lambda_{1}, \phi \right ) \prod_{s=1}^{S} \prod_{m=1}^{M} P\left ( k_{m,s} | n_{s}, \gamma_{m}, X_{s}, \omega_{m} \right ) & \textrm{ (18) } \\
+
+& k_{m,s} \sim \mathit{BetaBinomial^{*}} \left(n_{s}, \mathit{softmax}(\gamma * X)_{m,s}, e^{\omega}_{m} \right )  \textrm{ for } c \in[1..C] \sum_{m=1}^{M} \gamma_{m, c} = 0 & \textrm{ (19) } \\
+
+& \omega_{m} \sim \mathit{Normal} \left(\lambda_{0} + \lambda_{1} * \gamma_{m,1}, \phi \right ) & \textrm{ (20) } \\
+& \gamma_{m} \sim \mathit{Normal} \left(0,5 \right ) & \textrm{ (21) } \\
+& \lambda_{0}, \lambda_{1}, \phi \sim \mathit{Normal} \left(0,5 \right ) & \textrm{ (22) } \\
 
 \end{align}
-
-
+```
 

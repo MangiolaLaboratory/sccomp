@@ -182,10 +182,10 @@ job({
 
       "BRCA1_breast",
       readRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds") %>%
-        rename(cell_type = CellTypesFinal) %>%
+       # rename(cell_type = CellTypesFinal) %>%
         mutate(heterogeneity_prob_H0 = 1) %>%
         unnest(count_data) %>%
-        rename(sample = Sample) %>%
+        #rename(sample = Sample) %>%
         mutate(factor_of_interest = ptime) %>%
 
         #
@@ -277,7 +277,8 @@ estimate_plots =
         xlab("Biological condition") +
         ylab("Cell-group proportion (decimal)") +
         guides(fill="none", color="none") +
-        multipanel_theme
+        multipanel_theme +
+        theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
       else if(.y == "melanoma_responder")
         ggplot() +
@@ -300,7 +301,8 @@ estimate_plots =
         xlab("Biological condition") +
         ylab("Cell-group proportion (decimal)") +
         guides(fill="none", color="none") +
-        multipanel_theme
+        multipanel_theme+
+        theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
       else
         ggplot() +
@@ -318,7 +320,8 @@ estimate_plots =
         xlab("Biological condition") +
         ylab("Cell-group proportion (decimal)") +
         guides(fill="none", color="none") +
-        multipanel_theme
+        multipanel_theme+
+        theme(axis.text.x =  element_text(angle=20, hjust = 1))
     }
 
   ))
@@ -445,7 +448,14 @@ plot_novel_results =
     )) %>%
     add_count(dataset, name = "dataset_size") %>%
     count(color, dataset, dataset_size) %>%
-
+  mutate(dataset = case_when(
+    dataset == "BRCA1_breast" ~ "BRCA1",
+    dataset == "renal_cell_carcinoma" ~ "RCC",
+    dataset == "bc_cells" ~ "BRCA",
+    dataset == "melanoma_time" ~ "SKCM time",
+    dataset == "melanoma_responder" ~ "SKCM resp.",
+    TRUE ~ dataset
+  )) %>%
     nest(data = -dataset) %>%
     mutate(sum_interesting = map_int(data, ~ .x %>% filter(!is.na(color)) %>% pull(n) %>% sum)) %>%
     unnest(data) %>%
@@ -473,6 +483,14 @@ data_estimates %>%
 
 plot_outliers =
   data_estimates %>%
+  mutate(dataset = case_when(
+    dataset == "BRCA1_breast" ~ "BRCA1",
+    dataset == "renal_cell_carcinoma" ~ "RCC",
+    dataset == "bc_cells" ~ "BRCA",
+    dataset == "melanoma_time" ~ "SKCM time",
+    dataset == "melanoma_responder" ~ "SKCM resp.",
+    TRUE ~ dataset
+  )) %>%
   mutate(number_of_cell_types = map_int(data, ~ distinct(.x, cell_type) %>% nrow())) %>%
   mutate(outliers = map(
     data,
@@ -552,14 +570,14 @@ plot_association_all =
   mutate(data = map(data,  ~ .x %>% select(composition_CI,concentration)  )) %>%
   unnest(data) %>%
   unnest(c(composition_CI ,  concentration  )) %>%
-  ggplot(aes(`.median_(Intercept)`, -mean)) +
-  geom_errorbar(aes(ymin = -`2.5%`, ymax=-`97.5%`, color=dataset),  alpha = 0.4) +
+  ggplot(aes(`.median_(Intercept)`, mean)) +
+  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`, color=dataset),  alpha = 0.4) +
   geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`, color=dataset), alpha = 0.4) +
   geom_point(size=0.1) +
-  geom_abline(aes(intercept =  -intercept, slope = -slope, color = dataset), linetype = "dashed", data = slopes_df) +
+  geom_abline(aes(intercept =  intercept, slope = slope, color = dataset), linetype = "dashed", data = slopes_df) +
   scale_color_brewer(palette="Set1") +
   xlab("Category logit mean") +
-  ylab("Category log-overdispersion") +
+  ylab("Category log-concentration") +
   multipanel_theme
 
 
@@ -581,7 +599,7 @@ p =
   # Style
   plot_layout( nrow=4)
   ) )+
-  plot_layout(guides = 'collect', height = c(1, 7)) &
+  plot_layout(guides = 'collect', height = c(1, 8)) &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom", legend.key.size = unit(0.2, 'cm'))
 
 ggsave(
@@ -598,6 +616,6 @@ ggsave(
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 220 ,
+  height = 230 ,
   limitsize = FALSE
 )

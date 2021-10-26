@@ -14,9 +14,31 @@ library(job)
 library(patchwork)
 
 # Load multipanel_theme
-source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/305ed9ba2af815fdef3214b9e6171008d5917400/ggplot_theme_multipanel")
+source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/7a6df4a80d38b0427a263c21ac2480c4280cfe4b/ggplot_theme_multipanel")
 
 set.seed(42)
+
+library(magrittr)
+library(scales)
+library(utils)
+logit2_trans <- function(){
+
+
+  if (find.package("functional", quiet = TRUE) %>% length %>% equals(0)) {
+    message("Installing functional needed for analyses")
+    install.packages("functional", repos = "https://cloud.r-project.org")
+  }
+
+  trans <- qlogis
+  inv <- plogis
+
+  trans_new("logit2",
+            transform = trans,
+            inverse = inv,
+            breaks = functional::Compose(trans, extended_breaks(), inv),
+            format = label_scientific(digits = 2)
+  )
+}
 
 
 data_for_plot =
@@ -116,19 +138,23 @@ data_proportion =
   unnest(count_data) %>%
   mutate(significant = composition_prob_H0 < 0.025) %>%
   select(cell_type, sample, outlier, count, is_critical, significant, composition_effect_is_criticalTRUE) %>%
-  with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) )
+  with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) %>%
+  mutate(Condition = if_else(is_critical, "Critical", "Moderate")) %>%
+  mutate(Effect =composition_effect_is_criticalTRUE  )
 
 simulated_proportion =
   readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds") %>%
   replicate_data( number_of_draws = 10) %>%
-  left_join(data_proportion %>% distinct(is_critical, sample, cell_type, composition_effect_is_criticalTRUE))
+  left_join(data_proportion %>% distinct(is_critical, sample, cell_type, composition_effect_is_criticalTRUE))  %>%
+  mutate(Condition = if_else(is_critical, "Critical", "Moderate")) %>%
+  mutate(Effect =composition_effect_is_criticalTRUE  )
 
 data_simulation_process =
   list(
-    data_proportion %>% mutate(step = "Data (proportion representation)") %>% mutate(outlier = FALSE) %>% mutate(composition_effect_is_criticalTRUE = NA),
-    data_proportion %>% mutate(step = "Outlier identification") %>% mutate(composition_effect_is_criticalTRUE = NA),
+    data_proportion %>% mutate(step = "Data (proportion representation)") %>% mutate(outlier = FALSE) %>% mutate(Effect = NA),
+    data_proportion %>% mutate(step = "Outlier identification") %>% mutate(Effect = NA),
     data_proportion %>% mutate(step = "Model fitting"),
-    simulated_proportion %>% rename(proportion = generated_proportions) %>% mutate(step = "Data simulation") %>% filter(replicate==1) %>% mutate(outlier = FALSE) %>% mutate(composition_effect_is_criticalTRUE = NA)
+    simulated_proportion %>% rename(proportion = generated_proportions) %>% mutate(step = "Data simulation") %>% filter(replicate==1) %>% mutate(outlier = FALSE) %>% mutate(Effect = NA)
   ) %>%
   reduce(bind_rows) %>%
   filter(cell_type == "Neu") %>%
@@ -142,12 +168,12 @@ plot_simulation_process =
   ggplot() +
 
   geom_boxplot(
-    aes(is_critical, proportion, fill = factor(composition_effect_is_criticalTRUE)),
+    aes(Condition, proportion, fill = factor(composition_effect_is_criticalTRUE)),
     outlier.shape = NA,
     data = data_simulation_process |> filter(!outlier),
     fatten = 0.5, size=0.5,
   ) +
-  geom_point(aes(is_critical, proportion, color=outlier, shape=outlier), position = position_jitter(seed = 41), size = 1, data = data_simulation_process) +
+  geom_point(aes(Condition, proportion, color=outlier, shape=outlier), position = position_jitter(seed = 41), size = 1, data = data_simulation_process) +
   facet_wrap(~step, ncol = 1) +
   scale_color_manual(values = c("black", "#e11f28")) +
   scale_fill_manual(values = "#dd6572", na.value = "white") +
@@ -156,7 +182,8 @@ plot_simulation_process =
   ylab("Cell-group proportion (decimal)") +
   guides(fill = "none", shape="none", color="none") +
   coord_cartesian( clip = "off") +
-  multipanel_theme
+  multipanel_theme +
+  theme(axis.text.x =  element_text(angle=20, hjust = 1))
 # +
 #   theme(strip.clip = "off")
 
@@ -165,20 +192,20 @@ plot_boxplot =
   ggplot() +
 
   geom_boxplot(
-    aes(is_critical, proportion, fill=composition_effect_is_criticalTRUE),
+    aes(Condition, proportion, fill=Effect),
     outlier.shape = NA,
     data = data_proportion |> filter(!outlier), fatten = 0.5, size=0.5,
   ) +
-  geom_jitter(aes(is_critical, proportion, shape=outlier, color = composition_effect_is_criticalTRUE),  data = data_proportion) +
+  geom_jitter(aes(Condition, proportion, shape=outlier, color = Effect),  data = data_proportion) +
 
   geom_boxplot(
-    aes(is_critical, generated_proportions),
+    aes(Condition, generated_proportions),
     outlier.shape = NA, alpha=0.2,
     data = simulated_proportion, fatten = 0.5, size=0.5,
   ) +
-  geom_jitter(aes(is_critical, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
+  geom_jitter(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
 
-  facet_wrap(~ forcats::fct_reorder(cell_type, abs(composition_effect_is_criticalTRUE), .desc = TRUE), scales = "free_y", nrow = 4) +
+  facet_wrap(~ forcats::fct_reorder(cell_type, abs(Effect), .desc = TRUE), scales = "free_y", nrow = 4) +
   #scale_color_manual(values = c("black", "#e11f28")) +
   #scale_fill_manual(values = c("white", "#E2D379")) +
   scale_fill_distiller(palette = "Spectral") +
@@ -187,7 +214,8 @@ plot_boxplot =
   xlab("Biological condition") +
   ylab("Cell-group proportion") +
   multipanel_theme +
-  theme(axis.title.y = element_blank())
+  theme(axis.title.y = element_blank()) +
+  theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
 
 
@@ -201,12 +229,13 @@ plot_qq =
   facet_wrap(~dataset) +
   geom_abline(linetype="dashed", color="grey") +
   scale_color_manual(values = friendly_cols) +
-  scale_x_continuous(trans="logit", labels = dropLeadingZero) +
-  scale_y_continuous(trans="logit", labels = dropLeadingZero) +
-  xlab("Observed proportion (decimal)") +
-  ylab("Simulated proportion (decimal)") +
+  scale_x_continuous(trans="logit2") +
+  scale_y_continuous(trans="logit2") +
+  xlab("Observed proportion") +
+  ylab("Simulated proportion") +
   guides(color = "none") +
-  multipanel_theme
+  multipanel_theme +
+  theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
 plot_slopes =
   data_for_plot  %>%
@@ -231,12 +260,13 @@ plot_slopes_median_proportion =
   geom_point(aes(color=dataset), size=0.4) +
   geom_smooth(color="black", aes=0.4, size=0.4, method="lm") +
   facet_wrap(~method) +
-  scale_x_continuous(trans="logit", labels = dropLeadingZero) +
+  scale_x_continuous(trans="logit2") +
   scale_y_log10() +
   ylab("Slope qq-plot") +
-  xlab("Median observed proportion (decimal)") +
+  xlab("Median observed proportion") +
   scale_color_manual(values = friendly_cols)  +
-  multipanel_theme
+  multipanel_theme +
+  theme(axis.text.x =  element_text(angle=20, hjust = 1))
 # + theme(strip.clip = "off")
 
 p =
@@ -254,15 +284,15 @@ p =
   ) +
 
   # Style
-  plot_layout(guides = 'collect', heights  = c(2, 1)) + plot_annotation(tag_levels = c('A')) &
-  theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom")
+  plot_layout(guides = 'collect', heights  = c(3, 1)) + plot_annotation(tag_levels = c('A')) &
+  theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom",  legend.key.size = unit(0.5, 'cm'))
 
 ggsave(
   "dev/article_figures/qq_plot.pdf",
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 130 ,
+  height = 150 ,
   limitsize = FALSE
 )
 
@@ -271,6 +301,6 @@ ggsave(
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 130 ,
+  height = 150 ,
   limitsize = FALSE
 )
