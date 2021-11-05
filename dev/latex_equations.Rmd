@@ -20,7 +20,7 @@ de chunks within the document. You can embed an R code chunk like this:
 
 & \mathit{BetaBinomial}\left ( k_{m,s} | n_{s}, \alpha_{m}, \beta_{m} \right ) = {n_{s} \choose k_{m,s}}{\frac {\mathrm {B} (k_{m,s}+\alpha_{m} ,n_{s}-k_{m,s}+\beta_{m} )}{\mathrm {B} (\alpha_{m} ,\beta_{m} )}}  & \textrm{ (1) } \\
 
-& \alpha_{m} = \pi_{m} * \sigma_{m}; \beta_{m} = (1-\pi_{m}) * \sigma_{m} \textbf{ for } 0 \leq \pi \leq 1 \textbf{ and } \sigma \leq 0 & \textrm{ (2) } \\
+& \alpha_{m} = \pi_{m} * \sigma_{m}; \beta_{m} = (1-\pi_{m}) * \sigma_{m} \textrm{ for } 0 > \pi > 1 \textrm{ and } \sigma > 0 & \textrm{ (2) } \\
 
 & \mathit{BetaBinomial^{*}}\left ( k_{m,s} | n_{s}, \pi_{m}, \sigma_{m} \right ) = {n_{s} \choose k_{m,s}}{\frac {\mathrm {B} (k_{m,s}+(\pi_{m} * \sigma_{m}) ,n_{s}-k_{m,s}+((1-\pi_{m}) * \sigma_{m}) )}{\mathrm {B} (\pi_{m} * \sigma_{m} , (1-\pi_{m}) * \sigma_{m} )}}  & \textrm{ (3) } \\
 
@@ -33,9 +33,9 @@ de chunks within the document. You can embed an R code chunk like this:
 & P\left ( \pi, \sigma \right ) 
  \prod_{s=1}^{S} \prod_{m=1}^{M} P\left ( k_{m,s} | n_{s}, \pi_{m}, \sigma_{m} \right ) & \textrm{ (4) } \\
 
-& k_{m,s} \sim \mathit{BetaBinomial^{*}} \left(n_{s}, \pi_{m}, \sigma_{m} \right ) \textbf{ for } \sum_{m=1}^{M} \pi_{m} = 1 & \textrm{ (5) } \\
+& k_{m,s} \sim \mathit{BetaBinomial^{*}} \left(n_{s}, \pi_{m}, \sigma_{m} \right ) \textrm{ for } \sum_{m=1}^{M} \pi_{m} = 1 \textrm{ and } \sigma > 0 & \textrm{ (5) } \\
 
-& \pi_{m} \sim \mathit{Beta} \left(1,1 \right ) & \textrm{ (6) } \\
+& \pi_{m} \sim \mathit{Dirichlet} \left(1_{M} \right ) & \textrm{ (6) } \\
 & \sigma_{m} \sim \mathit{Normal} \left(1,1 \right ) & \textrm{ (7) } \\
 
 
@@ -44,7 +44,7 @@ de chunks within the document. You can embed an R code chunk like this:
 
 
 
-& \pi = \mathit{softmax} \left(\mu \right) =  \frac{exp(\mu)}{\sum_{m=1}^{M} exp(\mu_{m}) } \textbf{ for } \sum_{m=1}^{M} \mu_{m} = 0  & \textrm{ (8) } \\
+& \pi = \mathit{softmax} \left(\mu \right) =  \frac{exp(\mu)}{\sum_{m=1}^{M} exp(\mu_{m}) } \textrm{ for } \sum_{m=1}^{M} \mu_{m} = 0  & \textrm{ (8) } \\
 
 & \sigma = e^{\omega}  & \textrm{ (9) } \\
 
