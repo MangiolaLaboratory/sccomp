@@ -49,6 +49,7 @@ dirichlet_multinomial_glm = function(.data,
                                      variance_association = FALSE,
                                      test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
+                                     exclude_priors = FALSE,
                                      cores = detect_cores(), # For development purpose,
                                      seed = sample(1e5, 1)
 ) {

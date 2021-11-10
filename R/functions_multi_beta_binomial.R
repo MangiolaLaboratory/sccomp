@@ -50,7 +50,8 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             variance_association = FALSE,
                                             cores = detectCores(), # For development purpose,
                                             seed = sample(1e5, 1),
-                                            verbose = FALSE
+                                            verbose = FALSE,
+                                            exclude_priors = FALSE
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -458,6 +459,7 @@ multi_beta_binomial_glm = function(.data,
                                    cores = detectCores(), # For development purpose,
                                    seed = sample(1e5, 1),
                                    verbose = FALSE,
+                                   exclude_priors = FALSE,
                                    test_composition_above_logit_fold_change
 ) {
 
@@ -481,7 +483,8 @@ multi_beta_binomial_glm = function(.data,
       variance_association = variance_association,
       cores = cores, # For development purpose,
       seed = seed,
-      verbose = verbose
+      verbose = verbose,
+      exclude_priors = exclude_priors
     )
 
 
