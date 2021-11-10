@@ -47,18 +47,18 @@ data_for_plot =
     # Import data multi beta
     tribble(
       ~dataset, ~data,
-      "oligo",
+      "PBMC",
       readRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds") ,
       "UVM",
       readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds"),
-      "renal_cell_carcinoma",
+      "RCC",
       readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds"),
-      "bc_cells",
+      "BRCA",
       readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>%
         mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
       "COVID",
       readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds"),
-      "melanoma",
+      "SKCM",
       readRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
     ) %>%
       mutate(method = "Simplex Beta-binomial"),
@@ -67,18 +67,18 @@ data_for_plot =
     # Import data multi beta
     tribble(
       ~dataset, ~data,
-      "oligo",
+      "PBMC",
       readRDS("dev/data_integration/estimate_dirichlet_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds"),
       "UVM",
       readRDS("dev/data_integration/estimate_dirichlet_GSE139829_uveal_melanoma.rds"),
-      "renal_cell_carcinoma",
+      "RCC",
       readRDS("dev/data_integration/estimate_dirichlet_SCP1288_renal_cell_carcinoma.rds"),
-      "bc_cells",
+      "BRCA",
       readRDS("dev/data_integration/estimate_dirichlet_SCP1039_bc_cells.rds") %>%
         mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
       "COVID",
       readRDS("dev/data_integration/estimate_dirichlet_s41587-020-0602-4_COVID_19.rds"),
-      "melanoma",
+      "SKCM",
       readRDS("dev/data_integration/estimate_dirichlet_GSE120575_melanoma.rds")
     ) %>%
       mutate(method = "Dirichlet-multinomial")
@@ -151,14 +151,15 @@ simulated_proportion =
 
 data_simulation_process =
   list(
-    data_proportion %>% mutate(step = "Data (proportion representation)") %>% mutate(outlier = FALSE) %>% mutate(Effect = NA),
-    data_proportion %>% mutate(step = "Outlier identification") %>% mutate(Effect = NA),
-    data_proportion %>% mutate(step = "Model fitting"),
-    simulated_proportion %>% rename(proportion = generated_proportions) %>% mutate(step = "Data simulation") %>% filter(replicate==1) %>% mutate(outlier = FALSE) %>% mutate(Effect = NA)
+    data_proportion %>% mutate(step = "Data") %>% mutate(outlier = FALSE) %>% mutate(Effect = NA),
+    data_proportion %>% mutate(step = "Find outlier") %>% mutate(Effect = NA),
+    data_proportion %>% mutate(step = "Fit model"),
+    simulated_proportion %>% rename(proportion = generated_proportions) %>% mutate(step = "Simulate data") %>% filter(replicate==1) %>% mutate(outlier = FALSE) %>% mutate(Effect = NA)
   ) %>%
   reduce(bind_rows) %>%
   filter(cell_type == "Neu") %>%
-  mutate(step = forcats::fct_relevel(step, unique(.$step)))
+  mutate(step = forcats::fct_relevel(step, unique(.$step))) %>%
+  mutate(composition_effect_is_criticalTRUE = case_when(step=="Fit model" ~ composition_effect_is_criticalTRUE))
 
 
 # PLOTS
@@ -177,42 +178,64 @@ plot_simulation_process =
   facet_wrap(~step, ncol = 1) +
   scale_color_manual(values = c("black", "#e11f28")) +
   scale_fill_manual(values = "#dd6572", na.value = "white") +
-  scale_y_continuous(labels = dropLeadingZero, trans="logit") +
+  scale_y_continuous(trans="logit2") +
+  #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
   xlab("Biological condition") +
-  ylab("Cell-group proportion (decimal)") +
+  ylab("Cell-group proportion") +
   guides(fill = "none", shape="none", color="none") +
   coord_cartesian( clip = "off") +
   multipanel_theme +
-  theme(axis.text.x =  element_text(angle=20, hjust = 1))
+  theme(axis.text.x =  element_text(angle=20, hjust = 1), axis.title.x = element_blank())
 # +
 #   theme(strip.clip = "off")
 
+data_for_boxplot =
+  data_proportion |>
+  mutate(which="observed") |>
+  bind_rows(
+    simulated_proportion |>
+      rename(proportion = generated_proportions) |>
+      mutate(which="simulated") |>
+      mutate(outlier = FALSE) |>
+      mutate(Effect=NA)
+  )
 
 plot_boxplot =
   ggplot() +
-
   geom_boxplot(
-    aes(Condition, proportion, fill=Effect),
+    aes(Condition, proportion, fill=Effect, group=interaction(which, Condition)),
     outlier.shape = NA,
-    data = data_proportion |> filter(!outlier), fatten = 0.5, size=0.5,
+    data = data_for_boxplot |> filter(!outlier), fatten = 0.5, size=0.5,
   ) +
-  geom_jitter(aes(Condition, proportion, shape=outlier, color = Effect),  data = data_proportion) +
-
-  geom_boxplot(
-    aes(Condition, generated_proportions),
-    outlier.shape = NA, alpha=0.2,
-    data = simulated_proportion, fatten = 0.5, size=0.5,
+  geom_jitter(
+    aes(Condition, proportion, shape=outlier, color=which, size=which, group=interaction(which, Condition)),
+    data = data_for_boxplot,
+    position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2)
   ) +
-  geom_jitter(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
 
-  facet_wrap(~ forcats::fct_reorder(cell_type, abs(Effect), .desc = TRUE), scales = "free_y", nrow = 4) +
+  # geom_boxplot(
+  #   aes(Condition, generated_proportions),
+  #   outlier.shape = NA, alpha=0.2,
+  #   data = simulated_proportion, fatten = 0.5, size=0.5,
+  # ) +
+  # geom_jitter(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
+
+  facet_wrap(
+    ~ forcats::fct_reorder(cell_type, abs(Effect), .desc = TRUE, na.rm=TRUE),
+    scales = "free_y", nrow = 4
+  ) +
   #scale_color_manual(values = c("black", "#e11f28")) +
   #scale_fill_manual(values = c("white", "#E2D379")) +
-  scale_fill_distiller(palette = "Spectral") +
-  scale_color_distiller(palette = "Spectral") +
-  scale_y_continuous(labels = dropLeadingZero, trans="logit") +
+  scale_fill_distiller(palette = "Spectral", na.value = "white") +
+  scale_color_manual(values = c("observed" = "black", "simulated" = "grey")) +
+  scale_size_manual(values = c("observed" = 0.5, "simulated" = 0.1)) +
+  scale_alpha_manual(values = c("observed" = 1, "simulated" = 0.2)) +
+  #scale_color_distiller(palette = "Spectral") +
+  scale_y_continuous(trans="logit2") +
+  #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
   xlab("Biological condition") +
   ylab("Cell-group proportion") +
+  guides(color="none", alpha="none", size="none") +
   multipanel_theme +
   theme(axis.title.y = element_blank()) +
   theme(axis.text.x =  element_text(angle=20, hjust = 1))
@@ -273,7 +296,7 @@ p =
 
   (
     # Boxplots
-    ( ( plot_simulation_process | plot_boxplot )  +  plot_layout(widths = c(1,5)) ) /
+    ( ( plot_simulation_process | plot_boxplot )  +  plot_layout(widths = c(1,8)) ) /
 
 
    (
