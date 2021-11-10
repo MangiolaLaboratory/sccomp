@@ -47,6 +47,9 @@ data{
   real prior_prec_slope[2] ;
   real prior_prec_sd[2] ;
 
+  // Exclude priors for testing purposes
+  int<lower=0, upper=1> exclude_priors;
+
 }
 transformed data{
 	vector[2*M] Q_r = Q_sum_to_zero_QR(M);
@@ -109,24 +112,26 @@ model{
     }
   }
 
+  // Priors
   for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
 
-  // PRECISION REGRESSION
-  // to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
-  // if(is_vb==0){
-  for (a in 1:A) for(m in 1:M)
-    target += log_mix(mix_p,
-                    normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                    normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * -0.73074903 - 1.1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
-                  );
-  // }
+  if(exclude_priors == 0){
 
-  // else{
-  //   to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
-  //
-  // }
 
-  //
+    // PRECISION REGRESSION
+    // to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+    // if(is_vb==0){
+    for (a in 1:A) for(m in 1:M)
+      target += log_mix(mix_p,
+                      normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+                      normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                    );
+  } else {
+    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 5 );
+    for (a in 1:A) alpha_intercept_slope[a]  ~ normal( 5, 5 );
+  }
+
+  // Hyper priors
   mix_p ~ beta(1,5);
 
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
