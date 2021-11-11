@@ -61,6 +61,7 @@ sccomp_glm <- function(.data,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
                        variance_association = FALSE,
+                       exclude_priors = FALSE,
                        cores = detectCores(),
                        mcmc_seed = sample(1e5, 1)) {
   UseMethod("sccomp_glm", .data)
@@ -81,6 +82,7 @@ sccomp_glm.Seurat = function(.data,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              variance_association = FALSE,
+                             exclude_priors = FALSE,
                              cores = detectCores(),
                              mcmc_seed = sample(1e5, 1)) {
 
@@ -101,6 +103,7 @@ sccomp_glm.Seurat = function(.data,
       verbose = verbose,
       noise_model = noise_model,
       variance_association = variance_association,
+      exclude_priors = exclude_priors,
       cores = cores,
       mcmc_seed = mcmc_seed
     )
@@ -124,6 +127,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
                                            variance_association = FALSE,
+                                           exclude_priors = FALSE,
                                            cores = detectCores(),
                                            mcmc_seed = sample(1e5, 1)) {
 
@@ -146,6 +150,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
       verbose = verbose,
       noise_model = noise_model,
       variance_association = variance_association,
+      exclude_priors = exclude_priors,
       cores = cores,
       mcmc_seed = mcmc_seed
     )
@@ -169,6 +174,7 @@ sccomp_glm.DFrame = function(.data,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              variance_association = FALSE,
+                             exclude_priors = FALSE,
                              cores = detectCores(),
                              mcmc_seed = sample(1e5, 1)) {
 
@@ -192,6 +198,7 @@ sccomp_glm.DFrame = function(.data,
       verbose = verbose,
       noise_model = noise_model,
       variance_association = variance_association,
+      exclude_priors = exclude_priors,
       cores = cores,
       mcmc_seed = mcmc_seed
     )
@@ -214,6 +221,7 @@ sccomp_glm.data.frame = function(.data,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
                                  variance_association = FALSE,
+                                 exclude_priors = FALSE,
                                  cores = detectCores(),
                                  mcmc_seed = sample(1e5, 1)) {
 
@@ -246,6 +254,7 @@ sccomp_glm.data.frame = function(.data,
         verbose = verbose,
         my_glm_model = my_glm_model,
         variance_association = variance_association,
+        exclude_priors = exclude_priors,
         cores = cores,
         mcmc_seed = mcmc_seed
       ),
@@ -265,6 +274,7 @@ sccomp_glm.data.frame = function(.data,
         verbose = verbose,
         my_glm_model = my_glm_model,
         variance_association = variance_association,
+        exclude_priors = exclude_priors,
         cores = cores,
         mcmc_seed = mcmc_seed
       )
@@ -293,6 +303,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      verbose = FALSE,
                                      noise_model = "multi_beta_binomial",
                                      variance_association = FALSE,
+                                     exclude_priors = FALSE,
                                      cores = 4,
                                      mcmc_seed = sample(1e5, 1) ) {
 
@@ -346,6 +357,7 @@ sccomp_glm_data_frame_raw = function(.data,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       variance_association = variance_association,
+      exclude_priors = exclude_priors,
       cores = cores,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
       verbose = verbose,
@@ -369,6 +381,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         verbose = FALSE,
                                         noise_model = "multi_beta_binomial",
                                         variance_association = FALSE,
+                                        exclude_priors = FALSE,
                                         cores = 4,
                                         mcmc_seed = sample(1e5, 1)) {
 
@@ -412,6 +425,7 @@ sccomp_glm_data_frame_counts = function(.data,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       variance_association = variance_association,
+      exclude_priors = exclude_priors,
       cores = cores,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
       verbose = verbose,
