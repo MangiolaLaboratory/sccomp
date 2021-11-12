@@ -484,8 +484,14 @@ effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as
     unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%
     pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
-    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
-    nest(composition_CI = -c(M, !!effect_column_name))
+
+    # Create main effect if exists
+    when(
+      !is.na(factor_of_interest) ~ mutate(., !!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
+        nest(composition_CI = -c(M, !!effect_column_name)),
+      ~ nest(., composition_CI = -c(M))
+    )
+
 
 
 
