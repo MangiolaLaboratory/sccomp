@@ -555,7 +555,7 @@ replicate_data.data.frame = function(.data,
 #'   )
 #'
 #' # Set coefficients for cell_types. In this case all coefficients are 0 for simplicity.
-#' counts_obj = counts_obj |> mutate(b_0 = 1, b_1 = 1)
+#' counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
 #'
 #' # Simulate data
 #' simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
@@ -600,7 +600,9 @@ simulate_data.data.frame = function(.data,
   # Select model based on noise model
   my_model = attr(.estimate_object, "noise_model") %>% when(
     (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_simulate_data,
-    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities),
+    (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", readr::read_file("dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
+
   )
 
 
@@ -625,7 +627,8 @@ simulate_data.data.frame = function(.data,
   )
 
   parsed_fit =
-    parse_generated_quantities(fit, number_of_draws = number_of_draws) %>%
+    fit %>%
+    parse_generated_quantities(number_of_draws = number_of_draws) %>%
 
     # Get sample name
     nest(data = -N) %>%
@@ -649,4 +652,17 @@ simulate_data.data.frame = function(.data,
 
 }
 
+simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 
+  mu = model_input$X %*% model_input$beta
+
+  proportions =
+    rnorm(length(mu), mu, sd) %>%
+    matrix(nrow = nrow(model_input$X)) %>%
+    boot::inv.logit()
+    apply(1, function(x) x/sum(x)) %>%
+    t()
+
+  rownames(proportions) = rownames(model_input$X)
+  colnames(proportions) = colnames(model_input$beta )
+}
