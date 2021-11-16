@@ -73,7 +73,7 @@ transformed parameters{
 	for(n in 1:N){
 	  alpha[n] = to_row_vector(softmax(to_vector(alpha[n])));
 		buffer = 1.0/min(alpha[n]) * plateau;
-	  alpha[n] =  alpha[n] *  exp(precision_per_sample[n]) * buffer;
+	  alpha[n] =  alpha[n] *  exp(precision_per_sample[n]) ;
 	}
 
 
