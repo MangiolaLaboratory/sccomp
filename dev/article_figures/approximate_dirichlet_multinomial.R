@@ -65,10 +65,64 @@ estimate_1 =
   sccomp_glm(
     ~1, sample, category, count,
     check_outliers = FALSE,
-    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2)),
+    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
     verbose=TRUE
   )
 # })
+
+#cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f93", "#9bd18e", "#eece97", "#8f7b63", "#4c474b", "#415346")
+cool_palette = c("#e29a3b", "#3a9997", "#a15259",  "#cc374a", "#94379b", "#ff8d73", "#7be05f", "#ffc571", "#724c24", "#4c474b", "#236633")
+
+
+estimate_1 %>% saveRDS("dev/article_figures/estimate_1_for_dirichlet_approximation.rds")
+library(GGally)
+bind_rows(
+  readRDS("dev/article_figures/estimate_1_for_dirichlet_approximation.rds")  %>%
+    attr("fit") %>%
+    tidybayes::gather_draws(beta[C,M]) %>%
+    mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>%
+    mutate(class="dependent") %>%
+    ungroup() %>%
+    filter(.draw<=4000) %>%
+    filter(M < 4) ,
+  readRDS("dev/article_figures/estimate_1_fit_for_dirichlet_approximation_with_just_beta_binomial.rds")  %>%
+    tidybayes::gather_draws(beta[C,M]) %>%
+    mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>%
+    ungroup() %>%
+    filter(.draw<=4000) %>%
+    mutate(class="independent")
+) %>%
+
+  bind_rows(
+    fit %>% gather_draws(beta[C, M]) %>% filter(.chain!=1 & M != 4) %>%
+      mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>%
+      filter(.draw<=4000) %>%
+      mutate(class="Dirichlet-mult")
+  ) %>%
+
+  spread(M, .value) %>%
+  GGally::ggpairs(
+    columns = 7:10, aes(color = class, fill=class),
+    lower = list(continuous = function(data, mapping, method="lm", ...){
+      p <- ggplot(data = data, mapping = mapping) +
+        geom_point(alpha = 0.5,    size=0.1, shape=21, stroke=0) +
+        geom_smooth(method=method, ...)
+      p
+    }),
+    diag = list(continuous = function(data, mapping, ...){
+      p <- ggplot(data = data, mapping = mapping) +
+        geom_density(alpha = 0, size=0.5)
+      p
+    }),
+    upper = list(continuous = wrap("cor", size = 2))
+    ) +
+  scale_color_manual(values =c("dependent" = cool_palette[3], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[1])) +
+  scale_fill_manual(values =c("dependent" = cool_palette[3], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[1])) +
+  multipanel_theme +
+  theme(text = element_text(size=8)) +
+  theme(  strip.background =element_rect(fill="white", color="white")   ) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 plot_estimate =
   estimate_1 %>%
@@ -143,16 +197,56 @@ estimate_2 =
   sccomp_glm(
     ~1, sample, category, count,
     check_outliers = FALSE,
-    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2)),
+    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
     verbose=TRUE
   )
 # })
 
+estimate_2 %>% saveRDS("dev/article_figures/estimate_2_for_dirichlet_approximation.rds")
 
+bind_rows(
+  estimate_2 %>% attr("fit") %>% gather_draws(beta[C,M]) %>% mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>% mutate(class="dependent"),
+  readRDS("dev/article_figures/estimate_2_fit_for_dirichlet_approximation_with_just_beta_binomial.rds")  %>%
+    gather_draws(beta[C,M]) %>% mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>% mutate(class="independent")
+) %>%
+  ungroup() %>%
+  ggplot(aes(.value, color=class)) +
+  geom_density() +
+  facet_wrap(~M)
+
+readRDS("dev/article_figures/estimate_2_for_dirichlet_approximation.rds") %>% attr("fit") %>% pairs(pars="beta")
+readRDS("dev/article_figures/estimate_2_fit_for_dirichlet_approximation_with_just_beta_binomial.rds") %>% pairs(pars="beta")
 
 # Simulate data
 fit_object_2 = attr(estimate_2, "fit")
 generated_2 =  estimate_2 %>% replicate_data()
+
+bind_rows(
+readRDS("dev/article_figures/estimate_2_for_dirichlet_approximation.rds")  %>% attr("fit") %>% tidybayes::gather_draws(beta[C,M]) %>% mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>% mutate(class="dependent"),
+readRDS("dev/article_figures/estimate_2_fit_for_dirichlet_approximation_with_just_beta_binomial.rds")  %>%
+  tidybayes::gather_draws(beta[C,M]) %>% mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>% mutate(class="independent")
+) %>%
+  ungroup() %>%
+  ggplot(aes(.value, color=class)) +
+  geom_density() +
+  facet_wrap(~M)
+
+bind_rows(
+  readRDS("dev/article_figures/estimate_2_for_dirichlet_approximation.rds")  %>%
+    attr("fit") %>%
+    tidybayes::gather_draws(beta[C,M]) %>%
+    mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>%
+    mutate(class="dependent"),
+  readRDS("dev/article_figures/estimate_2_fit_for_dirichlet_approximation_with_just_beta_binomial.rds")  %>%
+    tidybayes::gather_draws(beta[C,M]) %>% mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>% mutate(class="independent")
+) %>%
+  ungroup() %>%
+  spread(M, .value) %>%
+  GGally::ggpairs(columns = 7:10, aes(color = class))
+
+readRDS("dev/article_figures/estimate_2_for_dirichlet_approximation.rds")  %>% attr("fit") %>% pairs(pars="beta")
+readRDS("dev/article_figures/estimate_2_fit_for_dirichlet_approximation_with_just_beta_binomial.rds") %>% pairs(pars="beta")
+
 
 
 both_data_sets_2 =
