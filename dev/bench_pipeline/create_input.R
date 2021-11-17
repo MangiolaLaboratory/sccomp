@@ -22,6 +22,7 @@ output_file = args[6]
 
 outlier_probability = 0.1
 
+
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
 beta_0 = readRDS("dev/beta_0.rds")
 
@@ -61,7 +62,8 @@ tibble(run = 1:50) %>%
 
       my_simulated_data =
         simulate_data(input_data,
-                      readRDS("dev/oligo_breast_estimate.rds"),
+                      readRDS("dev/oligo_breast_estimate.rds") %>%
+                        tidybulk:::add_attr("noise_model", "logit_normal_multinomial"), # Use logit normal
                       formula = ~ type ,
                       .sample = sample,
                       .cell_group = cell_type,
@@ -112,3 +114,29 @@ tibble(run = 1:50) %>%
 
   saveRDS(output_file)
 
+
+
+# Plot
+#
+
+# my_simulated_data2 |>
+#   left_join(input_data |> distinct(type, sample)) %>%
+#   ggplot(aes(factor(type), generated_proportions, fill=type)) +
+#
+#   geom_boxplot(
+#     aes( fill=type),
+#     outlier.shape = NA, alpha=0.2
+#   ) +
+#   geom_jitter(
+#     aes( color=type) ,
+#     alpha=0.2, size = 0.6,
+#     data = simulated_proportion
+#   ) +
+#
+#   facet_wrap(~ interaction(cell_type), scale="free_y") +
+#   scale_y_continuous(trans="logit") +
+#
+#   xlab("Biological condition") +
+#   ylab("Cell-group proportion") +
+#   theme_bw() +
+#   theme(strip.background =element_rect(fill="white"), legend.position = "bottom")
