@@ -19,6 +19,7 @@ sccomp_glm(
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
   variance_association = FALSE,
+  exclude_priors = FALSE,
   cores = detectCores(),
   mcmc_seed = sample(1e+05, 1)
 )

@@ -60,23 +60,38 @@ distro_plot_1 =
 
 # Fit
 # job({
-estimate_1 =
-  dirichlet_multinomial_counts_1 %>%
-  sccomp_glm(
-    ~1, sample, category, count,
-    check_outliers = FALSE,
-    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
-    verbose=TRUE
-  )
-# })
+# estimate_1 =
+#   dirichlet_multinomial_counts_1 %>%
+#   sccomp_glm(
+#     ~1, sample, category, count,
+#     check_outliers = FALSE,
+#     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
+#     verbose=TRUE
+#   )
+# # })
+#
+# estimate_1 %>% saveRDS("dev/article_figures/estimate_1_for_dirichlet_approximation.rds")
+
+estimate_1 = readRDS("dev/article_figures/estimate_1_for_dirichlet_approximation.rds")
+
+plot_estimate =
+  estimate_1 %>%
+  unnest(concentration, composition_CI   ) %>%
+  ggplot(aes(`.median_(Intercept)`, mean)) +
+  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`), color="#b25262", alpha = 0.8, width=0) +
+  geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), color="#b25262", alpha = 0.8, width=0) +
+  geom_point(size=0.2) +
+  geom_abline(intercept = 5.7496330, slope = -0.9650953, linetype = "dashed", color="grey") +
+  xlab("Category rate") +
+  ylab("Category log-concentration") +
+  multipanel_theme
 
 #cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f93", "#9bd18e", "#eece97", "#8f7b63", "#4c474b", "#415346")
-cool_palette = c("#e29a3b", "#3a9997", "#a15259",  "#cc374a", "#94379b", "#ff8d73", "#7be05f", "#ffc571", "#724c24", "#4c474b", "#236633")
+cool_palette = c("#e29a3b", "#3a9997", "#a15259",  "#b25262", "#94379b", "#ff8d73", "#7be05f", "#ffc571", "#724c24", "#4c474b", "#236633")
 
 
-estimate_1 %>% saveRDS("dev/article_figures/estimate_1_for_dirichlet_approximation.rds")
-library(GGally)
-bind_rows(
+plot_pairs_beta =
+  bind_rows(
   readRDS("dev/article_figures/estimate_1_for_dirichlet_approximation.rds")  %>%
     attr("fit") %>%
     tidybayes::gather_draws(beta[C,M]) %>%
@@ -94,7 +109,8 @@ bind_rows(
 ) %>%
 
   bind_rows(
-    fit %>% gather_draws(beta[C, M]) %>% filter(.chain!=1 & M != 4) %>%
+    readRDS("dev/article_figures/estimate_1_fit_for_dirichlet_approximation_dirichlet_multinomial.rds") %>%
+      gather_draws(beta[C, M]) %>% filter(.chain!=1 & M != 4) %>%
       mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>%
       filter(.draw<=4000) %>%
       mutate(class="Dirichlet-mult")
@@ -105,8 +121,8 @@ bind_rows(
     columns = 7:10, aes(color = class, fill=class),
     lower = list(continuous = function(data, mapping, method="lm", ...){
       p <- ggplot(data = data, mapping = mapping) +
-        geom_point(alpha = 0.5,    size=0.1, shape=21, stroke=0) +
-        geom_smooth(method=method, ...)
+        geom_point(  alpha=0.4,  size=0.2, shape=21, stroke=0) +
+        geom_smooth(method=method, size=0.5, linetype = "dashed", se=FALSE, ...)
       p
     }),
     diag = list(continuous = function(data, mapping, ...){
@@ -116,25 +132,15 @@ bind_rows(
     }),
     upper = list(continuous = wrap("cor", size = 2))
     ) +
-  scale_color_manual(values =c("dependent" = cool_palette[3], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[1])) +
-  scale_fill_manual(values =c("dependent" = cool_palette[3], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[1])) +
+  scale_color_manual(values =c("dependent" = cool_palette[1], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[3])) +
+  scale_fill_manual(values =c("dependent" = cool_palette[1], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[3])) +
   multipanel_theme +
   theme(text = element_text(size=8)) +
   theme(  strip.background =element_rect(fill="white", color="white")   ) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
-plot_estimate =
-  estimate_1 %>%
-  unnest(concentration) %>%
-  ggplot(aes(`.median_(Intercept)`, mean)) +
-  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`), color="#cc6666", alpha = 0.8, width=0) +
-  geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), color="#cc6666", alpha = 0.8, width=0) +
-  geom_point(size=0.2) +
-  geom_abline(intercept = 5.7496330, slope = -0.9650953, linetype = "dashed", color="grey") +
-  xlab("Category rate") +
-  ylab("Category log-concentration") +
-  multipanel_theme
+
 
 # Simulate data
 fit_object_1 = attr(estimate_1, "fit")
@@ -160,7 +166,7 @@ distro_plot_2 =
   both_data_sets_1 %>%
   ggplot(aes(category, count, color = distribution,  size=distribution)) +
   geom_jitter(height = 0,  alpha=0.5) +
-  scale_color_manual(values = c("black", "#cc6666")) +
+  scale_color_manual(values = c("black", "#b25262")) +
   scale_size_discrete(range = c(0.05, 0.5)) +
   guides(color="none", fill="none", size="none") +
   multipanel_theme
@@ -169,7 +175,7 @@ distro_violin_1 =
   both_data_sets_1 %>%
   ggplot(aes(category, count + 1, fill = distribution)) +
   geom_split_violin(scale = "width") +
-  scale_fill_manual(values = c("white", "#cc6666")) +
+  scale_fill_manual(values = c("white", "#b25262")) +
   #scale_size_discrete(range = c(0.1, 1)) +
   scale_y_log10() +
   guides(color="none", fill="none", size="none") +
@@ -192,17 +198,19 @@ dirichlet_multinomial_counts_2 =
 
 # Fit
 # job({
-estimate_2 =
-  dirichlet_multinomial_counts_2 %>%
-  sccomp_glm(
-    ~1, sample, category, count,
-    check_outliers = FALSE,
-    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
-    verbose=TRUE
-  )
-# })
+# estimate_2 =
+#   dirichlet_multinomial_counts_2 %>%
+#   sccomp_glm(
+#     ~1, sample, category, count,
+#     check_outliers = FALSE,
+#     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
+#     verbose=TRUE
+#   )
+# # })
+#
+# estimate_2 %>% saveRDS("dev/article_figures/estimate_2_for_dirichlet_approximation.rds")
 
-estimate_2 %>% saveRDS("dev/article_figures/estimate_2_for_dirichlet_approximation.rds")
+estimate_2= readRDS("dev/article_figures/estimate_2_for_dirichlet_approximation.rds")
 
 bind_rows(
   estimate_2 %>% attr("fit") %>% gather_draws(beta[C,M]) %>% mutate(.value = scale(.value, scale=F) %>% as.numeric()) %>% mutate(class="dependent"),
@@ -265,7 +273,7 @@ distro_plot_4 =
   both_data_sets_2 %>%
   ggplot(aes(category, count, color = distribution,  size=distribution)) +
   geom_jitter(height = 0, alpha=0.5) +
-  scale_color_manual(values = c("black", "#cc6666")) +
+  scale_color_manual(values = c("black", "#b25262")) +
   scale_size_discrete(range = c(0.05, 0.5)) +
   guides(color="none", fill="none", size="none") +
   multipanel_theme +
@@ -275,7 +283,7 @@ distro_violin_2 =
   both_data_sets_2 %>%
   ggplot(aes(category, count + 1, fill = distribution)) +
   geom_split_violin(scale = "width") +
-  scale_fill_manual(values = c("white", "#cc6666")) +
+  scale_fill_manual(values = c("white", "#b25262")) +
   #scale_size_discrete(range = c(0.1, 1)) +
   scale_y_log10() +
   multipanel_theme
@@ -293,11 +301,12 @@ plot_pairs =
   ggpairs(
     3:6,
     mapping=ggplot2::aes(colour = distribution, fill=distribution) ,
-    lower = list(continuous = wrap("points", alpha = 0.3,    size=0.1)) ,
+    lower = list(continuous = wrap("points",  size=0.2,  shape=21, stroke=0)) ,
     diag = list(discrete="barDiag", continuous = wrap("densityDiag", alpha=0 )),
     upper = list(continuous = wrap("cor", size = 2))
   ) +
-  scale_color_manual(values = c("black", "#cc6666")) +
+  scale_color_manual(values = c("black", "#b25262")) +
+  scale_fill_manual(values = c("black", "#b25262")) +
   multipanel_theme +
   theme(text = element_text(size=8)) +
   theme(  strip.background =element_rect(fill="white", color="white")   ) +
@@ -323,12 +332,14 @@ saveRDS(estimate_2, "dev/article_figures/estimate_2.rds")
 
 p1 =
   (
-    (distro_plot_1 + plot_estimate + distro_plot_2 + distro_violin_1 ) |
+    (distro_plot_1 | plot_estimate | distro_plot_2 | distro_violin_1 ) /
+    (
       wrap_elements(ggmatrix_gtable(plot_pairs)) |
-      (distro_plot_4 / distro_violin_2)
+      wrap_elements(ggmatrix_gtable(plot_pairs_beta))
+    )
   ) +
   # Style
-  plot_layout(guides = 'collect', width  = c(2, 4, 1)) + plot_annotation(tag_levels = c('A')) &
+  plot_layout(guides = 'collect', height  = c(1,3)) + plot_annotation(tag_levels = c('A')) &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom")
 
 
