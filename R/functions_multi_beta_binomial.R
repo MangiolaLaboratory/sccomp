@@ -344,11 +344,11 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 
   do_test = ncol(data_for_model$X) > 1
 
-  parsed_beta =
-    fit %>%
-    draws_to_tibble_x_y("beta", "C", "M") %>%
-    left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
-    nest(beta_posterior_1 = -M)
+  # parsed_beta =
+  #   fit %>%
+  #   summary_to_tibble("beta", "C", "M") %>%
+  #   left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
+  #   nest(beta_posterior_1 = -M)
 
   if(variance_association) {
     parsed_alpha =
@@ -356,29 +356,38 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       draws_to_tibble_x_y("alpha", "C", "M") %>%
       left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
       nest(alpha_1 = -M)
-
-
   }
 
+  # Parse fit
+  false_positive_rate = percent_false_positive/100
+  factor_of_interest = data_for_model$X %>% colnames() %>% .[2]
+  effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
 
-  parsed_beta %>%
-    beta_to_CI(false_positive_rate = percent_false_positive/100, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) %>%
+  fit %>%
+    summary_to_tibble("beta", "C", "M", probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))) %>%
 
-    # # ADD CI beta
-    # when(
-    #   do_test ~
-    #     mutate(
-    #       .,
-    #       composition_test = map_lgl(composition_CI , ~
-    #
-    #                                    pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > test_composition_above_logit_fold_change |
-    #                                    pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -test_composition_above_logit_fold_change
-    #       ) )  ,
-    #   ~ (.)
-    # ) %>%
+    # Drop columns I dont need
+    select(1, 2, 3, 7, 8, 9) %>%
+
+    # Rename column to match %
+    rename(
+      .lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
+      .median := !!as.symbol(sprintf("%s%s", "50", "%")) ,
+      .upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
+    ) %>%
+    left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
+    select(-C) %>%
+    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
+
+    # Create main effect if exists
+    when(
+      !is.na(factor_of_interest) ~ mutate(., !!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
+        nest(composition_CI = -c(M, !!effect_column_name)),
+      ~ nest(., composition_CI = -c(M))
+    ) %>%
 
     # Add probability if do_test
-    when(do_test ~ left_join(., get_probability_non_zero(parsed_beta, prefix="composition", test_above_logit_fold_change = test_composition_above_logit_fold_change), by="M" ), ~ (.)) %>%
+    when(do_test ~ left_join(., get_probability_non_zero(fit, prefix="composition", test_above_logit_fold_change = test_composition_above_logit_fold_change), by="M" ), ~ (.)) %>%
 
     # Add ALPHA
     when(do_test & variance_association ~ left_join(.,
@@ -389,20 +398,6 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 
     # ADD CI alpha
     when(do_test & variance_association ~ left_join(., get_probability_non_zero(parsed_alpha, prefix="heterogeneity", test_above_logit_fold_change = 0), by="M" ), ~ (.))
-  # %>%
-  #
-  #   when(
-  #     do_test & variance_association  ~
-  #       mutate(
-  #         .,
-  #         heterogeneity_test = map_lgl(heterogeneity_CI , ~
-  #
-  #                                        pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > test_composition_above_logit_fold_change |
-  #                                        pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -test_composition_above_logit_fold_change
-  #         ) )  ,
-  #     ~ (.)
-  #   )
-
 
 }
 
