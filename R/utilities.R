@@ -726,7 +726,7 @@ get.elbow.points.indices <- function(x, y, threshold) {
 #' @keywords internal
 #' @noRd
 #'
-get_probability_non_zero = function(.data, prefix = "", test_above_logit_fold_change = 0){
+get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fold_change = 0){
 
   probability_column_name = sprintf("%s_prob_H0", prefix) %>% as.symbol()
 
@@ -753,6 +753,35 @@ get_probability_non_zero = function(.data, prefix = "", test_above_logit_fold_ch
     select(M, !!probability_column_name)
     # %>%
     # mutate(false_discovery_rate = cummean(prob_non_zero))
+
+}
+
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+#' @importFrom stats C
+#'
+#' @keywords internal
+#' @noRd
+#'
+get_probability_non_zero = function(.data, prefix = "", test_above_logit_fold_change = 0){
+
+
+  draws = rstan::extract(.data, "beta")[[1]]
+
+  total_draws = dim(draws)[1]
+
+
+  bigger_zero =
+    draws[,2,] %>%
+    apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
+
+  smaller_zero =
+    draws[,2,] %>%
+    apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
+
+  (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
+    enframe(name = "M", value =  sprintf("%s_prob_H0", prefix))
+
 
 }
 
