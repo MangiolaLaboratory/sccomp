@@ -21,7 +21,9 @@ sccomp_glm(
   variance_association = FALSE,
   exclude_priors = FALSE,
   cores = detectCores(),
-  mcmc_seed = sample(1e+05, 1)
+  mcmc_seed = sample(1e+05, 1),
+  max_sampling_iterations = 20000,
+  pass_fit = TRUE
 )
 }
 \arguments{
