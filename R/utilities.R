@@ -358,7 +358,7 @@ label_deleterious_outliers = function(.my_data){
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores, quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
-  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL
+  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
 )
   {
 
@@ -378,9 +378,9 @@ fit_model = function(
 
       # If it's bigger than 20K CAP because it would get too extreme
       when(
-        (.) > 20000 ~ {
+        (.) > max_sampling_iterations ~ {
           warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
-          20000
+          max_sampling_iterations
         },
         (.)
       )
@@ -409,6 +409,12 @@ fit_model = function(
   #
   # print(ff)
 
+  # # Define a decent value for alpha as it fails for vb sometimes
+  # init_fun = function(...) list(
+  #   alpha=matrix(rep(data_for_model$prior_prec_intercept[1], data_for_model$A*data_for_model$M),nrow= data_for_model$A),
+  #   beta_raw_raw=matrix(rep(0, data_for_model$C*(data_for_model$M-1)),nrow= data_for_model$C)
+  # )
+
   if(!approximate_posterior_inference)
     sampling(
       model,
@@ -428,7 +434,7 @@ fit_model = function(
     vb_iterative(
       model,
       output_samples = output_samples ,
-      iter = output_samples,
+      iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
@@ -569,7 +575,17 @@ data_spread_to_model_input =
     .data_spread %>%
     select(!!.sample, covariate_names) %>%
     model.matrix(formula, data=.) %>%
-    apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=FALSE)))
+    apply(2, function(x)
+      x %>% when(
+        sd(.)==0 ~ (.),
+
+        # If I only have 0 and 1 for a binomial factor
+        unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
+
+        # If continuous
+        ~ scale(., scale=FALSE)
+      )
+    )
 
   XA = variance_association %>%
     when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
@@ -763,10 +779,10 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 #' @keywords internal
 #' @noRd
 #'
-get_probability_non_zero = function(.data, prefix = "", test_above_logit_fold_change = 0){
+get_probability_non_zero = function(.data, parameter, prefix = "", test_above_logit_fold_change = 0){
 
 
-  draws = rstan::extract(.data, "beta")[[1]]
+  draws = rstan::extract(.data, parameter)[[1]]
 
   total_draws = dim(draws)[1]
 
