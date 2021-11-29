@@ -8,8 +8,11 @@ library(forcats)
 # Load multipanel_theme
 source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/2a5e64e29f79a1e30405903fec1280df8662eff4/ggplot_theme_multipanel")
 
-
-
+prior_mean_variable_association = list(
+  intercept = c(5,10),
+  slope = c(0,  5),
+  standard_deviation = c(1,1)
+)
 
 job({
 
@@ -22,11 +25,7 @@ job({
       formula = ~ is_benign,
       sample, cell_type, count,
       approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
     ) %>%
     saveRDS("dev/study_of_association/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
 })
@@ -38,11 +37,8 @@ job({
       formula = ~ type,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
       ) %>%
     saveRDS("dev/study_of_association/estimate_GSE139829_uveal_melanoma.rds")
 
@@ -55,11 +51,8 @@ job({
       formula = ~ sex,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
       ) %>%
     saveRDS("dev/study_of_association/estimate_SCP1288_renal_cell_carcinoma.rds")
 })
@@ -71,11 +64,8 @@ job({
       formula = ~ type,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
       ) %>%
     saveRDS("dev/study_of_association/estimate_SCP1039_bc_cells.rds")
 })
@@ -87,11 +77,8 @@ job({
       formula = ~ is_critical,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
       ) %>%
     saveRDS("dev/study_of_association/estimate_s41587-020-0602-4_COVID_19.rds")
 })
@@ -102,11 +89,8 @@ job({
       formula = ~ time,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
       ) %>%
     saveRDS("dev/study_of_association/estimate_GSE120575_melanoma.rds")
 })
@@ -127,11 +111,8 @@ job({
       sample, cell_type ,
       approximate_posterior_inference = FALSE,
       variance_association = FALSE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
     ) %>%
     saveRDS("dev/study_of_association/estimate_BRCA1_s41467-021-21783-3.rds")
 })
@@ -150,11 +131,8 @@ job({
       sample, cell_type, count,
       approximate_posterior_inference = FALSE,
       exclude_priors = TRUE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
     ) %>%
     saveRDS("dev/study_of_association/priorFree_estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
 })
@@ -167,11 +145,8 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       exclude_priors = TRUE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
     ) %>%
     saveRDS("dev/study_of_association/priorFree_estimate_GSE139829_uveal_melanoma.rds")
 
@@ -185,11 +160,8 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       exclude_priors = TRUE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
     ) %>%
     saveRDS("dev/study_of_association/priorFree_estimate_SCP1288_renal_cell_carcinoma.rds")
 })
@@ -202,11 +174,8 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       exclude_priors = TRUE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
     ) %>%
     saveRDS("dev/study_of_association/priorFree_estimate_SCP1039_bc_cells.rds")
 })
@@ -219,11 +188,8 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       exclude_priors = TRUE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
     ) %>%
     saveRDS("dev/study_of_association/priorFree_estimate_s41587-020-0602-4_COVID_19.rds")
 })
@@ -235,11 +201,8 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       exclude_priors = TRUE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
     ) %>%
     saveRDS("dev/study_of_association/priorFree_estimate_GSE120575_melanoma.rds")
 })
@@ -261,11 +224,8 @@ job({
       approximate_posterior_inference = FALSE,
       variance_association = FALSE,
       exclude_priors = TRUE,
-      prior_mean_variable_association = list(
-        intercept = c(0, 5),
-        slope = c(0,  5),
-        standard_deviation = c(5,5)
-      )
+      prior_mean_variable_association = prior_mean_variable_association
+
     ) %>%
     saveRDS("dev/study_of_association/priorFree_estimate_BRCA1_s41467-021-21783-3.rds")
 })
@@ -310,9 +270,9 @@ fitdistrplus::fitdist(associations$standard_deviation, distr = "gamma", method =
 
 # With hyperprior
 hyperprior = list(
-  intercept = c(4.136855, 1.318474),
-  slope = c(-0.8452375, 0.09860897),
-  standard_deviation = c(14.14977, 21.98834)
+  intercept = c(4.32452, 1.050276),
+  slope = c(-0.8428576, 0.1029212),
+  standard_deviation = c(5.390190, 8.746909)
 )
 
 job({
@@ -425,7 +385,7 @@ job({
 df_for_plot =
   dir("dev/study_of_association/", pattern = "estimate", full.names = T) %>%
   enframe(value = "file") %>%
-  mutate(data = map(file, ~readRDS(.x))) %>%
+  mutate(data = imap(file, ~{ print(.y); readRDS(.x)} )) %>%
 
   # Process
   mutate(file = (file)) %>%
@@ -436,7 +396,7 @@ df_for_plot =
   ) ) %>%
   mutate(prior = factor(prior, levels = c("none", "prior", "hyperprior"))) %>%
 
-  extract(file, "dataset", regex = "estimate_([^_]+)_.*.rds") %>%
+  tidyr::extract(file, "dataset", regex = "estimate_([^_]+)_.*.rds") %>%
 
   # Add lines
   mutate(correlation = map(
@@ -685,14 +645,14 @@ estimate_CyTOF =
     formula = ~ 1,
     sample, cell_cluster,count,
     approximate_posterior_inference = FALSE,
-    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(0, 2))
+    prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5))
   )
 # estimate_CyTOF %>% attr("mean_concentration_association")
 # [1]  4.2623500    -1.1306609
 # prec_sd  = 0.4845913
 
 estimate_CyTOF %>%
-  unnest(concentration) %>%
+  unnest(concentration, composition_CI) %>%
   ggplot(aes(`.median_(Intercept)`, mean)) +
   geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  alpha = 0.4) +
   geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`), alpha = 0.4) +
