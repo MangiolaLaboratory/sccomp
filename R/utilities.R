@@ -821,7 +821,7 @@ design_matrix_and_coefficients_to_simulation = function(
 
 }
 
-design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, seed = sample(1:100000, size = 1)){
+design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, precision = 100, seed = sample(1:100000, size = 1)){
 
   # design_df = as.data.frame(design_matrix)
   # coefficient_df = as.data.frame(coefficient_matrix)
@@ -835,11 +835,11 @@ design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, c
   exposure = 500
 
   prop.means =
-    matrix(c(rep(1, length(design_matrix)), design_matrix), ncol=2) %*%
-    coefficient_matrix %>%
+    design_matrix %*%
+    t(coefficient_matrix) %>%
     boot::inv.logit()
 
-  extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * 100) %>%
+  extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * precision) %>%
     as_tibble(.name_repair = "unique", rownames = "sample") %>%
     mutate(covariate_1= design_matrix) %>%
     gather(cell_type, generated_counts, -sample, -covariate_1) %>%
