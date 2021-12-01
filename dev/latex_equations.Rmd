@@ -18,11 +18,11 @@ de chunks within the document. You can embed an R code chunk like this:
 ```{=tex}
 \begin{align}
 
-& \text{BetaBinomial}^{*}\left ( k_{m,s} | n_{s}, \alpha_{m}, \beta_{m} \right ) = {n_{s} \choose k_{m,s}}{\frac {\mathrm {B} (k_{m,s}+\alpha_{m} ,n_{s}-k_{m,s}+\beta_{m} )}{\mathrm {B} (\alpha_{m} ,\beta_{m} )}}  & \textrm{ (1) } \\
+& \text{BetaBinomial}^{*}\left ( k_{g,s} | n_{s}, \alpha_{g}, \beta_{g} \right ) = {n_{s} \choose k_{g,s}}{\frac {\mathrm {B} (k_{g,s}+\alpha_{g} ,n_{s}-k_{g,s}+\beta_{g} )}{\mathrm {B} (\alpha_{g} ,\beta_{g} )}}  & \textrm{ (1) } \\
 
-& \alpha_{m} = \pi_{m} \sigma_{m}; \beta_{m} = (1-\pi_{m}) \sigma_{m} \textrm{ for } 0 < \pi_{m} < 1 \textrm{ and } \sigma_{m} > 0 & \textrm{ (2) } \\
+& \alpha_{g} = \pi_{g} \sigma_{g}; \beta_{g} = (1-\pi_{g}) \sigma_{g} \textrm{ for } 0 < \pi_{g} < 1 \textrm{ and } \sigma_{g} > 0 & \textrm{ (2) } \\
 
-& \text{BetaBinomial}\left ( k_{m,s} | n_{s}, \pi_{m}, \sigma_{m} \right ) = {n_{s} \choose k_{m,s}}{\frac {\mathrm {B} (k_{m,s}+(\pi_{m} \sigma_{m}) ,n_{s}-k_{m,s}+((1-\pi_{m}) \sigma_{m}) )}{\mathrm {B} (\pi_{m} \sigma_{m} , (1-\pi_{m}) \sigma_{m} )}}  & \textrm{ (3) } \\
+& \text{BetaBinomial}\left ( k_{g,s} | n_{s}, \pi_{g}, \sigma_{g} \right ) = {n_{s} \choose k_{g,s}}{\frac {\mathrm {B} (k_{g,s}+(\pi_{g} \sigma_{g}) ,n_{s}-k_{g,s}+((1-\pi_{g}) \sigma_{g}) )}{\mathrm {B} (\pi_{g} \sigma_{g} , (1-\pi_{g}) \sigma_{g} )}}  & \textrm{ (3) } \\
 
 
 
@@ -31,24 +31,19 @@ de chunks within the document. You can embed an R code chunk like this:
 & \textbf{ Intercept-only model } \\
 
 & P\left ( \pi, \sigma \right ) 
- \prod_{s=1}^{S} \prod_{m=1}^{M} P\left ( k_{m,s} | n_{s}, \pi_{m}, \sigma_{m} \right ) & \textrm{ (4) } \\
+ \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \pi_{g}, \sigma_{g} \right ) & \textrm{ (4) } \\
 
-& k_{m,s} \sim \text{BetaBinomial} \left(n_{s}, \pi_{m}, \sigma_{m} \right ) \textrm{ for } \sum_{m=1}^{M} \pi_{m} = 1 \textrm{ and } \sigma_{m} > 0 & \textrm{ (5) } \\
-
-& \pi_{m} \sim \text{Dirichlet} \left(1_{M} \right ) & \textrm{ (6) } \\
-& \sigma_{m} \sim \text{Half-Normal} \left(0,1 \right ) & \textrm{ (7) } \\
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \pi_{g}, \sigma_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \pi_{g} = 1 \textrm{ and } \sigma_{g} > 0 & \textrm{ (5) } \\
 
 
 
 
 
+& \boldsymbol{\pi} = \text{multinomialLogistic} \left(\boldsymbol{\mu} \right) =  \frac{e^{\boldsymbol{\mu}}}{\sum_{g=1}^{G} e^{\mu_{g} }} \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0  & \textrm{ (6) } \\
 
+& \sigma_{g} = e^{\omega_{g}}  & \textrm{ (7) } \\
 
-& \boldsymbol{\pi} = \text{inv.mult.logistic} \left(\boldsymbol{\mu} \right) =  \frac{exp(\boldsymbol{\mu})}{\sum_{m=1}^{M} exp(\mu_{m}) } \textrm{ for } \sum_{m=1}^{M} \mu_{m} = 0  & \textrm{ (8) } \\
-
-& \sigma_{m} = e^{\omega_{m}}  & \textrm{ (9) } \\
-
-& \omega_{m} = \lambda_{0} + \lambda_{1} \mu_{m} & \textrm{ (10) } \\
+& \text{E}\left(\omega_{g} \right) = \lambda_{0} + \lambda_{1} \mu_{g} & \textrm{ (8) } \\
 
 
 
@@ -56,31 +51,33 @@ de chunks within the document. You can embed an R code chunk like this:
 
 & \textbf{ Intercept-only hierarchical model } \\
 
-& P\left ( \boldsymbol{\mu}, \lambda_{0}, \lambda \right )  \prod_{m=1}^{M} P\left ( \omega_{m} | \mu_{m}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{m=1}^{M} P\left ( k_{m,s} | n_{s}, \mu_{m}, \omega_{m} \right ) & \textrm{ (11) } \\
+& P\left ( \boldsymbol{\mu}, \lambda_{0}, \lambda \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, \omega_{g} \right ) & \textrm{ (9) } \\
 
-& k_{m,s} \sim \text{BetaBinomial} \left(n_{s}, \text{inv.mult.logistic}(\mu)_{m}, e^{\omega}_{m} \right ) \textrm{ for } \sum_{m=1}^{M} \mu_{m} = 0 & \textrm{ (12) } \\
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{multinomialLogistic}(\mu)_{g}, e^{\omega}_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0 & \textrm{ (10) } \\
 
-& \omega_{m} \sim \text{Normal} \left(\lambda_{0} + \lambda \mu_{m}, \phi \right ) & \textrm{ (13) } \\
-& \mu_{m} \sim \text{Normal} \left(0,5 \right ) & \textrm{ (14) } \\
-& \lambda_{0,m}, \lambda_{m} \sim \text{Normal} \left(0,5 \right ) & \textrm{ (15) } \\
-
-& \mu_{m,condition} = \text{intercept}_{m} + \text{effect}_{m} * x_{s} \textrm{ for } \sum_{m=1}^{M} \text{intercept}_{m} = 0 \textrm{ and } \sum_{m=1}^{M} \text{effect}_{m} = 0 & \textrm{ (16) } \\
+& \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g}, \phi \right ) & \textrm{ (11) } \\
 
 
-& \boldsymbol{\gamma}_{M,C} * \boldsymbol{X}_{C,S} \textrm{ for } c \in[1..C] \sum_{m=1}^{M} \gamma_{m, c} = 0 & \textrm{ (17) } \\
+& \mu_{g,condition} = \text{intercept}_{g} + \text{effect}_{g} x_{s} \textrm{ for } \sum_{g=1}^{G} \text{intercept}_{g} = 0 \textrm{ and } \sum_{g=1}^{G} \text{effect}_{g} = 0 & \textrm{ (12) } \\
+
+
+& \boldsymbol{M}_{G,C} \times \boldsymbol{X}_{C,S} \textrm{ for } c \in[1..C] \sum_{g=1}^{G} \mu_{g, c} = 0 & \textrm{ (13) } \\
 
 
 
 
 & \textbf{ Regression hierarchical model } \\
 
-& P\left (\boldsymbol{\gamma}, \lambda_{0}, \lambda, \phi \right )  \prod_{m=1}^{M} P\left ( \omega_{m} | \gamma_{m,1}, \lambda_{0}, \lambda_{1}, \phi \right ) \prod_{s=1}^{S} \prod_{m=1}^{M} P\left ( k_{m,s} | n_{s}, \gamma_{m}, X_{s}, \omega_{m} \right ) & \textrm{ (18) } \\
+& P\left (\boldsymbol{M}, \lambda_{0}, \lambda, \phi \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g,1}, \lambda_{0}, \lambda_{1}, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, X_{s}, \omega_{g} \right ) & \textrm{ (14) } \\
 
-& k_{m,s} \sim \text{BetaBinomial} \left(n_{s}, \text{inv.mult.logistic}(\boldsymbol{\gamma} * \boldsymbol{X})_{m,s}, e^{\omega}_{m} \right )  \textrm{ for } c \in[1..C] \sum_{m=1}^{M} \gamma_{m, c} = 0 & \textrm{ (19) } \\
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{multinomialLogistic}(\boldsymbol{\mu} \boldsymbol{X})_{g,s}, e^{\omega}_{g} \right )  \textrm{ for } c \in[1..C] \sum_{g=1}^{G} \mu_{g, c} = 0 & \textrm{ (15) } \\
 
-& \omega_{m} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \gamma_{m,1}, \phi \right ) & \textrm{ (20) } \\
-& \gamma_{m} \sim \text{Normal} \left(0,5 \right ) & \textrm{ (21) } \\
-& \lambda_{0}, \lambda_{1}, \phi \sim \text{Normal} \left(0,5 \right ) & \textrm{ (22) } \\
+& \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g,1}, \phi \right ) & \textrm{ (16) } \\
+& \mu_{g,c} \sim \text{Normal} \left(0,5 \right ) & \textrm{ (17) } \\
+& \lambda_{0}, \lambda_{1}, \phi \sim \text{Normal} \left(0,5 \right ) & \textrm{ (18) } \\
+
+& \text{E}\left(\omega_{g,i} \right) = \lambda_{0} + \lambda_{1} \mu_{g,i} & \textrm{ (19) } \\
+& \omega_{g,i} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g,i}, \phi \right ) & \textrm{ (20) } \\
 
 \end{align}
 ```

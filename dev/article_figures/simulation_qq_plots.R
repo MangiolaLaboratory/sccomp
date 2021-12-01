@@ -156,7 +156,7 @@ data_simulation_process =
     data_proportion %>% mutate(step = "Fit model"),
     simulated_proportion %>% rename(proportion = generated_proportions) %>% mutate(step = "Simulate data") %>% filter(replicate==1) %>% mutate(outlier = FALSE) %>% mutate(Effect = NA)
   ) %>%
-  reduce(bind_rows) %>%
+  purrr::reduce(bind_rows) %>%
   filter(cell_type == "Neu") %>%
   mutate(step = forcats::fct_relevel(step, unique(.$step))) %>%
   mutate(composition_effect_is_criticalTRUE = case_when(step=="Fit model" ~ composition_effect_is_criticalTRUE))
@@ -236,6 +236,7 @@ plot_boxplot =
   xlab("Biological condition") +
   ylab("Cell-group proportion") +
   guides(color="none", alpha="none", size="none") +
+  labs(fill="Compositional difference") +
   multipanel_theme +
   theme(axis.title.y = element_blank()) +
   theme(axis.text.x =  element_text(angle=20, hjust = 1))
