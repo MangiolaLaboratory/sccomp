@@ -80,7 +80,7 @@ dirichlet_multinomial_glm = function(.data,
    fit =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(model_glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed, approximate_posterior_inference= approximate_posterior_inference)
+      fit_model(model_glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed, approximate_posterior_inference= approximate_posterior_inference == "all")
 
     parsed_fit =
       fit %>%
@@ -131,7 +131,7 @@ dirichlet_multinomial_glm = function(.data,
         !!.count,
         iteration = 2,
         seed = seed,
-        approximate_posterior_inference = approximate_posterior_inference,
+        approximate_posterior_inference = approximate_posterior_inference == "all",
         false_positive_rate = false_positive_rate
       )
 
