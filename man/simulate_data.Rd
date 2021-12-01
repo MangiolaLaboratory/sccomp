@@ -53,7 +53,7 @@ estimate =
   )
 
 # Set coefficients for cell_types. In this case all coefficients are 0 for simplicity.
-counts_obj = counts_obj |> mutate(b_0 = 1, b_1 = 1)
+counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
 
 # Simulate data
 simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
