@@ -87,6 +87,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
     data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+    data_for_model$exclude_priors = exclude_priors
 
     # Check that design matrix is not too big
     if(ncol(data_for_model$X)>20)
@@ -134,6 +135,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
     data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+    data_for_model$exclude_priors = exclude_priors
 
 
     fit =
@@ -201,6 +203,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
     data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+    data_for_model$exclude_priors = exclude_priors
 
     # Add censoring
     data_for_model$is_truncated = 1
