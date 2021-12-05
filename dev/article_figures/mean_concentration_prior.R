@@ -14,221 +14,224 @@ prior_mean_variable_association = list(
   standard_deviation = c(1,1)
 )
 
-job({
+friendly_cols <- dittoSeq::dittoColors()
+cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f93", "#9bd18e", "#eece97", "#8f7b63", "#4c474b", "#415346")
 
-  load("data/counts_obj.rda")
-
-  counts_obj  |>
-    mutate(is_benign = type=="benign") |>
-    rename(cell_type = cell_group) %>%
-    sccomp_glm(
-      formula = ~ is_benign,
-      sample, cell_type, count,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-    ) %>%
-    saveRDS("dev/study_of_association/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
-})
-
-job({
-  readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
-    rename(type = `Sample Type`) %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-      ) %>%
-    saveRDS("dev/study_of_association/estimate_GSE139829_uveal_melanoma.rds")
-
-})
-
-job({
-  readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
-    tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(sex))  |>
-    sccomp_glm(
-      formula = ~ sex,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-      ) %>%
-    saveRDS("dev/study_of_association/estimate_SCP1288_renal_cell_carcinoma.rds")
-})
-
-job({
-  readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
-    mutate(type = subtype=="TNBC") %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-      ) %>%
-    saveRDS("dev/study_of_association/estimate_SCP1039_bc_cells.rds")
-})
-
-job({
-  readRDS("dev/data_integration/s41587-020-0602-4_COVID_19.rds")  |>
-    mutate(is_critical = severity=="critical") %>%
-    sccomp_glm(
-      formula = ~ is_critical,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-      ) %>%
-    saveRDS("dev/study_of_association/estimate_s41587-020-0602-4_COVID_19.rds")
-})
-
-job({
-  readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
-    sccomp_glm(
-      formula = ~ time,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-      ) %>%
-    saveRDS("dev/study_of_association/estimate_GSE120575_melanoma.rds")
-})
-
-job({
-
-  library(tidySingleCellExperiment)
-
-  readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
-    filter(ptime %>% is.na() %>% `!`) %>%
-
-    # Scale ptime
-    mutate(ptime = scales::rescale(ptime)) %>%
-    rename(cell_type = CellTypesFinal) %>%
-    rename(sample = Sample) %>%
-    sccomp_glm(
-      formula = ~ ptime,
-      sample, cell_type ,
-      approximate_posterior_inference = FALSE,
-      variance_association = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-    ) %>%
-    saveRDS("dev/study_of_association/estimate_BRCA1_s41467-021-21783-3.rds")
-})
-
-# Prior free
-job({
-
-  load("data/counts_obj.rda")
-
-
-  counts_obj  |>
-    mutate(is_benign = type=="benign") |>
-    rename(cell_type = cell_group) %>%
-    sccomp_glm(
-      formula = ~ is_benign,
-      sample, cell_type, count,
-      approximate_posterior_inference = FALSE,
-      exclude_priors = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-    ) %>%
-    saveRDS("dev/study_of_association/priorFree_estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
-})
-
-job({
-  readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
-    rename(type = `Sample Type`) %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      exclude_priors = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-    ) %>%
-    saveRDS("dev/study_of_association/priorFree_estimate_GSE139829_uveal_melanoma.rds")
-
-})
-
-job({
-  readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
-    tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(sex))  |>
-    sccomp_glm(
-      formula = ~ sex,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      exclude_priors = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-    ) %>%
-    saveRDS("dev/study_of_association/priorFree_estimate_SCP1288_renal_cell_carcinoma.rds")
-})
-
-job({
-  readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
-    mutate(type = subtype=="TNBC") %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      exclude_priors = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-    ) %>%
-    saveRDS("dev/study_of_association/priorFree_estimate_SCP1039_bc_cells.rds")
-})
-
-job({
-  readRDS("dev/data_integration/s41587-020-0602-4_COVID_19.rds")  |>
-    mutate(is_critical = severity=="critical") %>%
-    sccomp_glm(
-      formula = ~ is_critical,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      exclude_priors = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-    ) %>%
-    saveRDS("dev/study_of_association/priorFree_estimate_s41587-020-0602-4_COVID_19.rds")
-})
-
-job({
-  readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
-    sccomp_glm(
-      formula = ~ time,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      exclude_priors = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-    ) %>%
-    saveRDS("dev/study_of_association/priorFree_estimate_GSE120575_melanoma.rds")
-})
-
-job({
-
-  library(tidySingleCellExperiment)
-
-  readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
-    filter(ptime %>% is.na() %>% `!`) %>%
-
-    # Scale ptime
-    mutate(ptime = scales::rescale(ptime)) %>%
-    rename(cell_type = CellTypesFinal) %>%
-    rename(sample = Sample) %>%
-    sccomp_glm(
-      formula = ~ ptime,
-      sample, cell_type ,
-      approximate_posterior_inference = FALSE,
-      variance_association = FALSE,
-      exclude_priors = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-
-    ) %>%
-    saveRDS("dev/study_of_association/priorFree_estimate_BRCA1_s41467-021-21783-3.rds")
-})
+# job({
+#
+#   load("data/counts_obj.rda")
+#
+#   counts_obj  |>
+#     mutate(is_benign = type=="benign") |>
+#     rename(cell_type = cell_group) %>%
+#     sccomp_glm(
+#       formula = ~ is_benign,
+#       sample, cell_type, count,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#     ) %>%
+#     saveRDS("dev/study_of_association/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
+#     rename(type = `Sample Type`) %>%
+#     sccomp_glm(
+#       formula = ~ type,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#       ) %>%
+#     saveRDS("dev/study_of_association/estimate_GSE139829_uveal_melanoma.rds")
+#
+# })
+#
+# job({
+#   readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
+#     tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(sex))  |>
+#     sccomp_glm(
+#       formula = ~ sex,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#       ) %>%
+#     saveRDS("dev/study_of_association/estimate_SCP1288_renal_cell_carcinoma.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
+#     mutate(type = subtype=="TNBC") %>%
+#     sccomp_glm(
+#       formula = ~ type,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#       ) %>%
+#     saveRDS("dev/study_of_association/estimate_SCP1039_bc_cells.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/s41587-020-0602-4_COVID_19.rds")  |>
+#     mutate(is_critical = severity=="critical") %>%
+#     sccomp_glm(
+#       formula = ~ is_critical,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#       ) %>%
+#     saveRDS("dev/study_of_association/estimate_s41587-020-0602-4_COVID_19.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
+#     sccomp_glm(
+#       formula = ~ time,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#       ) %>%
+#     saveRDS("dev/study_of_association/estimate_GSE120575_melanoma.rds")
+# })
+#
+# job({
+#
+#   library(tidySingleCellExperiment)
+#
+#   readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
+#     filter(ptime %>% is.na() %>% `!`) %>%
+#
+#     # Scale ptime
+#     mutate(ptime = scales::rescale(ptime)) %>%
+#     rename(cell_type = CellTypesFinal) %>%
+#     rename(sample = Sample) %>%
+#     sccomp_glm(
+#       formula = ~ ptime,
+#       sample, cell_type ,
+#       approximate_posterior_inference = FALSE,
+#       variance_association = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/estimate_BRCA1_s41467-021-21783-3.rds")
+# })
+#
+# # Prior free
+# job({
+#
+#   load("data/counts_obj.rda")
+#
+#
+#   counts_obj  |>
+#     mutate(is_benign = type=="benign") |>
+#     rename(cell_type = cell_group) %>%
+#     sccomp_glm(
+#       formula = ~ is_benign,
+#       sample, cell_type, count,
+#       approximate_posterior_inference = FALSE,
+#       exclude_priors = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/priorFree_estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
+#     rename(type = `Sample Type`) %>%
+#     sccomp_glm(
+#       formula = ~ type,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       exclude_priors = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/priorFree_estimate_GSE139829_uveal_melanoma.rds")
+#
+# })
+#
+# job({
+#   readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
+#     tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(sex))  |>
+#     sccomp_glm(
+#       formula = ~ sex,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       exclude_priors = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/priorFree_estimate_SCP1288_renal_cell_carcinoma.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
+#     mutate(type = subtype=="TNBC") %>%
+#     sccomp_glm(
+#       formula = ~ type,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       exclude_priors = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/priorFree_estimate_SCP1039_bc_cells.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/s41587-020-0602-4_COVID_19.rds")  |>
+#     mutate(is_critical = severity=="critical") %>%
+#     sccomp_glm(
+#       formula = ~ is_critical,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       exclude_priors = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/priorFree_estimate_s41587-020-0602-4_COVID_19.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
+#     sccomp_glm(
+#       formula = ~ time,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       exclude_priors = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/priorFree_estimate_GSE120575_melanoma.rds")
+# })
+#
+# job({
+#
+#   library(tidySingleCellExperiment)
+#
+#   readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
+#     filter(ptime %>% is.na() %>% `!`) %>%
+#
+#     # Scale ptime
+#     mutate(ptime = scales::rescale(ptime)) %>%
+#     rename(cell_type = CellTypesFinal) %>%
+#     rename(sample = Sample) %>%
+#     sccomp_glm(
+#       formula = ~ ptime,
+#       sample, cell_type ,
+#       approximate_posterior_inference = FALSE,
+#       variance_association = FALSE,
+#       exclude_priors = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/priorFree_estimate_BRCA1_s41467-021-21783-3.rds")
+# })
 
 # Calculate hyperpriors
 associations =
@@ -275,116 +278,139 @@ hyperprior = list(
   standard_deviation = c(5.390190, 8.746909)
 )
 
-job({
-
-  load("data/counts_obj.rda")
-
-  counts_obj  |>
-    mutate(is_benign = type=="benign") |>
-    rename(cell_type = cell_group) %>%
-    sccomp_glm(
-      formula = ~ is_benign,
-      sample, cell_type, count,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = hyperprior
-    ) %>%
-    saveRDS("dev/study_of_association/hyperprior_estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
-})
-
-job({
-  readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
-    rename(type = `Sample Type`) %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = hyperprior
-
-    ) %>%
-    saveRDS("dev/study_of_association/hyperprior_estimate_GSE139829_uveal_melanoma.rds")
-
-})
-
-job({
-  readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
-    tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(sex))  |>
-    sccomp_glm(
-      formula = ~ sex,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = hyperprior
-
-    ) %>%
-    saveRDS("dev/study_of_association/hyperprior_estimate_SCP1288_renal_cell_carcinoma.rds")
-})
-
-job({
-  readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
-    mutate(type = subtype=="TNBC") %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = hyperprior
-
-    ) %>%
-    saveRDS("dev/study_of_association/hyperprior_estimate_SCP1039_bc_cells.rds")
-})
-
-job({
-  readRDS("dev/data_integration/s41587-020-0602-4_COVID_19.rds")  |>
-    mutate(is_critical = severity=="critical") %>%
-    sccomp_glm(
-      formula = ~ is_critical,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = hyperprior
-
-    ) %>%
-    saveRDS("dev/study_of_association/hyperprior_estimate_s41587-020-0602-4_COVID_19.rds")
-})
-
-job({
-  readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
-    sccomp_glm(
-      formula = ~ time,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = hyperprior
-
-    ) %>%
-    saveRDS("dev/study_of_association/hyperprior_estimate_GSE120575_melanoma.rds")
-})
-
-job({
-
-  library(tidySingleCellExperiment)
-
-  readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
-    filter(ptime %>% is.na() %>% `!`) %>%
-
-    # Scale ptime
-    mutate(ptime = scales::rescale(ptime)) %>%
-    rename(cell_type = CellTypesFinal) %>%
-    rename(sample = Sample) %>%
-    sccomp_glm(
-      formula = ~ ptime,
-      sample, cell_type ,
-      approximate_posterior_inference = FALSE,
-      variance_association = FALSE,
-      prior_mean_variable_association = hyperprior
-
-    ) %>%
-    saveRDS("dev/study_of_association/hyperprior_estimate_BRCA1_s41467-021-21783-3.rds")
-})
+# job({
+#
+#   load("data/counts_obj.rda")
+#
+#   counts_obj  |>
+#     mutate(is_benign = type=="benign") |>
+#     rename(cell_type = cell_group) %>%
+#     sccomp_glm(
+#       formula = ~ is_benign,
+#       sample, cell_type, count,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = hyperprior
+#     ) %>%
+#     saveRDS("dev/study_of_association/hyperprior_estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
+#     rename(type = `Sample Type`) %>%
+#     sccomp_glm(
+#       formula = ~ type,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = hyperprior
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/hyperprior_estimate_GSE139829_uveal_melanoma.rds")
+#
+# })
+#
+# job({
+#   readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
+#     tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(sex))  |>
+#     sccomp_glm(
+#       formula = ~ sex,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = hyperprior
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/hyperprior_estimate_SCP1288_renal_cell_carcinoma.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
+#     mutate(type = subtype=="TNBC") %>%
+#     sccomp_glm(
+#       formula = ~ type,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = hyperprior
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/hyperprior_estimate_SCP1039_bc_cells.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/s41587-020-0602-4_COVID_19.rds")  |>
+#     mutate(is_critical = severity=="critical") %>%
+#     sccomp_glm(
+#       formula = ~ is_critical,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = hyperprior
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/hyperprior_estimate_s41587-020-0602-4_COVID_19.rds")
+# })
+#
+# job({
+#   readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
+#     sccomp_glm(
+#       formula = ~ time,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = hyperprior
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/hyperprior_estimate_GSE120575_melanoma.rds")
+# })
+#
+# job({
+#
+#   library(tidySingleCellExperiment)
+#
+#   readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
+#     filter(ptime %>% is.na() %>% `!`) %>%
+#
+#     # Scale ptime
+#     mutate(ptime = scales::rescale(ptime)) %>%
+#     rename(cell_type = CellTypesFinal) %>%
+#     rename(sample = Sample) %>%
+#     sccomp_glm(
+#       formula = ~ ptime,
+#       sample, cell_type ,
+#       approximate_posterior_inference = FALSE,
+#       variance_association = FALSE,
+#       prior_mean_variable_association = hyperprior
+#
+#     ) %>%
+#     saveRDS("dev/study_of_association/hyperprior_estimate_BRCA1_s41467-021-21783-3.rds")
+# })
 
 
 # Plot
 
 # Read input
 df_for_plot =
-  dir("dev/study_of_association/", pattern = "estimate", full.names = T) %>%
+  dir("dev/study_of_association", pattern = "estimate", full.names = T) %>%
   enframe(value = "file") %>%
+  mutate(data_type = "RNA") %>%
+
+  bind_rows(
+    dir("dev/metagenomics", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "metagenomics")
+  ) %>%
+
+  bind_rows(
+    dir("dev/cytof", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "cytof")
+  ) %>%
+  filter(!grepl(".R$", file)) %>%
+
+  # Filter out hyperprior because not canging
+  filter(!grepl("hyperprior", file)) %>%
+
+  tidyr::extract(file, "dataset", regex = ".*_?estimate_([^_]+)_?.*.rds", remove = F)  %>%
+  nest(data = -data_type) %>%
+  mutate(color = cool_palette[1:n()]) %>%
+  unnest(data) %>%
+
   mutate(data = imap(file, ~{ print(.y); readRDS(.x)} )) %>%
 
   # Process
@@ -396,7 +422,7 @@ df_for_plot =
   ) ) %>%
   mutate(prior = factor(prior, levels = c("none", "prior", "hyperprior"))) %>%
 
-  tidyr::extract(file, "dataset", regex = "estimate_([^_]+)_.*.rds") %>%
+
 
   # Add lines
   mutate(correlation = map(
@@ -430,7 +456,7 @@ data_residuals =
   df_for_plot %>%
   select(-intercept, -slope) %>%
   filter(prior=="none") %>%
-  nest(data = -dataset) %>%
+  nest(data = -c(dataset, data_type, color)) %>%
   mutate(rlm_results = map(
     data,
     ~ .x %>%
@@ -474,74 +500,109 @@ data_residuals =
       #                                                              method="MM")},
       #             fullrange=TRUE) +
       ggside::geom_ysidedensity() +
+      ggside::scale_xsidey_continuous(breaks = NULL, labels = "", expand = expansion(c(0,.1))) +
+      ggside::scale_ysidex_continuous(breaks = NULL, labels = "", expand = expansion(c(0,.1))) +
       #ggtitle(..3) +
+      xlab("Cell groups/taxa") +
+      ylab("Residuals") +
       multipanel_theme +
-      theme(axis.title.y = element_blank(), axis.title.x = element_blank())
+      theme(axis.text.y = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank())
   ))
 
 plot_residuals =
   data_residuals %>%
-  pull(plot) %>%
-  wrap_plots(nrow=1)
+  nest(data = -data_type) %>%
+  mutate(plot = map(
+    data,
+    ~ .x %>%
+      pull(plot) %>%
+      wrap_plots(nrow=1)
+  ))
+
 
 # Plot no prior
 plot_no_prior =
   data_residuals %>%
-  unnest(data) %>%
-  filter(prior=="none") %>%
-  ggplot(aes(`.median_(Intercept)`, mean)) +
-  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`, color=dataset),  alpha = 0.4, size = 0.5 ) +
-  geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`, color=dataset), alpha = 0.4, size = 0.5) +
-  geom_point(size=0.1) +
-  geom_abline(
-    aes(intercept =  intercept, slope = slope),
-    linetype = "dotted",
-    alpha=0.5
-  ) +
-  # geom_abline(
-  #   aes(intercept =  1, slope = slope),
-  #   linetype = "dashed"
-  # ) +
-  facet_wrap(prior ~ dataset, scales = "free_y", nrow=1) +
-  scale_color_brewer(palette="Set1") +
-  guides(color="none") +
-  xlab("Category logit mean") +
-  ylab("Category log-concentration")+
-  multipanel_theme
+  nest(data = -data_type) %>%
+  mutate(plot = map(
+    data,
+    ~ .x %>%
+      unnest(data) %>%
+      filter(prior=="none") %>%
+      ggplot(aes(`.median_(Intercept)`, mean)) +
+      geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  color=unique(.x$color),  alpha = 0.4, size = 0.5 ) +
+      geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`),  color=unique(.x$color), alpha = 0.4, size = 0.5) +
+      geom_point(size=0.1) +
+      geom_abline(
+        aes(intercept =  intercept, slope = slope),
+        linetype = "dotted",
+        alpha=0.5
+      ) +
+      # geom_abline(
+      #   aes(intercept =  1, slope = slope),
+      #   linetype = "dashed"
+      # ) +
+      facet_wrap( ~ dataset, scales = "free", nrow=1) +
+      #scale_color_brewer(palette="Set1") +
+      #scale_color_manual(values = unique(.x$color)) +
+      guides(color="none") +
+      xlab("Inverse-multinomial-logit mean") +
+      ylab("Log-concentration")+
+      multipanel_theme
+  ))
+
 
 plot_prior =
   df_for_plot %>%
+  nest(data = -data_type) %>%
+  mutate(plot = map(
+    data,
+    ~ .x %>%
+      filter(prior!="none") %>%
+      ggplot(aes(`.median_(Intercept)`, mean)) +
+      geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  color=unique(.x$color),  alpha = 0.4, size = 0.5) +
+      geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`),  color=unique(.x$color), alpha = 0.4, size = 0.5) +
+      geom_point(size=0.1) +
+      geom_abline(
+        aes(intercept =  intercept, slope = slope),
+        linetype = "dashed",
+        alpha=0.5
+      ) +
+      geom_abline(
+        aes(intercept =  1, slope = slope),
+        linetype = "dashed",
+        alpha=0.5
+      ) +
+      facet_wrap(prior ~ dataset, scales = "free", ncol=7) +
+      #scale_color_manual(values = unique(.x$color)) +
+      guides(color="none") +
+      xlab("Inverse-multinomial-logit mean") +
+      ylab("Log-concentration")+
+      multipanel_theme +
+      theme(
+        strip.background = element_blank(),
+        strip.text.x = element_blank()
+      )
+  ))
 
-  filter(prior!="none") %>%
-  ggplot(aes(`.median_(Intercept)`, mean)) +
-  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`, color=dataset),  alpha = 0.4, size = 0.5) +
-  geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`, color=dataset), alpha = 0.4, size = 0.5) +
-  geom_point(size=0.1) +
-  geom_abline(
-    aes(intercept =  intercept, slope = slope),
-    linetype = "dashed",
-    alpha=0.5
-  ) +
-  geom_abline(
-    aes(intercept =  1, slope = slope),
-    linetype = "dashed",
-    alpha=0.5
-  ) +
-  facet_wrap(prior ~ dataset, scales = "free_y", nrow=2) +
-  scale_color_brewer(palette="Set1") +
-  guides(color="none") +
-  xlab("Category logit mean") +
-  ylab("Category log-concentration")+
-  multipanel_theme +
-  theme(
-    strip.background = element_blank(),
-    strip.text.x = element_blank()
-  )
 
 
 
- p = ( plot_no_prior / plot_residuals / plot_prior ) +
-  plot_layout(guides = "collect", heights = c(1, 1, 2) )  &
+ p =
+  (
+    filter(plot_no_prior, data_type=="RNA")$plot[[1]] /
+      filter(plot_residuals, data_type=="RNA")$plot[[1]]  /
+      filter(plot_prior, data_type=="RNA")$plot[[1]] /
+
+     ( (filter(plot_no_prior, data_type=="cytof")$plot[[1]] |  plot_spacer()) + plot_layout(guides = "collect", width = c( 4,2) )) /
+  ( (filter(plot_residuals, data_type=="cytof")$plot[[1]]  | plot_spacer()) + plot_layout(guides = "collect", width = c(1, 1,1, 1, 2.5) ) ) /
+   ((filter(plot_prior, data_type=="cytof")$plot[[1]] |  plot_spacer()) + plot_layout(guides = "collect", width = c( 4,2) )) /
+
+    filter(plot_no_prior, data_type=="metagenomics")$plot[[1]] /
+    filter(plot_residuals, data_type=="metagenomics")$plot[[1]]  /
+    filter(plot_prior, data_type=="metagenomics")$plot[[1]]
+ )+
+  plot_layout(guides = "collect", heights = c(1, 1, 1, 1, 1, 1, 1, 1, 1) )  &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom", legend.key.size = unit(0.2, 'cm'))
 
 
@@ -550,7 +611,7 @@ plot_prior =
    plot = p,
    units = c("mm"),
    width = 183 ,
-   height = 183/7*4 ,
+   height = 183 ,
    limitsize = FALSE
  )
 
@@ -559,7 +620,7 @@ plot_prior =
    plot = p,
    units = c("mm"),
    width = 183 ,
-   height = 183/7*4 ,
+   height = 183 ,
    limitsize = FALSE
  )
 
