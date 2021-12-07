@@ -113,10 +113,10 @@ model{
   }
 
   // Priors
-  for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
 
   if(exclude_priors == 0){
 
+    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
 
     // PRECISION REGRESSION
     // to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
@@ -128,7 +128,7 @@ model{
                     );
   } else {
     for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 5 );
-    for (a in 1:A) alpha_intercept_slope[a]  ~ normal( 5, 5 );
+    for (a in 1:A) alpha[a]  ~ normal( 5, 5 );
   }
 
   // Hyper priors
