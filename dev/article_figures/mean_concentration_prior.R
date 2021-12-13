@@ -17,6 +17,10 @@ prior_mean_variable_association = list(
 friendly_cols <- dittoSeq::dittoColors()
 cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f93", "#9bd18e", "#eece97", "#8f7b63", "#4c474b", "#415346")
 
+library(shades)
+# http://hughjonesd.github.io/tweaking-colours-with-the-shades-package.html
+fair_cols <- c("#38170B","#BF1B0B", "#FFC465", "#66ADE5", "#252A52")
+
 # job({
 #
 #   load("data/counts_obj.rda")
@@ -411,7 +415,10 @@ df_for_plot =
   mutate(color = cool_palette[1:n()]) %>%
   unnest(data) %>%
 
-  mutate(data = imap(file, ~{ print(.y); readRDS(.x)} )) %>%
+  # Add cell_type for cytof
+  mutate(
+    data = map( file,  ~ readRDS(.x) )
+  ) %>%
 
   # Process
   mutate(file = (file)) %>%
@@ -446,10 +453,73 @@ df_for_plot =
   unite("dataset", c(dataset, datase_size), sep=" S=") %>%
 
   # Get data
-  mutate(data = map(data,  ~ .x %>% select(composition_CI,concentration)  )) %>%
+  mutate(data = map(data,  ~ select( .x, composition_CI,concentration, cell_type )  )) %>%
   unnest(data) %>%
   unnest(c(composition_CI ,  concentration  ))
 
+df_for_plot %>% saveRDS("dev/df_for_plot.rds")
+
+plot_shrinkage =
+  df_for_plot %>%
+  mutate(
+    diff_in_concentration = abs(`97.5%`-`2.5%`),
+    diff_in_mean = abs(`.upper_(Intercept)`-`.lower_(Intercept)`)
+  ) %>%
+
+  # Add diff of diff
+  nest(data = -c( cell_type, dataset)) %>%
+  mutate(log_diff_diff_mean = map_dbl(
+    data,
+    ~ { v = .x %>%
+      arrange(prior) %>%
+      pull(diff_in_mean)
+    log(v[2]/v[1])
+
+    }
+
+  )) %>%
+  mutate(log_diff_diff_concentration = map_dbl(
+    data,
+    ~ { v = .x %>%
+      arrange(prior) %>%
+      pull(diff_in_concentration)
+    log(v[2]/v[1])
+
+    }
+
+  )) %>%
+  unnest(data) %>%
+
+  # Plot
+  nest(data = -data_type) %>%
+  mutate(plot_diff_concentration = map(
+    data,
+    ~ ggplot(.x, aes(prior, diff_in_concentration)) +
+      geom_point(alpha=0.5, size=0.3) +
+      geom_line(aes(group=cell_type, color=log_diff_diff_concentration), alpha=0.6, size=0.1) +
+      facet_wrap(~ dataset, scales="free_y", ncol=1, strip.position="right") +
+      scale_colour_gradient2(
+        low="#053061",mid= "grey", high="#67001f",  midpoint = 0,
+        limits = c(-quantile(abs(.x$log_diff_diff_concentration), 0.9), quantile(abs(.x$log_diff_diff_concentration), 0.9))
+      ) +
+      guides(color="none") +
+      multipanel_theme +
+      theme(axis.title.y = element_blank())
+  )) %>%
+  mutate(plot_diff_mean = map(
+    data,
+    ~ ggplot(.x, aes(prior, diff_in_mean)) +
+      geom_point(alpha=0.5, size=0.3) +
+      geom_line(aes(group=cell_type, color=log_diff_diff_mean), alpha=0.6, size=0.1) +
+      facet_wrap(~ dataset, scales="free_y", ncol=1, strip.position="right") +
+      scale_colour_gradient2(
+        low="#053061",mid= "grey", high="#67001f",  midpoint = 0,
+        limits = c(-quantile(abs(.x$log_diff_diff_concentration), 0.9), quantile(abs(.x$log_diff_diff_concentration), 0.9))
+      ) +
+      guides(color="none") +
+      multipanel_theme +
+      theme(strip.background.y  = element_blank(), strip.text.y = element_blank())
+  ))
 
 
 data_residuals =
@@ -508,6 +578,10 @@ data_residuals =
       multipanel_theme +
       theme(axis.text.y = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank())
   ))
+
+
+
+
 
 plot_residuals =
   data_residuals %>%
@@ -589,20 +663,31 @@ plot_prior =
 
 
  p =
-  (
+ (
+
+ (
     filter(plot_no_prior, data_type=="RNA")$plot[[1]] /
       filter(plot_residuals, data_type=="RNA")$plot[[1]]  /
       filter(plot_prior, data_type=="RNA")$plot[[1]] /
 
-     ( (filter(plot_no_prior, data_type=="cytof")$plot[[1]] |  plot_spacer()) + plot_layout(guides = "collect", width = c( 4,2) )) /
-  ( (filter(plot_residuals, data_type=="cytof")$plot[[1]]  | plot_spacer()) + plot_layout(guides = "collect", width = c(1, 1,1, 1, 2.5) ) ) /
-   ((filter(plot_prior, data_type=="cytof")$plot[[1]] |  plot_spacer()) + plot_layout(guides = "collect", width = c( 4,2) )) /
+     ( (filter(plot_no_prior, data_type=="cytof")$plot[[1]] |  plot_spacer()) + plot_layout(guides = "collect", width = c( 5,1) )) /
+  ( (filter(plot_residuals, data_type=="cytof")$plot[[1]]  | plot_spacer())  ) /
+   ((filter(plot_prior, data_type=="cytof")$plot[[1]] |  plot_spacer()) + plot_layout(guides = "collect", width = c( 5,1) )) /
 
     filter(plot_no_prior, data_type=="metagenomics")$plot[[1]] /
     filter(plot_residuals, data_type=="metagenomics")$plot[[1]]  /
     filter(plot_prior, data_type=="metagenomics")$plot[[1]]
+ ) | (
+   filter(plot_shrinkage, data_type=="RNA")$plot_diff_mean[[1]] +
+     filter(plot_shrinkage, data_type=="RNA")$plot_diff_concentration[[1]] +
+     filter(plot_shrinkage, data_type=="cytof")$plot_diff_mean[[1]] +
+     filter(plot_shrinkage, data_type=="cytof")$plot_diff_concentration[[1]] +
+     filter(plot_shrinkage, data_type=="metagenomics")$plot_diff_mean[[1]] +
+     filter(plot_shrinkage, data_type=="metagenomics")$plot_diff_concentration[[1]] +
+     plot_layout(ncol=2 ,byrow = TRUE)
+ )
  )+
-  plot_layout(guides = "collect", heights = c(1, 1, 1, 1, 1, 1, 1, 1, 1) )  &
+  plot_layout(guides = "collect", width = c( 4,1) )  &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom", legend.key.size = unit(0.2, 'cm'))
 
 
