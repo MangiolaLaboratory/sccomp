@@ -239,15 +239,16 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #' @noRd
 draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
+  par_names =
+    names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   fit %>%
-    extract(par_names, permuted=FALSE) %>%
+    extract(par, permuted=FALSE) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = seq_len(n())) %>%
 
-    when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
+    #when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
 
     pivot_longer(
       names_to = c("dummy", ".chain", ".variable", x, y),
@@ -356,7 +357,7 @@ label_deleterious_outliers = function(.my_data){
 }
 
 fit_model = function(
-  data_for_model, model, censoring_iteration = 1, cores, quantile = 0.95,
+  data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
   seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
 )
