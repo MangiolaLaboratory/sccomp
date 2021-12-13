@@ -40,54 +40,56 @@ logit2_trans <- function(){
   )
 }
 
+cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f93", "#9bd18e", "#eece97", "#8f7b63", "#4c474b", "#415346")
+
+library(glue)
+library(forcats)
+
+# library(furrr)
+# plan(multisession, workers=15)
 
 data_for_plot =
+  dir("dev/data_integration", pattern = "estimate", full.names = T) %>%
+  enframe(value = "file") %>%
+  mutate(data_type = "RNA") %>%
+
   bind_rows(
-
-    # Import data multi beta
-    tribble(
-      ~dataset, ~data,
-      "PBMC",
-      readRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds") ,
-      "UVM",
-      readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds"),
-      "RCC",
-      readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds"),
-      "BRCA",
-      readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>%
-        mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
-      "COVID",
-      readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds"),
-      "SKCM",
-      readRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
-    ) %>%
-      mutate(method = "Simplex Beta-binomial"),
-
-
-    # Import data multi beta
-    tribble(
-      ~dataset, ~data,
-      "PBMC",
-      readRDS("dev/data_integration/estimate_dirichlet_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds"),
-      "UVM",
-      readRDS("dev/data_integration/estimate_dirichlet_GSE139829_uveal_melanoma.rds"),
-      "RCC",
-      readRDS("dev/data_integration/estimate_dirichlet_SCP1288_renal_cell_carcinoma.rds"),
-      "BRCA",
-      readRDS("dev/data_integration/estimate_dirichlet_SCP1039_bc_cells.rds") %>%
-        mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
-      "COVID",
-      readRDS("dev/data_integration/estimate_dirichlet_s41587-020-0602-4_COVID_19.rds"),
-      "SKCM",
-      readRDS("dev/data_integration/estimate_dirichlet_GSE120575_melanoma.rds")
-    ) %>%
-      mutate(method = "Dirichlet-multinomial")
+    dir("dev/metagenomics", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "metagenomics")
   ) %>%
 
-  mutate(method = factor(method, levels = c("Simplex Beta-binomial", "Dirichlet-multinomial"))) %>%
+  bind_rows(
+    dir("dev/cytof", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "cytof")
+  ) %>%
+  filter(!grepl(".R$", file)) %>%
+
+  # Filter out hyperprior because not canging
+  filter(!grepl("hyperprior", file)) %>%
+  filter(!grepl("priorFree", file)) %>%
+  filter(!grepl("VarianceApprox", file)) %>%
+
+  # Set method
+  mutate(method = if_else(grepl("dirichlet", file), "Dm", "scBb")) %>%
+  mutate(method = factor(method, levels = c("scBb", "Dm"))) %>%
+
+  # Create dataset
+  tidyr::extract(file, c("dummy", "dataset"), regex = ".*_?estimate_(dirichlet_)?([^_]+)_?.*.rds", remove = F)  %>%
+
+  # Color
+  nest(data = -dataset) %>%
+  mutate(color = cool_palette[1:n()]) %>%
+  unnest(data) %>%
+
+  #filter(method=="Dm") %>%
+
+  # Add cell_type for cytof
+  mutate(  data = map( file,  ~ readRDS(.x) ) ) %>%
 
   # Simulate
-  mutate(simulation = map(
+  mutate(simulation = imap(
     data,
     ~  .x %>%
       replicate_data() %>%
@@ -102,9 +104,13 @@ data_for_plot =
   # Calculate proportion
   mutate(data = map(
     data,
-    ~ .x %>% distinct() %>%
+    ~ .x %>%
+      distinct() %>%
       unnest(count_data) %>%
-      select(cell_type, sample, outlier, count) %>%
+      when("abundance" %in% colnames(.) ~ rename(., count = abundance), ~ (.)) %>%
+      when("Absolute.Abundance" %in% colnames(.) ~ rename(., count = Absolute.Abundance), ~ (.)) %>%
+      select(cell_type, sample, one_of("outlier"), count) %>%
+
       with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) %>%
       with_groups(cell_type, ~.x %>% arrange(proportion) %>%  mutate(sample = 1:n() ))
   )) %>%
@@ -120,8 +126,8 @@ data_for_plot =
 
   # linear model for qq plot
   unnest(data) %>%
-  filter(!outlier) %>%
-  nest(data = -c(dataset, cell_type, method)) %>%
+  filter(is.na(outlier) | !outlier) %>%
+  nest(data = -c(data_type, dataset, cell_type, method)) %>%
   mutate(slope = map_dbl(
     data,
     ~ lm(generated_proportions~proportion, data=.x) %>%
@@ -130,6 +136,98 @@ data_for_plot =
       pull(estimate )
   ))  %>%
   mutate(median_proportion = map_dbl( data, ~ median(.x$proportion) ))
+
+
+
+# data_for_plot =
+#   bind_rows(
+#
+#     # Import data multi beta
+#     tribble(
+#       ~dataset, ~data,
+#       "PBMC",
+#       readRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds") ,
+#       "UVM",
+#       readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds"),
+#       "RCC",
+#       readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds"),
+#       "BRCA",
+#       readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>%
+#         mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
+#       "COVID",
+#       readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds"),
+#       "SKCM",
+#       readRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
+#     ) %>%
+#       mutate(method = "Simplex Beta-binomial"),
+#
+#
+#     # Import data multi beta
+#     tribble(
+#       ~dataset, ~data,
+#       "PBMC",
+#       readRDS("dev/data_integration/estimate_dirichlet_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds"),
+#       "UVM",
+#       readRDS("dev/data_integration/estimate_dirichlet_GSE139829_uveal_melanoma.rds"),
+#       "RCC",
+#       readRDS("dev/data_integration/estimate_dirichlet_SCP1288_renal_cell_carcinoma.rds"),
+#       "BRCA",
+#       readRDS("dev/data_integration/estimate_dirichlet_SCP1039_bc_cells.rds") %>%
+#         mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type)))),
+#       "COVID",
+#       readRDS("dev/data_integration/estimate_dirichlet_s41587-020-0602-4_COVID_19.rds"),
+#       "SKCM",
+#       readRDS("dev/data_integration/estimate_dirichlet_GSE120575_melanoma.rds")
+#     ) %>%
+#       mutate(method = "Dirichlet-multinomial")
+#   ) %>%
+#
+#   mutate(method = factor(method, levels = c("Simplex Beta-binomial", "Dirichlet-multinomial"))) %>%
+#
+#   # Simulate
+#   mutate(simulation = map(
+#     data,
+#     ~  .x %>%
+#       replicate_data() %>%
+#       with_groups(
+#         cell_type,
+#         ~.x %>%
+#           arrange(generated_proportions ) %>%
+#           mutate(sample = 1:n() )
+#       )
+#   )) %>%
+#
+#   # Calculate proportion
+#   mutate(data = map(
+#     data,
+#     ~ .x %>% distinct() %>%
+#       unnest(count_data) %>%
+#       select(cell_type, sample, outlier, count) %>%
+#       with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) %>%
+#       with_groups(cell_type, ~.x %>% arrange(proportion) %>%  mutate(sample = 1:n() ))
+#   )) %>%
+#
+#   # Join data
+#   mutate(data = map2(
+#     data, simulation,
+#     ~ left_join(.x, .y, by = c("cell_type", "sample") ) %>%
+#       mutate(difference_proportion = generated_proportions - proportion )
+#   )) %>%
+#   select(-simulation) %>%
+#
+#
+#   # linear model for qq plot
+#   unnest(data) %>%
+#   filter(!outlier) %>%
+#   nest(data = -c(dataset, cell_type, method)) %>%
+#   mutate(slope = map_dbl(
+#     data,
+#     ~ lm(generated_proportions~proportion, data=.x) %>%
+#       broom::tidy() %>%
+#       filter(term!="(Intercept)") %>%
+#       pull(estimate )
+#   ))  %>%
+#   mutate(median_proportion = map_dbl( data, ~ median(.x$proportion) ))
 
 # Boxplot posterior predictive check
 data_proportion =
@@ -245,12 +343,16 @@ plot_boxplot =
 
 plot_qq =
   data_for_plot %>%
-  filter(method=="Simplex Beta-binomial") %>%
+  filter(method=="scBb") %>%
+  filter(dataset!="PBMC") %>%
   unnest(data) %>%
   ggplot(aes(proportion, generated_proportions, group=cell_type)) +
   geom_point(size=0.2, alpha=0.5) +
-  geom_smooth(aes(color=dataset), method = "lm", se = FALSE, size=0.2, alpha=0.3) +
-  facet_wrap(~dataset) +
+  geom_smooth(
+    aes(color=fct_reorder( dataset, data_type)),
+    method = "lm", se = FALSE, size=0.2, alpha=0.3
+  ) +
+  facet_wrap(  fct_reorder( dataset, data_type) ~ ., nrow=2) +
   geom_abline(linetype="dashed", color="grey") +
   scale_color_manual(values = friendly_cols) +
   scale_x_continuous(trans="logit2") +
@@ -264,7 +366,7 @@ plot_qq =
 plot_slopes =
   data_for_plot  %>%
   filter(median_proportion > 0) %>%
-  filter(method=="Simplex Beta-binomial") %>%
+  filter(method=="scBb") %>%
   ggplot(aes(slope, color=dataset))+
   geom_vline(xintercept  = 1,linetype="dashed", color="grey" ) +
   geom_density() +
@@ -276,21 +378,7 @@ plot_slopes =
   guides(color = "none") +
   multipanel_theme
 
-plot_slopes_median_proportion =
-  data_for_plot %>%
-  filter(median_proportion > 0) %>%
-  ggplot(aes(median_proportion, slope)) +
-  geom_hline(yintercept  = 1,linetype="dashed", color="grey" ) +
-  geom_point(aes(color=dataset), size=0.4) +
-  geom_smooth(color="black", aes=0.4, size=0.4, method="lm") +
-  facet_wrap(~method) +
-  scale_x_continuous(trans="logit2") +
-  scale_y_log10() +
-  ylab("Slope qq-plot") +
-  xlab("Median observed proportion") +
-  scale_color_manual(values = friendly_cols)  +
-  multipanel_theme +
-  theme(axis.text.x =  element_text(angle=20, hjust = 1))
+
 # + theme(strip.clip = "off")
 
 p =
@@ -302,8 +390,8 @@ p =
 
    (
      # Dotplot
-     plot_qq +  plot_slopes + plot_slopes_median_proportion  +
-      plot_layout(widths = c(3,1,2))
+     plot_qq +  plot_slopes   +
+      plot_layout(widths = c(3,1))
    )
   ) +
 
@@ -328,3 +416,21 @@ ggsave(
   height = 150 ,
   limitsize = FALSE
 )
+
+plot_slopes_median_proportion =
+  data_for_plot %>%
+  filter(median_proportion > 0) %>%
+  ggplot(aes(median_proportion, slope)) +
+  geom_hline(yintercept  = 1,linetype="dashed", color="grey" ) +
+  geom_point(aes(color=dataset), size=0.4) +
+  geom_smooth(color="black", aes=0.4, size=0.4, method="lm") +
+  facet_grid(data_type~method) +
+  scale_x_continuous(trans="logit2") +
+  scale_y_log10() +
+  ylab("Slope qq-plot") +
+  xlab("Median observed proportion") +
+  scale_color_manual(values = friendly_cols)  +
+  multipanel_theme +
+  theme(axis.text.x =  element_text(angle=20, hjust = 1))
+
+plot_slopes_median_proportion
