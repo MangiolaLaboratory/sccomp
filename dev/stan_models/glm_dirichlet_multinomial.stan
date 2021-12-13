@@ -41,9 +41,9 @@ data{
 	int N;
 	int M;
 	int C;
+	int A;
 	int y[N,M];
 	matrix[N,C] X;
-
 }
 transformed data{
 
@@ -52,7 +52,7 @@ transformed data{
 }
 parameters{
 	matrix[C, M-1] beta_raw;
-	vector[C] precision;
+	vector[A] precision;
 
 	// To exclude
 
@@ -61,7 +61,7 @@ transformed parameters{
   real buffer;
   real plateau = 0.5;
 	matrix[C,M] beta;
-	vector[N] precision_per_sample = X * precision;
+	vector[N] precision_per_sample = X[,1:A] * precision;
 
 	//real precision_diff = precision[1] - precision[2];
 	matrix[ N, M] alpha; // for generated quantities. It is cell types in the rows and samples as columns

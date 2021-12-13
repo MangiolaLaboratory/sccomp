@@ -513,10 +513,12 @@ replicate_data.data.frame = function(.data,
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
 
+  fit_matrix = as.matrix(attr(.data, "fit") )
+
   # Generate quantities
   rstan::gqs(
     my_model,
-    draws =  as.matrix(attr(.data, "fit") ),
+    draws =  fit_matrix[sample(number_of_draws, seq_len(nrow(fit_matrix))),, drop=FALSE],
     data = model_input,
     seed = mcmc_seed
   ) %>%
