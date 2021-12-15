@@ -82,3 +82,18 @@ de chunks within the document. You can embed an R code chunk like this:
 \end{align}
 ```
 
+
+
+```{=tex}
+\begin{align}
+
+
+
+& \text{var(k)} \approx  n \left(\frac{\alpha}{\alpha + \beta} \right) + \lambda_{2} \left(\frac{(\frac{\alpha}{\alpha + \beta})}{GM(\frac{\alpha}{\alpha + \beta})}\right)^{\lambda_1} n^{\lambda_1 + 1} \left(n(\frac{\alpha}{\alpha + \beta}) \right)^{1-\lambda_{1}} \\
+
+& \text{var(k)} \approx  n \left(\frac{\alpha}{\alpha + \beta} \right) + \lambda_{2} \left(\frac{(\frac{\alpha}{\alpha + \beta})}{log(\frac{\alpha}{\alpha + \beta})}\right)^{\lambda_1} n^{\lambda_1 + 1} \left(n(\frac{\alpha}{\alpha + \beta}) \right)^{1-\lambda_{1}} \\
+
+
+\end{align}
+```
+

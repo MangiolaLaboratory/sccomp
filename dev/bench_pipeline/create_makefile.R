@@ -45,8 +45,8 @@ commands_df =
     commands_df %>% filter(method %in% c("sccomp", "dirichletMultinomial")) %>%  distinct(estimate_command) %>% pull(estimate_command)
   ) %>%
 
-  # Estimate sccomp
-  c("CATEGORY=estimate_rest\nMEMORY=10024\nCORES=4\nWALL_TIME=1500") %>%
+  # Estimate rest
+  c("CATEGORY=estimate_rest\nMEMORY=10024\nCORES=4") %>%
   c(
     commands_df %>% filter(method %in% c("rest")) %>% distinct(estimate_command) %>% pull(estimate_command)
   ) %>%
