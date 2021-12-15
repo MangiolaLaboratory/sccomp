@@ -303,7 +303,7 @@ plot_boxplot =
   geom_boxplot(
     aes(Condition, proportion, fill=Effect, group=interaction(which, Condition)),
     outlier.shape = NA,
-    data = data_for_boxplot |> filter(!outlier), fatten = 0.5, size=0.5,
+    data = data_for_boxplot |> filter(!outlier), fatten = 0.5, lwd=0.5,
   ) +
   geom_jitter(
     aes(Condition, proportion, shape=outlier, color=which, size=which, group=interaction(which, Condition)),
@@ -339,29 +339,58 @@ plot_boxplot =
   theme(axis.title.y = element_blank()) +
   theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
+get_plot_qq = function(.data){
+  .data=
+    .data  %>%
+    filter(method=="scBb") %>%
+    unnest(data)
 
+  .data%>%
+    ggplot(aes(proportion, generated_proportions, group=cell_type)) +
+    geom_point(size=0.2, alpha=0.5) +
+    geom_smooth(
+      aes(color=fct_reorder( dataset, data_type)),
+      method = "lm", se = FALSE, size=0.2, alpha=0.3
+    ) +
+    facet_wrap(  fct_reorder( dataset, data_type) ~ ., nrow=2) +
+    geom_abline(linetype="dashed", color="grey") +
+    scale_color_manual(values = friendly_cols) +
+    scale_x_continuous(trans="logit2", breaks = c(min(.data$proportion[.data$proportion>0]), max(.data$proportion))) +
+    scale_y_continuous(trans="logit2", breaks = c(min(.data$generated_proportions[.data$generated_proportions>0]), max(.data$generated_proportions))) +
 
-plot_qq =
+    xlab("Observed proportion") +
+    ylab("Simulated proportion") +
+    guides(color = "none") +
+    multipanel_theme +
+    theme(
+      strip.background = element_blank(),
+      strip.text.x = element_blank()
+    )
+}
+
+plot_qq_RNA =
   data_for_plot %>%
-  filter(method=="scBb") %>%
-  filter(dataset!="PBMC") %>%
-  unnest(data) %>%
-  ggplot(aes(proportion, generated_proportions, group=cell_type)) +
-  geom_point(size=0.2, alpha=0.5) +
-  geom_smooth(
-    aes(color=fct_reorder( dataset, data_type)),
-    method = "lm", se = FALSE, size=0.2, alpha=0.3
-  ) +
-  facet_wrap(  fct_reorder( dataset, data_type) ~ ., nrow=2) +
-  geom_abline(linetype="dashed", color="grey") +
-  scale_color_manual(values = friendly_cols) +
-  scale_x_continuous(trans="logit2") +
-  scale_y_continuous(trans="logit2") +
-  xlab("Observed proportion") +
-  ylab("Simulated proportion") +
-  guides(color = "none") +
-  multipanel_theme +
-  theme(axis.text.x =  element_text(angle=20, hjust = 1))
+  filter(data_type=="RNA") %>%
+  filter(dataset!="GSE115189") %>% # Drop the made up dataset
+  get_plot_qq +
+  theme(axis.title.x = element_blank()) +
+  ggtitle("RNA")
+
+plot_qq_cytof =
+  data_for_plot %>%
+  filter(data_type=="cytof") %>%
+  get_plot_qq +
+  theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+  theme(axis.title.x = element_blank()) +
+  ggtitle("CyTOF")
+
+plot_qq_metagenomics =
+  data_for_plot %>%
+  filter(data_type=="metagenomics") %>%
+  get_plot_qq +
+  theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+  theme(axis.title.x = element_blank()) +
+  ggtitle("Microbiome")
 
 plot_slopes =
   data_for_plot  %>%
@@ -378,8 +407,29 @@ plot_slopes =
   guides(color = "none") +
   multipanel_theme
 
+plot_slopes_median_proportion =
+  data_for_plot %>%
+  filter(median_proportion > 0) %>%
+  {
+    .x = (.)
 
-# + theme(strip.clip = "off")
+    ggplot(.x, aes(median_proportion, slope)) +
+      geom_hline(yintercept  = 1,linetype="dashed", color="grey" ) +
+      geom_point(aes(color=dataset), size=0.4) +
+      geom_smooth(color="black", aes=0.4, size=0.4, method="lm") +
+      facet_grid(method~data_type) +
+      scale_x_continuous(trans="logit2", breaks = c(min(.x$median_proportion), max(.x$median_proportion))) +
+      scale_y_log10() +
+      ylab("Slope qq-plot") +
+      xlab("Observed proportion") +
+      scale_color_manual(values = friendly_cols)  +
+      multipanel_theme  +
+      theme(
+        strip.background = element_blank(),
+        strip.text.x = element_blank()
+      )
+  }
+
 
 p =
 
@@ -387,24 +437,30 @@ p =
     # Boxplots
     ( ( plot_simulation_process | plot_boxplot )  +  plot_layout(widths = c(1,8)) ) /
 
+  (
+    ( (
+      (
+       # Dotplot
+       plot_qq_RNA + plot_qq_cytof + plot_qq_metagenomics
+      ) /
+       plot_slopes_median_proportion
+    ) |
+      plot_slopes )+  plot_layout(width  = c(3,1))
+  )
 
-   (
-     # Dotplot
-     plot_qq +  plot_slopes   +
-      plot_layout(widths = c(3,1))
-   )
   ) +
 
   # Style
-  plot_layout(guides = 'collect', heights  = c(3, 1)) + plot_annotation(tag_levels = c('A')) &
+  plot_layout(guides = 'collect', heights  = c(3, 2))  &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom",  legend.key.size = unit(0.5, 'cm'))
+
 
 ggsave(
   "dev/article_figures/qq_plot.pdf",
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 150 ,
+  height = 190 ,
   limitsize = FALSE
 )
 
@@ -413,24 +469,8 @@ ggsave(
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 150 ,
+  height = 190 ,
   limitsize = FALSE
 )
 
-plot_slopes_median_proportion =
-  data_for_plot %>%
-  filter(median_proportion > 0) %>%
-  ggplot(aes(median_proportion, slope)) +
-  geom_hline(yintercept  = 1,linetype="dashed", color="grey" ) +
-  geom_point(aes(color=dataset), size=0.4) +
-  geom_smooth(color="black", aes=0.4, size=0.4, method="lm") +
-  facet_grid(data_type~method) +
-  scale_x_continuous(trans="logit2") +
-  scale_y_log10() +
-  ylab("Slope qq-plot") +
-  xlab("Median observed proportion") +
-  scale_color_manual(values = friendly_cols)  +
-  multipanel_theme +
-  theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
-plot_slopes_median_proportion

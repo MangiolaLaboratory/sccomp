@@ -68,7 +68,7 @@ job({
     mutate(type = subtype=="TNBC") %>%
     sccomp_glm(
       formula = ~ type,
-      sample, cell_type,
+      sample, celltype_subset,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
