@@ -142,5 +142,10 @@ model{
 
 generated quantities {
   matrix[C,M] beta;
+  matrix[A, M] alpha_normalised;
+
   beta = R_ast_inverse * beta_raw; // coefficients on x
+
+  for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta_raw[a] * prec_coeff[2] );
+
 }
