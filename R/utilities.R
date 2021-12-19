@@ -416,6 +416,10 @@ fit_model = function(
   #   beta_raw_raw=matrix(rep(0, data_for_model$C*(data_for_model$M-1)),nrow= data_for_model$C)
   # )
 
+  # If differential variance also capture beta_raw
+  #if(data_for_model$A > 1)
+
+  # Fit
   if(!approximate_posterior_inference)
     sampling(
       model,
@@ -513,7 +517,7 @@ effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as
 #' @noRd
 alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
-  effect_column_name = sprintf("heterogeneity_effect_%s", factor_of_interest) %>% as.symbol()
+  effect_column_name = sprintf("variability_effect_%s", factor_of_interest) %>% as.symbol()
 
   fitted %>%
     unnest(!!as.symbol(sprintf("alpha_%s", censoring_iteration))) %>%
@@ -533,7 +537,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
     select(-data, -C) %>%
     pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
     mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
-    nest(heterogeneity_CI = -c(M, !!effect_column_name))
+    nest(variability_CI = -c(M, !!effect_column_name))
 
 
 
@@ -589,7 +593,7 @@ data_spread_to_model_input =
     )
 
   XA = variance_association %>%
-    when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
+    when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,, drop=FALSE]) %>%
     as_tibble() %>%
     distinct()
 
@@ -789,11 +793,54 @@ get_probability_non_zero = function(.data, parameter, prefix = "", test_above_lo
 
 
   bigger_zero =
-    draws[,2,] %>%
+    draws %>%
+    apply(2, function(y){
+      y %>%
+      apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
+    }) %>%
+    .[,-1, drop=FALSE]
+
+
+  smaller_zero =
+    draws %>%
+    apply(2, function(y){
+      y %>%
+        apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
+    }) %>%
+    .[,-1, drop=FALSE]
+
+
+  (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
+    as.data.frame() %>%
+    rowid_to_column(var = "M")
+
+}
+
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+#' @importFrom stats C
+#'
+#' @keywords internal
+#' @noRd
+#'
+get_probability_non_zero_variance = function(.data, parameter, prefix = "", X, XA, test_above_logit_fold_change = 0){
+
+
+  concentration_difference = rstan::extract(.data, parameter)[[1]][,2,]
+  slope = rstan::extract(.data, "prec_coeff")[[1]][,2]
+  mean_difference =  rstan::extract(.data, "beta_raw")[[1]][,2,]
+  expected_difference = mean_difference %>% apply(2, function(m) m * slope)
+  normalised_difference = concentration_difference - expected_difference
+
+  total_draws = dim(draws)[1]
+
+
+  bigger_zero =
+    normalised_difference %>%
     apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
 
   smaller_zero =
-    draws[,2,] %>%
+    normalised_difference %>%
     apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
 
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
@@ -801,6 +848,7 @@ get_probability_non_zero = function(.data, parameter, prefix = "", test_above_lo
 
 
 }
+
 
 #' @keywords internal
 #' @noRd

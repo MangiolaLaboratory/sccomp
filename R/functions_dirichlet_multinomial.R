@@ -600,11 +600,7 @@ generate_quantities = function(fit, data_for_model, model_generate){
     model_generate,
     #rstan::stan_model("inst/stan/generated_quantities.stan"),
     draws =  as.matrix(fit),
-    data = list(
-      N = data_for_model$N,
-      M = data_for_model$M,
-      exposure = data_for_model$exposure
-    )
+    data = data_for_model
   ) %>%
 
     extract("counts") %$% counts %>%
