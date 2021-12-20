@@ -568,39 +568,48 @@ parse_formula <- function(fm) {
 #' @noRd
 #'
 data_spread_to_model_input =
-  function(.data_spread, formula, .sample, .cell_type, .count, variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ){
+  function(
+    .data_spread, formula, .sample, .cell_type, .count,
+    variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ,
+    formula_variability = ~ 1){
 
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
 
-  covariate_names = parse_formula(formula)
-  X =
+
+  get_design_matrix = function(formula, .data_spread){
+
     .data_spread %>%
-    select(!!.sample, covariate_names) %>%
-    model.matrix(formula, data=.) %>%
-    apply(2, function(x)
-      x %>% when(
-        sd(.)==0 ~ (.),
+      select(!!.sample, parse_formula(formula)) %>%
+      model.matrix(formula, data=.) %>%
+      apply(2, function(x)
+        x %>% when(
+          sd(.)==0 ~ (.),
 
-        # If I only have 0 and 1 for a binomial factor
-        unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
+          # If I only have 0 and 1 for a binomial factor
+          unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
 
-        # If continuous
-        ~ scale(., scale=FALSE)
+          # If continuous
+          ~ scale(., scale=FALSE)
+        )
       )
-    )
+  }
 
-  XA = variance_association %>%
-    when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,, drop=FALSE]) %>%
+  X  = get_design_matrix(formula, .data_spread)
+
+  Xa  = get_design_matrix(formula_variability, .data_spread)
+
+  XA = Xa %>%
     as_tibble() %>%
     distinct()
 
   A = ncol(XA);
+  Ar = nrow(XA);
+
+  covariate_names = parse_formula(formula)
   cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
-
-
 
   data_for_model =
     list(
@@ -610,8 +619,10 @@ data_spread_to_model_input =
       y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = quo_name(.sample)),
       X = X,
       XA = XA,
+      Xa = Xa,
       C = ncol(X),
       A = A,
+      Ar = Ar,
       truncation_ajustment = truncation_ajustment,
       is_vb = as.integer(approximate_posterior_inference)
     )

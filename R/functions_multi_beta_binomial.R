@@ -43,6 +43,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             .sample,
                                             .cell_type,
                                             .count,
+                                            formula_variability = ~ 1,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
@@ -80,7 +81,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference == "all"
+        approximate_posterior_inference = approximate_posterior_inference == "all",
+        formula_variability = formula_variability
       )
 
     # Pior
@@ -129,7 +131,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = FALSE,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all")
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
+        formula_variability = ~1
       )
 
     # Pior
@@ -198,7 +201,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all")
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
+        formula_variability = formula_variability
       )
 
     # Pior
