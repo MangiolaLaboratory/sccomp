@@ -518,7 +518,7 @@ replicate_data.data.frame = function(.data,
   # Generate quantities
   rstan::gqs(
     my_model,
-    draws =  fit_matrix[sample(number_of_draws, seq_len(nrow(fit_matrix))),, drop=FALSE],
+    draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
     data = model_input,
     seed = mcmc_seed
   ) %>%

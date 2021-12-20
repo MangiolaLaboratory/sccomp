@@ -446,11 +446,11 @@ df_for_plot =
   mutate( intercept = if_else(prior!="none", intercept, 99) ) %>%
 
   # Get dataset size
-  mutate(datase_size = map_int(
+  mutate(dataset_size = map_int(
     data,
     ~ .x %>% pull(count_data) %>% .[[1]] %>% nrow
   )) %>%
-  unite("dataset", c(dataset, datase_size), sep=" S=") %>%
+  unite("dataset", c(dataset, dataset_size), sep=" S=") %>%
 
   # Get data
   mutate(data = map(data,  ~ select( .x, composition_CI,concentration, cell_type )  )) %>%
