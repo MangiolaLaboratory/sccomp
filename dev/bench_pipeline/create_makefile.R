@@ -52,7 +52,7 @@ commands_df =
   ) %>%
 
   # Calculate significance
-  c("CATEGORY=significance\nMEMORY=10024\nCORES=4\nWALL_TIME=1500") %>%
+  c("CATEGORY=significance\nMEMORY=40024\nCORES=4\nWALL_TIME=1500") %>%
   c(
 
       commands_df %>%

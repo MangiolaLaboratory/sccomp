@@ -9,20 +9,6 @@ library(patchwork)
 job({
 
   load("data/counts_obj.rda")
-
-  # counts_obj %>%
-  #   group_by(sample) %>%
-  #   mutate(proportion = (count+1)/sum(count+1)) %>%
-  #   ungroup(sample) %>%
-  #   mutate(proportion_logit = boot::logit(proportion)) %>%
-  #   group_by(cell_group) %>%
-  #   summarise(mean = mean(proportion_logit), variance = sd(proportion_logit)) %>%
-  #   ggplot(aes(mean, variance)) +
-  #   geom_point() +
-  #   geom_smooth(method="lm") +
-  #   theme_bw()
-
-
     counts_obj  |>
     mutate(is_benign = type=="benign") |>
       rename(cell_type = cell_group) %>%
@@ -65,10 +51,12 @@ job({
 
 job({
     readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
-    mutate(type = subtype=="TNBC") %>%
+    #mutate(type = subtype=="TNBC") %>%
+    mutate(type = factor(subtype, levels = c("TNBC", "HER2+", "ER+"))) %>%
+    mutate(cell_type = celltype_subset) %>%
     sccomp_glm(
       formula = ~ type,
-      sample, celltype_subset,
+      sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
