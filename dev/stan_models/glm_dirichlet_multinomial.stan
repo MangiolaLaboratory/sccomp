@@ -52,7 +52,7 @@ transformed data{
 }
 parameters{
 	matrix[C, M-1] beta_raw;
-	vector[A] precision;
+	vector<upper=10>[A] precision;
 
 	// To exclude
 
@@ -84,6 +84,6 @@ model{
 
 	 for(n in 1:N) y[n] ~ dirichlet_multinomial( to_vector(alpha[n] ));
 
-	 precision ~ normal(0,2);
+	 precision ~ normal(0,5);
 	 for(i in 1:C) beta_raw[i] ~ normal(0, x_raw_sigma );
 }

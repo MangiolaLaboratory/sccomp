@@ -32,7 +32,7 @@ estimated_files %>%
       mutate(hypothesis_ttest = map(results_ttest , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
       mutate(hypothesis_quasiBinomial = map(results_quasiBinomial , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
       mutate(hypothesis_rlm = map(results_rlm , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
-      mutate(hypothesis_sccoda = map(results_sccoda, ~ .x %>% arrange(p.value) %>% mutate(probability = p.inclusion ) %>% mutate(estimate = parameter    ))) %>%
+      mutate(hypothesis_sccoda = map(results_sccoda, ~ .x %>% arrange(p.inclusion) %>% mutate(probability = p.inclusion ) %>% mutate(estimate = parameter    ))) %>%
 
       mutate(hypothesis_DirichletMultinomial  = map(
         results_DirichletMultinomial ,
