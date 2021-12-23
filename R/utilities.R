@@ -827,40 +827,6 @@ get_probability_non_zero = function(.data, parameter, prefix = "", test_above_lo
 
 }
 
-#' @importFrom magrittr divide_by
-#' @importFrom magrittr multiply_by
-#' @importFrom stats C
-#'
-#' @keywords internal
-#' @noRd
-#'
-get_probability_non_zero_variance = function(.data, parameter, prefix = "", X, XA, test_above_logit_fold_change = 0){
-
-
-  concentration_difference = rstan::extract(.data, parameter)[[1]][,2,]
-  slope = rstan::extract(.data, "prec_coeff")[[1]][,2]
-  mean_difference =  rstan::extract(.data, "beta_raw")[[1]][,2,]
-  expected_difference = mean_difference %>% apply(2, function(m) m * slope)
-  normalised_difference = concentration_difference - expected_difference
-
-  total_draws = dim(draws)[1]
-
-
-  bigger_zero =
-    normalised_difference %>%
-    apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
-
-  smaller_zero =
-    normalised_difference %>%
-    apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
-
-  (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
-    enframe(name = "M", value =  sprintf("%s_prob_H0", prefix))
-
-
-}
-
-
 #' @keywords internal
 #' @noRd
 #'
