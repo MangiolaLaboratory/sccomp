@@ -8,6 +8,8 @@ library(sccomp)
 library(job)
 library(patchwork)
 library(forcats)
+library(ggsignif)
+library(scales)
 
 # Load multipanel_theme
 source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/15bcd45b7899b2d72ae46619a3e3cdf8fd6c0e5d/ggplot_theme_multipanel")
@@ -74,6 +76,7 @@ job({
     separate(res_time, c("res", "time"), sep="_") |>
     sccomp_glm(
       formula = ~ time + res,
+      formula_variability = ~ time,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
@@ -93,6 +96,7 @@ job({
     separate(res_time, c("res", "time"), sep="_") |>
     sccomp_glm(
       formula = ~ res + time,
+      formula_variability = ~ res,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
@@ -124,18 +128,21 @@ job({
         mutate(significant_in_article = FALSE)  %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = pmin(`composition_pH0_typeER+`, `composition_pH0_typeHER2+`)) %>%
-        mutate(variability_prob_H0 = pmin(`variability_pH0_typeER+`, `variability_pH0_typeHER2+`))  ,
+        mutate(composition_prob_H0 = `composition_pH0_typePrimary`) %>%
+        mutate(variability_prob_H0 = 1)  ,
 
       "renal_cell_carcinoma",
-      readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds")%>%
+      readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds") %>%
         mutate(variability_prob_H0 = 1) %>%
         unnest(count_data) %>%
         mutate(factor_of_interest = ICB_Response) %>%
 
         # https://www.sciencedirect.com/science/article/pii/S1535610821001173#fig3
         # The proportions of these cell populations were stable between patients and across ICB exposure status
-        mutate(significant_in_article = FALSE),
+        mutate(significant_in_article = FALSE) %>%
+
+        # Readapt to ols format
+        mutate(composition_prob_H0 = `composition_pH0_ICB_ResponseResponder`),
 
       # Here factor of interest is subtype== triple-negative versus the rest
       "bc_cells",
@@ -162,7 +169,11 @@ job({
         # we observed that patients with critical COVID-19 showed a striking depletion of basal cells
         # (P < 1.00 × 10−9) and a strong enrichment for neutrophils (P < 1.00 × 10−9)
         # compared to both patients with moderate COVID-19 and controls
-        mutate(significant_in_article = cell_type %in% c("Basal", "Neu")) ,
+        mutate(significant_in_article = cell_type %in% c("Basal", "Neu"))  %>%
+
+        # Readapt to ols format
+        mutate(composition_prob_H0 = `composition_pH0_is_criticalTRUE`) %>%
+        mutate(variability_prob_H0 = variability_pH0_is_criticalTRUE)   ,
 
 
       "melanoma_time",
@@ -173,7 +184,11 @@ job({
         # While each patient showed changes in cluster frequencies between baseline and
         # post-treatment samples (Table S1), there were no consistent changes when aggregating
         # all samples (Table S1).
-        mutate(significant_in_article = FALSE) ,
+        mutate(significant_in_article = FALSE)  %>%
+
+        # Readapt to ols format
+        mutate(composition_prob_H0 = `composition_pH0_timePre`) %>%
+        mutate(variability_prob_H0 = variability_pH0_timePre),
 
 
       "melanoma_responder",
@@ -184,7 +199,11 @@ job({
         # Here time is pre post checkpoint therapy
         # B cells, CD8+ and CD4+ memory T cells were enriched in responder
         # myeloid cells in non-responder
-        mutate(significant_in_article = cell_type %in% c("G1-B cells", "G10-Memory T cells", "G3-Monocytes/Macrophages")),
+        mutate(significant_in_article = cell_type %in% c("G1-B cells", "G10-Memory T cells", "G3-Monocytes/Macrophages")) %>%
+
+        # Readapt to ols format
+        mutate(composition_prob_H0 = `composition_pH0_resResponder`) %>%
+        mutate(variability_prob_H0 = variability_pH0_resResponder),
 
       "BRCA1_breast",
       readRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds") %>%
@@ -195,7 +214,10 @@ job({
         mutate(factor_of_interest = ptime) %>%
 
         #
-        mutate(significant_in_article = cell_type %in% c("Fb3","Hsp", "Fb9", "Fb2","Fb6", "Fb4", "Hs","cDC1", "CTLs", "CyclingT", "Avd","MdC1", "Mo1", "Tregs", "Mo3","Fb1" ,  "CD83"   ))
+        mutate(significant_in_article = cell_type %in% c("Fb3","Hsp", "Fb9", "Fb2","Fb6", "Fb4", "Hs","cDC1", "CTLs", "CyclingT", "Avd","MdC1", "Mo1", "Tregs", "Mo3","Fb1" ,  "CD83"   )) %>%
+
+        # Readapt to ols format
+        mutate(composition_prob_H0 = `composition_pH0_ptime`)
     ) %>%
 
     # Calculate probability
@@ -211,10 +233,11 @@ job({
       data,
       ~ .x %>% #filter(.x, variability_prob_H0 < 0.05 | composition_prob_H0 < 0.05 ) %>%
         mutate(label = case_when(
-          composition_prob_H0 < 0.05 ~ "Diff abundant",
-          composition_prob_H0 > 0.05 & variability_prob_H0 < 0.05  ~ "Diff heterogeneous",
+          composition_prob_H0 < 0.025 & variability_prob_H0 < 0.025 ~ "Diff both",
+          composition_prob_H0 < 0.025 ~ "Diff abundant",
+          variability_prob_H0 < 0.025  ~ "Diff heterogeneous",
           TRUE ~ "Non-significant"
-        ) %>% factor(levels = c("Diff abundant", "Diff heterogeneous", "Non-significant"))
+        ) %>% factor(levels = c("Diff abundant", "Diff heterogeneous", "Diff both",  "Non-significant"))
         )
     )) %>%
 
@@ -227,9 +250,17 @@ job({
     dir("dev/data_integration/", pattern = "^UMAP_", full.names = TRUE) %>%
     grep("UMAP_oligo", ., invert = TRUE, value = TRUE) %>%
     grep("COVID", ., invert = TRUE, value = TRUE) %>%
+    grep("GSE115189", ., invert=TRUE, value=TRUE) %>%
     c("dev/data_integration/s41587-020-0602-4_COVID_19.rds") %>%
     imap(~ readRDS(.x) %>% {print(.y); (.)} %>%
           tidyseurat::as_tibble() %>%
+
+          # if brca change cell type column
+           when(
+             .x=="dev/data_integration//UMAP_SCP1039_bc_cells.rds" ~ mutate(., cell_type = celltype_subset) ,
+             ~ (.)
+            ) %>%
+
           select(.cell, sample, cell_type, UMAP_1, UMAP_2) %>%
           mutate(file = .x)
     ) %>%
@@ -244,6 +275,34 @@ cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f9
 color_palette_link = cool_palette %>% setNames(c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))
 scales::show_col(cool_palette)
 
+
+add_multi_shades = function(.data, .palette_col, .color_col){
+
+  .palette_col = enquo(.palette_col)
+  .color_col = enquo(.color_col)
+
+  palettes = c("Reds", "Greens", "Purples", "Blues", "RdPu", "Greys", "YlOrBr")
+
+  palettes_df =
+    tibble(!!.palette_col := levels(pull(!!.data, !!.palette_col))) %>%
+    mutate(.palette = palettes[1:n()])
+
+  .data %>%
+    nest(data__ = -!!.palette_col) %>%
+    left_join(palettes_df, by=quo_name(.palette_col)) %>%
+
+    mutate(data__ = map2(
+      data__, .palette,
+      ~ .x %>%
+        nest(data__ = -!!.color_col) %>%
+        mutate(.color = gradient_n_pal(brewer_pal(palette=.y)(9))(seq(0, 1, length.out=n())) ) %>%
+        unnest(data__)
+    )) %>%
+    unnest(data__)
+
+
+}
+
 estimate_plots =
   data_estimates %>%
 
@@ -252,8 +311,8 @@ estimate_plots =
     ~ .x %>%
       filter(label %>% is.na %>% `!`) %>%
       unite("color", c(label, significant_in_article)) %>%
-      mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))) %>%
-      filter(!color %in% c("Non-significant_FALSE", "Diff abundant_TRUE"))
+      mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Diff both_TRUE", "Diff both_FALSE", "Non-significant_FALSE"))) %>%
+      filter(!color %in% c("Non-significant_FALSE"))
 
   )) %>%
 
@@ -266,26 +325,39 @@ estimate_plots =
 
       .x$estimate = .x %>% pull(2)
 
-      if(.y == "BRCA1_breast")
+      if(.y == "BRCA1_breast"){
+        .x = .x %>% filter(color != "Diff abundant_TRUE")
+
         ggplot() +
 
         geom_point(aes(factor_of_interest, proportion, color=outlier), size = 0.3, data = .x, height = 0) +
         geom_smooth(
-          aes(factor_of_interest, proportion, fill=color), color="black", size = 0.5,
-          method="lm",
+          aes(factor_of_interest, proportion, fill=color), color="black", size = 0.2,
+          method="lm", alpha=1,
           data = .x %>% filter(!outlier)
         ) +
         facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=2) +
-        scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
+        scale_x_continuous(breaks = c(min(.x$factor_of_interest), max(.x$factor_of_interest))) +
+          scale_y_continuous(trans="S_sqrt", labels = dropLeadingZero) +
+
         scale_color_manual(values = c("black", "#e11f28")) +
-        scale_fill_manual(values = color_palette_link) +
+          scale_fill_manual(values =  c(
+            "Non-significant_TRUE" = brewer_pal(palette="Reds")(9)[7],
+            "Diff abundant_FALSE" = brewer_pal(palette="Greens")(9)[7],
+            "Diff heterogeneous_FALSE"= brewer_pal(palette="Purples")(9)[7] ,
+            "Diff both_FALSE"= brewer_pal(palette="Blues")(9)[7],
+            "Diff abundant_TRUE" = brewer_pal(palette="Greys")(9)[7]
+          )) +
         #scale_fill_brewer(palette="Set1") +
-        xlab("Biological condition") +
+        xlab("Pseudo-time") +
         ylab("Cell-group proportion (decimal)") +
         guides(fill="none", color="none") +
         multipanel_theme +
-        theme(axis.text.x =  element_text(angle=20, hjust = 1))
-
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        )
+      }
       else if(.y == "melanoma_responder")
         ggplot() +
         geom_boxplot(
@@ -301,14 +373,24 @@ estimate_plots =
         facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=1) +
         scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
         scale_color_manual(values = c("black", "#e11f28")) +
-        scale_fill_manual(values = color_palette_link) +
+        scale_fill_manual(values =  c(
+          "Non-significant_TRUE" = brewer_pal(palette="Reds")(9)[7],
+          "Diff abundant_FALSE" = brewer_pal(palette="Greens")(9)[7],
+          "Diff heterogeneous_FALSE"= brewer_pal(palette="Purples")(9)[7] ,
+          "Diff both_FALSE"= brewer_pal(palette="Blues")(9)[7],
+          "Diff abundant_TRUE" = brewer_pal(palette="Greys")(9)[7]
+        )) +
         #scale_shape_manual(values = c(1, 19)) +
         #scale_fill_brewer(palette="Set1") +
         xlab("Biological condition") +
         ylab("Cell-group proportion (decimal)") +
         guides(fill="none", color="none") +
         multipanel_theme+
-        theme(axis.text.x =  element_text(angle=20, hjust = 1))
+        theme(axis.text.x =  element_text(angle=20, hjust = 1)) +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        )
 
       else
         ggplot() +
@@ -321,13 +403,23 @@ estimate_plots =
         facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=1) +
         scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
         scale_color_manual(values = c("black", "#e11f28")) +
-        scale_fill_manual(values = color_palette_link) +
+      scale_fill_manual(values =  c(
+        "Non-significant_TRUE" = brewer_pal(palette="Reds")(9)[7],
+        "Diff abundant_FALSE" = brewer_pal(palette="Greens")(9)[7],
+        "Diff heterogeneous_FALSE"= brewer_pal(palette="Purples")(9)[7] ,
+        "Diff both_FALSE"= brewer_pal(palette="Blues")(9)[7],
+        "Diff abundant_TRUE" = brewer_pal(palette="Greys")(9)[7]
+      )) +
         #scale_fill_brewer(palette="Set1") +
         xlab("Biological condition") +
         ylab("Cell-group proportion (decimal)") +
         guides(fill="none", color="none") +
         multipanel_theme+
-        theme(axis.text.x =  element_text(angle=20, hjust = 1))
+        theme(axis.text.x =  element_text(angle=20, hjust = 1)) +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        )
     }
 
   ))
@@ -337,12 +429,12 @@ source("~/PostDoc/oligo_breast//functions.R")
 
 plot_df =
   counts %>%
-  with_groups(file, ~ sample_n(.x, 10000)) %>%
+  #with_groups(file, ~ sample_n(.x, 10000)) %>%
   left_join(
     data_estimates %>% mutate(data = map(data, ~ select(.x, sample, cell_type, label, significant_in_article))) %>% unnest(data)
-  ) %>% filter(label %>% is.na %>% `!`) %>%
+  ) %>%
+  #filter(label %>% is.na %>% `!`) %>%
   unite("color", c(label, significant_in_article)) %>%
-  mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))) %>%
   mutate(color = case_when(
     color != "Non-significant_FALSE" ~ color
   )) %>%
@@ -350,14 +442,47 @@ plot_df =
   # Filter non intersting datasets
   nest(data = -dataset) %>%
   mutate(n = map_int(data, ~ filter(.x, !is.na(color)) %>% nrow())) %>%
-  filter(n > 0) %>%
+  filter(n > 0 | dataset %>% is.na) %>%
+  unnest(data) %>%
+
+  # Recover dataset - this is result of bad programming
+  nest(data = -file) %>%
+  mutate(data = map(
+    data,
+    ~ {
+      ds = filter(.x, dataset %>% is.na %>% `!`) %>% pull(dataset) %>% unique %>% as.character
+      mutate(.x, dataset = ds)
+    }
+  )) %>%
+  unnest(data) %>%
+  mutate(color = case_when(
+    !(is.na(color) | color=="NA_NA") ~ color
+  )) %>%
+  mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Diff both_TRUE", "Diff both_FALSE", "Non-significant_FALSE"))) %>%
+
 
   # Create UMAP
+  nest(data = -dataset) %>%
+
+  # Subset
+  mutate(data = map2(
+    data, dataset,
+    ~ when(.x, .y != "bc_cells" ~ sample_n(., 10000), ~ (.))
+  )) %>%
+
+  # lot
   mutate(UMAP_plot = map2(
     data, dataset,
-    ~ ggplot() +
+    ~ {
+
+      .x = .x %>%
+        # Add colouring
+        mutate(color = factor(color, levels = c( "Non-significant_TRUE" , "Diff abundant_FALSE" ,  "Diff heterogeneous_FALSE" ,   "Diff both_FALSE",  "Diff abundant_TRUE" ))) %>%
+        add_multi_shades(color, cell_type)
+
+      ggplot() +
       geom_point(aes(UMAP_1, UMAP_2), data=filter(.x, is.na(color)), fill="grey", size=0.5, alpha=0.5, shape=21, stroke=0) +
-      geom_point(aes(UMAP_1, UMAP_2, fill=color), data=filter(.x, !is.na(color)), size=0.5, alpha=1, shape=21, stroke=0) +
+      geom_point(aes(UMAP_1, UMAP_2), data=filter(.x, !is.na(color)), fill=filter(.x, !is.na(color)) %>% pull(.color), size=0.5, alpha=1, shape=21, stroke=0) +
       ggrepel::geom_text_repel(
         data= 	get_labels_clusters(
           mutate(.x, cell_type = if_else(!is.na(color), cell_type, "")),
@@ -372,15 +497,13 @@ plot_df =
       #scale_fill_brewer(palette="Set1") +
       # scale_fill_manual(values = friendly_cols, na.value = "grey") +
       scale_color_manual(values = friendly_cols, na.value = "grey") +
-      guides( fill = "none" ) +
+      #guides( fill = "none" ) +
       theme_UMAP +
       theme(title = element_text(size = 7),
             axis.line = element_blank(),
-            axis.ticks = element_blank(),
-            axis.title.x = element_blank(),
-            axis.title.y = element_blank()
-          ) +
-      ggtitle(.y)
+            axis.ticks = element_blank()
+          )
+    }
   )) %>%
 
   # add estimate_plots
@@ -471,11 +594,21 @@ plot_novel_results =
       aes(forcats::fct_reorder(dataset, sum_interesting, .desc = TRUE ),  n, fill=fct_rev(factor(color,  exclude = NULL)  )),
       stat = "identity", position = "stack",lwd =0.5, fatten = 0.5
     )+
-    scale_fill_manual(values = color_palette_link) +
+    scale_fill_manual(values = c(
+      "Non-significant_TRUE" = brewer_pal(palette="Reds")(9)[7],
+      "Diff abundant_FALSE" = brewer_pal(palette="Greens")(9)[7],
+      "Diff heterogeneous_FALSE"= brewer_pal(palette="Purples")(9)[7] ,
+      "Diff both_FALSE"= brewer_pal(palette="Blues")(9)[7],
+      "Diff abundant_TRUE" = brewer_pal(palette="Greys")(9)[7]
+    )) +
     xlab("Dataset") +
     ylab("Number of cell-types") +
   multipanel_theme +
-    theme( axis.text.x = element_text(angle=30, hjust = 1))
+    theme( axis.text.x = element_text(angle=30, hjust = 1))  +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
 # We identified and quarantined outlier observations in all datasets,
 # with an 19% of cell types containing one or more outliers.
@@ -519,118 +652,222 @@ plot_outliers =
   ylab("Count of outliers") +
   guides(fill="none") +
   multipanel_theme +
-  theme(legend.position = "none", axis.text.x = element_text(angle=30, hjust = 1))
+  theme(legend.position = "none", axis.text.x = element_text(angle=30, hjust = 1)) +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
 
-# Mean variance association
-job({
-  data_mean_variance_association =
+# # Mean variance association
+# job({
+#   data_mean_variance_association =
+#
+#     # Import data multi beta
+#     tribble(
+#       ~dataset, ~data,
+#
+#
+#       # Comparing Metastasis vs Primary
+#       "UVM",
+#       readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma_no_heterogeneity.rds"),
+#
+#       "renal_cell_carcinoma",
+#       readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds"),
+#
+#       # Here factor of interest is subtype== triple-negative versus the rest
+#       "bc_cells",
+#       readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") ,
+#
+#       "COVID",
+#       readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds"),
+#
+#
+#       "melanoma_time",
+#       readRDS("dev/data_integration/estimate_GSE120575_melanoma_pre_vs_post_treatment.rds"),
+#
+#
+#       "melanoma_responder",
+#       readRDS("dev/data_integration/estimate_GSE120575_melanoma_responders_vs_not.rds") ,
+#
+#       "BRCA1_breast",
+#       readRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds")
+#     )
+# })
 
-    # Import data multi beta
-    tribble(
-      ~dataset, ~data,
-
-
-      # Comparing Metastasis vs Primary
-      "UVM",
-      readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma_no_heterogeneity.rds"),
-
-      "renal_cell_carcinoma",
-      readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds"),
-
-      # Here factor of interest is subtype== triple-negative versus the rest
-      "bc_cells",
-      readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") ,
-
-      "COVID",
-      readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds"),
-
-
-      "melanoma_time",
-      readRDS("dev/data_integration/estimate_GSE120575_melanoma_pre_vs_post_treatment.rds"),
-
-
-      "melanoma_responder",
-      readRDS("dev/data_integration/estimate_GSE120575_melanoma_responders_vs_not.rds") ,
-
-      "BRCA1_breast",
-      readRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds")
-    )
-})
-
-# Plor trends
-slopes_df =
-  data_mean_variance_association %>%
-  mutate(data = map(
-    data,
-    ~ .x %>%
-      attr("mean_concentration_association") %>%
-      t() %>%
-      as.data.frame %>%
-      setNames(c("intercept", "slope", "standard_deviation"))
-  )) %>%
-  unnest(data)
-
-plot_association_all =
-  data_mean_variance_association %>%
-  mutate(data = map(data,  ~ .x %>% select(composition_CI,concentration)  )) %>%
-  unnest(data) %>%
-  unnest(c(composition_CI ,  concentration  )) %>%
-  ggplot(aes(`.median_(Intercept)`, mean)) +
-  geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`, color=dataset),  alpha = 0.4) +
-  geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`, color=dataset), alpha = 0.4) +
-  geom_point(size=0.1) +
-  geom_abline(aes(intercept =  intercept, slope = slope, color = dataset), linetype = "dashed", data = slopes_df) +
-  scale_color_brewer(palette="Set1") +
-  xlab("Category logit mean") +
-  ylab("Category log-concentration") +
-  multipanel_theme
-
-
-
-# size 1 + 5
-p =
-  (
-  ( plot_novel_results | plot_outliers | plot_association_all ) /
-((
-  ( plot_df$UMAP_plot[[4]] + plot_df$estimate_plot[[4]] + plot_df$UMAP_plot[[6]] + plot_df$estimate_plot[[6]] +  plot_layout(widths = c(1, 2.5/2, 1, 2.5/2)) ) / # size 1 + 4
-
-
-
-    ( plot_df$UMAP_plot[[3]] + plot_df$estimate_plot[[3]] + plot_df$UMAP_plot[[2]] + plot_df$estimate_plot[[2]] +  plot_layout(widths = c(1, 2, 1, 0.50)) ) / # size 1 + 4
-
-    ( plot_df$UMAP_plot[[1]] + plot_df$estimate_plot[[1]]  +  plot_layout(widths = c(1, 3.5)) )
-) +
-
-  # Style
-  plot_layout( nrow=4)
-  ) )+
-  plot_layout(guides = 'collect', height = c(1, 8)) &
-  theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom", legend.key.size = unit(0.2, 'cm'))
-
-ggsave(
-  "dev/article_figures/novel_results_plot.pdf",
-  plot = p,
-  units = c("mm"),
-  width = 183 ,
-  height = 220 ,
-  limitsize = FALSE
-)
-
-ggsave(
-  "dev/article_figures/novel_results_plot.png",
-  plot = p,
-  units = c("mm"),
-  width = 183 ,
-  height = 230 ,
-  limitsize = FALSE
-)
-
+# # Plor trends
+# slopes_df =
+#   data_mean_variance_association %>%
+#   mutate(data = map(
+#     data,
+#     ~ .x %>%
+#       attr("mean_concentration_association") %>%
+#       t() %>%
+#       as.data.frame %>%
+#       setNames(c("intercept", "slope", "standard_deviation"))
+#   )) %>%
+#   unnest(data)
+#
+# plot_association_all =
+#   data_mean_variance_association %>%
+#   mutate(data = map(data,  ~ .x %>% select(composition_CI,concentration)  )) %>%
+#   unnest(data) %>%
+#   unnest(c(composition_CI ,  concentration  )) %>%
+#   ggplot(aes(`.median_(Intercept)`, mean)) +
+#   geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`, color=dataset),  alpha = 0.4) +
+#   geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`, color=dataset), alpha = 0.4) +
+#   geom_point(size=0.1) +
+#   geom_abline(aes(intercept =  intercept, slope = slope, color = dataset), linetype = "dashed", data = slopes_df) +
+#   scale_color_brewer(palette="Set1") +
+#   xlab("Category logit mean") +
+#   ylab("Category log-concentration") +
+#   multipanel_theme
 
 
 # Analysis of breast
+plot_BRCA_UMAP =
+  counts %>%
+  #with_groups(file, ~ sample_n(.x, 10000)) %>%
+  left_join(
+    data_estimates %>% mutate(data = map(data, ~ select(.x, sample, cell_type, label, significant_in_article))) %>% unnest(data)
+  ) %>%
+  #filter(label %>% is.na %>% `!`) %>%
+  unite("color", c(label, significant_in_article)) %>%
+  mutate(color = case_when(
+    color != "Non-significant_FALSE" ~ color
+  )) %>%
 
-( plot_df$UMAP_plot[[5]] + plot_df$estimate_plot[[5]] +  plot_layout(widths = c(1, 3.5)) ) / # size 1 + 9
+  # Filter non intersting datasets
+  nest(data = -dataset) %>%
+  mutate(n = map_int(data, ~ filter(.x, !is.na(color)) %>% nrow())) %>%
+  filter(n > 0 | dataset %>% is.na) %>%
+  unnest(data) %>%
+
+  # Recover dataset - this is result of bad programming
+  nest(data = -file) %>%
+  mutate(data = map(
+    data,
+    ~ {
+      ds = filter(.x, dataset %>% is.na %>% `!`) %>% pull(dataset) %>% unique %>% as.character
+      mutate(.x, dataset = ds)
+    }
+  )) %>%
+  unnest(data) %>%
+  mutate(color = case_when(
+    !(is.na(color) | color=="NA_NA") ~ color
+  )) %>%
+  mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE"))) %>%
+
+
+  # Create UMAP
+  nest(data = -dataset) %>%
+  filter(dataset=="bc_cells") %>%
+  unnest(data) %>%
+
+  left_join(
+    readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>% unnest(count_data) %>% distinct(sample, type )
+  ) %>%
+
+  left_join(
+    readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>% distinct(cell_type, `composition_pH0_typeHER2+` ,   `composition_pH0_typeER+`, `variability_pH0_typeHER2+`,  `variability_pH0_typeER+` )
+  ) %>%
+
+
+  with_groups(sample, ~ sample_n(.x, 3000, replace = TRUE)) %>%
+
+  # Forget about cancer
+  mutate(color = case_when(!grepl("Cancer", cell_type) ~ color )) %>%
+
+  # Rename cell types
+  left_join(
+    read_csv("dev/brca_cell_type_abbreviations.csv") %>%
+      setNames(c("cell_type", "cell_type_pretty"))
+  ) %>%
+
+  # Add colouring
+  mutate(color = factor(color, levels = c( "Non-significant_TRUE" , "Diff abundant_FALSE" ,  "Diff heterogeneous_FALSE" ,   "Diff both_FALSE",  "Diff abundant_TRUE" ))) %>%
+  add_multi_shades(color, cell_type) %>%
+
+  # Plot
+ { .x = (.)
+   ggplot() +
+      geom_point(aes(UMAP_1, UMAP_2), data=filter(.x, is.na(color)), fill="grey", size=0.5, alpha=0.5, shape=21, stroke=0, position = "jitter") +
+      geom_point(aes(UMAP_1, UMAP_2), fill=filter(.x, !is.na(color)) %>% pull(.color), data=filter(.x, !is.na(color)), size=0.5, alpha=1, shape=21, stroke=0, position = "jitter") +
+      ggrepel::geom_text_repel(
+        data= 	get_labels_clusters(
+          mutate(.x, cell_type_pretty =
+                   case_when(
+                     is.na(color) ~"",
+                     type == "TNBC" ~"",
+                     type == "HER2+" & (`composition_pH0_typeHER2+`<0.025 | `variability_pH0_typeHER2+`<0.025) ~cell_type_pretty,
+                     type == "ER+" & (`composition_pH0_typeER+`<0.025 | `variability_pH0_typeER+`<0.025) ~cell_type_pretty,
+                     TRUE ~""
+                   )
+                 ),
+          c(cell_type_pretty, type),
+          UMAP_1,
+          UMAP_2
+        ) ,
+        aes(UMAP_1, UMAP_2, label = cell_type_pretty), size = 2, max.overlaps = 100
+
+      ) +
+     facet_wrap(~type) +
+      #facet_wrap(~dataset, scale="free") +
+      scale_fill_manual(values = color_palette_link) +
+      #scale_fill_brewer(palette="Set1") +
+      # scale_fill_manual(values = friendly_cols, na.value = "grey") +
+      scale_color_manual(values = friendly_cols, na.value = "grey") +
+      #guides( fill = "none" ) +
+      theme_UMAP +
+      theme(title = element_text(size = 7),
+            axis.line = element_blank(),
+            axis.ticks = element_blank()
+      )
+ }
+
+
+#
+# data_estimates %>%
+#
+#   mutate(data = map(
+#     data,
+#     ~ .x %>%
+#       filter(label %>% is.na %>% `!`) %>%
+#       unite("color", c(label, significant_in_article)) %>%
+#       mutate(color = fct_relevel(color, c("Diff abundant_FALSE", "Diff heterogeneous_FALSE", "Non-significant_TRUE", "Diff abundant_TRUE", "Non-significant_FALSE"))) %>%
+#       filter(!color %in% c("Non-significant_FALSE", "Diff abundant_TRUE"))
+#
+#   )) %>%
+#
+#   filter(map_int(data, ~ nrow(.x))>0) %>%
+#   filter(dataset=="bc_cells") %>%
+#   unnest(data) %>%
+#   # Create plot
+#   {
+#       .x = (.)
+#       .x$estimate = .x %>% pull(3)
+#
+#       ggplot() +
+#       geom_boxplot(
+#         aes(factor_of_interest, proportion, fill=color),
+#         outlier.shape = NA,
+#         data = .x %>% filter(!outlier), lwd =0.5, fatten = 0.5
+#       ) +
+#       geom_jitter(aes(factor_of_interest, proportion, color=outlier), size = 0.3, data = .x, height = 0) +
+#       facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=1) +
+#       scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
+#       scale_color_manual(values = c("black", "#e11f28")) +
+#       scale_fill_manual(values = color_palette_link) +
+#       #scale_fill_brewer(palette="Set1") +
+#       xlab("Biological condition") +
+#       ylab("Cell-group proportion (decimal)") +
+#       guides(fill="none", color="none") +
+#       multipanel_theme+
+#       theme(axis.text.x =  element_text(angle=20, hjust = 1))
+#     }
+
+
+
 
 BRCA_tnbc_vs_all = readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds")
 BRCA_tnbc_vs_all %>%
@@ -662,181 +899,268 @@ data_proportion =
     `variability_pH0_typeHER2+` < 0.025 ~ "her2+",
     `variability_pH0_typeER+` < 0.025 ~ "er+",
     TRUE ~ "none"
-  ))
+  ))  %>%
+  left_join(
+    plot_df %>% filter(dataset == "bc_cells") %>% unnest(data) %>% distinct(cell_type,  color )
+  )  %>%
+  # Forget about cancer
+  mutate(color = case_when(!grepl("Cancer", cell_type) ~ color )) %>%
+
+  # Rename cell types
+  left_join(
+    read_csv("dev/brca_cell_type_abbreviations.csv") %>%
+      setNames(c("cell_type", "cell_type_pretty"))
+  ) %>%
+
+  mutate(composition_pH0 = pmin(`composition_pH0_typeHER2+`, `composition_pH0_typeER+`))
 
 simulated_proportion =
   BRCA_tnbc_vs_all |>
   replicate_data(number_of_draws = 100) |>
-  left_join(data_proportion |> distinct(type, sample))
+  left_join(data_proportion |> distinct(type, sample)) %>%
+
+  # Rename cell types
+  left_join(
+    read_csv("dev/brca_cell_type_abbreviations.csv") %>%
+      setNames(c("cell_type", "cell_type_pretty"))
+  )
 
 folded_power = function(x, p=1/3){
   x^p - (1-x)^p
 }
 
-ggplot() +
+S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+IS_sqrt <- function(x){x^2*sign(x)}
+S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
+
+
+calc_boxplot_stat <- function(x) {
+  coef <- 1.5
+  n <- sum(!is.na(x))
+  # calculate quantiles
+  stats <- quantile(x, probs = c(0.0, 0.25, 0.5, 0.75, 1.0))
+  names(stats) <- c("ymin", "lower", "middle", "upper", "ymax")
+  iqr <- diff(stats[c(2, 4)])
+  # set whiskers
+  outliers <- x < (stats[2] - coef * iqr) | x > (stats[4] + coef * iqr)
+  if (any(outliers)) {
+    stats[c(1, 5)] <- range(c(stats[2:4], x[!outliers]), na.rm = TRUE)
+  }
+  return(stats)
+}
+
+plot_brca_boxplot =
+  ggplot() +
+  stat_summary(
+    aes(type, (generated_proportions)),
+    fun.data = calc_boxplot_stat, geom="boxplot",
+    fatten = 0.5, lwd=0.2,
+    data =
+      simulated_proportion %>%
+
+      # Filter uanitles because of limits
+      inner_join( filter(data_proportion, !is.na(color)) %>% distinct(cell_type, composition_pH0, color)) ,
+    color="blue"
+
+  )+
+ # geom_jitter(aes(type, (generated_proportions)), color="blue" ,alpha=0.2, size = 0.6, data = simulated_proportion) +
 
   geom_boxplot(
-    aes(type, folded_power(generated_proportions)),
-    outlier.shape = NA, alpha=0.2,
-    data = simulated_proportion, color="blue"
-  ) +
- # geom_jitter(aes(type, folded_power(generated_proportions)), color="blue" ,alpha=0.2, size = 0.6, data = simulated_proportion) +
-
-  geom_boxplot(
-    aes(type, folded_power(proportion), fill=significance_c),
+    aes(type, (proportion), fill=color),
     outlier.shape = NA,
-    data = filter(data_proportion, !outlier)
+    fatten = 0.5, lwd=0.2,
+    data = filter(data_proportion, !outlier) %>% filter(!is.na(color))
   ) +
-  geom_jitter(aes(type, folded_power(proportion), color=outlier), size = 1, data = data_proportion, height = 0) +
+  geom_jitter(aes(type, (proportion), color=outlier), size = 0.2, data = data_proportion  %>% filter(!is.na(color)), height = 0) +
 
-  facet_wrap(~ interaction(cell_type), scale="free_y") +
+  #geom_signif(comparisons = list(c("HER2+", "ER+")), map_signif_level=TRUE) +
+
+  facet_wrap(~ fct_reorder(cell_type_pretty, as.numeric(color)), scale="free_y", nrow=2) +
   #scale_y_continuous(trans="logit") +
+
+  scale_y_continuous(trans="S_sqrt", labels = dropLeadingZero) +
+
   scale_color_manual(values = c("black", "#e11f28")) +
-  #scale_fill_manual(values = c("white", "#E2D379")) +
+  scale_fill_manual(values =  c(
+    "Non-significant_TRUE" = brewer_pal(palette="Reds")(9)[7],
+    "Diff abundant_FALSE" = brewer_pal(palette="Greens")(9)[7],
+    "Diff heterogeneous_FALSE"= brewer_pal(palette="Purples")(9)[7] ,
+    "Diff both_FALSE"= brewer_pal(palette="Blues")(9)[7],
+    "Diff abundant_TRUE" = brewer_pal(palette="Greys")(9)[7]
+  )) +
   xlab("Biological condition") +
   ylab("Cell-group proportion") +
-  theme_bw() +
-  theme(strip.background =element_rect(fill="white"), legend.position = "bottom")
+  multipanel_theme +
+  theme(strip.background =element_rect(fill="white", colour = NA), legend.position = "bottom")  +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle=30, hjust = 1)
+  )
 
-ggplot() +
+# ggplot() +
+#
+#   geom_boxplot(
+#     aes(type, folded_power(generated_proportions)),
+#     outlier.shape = NA, alpha=0.2,
+#     data = simulated_proportion, color="blue"
+#   ) +
+#   # geom_jitter(aes(type, folded_power(generated_proportions)), color="blue" ,alpha=0.2, size = 0.6, data = simulated_proportion) +
+#
+#   geom_boxplot(
+#     aes(type, folded_power(proportion), fill=significance_v),
+#     outlier.shape = NA,
+#     data = filter(data_proportion, !outlier)
+#   ) +
+#   geom_jitter(aes(type, folded_power(proportion), color=outlier), size = 1, data = data_proportion, height = 0) +
+#
+#   facet_wrap(~ interaction(cell_type), scale="free_y") +
+#   #scale_y_continuous(trans="logit") +
+#   scale_color_manual(values = c("black", "#e11f28")) +
+#   #scale_fill_manual(values = c("white", "#E2D379")) +
+#   xlab("Biological condition") +
+#   ylab("Cell-group proportion") +
+#   multipanel_theme +
+#   theme(strip.background =element_rect(fill="white"), legend.position = "bottom")  +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank()
+#   )
 
-  geom_boxplot(
-    aes(type, folded_power(generated_proportions)),
-    outlier.shape = NA, alpha=0.2,
-    data = simulated_proportion, color="blue"
-  ) +
-  # geom_jitter(aes(type, folded_power(generated_proportions)), color="blue" ,alpha=0.2, size = 0.6, data = simulated_proportion) +
-
-  geom_boxplot(
-    aes(type, folded_power(proportion), fill=significance_v),
-    outlier.shape = NA,
-    data = filter(data_proportion, !outlier)
-  ) +
-  geom_jitter(aes(type, folded_power(proportion), color=outlier), size = 1, data = data_proportion, height = 0) +
-
-  facet_wrap(~ interaction(cell_type), scale="free_y") +
-  #scale_y_continuous(trans="logit") +
-  scale_color_manual(values = c("black", "#e11f28")) +
-  #scale_fill_manual(values = c("white", "#E2D379")) +
-  xlab("Biological condition") +
-  ylab("Cell-group proportion") +
-  theme_bw() +
-  theme(strip.background =element_rect(fill="white"), legend.position = "bottom")
-
-BRCA_tnbc_vs_all |>
-  select(cell_type, composition_CI, contains("composition_effect"), contains("composition_pH0")) %>%
-  setNames(gsub("composition_effect", ".median", colnames(.))) %>%
-  setNames(gsub("composition_pH0", "pH0", colnames(.))) %>%
-  unnest(composition_CI) |>
-  select(-contains("Intercept")) %>%
-  pivot_longer(c(3:10), names_sep ="_", names_to = c("quantile", "subtype"), values_to = c("value")) %>%
-  pivot_wider(names_from = quantile, values_from = value) %>%
-  ggplot(aes(x=`.median`, y=fct_reorder(cell_type, .median))) +
-  geom_vline(xintercept = 0.2, colour="grey") +
-  geom_vline(xintercept = -0.2, colour="grey") +
-  geom_errorbar(aes(xmin=`.lower`, xmax=`.upper`, color=pH0<0.025)) +
-  geom_point() +
-  facet_wrap(~subtype) +
-  scale_color_brewer(palette = "Set1") +
-  xlab("Credible interval of the slope") +
-  ylab("Cell group") +
-  theme_bw() +
-  theme(legend.position = "bottom")
-
-BRCA_tnbc_vs_all |>
-  select(cell_type, variability_CI, contains("variability_effect"), contains("variability_pH0")) %>%
-  setNames(gsub("variability_effect", ".median", colnames(.))) %>%
-  setNames(gsub("variability_pH0", "pH0", colnames(.))) %>%
-  unnest(variability_CI) |>
-  select(-contains("Intercept")) %>%
-  pivot_longer(c(3:10), names_sep ="_", names_to = c("quantile", "subtype"), values_to = c("value")) %>%
-  pivot_wider(names_from = quantile, values_from = value) %>%
-  ggplot(aes(x=`.median`, y=fct_reorder(cell_type, .median))) +
-  geom_vline(xintercept = 0.2, colour="grey") +
-  geom_vline(xintercept = -0.2, colour="grey") +
-  geom_errorbar(aes(xmin=`.lower`, xmax=`.upper`, color=pH0<0.025)) +
-  geom_point() +
-  facet_wrap(~subtype) +
-  scale_color_brewer(palette = "Set1") +
-  xlab("Credible interval of the slope") +
-  ylab("Cell group") +
-  theme_bw() +
-  theme(legend.position = "bottom")
+# BRCA_tnbc_vs_all |>
+#
+#   select(cell_type, composition_CI, contains("composition_effect"), contains("composition_pH0")) %>%
+#   setNames(gsub("composition_effect", ".median", colnames(.))) %>%
+#   setNames(gsub("composition_pH0", "pH0", colnames(.))) %>%
+#   unnest(composition_CI) |>
+#   select(-contains("Intercept")) %>%
+#   pivot_longer(c(3:10), names_sep ="_", names_to = c("quantile", "subtype"), values_to = c("value")) %>%
+#   pivot_wider(names_from = quantile, values_from = value) %>%
+#   ggplot(aes(x=`.median`, y=fct_reorder(cell_type, .median), label=cell_type)) +
+#   geom_vline(xintercept = 0.2, colour="grey") +
+#   geom_vline(xintercept = -0.2, colour="grey") +
+#   geom_errorbar(aes(xmin=`.lower`, xmax=`.upper`, color=pH0<0.025)) +
+#   geom_point() +
+#   facet_wrap(~subtype) +
+#   scale_color_brewer(palette = "Set1") +
+#   xlab("Credible interval of the slope") +
+#   ylab("Cell group") +
+#   theme_bw() +
+#   theme(legend.position = "bottom")
+#
+# BRCA_tnbc_vs_all |>
+#   select(cell_type, variability_CI, contains("variability_effect"), contains("variability_pH0")) %>%
+#   setNames(gsub("variability_effect", ".median", colnames(.))) %>%
+#   setNames(gsub("variability_pH0", "pH0", colnames(.))) %>%
+#   unnest(variability_CI) |>
+#   select(-contains("Intercept")) %>%
+#   pivot_longer(c(3:10), names_sep ="_", names_to = c("quantile", "subtype"), values_to = c("value")) %>%
+#   pivot_wider(names_from = quantile, values_from = value) %>%
+#   ggplot(aes(x=`.median`, y=fct_reorder(cell_type, .median))) +
+#   geom_vline(xintercept = 0.2, colour="grey") +
+#   geom_vline(xintercept = -0.2, colour="grey") +
+#   geom_errorbar(aes(xmin=`.lower`, xmax=`.upper`, color=pH0<0.025)) +
+#   geom_point() +
+#   facet_wrap(~subtype) +
+#   scale_color_brewer(palette = "Set1") +
+#   xlab("Credible interval of the slope") +
+#   ylab("Cell group") +
+#   theme_bw() +
+#   theme(legend.position = "bottom")
 
 plot_BRCA_summary_er =
   BRCA_tnbc_vs_all %>%
   unnest(c(composition_CI, variability_CI), names_repair = "unique") %>%
-  ggplot(aes(`composition_effect_typeER+`, `variability_effect_typeER+`)) +
-  geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed") +
-  geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed") +
-  geom_errorbar(aes(xmin=`.lower_typeER+...7`, xmax=`.upper_typeER+...11`, color=`composition_pH0_typeER+`<0.025, alpha=`composition_pH0_typeER+`<0.025)) +
-  geom_errorbar(aes(ymin=`.lower_typeER+...19`, ymax=`.upper_typeER+...23`, color=`variability_pH0_typeER+`<0.025, alpha=`composition_pH0_typeER+`<0.025)) +
+  ggplot(aes(`composition_effect_typeER+`, `variability_effect_typeER+`, label=cell_type)) +
+  geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+  geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+  geom_errorbar(aes(xmin=`.lower_typeER+...7`, xmax=`.upper_typeER+...11`, color=`composition_pH0_typeER+`<0.025, alpha=`composition_pH0_typeER+`<0.025), size=0.2) +
+  geom_errorbar(aes(ymin=`.lower_typeER+...19`, ymax=`.upper_typeER+...23`, color=`variability_pH0_typeER+`<0.025, alpha=`composition_pH0_typeER+`<0.025), size=0.2) +
 
-  geom_point(aes(alpha=`composition_pH0_typeER+`<0.025))  +
-  annotate("text", x = 0, y = -3.5, label = "Variable") +
-  annotate("text", x = 5, y = 0, label = "Abundant") +
+  geom_point(aes(alpha=`composition_pH0_typeER+`<0.025), size=0.2)  +
+  annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+  annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
   scale_alpha_manual(values = c(0.4, 1)) +
-  ggtitle("ER+") +
-  multipanel_theme
+  #ggtitle("ER+") +
+  multipanel_theme +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
 plot_BRCA_summary_her2 =
   BRCA_tnbc_vs_all %>%
   unnest(c(composition_CI, variability_CI), names_repair = "unique") %>%
-  ggplot(aes(`composition_effect_typeHER2+`, `variability_effect_typeER+`)) +
-  geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed") +
-  geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed") +
-  geom_errorbar(aes(xmin=`.lower_typeHER2+...6`, xmax=`.upper_typeHER2+...10`, color=`composition_pH0_typeHER2+`<0.025, alpha=`composition_pH0_typeHER2+`<0.025)) +
-  geom_errorbar(aes(ymin=`.lower_typeHER2+...18`, ymax=`.upper_typeHER2+...22`, color=`variability_pH0_typeHER2+`<0.025, alpha=`composition_pH0_typeHER2+`<0.025)) +
+  ggplot(aes(`composition_effect_typeHER2+`, `variability_effect_typeER+`, label=cell_type)) +
+  geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+  geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+  geom_errorbar(aes(xmin=`.lower_typeHER2+...6`, xmax=`.upper_typeHER2+...10`, color=`composition_pH0_typeHER2+`<0.025, alpha=`composition_pH0_typeHER2+`<0.025), size=0.2) +
+  geom_errorbar(aes(ymin=`.lower_typeHER2+...18`, ymax=`.upper_typeHER2+...22`, color=`variability_pH0_typeHER2+`<0.025, alpha=`composition_pH0_typeHER2+`<0.025), size=0.2) +
 
-  geom_point(aes(alpha=`composition_pH0_typeHER2+`<0.025))  +
-  annotate("text", x = 0, y = -3.5, label = "Variable") +
-  annotate("text", x = 3, y = 0, label = "Abundant") +
+  geom_point(aes(alpha=`composition_pH0_typeHER2+`<0.025), size=0.2)  +
+  annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+  annotate("text", x = 3, y = 0, label = "Abundant", size=2, angle=270) +
   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
   scale_alpha_manual(values = c(0.4, 1)) +
-  ggtitle("HER2+") +
-  multipanel_theme
+  guides(color="none", alpha="none") +
+  #ggtitle("HER2+") +
+  multipanel_theme +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
 
-bc_subtypes =
-  readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
-  #mutate(type = subtype=="TNBC") %>%
-  # mutate(type = factor(subtype, levels = c("TNBC", "HER2+", "ER+"))) %>%
-  mutate(cell_type = celltype_subset) %>%
-  nest(data = -subtype) %>%
-  mutate(result = map(
-    data,
-    ~ sccomp_glm(
-      .x,
-      formula = ~ 1,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      variance_association = FALSE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
-    )
-  ))
-
-
+ # bc_subtypes =
+#   readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
+#   #mutate(type = subtype=="TNBC") %>%
+#   # mutate(type = factor(subtype, levels = c("TNBC", "HER2+", "ER+"))) %>%
+#   mutate(cell_type = celltype_subset) %>%
+#   nest(data = -subtype) %>%
+#   mutate(result = map(
+#     data,
+#     ~ sccomp_glm(
+#       .x,
+#       formula = ~ 1,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       variance_association = FALSE,
+#       prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+#     )
+#   ))
+#
+# bc_subtypes %>% saveRDS("dev/bc_subtypes.rds")
+bc_subtypes = readRDS("dev/bc_subtypes.rds")
 
 fair_cols <- c("#BF1B0B", "#66ADE5", "#378805")
 library(shades)
 
-bc_subtypes %>%
-  mutate(mean_concentration_association = map(result, ~ .x %>% attr("mean_concentration_association") %>% t %>% as.data.frame())) %>%
-  unnest(mean_concentration_association) %>%
-  unnest(result) %>%
-  select(-data) %>%
-  unnest(composition_CI) %>%
-  unnest(concentration) %>%
-  ggplot(aes(`.median_(Intercept)`, mean, color=subtype)) +
-  geom_point() +
-  geom_abline(mapping = aes(intercept = `prec_coeff[1]`, slope = `prec_coeff[2]`, color=subtype), linetype = "dashed") +
-  scale_color_manual(values = saturation(fair_cols, delta(-0.2))) +
-  xlab("Multinomial-logit mean") +
-  ylab("Log concentration") +
-  multipanel_theme
+plot_type_associations_lines =
+  bc_subtypes %>%
+    mutate(mean_concentration_association = map(result, ~ .x %>% attr("mean_concentration_association") %>% t %>% as.data.frame())) %>%
+    unnest(mean_concentration_association) %>%
+    unnest(result) %>%
+    select(-data) %>%
+    unnest(composition_CI) %>%
+    unnest(concentration) %>%
+    ggplot(aes(`.median_(Intercept)`, mean, color=subtype)) +
+    geom_point(size=0.2) +
+    geom_abline(
+      mapping = aes(intercept = `prec_coeff[1]`, slope = `prec_coeff[2]`, color=subtype),
+      linetype = "dashed", size=0.3
+    ) +
+    scale_color_manual(values = cool_palette) +
+    xlab("Multinomial-logit mean") +
+    ylab("Log concentration") +
+    multipanel_theme +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
-bc_subtypes %>%
+plot_type_associations_densities =
+  bc_subtypes %>%
   mutate(intercept_assoc = map(
     result,
     ~ attr(.x, "fit") %>%
@@ -845,12 +1169,48 @@ bc_subtypes %>%
   select(1, 4) %>%
   unnest(intercept_assoc) %>%
   ggplot(aes(prec_coeff,  fill=subtype)) +
-  ggdist:: stat_halfeye(alpha = 0.6) +
+  ggdist:: stat_halfeye(alpha = 0.6, size=0.3) +
   #geom_density()+
   facet_wrap(~A, scale="free_x") +
-  scale_fill_manual(values = saturation(fair_cols, delta(-0.2))) +
+  scale_fill_manual(values = cool_palette) +
   xlab("Mean-concentration association") +
   ylab("density") +
-  multipanel_theme
+  guides(fill="none") +
+  multipanel_theme +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+
+p=plot_BRCA_UMAP /
+  (plot_BRCA_summary_er | plot_BRCA_summary_her2 | plot_type_associations_lines | plot_type_associations_densities) /
+  plot_brca_boxplot /
+  ( plot_df$UMAP_plot[[1]] + plot_df$estimate_plot[[1]]  +  plot_layout(widths = c(1, 3.5)) ) /
+ # (  plot_df$UMAP_plot[[2]] + plot_df$estimate_plot[[2]] +  plot_df$UMAP_plot[[3]] + plot_df$estimate_plot[[3]] + plot_layout(widths = c(1, 0.5, 1, 2)) ) /
+  # ( plot_df$UMAP_plot[[4]] + plot_df$estimate_plot[[4]] +
+      (plot_novel_results + plot_outliers +  plot_spacer() + plot_layout(widths = c(1,1,2))) +
+  plot_layout(guides = 'collect') + plot_annotation(tag_levels = 'A') &
+  theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom", legend.key.size = unit(0.2, 'cm'), plot.tag = element_text(size = 10))
+
+
+
+ggsave(
+  "dev/article_figures/novel_results_plot.png",
+  plot = p,
+  units = c("mm"),
+  width = 183 ,
+  height = 230 ,
+  limitsize = FALSE
+)
+
+ggsave(
+  "dev/article_figures/novel_results_plot.pdf",
+  plot = p,
+  units = c("mm"),
+  width = 183 ,
+  height = 220 ,
+  limitsize = FALSE
+)
 
 
