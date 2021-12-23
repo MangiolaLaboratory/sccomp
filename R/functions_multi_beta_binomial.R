@@ -378,6 +378,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
   median_factor_of_interest = sprintf(".median_%s", factor_of_interest)
   effect_column_name = sprintf("composition_effect_%s", factor_of_interest)
 
+
   beta_CI =
     fit %>%
     summary_to_tibble("beta", "C", "M", probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))) %>%
@@ -402,9 +403,12 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       ~ nest(., composition_CI = -c(M))
     )
 
-  if(variance_association) {
+  if(data_for_model$A > 1) {
     variability_effect_column_name = sprintf("variability_effect_%s", factor_of_interest) %>% as.symbol()
 
+    factor_of_interest_variance = data_for_model$Xa %>% colnames() %>% .[-1]
+    median_factor_of_interest_variance = sprintf(".median_%s", factor_of_interest_variance)
+    effect_column_name_variance = sprintf("composition_effect_%s", factor_of_interest_variance)
 
     alpha_CI =
       fit %>%
@@ -425,7 +429,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 
       # Create main effect if exists
       when(
-        !is.na(factor_of_interest) %>% any() ~ nest(., variability_CI = -c(M, one_of(median_factor_of_interest))) %>%
+        !is.na(factor_of_interest) %>% any() ~ nest(., variability_CI = -c(M, one_of(median_factor_of_interest_variance))) %>%
           setNames(gsub(".median", "variability_effect", colnames(.))),
         ~ nest(., variability_CI = -c(M))
       )
@@ -445,14 +449,14 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
     ) %>%
 
     # Add ALPHA
-    when(do_test & variance_association ~ left_join(.,  alpha_CI ,  by="M"), ~(.)) %>%
+    when(do_test & (data_for_model$A > 1) ~ left_join(.,  alpha_CI ,  by="M"), ~(.)) %>%
 
     # ADD CI alpha
     when(
-      do_test & variance_association ~ left_join(
+      do_test & (data_for_model$A > 1) ~ left_join(
         .,
         get_probability_non_zero(fit, "alpha_normalised", prefix="variability", test_above_logit_fold_change = 0) %>%
-          setNames(c("M", sprintf("variability_pH0_%s", factor_of_interest))),
+          setNames(c("M", sprintf("variability_pH0_%s", factor_of_interest_variance))),
         by="M"
       ),
       ~ (.)
@@ -505,6 +509,7 @@ multi_beta_binomial_glm = function(.data,
                                    .sample,
                                    .cell_type,
                                    .count,
+                                   formula_variability = ~1,
                                    prior_mean_variable_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
@@ -532,6 +537,7 @@ multi_beta_binomial_glm = function(.data,
       .sample = !!.sample,
       .cell_type = !!.cell_type,
       .count = !!.count,
+      formula_variability = formula_variability,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive,
       check_outliers = check_outliers,

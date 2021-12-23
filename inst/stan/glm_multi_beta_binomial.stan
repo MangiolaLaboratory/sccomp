@@ -26,14 +26,16 @@ functions{
 
 }
 data{
-	int N;
-	int M;
-	int C;
-	int A;
+	int<lower=1> N;
+	int<lower=1> M;
+	int<lower=1> C;
+	int<lower=1> A;
+	int<lower=1> Ar; // Rows of unique variability design
 	int exposure[N];
 	int y[N,M];
 	matrix[N, C] X;
-	matrix[A, A] XA;
+	matrix[Ar, A] XA; // The unique variability design
+	matrix[N, A] Xa; // The variability design
 
 	// Truncation
 	int is_truncated;
@@ -77,7 +79,7 @@ transformed parameters{
 		matrix[C,M] beta_raw;
 		matrix[A,M] beta_intercept_slope;
 		matrix[A,M] alpha_intercept_slope;
-    matrix[M, N] precision = (X[,1:A] * alpha)';
+    matrix[M, N] precision = (Xa * alpha)';
 
 	  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
