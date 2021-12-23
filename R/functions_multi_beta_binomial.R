@@ -435,6 +435,15 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       )
   }
 
+  #' @importFrom dplyr cummean
+  get_FDR = function(x){
+    enframe(x) %>%
+      arrange(value) %>%
+      mutate(FDR = cummean(value)) %>%
+      arrange(name) %>%
+      pull(FDR)
+  }
+
   beta_CI %>%
 
     # Add probability if do_test
@@ -442,7 +451,8 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       do_test ~ left_join(
         .,
         get_probability_non_zero(fit, "beta", prefix="composition", test_above_logit_fold_change = test_composition_above_logit_fold_change) %>%
-          setNames(c("M", sprintf("composition_pH0_%s", factor_of_interest))),
+          mutate(across(-M, .fns = list(fdr = ~ get_FDR(.))) ) %>%
+          setNames(c("M", sprintf("composition_pH0_%s", factor_of_interest), sprintf("composition_FDR_%s", factor_of_interest))),
         by="M"
         ),
       ~ (.)
@@ -455,8 +465,9 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
     when(
       do_test & (data_for_model$A > 1) ~ left_join(
         .,
-        get_probability_non_zero(fit, "alpha_normalised", prefix="variability", test_above_logit_fold_change = 0) %>%
-          setNames(c("M", sprintf("variability_pH0_%s", factor_of_interest_variance))),
+        get_probability_non_zero(fit, "alpha_normalised", prefix="variability", test_above_logit_fold_change = 0.2) %>%
+          mutate(across(-M, .fns = list(fdr = ~ get_FDR(.))) ) %>%
+          setNames(c("M", sprintf("variability_pH0_%s", factor_of_interest_variance), sprintf("variability_FDR_%s", factor_of_interest_variance))),
         by="M"
       ),
       ~ (.)
