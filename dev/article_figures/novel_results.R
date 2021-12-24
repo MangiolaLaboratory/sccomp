@@ -31,79 +31,84 @@ theme_UMAP =
   )
 friendly_cols <- dittoSeq::dittoColors()
 
-prior_mean_variable_association = list(intercept = c(5, 5), slope = c(0,  5), standard_deviation = c(5,5))
+S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+IS_sqrt <- function(x){x^2*sign(x)}
+S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
 
-job({
-  estimate_UVM =
-    readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
-    rename(type = `Sample Type`) %>%
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      variance_association = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-    ) %>%
-    saveRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma_no_heterogeneity.rds")
 
-})
-
-job({
-  readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
-    mutate(ICB_Response = case_when(
-      ICB_Response %in% c("ICB_PR", "ICB_SD") ~ "Responder",
-      ICB_Response %in% c("ICB_PD") ~ "Non-responder",
-    )) %>%
-
-    tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(ICB_Response) )  |>
-    sccomp_glm(
-      formula = ~ ICB_Response,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-    ) %>%
-    saveRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds")
-})
-
-job({
-
-  # Analysis about
-  # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6641984/#SD2
-  # While each patient showed changes in cluster frequencies between baseline and
-  # post-treatment samples (Table S1), there were no consistent changes when aggregating
-  # all samples (Table S1).
-  readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
-    separate(res_time, c("res", "time"), sep="_") |>
-    sccomp_glm(
-      formula = ~ time + res,
-      formula_variability = ~ time,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      variance_association = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-    ) %>%
-    saveRDS("dev/data_integration/estimate_GSE120575_melanoma_pre_vs_post_treatment.rds")
-})
-
-job({
-
-  # Analysis about
-  # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6641984/#SD2
-  # While each patient showed changes in cluster frequencies between baseline and
-  # post-treatment samples (Table S1), there were no consistent changes when aggregating
-  # all samples (Table S1).
-  readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
-    separate(res_time, c("res", "time"), sep="_") |>
-    sccomp_glm(
-      formula = ~ res + time,
-      formula_variability = ~ res,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      variance_association = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
-    ) %>%
-    saveRDS("dev/data_integration/estimate_GSE120575_melanoma_responders_vs_not.rds")
-})
+# prior_mean_variable_association = list(intercept = c(5, 5), slope = c(0,  5), standard_deviation = c(5,5))
+#
+# job({
+#   estimate_UVM =
+#     readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
+#     rename(type = `Sample Type`) %>%
+#     sccomp_glm(
+#       formula = ~ type,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       variance_association = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#     ) %>%
+#     saveRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma_no_heterogeneity.rds")
+#
+# })
+#
+# job({
+#   readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
+#     mutate(ICB_Response = case_when(
+#       ICB_Response %in% c("ICB_PR", "ICB_SD") ~ "Responder",
+#       ICB_Response %in% c("ICB_PD") ~ "Non-responder",
+#     )) %>%
+#
+#     tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(ICB_Response) )  |>
+#     sccomp_glm(
+#       formula = ~ ICB_Response,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#     ) %>%
+#     saveRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds")
+# })
+#
+# job({
+#
+#   # Analysis about
+#   # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6641984/#SD2
+#   # While each patient showed changes in cluster frequencies between baseline and
+#   # post-treatment samples (Table S1), there were no consistent changes when aggregating
+#   # all samples (Table S1).
+#   readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
+#     separate(res_time, c("res", "time"), sep="_") |>
+#     sccomp_glm(
+#       formula = ~ time + res,
+#       formula_variability = ~ time,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       variance_association = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#     ) %>%
+#     saveRDS("dev/data_integration/estimate_GSE120575_melanoma_pre_vs_post_treatment.rds")
+# })
+#
+# job({
+#
+#   # Analysis about
+#   # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6641984/#SD2
+#   # While each patient showed changes in cluster frequencies between baseline and
+#   # post-treatment samples (Table S1), there were no consistent changes when aggregating
+#   # all samples (Table S1).
+#   readRDS("dev/data_integration/GSE120575_melanoma.rds")  |>
+#     separate(res_time, c("res", "time"), sep="_") |>
+#     sccomp_glm(
+#       formula = ~ res + time,
+#       formula_variability = ~ res,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       variance_association = TRUE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#     ) %>%
+#     saveRDS("dev/data_integration/estimate_GSE120575_melanoma_responders_vs_not.rds")
+# })
 
 # https://www.nature.com/articles/s41467-021-21783-3#Abs1
 # we find an expansion of Tregs suggesting the early establishment of an immuno-suppressive environment
@@ -157,8 +162,8 @@ job({
         mutate(significant_in_article = cell_type %in% c("T cells CD8+", "T_cells_c6_IFIT1", "T_cells_c11_MKI67", "T_cells_c8_CD8+_LAG3", "Myeloid_c1_LAM1_FABP5")) %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = pmin(`composition_pH0_typeER+`, `composition_pH0_typeHER2+`)) %>%
-        mutate(variability_prob_H0 = pmin(`variability_pH0_typeER+`, `variability_pH0_typeHER2+`))        ,
+        mutate(composition_prob_H0 = pmin(`composition_FDR_typeER+`, `composition_FDR_typeHER2+`)) %>%
+        mutate(variability_prob_H0 = pmin(`variability_FDR_typeER+`, `variability_FDR_typeHER2+`))        ,
 
       "COVID",
       readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds")%>%
@@ -929,9 +934,6 @@ folded_power = function(x, p=1/3){
   x^p - (1-x)^p
 }
 
-S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
-IS_sqrt <- function(x){x^2*sign(x)}
-S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
 
 
 calc_boxplot_stat <- function(x) {
@@ -1074,10 +1076,10 @@ plot_BRCA_summary_er =
   ggplot(aes(`composition_effect_typeER+`, `variability_effect_typeER+`, label=cell_type)) +
   geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
   geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-  geom_errorbar(aes(xmin=`.lower_typeER+...7`, xmax=`.upper_typeER+...11`, color=`composition_pH0_typeER+`<0.025, alpha=`composition_pH0_typeER+`<0.025), size=0.2) +
-  geom_errorbar(aes(ymin=`.lower_typeER+...19`, ymax=`.upper_typeER+...23`, color=`variability_pH0_typeER+`<0.025, alpha=`composition_pH0_typeER+`<0.025), size=0.2) +
+  geom_errorbar(aes(xmin=`.lower_typeER+...7`, xmax=`.upper_typeER+...11`, color=`composition_FDR_typeER+`<0.025, alpha=`composition_FDR_typeER+`<0.025), size=0.2) +
+  geom_errorbar(aes(ymin=`.lower_typeER+...21`, ymax=`.upper_typeER+...25`, color=`variability_FDR_typeER+`<0.025, alpha=`variability_FDR_typeER+`<0.025), size=0.2) +
 
-  geom_point(aes(alpha=`composition_pH0_typeER+`<0.025), size=0.2)  +
+  geom_point(aes(alpha=`composition_FDR_typeER+`<0.025), size=0.2)  +
   annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
   annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
@@ -1095,10 +1097,10 @@ plot_BRCA_summary_her2 =
   ggplot(aes(`composition_effect_typeHER2+`, `variability_effect_typeER+`, label=cell_type)) +
   geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
   geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-  geom_errorbar(aes(xmin=`.lower_typeHER2+...6`, xmax=`.upper_typeHER2+...10`, color=`composition_pH0_typeHER2+`<0.025, alpha=`composition_pH0_typeHER2+`<0.025), size=0.2) +
-  geom_errorbar(aes(ymin=`.lower_typeHER2+...18`, ymax=`.upper_typeHER2+...22`, color=`variability_pH0_typeHER2+`<0.025, alpha=`composition_pH0_typeHER2+`<0.025), size=0.2) +
+  geom_errorbar(aes(xmin=`.lower_typeHER2+...6`, xmax=`.upper_typeHER2+...10`, color=`composition_FDR_typeHER2+`<0.025, alpha=`composition_FDR_typeHER2+`<0.025), size=0.2) +
+  geom_errorbar(aes(ymin=`.lower_typeHER2+...20`, ymax=`.upper_typeHER2+...24`, color=`variability_FDR_typeHER2+`<0.025, alpha=`variability_FDR_typeHER2+`<0.025), size=0.2) +
 
-  geom_point(aes(alpha=`composition_pH0_typeHER2+`<0.025), size=0.2)  +
+  geom_point(aes(alpha=`composition_FDR_typeHER2+`<0.025), size=0.2)  +
   annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
   annotate("text", x = 3, y = 0, label = "Abundant", size=2, angle=270) +
   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +

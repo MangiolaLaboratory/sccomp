@@ -56,10 +56,11 @@ job({
     mutate(cell_type = celltype_subset) %>%
     sccomp_glm(
       formula = ~ type,
+      formula_variability = ~ type,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+      prior_mean_variable_association = list(intercept = c(5, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
     ) %>%
     saveRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds")
 })
