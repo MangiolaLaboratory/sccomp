@@ -62,8 +62,14 @@ transformed data{
   matrix[C, C] R_ast_inverse;
   // thin and scale the QR decomposition
   Q_ast = qr_thin_Q(X) * sqrt(N - 1);
-  R_ast = qr_thin_R(X) / sqrt(N - 1);
-  R_ast_inverse = inverse(R_ast);
+  R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
+
+  // If I get crazy diagonal matrix omit it
+  if(max(R_ast_inverse)>1000){
+    print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
+    Q_ast = X;
+    R_ast_inverse = diag_matrix(rep_vector(1.0, C));
+  }
 }
 parameters{
 	matrix[C, M-1] beta_raw_raw;
