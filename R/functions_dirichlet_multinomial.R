@@ -53,7 +53,8 @@ dirichlet_multinomial_glm = function(.data,
                                      cores = detect_cores(), # For development purpose,
                                      seed = sample(1e5, 1),
                                      max_sampling_iterations = NULL,
-                                     pass_fit = TRUE
+                                     pass_fit = TRUE,
+                                     formula_variability  = NULL
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)

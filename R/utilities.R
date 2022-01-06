@@ -282,11 +282,16 @@ draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   fit %>%
-    extract(par_names, permuted=FALSE) %>%
+    rstan::extract(par_names, permuted=FALSE) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = seq_len(n())) %>%
-    pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", names_ptypes = list(".chain" = integer(), ".variable" = character(), "A" = integer(), "C" = integer()), values_to = ".value") %>%
+    pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", values_to = ".value") %>%
+
+    mutate(
+      !!as.symbol(x) := as.integer(!!as.symbol(x)),
+    ) %>%
+
     select(-dummy) %>%
     arrange(.variable, !!as.symbol(x), .chain) %>%
     group_by(.variable, !!as.symbol(x)) %>%
