@@ -239,35 +239,59 @@ fair_cols <- c("#38170B","#BF1B0B", "#FFC465", "#66ADE5", "#252A52")
 
 # Calculate hyperpriors
 associations =
-  dir("dev/study_of_association/", pattern = "estimate", full.names = T) %>%
+  dir("dev/study_of_association", pattern = "estimate", full.names = T) %>%
   enframe(value = "file") %>%
+  mutate(data_type = "RNA") %>%
+
+  bind_rows(
+    dir("dev/metagenomics", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "metagenomics")
+  ) %>%
+
+  bind_rows(
+    dir("dev/cytof", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "cytof")
+  ) %>%
+  filter(!grepl(".R$", file)) %>%
+
+  # Filter out hyperprior because not canging
   filter(!grepl("hyperprior", file)) %>%
   filter(!grepl("priorFree", file)) %>%
+  filter(!grepl("dirichlet", file)) %>%
+
+  tidyr::extract(file, "dataset", regex = ".*_?estimate_([^_]+)_?.*.rds", remove = F)  %>%
 
   mutate(data = map(file, ~readRDS(.x))) %>%
-
-  # Process
-  mutate(file = (file)) %>%
-  mutate(prior = !grepl("priorFree", file)) %>%
-  tidyr::extract(file, "dataset", regex = "estimate_([^_]+)_.*.rds") %>%
 
   # Add lines
   mutate(correlation = map(
     data,
     ~ .x %>%
       attr("mean_concentration_association") %>%
+      as.numeric() %>%
       t() %>%
       as.data.frame %>%
       setNames(c("intercept", "slope", "standard_deviation"))
   )) %>%
   unnest(correlation)
 
-mean(associations$intercept)
-sd(associations$intercept)
-# 4.136855 1.318474
+associations %>%
+with_groups(data_type, ~summarise(.x,
+                                  mean_i = mean(intercept),
+                                  sd_i = sd(intercept),
+                                  min_i = min(intercept),
+                                  max_i = max(intercept),
+                                  mean_s = mean(slope),
+                                  sd_s = sd(slope),
+                                  min_s = min(slope),
+                                  max_s = max(slope)
+                                  ))
 
-mean(associations$slope)
-sd(associations$slope)
+
+
+
 # -0.8452375 0.09860897
 
 fitdistrplus::fitdist(associations$standard_deviation, distr = "gamma", method = "mle") %>%  summary()

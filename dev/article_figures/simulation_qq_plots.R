@@ -45,6 +45,10 @@ cool_palette = c("#b58b4c", "#74a6aa", "#a15259",  "#37666a", "#79477c", "#cb9f9
 library(glue)
 library(forcats)
 
+S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+IS_sqrt <- function(x){x^2*sign(x)}
+S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
+
 # library(furrr)
 # plan(multisession, workers=15)
 
