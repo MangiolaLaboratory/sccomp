@@ -132,8 +132,8 @@ plot_pairs_beta =
     }),
     upper = list(continuous = wrap("cor", size = 2))
     ) +
-  scale_color_manual(values =c("dependent" = cool_palette[1], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[3])) +
-  scale_fill_manual(values =c("dependent" = cool_palette[1], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[3])) +
+  scale_color_manual(values =c("dependent" = cool_palette[3], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[1])) +
+  scale_fill_manual(values =c("dependent" = cool_palette[3], "independent" = cool_palette[2], "Dirichlet-mult" =cool_palette[1])) +
   multipanel_theme +
   theme(text = element_text(size=8)) +
   theme(  strip.background =element_rect(fill="white", color="white")   ) +
@@ -146,12 +146,20 @@ plot_pairs_beta =
 fit_object_1 = attr(estimate_1, "fit")
 generated_1 =  estimate_1 %>% replicate_data()
 
+estimate_unconstrained_bb = estimate_1
+attr(estimate_unconstrained_bb, "fit") = readRDS("dev/article_figures/estimate_1_fit_for_dirichlet_approximation_with_just_beta_binomial.rds")
+generate_unconstrained_bb = estimate_unconstrained_bb %>%  replicate_data()
 
 both_data_sets_1 =
   estimate_1  %>%
   select(category, count_data ) %>%
   unnest(count_data ) %>%
-  mutate(distribution = "Simplex beta binomial") %>%
+  mutate(distribution = "Sum-constrained Beta-binomial") %>%
+  bind_rows(
+    generate_unconstrained_bb %>%
+      rename(count = generated_counts ) %>%
+      mutate(distribution = "Beta-binomial")
+  ) %>%
   bind_rows(
     generated_1 %>%
       rename(count = generated_counts ) %>%
@@ -288,7 +296,7 @@ distro_violin_2 =
   scale_y_log10() +
   multipanel_theme
 
-
+readRDS("dev/article_figures/estimate_1_fit_for_dirichlet_approximation_with_just_beta_binomial.rds")
 
 
 plot_pairs =
@@ -296,7 +304,12 @@ plot_pairs =
 
   # Plot
   select(sample, category, count, distribution) %>%
-  mutate(distribution = if_else(distribution == "Simplex beta binomial", "sbb", "dm")) %>%
+  mutate(distribution = case_when(
+    distribution == "Sum-constrained Beta-binomial" ~"scBb",
+    distribution == "Beta-binomial" ~"Bb",
+    distribution == "Dirichlet-multinomial" ~"Dm"
+
+  ) ) %>%
   spread(category, count ) %>%
   ggpairs(
     3:6,
@@ -305,8 +318,8 @@ plot_pairs =
     diag = list(discrete="barDiag", continuous = wrap("densityDiag", alpha=0 )),
     upper = list(continuous = wrap("cor", size = 2))
   ) +
-  scale_color_manual(values = c("black", "#b25262")) +
-  scale_fill_manual(values = c("black", "#b25262")) +
+  scale_color_manual(values =c("Dm" = cool_palette[1], "Bb" = cool_palette[2], "scBb" =cool_palette[3])) +
+  scale_fill_manual(values =c("Dm" = cool_palette[1], "Bb" = cool_palette[2], "scBb" =cool_palette[3])) +
   multipanel_theme +
   theme(text = element_text(size=8)) +
   theme(  strip.background =element_rect(fill="white", color="white")   ) +
@@ -334,8 +347,9 @@ p1 =
   (
     (distro_plot_1 | plot_estimate | distro_plot_2 | distro_violin_1 ) /
     (
-      wrap_elements(ggmatrix_gtable(plot_pairs)) |
-      wrap_elements(ggmatrix_gtable(plot_pairs_beta))
+      wrap_elements(ggmatrix_gtable(plot_pairs_beta)) |
+        wrap_elements(ggmatrix_gtable(plot_pairs))
+
     )
   ) +
   # Style

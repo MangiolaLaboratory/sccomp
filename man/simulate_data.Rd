@@ -11,6 +11,7 @@ simulate_data(
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
+  variability_multiplier = 5,
   number_of_draws = 1,
   mcmc_seed = sample(1e+05, 1)
 )
@@ -22,6 +23,7 @@ simulate_data(
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
+  variability_multiplier = 5,
   number_of_draws = 1,
   mcmc_seed = sample(1e+05, 1)
 )

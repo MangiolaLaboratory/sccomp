@@ -9,6 +9,8 @@ data{
 
   matrix[C,M] beta;
 
+  real variability_multiplier;
+
 }
 
 parameters{
@@ -34,12 +36,12 @@ generated quantities{
   else beta_intercept_slope = (XA * beta[1:A,]);
 
   // PRECISION REGRESSION
-  for(a in 1:A) for(m in 1:M) alpha[a,m] = normal_rng( beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd);
+  for(a in 1:A) for(m in 1:M) alpha[a,m] = normal_rng( beta_intercept_slope[a,m] * -prec_coeff[2] + prec_coeff[1], prec_sd);
 
   precision = (X[,1:A] * alpha)';
 
    for(i in 1:cols(mu)) {
-      normal_draws[,i] = to_vector( normal_rng(mu[,i],  precision[,i] / 5 )  ); // sd decreased because different representation from beta binomial
+      normal_draws[,i] = to_vector( normal_rng(mu[,i],  precision[,i] / variability_multiplier )  ); // sd decreased because different representation from beta binomial
     }
 
   for(i in 1:cols(normal_draws)) {

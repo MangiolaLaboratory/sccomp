@@ -12,12 +12,13 @@ set.seed(42)
 
 #result_directory = "dev/benchmark_results_0568ae31db577b7a39976a96327e2ac741247c77"
 result_directory = "dev/benchmark_results_3573b63473a94fcc9223277b17e6d59bad3890b7_simulation_logitLinear/"
+result_directory = "dev/benchmark_results/"
 
 cool_palette = c("#cc374a","#e29a3b", "#3a9997", "#a15259",   "#94379b", "#ff8d73", "#7be05f", "#ffc571", "#724c24", "#4c474b", "#236633")
 scales::show_col(cool_palette)
 
 levels_algorithm =
-  c("sccomp", "speckle" , "logitLinear" , "ttest"  , "quasiBinomial" , "rlm" , "DirichletMultinomial" , "random"   )
+  c("sccomp", "speckle" , "logitLinear" , "ttest"  , "quasiBinomial" , "rlm" , "sccoda"    )
 
 plot_auc =
   dir(result_directory, pattern = "auc", full.names = TRUE) %>%
@@ -27,8 +28,9 @@ plot_auc =
   unnest(data) %>%
 
   filter( name !="random") %>%
+  filter(name != "DirichletMultinomial") %>%
+
   filter(n_samples >2) %>%
-  mutate(name = if_else(name=="random", "zrandom", name)) %>%
 
   # Filter too small slope
   #filter(slope>0.1) %>%
@@ -40,8 +42,9 @@ plot_auc =
     ~ .x %>%
 
       mutate(`Accuracy (AUC)` = auc ) %>%
-      mutate(n_cell_type_ = glue("{n_cell_type} cell types"), n_samples_ = glue("{n_samples} samples")) %>%
+      mutate(n_cell_type_ = glue("{n_cell_type} cell groups"), n_samples_ = glue("{n_samples} samples")) %>%
       rename(Algorithm = name) %>%
+
       ggplot(aes(slope, `Accuracy (AUC)`, color=fct_relevel(Algorithm, levels_algorithm))) +
       geom_line(size=0.3) +
       facet_grid( fct_reorder(n_cell_type_,n_cell_type)  ~ fct_reorder(n_samples_, n_samples), scale="free_y") +
@@ -57,6 +60,78 @@ plot_auc =
   pull(plot)
 
 
+
+# Gain of perfomrances
+performance_df =
+  dir(result_directory, pattern = "auc", full.names = TRUE) %>%
+  map_dfr(~ .x %>% readRDS()) %>%
+  nest(data = c(name, auc)) %>%
+  mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc))) %>%
+  unnest(data) %>%
+
+  filter( name !="random") %>%
+  filter(name != "DirichletMultinomial") %>%
+
+  filter(n_samples >2) %>%
+
+  filter(case_when(
+    n_samples < 10 & slope > 0.5 ~ TRUE,
+    n_samples == 10 & slope > 0.5 & slope < 1.7 ~ TRUE,
+    n_samples > 10 & slope > 0.3 & slope < 1.4 ~ TRUE,
+    TRUE ~FALSE
+  )) %>%
+
+  with_groups(c(n_samples, n_cell_type, add_outliers , name), ~summarise(.x, m = mean(auc))) %>%
+  with_groups(c(n_samples, n_cell_type, add_outliers), ~
+                arrange(.x, m) %>%
+                mutate(m_prev = lag(m)) %>%
+                mutate(gain=m-m_prev) %>%
+                filter(!is.na(gain)) %>%
+
+                # Calculate average except self
+                mutate(gain_avg = sum(gain)) %>%
+                mutate(gain_avg = gain_avg - gain) %>%
+                mutate(gain_avg = gain_avg / (n()-1)) %>%
+                # mutate(gain_avg = cummean(gain)) %>%
+                mutate(gain_avg_prev = lag(gain_avg))
+            ) %>%
+  mutate(gain_leap = gain/gain_avg_prev)
+
+performance_df_for_plot =
+  performance_df %>%
+  filter(add_outliers == 1) %>%
+
+  filter(!is.na(gain_leap)) %>%
+  complete(n_samples, n_cell_type, add_outliers , name, fill = list(gain_leap = 0)) %>%
+
+  #with_groups(c( add_outliers , name), ~arrange(.x, gain_leap) %>% mutate(rank = 1:n())) %>%
+  with_groups(name, ~summarise(.x,
+                               `Average gain_leap`= mean(gain_leap),
+                               `Average AUC`= mean(m, na.rm = TRUE)
+                              ))
+
+
+plot_performances =
+  performance_df_for_plot %>%
+  mutate(`Average gain_leap` = - `Average gain_leap`) %>%
+  mutate(name_x = fct_reorder(name,  `Average AUC`, .desc = TRUE)) %>%
+  gather( "Performance", "value",`Average gain_leap`, `Average AUC`) %>%
+  ggplot( aes(x=name_x, y= value, fill=fct_relevel(name, levels_algorithm))) +
+  facet_wrap(~ fct_relevel(Performance,c("Average gain_leap", "Average AUC") ), scales = "free_x") +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = cool_palette) +
+  multipanel_theme +
+  theme(panel.spacing.x = unit(0, "mm"))
+
+
+
+
+
+
+
+
 plot_ROC =
   readRDS(glue("{result_directory}/parsed_1.4_20_20_1000_1.rds")) %>%
   mutate(roc = map(
@@ -66,6 +141,8 @@ plot_ROC =
   )) %>%
   select(-df_for_roc) %>%
   unnest(roc) %>%
+
+  filter(name != "DirichletMultinomial") %>%
 
   #filter( name !="speckle") %>%
   rename(Algorithm = name) %>%
@@ -101,7 +178,7 @@ plot_simulated =
     lwd = 0.3, fatten = 0.5
   ) +
   geom_jitter(aes(factor(type), generated_proportions, color=Outlier), size = 0.5, data = simulated_data) +
-  facet_wrap(~ fct_reorder(cell_type, !Significant),  ncol = 10) +
+  facet_wrap(~ fct_reorder(cell_type, as.integer(cell_type)),  ncol = 10) +
   scale_y_continuous(trans="logit", labels = dropLeadingZero) +
   scale_color_manual(values = c("black", "#e11f28")) +
   scale_fill_manual(values = c("white", "#E2D379")) +
@@ -114,7 +191,7 @@ plot_simulated =
 p =
   (
 ( plot_simulated + plot_ROC ) /
-plot_auc[[2]]
+( plot_auc[[2]] + plot_performances + plot_layout( width=c(1, 0.5)))
 )+
 
   plot_layout(guides = 'collect', height=c(1, 1.5)) +
