@@ -1319,6 +1319,7 @@ simulate_data <- function(.data,
                        .sample = NULL,
                        .cell_group = NULL,
                        .coefficients = NULL,
+                       variability_multiplier = 5,
                        number_of_draws = 1,
                        mcmc_seed = sample(1e5, 1)) {
   UseMethod("simulate_data", .data)
@@ -1337,6 +1338,7 @@ simulate_data.data.frame = function(.data,
                                     .sample = NULL,
                                     .cell_group = NULL,
                                     .coefficients = NULL,
+                                    variability_multiplier = 5,
                                     number_of_draws = 1,
                                     mcmc_seed = sample(1e5, 1)){
 
@@ -1375,7 +1377,7 @@ simulate_data.data.frame = function(.data,
     rstan::gqs(
     my_model,
     draws =  as.matrix(attr(.estimate_object, "fit") ),
-    data = model_input,
+    data = model_input %>% c(list(variability_multiplier = variability_multiplier)),
     seed = mcmc_seed
   )
 

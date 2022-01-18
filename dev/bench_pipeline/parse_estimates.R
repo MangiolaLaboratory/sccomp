@@ -32,23 +32,23 @@ estimated_files %>%
       mutate(hypothesis_ttest = map(results_ttest , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
       mutate(hypothesis_quasiBinomial = map(results_quasiBinomial , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
       mutate(hypothesis_rlm = map(results_rlm , ~ .x %>% arrange(p.value) %>% mutate(probability = 1-p.value) %>% mutate(estimate = estimate    ))) %>%
-      mutate(hypothesis_sccoda = map(results_sccoda, ~ .x %>% arrange(p.inclusion) %>% mutate(probability = p.inclusion ) %>% mutate(estimate = parameter    ))) %>%
+      mutate(hypothesis_sccoda = map(results_sccoda, ~ .x %>% arrange(p.inclusion) %>% mutate(probability = p.inclusion ) %>% mutate(estimate = parameter    ))) , #%>%
 
-      mutate(hypothesis_DirichletMultinomial  = map(
-        results_DirichletMultinomial ,
-        ~ .x  %>%
-          arrange(composition_prob_H0) %>%
-          mutate(probability = 1-composition_prob_H0) %>%
-          mutate(estimate = composition_effect_type )
-      )),
+      # mutate(hypothesis_DirichletMultinomial  = map(
+      #   results_DirichletMultinomial ,
+      #   ~ .x  %>%
+      #     arrange(composition_pH0_type) %>%
+      #     mutate(probability = 1-composition_pH0_type) %>%
+      #     mutate(estimate = composition_effect_type )
+      # )),
     ~ (.)
   )%>%
 
   mutate(hypothesis_sccomp = map(
     results_sccomp ,
     ~ .x  %>%
-      arrange(composition_prob_H0) %>%
-      mutate(probability = 1-composition_prob_H0) %>%
+      arrange(composition_pH0_type) %>%
+      mutate(probability = 1-composition_pH0_type) %>%
       mutate(estimate = composition_effect_type )
   )) %>%
 
