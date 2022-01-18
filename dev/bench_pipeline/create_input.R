@@ -24,7 +24,8 @@ outlier_probability = 0.1
 
 
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
-beta_0 = readRDS("dev/beta_0.rds")
+beta_0 = readRDS("dev/beta_0.rds") %>% sort()
+beta_0= (-(n_cell_type/2):(n_cell_type/2))[seq_len(n_cell_type)] * 0.08912
 
 is_odd = function(x) { ( seq_len(length(x)) %% 2 ) == 1 }
 
@@ -44,7 +45,7 @@ tibble(run = 1:50) %>%
           sample = 1:n_samples, cell_type = 1:n_cell_type
         ) %>%
         nest(d = -cell_type) %>%
-        mutate(beta_0 = 0 ) %>%  # sample(beta_0, size = n())) %>% # rnorm(n = n(), 0, 1)) %>%
+        mutate(beta_0 = beta_0 ) %>%  # sample(beta_0, size = n())) %>% # rnorm(n = n(), 0, 1)) %>%
         mutate(  beta_1 = case_when(
           cell_type %in% seq_len(n_differentially_abundant)[is_odd(seq_len(n_differentially_abundant))] ~ 1,
           cell_type %in% seq_len(n_differentially_abundant)[!is_odd(seq_len(n_differentially_abundant))]  ~ -1,
@@ -60,14 +61,17 @@ tibble(run = 1:50) %>%
         mutate(sample = as.character(sample), cell_type = as.character(cell_type)) %>%
         unnest(coefficients)
 
+      estimate = readRDS("dev/oligo_breast_estimate.rds")
+      attr(estimate, "noise_model") = "logit_normal_multinomial"
+
       my_simulated_data =
         simulate_data(input_data,
-                      readRDS("dev/oligo_breast_estimate.rds") %>%
-                        tidybulk:::add_attr("noise_model", "logit_normal_multinomial"), # Use logit normal
+                      estimate, # Use logit normal
                       formula = ~ type ,
                       .sample = sample,
                       .cell_group = cell_type,
                       .coefficients = c(beta_0, beta_1),
+                      variability_multiplier = ifelse(add_outliers, 20, 10),
                       mcmc_seed = .x * 2
         )
 

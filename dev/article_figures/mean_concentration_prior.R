@@ -433,6 +433,7 @@ df_for_plot =
 
   # Filter out hyperprior because not canging
   filter(!grepl("hyperprior", file)) %>%
+  filter(!grepl("dirichlet", file)) %>%
 
   tidyr::extract(file, "dataset", regex = ".*_?estimate_([^_]+)_?.*.rds", remove = F)  %>%
   nest(data = -data_type) %>%
@@ -474,7 +475,7 @@ df_for_plot =
     data,
     ~ .x %>% pull(count_data) %>% .[[1]] %>% nrow
   )) %>%
-  unite("dataset", c(dataset, dataset_size), sep=" S=") %>%
+  unite("dataset_size", c(dataset, dataset_size), sep=" S=", remove = FALSE) %>%
 
   # Get data
   mutate(data = map(data,  ~ select( .x, composition_CI,concentration, cell_type )  )) %>%
@@ -520,7 +521,7 @@ plot_shrinkage =
     data,
     ~ ggplot(.x, aes(prior, diff_in_concentration)) +
       geom_point(alpha=0.5, size=0.3) +
-      geom_line(aes(group=cell_type, color=log_diff_diff_concentration), alpha=0.6, size=0.1) +
+      geom_line(aes(group=cell_type, color=log_diff_diff_concentration),  size=0.1) +
       facet_wrap(~ dataset, scales="free_y", ncol=1, strip.position="right") +
       scale_colour_gradient2(
         low="#053061",mid= "grey", high="#67001f",  midpoint = 0,
@@ -528,13 +529,13 @@ plot_shrinkage =
       ) +
       guides(color="none") +
       multipanel_theme +
-      theme(axis.title.y = element_blank())
+      theme(axis.title.y = element_blank(), strip.text.y = element_text(angle=0, hjust = 0))
   )) %>%
   mutate(plot_diff_mean = map(
     data,
     ~ ggplot(.x, aes(prior, diff_in_mean)) +
       geom_point(alpha=0.5, size=0.3) +
-      geom_line(aes(group=cell_type, color=log_diff_diff_mean), alpha=0.6, size=0.1) +
+      geom_line(aes(group=cell_type, color=log_diff_diff_mean),  size=0.1) +
       facet_wrap(~ dataset, scales="free_y", ncol=1, strip.position="right") +
       scale_colour_gradient2(
         low="#053061",mid= "grey", high="#67001f",  midpoint = 0,
@@ -557,8 +558,8 @@ data_residuals =
       rename(logit_mean = `.median_(Intercept)`) %>%
       MASS::rlm(mean ~ logit_mean , data = .)
   )) %>%
-  mutate(residuals = map(
-    rlm_results,
+  mutate(residuals = map2(
+    rlm_results, data,
     ~ resid(.x)
   )) %>%
   mutate(weights = map(
@@ -580,11 +581,12 @@ data_residuals =
   # )) %>%
 
   mutate(plot = pmap(
-    list(residuals, weights, dataset),
+    list(residuals, weights, dataset, data),
     ~ enframe(..1) %>%
+      mutate(m = ..4 %>% pull(`.median_(Intercept)`)) %>%
       mutate(weights = ..2) %>%
       mutate(name = as.numeric(name)) %>%
-      ggplot(aes(name, value)) +
+      ggplot(aes(m, value)) +
       geom_hline(yintercept=0,linetype="dashed") +
       geom_point(size = 0.5) +
       geom_smooth(se=FALSE, span=1, mapping = aes(weight = weights), size=0.5) +
@@ -600,7 +602,7 @@ data_residuals =
       xlab("Cell groups/taxa") +
       ylab("Residuals") +
       multipanel_theme +
-      theme(axis.text.y = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.ticks.y = element_blank())
+      theme(axis.title.y  = element_blank())
   ))
 
 
@@ -617,7 +619,6 @@ plot_residuals =
       wrap_plots(nrow=1)
   ))
 
-
 # Plot no prior
 plot_no_prior =
   data_residuals %>%
@@ -628,8 +629,8 @@ plot_no_prior =
       unnest(data) %>%
       filter(prior=="none") %>%
       ggplot(aes(`.median_(Intercept)`, mean)) +
-      geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  color=unique(.x$color),  alpha = 0.4, size = 0.5 ) +
-      geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`),  color=unique(.x$color), alpha = 0.4, size = 0.5) +
+      geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  color=cool_palette[3],  alpha = 0.4, size = 0.5 ) +
+      geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`),  color=cool_palette[3], alpha = 0.4, size = 0.5) +
       geom_point(size=0.1) +
       geom_abline(
         aes(intercept =  intercept, slope = slope),
@@ -640,7 +641,7 @@ plot_no_prior =
       #   aes(intercept =  1, slope = slope),
       #   linetype = "dashed"
       # ) +
-      facet_wrap( ~ dataset, scales = "free", nrow=1) +
+      facet_wrap( ~ dataset_size, scales = "free", nrow=1) +
       #scale_color_brewer(palette="Set1") +
       #scale_color_manual(values = unique(.x$color)) +
       guides(color="none") +
@@ -658,8 +659,8 @@ plot_prior =
     ~ .x %>%
       filter(prior!="none") %>%
       ggplot(aes(`.median_(Intercept)`, mean)) +
-      geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  color=unique(.x$color),  alpha = 0.4, size = 0.5) +
-      geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`),  color=unique(.x$color), alpha = 0.4, size = 0.5) +
+      geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  color=cool_palette[2],  alpha = 0.4, size = 0.5) +
+      geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`),  color=cool_palette[2], alpha = 0.4, size = 0.5) +
       geom_point(size=0.1) +
       geom_abline(
         aes(intercept =  intercept, slope = slope),
@@ -671,7 +672,7 @@ plot_prior =
         linetype = "dashed",
         alpha=0.5
       ) +
-      facet_wrap(prior ~ dataset, scales = "free", ncol=7) +
+      facet_wrap(prior ~ dataset_size, scales = "free", ncol=7) +
       #scale_color_manual(values = unique(.x$color)) +
       guides(color="none") +
       xlab("Inverse-multinomial-logit mean") +
@@ -694,9 +695,9 @@ plot_prior =
       filter(plot_residuals, data_type=="RNA")$plot[[1]]  /
       filter(plot_prior, data_type=="RNA")$plot[[1]] /
 
-     ( (filter(plot_no_prior, data_type=="cytof")$plot[[1]] |  plot_spacer()) + plot_layout(guides = "collect", width = c( 5,1) )) /
-  ( (filter(plot_residuals, data_type=="cytof")$plot[[1]]  | plot_spacer())  ) /
-   ((filter(plot_prior, data_type=="cytof")$plot[[1]] |  plot_spacer()) + plot_layout(guides = "collect", width = c( 5,1) )) /
+     filter(plot_no_prior, data_type=="cytof")$plot[[1]]   /
+  filter(plot_residuals, data_type=="cytof")$plot[[1]]     /
+   filter(plot_prior, data_type=="cytof")$plot[[1]]   /
 
     filter(plot_no_prior, data_type=="metagenomics")$plot[[1]] /
     filter(plot_residuals, data_type=="metagenomics")$plot[[1]]  /

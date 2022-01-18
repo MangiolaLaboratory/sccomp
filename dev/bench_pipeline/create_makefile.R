@@ -19,7 +19,7 @@ commands_df =
 ) %>%
 
   # Add algorithm
-  expand_grid(method = c("sccomp", "dirichletMultinomial", "rest")) %>%
+  expand_grid(method = c("sccomp", "rest")) %>%
 
   # Make commands
   unite("file_prefix" , c(slope, n_samples, n_cell_type, max_cell_counts_per_sample, add_outliers), remove = FALSE) %>%
