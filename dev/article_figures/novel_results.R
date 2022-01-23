@@ -53,22 +53,22 @@ S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
 #
 # })
 #
-# job({
-#   readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
-#     mutate(ICB_Response = case_when(
-#       ICB_Response %in% c("ICB_PR", "ICB_SD") ~ "Responder",
-#       ICB_Response %in% c("ICB_PD") ~ "Non-responder",
-#     )) %>%
-#
-#     tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(ICB_Response) )  |>
-#     sccomp_glm(
-#       formula = ~ ICB_Response,
-#       sample, cell_type,
-#       approximate_posterior_inference = FALSE,
-#       prior_mean_variable_association = prior_mean_variable_association
-#     ) %>%
-#     saveRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds")
-# })
+job({
+  readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
+    mutate(ICB_Response = case_when(
+      ICB_Response %in% c("ICB_PR", "ICB_SD") ~ "Responder",
+      ICB_Response %in% c("ICB_PD") ~ "Non-responder",
+    )) %>%
+
+    tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(ICB_Response) )  |>
+    sccomp_glm(
+      formula = ~ ICB_Response,
+      sample, cell_type,
+      approximate_posterior_inference = FALSE,
+      prior_mean_variable_association = prior_mean_variable_association
+    ) %>%
+    saveRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds")
+})
 #
 # job({
 #
@@ -376,7 +376,9 @@ estimate_plots =
           size = 0.7, data = .x
         ) +
         facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=1) +
-        scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
+        #scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
+        scale_y_continuous(trans="S_sqrt", labels = dropLeadingZero) +
+
         scale_color_manual(values = c("black", "#e11f28")) +
         scale_fill_manual(values =  c(
           "Non-significant_TRUE" = brewer_pal(palette="Reds")(9)[7],
@@ -406,7 +408,9 @@ estimate_plots =
         ) +
         geom_jitter(aes(factor_of_interest, proportion, color=outlier), size = 0.3, data = .x, height = 0) +
         facet_wrap(~ fct_reorder(cell_type, abs(estimate), .desc = TRUE), scale="free_y", nrow=1) +
-        scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
+        #scale_y_continuous(trans="logit",labels = dropLeadingZero  ) +
+        scale_y_continuous(trans="S_sqrt", labels = dropLeadingZero) +
+
         scale_color_manual(values = c("black", "#e11f28")) +
       scale_fill_manual(values =  c(
         "Non-significant_TRUE" = brewer_pal(palette="Reds")(9)[7],
@@ -1216,3 +1220,31 @@ ggsave(
 )
 
 
+p_other = (
+  (plot_df$UMAP_plot[[2]] + ggtitle(plot_df$dataset[[2]])) + plot_df$estimate_plot[[2]] +
+    (plot_df$UMAP_plot[[3]] + ggtitle(plot_df$dataset[[3]])) + plot_df$estimate_plot[[3]] +
+    plot_layout(widths = c(1, 0.5, 1, 2))
+) /
+(
+   (plot_df$UMAP_plot[[4]] + ggtitle(plot_df$dataset[[4]])) + plot_df$estimate_plot[[4]]  +
+   (plot_df$UMAP_plot[[6]] + ggtitle(plot_df$dataset[[6]])) + plot_df$estimate_plot[[6]]  +
+    plot_layout(widths = c(1,1,1,1))
+)
+
+ggsave(
+  "dev/article_figures/novel_results_other_plot.png",
+  plot = p_other,
+  units = c("mm"),
+  width = 183 ,
+  height = 150 ,
+  limitsize = FALSE
+)
+
+ggsave(
+  "dev/article_figures/novel_results_other_plot.pdf",
+  plot = p_other,
+  units = c("mm"),
+  width = 183 ,
+  height = 150 ,
+  limitsize = FALSE
+)
