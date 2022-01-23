@@ -14,6 +14,9 @@ set.seed(42)
 result_directory = "dev/benchmark_results_3573b63473a94fcc9223277b17e6d59bad3890b7_simulation_logitLinear/"
 result_directory = "dev/benchmark_results/"
 
+result_directory = "dev/benchmark_results_hyperprior/"
+
+
 cool_palette = c("#cc374a","#e29a3b", "#3a9997", "#a15259",   "#94379b", "#ff8d73", "#7be05f", "#ffc571", "#724c24", "#4c474b", "#236633")
 scales::show_col(cool_palette)
 
@@ -232,6 +235,65 @@ ggsave(
 ggsave(
   "dev/article_figures/plot_benchmark_SUPPLEMENTARY_NO_OUTLIER.png",
   plot = p,
+  units = c("mm"),
+  width = 183 ,
+  height = 150/2.5*1.5 ,
+  limitsize = FALSE
+)
+
+
+# Hyperprior
+plot_auc_hyperprior =
+  dir(result_directory, pattern = "auc", full.names = TRUE) %>%
+  map_dfr(~ .x %>% readRDS()) %>%
+  nest(data = c(name, auc)) %>%
+  mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc))) %>%
+  unnest(data) %>%
+
+  filter( name !="random") %>%
+  filter(name != "DirichletMultinomial") %>%
+
+
+  # Filter too small slope
+  #filter(slope>0.1) %>%
+
+  # Choose one mode
+  nest(data = -c(add_outliers, max_cell_counts_per_sample)) %>%
+  mutate(plot = map(
+    data,
+    ~ .x %>%
+
+      mutate(`Accuracy (AUC)` = auc ) %>%
+      mutate(n_cell_type_ = glue("{n_cell_type} cell groups"), n_samples_ = glue("{n_samples} samples")) %>%
+      rename(Algorithm = name) %>%
+
+      ggplot(aes(slope, `Accuracy (AUC)`, color=fct_relevel(Algorithm, levels_algorithm))) +
+      geom_line(size=0.3) +
+      facet_grid( fct_reorder(n_cell_type_,n_cell_type)  ~ fct_reorder(n_samples_, n_samples), scale="free_y") +
+      geom_hline(yintercept = 0.1, linetype="dashed", color="grey") +
+      scale_color_manual(values = cool_palette) +
+      scale_y_continuous( labels = dropLeadingZero) +
+      labs(color="Algorithm") +
+      theme_bw() +
+      ylab("Accuracy (AUC) to 0.1 false-positive rate (decimal)") +
+      xlab("Slope") +
+      multipanel_theme
+  )) %>%
+  pull(plot) %>%
+  .[[1]]
+
+ggsave(
+  "dev/article_figures/plot_benchmark_hyperprior.pdf",
+  plot = plot_auc_hyperprior,
+  units = c("mm"),
+  width = 183 ,
+  height = 150/2.5*1.5 ,
+  limitsize = FALSE
+)
+
+ggsave(
+  "dev/article_figures/plot_benchmark_hyperprior.png",
+  plot = plot_auc_hyperprior,
   units = c("mm"),
   width = 183 ,
   height = 150/2.5*1.5 ,

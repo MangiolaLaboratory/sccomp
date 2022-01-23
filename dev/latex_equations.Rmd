@@ -30,7 +30,7 @@ de chunks within the document. You can embed an R code chunk like this:
 
 & \textbf{ Single-mean model } \\
 
-& P\left ( \pi, \sigma \right ) 
+& P\left ( \boldsymbol{\pi}, \boldsymbol{\sigma} \right ) 
  \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \pi_{g}, \sigma_{g} \right ) & \textrm{ (4) } \\
 
 & k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \pi_{g}, \sigma_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \pi_{g} = 1 \textrm{ and } \sigma_{g} > 0 & \textrm{ (5) } \\
@@ -39,7 +39,7 @@ de chunks within the document. You can embed an R code chunk like this:
 
 
 
-& \boldsymbol{\pi} = \text{multinomialLogistic} \left(\boldsymbol{\mu} \right) =  \frac{e^{\boldsymbol{\mu}}}{\sum_{g=1}^{G} e^{\mu_{g} }} \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0  & \textrm{ (6) } \\
+& \boldsymbol{\pi} = \text{InverseMultinomialLogistic} \left(\boldsymbol{\mu} \right) =  \frac{e^{\boldsymbol{\mu}}}{\sum_{g=1}^{G} e^{\mu_{g} }} \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0  & \textrm{ (6) } \\
 
 & \sigma_{g} = e^{\omega_{g}}  & \textrm{ (7) } \\
 

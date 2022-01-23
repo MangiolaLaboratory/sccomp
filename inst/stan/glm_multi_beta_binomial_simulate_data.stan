@@ -9,6 +9,8 @@ data{
 
   matrix[C,M] beta;
 
+  real<lower=0> variability_multiplier;
+
 }
 
 parameters{
@@ -41,6 +43,9 @@ generated quantities{
   for(a in 1:A) for(m in 1:M) alpha[a,m] = normal_rng( beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd);
 
   precision = (X[,1:A] * alpha)';
+
+  // Precision adjustment
+  precision = precision - log(variability_multiplier);
 
   for(i in 1:N) mu[,i] = softmax(mu[,i]);
   for(i in 1:cols(mu)) {
