@@ -800,10 +800,10 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 #' @keywords internal
 #' @noRd
 #'
-get_probability_non_zero = function(.data, parameter, prefix = "", test_above_logit_fold_change = 0){
+get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
 
 
-  draws = rstan::extract(.data, parameter)[[1]]
+  draws = rstan::extract(fit, parameter)[[1]]
 
   total_draws = dim(draws)[1]
 
@@ -813,8 +813,7 @@ get_probability_non_zero = function(.data, parameter, prefix = "", test_above_lo
     apply(2, function(y){
       y %>%
       apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
-    }) %>%
-    .[,-1, drop=FALSE]
+    })
 
 
   smaller_zero =
@@ -822,8 +821,7 @@ get_probability_non_zero = function(.data, parameter, prefix = "", test_above_lo
     apply(2, function(y){
       y %>%
         apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
-    }) %>%
-    .[,-1, drop=FALSE]
+    })
 
 
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
@@ -945,4 +943,13 @@ class_list_to_counts = function(.data, .sample, .cell_group){
       fill = list(count = 0)
     ) %>%
     mutate(count = as.integer(count))
+}
+
+#' @importFrom dplyr cummean
+get_FDR = function(x){
+  enframe(x) %>%
+    arrange(value) %>%
+    mutate(FDR = cummean(value)) %>%
+    arrange(name) %>%
+    pull(FDR)
 }
