@@ -336,6 +336,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
 #' @importFrom dplyr case_when
+#' @importFrom dplyr with_groups
 #'
 #' @param fit The fit object
 #' @param data_for_model Parsed data
@@ -374,9 +375,9 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 
   # Parse fit
   false_positive_rate = percent_false_positive/100
-  factor_of_interest = data_for_model$X %>% colnames() %>% .[-1]
+  factor_of_interest = data_for_model$X %>% colnames()
   median_factor_of_interest = sprintf(".median_%s", factor_of_interest)
-  effect_column_name = sprintf("composition_effect_%s", factor_of_interest)
+  effect_column_name = sprintf("c_effect_%s", factor_of_interest)
 
 
   beta_CI =
@@ -388,27 +389,18 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 
     # Rename column to match %
     rename(
-      .lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
-      .median := !!as.symbol(sprintf("%s%s", "50", "%")) ,
-      .upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
+      c_lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
+      c_effect := !!as.symbol(sprintf("%s%s", "50", "%")) ,
+      c_upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
     ) %>%
     left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
-    select(-C) %>%
-    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
-
-    # Create main effect if exists
-    when(
-      !is.na(factor_of_interest) %>% any() ~ nest(., composition_CI = -c(M, one_of(median_factor_of_interest))) %>%
-        setNames(gsub(".median", "composition_effect", colnames(.))),
-      ~ nest(., composition_CI = -c(M))
-    )
+    select(-C, -.variable)
 
   if(data_for_model$A > 1) {
-    variability_effect_column_name = sprintf("variability_effect_%s", factor_of_interest) %>% as.symbol()
+    variability_effect_column_name = sprintf("v_effect_%s", factor_of_interest) %>% as.symbol()
 
-    factor_of_interest_variance = data_for_model$Xa %>% colnames() %>% .[-1]
+    factor_of_interest_variance = data_for_model$Xa %>% colnames()
     median_factor_of_interest_variance = sprintf(".median_%s", factor_of_interest_variance)
-    effect_column_name_variance = sprintf("composition_effect_%s", factor_of_interest_variance)
 
     alpha_CI =
       fit %>%
@@ -419,30 +411,14 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 
       # Rename column to match %
       rename(
-        .lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
-        .median := !!as.symbol(sprintf("%s%s", "50", "%")) ,
-        .upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
+        v_lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
+        v_effect := !!as.symbol(sprintf("%s%s", "50", "%")) ,
+        v_upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
       ) %>%
       left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
-      select(-C) %>%
-      pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
-
-      # Create main effect if exists
-      when(
-        !is.na(factor_of_interest) %>% any() ~ nest(., variability_CI = -c(M, one_of(median_factor_of_interest_variance))) %>%
-          setNames(gsub(".median", "variability_effect", colnames(.))),
-        ~ nest(., variability_CI = -c(M))
-      )
+      select(-C, -.variable)
   }
 
-  #' @importFrom dplyr cummean
-  get_FDR = function(x){
-    enframe(x) %>%
-      arrange(value) %>%
-      mutate(FDR = cummean(value)) %>%
-      arrange(name) %>%
-      pull(FDR)
-  }
 
   beta_CI %>%
 
@@ -450,28 +426,31 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
     when(
       do_test ~ left_join(
         .,
-        get_probability_non_zero(fit, "beta", prefix="composition", test_above_logit_fold_change = test_composition_above_logit_fold_change) %>%
-          mutate(across(-M, .fns = list(fdr = ~ get_FDR(.))) ) %>%
-          setNames(c("M", sprintf("composition_pH0_%s", factor_of_interest), sprintf("composition_FDR_%s", factor_of_interest))),
-        by="M"
-        ),
+        get_probability_non_zero(fit, "beta", prefix="c", test_above_logit_fold_change = test_composition_above_logit_fold_change) %>%
+          setNames(c("M",  factor_of_interest)) %>%
+          gather(C_name, c_pH0, -M) %>%
+          with_groups(C_name, ~ mutate(.x, c_FDR = get_FDR(c_pH0))),
+        by=c("M", "C_name")
+      ),
       ~ (.)
     ) %>%
 
     # Add ALPHA
-    when(do_test & (data_for_model$A > 1) ~ left_join(.,  alpha_CI ,  by="M"), ~(.)) %>%
+    when(do_test & (data_for_model$A > 1) ~ left_join(.,  alpha_CI ,  by=c("M", "C_name")), ~(.)) %>%
 
     # ADD CI alpha
     when(
       do_test & (data_for_model$A > 1) ~ left_join(
         .,
-        get_probability_non_zero(fit, "alpha_normalised", prefix="variability", test_above_logit_fold_change = 0.2) %>%
-          mutate(across(-M, .fns = list(fdr = ~ get_FDR(.))) ) %>%
-          setNames(c("M", sprintf("variability_pH0_%s", factor_of_interest_variance), sprintf("variability_FDR_%s", factor_of_interest_variance))),
-        by="M"
+        get_probability_non_zero(fit, "alpha_normalised", prefix="v", test_above_logit_fold_change = 0.2) %>%
+        setNames(c("M",  factor_of_interest_variance)) %>%
+          gather(C_name, v_pH0, -M) %>%
+          with_groups(C_name, ~ mutate(.x, v_FDR = get_FDR(v_pH0))),
+        by=c("M", "C_name")
       ),
       ~ (.)
-    )
+    ) %>%
+    select(parameter  = C_name, everything())
 
 }
 
@@ -574,14 +553,12 @@ multi_beta_binomial_glm = function(.data,
     test_composition_above_logit_fold_change = test_composition_above_logit_fold_change
   ) %>%
 
-    # Join the precision
-    left_join(get_mean_precision(result_list$fit, result_list$data_for_model), by="M") %>%
-
-
-    # Clean
-    select(-M) %>%
-    mutate(!!.cell_type := result_list$data_for_model$y %>% colnames()) %>%
-    select(!!.cell_type, everything()) %>%
+    # Add cell name
+    left_join(
+      result_list$data_for_model$y %>% colnames() %>% enframe(name = "M", value  = quo_name(.cell_type)),
+      by = "M"
+    ) %>%
+    select(!!.cell_type, everything(), -M) %>%
 
     # Join generated data
     # left_join(result_list$generated_quantities, by="M") %>%
