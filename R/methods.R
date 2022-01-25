@@ -1452,7 +1452,7 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 #'
 plot_summary <- function(.data, .cell_group) {
 
-  multipanel_theme =
+    multipanel_theme =
     theme_bw() +
     theme(
       panel.border = element_blank(),
@@ -1485,6 +1485,13 @@ plot_summary <- function(.data, .cell_group) {
       axis.ticks.x = element_line(size=0.2),
       axis.ticks.y = element_line(size=0.2)
     )
+
+  dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
+
+  S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+  IS_sqrt <- function(x){x^2*sign(x)}
+  S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
+
 
   .cell_group = enquo(.cell_group)
 
@@ -1536,7 +1543,7 @@ if("fit" %in% names(attributes(.data))){
 
   data_proportion =
     .data %>%
-    pivot_wider(names_from = parameter, values_from = contains("c_|v_")) %>%
+    pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
     unnest(count_data) %>%
     with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) )
 
@@ -1589,6 +1596,7 @@ if("fit" %in% names(attributes(.data))){
     #scale_fill_manual(values = c("white", "#E2D379")) +
     scale_fill_distiller(palette = "Spectral", na.value = "white") +
     #scale_color_distiller(palette = "Spectral") +
+
     scale_y_continuous(trans="S_sqrt", labels = dropLeadingZero) +
     #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
     xlab("Biological condition") +
