@@ -95,6 +95,7 @@ res =
 
 data_for_plot = 
   res |> 
+   pivot_wider(names_from = parameter, values_from = c(c_FDR )  )|>
     tidyr::unnest(count_data ) |>
     group_by(sample) |>
     mutate(proportion = (count+1)/sum(count+1)) |>
@@ -102,7 +103,7 @@ data_for_plot =
 
  ggplot() +
   geom_boxplot(
-    aes(type, proportion, fill=composition_prob_H0<0.025),
+    aes(type, proportion, fill=c_pH0<0.025),
     outlier.shape = NA, 
     data =  filter(data_for_plot, !outlier)
   ) + 
@@ -160,8 +161,10 @@ We can perform posterior predictive checks of the model. This gives information 
 
 data_proportion =
       res |>
+     pivot_wider(names_from = parameter, values_from = contains("c_") )  |>
+
       unnest(count_data) |>
-      select(cell_group, sample, outlier, count, type, composition_prob_H0) |>
+      select(cell_group, sample, outlier, count, type, c_pH0_typecancer) |>
       with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) 
 
 simulated_proportion = 
@@ -179,7 +182,7 @@ ggplot() +
   geom_jitter(aes(type, generated_proportions), color="blue" ,alpha=0.2, size = 0.6, data = simulated_proportion) + 
   
     geom_boxplot(
-    aes(type, proportion, fill=composition_prob_H0<0.025),
+    aes(type, proportion, fill=c_pH0_typecancer<0.025),
     outlier.shape = NA, 
     data = filter(data_proportion, !outlier)
   ) + 

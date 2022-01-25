@@ -49,11 +49,275 @@ S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
 IS_sqrt <- function(x){x^2*sign(x)}
 S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
 
-# library(furrr)
-# plan(multisession, workers=15)
+color_df =
+  dir("dev/study_of_association", pattern = "estimate", full.names = T) %>%
+  enframe(value = "file") %>%
+  mutate(data_type = "RNA") %>%
+
+  bind_rows(
+    dir("dev/metagenomics", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "metagenomics")
+  ) %>%
+
+  bind_rows(
+    dir("dev/cytof", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "cytof")
+  ) %>%
+  filter(!grepl(".R$", file)) %>%
+
+  # Filter out hyperprior because not canging
+  filter(!grepl("hyperprior", file)) %>%
+  filter(!grepl("dirichlet", file)) %>%
+
+  tidyr::extract(file, "dataset", regex = ".*_?estimate_([^_]+)_?.*.rds", remove = F)  %>%
+  nest(data = -data_type) %>%
+  mutate(color = cool_palette[1:n()]) %>%
+  unnest(data) %>%
+
+  # Add colors
+  nest(data = -c(data_type, dataset)) %>%
+  arrange(fct_relevel(data_type, c("RNA", "cytof", "metagenomics")), dataset) %>%
+  mutate(.color = friendly_cols[1:n()]) %>%
+  select(-data)
 
 
-  data_for_plot =
+
+# Ex figure 2, ow in supplementary mean-variability association
+
+# Read input
+df_for_plot =
+  dir("dev/study_of_association", pattern = "estimate", full.names = T) %>%
+  enframe(value = "file") %>%
+  mutate(data_type = "RNA") %>%
+
+  bind_rows(
+    dir("dev/metagenomics", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "metagenomics")
+  ) %>%
+
+  bind_rows(
+    dir("dev/cytof", pattern = "estimate", full.names = T) %>%
+      enframe(value = "file") %>%
+      mutate(data_type = "cytof")
+  ) %>%
+  filter(!grepl(".R$", file)) %>%
+
+  # Filter out hyperprior because not canging
+  filter(!grepl("hyperprior", file)) %>%
+  filter(!grepl("dirichlet", file)) %>%
+
+  tidyr::extract(file, "dataset", regex = ".*_?estimate_([^_]+)_?.*.rds", remove = F)  %>%
+
+  # Add cell_type for cytof
+  mutate(
+    data = map( file,  ~ readRDS(.x) )
+  ) %>%
+
+  # Process
+  mutate(file = (file)) %>%
+  mutate(prior = case_when(
+    grepl("priorFree", file) ~ "none",
+    grepl("hyperprior", file) ~ "hyperprior",
+    TRUE ~ "prior"
+  ) ) %>%
+  mutate(prior = factor(prior, levels = c("none", "prior", "hyperprior"))) %>%
+
+  # Add lines
+  mutate(correlation = map(
+    data,
+    ~ .x %>%
+      attr("mean_concentration_association") %>%
+      t() %>%
+      as.data.frame %>%
+      setNames(c("intercept", "slope", "standard_deviation"))
+  )) %>%
+  unnest(correlation) %>%
+
+  # hide
+  mutate( intercept = if_else(prior!="none", intercept, 99) ) %>%
+
+  # Get dataset size
+  mutate(dataset_size = map_int(
+    data,
+    ~ .x %>% pull(count_data) %>% .[[1]] %>% nrow
+  )) %>%
+  unite("dataset_size", c(dataset, dataset_size), sep=" S=", remove = FALSE) %>%
+
+  # Get data
+  mutate(data = map(data,  ~ select( .x, composition_CI,concentration, cell_type )  )) %>%
+  unnest(data) %>%
+  unnest(c(composition_CI ,  concentration  ))
+
+
+data_residuals =
+  df_for_plot %>%
+  select(-intercept, -slope) %>%
+  filter(prior=="none") %>%
+  nest(data = -c(dataset, data_type)) %>%
+  mutate(rlm_results = map(
+    data,
+    ~ .x %>%
+      rename(logit_mean = `.median_(Intercept)`) %>%
+      MASS::rlm(mean ~ logit_mean , data = .)
+  )) %>%
+  mutate(residuals = map2(
+    rlm_results, data,
+    ~ resid(.x)
+  )) %>%
+  mutate(weights = map(
+    rlm_results,
+    ~ .x$w
+  )) %>%
+  mutate(coefficients = map(
+    rlm_results,
+    ~ .x$coefficients %>%
+      setNames(c("intercept", "slope")) %>%
+      enframe() %>%
+      spread(name, value)
+  )) %>%
+  unnest(coefficients)
+
+plot_residuals =
+  data_residuals %>%
+
+  # Group
+  mutate(data_plot = pmap(
+    list(residuals, weights, dataset, data),
+    ~ enframe(..1) %>%
+      mutate(m = ..4 %>% pull(`.median_(Intercept)`)) %>%
+      mutate(weights = ..2) %>%
+      mutate(name = as.numeric(name))
+  )) %>% select(data_plot, data_type, dataset) %>%
+  unnest(data_plot) %>%
+  nest(data_plot = -data_type) %>%
+
+  # Plot
+  mutate(plot = map(
+    data_plot,
+    ~ .x %>%
+      ggplot(aes(m, -value, group=dataset, color = dataset)) +
+      geom_hline(yintercept=0,linetype="dashed") +
+      geom_point(size=0.1, alpha=0.6) +
+      geom_smooth(se=FALSE, span=1, mapping = aes(weight = weights), size=0.5, linetype = "dashed", color="#333333") +
+
+      ggside::geom_ysidedensity() +
+      ggside::scale_xsidey_continuous(breaks = NULL, labels = "", expand = expansion(c(0,.1))) +
+      ggside::scale_ysidex_continuous(breaks = NULL, labels = "", expand = expansion(c(0,.1))) +
+      scale_color_manual(values = color_df %>% distinct(dataset, .color) %>% deframe()) +
+      xlab("Cell groups/taxa") +
+      ylab("Residuals") +
+      guides(color="none") +
+      multipanel_theme +
+      theme(axis.title.x = element_blank())
+  ))
+
+
+# Plot no prior
+plot_no_prior =
+  data_residuals %>%
+  unnest(data) %>%
+  filter(prior=="none") %>%
+  nest(data = -data_type) %>%
+  mutate(plot = map(
+    data,
+    ~ .x %>%
+      ggplot(aes(`.median_(Intercept)`, -mean, group=dataset, color=dataset)) +
+      geom_point(size=0.1, alpha=0.6) +
+      geom_abline(
+        aes(intercept =  -intercept, slope = -slope, color=dataset),
+        linetype = "dotted",
+        alpha=0.5,
+        color="#333333"
+      ) +
+      scale_color_manual(values = color_df %>% distinct(dataset, .color) %>% deframe()) +
+      guides(color="none") +
+      xlab("Inverse-multinomial-logit mean") +
+      ylab("Log-concentration")+
+      multipanel_theme +
+      theme(axis.title.x = element_blank())
+  ))
+
+# Shrinkage
+plot_shrinkage =
+  df_for_plot %>%
+  mutate(
+    diff_in_concentration = abs(`97.5%`-`2.5%`) ,
+    diff_in_mean = abs(`.upper_(Intercept)`-`.lower_(Intercept)`)
+  ) %>%
+
+  # Scale
+  with_groups(dataset, ~ .x %>% mutate(
+    diff_in_mean= diff_in_mean %>% scale(center = FALSE) %>% as.numeric(),
+    diff_in_concentration= diff_in_concentration %>% scale(center = FALSE) %>% as.numeric(),
+  )) %>%
+
+  # Add diff of diff
+  nest(data = -c( cell_type, dataset)) %>%
+
+  mutate(log_diff_diff_mean = map_dbl(
+    data,
+    ~ { v = .x %>%
+      arrange(prior) %>%
+      pull(diff_in_mean)
+    log(v[2]/v[1])
+
+    }
+
+  )) %>%
+
+  mutate(log_diff_diff_concentration = map_dbl(
+    data,
+    ~ { v = .x %>%
+      arrange(prior) %>%
+      pull(diff_in_concentration)
+    log(v[2]/v[1])
+
+    }
+
+  )) %>%
+  unnest(data) %>%
+
+  # Plot
+  nest(data = -data_type) %>%
+
+  mutate(plot_diff_concentration = map(
+    data,
+    ~ .x %>%
+      filter(abs(log_diff_diff_concentration)>0.5) %>%
+      ggplot( aes(prior, diff_in_concentration)) +
+      geom_point(alpha=0.5, size=0.3) +
+      geom_line(aes(group=cell_type, color=dataset), alpha=0.5, size=0.5) +
+      scale_color_manual(values = color_df %>% distinct(dataset, .color) %>% deframe()) +
+      scale_size(range = c(0.01, 0.1)) %>%
+      guides(color="none") +
+      multipanel_theme +
+      theme(axis.title.x = element_blank())
+  )) %>%
+  mutate(plot_diff_mean = map(
+    data,
+    ~  .x %>%
+      filter(abs(log_diff_diff_mean)>0.5) %>%
+      ggplot( aes(prior, diff_in_mean)) +
+      geom_point(alpha=0.5, size=0.3) +
+      geom_line(aes(group=cell_type, color=dataset), alpha=0.5, size=0.5) +
+      scale_color_manual(values = color_df %>% distinct(dataset, .color) %>% deframe()) +
+      scale_size(range = c(0.01, 0.1)) %>%
+      guides(color="none") +
+      multipanel_theme +
+      theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+  ))
+
+rm(data_estimates)
+rm(data_for_plot)
+rm(df_for_plot)
+gc()
+
+# Figure 2 Q-Q plots
+
+data_for_plot =
     dir("dev/data_integration", pattern = "estimate", full.names = T) %>%
     enframe(value = "file") %>%
     mutate(data_type = "RNA") %>%
@@ -143,7 +407,7 @@ S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
     mutate(median_proportion = map_dbl( data, ~ median(.x$proportion) ))
 
 
-  data_for_plot %>% saveRDS("dev/data_for_plot.rds")
+data_for_plot %>% saveRDS("dev/data_for_plot.rds")
 
 # data_for_plot =
 #   bind_rows(
@@ -238,9 +502,9 @@ S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
 # Boxplot posterior predictive check
 gc()
 
-  covid =  readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds")
+covid =  readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds")
 
-  data_proportion =
+data_proportion =
     covid %>%
   distinct() %>%
   unnest(count_data) %>%
@@ -251,15 +515,15 @@ gc()
   mutate(Effect =composition_effect_is_criticalTRUE  )
 
 
-  simulated_proportion =
+simulated_proportion =
     covid %>%
   replicate_data( number_of_draws = 100) %>%
   left_join(data_proportion %>% distinct(is_critical, sample, cell_type, composition_effect_is_criticalTRUE))  %>%
   mutate(Condition = if_else(is_critical, "Critical", "Moderate")) %>%
   mutate(Effect =composition_effect_is_criticalTRUE  )
 
-  rm(covid)
-  gc()
+rm(covid)
+gc()
 
 data_simulation_process =
   list(
@@ -474,9 +738,43 @@ plot_slopes_median_proportion =
   }
 
 
+
+plot_mean_variability_assoc =
+(
+  plot_no_prior %>%
+    arrange(fct_relevel(data_type, c("RNA", "cytof", "metagenomics"))) %>%
+    pull(plot) %>%
+    wrap_plots(ncol = 1)
+) |
+
+(
+  plot_residuals %>%
+    arrange(fct_relevel(data_type, c("RNA", "cytof", "metagenomics"))) %>%
+    pull(plot) %>%
+    wrap_plots(ncol = 1)
+) |
+
+(
+  plot_shrinkage %>%
+    arrange(fct_relevel(data_type, c("RNA", "cytof", "metagenomics"))) %>%
+    pull(plot_diff_concentration ) %>%
+    wrap_plots(ncol = 1)
+) |
+
+(
+  plot_shrinkage %>%
+    arrange(fct_relevel(data_type, c("RNA", "cytof", "metagenomics"))) %>%
+    pull(plot_diff_mean) %>%
+    wrap_plots(ncol = 1)
+)
+
+
 p =
 
   (
+    # Mean variability assoc
+    plot_mean_variability_assoc /
+
     # Boxplots
     ( ( plot_simulation_process | plot_boxplot )  +  plot_layout(widths = c(1,8)) ) /
 
@@ -494,7 +792,7 @@ p =
   ) +
 
   # Style
-  plot_layout(guides = 'collect', heights  = c(3, 2))  &
+  plot_layout(guides = 'collect', heights  = c(2, 3, 2))  &
   theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom",  legend.key.size = unit(0.5, 'cm'))
 
 
@@ -503,7 +801,7 @@ ggsave(
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 190 ,
+  height = 225 ,
   limitsize = FALSE
 )
 
@@ -512,7 +810,7 @@ ggsave(
   plot = p,
   units = c("mm"),
   width = 183 ,
-  height = 190 ,
+  height = 225 ,
   limitsize = FALSE
 )
 

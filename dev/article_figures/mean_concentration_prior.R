@@ -573,7 +573,15 @@ data_residuals =
       enframe() %>%
       spread(name, value)
   )) %>%
-  unnest(coefficients) %>%
+  unnest(coefficients)
+
+
+
+
+
+plot_residuals =
+  data_residuals %>%
+
   # # library("metRology")
   # mutate(t =map(
   #   residuals,
@@ -603,14 +611,7 @@ data_residuals =
       ylab("Residuals") +
       multipanel_theme +
       theme(axis.title.y  = element_blank())
-  ))
-
-
-
-
-
-plot_residuals =
-  data_residuals %>%
+  )) %>%
   nest(data = -data_type) %>%
   mutate(plot = map(
     data,

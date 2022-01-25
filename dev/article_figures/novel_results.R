@@ -36,8 +36,8 @@ IS_sqrt <- function(x){x^2*sign(x)}
 S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
 
 
-# prior_mean_variable_association = list(intercept = c(5, 5), slope = c(0,  5), standard_deviation = c(5,5))
-#
+prior_mean_variable_association = list(intercept = c(5, 5), slope = c(0,  5), standard_deviation = c(5,5))
+
 # job({
 #   estimate_UVM =
 #     readRDS("dev/data_integration/UVM_single_cell/counts.rds")  |>
@@ -53,22 +53,22 @@ S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
 #
 # })
 #
-job({
-  readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
-    mutate(ICB_Response = case_when(
-      ICB_Response %in% c("ICB_PR", "ICB_SD") ~ "Responder",
-      ICB_Response %in% c("ICB_PD") ~ "Non-responder",
-    )) %>%
-
-    tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(ICB_Response) )  |>
-    sccomp_glm(
-      formula = ~ ICB_Response,
-      sample, cell_type,
-      approximate_posterior_inference = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
-    ) %>%
-    saveRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds")
-})
+# job({
+#   readRDS("dev/data_integration/SCP1288_renal_cell_carcinoma.rds")  |>
+#     mutate(ICB_Response = case_when(
+#       ICB_Response %in% c("ICB_PR", "ICB_SD") ~ "Responder",
+#       ICB_Response %in% c("ICB_PD") ~ "Non-responder",
+#     )) %>%
+#
+#     tidyseurat::filter(!is.na(sample) & !is.na(cell_type) & !is.na(ICB_Response) )  |>
+#     sccomp_glm(
+#       formula = ~ ICB_Response,
+#       sample, cell_type,
+#       approximate_posterior_inference = FALSE,
+#       prior_mean_variable_association = prior_mean_variable_association
+#     ) %>%
+#     saveRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds")
+# })
 #
 # job({
 #
@@ -125,7 +125,9 @@ job({
       # Comparing Metastasis vs Primary
       "UVM",
       readRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma_no_heterogeneity.rds") %>%
-        mutate(variability_prob_H0 = 1) %>%
+        mutate(v_pH0= 1, v_FDR=1) %>%
+        pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
+
         unnest(count_data) %>%
         mutate(factor_of_interest = type) %>%
 
@@ -133,12 +135,13 @@ job({
         mutate(significant_in_article = FALSE)  %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = `composition_pH0_typePrimary`) %>%
-        mutate(variability_prob_H0 = 1)  ,
+        mutate(c_FDR = `c_FDR_typePrimary`) %>%
+        mutate(v_FDR = v_FDR_typePrimary)  ,
 
       "renal_cell_carcinoma",
       readRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma_based_on_ICB_Response.rds") %>%
-        mutate(variability_prob_H0 = 1) %>%
+        mutate(v_pH0 = 1, v_FDR = 1) %>%
+        pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
         unnest(count_data) %>%
         mutate(factor_of_interest = ICB_Response) %>%
 
@@ -147,11 +150,13 @@ job({
         mutate(significant_in_article = FALSE) %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = `composition_pH0_ICB_ResponseResponder`),
+        mutate(c_FDR = `c_FDR_ICB_ResponseResponder`) %>%
+        mutate(v_FDR = `v_FDR_ICB_ResponseResponder`),
 
       # Here factor of interest is subtype== triple-negative versus the rest
       "bc_cells",
       readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>%
+        pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
         mutate(count_data  = map(count_data , ~mutate(.x, type = as.character(type))))%>%
         unnest(count_data) %>%
         #mutate(type = if_else(type =="TRUE", "TNBC", "Other")) %>%
@@ -162,11 +167,12 @@ job({
         mutate(significant_in_article = cell_type %in% c("T cells CD8+", "T_cells_c6_IFIT1", "T_cells_c11_MKI67", "T_cells_c8_CD8+_LAG3", "Myeloid_c1_LAM1_FABP5")) %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = pmin(`composition_FDR_typeER+`, `composition_FDR_typeHER2+`)) %>%
-        mutate(variability_prob_H0 = pmin(`variability_FDR_typeER+`, `variability_FDR_typeHER2+`))        ,
+        mutate(c_FDR = pmin(`c_FDR_typeER+`, `c_FDR_typeHER2+`)) %>%
+        mutate(v_FDR = pmin(`v_FDR_typeER+`, `v_FDR_typeHER2+`))        ,
 
       "COVID",
       readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds")%>%
+        pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
         unnest(count_data) %>%
         mutate(is_critical = if_else(is_critical, "Critical", "Non-critical")) %>%
         mutate(factor_of_interest = is_critical) %>%
@@ -177,12 +183,13 @@ job({
         mutate(significant_in_article = cell_type %in% c("Basal", "Neu"))  %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = `composition_pH0_is_criticalTRUE`) %>%
-        mutate(variability_prob_H0 = variability_pH0_is_criticalTRUE)   ,
+        mutate(c_FDR = `c_FDR_is_criticalTRUE`) %>%
+        mutate(v_FDR = v_FDR_is_criticalTRUE)   ,
 
 
       "melanoma_time",
       readRDS("dev/data_integration/estimate_GSE120575_melanoma_pre_vs_post_treatment.rds")%>%
+        pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
         unnest(count_data) %>%
         mutate(factor_of_interest = time) %>%
 
@@ -192,12 +199,13 @@ job({
         mutate(significant_in_article = FALSE)  %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = `composition_pH0_timePre`) %>%
-        mutate(variability_prob_H0 = variability_pH0_timePre),
+        mutate(c_FDR = `c_FDR_timePre`) %>%
+        mutate(v_FDR = v_FDR_timePre),
 
 
       "melanoma_responder",
       readRDS("dev/data_integration/estimate_GSE120575_melanoma_responders_vs_not.rds") %>%
+        pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
         unnest(count_data) %>%
         mutate(factor_of_interest = res) %>%
 
@@ -207,13 +215,15 @@ job({
         mutate(significant_in_article = cell_type %in% c("G1-B cells", "G10-Memory T cells", "G3-Monocytes/Macrophages")) %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = `composition_pH0_resResponder`) %>%
-        mutate(variability_prob_H0 = variability_pH0_resResponder),
+        mutate(c_FDR = `c_FDR_resResponder`) %>%
+        mutate(v_FDR = v_FDR_resResponder),
 
       "BRCA1_breast",
+
       readRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds") %>%
        # rename(cell_type = CellTypesFinal) %>%
-        mutate(variability_prob_H0 = 1) %>%
+        mutate(v_FDR = 1) %>%
+        pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
         unnest(count_data) %>%
         #rename(sample = Sample) %>%
         mutate(factor_of_interest = ptime) %>%
@@ -222,7 +232,8 @@ job({
         mutate(significant_in_article = cell_type %in% c("Fb3","Hsp", "Fb9", "Fb2","Fb6", "Fb4", "Hs","cDC1", "CTLs", "CyclingT", "Avd","MdC1", "Mo1", "Tregs", "Mo3","Fb1" ,  "CD83"   )) %>%
 
         # Readapt to ols format
-        mutate(composition_prob_H0 = `composition_pH0_ptime`)
+        mutate(c_FDR = `c_FDR_ptime`) %>%
+        mutate(v_FDR = `v_FDR_ptime`)
     ) %>%
 
     # Calculate probability
@@ -238,9 +249,9 @@ job({
       data,
       ~ .x %>% #filter(.x, variability_prob_H0 < 0.05 | composition_prob_H0 < 0.05 ) %>%
         mutate(label = case_when(
-          composition_prob_H0 < 0.025 & variability_prob_H0 < 0.025 ~ "Diff both",
-          composition_prob_H0 < 0.025 ~ "Diff abundant",
-          variability_prob_H0 < 0.025  ~ "Diff heterogeneous",
+          c_FDR < 0.025 & v_FDR < 0.025 ~ "Diff both",
+          c_FDR < 0.025 ~ "Diff abundant",
+          v_FDR < 0.025  ~ "Diff heterogeneous",
           TRUE ~ "Non-significant"
         ) %>% factor(levels = c("Diff abundant", "Diff heterogeneous", "Diff both",  "Non-significant"))
         )
@@ -328,7 +339,7 @@ estimate_plots =
     data, dataset,
     ~ {
 
-      .x$estimate = .x %>% pull(2)
+      .x$estimate = .x %>% select(contains("c_effect")) %>%  pull(1)
 
       if(.y == "BRCA1_breast"){
         .x = .x %>% filter(color != "Diff abundant_TRUE")
@@ -439,8 +450,9 @@ source("~/PostDoc/oligo_breast//functions.R")
 plot_df =
   counts %>%
   #with_groups(file, ~ sample_n(.x, 10000)) %>%
-  left_join(
-    data_estimates %>% mutate(data = map(data, ~ select(.x, sample, cell_type, label, significant_in_article))) %>% unnest(data)
+  inner_join(
+    data_estimates %>% mutate(data = map(data, ~ select(.x, sample, cell_type, label, significant_in_article))) %>% unnest(data),
+    by = c("sample", "cell_type")
   ) %>%
   #filter(label %>% is.na %>% `!`) %>%
   unite("color", c(label, significant_in_article)) %>%
@@ -644,7 +656,7 @@ plot_outliers =
     data,
     ~ .x %>%
       filter(outlier) %>%
-      mutate(significant = composition_prob_H0<0.05) %>%
+      mutate(significant = c_FDR<0.025) %>%
       count(outlier, significant) %>%
       mutate(nn = sum(n))
   )) %>%
@@ -737,7 +749,7 @@ plot_outliers =
 plot_BRCA_UMAP =
   counts %>%
   #with_groups(file, ~ sample_n(.x, 10000)) %>%
-  left_join(
+  inner_join(
     data_estimates %>% mutate(data = map(data, ~ select(.x, sample, cell_type, label, significant_in_article))) %>% unnest(data)
   ) %>%
   #filter(label %>% is.na %>% `!`) %>%
@@ -778,7 +790,9 @@ plot_BRCA_UMAP =
   ) %>%
 
   left_join(
-    readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>% distinct(cell_type, `composition_pH0_typeHER2+` ,   `composition_pH0_typeER+`, `variability_pH0_typeHER2+`,  `variability_pH0_typeER+` )
+    readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds") %>%
+      distinct(cell_type, `c_FDR` , parameter,  v_FDR ) %>%
+      pivot_wider(names_from = parameter, values_from = c(c_FDR ,    v_FDR)  )
   ) %>%
 
 
@@ -808,8 +822,8 @@ plot_BRCA_UMAP =
                    case_when(
                      is.na(color) ~"",
                      type == "TNBC" ~"",
-                     type == "HER2+" & (`composition_pH0_typeHER2+`<0.025 | `variability_pH0_typeHER2+`<0.025) ~cell_type_pretty,
-                     type == "ER+" & (`composition_pH0_typeER+`<0.025 | `variability_pH0_typeER+`<0.025) ~cell_type_pretty,
+                     type == "HER2+" & (`c_FDR_typeHER2+`<0.025 | `v_FDR_typeHER2+`<0.025) ~cell_type_pretty,
+                     type == "ER+" & (`c_FDR_typeER+`<0.025 | `v_FDR_typeER+`<0.025) ~cell_type_pretty,
                      TRUE ~""
                    )
                  ),
@@ -879,34 +893,37 @@ plot_BRCA_UMAP =
 
 
 BRCA_tnbc_vs_all = readRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds")
-BRCA_tnbc_vs_all %>%
-  ggplot(aes(`composition_effect_typeER+`, `variability_effect_typeER+`)) +
-  geom_point()  +
-  geom_smooth(method="lm")
-
-BRCA_tnbc_vs_all %>%
-  ggplot(aes(`composition_effect_typeER+`, `variability_effect_typeHER2+`)) +
-  geom_point() +
-  geom_smooth(method="lm")
+# BRCA_tnbc_vs_all %>%
+#   ggplot(aes(`composition_effect_typeER+`, `variability_effect_typeER+`)) +
+#   geom_point()  +
+#   geom_smooth(method="lm")
+#
+# BRCA_tnbc_vs_all %>%
+#   ggplot(aes(`composition_effect_typeER+`, `variability_effect_typeHER2+`)) +
+#   geom_point() +
+#   geom_smooth(method="lm")
 
 
 # Generated
 
 data_proportion =
   BRCA_tnbc_vs_all |>
+  pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
   unnest(count_data) |>
-  select(cell_type, sample, outlier, count, type, contains("pH0")) |>
+  select(cell_type, sample, outlier, count, type, contains("FDR")) |>
   with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) %>%
+
+
   mutate(significance_c = case_when(
-    `composition_pH0_typeHER2+` < 0.025 & `composition_pH0_typeER+` < 0.025 ~ "her2+ er+",
-    `composition_pH0_typeHER2+` < 0.025 ~ "her2+",
-    `composition_pH0_typeER+` < 0.025 ~ "er+",
+    `c_FDR_typeHER2+` < 0.025 & `c_FDR_typeER+` < 0.025 ~ "her2+ er+",
+    `c_FDR_typeHER2+` < 0.025 ~ "her2+",
+    `c_FDR_typeER+` < 0.025 ~ "er+",
     TRUE ~ "none"
   )) %>%
   mutate(significance_v = case_when(
-    `variability_pH0_typeHER2+` < 0.025 & `variability_pH0_typeER+` < 0.025 ~ "her2+ er+",
-    `variability_pH0_typeHER2+` < 0.025 ~ "her2+",
-    `variability_pH0_typeER+` < 0.025 ~ "er+",
+    `v_FDR_typeHER2+` < 0.025 & `v_FDR_typeER+` < 0.025 ~ "her2+ er+",
+    `v_FDR_typeHER2+` < 0.025 ~ "her2+",
+    `v_FDR_typeER+` < 0.025 ~ "er+",
     TRUE ~ "none"
   ))  %>%
   left_join(
@@ -921,7 +938,7 @@ data_proportion =
       setNames(c("cell_type", "cell_type_pretty"))
   ) %>%
 
-  mutate(composition_pH0 = pmin(`composition_pH0_typeHER2+`, `composition_pH0_typeER+`))
+  mutate(c_FDR = pmin(`c_FDR_typeHER2+`, `c_FDR_typeER+`))
 
 simulated_proportion =
   BRCA_tnbc_vs_all |>
@@ -965,7 +982,7 @@ plot_brca_boxplot =
       simulated_proportion %>%
 
       # Filter uanitles because of limits
-      inner_join( filter(data_proportion, !is.na(color)) %>% distinct(cell_type, composition_pH0, color)) ,
+      inner_join( filter(data_proportion, !is.na(color)) %>% distinct(cell_type, c_FDR, color)) ,
     color="blue"
 
   )+
@@ -1076,15 +1093,15 @@ plot_brca_boxplot =
 
 plot_BRCA_summary_er =
   BRCA_tnbc_vs_all %>%
-  unnest(c(composition_CI, variability_CI), names_repair = "unique") %>%
-  ggplot(aes(`composition_effect_typeER+`, `variability_effect_typeER+`, label=cell_type)) +
+  filter(parameter == "typeER+") %>%
+  ggplot(aes(c_effect, -v_effect, label=cell_type)) +
   geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
   geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-  geom_errorbar(aes(xmin=`.lower_typeER+...7`, xmax=`.upper_typeER+...11`, color=`composition_FDR_typeER+`<0.025, alpha=`composition_FDR_typeER+`<0.025), size=0.2) +
-  geom_errorbar(aes(ymin=`.lower_typeER+...21`, ymax=`.upper_typeER+...25`, color=`variability_FDR_typeER+`<0.025, alpha=`variability_FDR_typeER+`<0.025), size=0.2) +
+  geom_errorbar(aes(xmin=c_lower, xmax=c_upper, color=c_FDR<0.025, alpha=c_FDR<0.025), size=0.2) +
+  geom_errorbar(aes(ymin=-v_lower, ymax=-v_upper, color=v_FDR<0.025, alpha=v_FDR<0.025), size=0.2) +
 
-  geom_point(aes(alpha=`composition_FDR_typeER+`<0.025), size=0.2)  +
-  annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+  geom_point(size=0.2)  +
+  annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
   annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
   scale_alpha_manual(values = c(0.4, 1)) +
@@ -1097,20 +1114,19 @@ plot_BRCA_summary_er =
 
 plot_BRCA_summary_her2 =
   BRCA_tnbc_vs_all %>%
-  unnest(c(composition_CI, variability_CI), names_repair = "unique") %>%
-  ggplot(aes(`composition_effect_typeHER2+`, `variability_effect_typeER+`, label=cell_type)) +
+  filter(parameter == "typeHER2+") %>%
+  ggplot(aes(c_effect, -v_effect, label=cell_type)) +
   geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
   geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-  geom_errorbar(aes(xmin=`.lower_typeHER2+...6`, xmax=`.upper_typeHER2+...10`, color=`composition_FDR_typeHER2+`<0.025, alpha=`composition_FDR_typeHER2+`<0.025), size=0.2) +
-  geom_errorbar(aes(ymin=`.lower_typeHER2+...20`, ymax=`.upper_typeHER2+...24`, color=`variability_FDR_typeHER2+`<0.025, alpha=`variability_FDR_typeHER2+`<0.025), size=0.2) +
+  geom_errorbar(aes(xmin=c_lower, xmax=c_upper, color=c_FDR<0.025, alpha=c_FDR<0.025), size=0.2) +
+  geom_errorbar(aes(ymin=-v_lower, ymax=-v_upper, color=v_FDR<0.025, alpha=v_FDR<0.025), size=0.2) +
 
-  geom_point(aes(alpha=`composition_FDR_typeHER2+`<0.025), size=0.2)  +
-  annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
-  annotate("text", x = 3, y = 0, label = "Abundant", size=2, angle=270) +
+  geom_point(size=0.2)  +
+  annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
+  annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
   scale_alpha_manual(values = c(0.4, 1)) +
-  guides(color="none", alpha="none") +
-  #ggtitle("HER2+") +
+  #ggtitle("ER+") +
   multipanel_theme +
   theme(
     panel.grid.major = element_blank(),
@@ -1222,13 +1238,15 @@ ggsave(
 
 p_other = (
   (plot_df$UMAP_plot[[2]] + ggtitle(plot_df$dataset[[2]])) + plot_df$estimate_plot[[2]] +
-    (plot_df$UMAP_plot[[3]] + ggtitle(plot_df$dataset[[3]])) + plot_df$estimate_plot[[3]] +
-    plot_layout(widths = c(1, 0.5, 1, 2))
+    plot_layout(widths = c(1, 1))
 ) /
+  (
+    (plot_df$UMAP_plot[[3]] + ggtitle(plot_df$dataset[[3]])) + plot_df$estimate_plot[[3]] +
+      plot_layout(widths = c(1, 1))
+  ) /
 (
-   (plot_df$UMAP_plot[[4]] + ggtitle(plot_df$dataset[[4]])) + plot_df$estimate_plot[[4]]  +
-   (plot_df$UMAP_plot[[6]] + ggtitle(plot_df$dataset[[6]])) + plot_df$estimate_plot[[6]]  +
-    plot_layout(widths = c(1,1,1,1))
+   (plot_df$UMAP_plot[[5]] + ggtitle(plot_df$dataset[[5]])) + plot_df$estimate_plot[[5]]  +
+    plot_layout(widths = c(1,1))
 )
 
 ggsave(
@@ -1236,7 +1254,7 @@ ggsave(
   plot = p_other,
   units = c("mm"),
   width = 183 ,
-  height = 150 ,
+  height = 183 ,
   limitsize = FALSE
 )
 
@@ -1245,6 +1263,77 @@ ggsave(
   plot = p_other,
   units = c("mm"),
   width = 183 ,
-  height = 150 ,
+  height = 183 ,
   limitsize = FALSE
 )
+
+# # Other mean trend variability trend association
+# data_estimates %>%
+#   slice(4) %>%
+#   pull(data) %>%
+#   .[[1]] %>%
+#   unnest(c(composition_CI, variability_CI), names_repair = "unique") %>%
+#   ggplot(aes(`composition_effect_is_criticalTRUE`, `variability_effect_is_criticalTRUE`, label=cell_type)) +
+#   geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+#   geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+#   geom_errorbar(aes(xmin=`.lower_is_criticalTRUE...5`, xmax=`.upper_is_criticalTRUE...8`, color=`composition_FDR_is_criticalTRUE`<0.025, alpha=`composition_FDR_is_criticalTRUE`<0.025), size=0.2) +
+#   geom_errorbar(aes(ymin=`.lower_is_criticalTRUE...14`, ymax=`.upper_is_criticalTRUE...17`, color=`variability_FDR_is_criticalTRUE`<0.025, alpha=`variability_FDR_is_criticalTRUE`<0.025), size=0.2) +
+#
+#   geom_point(aes(alpha=`c_FDR_is_criticalTRUE`<0.025), size=0.2)  +
+#   annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+#   annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+#   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+#   scale_alpha_manual(values = c(0.4, 1)) +
+#   #ggtitle("ER+") +
+#   multipanel_theme +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank()
+#   )
+#
+# data_estimates %>%
+#   slice(5) %>%
+#   pull(data) %>%
+#   .[[1]] %>%
+#   unnest(c(composition_CI, variability_CI), names_repair = "unique") %>%
+#   ggplot(aes(`composition_effect_timePre`, `variability_effect_timePre`, label=cell_type)) +
+#   geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+#   geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+#   # geom_errorbar(aes(xmin=`.lower_is_criticalTRUE...5`, xmax=`.upper_typeER+...11`, color=`c_FDR_is_criticalTRUE`<0.025, alpha=`composition_FDR_typeER+`<0.025), size=0.2) +
+#   # geom_errorbar(aes(ymin=`.lower_typeER+...21`, ymax=`.upper_typeER+...25`, color=`v_FDR_is_criticalTRUE`<0.025, alpha=`variability_FDR_typeER+`<0.025), size=0.2) +
+#   #
+#   geom_point(aes(alpha=`composition_effect_timePre`<0.025), size=0.2)  +
+#   annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+#   annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+#   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+#   scale_alpha_manual(values = c(0.4, 1)) +
+#   #ggtitle("ER+") +
+#   multipanel_theme +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank()
+#   )
+#
+#
+# data_estimates %>%
+#   slice(6) %>%
+#   pull(data) %>%
+#   .[[1]] %>%
+#   unnest(c(composition_CI, variability_CI), names_repair = "unique") %>%
+#   ggplot(aes(`composition_effect_resResponder`, `variability_effect_resResponder`, label=cell_type)) +
+#   geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+#   geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+#   # geom_errorbar(aes(xmin=`.lower_is_criticalTRUE...5`, xmax=`.upper_typeER+...11`, color=`c_FDR_is_criticalTRUE`<0.025, alpha=`composition_FDR_typeER+`<0.025), size=0.2) +
+#   # geom_errorbar(aes(ymin=`.lower_typeER+...21`, ymax=`.upper_typeER+...25`, color=`v_FDR_is_criticalTRUE`<0.025, alpha=`variability_FDR_typeER+`<0.025), size=0.2) +
+#   #
+#   geom_point(aes(alpha=`composition_effect_resResponder`<0.025), size=0.2)  +
+#   annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+#   annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+#   scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+#   scale_alpha_manual(values = c(0.4, 1)) +
+#   #ggtitle("ER+") +
+#   multipanel_theme +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank()
+#   )
