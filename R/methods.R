@@ -1486,6 +1486,13 @@ plot_summary <- function(.data, .cell_group) {
       axis.ticks.y = element_line(size=0.2)
     )
 
+  dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
+
+  S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+  IS_sqrt <- function(x){x^2*sign(x)}
+  S_sqrt_trans <- function() trans_new("S_sqrt",S_sqrt,IS_sqrt)
+
+
   .cell_group = enquo(.cell_group)
 
   if("v_effect" %in% colnames(.data)){
