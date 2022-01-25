@@ -1183,7 +1183,8 @@ sccomp_glm_data_frame_counts = function(.data,
       pass_fit = pass_fit
     ) %>%
     add_attr(.sample, ".sample") %>%
-    add_attr(.cell_group, ".cell_group")
+    add_attr(.cell_group, ".cell_group") %>%
+    add_attr(parse_formula(formula), "covariates" )
 }
 
 #' replicate_data
@@ -1449,9 +1450,155 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 #'
 #' estimate |> plot_summary()
 #'
-plot_summary <- function(.data) {
+plot_summary <- function(.data, .cell_group) {
+
+  multipanel_theme =
+    theme_bw() +
+    theme(
+      panel.border = element_blank(),
+      axis.line = element_line(size=0.5),
+      panel.grid.major = element_line(size = 0.1),
+      panel.grid.minor = element_blank(),
+      legend.position = "bottom",
+      strip.background = element_blank(),
+      axis.title.y = element_text(margin = margin(t = 0, r = 0, b = 0, l = 0), size = 7),
+      axis.title.x = element_text(margin = margin(t = 0, r = 0, b = 0, l = 0), size = 7),
+      panel.spacing.x=unit(0.1, "lines"),
+      axis.text.x = element_text(size=6),
+      axis.text.y = element_text(size=6),
+      strip.text.x = element_text(size = 7),
+      strip.text.y = element_text(size = 7),
+
+      # legend
+      legend.key.size = unit(5, 'mm'),
+      legend.title = element_text(size=7),
+      legend.text = element_text(size=6),
+
+      # Avoid text clipping for facets. Currently not merged remotes::install_github("tidyverse/ggplot2#4223")
+      # strip.clip = "off",
+
+      # Title
+      plot.title = element_text(size=7),
+
+      axis.line.x = element_line(size=0.2),
+      axis.line.y = element_line(size=0.2),
+      axis.ticks.x = element_line(size=0.2),
+      axis.ticks.y = element_line(size=0.2)
+    )
+
+  .cell_group = enquo(.cell_group)
+
+  if("v_effect" %in% colnames(.data)){
+  # mean-variance association
+plot_associations =
+  .data %>%
+
+  # Filter where I did not inferred the variance
+  filter(!is.na(v_effect)) %>%
+
+  # Plot
+  ggplot(aes(c_effect, v_effect, label=!!.cell_group)) +
+  geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+  geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+  geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
+  geom_errorbar(aes(ymin=`v_lower`, ymax=`v_upper`, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
+
+  geom_point(size=0.2)  +
+  annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+  annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+  scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+  scale_alpha_manual(values = c(0.4, 1)) +
+  facet_wrap(~parameter) +
+  multipanel_theme +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+  }
+
+if("fit" %in% names(attributes(.data))){
+
+  calc_boxplot_stat <- function(x) {
+    coef <- 1.5
+    n <- sum(!is.na(x))
+    # calculate quantiles
+    stats <- quantile(x, probs = c(0.0, 0.25, 0.5, 0.75, 1.0))
+    names(stats) <- c("ymin", "lower", "middle", "upper", "ymax")
+    iqr <- diff(stats[c(2, 4)])
+    # set whiskers
+    outliers <- x < (stats[2] - coef * iqr) | x > (stats[4] + coef * iqr)
+    if (any(outliers)) {
+      stats[c(1, 5)] <- range(c(stats[2:4], x[!outliers]), na.rm = TRUE)
+    }
+    return(stats)
+  }
 
 
+  data_proportion =
+    .data %>%
+    pivot_wider(names_from = parameter, values_from = contains("c_|v_")) %>%
+    unnest(count_data) %>%
+    with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) )
 
+  factor_of_interest = .data %>% attr("covariates") %>% .[1]
+  simulated_proportion =
+    .data %>%
+    replicate_data( number_of_draws = 100) %>%
+    left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), sample, !!.cell_group))
+
+
+  ggplot() +
+
+    stat_summary(
+      aes(!!as.symbol(factor_of_interest), (generated_proportions)),
+      fun.data = calc_boxplot_stat, geom="boxplot",
+      fatten = 0.5, lwd=0.2,
+      data =
+        simulated_proportion %>%
+
+        # Filter uanitles because of limits
+        inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)) ,
+      color="blue"
+
+    ) +
+
+    geom_boxplot(
+      aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest)), # fill=Effect),
+      outlier.shape = NA,
+      data = data_proportion |> filter(!outlier), fatten = 0.5, lwd=0.5,
+    ) +
+    geom_jitter(
+      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier,  group=!!as.symbol(factor_of_interest)),
+      data = data_proportion,
+      position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
+      size = 0.5
+    ) +
+
+    # geom_boxplot(
+    #   aes(Condition, generated_proportions),
+    #   outlier.shape = NA, alpha=0.2,
+    #   data = simulated_proportion, fatten = 0.5, size=0.5,
+    # ) +
+    # geom_jitter(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
+
+    facet_wrap(
+      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      scales = "free_y", nrow = 4
+    ) +
+    #scale_color_manual(values = c("black", "#e11f28")) +
+    #scale_fill_manual(values = c("white", "#E2D379")) +
+    scale_fill_distiller(palette = "Spectral", na.value = "white") +
+    #scale_color_distiller(palette = "Spectral") +
+    scale_y_continuous(trans="S_sqrt", labels = dropLeadingZero) +
+    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
+    xlab("Biological condition") +
+    ylab("Cell-group proportion") +
+    guides(color="none", alpha="none", size="none") +
+    labs(fill="Compositional difference") +
+    multipanel_theme +
+    theme(axis.title.y = element_blank()) +
+    theme(axis.text.x =  element_text(angle=20, hjust = 1))
+
+}
 
 }
