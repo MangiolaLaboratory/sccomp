@@ -86,13 +86,18 @@ transformed parameters{
 		matrix[A,M] beta_intercept_slope;
 		matrix[A,M] alpha_intercept_slope;
     matrix[M, N] precision = (Xa * alpha)';
+    matrix[C,M] beta;
 
 	  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
+
+		// Beta
+	  beta = R_ast_inverse * beta_raw; // coefficients on x
+
     // All this because if A ==1 we have ocnversion problems
     // This works only with two discrete groups
-    if(A == 1) beta_intercept_slope = to_matrix(beta_raw[A,], A, M, 0);
-    else beta_intercept_slope = (XA * beta_raw[1:A,]);
+    if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
+    else beta_intercept_slope = (XA * beta[1:A,]);
 		if(A == 1)  alpha_intercept_slope = alpha;
 		else alpha_intercept_slope = (XA * alpha);
 
@@ -149,11 +154,9 @@ model{
 }
 
 generated quantities {
-  matrix[C,M] beta;
-  matrix[A, M] alpha_normalised;
+  matrix[A, M] alpha_normalised = alpha;
 
-  beta = R_ast_inverse * beta_raw; // coefficients on x
 
-  for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta_raw[a] * prec_coeff[2] );
+  if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
 
 }
