@@ -29,7 +29,7 @@ readRDS(input_file) %>%
         approximate_posterior_inference = FALSE,
         percent_false_positive = 0.001 * 100,
         noise_model="dirichlet_multinomial",
-        seed = .y * 2
+        mcmc_seed = .y * 2
       )
   )) %>%
   saveRDS(output_file)

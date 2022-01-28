@@ -17,6 +17,7 @@ add_outliers = as.integer(args[3])
 beta_0 = readRDS("dev/beta_0.rds")
 source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/quasi_binomial/counts_to_quasi_binomial_estimate.R", echo=TRUE)
 source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/rlm_robust/rlm_estimate.R", echo=TRUE)
+source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/scCODA/counts_to_scCODA.R", echo=TRUE)
 
 # Iterate over runs
 readRDS(input_file) %>%
@@ -155,6 +156,11 @@ readRDS(input_file) %>%
     ~   counts_to_rlm(.x, sample, cell_type, generated_counts, type)
   )) %>%
 
+  # scCODA
+  mutate( results_sccoda = map(
+    data,
+    ~   counts_to_scCODA(.x, sample, cell_type, generated_counts, type)
+  )) %>%
 
   saveRDS(output_file)
 

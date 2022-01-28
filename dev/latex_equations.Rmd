@@ -11,40 +11,89 @@ knitr::opts_chunk$set(echo = TRUE)
 
 de chunks within the document. You can embed an R code chunk like this:
 
+# Simplest model
 
+
+
+```{=tex}
 \begin{align}
 
-& \textbf{ Intercept-only model } \\
+& \text{BetaBinomial}^{*}\left ( k_{g,s} | n_{s}, \alpha_{g}, \beta_{g} \right ) = {n_{s} \choose k_{g,s}}{\frac {\mathrm {B} (k_{g,s}+\alpha_{g} ,n_{s}-k_{g,s}+\beta_{g} )}{\mathrm {B} (\alpha_{g} ,\beta_{g} )}}  & \textrm{ (1) } \\
 
-& P\left ( \lambda, \mu, \phi \right ) \prod_{m=1}^{M} P\left ( \sigma_{m} | \mu_{m}, \lambda, \phi \right ) 
- \prod_{n=1}^{N} \prod_{m=1}^{M} P\left ( k_{m,n} | n_{n}, \mu_{m}, \sigma_{m} \right ) & \textrm{ (1) } \\
+& \alpha_{g} = \pi_{g} \sigma_{g}; \beta_{g} = (1-\pi_{g}) \sigma_{g} \textrm{ for } 0 < \pi_{g} < 1 \textrm{ and } \sigma_{g} > 0 & \textrm{ (2) } \\
 
-& k_{m,n} \sim \mathit{BetaBinomial^{*}} \left(n_{n}, \mu_{m}, \sigma_{m} \right ); \sum_{m=1}^{M} \mu_{m} = 0 & \textrm{ (2) } \\
-
-& \sigma_{m} \sim \mathit{Normal} \left(\lambda_{0} + \lambda * \mu_{m}, \phi \right ) & \textrm{ (3) } \\
-
-& \lambda \sim \mathit{Normal} \left(0,5 \right);  \nu \sim \mathit{Normal} \left(0,2 \right); & \textrm{ (4) }  \\
-\\
-& \textbf{ Regression model } \\
-\\
-& \mu_{m,n} =  \left( \gamma_{m,c} * X_{c,n} \right ); \textrm{For c}\in[1..C] \sum_{m=1}^{M} \gamma_{m, c} = 0 & \textrm{ (5) } \\
-\\
-
-& \textbf{ Beta-binomial reparametrisation } \\
-\\
-& \mathit{BetaBinomial^{*}} \left(n_{n}, \mu_{m}, \sigma_{m} \right ) & \textrm{ Alternative parametrisation (6) } \\
-
-& \pi = \mathit{softmax} \left(\mu \right); =  \frac{exp(\mu)}{\sum_{m=1}^{M} exp(\mu_{m}) } & \textrm{ (7) } \\
-& \omega = e^{\sigma} & \textrm{ (8) } \\
-
-& \alpha_{m} = \pi_{m} * \omega_{m}; \beta_{m} = \left(1 - \pi_{m} \right) * \omega_{m}; & \textrm{ (9) } \\
-
-& \mathit{BetaBinomial} \left(n_{n}, \alpha_{m}, \beta_{m} \right ) & \textrm{ Classic parametrisation (10) } \\
+& \text{BetaBinomial}\left ( k_{g,s} | n_{s}, \pi_{g}, \sigma_{g} \right ) = {n_{s} \choose k_{g,s}}{\frac {\mathrm {B} (k_{g,s}+(\pi_{g} \sigma_{g}) ,n_{s}-k_{g,s}+((1-\pi_{g}) \sigma_{g}) )}{\mathrm {B} (\pi_{g} \sigma_{g} , (1-\pi_{g}) \sigma_{g} )}}  & \textrm{ (3) } \\
 
 
+
+
+
+& \textbf{ Single-mean model } \\
+
+& P\left ( \boldsymbol{\pi}, \boldsymbol{\sigma} \right ) 
+ \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \pi_{g}, \sigma_{g} \right ) & \textrm{ (4) } \\
+
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \pi_{g}, \sigma_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \pi_{g} = 1 \textrm{ and } \sigma_{g} > 0 & \textrm{ (5) } \\
+
+
+
+
+
+& \boldsymbol{\pi} = \text{InverseMultinomialLogistic} \left(\boldsymbol{\mu} \right) =  \frac{e^{\boldsymbol{\mu}}}{\sum_{g=1}^{G} e^{\mu_{g} }} \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0  & \textrm{ (6) } \\
+
+& \sigma_{g} = e^{\omega_{g}}  & \textrm{ (7) } \\
+
+& \text{E}\left(\omega_{g} \right) = \lambda_{0} + \lambda_{1} \mu_{g} & \textrm{ (8) } \\
+
+
+
+
+
+& \textbf{ Single-mean hierarchical model } \\
+
+& P\left ( \boldsymbol{\mu}, \lambda_{0}, \lambda \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, \omega_{g} \right ) & \textrm{ (9) } \\
+
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{multinomialLogistic}(\mu)_{g}, e^{\omega}_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0 & \textrm{ (10) } \\
+
+& \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g}, \phi \right ) & \textrm{ (11) } \\
+
+
+& \mu_{g,condition} = \text{intercept}_{g} + \text{effect}_{g} x_{s} \textrm{ for } \sum_{g=1}^{G} \text{intercept}_{g} = 0 \textrm{ and } \sum_{g=1}^{G} \text{effect}_{g} = 0 & \textrm{ (12) } \\
+
+
+& \boldsymbol{M}_{G,S} = \boldsymbol{\Gamma}_{G,C} \times \boldsymbol{X}_{C,S} \textrm{ for } s \in[1..S] \sum_{g=1}^{G} \mu_{g, s} = 0 & \textrm{ (13) } \\
+
+
+
+
+& \textbf{ Regression hierarchical model } \\
+
+& P\left (\boldsymbol{\Gamma}, \lambda_{0}, \lambda, \phi \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g,1}, \lambda_{0}, \lambda_{1}, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, X_{s}, \omega_{g} \right ) & \textrm{ (14) } \\
+
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{multinomialLogistic}(\boldsymbol{\mu_{g,s}}), e^{\omega}_{g} \right ) & \textrm{ (15) } \\
+
+& \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \gamma_{g,1}, \phi \right ) & \textrm{ (16) } \\
+& \gamma_{g,c} \sim \text{Normal} \left(0,5 \right ) & \textrm{ (17) } \\
+& \lambda_{0}, \lambda_{1}, \phi \sim \text{Normal} \left(0,5 \right ) & \textrm{ (18) } \\
+
+& \text{E}\left(\omega_{g,i} \right) = \lambda_{0} + \lambda_{1} \mu_{g,i} & \textrm{ (19) } \\
+& \omega_{g,i} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g,i}, \phi \right ) & \textrm{ (20) } \\
+
+\end{align}
+```
+
+
+
+```{=tex}
+\begin{align}
+
+
+
+& \text{var(k)} \approx  n \left(\frac{\alpha}{\alpha + \beta} \right) + \lambda_{2} \left(\frac{(\frac{\alpha}{\alpha + \beta})}{GM(\frac{\alpha}{\alpha + \beta})}\right)^{\lambda_1} n^{\lambda_1 + 1} \left(n(\frac{\alpha}{\alpha + \beta}) \right)^{1-\lambda_{1}} \\
+
+& \text{var(k)} \approx  n \left(\frac{\alpha}{\alpha + \beta} \right) + \lambda_{2} \left(\frac{(\frac{\alpha}{\alpha + \beta})}{log(\frac{\alpha}{\alpha + \beta})}\right)^{\lambda_1} n^{\lambda_1 + 1} \left(n(\frac{\alpha}{\alpha + \beta}) \right)^{1-\lambda_{1}} \\
 
 
 \end{align}
-
-
+```
 

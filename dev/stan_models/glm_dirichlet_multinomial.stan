@@ -41,9 +41,9 @@ data{
 	int N;
 	int M;
 	int C;
+	int A;
 	int y[N,M];
 	matrix[N,C] X;
-
 }
 transformed data{
 
@@ -52,7 +52,7 @@ transformed data{
 }
 parameters{
 	matrix[C, M-1] beta_raw;
-	vector[C] precision;
+	vector<upper=10>[A] precision;
 
 	// To exclude
 
@@ -61,7 +61,7 @@ transformed parameters{
   real buffer;
   real plateau = 0.5;
 	matrix[C,M] beta;
-	vector[N] precision_per_sample = X * precision;
+	vector[N] precision_per_sample = X[,1:A] * precision;
 
 	//real precision_diff = precision[1] - precision[2];
 	matrix[ N, M] alpha; // for generated quantities. It is cell types in the rows and samples as columns
@@ -73,7 +73,7 @@ transformed parameters{
 	for(n in 1:N){
 	  alpha[n] = to_row_vector(softmax(to_vector(alpha[n])));
 		buffer = 1.0/min(alpha[n]) * plateau;
-	  alpha[n] =  alpha[n] *  exp(precision_per_sample[n]) * buffer;
+	  alpha[n] =  alpha[n] *  exp(precision_per_sample[n]) ;
 	}
 
 
@@ -84,6 +84,6 @@ model{
 
 	 for(n in 1:N) y[n] ~ dirichlet_multinomial( to_vector(alpha[n] ));
 
-	 precision ~ normal(0,2);
+	 precision ~ normal(0,5);
 	 for(i in 1:C) beta_raw[i] ~ normal(0, x_raw_sigma );
 }

@@ -239,15 +239,16 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #' @noRd
 draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
+  par_names =
+    names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   fit %>%
-    extract(par_names, permuted=FALSE) %>%
+    extract(par, permuted=FALSE) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = seq_len(n())) %>%
 
-    when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
+    #when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
 
     pivot_longer(
       names_to = c("dummy", ".chain", ".variable", x, y),
@@ -281,11 +282,16 @@ draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   fit %>%
-    extract(par_names, permuted=FALSE) %>%
+    rstan::extract(par_names, permuted=FALSE) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = seq_len(n())) %>%
-    pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", names_ptypes = list(".chain" = integer(), ".variable" = character(), "A" = integer(), "C" = integer()), values_to = ".value") %>%
+    pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", values_to = ".value") %>%
+
+    mutate(
+      !!as.symbol(x) := as.integer(!!as.symbol(x)),
+    ) %>%
+
     select(-dummy) %>%
     arrange(.variable, !!as.symbol(x), .chain) %>%
     group_by(.variable, !!as.symbol(x)) %>%
@@ -356,9 +362,9 @@ label_deleterious_outliers = function(.my_data){
 }
 
 fit_model = function(
-  data_for_model, model, censoring_iteration = 1, cores, quantile = 0.95,
+  data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
-  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL
+  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
 )
   {
 
@@ -378,9 +384,9 @@ fit_model = function(
 
       # If it's bigger than 20K CAP because it would get too extreme
       when(
-        (.) > 20000 ~ {
+        (.) > max_sampling_iterations ~ {
           warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
-          20000
+          max_sampling_iterations
         },
         (.)
       )
@@ -409,6 +415,16 @@ fit_model = function(
   #
   # print(ff)
 
+  # # Define a decent value for alpha as it fails for vb sometimes
+  # init_fun = function(...) list(
+  #   alpha=matrix(rep(data_for_model$prior_prec_intercept[1], data_for_model$A*data_for_model$M),nrow= data_for_model$A),
+  #   beta_raw_raw=matrix(rep(0, data_for_model$C*(data_for_model$M-1)),nrow= data_for_model$C)
+  # )
+
+  # If differential variance also capture beta_raw
+  #if(data_for_model$A > 1)
+
+  # Fit
   if(!approximate_posterior_inference)
     sampling(
       model,
@@ -428,7 +444,7 @@ fit_model = function(
     vb_iterative(
       model,
       output_samples = output_samples ,
-      iter = output_samples,
+      iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
@@ -484,8 +500,14 @@ effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as
     unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%
     pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
-    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
-    nest(composition_CI = -c(M, !!effect_column_name))
+
+    # Create main effect if exists
+    when(
+      !is.na(factor_of_interest) ~ mutate(., !!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
+        nest(composition_CI = -c(M, !!effect_column_name)),
+      ~ nest(., composition_CI = -c(M))
+    )
+
 
 
 
@@ -500,7 +522,7 @@ effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as
 #' @noRd
 alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
-  effect_column_name = sprintf("heterogeneity_effect_%s", factor_of_interest) %>% as.symbol()
+  effect_column_name = sprintf("variability_effect_%s", factor_of_interest) %>% as.symbol()
 
   fitted %>%
     unnest(!!as.symbol(sprintf("alpha_%s", censoring_iteration))) %>%
@@ -520,7 +542,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
     select(-data, -C) %>%
     pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
     mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
-    nest(heterogeneity_CI = -c(M, !!effect_column_name))
+    nest(variability_CI = -c(M, !!effect_column_name))
 
 
 
@@ -551,29 +573,48 @@ parse_formula <- function(fm) {
 #' @noRd
 #'
 data_spread_to_model_input =
-  function(.data_spread, formula, .sample, .cell_type, .count, variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ){
+  function(
+    .data_spread, formula, .sample, .cell_type, .count,
+    variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ,
+    formula_variability = ~ 1){
 
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
 
-  covariate_names = parse_formula(formula)
-  X =
-    .data_spread %>%
-    select(!!.sample, covariate_names) %>%
-    model.matrix(formula, data=.) %>%
-    apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=FALSE)))
 
-  XA = variance_association %>%
-    when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
+  get_design_matrix = function(formula, .data_spread){
+
+    .data_spread %>%
+      select(!!.sample, parse_formula(formula)) %>%
+      model.matrix(formula, data=.) %>%
+      apply(2, function(x)
+        x %>% when(
+          sd(.)==0 ~ (.),
+
+          # If I only have 0 and 1 for a binomial factor
+          unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
+
+          # If continuous
+          ~ scale(., scale=FALSE)
+        )
+      )
+  }
+
+  X  = get_design_matrix(formula, .data_spread)
+
+  Xa  = get_design_matrix(formula_variability, .data_spread)
+
+  XA = Xa %>%
     as_tibble() %>%
     distinct()
 
   A = ncol(XA);
+  Ar = nrow(XA);
+
+  covariate_names = parse_formula(formula)
   cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
-
-
 
   data_for_model =
     list(
@@ -583,8 +624,10 @@ data_spread_to_model_input =
       y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = quo_name(.sample)),
       X = X,
       XA = XA,
+      Xa = Xa,
       C = ncol(X),
       A = A,
+      Ar = Ar,
       truncation_ajustment = truncation_ajustment,
       is_vb = as.integer(approximate_posterior_inference)
     )
@@ -720,7 +763,7 @@ get.elbow.points.indices <- function(x, y, threshold) {
 #' @keywords internal
 #' @noRd
 #'
-get_probability_non_zero = function(.data, prefix = "", test_above_logit_fold_change = 0){
+get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fold_change = 0){
 
   probability_column_name = sprintf("%s_prob_H0", prefix) %>% as.symbol()
 
@@ -747,6 +790,43 @@ get_probability_non_zero = function(.data, prefix = "", test_above_logit_fold_ch
     select(M, !!probability_column_name)
     # %>%
     # mutate(false_discovery_rate = cummean(prob_non_zero))
+
+}
+
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+#' @importFrom stats C
+#'
+#' @keywords internal
+#' @noRd
+#'
+get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
+
+
+  draws = rstan::extract(fit, parameter)[[1]]
+
+  total_draws = dim(draws)[1]
+
+
+  bigger_zero =
+    draws %>%
+    apply(2, function(y){
+      y %>%
+      apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
+    })
+
+
+  smaller_zero =
+    draws %>%
+    apply(2, function(y){
+      y %>%
+        apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
+    })
+
+
+  (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
+    as.data.frame() %>%
+    rowid_to_column(var = "M")
 
 }
 
@@ -783,7 +863,9 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 #'
 #'
 design_matrix_and_coefficients_to_simulation = function(
-  design_matrix, coefficient_matrix, estimates_to_real_dataset
+
+  design_matrix, coefficient_matrix, .estimate_object
+
 ){
 
   design_df = as.data.frame(design_matrix)
@@ -804,7 +886,9 @@ design_matrix_and_coefficients_to_simulation = function(
     left_join(coefficient_df |>as_tibble(rownames = "cell_type"), by = "cell_type")
 
   simulate_data(.data = input_data,
-                .estimate_object = estimates_to_real_dataset,
+
+                .estimate_object = .estimate_object,
+
                 formula = ~ covariate_1 ,
                 .sample = sample,
                 .cell_group = cell_type,
@@ -816,7 +900,8 @@ design_matrix_and_coefficients_to_simulation = function(
 }
 
 
-design_matrix_and_coefficients_to_dir_mult_simulation = function(design_matrix, coefficient_matrix, seed = sample(1:100000, size = 1)){
+design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, precision = 100, seed = sample(1:100000, size = 1)){
+
 
   # design_df = as.data.frame(design_matrix)
   # coefficient_df = as.data.frame(coefficient_matrix)
@@ -830,11 +915,11 @@ design_matrix_and_coefficients_to_dir_mult_simulation = function(design_matrix, 
   exposure = 500
 
   prop.means =
-    matrix(c(rep(1, length(design_matrix)), design_matrix), ncol=2) %*%
-    coefficient_matrix %>%
+    design_matrix %*%
+    t(coefficient_matrix) %>%
     boot::inv.logit()
 
-  extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * 100) %>%
+  extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * precision) %>%
     as_tibble(.name_repair = "unique", rownames = "sample") %>%
     mutate(covariate_1= design_matrix) %>%
     gather(cell_type, generated_counts, -sample, -covariate_1) %>%
@@ -864,4 +949,13 @@ class_list_to_counts = function(.data, .sample, .cell_group){
       fill = list(count = 0)
     ) %>%
     mutate(count = as.integer(count))
+}
+
+#' @importFrom dplyr cummean
+get_FDR = function(x){
+  enframe(x) %>%
+    arrange(value) %>%
+    mutate(FDR = cummean(value)) %>%
+    arrange(name) %>%
+    pull(FDR)
 }

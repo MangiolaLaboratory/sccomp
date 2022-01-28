@@ -19,7 +19,7 @@ commands_df =
 ) %>%
 
   # Add algorithm
-  expand_grid(method = c("sccomp", "dirichletMultinomial", "rest")) %>%
+  expand_grid(method = c("sccomp", "rest")) %>%
 
   # Make commands
   unite("file_prefix" , c(slope, n_samples, n_cell_type, max_cell_counts_per_sample, add_outliers), remove = FALSE) %>%
@@ -45,14 +45,14 @@ commands_df =
     commands_df %>% filter(method %in% c("sccomp", "dirichletMultinomial")) %>%  distinct(estimate_command) %>% pull(estimate_command)
   ) %>%
 
-  # Estimate sccomp
-  c("CATEGORY=estimate_rest\nMEMORY=10024\nCORES=4\nWALL_TIME=1500") %>%
+  # Estimate rest
+  c("CATEGORY=estimate_rest\nMEMORY=10024\nCORES=4") %>%
   c(
     commands_df %>% filter(method %in% c("rest")) %>% distinct(estimate_command) %>% pull(estimate_command)
   ) %>%
 
   # Calculate significance
-  c("CATEGORY=significance\nMEMORY=10024\nCORES=4\nWALL_TIME=1500") %>%
+  c("CATEGORY=significance\nMEMORY=40024\nCORES=4\nWALL_TIME=1500") %>%
   c(
 
       commands_df %>%

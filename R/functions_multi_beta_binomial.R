@@ -43,6 +43,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             .sample,
                                             .cell_type,
                                             .count,
+                                            formula_variability = ~ 1,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
@@ -50,7 +51,9 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             variance_association = FALSE,
                                             cores = detectCores(), # For development purpose,
                                             seed = sample(1e5, 1),
-                                            verbose = FALSE
+                                            verbose = FALSE,
+                                            exclude_priors = FALSE,
+                                            max_sampling_iterations = 20000
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -78,13 +81,19 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference == "all"
+        approximate_posterior_inference = approximate_posterior_inference == "all",
+        formula_variability = formula_variability
       )
 
     # Pior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
     data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+    data_for_model$exclude_priors = exclude_priors
+
+    # Check that design matrix is not too big
+    if(ncol(data_for_model$X)>20)
+      warning("sccomp says: the design matrix has more than 20 columns. Possibly some numerical covariates are erroneously of type character/factor.")
 
     fit =
       data_for_model %>%
@@ -96,7 +105,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference == "all",
         verbose = verbose,
-        seed = seed
+        seed = seed,
+        max_sampling_iterations = max_sampling_iterations,
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
       )
 
     list(
@@ -120,13 +131,15 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = FALSE,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all")
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
+        formula_variability = ~1
       )
 
     # Pior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
     data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+    data_for_model$exclude_priors = exclude_priors
 
 
     fit =
@@ -139,7 +152,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         verbose = verbose,
-        seed = seed
+        seed = seed,
+        max_sampling_iterations = max_sampling_iterations,
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
       )
 
     rng =  rstan::gqs(
@@ -186,13 +201,15 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula, !!.sample, !!.cell_type, !!.count,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all")
+        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
+        formula_variability = formula_variability
       )
 
     # Pior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
     data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+    data_for_model$exclude_priors = exclude_priors
 
     # Add censoring
     data_for_model$is_truncated = 1
@@ -216,7 +233,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         quantile = my_quantile_step_2,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         verbose = verbose,
-        seed = seed
+        seed = seed,
+        max_sampling_iterations = max_sampling_iterations,
+        pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised")
       )
 
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
@@ -279,7 +298,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         cores = cores,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
-        verbose = verbose, seed = seed
+        verbose = verbose, seed = seed,
+        max_sampling_iterations = max_sampling_iterations,
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
       )
 
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
@@ -315,6 +336,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
 #' @importFrom dplyr case_when
+#' @importFrom dplyr with_groups
 #'
 #' @param fit The fit object
 #' @param data_for_model Parsed data
@@ -343,65 +365,92 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 
   do_test = ncol(data_for_model$X) > 1
 
-  parsed_beta =
+  # parsed_beta =
+  #   fit %>%
+  #   summary_to_tibble("beta", "C", "M") %>%
+  #   left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
+  #   nest(beta_posterior_1 = -M)
+
+
+
+  # Parse fit
+  false_positive_rate = percent_false_positive/100
+  factor_of_interest = data_for_model$X %>% colnames()
+  median_factor_of_interest = sprintf(".median_%s", factor_of_interest)
+  effect_column_name = sprintf("c_effect_%s", factor_of_interest)
+
+
+  beta_CI =
     fit %>%
-    draws_to_tibble_x_y("beta", "C", "M") %>%
+    summary_to_tibble("beta", "C", "M", probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))) %>%
+
+    # Drop columns I dont need
+    select(1, 2, 3, 7, 8, 9) %>%
+
+    # Rename column to match %
+    rename(
+      c_lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
+      c_effect := !!as.symbol(sprintf("%s%s", "50", "%")) ,
+      c_upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
+    ) %>%
     left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
-    nest(beta_posterior_1 = -M)
+    select(-C, -.variable)
 
-  if(variance_association) {
-    parsed_alpha =
+  if(data_for_model$A > 1) {
+    variability_effect_column_name = sprintf("v_effect_%s", factor_of_interest) %>% as.symbol()
+
+    factor_of_interest_variance = data_for_model$Xa %>% colnames()
+    median_factor_of_interest_variance = sprintf(".median_%s", factor_of_interest_variance)
+
+    alpha_CI =
       fit %>%
-      draws_to_tibble_x_y("alpha", "C", "M") %>%
+      summary_to_tibble("alpha_normalised", "C", "M", probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))) %>%
+
+      # Drop columns I dont need
+      select(1, 2, 3, 7, 8, 9) %>%
+
+      # Rename column to match %
+      rename(
+        v_lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
+        v_effect := !!as.symbol(sprintf("%s%s", "50", "%")) ,
+        v_upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
+      ) %>%
       left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
-      nest(alpha_1 = -M)
-
-
+      select(-C, -.variable)
   }
 
 
-  parsed_beta %>%
-    beta_to_CI(false_positive_rate = percent_false_positive/100, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) %>%
-
-    # # ADD CI beta
-    # when(
-    #   do_test ~
-    #     mutate(
-    #       .,
-    #       composition_test = map_lgl(composition_CI , ~
-    #
-    #                                    pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > test_composition_above_logit_fold_change |
-    #                                    pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -test_composition_above_logit_fold_change
-    #       ) )  ,
-    #   ~ (.)
-    # ) %>%
+  beta_CI %>%
 
     # Add probability if do_test
-    when(do_test ~ left_join(., get_probability_non_zero(parsed_beta, prefix="composition", test_above_logit_fold_change = test_composition_above_logit_fold_change), by="M" ), ~ (.)) %>%
+    when(
+      do_test ~ left_join(
+        .,
+        get_probability_non_zero(fit, "beta", prefix="c", test_above_logit_fold_change = test_composition_above_logit_fold_change) %>%
+          setNames(c("M",  factor_of_interest)) %>%
+          gather(C_name, c_pH0, -M) %>%
+          with_groups(C_name, ~ mutate(.x, c_FDR = get_FDR(c_pH0))),
+        by=c("M", "C_name")
+      ),
+      ~ (.)
+    ) %>%
 
     # Add ALPHA
-    when(do_test & variance_association ~ left_join(.,
-                                                    parsed_alpha %>%
-                                                      alpha_to_CI(false_positive_rate = percent_false_positive/100, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) ,
-                                                    by="M"
-    ), ~(.)) %>%
+    when(do_test & (data_for_model$A > 1) ~ left_join(.,  alpha_CI ,  by=c("M", "C_name")), ~(.)) %>%
 
     # ADD CI alpha
-    when(do_test & variance_association ~ left_join(., get_probability_non_zero(parsed_alpha, prefix="heterogeneity", test_above_logit_fold_change = 0), by="M" ), ~ (.))
-  # %>%
-  #
-  #   when(
-  #     do_test & variance_association  ~
-  #       mutate(
-  #         .,
-  #         heterogeneity_test = map_lgl(heterogeneity_CI , ~
-  #
-  #                                        pull(.x, !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2]))) > test_composition_above_logit_fold_change |
-  #                                        pull(.x, !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2]))) < -test_composition_above_logit_fold_change
-  #         ) )  ,
-  #     ~ (.)
-  #   )
-
+    when(
+      do_test & (data_for_model$A > 1) ~ left_join(
+        .,
+        get_probability_non_zero(fit, "alpha_normalised", prefix="v", test_above_logit_fold_change = 0.2) %>%
+        setNames(c("M",  factor_of_interest_variance)) %>%
+          gather(C_name, v_pH0, -M) %>%
+          with_groups(C_name, ~ mutate(.x, v_FDR = get_FDR(v_pH0))),
+        by=c("M", "C_name")
+      ),
+      ~ (.)
+    ) %>%
+    select(parameter  = C_name, everything())
 
 }
 
@@ -450,6 +499,7 @@ multi_beta_binomial_glm = function(.data,
                                    .sample,
                                    .cell_type,
                                    .count,
+                                   formula_variability = ~1,
                                    prior_mean_variable_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
@@ -458,7 +508,10 @@ multi_beta_binomial_glm = function(.data,
                                    cores = detectCores(), # For development purpose,
                                    seed = sample(1e5, 1),
                                    verbose = FALSE,
-                                   test_composition_above_logit_fold_change
+                                   exclude_priors = FALSE,
+                                   test_composition_above_logit_fold_change,
+                                   max_sampling_iterations = 20000,
+                                   pass_fit = TRUE
 ) {
 
   # Prepare column same enquo
@@ -474,6 +527,7 @@ multi_beta_binomial_glm = function(.data,
       .sample = !!.sample,
       .cell_type = !!.cell_type,
       .count = !!.count,
+      formula_variability = formula_variability,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive,
       check_outliers = check_outliers,
@@ -481,7 +535,9 @@ multi_beta_binomial_glm = function(.data,
       variance_association = variance_association,
       cores = cores, # For development purpose,
       seed = seed,
-      verbose = verbose
+      verbose = verbose,
+      exclude_priors = exclude_priors,
+      max_sampling_iterations = max_sampling_iterations
     )
 
 
@@ -497,14 +553,12 @@ multi_beta_binomial_glm = function(.data,
     test_composition_above_logit_fold_change = test_composition_above_logit_fold_change
   ) %>%
 
-    # Join the precision
-    left_join(get_mean_precision(result_list$fit, result_list$data_for_model), by="M") %>%
-
-
-    # Clean
-    select(-M) %>%
-    mutate(!!.cell_type := result_list$data_for_model$y %>% colnames()) %>%
-    select(!!.cell_type, everything()) %>%
+    # Add cell name
+    left_join(
+      result_list$data_for_model$y %>% colnames() %>% enframe(name = "M", value  = quo_name(.cell_type)),
+      by = "M"
+    ) %>%
+    select(!!.cell_type, everything(), -M) %>%
 
     # Join generated data
     # left_join(result_list$generated_quantities, by="M") %>%
@@ -523,30 +577,30 @@ multi_beta_binomial_glm = function(.data,
 
     # Attach association mean concentration
     add_attr(get_mean_precision_association(result_list$fit), "mean_concentration_association") %>%
-    add_attr(result_list$fit, "fit") %>%
+    when(pass_fit ~ add_attr(., result_list$fit, "fit"), ~ (.)) %>%
     add_attr(result_list$data_for_model, "model_input")
 
 }
 
 #' @importFrom stats model.matrix
-glm_multi_beta_binomial = function(input_df, formula, .sample){
-
-  covariate_names = parse_formula(formula)
-  .sample = enquo(.sample)
-
-  sampling(stanmodels$glm_multi_beta_binomial,
-           data = list(
-             N = input_df %>% nrow(),
-             M = input_df %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
-             exposure = input_df$exposure,
-             y = input_df %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = !!.sample),
-             X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.),
-             C = length(covariate_names)
-           ),
-           cores = 4
-  )
-
-}
+# glm_multi_beta_binomial = function(input_df, formula, .sample){
+#
+#   covariate_names = parse_formula(formula)
+#   .sample = enquo(.sample)
+#
+#   sampling(stanmodels$glm_multi_beta_binomial,
+#            data = list(
+#              N = input_df %>% nrow(),
+#              M = input_df %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
+#              exposure = input_df$exposure,
+#              y = input_df %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = !!.sample),
+#              X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.),
+#              C = length(covariate_names)
+#            ),
+#            cores = 4
+#   )
+#
+# }
 
 get_mean_precision = function(fit, data_for_model){
   fit %>%

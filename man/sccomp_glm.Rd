@@ -10,6 +10,7 @@ sccomp_glm(
   .sample,
   .cell_group,
   .count = NULL,
+  formula_variability = ~1,
   prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope =
     c(-0.73074903, 0.06532897), standard_deviation = c(5.06983, 8.549324)),
   percent_false_positive = 5,
@@ -19,8 +20,34 @@ sccomp_glm(
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
   variance_association = FALSE,
+  exclude_priors = FALSE,
   cores = detectCores(),
-  mcmc_seed = sample(1e+05, 1)
+  mcmc_seed = sample(1e+05, 1),
+  max_sampling_iterations = 20000,
+  pass_fit = TRUE
+)
+
+sccomp_glm(
+  .data,
+  formula = ~1,
+  .sample,
+  .cell_group,
+  .count = NULL,
+  formula_variability = ~1,
+  prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope =
+    c(-0.73074903, 0.06532897), standard_deviation = c(5.06983, 8.549324)),
+  percent_false_positive = 5,
+  check_outliers = TRUE,
+  approximate_posterior_inference = "outlier_detection",
+  test_composition_above_logit_fold_change = 0.2,
+  verbose = FALSE,
+  noise_model = "multi_beta_binomial",
+  variance_association = FALSE,
+  exclude_priors = FALSE,
+  cores = detectCores(),
+  mcmc_seed = sample(1e+05, 1),
+  max_sampling_iterations = 20000,
+  pass_fit = TRUE
 )
 }
 \arguments{
@@ -56,11 +83,27 @@ sccomp_glm(
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
+
+A nested tibble \code{tbl} with cell_group-wise statistics
 }
 \description{
 This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
+
+This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
 }
 \examples{
+
+data("counts_obj")
+
+estimate =
+  sccomp_glm(
+  counts_obj ,
+   ~ type,  sample, cell_group, count,
+    approximate_posterior_inference = "all",
+    check_outliers = FALSE,
+    cores = 1
+  )
+
 
 data("counts_obj")
 

@@ -70,7 +70,7 @@ benchmark =
                     formula = ~ type ,
                     sample,
                     cell_type, tot_count, coefficients,
-                    seed = .x * 2
+                    mcmc_seed = .x * 2
       )
 
       # Add multipliers
