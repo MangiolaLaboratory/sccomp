@@ -26,14 +26,16 @@ functions{
 
 }
 data{
-	int N;
-	int M;
-	int C;
-	int A;
+	int<lower=1> N;
+	int<lower=1> M;
+	int<lower=1> C;
+	int<lower=1> A;
+	int<lower=1> Ar; // Rows of unique variability design
 	int exposure[N];
 	int y[N,M];
 	matrix[N, C] X;
-	matrix[A, A] XA;
+	matrix[Ar, A] XA; // The unique variability design
+	matrix[N, A] Xa; // The variability design
 
 	// Truncation
 	int is_truncated;
@@ -47,6 +49,9 @@ data{
   real prior_prec_slope[2] ;
   real prior_prec_sd[2] ;
 
+  // Exclude priors for testing purposes
+  int<lower=0, upper=1> exclude_priors;
+
 }
 transformed data{
 	vector[2*M] Q_r = Q_sum_to_zero_QR(M);
@@ -57,8 +62,14 @@ transformed data{
   matrix[C, C] R_ast_inverse;
   // thin and scale the QR decomposition
   Q_ast = qr_thin_Q(X) * sqrt(N - 1);
-  R_ast = qr_thin_R(X) / sqrt(N - 1);
-  R_ast_inverse = inverse(R_ast);
+  R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
+
+  // If I get crazy diagonal matrix omit it
+  if(max(R_ast_inverse)>1000){
+    print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
+    Q_ast = X;
+    R_ast_inverse = diag_matrix(rep_vector(1.0, C));
+  }
 }
 parameters{
 	matrix[C, M-1] beta_raw_raw;
@@ -74,14 +85,19 @@ transformed parameters{
 		matrix[C,M] beta_raw;
 		matrix[A,M] beta_intercept_slope;
 		matrix[A,M] alpha_intercept_slope;
-    matrix[M, N] precision = (X[,1:A] * alpha)';
+    matrix[M, N] precision = (Xa * alpha)';
+    matrix[C,M] beta;
 
 	  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
+
+		// Beta
+	  beta = R_ast_inverse * beta_raw; // coefficients on x
+
     // All this because if A ==1 we have ocnversion problems
     // This works only with two discrete groups
-    if(A == 1) beta_intercept_slope = to_matrix(beta_raw[A,], A, M, 0);
-    else beta_intercept_slope = (XA * beta_raw[1:A,]);
+    if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
+    else beta_intercept_slope = (XA * beta[1:A,]);
 		if(A == 1)  alpha_intercept_slope = alpha;
 		else alpha_intercept_slope = (XA * alpha);
 
@@ -109,24 +125,26 @@ model{
     }
   }
 
-  for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
+  // Priors
 
-  // PRECISION REGRESSION
-  // to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
-  // if(is_vb==0){
-  for (a in 1:A) for(m in 1:M)
-    target += log_mix(mix_p,
-                    normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                    normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * -0.73074903 - 1.1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
-                  );
-  // }
+  if(exclude_priors == 0){
 
-  // else{
-  //   to_vector(alpha_intercept_slope) ~ normal( to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
-  //
-  // }
+    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
 
-  //
+    // PRECISION REGRESSION
+    // to_vector(alpha_intercept_slope) ~ student_t( 8, to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
+    // if(is_vb==0){
+    for (a in 1:A) for(m in 1:M)
+      target += log_mix(mix_p,
+                      normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+                      normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                    );
+  } else {
+    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 5 );
+    for (a in 1:A) alpha[a]  ~ normal( 5, 5 );
+  }
+
+  // Hyper priors
   mix_p ~ beta(1,5);
 
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
@@ -136,6 +154,9 @@ model{
 }
 
 generated quantities {
-  matrix[C,M] beta;
-  beta = R_ast_inverse * beta_raw; // coefficients on x
+  matrix[A, M] alpha_normalised = alpha;
+
+
+  if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
+
 }

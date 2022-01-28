@@ -5,24 +5,11 @@ library(job)
 library(patchwork)
 
 
+prior_mean_variable_association = list(intercept = c(5, 5), slope = c(0,  5), standard_deviation = c(5,5))
 
 job({
 
   load("data/counts_obj.rda")
-
-  # counts_obj %>%
-  #   group_by(sample) %>%
-  #   mutate(proportion = (count+1)/sum(count+1)) %>%
-  #   ungroup(sample) %>%
-  #   mutate(proportion_logit = boot::logit(proportion)) %>%
-  #   group_by(cell_group) %>%
-  #   summarise(mean = mean(proportion_logit), variance = sd(proportion_logit)) %>%
-  #   ggplot(aes(mean, variance)) +
-  #   geom_point() +
-  #   geom_smooth(method="lm") +
-  #   theme_bw()
-
-
     counts_obj  |>
     mutate(is_benign = type=="benign") |>
       rename(cell_type = cell_group) %>%
@@ -31,7 +18,7 @@ job({
       sample, cell_type, count,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+      prior_mean_variable_association = prior_mean_variable_association
     ) %>%
       saveRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
 })
@@ -44,7 +31,7 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+      prior_mean_variable_association = prior_mean_variable_association
     ) %>%
     saveRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds")
 
@@ -58,20 +45,23 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+      prior_mean_variable_association = prior_mean_variable_association
     ) %>%
     saveRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds")
 })
 
 job({
     readRDS("dev/data_integration/SCP1039_bc_cells.rds")  |>
-    mutate(type = subtype=="TNBC") %>%
+    #mutate(type = subtype=="TNBC") %>%
+    mutate(type = factor(subtype, levels = c("TNBC", "HER2+", "ER+"))) %>%
+    mutate(cell_type = celltype_subset) %>%
     sccomp_glm(
       formula = ~ type,
+      formula_variability = ~ type,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+      prior_mean_variable_association = prior_mean_variable_association
     ) %>%
     saveRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds")
 })
@@ -81,10 +71,11 @@ job({
     mutate(is_critical = severity=="critical") %>%
     sccomp_glm(
       formula = ~ is_critical,
+      formula_variability = ~is_critical,
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+      prior_mean_variable_association = prior_mean_variable_association
     ) %>%
     saveRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds")
 })
@@ -96,7 +87,7 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+      prior_mean_variable_association = prior_mean_variable_association
     ) %>%
     saveRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
 })
@@ -117,7 +108,7 @@ job({
       sample, cell_type ,
       approximate_posterior_inference = FALSE,
       variance_association = FALSE,
-      prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+      prior_mean_variable_association = prior_mean_variable_association
     ) %>%
     saveRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds")
 })

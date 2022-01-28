@@ -45,12 +45,16 @@ dirichlet_multinomial_glm = function(.data,
                                      prior_mean_variable_association = NULL,
                                      percent_false_positive = 5,
                                      check_outliers = FALSE,
-                                     approximate_posterior_inference = TRUE,
+                                     approximate_posterior_inference = "none",
                                      variance_association = FALSE,
                                      test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
+                                     exclude_priors = FALSE,
                                      cores = detect_cores(), # For development purpose,
-                                     seed = sample(1e5, 1)
+                                     seed = sample(1e5, 1),
+                                     max_sampling_iterations = NULL,
+                                     pass_fit = TRUE,
+                                     formula_variability  = NULL
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -59,7 +63,11 @@ dirichlet_multinomial_glm = function(.data,
 
   data_for_model =
     data_to_spread (.data, formula, !!.sample, !!.cell_type, !!.count) %>%
-    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference= approximate_posterior_inference)
+    data_spread_to_model_input(
+      formula, !!.sample, !!.cell_type, !!.count,
+      approximate_posterior_inference= approximate_posterior_inference == "all",
+      variance_association = variance_association
+    )
 
   false_positive_rate = percent_false_positive/100
 
@@ -79,7 +87,7 @@ dirichlet_multinomial_glm = function(.data,
    fit =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
-      fit_model(model_glm_dirichlet_multinomial, censoring_iteration, chains= 4, pars = c("beta", "precision"), seed = seed, approximate_posterior_inference= approximate_posterior_inference)
+      fit_model(model_glm_dirichlet_multinomial, censoring_iteration, cores = cores, chains= 4, pars = c("beta", "precision"), seed = seed, approximate_posterior_inference= approximate_posterior_inference == "all", verbose=verbose)
 
     parsed_fit =
       fit %>%
@@ -104,12 +112,20 @@ dirichlet_multinomial_glm = function(.data,
       # ) %>%
 
       # add probability
-      left_join( get_probability_non_zero(parsed_fit, prefix = "composition"), by="M" ) %>%
+      left_join( get_probability_non_zero_OLD(parsed_fit, prefix = "composition"), by="M" ) %>%
 
       # Clean
       select(-M) %>%
       mutate(!!.cell_type := data_for_model$y %>% colnames()) %>%
       select(!!.cell_type, everything())
+
+    count_data =
+      .data %>%
+      nest(count_data = -!!.cell_type)
+
+    return_df =
+      return_df %>%
+      left_join(  count_data, by = quo_name(.cell_type)  )
 
   }
 
@@ -117,9 +133,9 @@ dirichlet_multinomial_glm = function(.data,
 
     .data_1 =
       .data %>%
-      fit_model_and_parse_out_no_missing_data(data_for_model, model_glm_dirichlet_multinomial, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4, seed = seed, approximate_posterior_inference = approximate_posterior_inference)
+      fit_model_and_parse_out_no_missing_data(data_for_model, model_glm_dirichlet_multinomial, formula, !!.sample, !!.cell_type, !!.count, iteration = 1, chains = 4, seed = seed, approximate_posterior_inference = approximate_posterior_inference != "none")
 
-    .data_2 =
+    return_df =
       .data_1 %>%
       select(-contains("posterior")) %>%
       fit_model_and_parse_out_missing_data(
@@ -130,22 +146,12 @@ dirichlet_multinomial_glm = function(.data,
         !!.count,
         iteration = 2,
         seed = seed,
-        approximate_posterior_inference = approximate_posterior_inference,
-        false_positive_rate = false_positive_rate
+        approximate_posterior_inference = approximate_posterior_inference == "all",
+        false_positive_rate = false_positive_rate,
+        variance_association = variance_association
       )
 
-    return_df =
-      .data_2
-    # %>%
-    #
-    #   # Join filtered
-    #   mutate(
-    #     significant =
-    #       !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-    #       !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-    #   )
-
-  fit = attr(.data_2, "fit")
+  fit = attr(return_df, "fit")
   }
 
   return_df %>%
@@ -223,7 +229,8 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
 #' @importFrom stats C
 #' @importFrom rstan sflist2stanfit
 #' @importFrom rstan Rhat
-fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference, false_positive_rate){
+fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference, false_positive_rate,
+                                                variance_association){
 
 
   # Prepare column same enquo
@@ -235,7 +242,8 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
   data_for_model =
     .data %>%
     data_to_spread (formula, !!.sample, !!.cell_type, !!.count) %>%
-    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference = approximate_posterior_inference)
+    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference = approximate_posterior_inference,
+                               variance_association = variance_association)
 
   # .count = enquo(.count)
   #
@@ -264,16 +272,14 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     select(.value = count, N, M)
 
   # Dirichlet with missing data
+
   fit_imputation =
     data_for_model %>%
     do_inference_imputation(
-      formula,
-      approximate_posterior_inference,
-      FALSE,
-      C,
-      X,
-      cores,
-      additional_parameters_to_save,
+      approximate_posterior_inference = approximate_posterior_inference,
+      approximate_posterior_analysis = FALSE,
+      cores = cores,
+      additional_parameters_to_save = additional_parameters_to_save,
       pass_fit = pass_fit,
       to_include = to_include,
       tol_rel_obj = tol_rel_obj,
@@ -595,11 +601,7 @@ generate_quantities = function(fit, data_for_model, model_generate){
     model_generate,
     #rstan::stan_model("inst/stan/generated_quantities.stan"),
     draws =  as.matrix(fit),
-    data = list(
-      N = data_for_model$N,
-      M = data_for_model$M,
-      exposure = data_for_model$exposure
-    )
+    data = data_for_model
   ) %>%
 
     extract("counts") %$% counts %>%
