@@ -53,7 +53,7 @@ de chunks within the document. You can embed an R code chunk like this:
 
 & P\left ( \boldsymbol{\mu}, \lambda_{0}, \lambda \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, \omega_{g} \right ) & \textrm{ (9) } \\
 
-& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{multinomialLogistic}(\mu)_{g}, e^{\omega}_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0 & \textrm{ (10) } \\
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{InverseMultinomialLogistic}(\boldsymbol{\mu})_{g}, e^{\omega}_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0 & \textrm{ (10) } \\
 
 & \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g}, \phi \right ) & \textrm{ (11) } \\
 
@@ -70,14 +70,16 @@ de chunks within the document. You can embed an R code chunk like this:
 
 & P\left (\boldsymbol{\Gamma}, \lambda_{0}, \lambda, \phi \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g,1}, \lambda_{0}, \lambda_{1}, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, X_{s}, \omega_{g} \right ) & \textrm{ (14) } \\
 
-& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{multinomialLogistic}(\boldsymbol{\mu_{g,s}}), e^{\omega}_{g} \right ) & \textrm{ (15) } \\
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{InverseMultinomialLogistic}(\boldsymbol{\mu_{s}})_{g}, e^{\omega}_{g} \right ) & \textrm{ (15) } \\
 
 & \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \gamma_{g,1}, \phi \right ) & \textrm{ (16) } \\
 & \gamma_{g,c} \sim \text{Normal} \left(0,5 \right ) & \textrm{ (17) } \\
 & \lambda_{0}, \lambda_{1}, \phi \sim \text{Normal} \left(0,5 \right ) & \textrm{ (18) } \\
 
-& \text{E}\left(\omega_{g,i} \right) = \lambda_{0} + \lambda_{1} \mu_{g,i} & \textrm{ (19) } \\
+& \text{E}\left(\omega_{g,i} \right) = \lambda_{0} + \lambda_{1} \gamma_{g,i} & \textrm{ (19) } \\
 & \omega_{g,i} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g,i}, \phi \right ) & \textrm{ (20) } \\
+
+
 
 \end{align}
 ```
