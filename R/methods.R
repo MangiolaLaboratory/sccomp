@@ -1428,6 +1428,7 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 #'
 #' @description This function plots a summary of the results of the model.
 #'
+#' @importFrom ggrepel geom_text_repel
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
 #' @return A `ggplot`
@@ -1497,30 +1498,51 @@ plot_summary <- function(.data, .cell_group) {
 
   if("v_effect" %in% colnames(.data)){
   # mean-variance association
-plot_associations =
+  plot_associations =
   .data %>%
 
   # Filter where I did not inferred the variance
   filter(!is.na(v_effect)) %>%
 
-  # Plot
-  ggplot(aes(c_effect, v_effect, label=!!.cell_group)) +
-  geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-  geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-  geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
-  geom_errorbar(aes(ymin=`v_lower`, ymax=`v_upper`, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
+  # Add labels
+  with_groups(
+    parameter,
+    ~ .x %>%
+      arrange(c_FDR) %>%
+      mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < 0.025 & parameter!="(Intercept)", !!.cell_group, ""))
+  ) %>%
+  with_groups(
+    parameter,
+    ~ .x %>%
+      arrange(v_FDR) %>%
+      mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < 0.025 & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
+  ) %>%
 
-  geom_point(size=0.2)  +
-  annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
-  annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
-  scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
-  scale_alpha_manual(values = c(0.4, 1)) +
-  facet_wrap(~parameter) +
-  multipanel_theme +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  )
+    {
+      .x = (.)
+      # Plot
+      ggplot(.x, aes(c_effect, v_effect)) +
+        geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+        geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
+        geom_errorbar(aes(ymin=`v_lower`, ymax=`v_upper`, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
+
+        geom_point(size=0.2)  +
+        annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+        annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+
+        geom_text_repel(aes(c_effect, v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label!="") ) +
+
+        scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+        scale_alpha_manual(values = c(0.4, 1)) +
+        facet_wrap(~parameter, scales="free") +
+        multipanel_theme +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        )
+    }
+
   }
 
 if("fit" %in% names(attributes(.data))){
