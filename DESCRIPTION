@@ -32,7 +32,9 @@ Imports:
     lifecycle,
     stats,
     tidyselect,
-    utils
+    utils,
+    ggplot2,
+    ggrepel
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
