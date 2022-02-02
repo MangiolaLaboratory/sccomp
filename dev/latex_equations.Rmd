@@ -51,7 +51,7 @@ de chunks within the document. You can embed an R code chunk like this:
 
 & \textbf{ Single-mean hierarchical model } \\
 
-& P\left ( \boldsymbol{\mu}, \lambda_{0}, \lambda \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, \omega_{g} \right ) & \textrm{ (9) } \\
+& P\left ( \boldsymbol{\mu}, \lambda_{0}, \lambda \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g,s}, \omega_{g} \right ) & \textrm{ (9) } \\
 
 & k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{InverseMultinomialLogistic}(\boldsymbol{\mu})_{g}, e^{\omega}_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0 & \textrm{ (10) } \\
 
@@ -69,10 +69,9 @@ de chunks within the document. You can embed an R code chunk like this:
 & \lambda_{0}, \lambda_{1}, \phi \sim \text{Normal} \left(0,5 \right ) & \textrm{ (16) } \\
 
 
-& \psi_{g,d} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \bar{\mu_{g,d}}, \phi \right ) & \textrm{ (17) } \\
-& \hat{\omega_{d}} = \omega_{d} - \left( \gamma_{d} \lambda_{1} \right)  \textrm{ for } D > 2, or = \omega_{d} \textrm{ otherwise } & \textrm{ (18) } \\
-
-
+& \text{E}\left(\omega_{g,i} \right) = \lambda_{0} + \lambda_{1} \mu_{g,i} & \textrm{ (17) } \\
+& \omega_{g,i} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g,i}, \phi \right ) & \textrm{ (18) } \\
+& \omega_{g,2} - \omega_{g,1} - \left(\lambda_{1} * \left(\mu_{g,2} - \mu_{g,1} \right)\right)  & \textrm{ (19) } \\
 
 
 \end{align}
