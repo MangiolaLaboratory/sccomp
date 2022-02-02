@@ -863,7 +863,9 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 #'
 #'
 design_matrix_and_coefficients_to_simulation = function(
+
   design_matrix, coefficient_matrix, .estimate_object
+
 ){
 
   design_df = as.data.frame(design_matrix)
@@ -884,7 +886,9 @@ design_matrix_and_coefficients_to_simulation = function(
     left_join(coefficient_df |>as_tibble(rownames = "cell_type"), by = "cell_type")
 
   simulate_data(.data = input_data,
+
                 .estimate_object = .estimate_object,
+
                 formula = ~ covariate_1 ,
                 .sample = sample,
                 .cell_group = cell_type,
@@ -895,7 +899,9 @@ design_matrix_and_coefficients_to_simulation = function(
 
 }
 
+
 design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, precision = 100, seed = sample(1:100000, size = 1)){
+
 
   # design_df = as.data.frame(design_matrix)
   # coefficient_df = as.data.frame(coefficient_matrix)
