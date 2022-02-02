@@ -1428,6 +1428,8 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 #'
 #' @description This function plots a summary of the results of the model.
 #'
+#' @importFrom ggrepel geom_text_repel
+#' @importFrom tidyr pivot_longer
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
 #' @return A `ggplot`
@@ -1495,33 +1497,7 @@ plot_summary <- function(.data, .cell_group) {
 
   .cell_group = enquo(.cell_group)
 
-  if("v_effect" %in% colnames(.data)){
-  # mean-variance association
-plot_associations =
-  .data %>%
-
-  # Filter where I did not inferred the variance
-  filter(!is.na(v_effect)) %>%
-
-  # Plot
-  ggplot(aes(c_effect, v_effect, label=!!.cell_group)) +
-  geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-  geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-  geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
-  geom_errorbar(aes(ymin=`v_lower`, ymax=`v_upper`, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
-
-  geom_point(size=0.2)  +
-  annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
-  annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
-  scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
-  scale_alpha_manual(values = c(0.4, 1)) +
-  facet_wrap(~parameter) +
-  multipanel_theme +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  )
-  }
+plots = list()
 
 if("fit" %in% names(attributes(.data))){
 
@@ -1553,7 +1529,22 @@ if("fit" %in% names(attributes(.data))){
     replicate_data( number_of_draws = 100) %>%
     left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), sample, !!.cell_group))
 
+  significance_colors =
+    .data %>%
+    pivot_longer(
+      c(contains("c_"), contains("v_")),
+      names_pattern = "([cv])_([a-zA-Z0-9]+)",
+      names_to = c("which", "stats_name"),
+      values_to = "stats_value"
+    ) %>%
+    filter(stats_name == "FDR") %>%
+    filter(parameter != "(Intercept)") %>%
+    filter(stats_value < 0.025) %>%
+    unite("name", c(which, parameter)) %>%
+    with_groups(cell_group, ~ .x %>% summarise(name = paste(name, collapse = " + ")))
 
+
+plots$boxplot =
   ggplot() +
 
     stat_summary(
@@ -1570,12 +1561,17 @@ if("fit" %in% names(attributes(.data))){
     ) +
 
     geom_boxplot(
-      aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest)), # fill=Effect),
+      aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
       outlier.shape = NA,
-      data = data_proportion |> filter(!outlier), fatten = 0.5, lwd=0.5,
+      data =
+        data_proportion |>
+        filter(!outlier) |>
+        left_join(significance_colors, by = quo_name(.cell_group)),
+      fatten = 0.5,
+      lwd=0.5,
     ) +
     geom_jitter(
-      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier,  group=!!as.symbol(factor_of_interest)),
+      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
       data = data_proportion,
       position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
       size = 0.5
@@ -1592,12 +1588,13 @@ if("fit" %in% names(attributes(.data))){
       vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
       scales = "free_y", nrow = 4
     ) +
-    #scale_color_manual(values = c("black", "#e11f28")) +
+    scale_color_manual(values = c("black", "#e11f28")) +
     #scale_fill_manual(values = c("white", "#E2D379")) +
-    scale_fill_distiller(palette = "Spectral", na.value = "white") +
+    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
     #scale_color_distiller(palette = "Spectral") +
 
-    scale_y_continuous(trans="S_sqrt", labels = dropLeadingZero) +
+    scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
+  scale_fill_discrete(na.value = "white") +
     #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
@@ -1608,5 +1605,56 @@ if("fit" %in% names(attributes(.data))){
     theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
 }
+
+if("v_effect" %in% colnames(.data)){
+    # mean-variance association
+    plots$plot_associations =
+      .data %>%
+
+      # Filter where I did not inferred the variance
+      filter(!is.na(v_effect)) %>%
+
+      # Add labels
+      with_groups(
+        parameter,
+        ~ .x %>%
+          arrange(c_FDR) %>%
+          mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < 0.025 & parameter!="(Intercept)", !!.cell_group, ""))
+      ) %>%
+      with_groups(
+        parameter,
+        ~ .x %>%
+          arrange(v_FDR) %>%
+          mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < 0.025 & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
+      ) %>%
+
+      {
+        .x = (.)
+        # Plot
+        ggplot(.x, aes(c_effect, v_effect)) +
+          geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+          geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+          geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
+          geom_errorbar(aes(ymin=`v_lower`, ymax=`v_upper`, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
+
+          geom_point(size=0.2)  +
+          annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
+          annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+
+          geom_text_repel(aes(c_effect, v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label!="") ) +
+
+          scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+          scale_alpha_manual(values = c(0.4, 1)) +
+          facet_wrap(~parameter, scales="free") +
+          multipanel_theme +
+          theme(
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank()
+          )
+      }
+
+}
+
+plots
 
 }
