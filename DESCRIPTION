@@ -33,7 +33,7 @@ Imports:
     stats,
     tidyselect,
     utils,
-    ggplot,
+    ggplot2,
     ggrepel
 Suggests:
     BiocStyle,
