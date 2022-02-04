@@ -109,18 +109,18 @@ res
 ```
 
     ## # A tibble: 72 × 8
-    ##    cell_group parameter   c_lower c_effect c_upper   c_pH0    c_FDR count_data  
-    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>   <dbl>    <dbl> <list>      
-    ##  1 B1         (Intercept)  0.565     0.759  0.957  0       0        <tibble [20…
-    ##  2 B1         typecancer  -1.14     -0.758 -0.382  0.00275 0.00112  <tibble [20…
-    ##  3 B2         (Intercept)  0.130     0.372  0.631  0.0735  0.00539  <tibble [20…
-    ##  4 B2         typecancer  -1.13     -0.669 -0.198  0.0260  0.00339  <tibble [20…
-    ##  5 B3         (Intercept) -0.744    -0.528 -0.316  0.00175 0.000228 <tibble [20…
-    ##  6 B3         typecancer  -0.708    -0.308  0.0761 0.292   0.0959   <tibble [20…
-    ##  7 BM         (Intercept) -1.39     -1.17  -0.965  0       0        <tibble [20…
-    ##  8 BM         typecancer  -0.742    -0.326  0.0882 0.265   0.0774   <tibble [20…
-    ##  9 CD4 1      (Intercept)  0.271     0.417  0.568  0.00200 0.000302 <tibble [20…
-    ## 10 CD4 1      typecancer  -0.0930    0.182  0.476  0.551   0.134    <tibble [20…
+    ##    cell_group parameter   c_lower c_effect c_upper    c_pH0     c_FDR count_data
+    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>    <dbl>     <dbl> <list>    
+    ##  1 B1         (Intercept)  0.489     0.675  0.866  0        0         <tibble […
+    ##  2 B1         typecancer  -1.29     -0.914 -0.536  0.000250 0.0000500 <tibble […
+    ##  3 B2         (Intercept)  0.0399    0.281  0.511  0.245    0.0157    <tibble […
+    ##  4 B2         typecancer  -1.04     -0.598 -0.136  0.0407   0.00507   <tibble […
+    ##  5 B3         (Intercept) -0.731    -0.535 -0.315  0.00125  0.000152  <tibble […
+    ##  6 B3         typecancer  -0.718    -0.312  0.0863 0.294    0.0803    <tibble […
+    ##  7 BM         (Intercept) -1.39     -1.18  -0.958  0        0         <tibble […
+    ##  8 BM         typecancer  -0.745    -0.336  0.0748 0.257    0.0597    <tibble […
+    ##  9 CD4 1      (Intercept)  0.266     0.410  0.561  0.00275  0.000260  <tibble […
+    ## 10 CD4 1      typecancer  -0.111     0.179  0.495  0.558    0.144     <tibble […
     ## # … with 62 more rows
 
 ## Visualise data + inference
@@ -153,10 +153,10 @@ significant if bigger than the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.
 
 ``` r
-plots$plot_associations
+plots$credible_intervals_1D
 ```
 
-    ## NULL
+![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
 
 ## Visualisation of the MCMC chains from the posterior distribution
 
@@ -177,7 +177,8 @@ We can model the cell-group variability also dependent on type, and so
 test differences in variability
 
 ``` r
-counts_obj |>
+res = 
+  counts_obj |>
   sccomp_glm( 
     formula_composition = ~ type, 
     formula_variability = ~ type, 
@@ -193,18 +194,47 @@ counts_obj |>
 
     ## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]
 
+``` r
+res
+```
+
     ## # A tibble: 72 × 13
-    ##    cell_group parameter   c_lower c_effect c_upper   c_pH0    c_FDR v_lower
-    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>   <dbl>    <dbl>   <dbl>
-    ##  1 B1         (Intercept)  0.460     0.646  0.825  0       0           4.83
-    ##  2 B1         typecancer  -1.39     -1.03  -0.672  0       0          -1.07
-    ##  3 B2         (Intercept)  0.0476    0.274  0.502  0.253   0.0232      4.57
-    ##  4 B2         typecancer  -1.12     -0.668 -0.202  0.0248  0.00411    -1.52
-    ##  5 B3         (Intercept) -0.740    -0.537 -0.317  0.00150 0.000141    5.60
-    ##  6 B3         typecancer  -0.773    -0.339  0.0868 0.251   0.0871     -1.84
-    ##  7 BM         (Intercept) -1.40     -1.18  -0.969  0       0           6.27
-    ##  8 BM         typecancer  -0.859    -0.433 -0.0111 0.148   0.0399     -1.21
-    ##  9 CD4 1      (Intercept)  0.255     0.403  0.559  0.00600 0.000385    5.31
-    ## 10 CD4 1      typecancer  -0.200     0.107  0.424  0.728   0.263      -1.51
+    ##    cell_group parameter   c_lower c_effect  c_upper    c_pH0     c_FDR v_lower
+    ##    <chr>      <chr>         <dbl>    <dbl>    <dbl>    <dbl>     <dbl>   <dbl>
+    ##  1 B1         (Intercept)  0.462     0.643  0.822   0        0           -4.80
+    ##  2 B1         typecancer  -1.40     -1.04  -0.675   0.000250 0.0000833    1.12
+    ##  3 B2         (Intercept)  0.0409    0.272  0.509   0.264    0.0250      -4.54
+    ##  4 B2         typecancer  -1.14     -0.659 -0.194   0.0270   0.00428      1.49
+    ##  5 B3         (Intercept) -0.733    -0.537 -0.319   0.00150  0.0000909   -5.57
+    ##  6 B3         typecancer  -0.764    -0.333  0.104   0.263    0.0813       1.88
+    ##  7 BM         (Intercept) -1.40     -1.19  -0.966   0        0           -6.26
+    ##  8 BM         typecancer  -0.842    -0.427 -0.00467 0.149    0.0449       1.21
+    ##  9 CD4 1      (Intercept)  0.246     0.399  0.553   0.00575  0.000437    -5.33
+    ## 10 CD4 1      typecancer  -0.198     0.107  0.414   0.725    0.245        1.55
     ## # … with 62 more rows, and 5 more variables: v_effect <dbl>, v_upper <dbl>,
     ## #   v_pH0 <dbl>, v_FDR <dbl>, count_data <list>
+
+Plot 1D significance plot
+
+``` r
+plots = plot_summary(res)
+```
+
+    ## Joining, by = c("sample", "cell_group")
+
+    ## Joining, by = c("cell_group", "type")
+
+``` r
+plots$credible_intervals_1D
+```
+
+![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
+
+Plot 2D significance plot. This is possible if only differential
+variability has been tested
+
+``` r
+plots$credible_intervals_2D
+```
+
+![](inst/figures/unnamed-chunk-15-1.png)<!-- -->

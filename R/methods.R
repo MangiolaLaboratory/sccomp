@@ -780,31 +780,10 @@ plot_summary <- function(.data) {
       axis.ticks.y = element_line(size=0.2)
     )
 
-  dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
-
-  S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
-  IS_sqrt <- function(x){x^2*sign(x)}
-  S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
-
-
   .cell_group = attr(.data, ".cell_group")
 
 plots = list()
 
-calc_boxplot_stat <- function(x) {
-  coef <- 1.5
-  n <- sum(!is.na(x))
-  # calculate quantiles
-  stats <- quantile(x, probs = c(0.0, 0.25, 0.5, 0.75, 1.0))
-  names(stats) <- c("ymin", "lower", "middle", "upper", "ymax")
-  iqr <- diff(stats[c(2, 4)])
-  # set whiskers
-  outliers <- x < (stats[2] - coef * iqr) | x > (stats[4] + coef * iqr)
-  if (any(outliers)) {
-    stats[c(1, 5)] <- range(c(stats[2:4], x[!outliers]), na.rm = TRUE)
-  }
-  return(stats)
-}
 
 data_proportion =
   .data %>%
@@ -817,47 +796,171 @@ data_proportion =
 
 factor_of_interest = .data %>% attr("covariates") %>% .[1]
 
-significance_colors =
-  .data %>%
-  pivot_longer(
-    c(contains("c_"), contains("v_")),
-    names_pattern = "([cv])_([a-zA-Z0-9]+)",
-    names_to = c("which", "stats_name"),
-    values_to = "stats_value"
-  ) %>%
-  filter(stats_name == "FDR") %>%
-  filter(parameter != "(Intercept)") %>%
-  filter(stats_value < 0.025) %>%
-  unite("name", c(which, parameter)) %>%
-  with_groups(cell_group, ~ .x %>% summarise(name = paste(name, collapse = " + ")))
+# Boxplot
+plots$boxplot = plot_boxplot(.data, data_proportion, factor_of_interest, !!.cell_group, multipanel_theme)
 
-plots$boxplot =  ggplot()
+# 1D intervals
+plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, multipanel_theme)
 
-if("fit" %in% names(attributes(.data))){
+# 2D intervals
+if("v_effect" %in% colnames(.data))  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, multipanel_theme)
 
-  simulated_proportion =
-    .data %>%
-    replicate_data( number_of_draws = 100) %>%
-    left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), sample, !!.cell_group))
+plots
 
-  plots$boxplot = plots$boxplot +
+}
 
-    stat_summary(
-      aes(!!as.symbol(factor_of_interest), (generated_proportions)),
-      fun.data = calc_boxplot_stat, geom="boxplot",
-      fatten = 0.5, lwd=0.2,
-      data =
-        simulated_proportion %>%
+#' @importFrom patchwork wrap_plots
+plot_1d_intervals = function(.data, .cell_group, my_theme){
 
-        # Filter uanitles because of limits
-        inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)) ,
-      color="blue"
+  .cell_group = enquo(.cell_group)
 
-    )
+  .data |>
+    filter(parameter != "(Intercept)") |>
+
+    # Reshape
+    pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
+    pivot_wider(names_from = estimate, values_from = value) |>
+
+    nest(data = -c(parameter, which)) |>
+    mutate(plot = pmap(
+      list(data, which, parameter),
+      ~  ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
+        geom_vline(xintercept = 0.2, colour="grey") +
+        geom_vline(xintercept = -0.2, colour="grey") +
+        geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<0.025)) +
+        geom_point() +
+        scale_color_brewer(palette = "Set1") +
+        xlab("Credible interval of the slope") +
+        ylab("Cell group") +
+        ggtitle(sprintf("%s %s", ..2, ..3)) +
+        theme(legend.position = "bottom") +
+        my_theme
+    )) %>%
+    pull(plot) |>
+    wrap_plots(ncol=2)
+
+
 }
 
 
-plots$boxplot = plots$boxplot +
+plot_2d_intervals = function(.data, .cell_group, my_theme){
+
+  .cell_group = enquo(.cell_group)
+
+  # mean-variance association
+  .data %>%
+
+    # Filter where I did not inferred the variance
+    filter(!is.na(v_effect)) %>%
+
+    # Add labels
+    with_groups(
+      parameter,
+      ~ .x %>%
+        arrange(c_FDR) %>%
+        mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < 0.025 & parameter!="(Intercept)", !!.cell_group, ""))
+    ) %>%
+    with_groups(
+      parameter,
+      ~ .x %>%
+        arrange(v_FDR) %>%
+        mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < 0.025 & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
+    ) %>%
+
+    {
+      .x = (.)
+      # Plot
+      ggplot(.x, aes(c_effect, v_effect)) +
+        geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+        geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
+        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
+
+        geom_point(size=0.2)  +
+        annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
+        annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+
+        geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label!="") ) +
+
+        scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+        scale_alpha_manual(values = c(0.4, 1)) +
+        facet_wrap(~parameter, scales="free") +
+        my_theme +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        )
+    }
+
+}
+
+plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, my_theme){
+
+  calc_boxplot_stat <- function(x) {
+    coef <- 1.5
+    n <- sum(!is.na(x))
+    # calculate quantiles
+    stats <- quantile(x, probs = c(0.0, 0.25, 0.5, 0.75, 1.0))
+    names(stats) <- c("ymin", "lower", "middle", "upper", "ymax")
+    iqr <- diff(stats[c(2, 4)])
+    # set whiskers
+    outliers <- x < (stats[2] - coef * iqr) | x > (stats[4] + coef * iqr)
+    if (any(outliers)) {
+      stats[c(1, 5)] <- range(c(stats[2:4], x[!outliers]), na.rm = TRUE)
+    }
+    return(stats)
+  }
+
+  dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
+
+  S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+  IS_sqrt <- function(x){x^2*sign(x)}
+  S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
+
+
+  .cell_group = enquo(.cell_group)
+
+  significance_colors =
+    .data %>%
+    pivot_longer(
+      c(contains("c_"), contains("v_")),
+      names_pattern = "([cv])_([a-zA-Z0-9]+)",
+      names_to = c("which", "stats_name"),
+      values_to = "stats_value"
+    ) %>%
+    filter(stats_name == "FDR") %>%
+    filter(parameter != "(Intercept)") %>%
+    filter(stats_value < 0.025) %>%
+    unite("name", c(which, parameter)) %>%
+    with_groups(cell_group, ~ .x %>% summarise(name = paste(name, collapse = " + ")))
+
+  my_boxplot =  ggplot()
+
+  if("fit" %in% names(attributes(.data))){
+
+    simulated_proportion =
+      .data %>%
+      replicate_data( number_of_draws = 100) %>%
+      left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), sample, !!.cell_group))
+
+    my_boxplot = my_boxplot +
+
+      stat_summary(
+        aes(!!as.symbol(factor_of_interest), (generated_proportions)),
+        fun.data = calc_boxplot_stat, geom="boxplot",
+        fatten = 0.5, lwd=0.2,
+        data =
+          simulated_proportion %>%
+
+          # Filter uanitles because of limits
+          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)) ,
+        color="blue"
+
+      )
+  }
+
+
+  my_boxplot +
 
     geom_boxplot(
       aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
@@ -893,67 +996,16 @@ plots$boxplot = plots$boxplot +
     #scale_color_distiller(palette = "Spectral") +
 
     scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
-  scale_fill_discrete(na.value = "white") +
+    scale_fill_discrete(na.value = "white") +
     #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
     guides(color="none", alpha="none", size="none") +
     labs(fill="Compositional difference") +
-    multipanel_theme +
+    my_theme +
     theme(axis.title.y = element_blank()) +
     theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
 
-
-if("v_effect" %in% colnames(.data)){
-    # mean-variance association
-    plots$plot_associations =
-      .data %>%
-
-      # Filter where I did not inferred the variance
-      filter(!is.na(v_effect)) %>%
-
-      # Add labels
-      with_groups(
-        parameter,
-        ~ .x %>%
-          arrange(c_FDR) %>%
-          mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < 0.025 & parameter!="(Intercept)", !!.cell_group, ""))
-      ) %>%
-      with_groups(
-        parameter,
-        ~ .x %>%
-          arrange(v_FDR) %>%
-          mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < 0.025 & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
-      ) %>%
-
-      {
-        .x = (.)
-        # Plot
-        ggplot(.x, aes(c_effect, v_effect)) +
-          geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-          geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-          geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
-          geom_errorbar(aes(ymin=`v_lower`, ymax=`v_upper`, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
-
-          geom_point(size=0.2)  +
-          annotate("text", x = 0, y = -3.5, label = "Variable", size=2) +
-          annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
-
-          geom_text_repel(aes(c_effect, v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label!="") ) +
-
-          scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
-          scale_alpha_manual(values = c(0.4, 1)) +
-          facet_wrap(~parameter, scales="free") +
-          multipanel_theme +
-          theme(
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank()
-          )
-      }
-
-}
-
-plots
 
 }
