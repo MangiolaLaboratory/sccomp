@@ -13,7 +13,7 @@ RoxygenNote: 7.1.2
 Biarch: true
 Depends: 
     R (>= 4.1.0),
-    rstan (>= 2.18.1)
+    rstan (>= 2.26.6)
 Imports: 
     methods,
     Rcpp (>= 0.12.0),
