@@ -35,35 +35,20 @@ functions{
     return y;
   }
 
-  real partial_sum_lpmf(int[] y_array,
-                        int start, int end,
-                        matrix Q_ast,
-                        matrix Xa,
-                        matrix beta_raw,
-                        matrix alpha,
-
+  real partial_sum_lpmf(int[] slice_y,
+                        int start,
+                        int end,
                         int[] exposure_array,
-                        int N,
-                        int M,
-                        int[] truncation_not_idx
+                        vector mu_array,
+                        vector precision_array
                         ) {
 
-
-  // Calculate MU
-  matrix[M, N] precision = (Xa * alpha)';
-  matrix[M, N] mu = (Q_ast * beta_raw)';
-  for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
-
-  // Convert the matrix m to a column vector in column-major order.
-  vector[N*M] mu_array = to_vector(mu);
-  vector[N*M] precision_array = to_vector(exp(precision));
-
-   return beta_binomial_lupmf(
-    y_array |
-    exposure_array[truncation_not_idx][start:end],
-    (mu_array[truncation_not_idx][start:end] .* precision_array[truncation_not_idx][start:end]),
-    ((1.0 - mu_array[truncation_not_idx][start:end]) .* precision_array[truncation_not_idx][start:end])
-  );
+return beta_binomial_lupmf(
+    slice_y |
+    exposure_array[start:end],
+    (mu_array[start:end] .* precision_array[start:end]),
+    (1.0 - mu_array[start:end]) .* precision_array[start:end]
+  ) ;
 
 }
 
@@ -160,30 +145,17 @@ else alpha_intercept_slope = (XA * alpha);
 }
 model{
 
-  target +=  reduce_sum(
-    partial_sum_lupmf,
-    y_array[truncation_not_idx],
-    grainsize,
-    Q_ast,
-    Xa,
-    beta_raw,
-    alpha,
-    exposure_array,
-    N,
-    M,
-    truncation_not_idx
-  );
 
-  // // Calculate MU
-  // matrix[M, N] precision = (Xa * alpha)';
-  // matrix[M, N] mu = (Q_ast * beta_raw)';
-  // for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
-  //
-  // // Convert the matrix m to a column vector in column-major order.
-  // vector[N*M] mu_array = to_vector(mu);
-  // vector[N*M] precision_array = to_vector(exp(precision));
-  //
-  //
+  // Calculate MU
+  matrix[M, N] precision = (Xa * alpha)';
+  matrix[M, N] mu = (Q_ast * beta_raw)';
+  for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
+
+  // Convert the matrix m to a column vector in column-major order.
+  vector[N*M] mu_array = to_vector(mu);
+  vector[N*M] precision_array = to_vector(exp(precision));
+
+
   // // Use index to decide truncation
   // target += beta_binomial_lpmf(
   //   y_array[truncation_not_idx] |
@@ -192,6 +164,15 @@ model{
   //   ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
   // ) ;
 
+
+  target +=  reduce_sum(
+    partial_sum_lupmf,
+    y_array[truncation_not_idx],
+    grainsize,
+    exposure_array[truncation_not_idx],
+    mu_array[truncation_not_idx],
+    precision_array[truncation_not_idx]
+  );
 
   // Priors
   if(exclude_priors == 0){
@@ -227,4 +208,5 @@ generated quantities {
   if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
 
 }
+
 
