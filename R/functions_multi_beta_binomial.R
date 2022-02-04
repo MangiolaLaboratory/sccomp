@@ -219,6 +219,8 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$is_truncated = 1
     data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+    data_for_model$truncation_not_idx = (data_for_model$truncation_down >= 0) %>% t() %>% as.vector()  %>% which()
+    data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
     message("sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]")
 
