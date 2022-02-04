@@ -59,10 +59,10 @@ functions{
   vector[N*M] precision_array = to_vector(exp(precision));
 
    return beta_binomial_lupmf(
-    y_array[truncation_not_idx] |
-    exposure_array[truncation_not_idx],
-    (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
-    ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
+    y_array |
+    exposure_array[truncation_not_idx][start:end],
+    (mu_array[truncation_not_idx][start:end] .* precision_array[truncation_not_idx][start:end]),
+    ((1.0 - mu_array[truncation_not_idx][start:end]) .* precision_array[truncation_not_idx][start:end])
   );
 
 }
@@ -111,7 +111,6 @@ transformed data{
   matrix[C, C] R_ast_inverse;
 
   int y_array[N*M];
-  int truncation_down_array[N*M];
   int exposure_array[N*M];
 
   // thin and scale the QR decomposition
@@ -127,7 +126,6 @@ transformed data{
 
   // Data vectorised
   y_array =  to_array_1d(y);
-  truncation_down_array = to_array_1d(truncation_down);
   exposure_array = rep_each(exposure, M);
 }
 parameters{
@@ -164,7 +162,7 @@ model{
 
   target +=  reduce_sum(
     partial_sum_lupmf,
-    y_array,
+    y_array[truncation_not_idx],
     grainsize,
     Q_ast,
     Xa,
@@ -175,6 +173,24 @@ model{
     M,
     truncation_not_idx
   );
+
+  // // Calculate MU
+  // matrix[M, N] precision = (Xa * alpha)';
+  // matrix[M, N] mu = (Q_ast * beta_raw)';
+  // for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
+  //
+  // // Convert the matrix m to a column vector in column-major order.
+  // vector[N*M] mu_array = to_vector(mu);
+  // vector[N*M] precision_array = to_vector(exp(precision));
+  //
+  //
+  // // Use index to decide truncation
+  // target += beta_binomial_lpmf(
+  //   y_array[truncation_not_idx] |
+  //   exposure_array[truncation_not_idx],
+  //   (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
+  //   ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
+  // ) ;
 
 
   // Priors
