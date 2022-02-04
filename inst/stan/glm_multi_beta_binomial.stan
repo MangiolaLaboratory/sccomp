@@ -22,7 +22,53 @@ functions{
     return x;
   }
 
+real partial_sum_lpmf(int[,] y,
+                        int start, int end,
+                        matrix Q_ast,
+                        matrix beta_raw,
+                        matrix precision,
 
+                        int[] exposure,
+                        int N,
+                        int M,
+                        int is_truncated
+                        ) {
+
+
+    return neg_binomial_2_log_lupmf(slice_Y | mu[start:end], 1.0 ./ exp(shape[start:end]) );
+
+  real lp = 0;
+  vector[N] exp_precision;
+
+  // Calculate MU
+  matrix[M, N] mu = (Q_ast * beta_raw)';
+  for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
+
+
+
+  // NON TRUNCATION
+  if(is_truncated == 0){
+     exp_precision = exp(precision[,i]);
+
+    for(i in 1:N)
+      lp += beta_binomial_lupmf(y[i,] | exposure[i], (mu[,i] .* exp_precision), ((1.0 - mu[,i]) .* exp_precision) );
+  }
+
+  // YES TRUNCATION
+  else{
+    for(i in 1:cols(mu)) { // SAMPLE
+      for(j in 1:rows(mu)){ // CATEGORY
+        if(truncation_down[i, j] >=0)
+         exp_precision = exp(precision[j,i]);
+
+          lp += beta_binomial_lupmf(y[i,j] | exposure[i], (mu[j,i] .* exp_precision), ((1.0 - mu[j,i]) .* exp_precision) );
+      }
+    }
+  }
+
+  return(lp);
+
+}
 
 }
 data{
@@ -104,26 +150,19 @@ transformed parameters{
 }
 model{
 
-  // Calculate MU
-  matrix[M, N] mu = (Q_ast * beta_raw)';
+   target += reduce_sum(
+    partial_sum_lupmf,
+    y,
+    grainsize,
+    Q_ast,
+    beta_raw,
+    precision,
 
-  for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
-
-  // NON TRUNCATION
-  if(is_truncated == 0){
-    for(i in 1:N)
-      target += beta_binomial_lpmf(y[i,] | exposure[i], (mu[,i] .* exp(precision[,i])), ((1.0 - mu[,i]) .* exp(precision[,i])) );
-  }
-
-  // YES TRUNCATION
-  else{
-    for(i in 1:cols(mu)) { // SAMPLE
-      for(j in 1:rows(mu)){ // CATEGORY
-        if(truncation_down[i, j] >=0)
-          target += beta_binomial_lpmf(y[i,j] | exposure[i], (mu[j,i] .* exp(precision[j,i])), ((1.0 - mu[j,i]) .* exp(precision[j,i])) );
-      }
-    }
-  }
+    exposure,
+    N,
+    M,
+    is_truncated
+  );
 
   // Priors
 
@@ -160,3 +199,4 @@ generated quantities {
   if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
 
 }
+
