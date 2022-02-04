@@ -160,3 +160,4 @@ generated quantities {
   if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
 
 }
+
