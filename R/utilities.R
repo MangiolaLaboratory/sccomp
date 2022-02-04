@@ -391,38 +391,8 @@ fit_model = function(
         (.)
       )
 
-  # Find optimal number of chains
-  if(is.null(chains))
-    chains =
-      find_optimal_number_of_chains(
-        how_many_posterior_draws = output_samples,
-        warmup = warmup_samples
-      ) %>%
-        min(cores)
 
-  # library(VGAM)
-  # ff = VGAM::vglm(
-  #   cbind(a, b) ~ cov,
-  #   dirmultinomial,
-  #   data = tibble(
-  #     a = data_for_model$y[,1],
-  #     b = data_for_model$y[,2],
-  #     cov = data_for_model$X[,2]
-  #   ),
-  #   trace = TRUE
-  # ) %>%
-  # summary()
-  #
-  # print(ff)
-
-  # # Define a decent value for alpha as it fails for vb sometimes
-  # init_fun = function(...) list(
-  #   alpha=matrix(rep(data_for_model$prior_prec_intercept[1], data_for_model$A*data_for_model$M),nrow= data_for_model$A),
-  #   beta_raw_raw=matrix(rep(0, data_for_model$C*(data_for_model$M-1)),nrow= data_for_model$C)
-  # )
-
-  # If differential variance also capture beta_raw
-  #if(data_for_model$A > 1)
+  rstan_options(threads_per_chain = floor(cores/chains))
 
   # Fit
   if(!approximate_posterior_inference)
@@ -629,13 +599,20 @@ data_spread_to_model_input =
       A = A,
       Ar = Ar,
       truncation_ajustment = truncation_ajustment,
-      is_vb = as.integer(approximate_posterior_inference)
+      is_vb = as.integer(approximate_posterior_inference),
+
+      # For parallel chains
+      grainsize = 1
     )
+
+
 
   # Add censoring
   data_for_model$is_truncated = 0
   data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
   data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
+  data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
+  data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
   # Return
   data_for_model
