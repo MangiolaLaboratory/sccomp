@@ -22,27 +22,41 @@ functions{
     return x;
   }
 
+  int[] rep_each(int[] x, int K) {
+    int N = size(x);
+    int y[N * K];
+    int pos = 1;
+    for (n in 1:N) {
+      for (k in 1:K) {
+        y[pos] = x[n];
+        pos += 1;
+      }
+    }
+    return y;
+  }
 
 
 }
 data{
-	int<lower=1> N;
-	int<lower=1> M;
-	int<lower=1> C;
-	int<lower=1> A;
-	int<lower=1> Ar; // Rows of unique variability design
-	int exposure[N];
-	int y[N,M];
-	matrix[N, C] X;
-	matrix[Ar, A] XA; // The unique variability design
-	matrix[N, A] Xa; // The variability design
+  int<lower=1> N;
+  int<lower=1> M;
+  int<lower=1> C;
+  int<lower=1> A;
+  int<lower=1> Ar; // Rows of unique variability design
+  int exposure[N];
+  int y[N,M];
+  matrix[N, C] X;
+  matrix[Ar, A] XA; // The unique variability design
+  matrix[N, A] Xa; // The variability design
 
-	// Truncation
-	int is_truncated;
-	int truncation_up[N,M];
-	int truncation_down[N,M];
+  // Truncation
+  int is_truncated;
+  int truncation_up[N,M];
+  int truncation_down[N,M];
+  int<lower=1, upper=N*M> TNS; // truncation_not_size
+  int<lower=1, upper=N*M> truncation_not_idx[TNS];
 
-	int<lower=0, upper=1> is_vb;
+  int<lower=0, upper=1> is_vb;
 
   // Prior info
   real prior_prec_intercept[2] ;
@@ -54,12 +68,17 @@ data{
 
 }
 transformed data{
-	vector[2*M] Q_r = Q_sum_to_zero_QR(M);
+  vector[2*M] Q_r = Q_sum_to_zero_QR(M);
   real x_raw_sigma = inv_sqrt(1 - inv(M));
 
   matrix[N, C] Q_ast;
   matrix[C, C] R_ast;
   matrix[C, C] R_ast_inverse;
+
+  int y_array[N*M];
+  int truncation_down_array[N*M];
+  int exposure_array[N*M];
+
   // thin and scale the QR decomposition
   Q_ast = qr_thin_Q(X) * sqrt(N - 1);
   R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
@@ -70,6 +89,11 @@ transformed data{
     Q_ast = X;
     R_ast_inverse = diag_matrix(rep_vector(1.0, C));
   }
+
+  // Data vectorised
+  y_array =  to_array_1d(y);
+  truncation_down_array = to_array_1d(truncation_down);
+  exposure_array = rep_each(exposure, M);
 }
 parameters{
 	matrix[C, M-1] beta_raw_raw;
@@ -86,20 +110,20 @@ transformed parameters{
 		matrix[A,M] beta_intercept_slope;
 		matrix[A,M] alpha_intercept_slope;
     matrix[M, N] precision = (Xa * alpha)';
-    matrix[C,M] beta;
+matrix[C,M] beta;
 
-	  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
 
-		// Beta
-	  beta = R_ast_inverse * beta_raw; // coefficients on x
+// Beta
+beta = R_ast_inverse * beta_raw; // coefficients on x
 
-    // All this because if A ==1 we have ocnversion problems
-    // This works only with two discrete groups
-    if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
-    else beta_intercept_slope = (XA * beta[1:A,]);
-		if(A == 1)  alpha_intercept_slope = alpha;
-		else alpha_intercept_slope = (XA * alpha);
+// All this because if A ==1 we have ocnversion problems
+// This works only with two discrete groups
+if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
+else beta_intercept_slope = (XA * beta[1:A,]);
+if(A == 1)  alpha_intercept_slope = alpha;
+else alpha_intercept_slope = (XA * alpha);
 
 }
 model{
@@ -109,24 +133,21 @@ model{
 
   for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
 
-  // NON TRUNCATION
-  if(is_truncated == 0){
-    for(i in 1:N)
-      target += beta_binomial_lpmf(y[i,] | exposure[i], (mu[,i] .* exp(precision[,i])), ((1.0 - mu[,i]) .* exp(precision[,i])) );
-  }
+  // Convert the matrix m to a column vector in column-major order.
+  vector[N*M] mu_array = to_vector(mu);
+  vector[N*M] precision_array = to_vector(exp(precision));
 
-  // YES TRUNCATION
-  else{
-    for(i in 1:cols(mu)) { // SAMPLE
-      for(j in 1:rows(mu)){ // CATEGORY
-        if(truncation_down[i, j] >=0)
-          target += beta_binomial_lpmf(y[i,j] | exposure[i], (mu[j,i] .* exp(precision[j,i])), ((1.0 - mu[j,i]) .* exp(precision[j,i])) );
-      }
-    }
-  }
+
+  // Use index to decide truncation
+  target += beta_binomial_lpmf(
+    y_array[truncation_not_idx] |
+    exposure_array[truncation_not_idx],
+    (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
+    ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
+  ) ;
+
 
   // Priors
-
   if(exclude_priors == 0){
 
     for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
