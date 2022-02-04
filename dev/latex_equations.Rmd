@@ -51,49 +51,31 @@ de chunks within the document. You can embed an R code chunk like this:
 
 & \textbf{ Single-mean hierarchical model } \\
 
-& P\left ( \boldsymbol{\mu}, \lambda_{0}, \lambda \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, \omega_{g} \right ) & \textrm{ (9) } \\
+& P\left ( \boldsymbol{\mu}, \lambda_{0}, \lambda \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g}, \lambda_{0}, \lambda, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g,s}, \omega_{g} \right ) & \textrm{ (9) } \\
 
-& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{multinomialLogistic}(\mu)_{g}, e^{\omega}_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0 & \textrm{ (10) } \\
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{InverseMultinomialLogistic}(\boldsymbol{\mu})_{g}, e^{\omega}_{g} \right ) \textrm{ for } \sum_{g=1}^{G} \mu_{g} = 0 & \textrm{ (10) } \\
 
 & \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g}, \phi \right ) & \textrm{ (11) } \\
 
 
-& \mu_{g,condition} = \text{intercept}_{g} + \text{effect}_{g} x_{s} \textrm{ for } \sum_{g=1}^{G} \text{intercept}_{g} = 0 \textrm{ and } \sum_{g=1}^{G} \text{effect}_{g} = 0 & \textrm{ (12) } \\
-
-
-& \boldsymbol{M}_{G,S} = \boldsymbol{\Gamma}_{G,C} \times \boldsymbol{X}_{C,S} \textrm{ for } s \in[1..S] \sum_{g=1}^{G} \mu_{g, s} = 0 & \textrm{ (13) } \\
-
-
-
-
 & \textbf{ Regression hierarchical model } \\
 
-& P\left (\boldsymbol{\Gamma}, \lambda_{0}, \lambda, \phi \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \mu_{g,1}, \lambda_{0}, \lambda_{1}, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g}, X_{s}, \omega_{g} \right ) & \textrm{ (14) } \\
+& P\left (\boldsymbol{\Gamma}, \lambda_{0}, \lambda, \phi \right )  \prod_{g=1}^{G} P\left ( \omega_{g} | \gamma_{g,1}, \lambda_{0}, \lambda_{1}, \phi \right ) \prod_{s=1}^{S} \prod_{g=1}^{G} P\left ( k_{g,s} | n_{s}, \mu_{g,s}, X_{s}, \omega_{g} \right ) & \textrm{ (12) } \\
 
-& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{multinomialLogistic}(\boldsymbol{\mu_{g,s}}), e^{\omega}_{g} \right ) & \textrm{ (15) } \\
+& k_{g,s} \sim \text{BetaBinomial} \left(n_{s}, \text{InverseMultinomialLogistic}(\boldsymbol{\mu_{s}})_{g}, e^{\omega}_{g} \right ) & \textrm{ (13) } \\
 
-& \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \gamma_{g,1}, \phi \right ) & \textrm{ (16) } \\
-& \gamma_{g,c} \sim \text{Normal} \left(0,5 \right ) & \textrm{ (17) } \\
-& \lambda_{0}, \lambda_{1}, \phi \sim \text{Normal} \left(0,5 \right ) & \textrm{ (18) } \\
-
-& \text{E}\left(\omega_{g,i} \right) = \lambda_{0} + \lambda_{1} \mu_{g,i} & \textrm{ (19) } \\
-& \omega_{g,i} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g,i}, \phi \right ) & \textrm{ (20) } \\
-
-\end{align}
-```
+& \omega_{g} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \gamma_{g,1}, \phi \right ) & \textrm{ (14) } \\
+& \gamma_{g,c} \sim \text{Normal} \left(0,5 \right ) & \textrm{ (15) } \\
+& \lambda_{0}, \lambda_{1}, \phi \sim \text{Normal} \left(0,5 \right ) & \textrm{ (16) } \\
 
 
-
-```{=tex}
-\begin{align}
-
-
-
-& \text{var(k)} \approx  n \left(\frac{\alpha}{\alpha + \beta} \right) + \lambda_{2} \left(\frac{(\frac{\alpha}{\alpha + \beta})}{GM(\frac{\alpha}{\alpha + \beta})}\right)^{\lambda_1} n^{\lambda_1 + 1} \left(n(\frac{\alpha}{\alpha + \beta}) \right)^{1-\lambda_{1}} \\
-
-& \text{var(k)} \approx  n \left(\frac{\alpha}{\alpha + \beta} \right) + \lambda_{2} \left(\frac{(\frac{\alpha}{\alpha + \beta})}{log(\frac{\alpha}{\alpha + \beta})}\right)^{\lambda_1} n^{\lambda_1 + 1} \left(n(\frac{\alpha}{\alpha + \beta}) \right)^{1-\lambda_{1}} \\
+& \text{E}\left(\omega_{g,i} \right) = \lambda_{0} + \lambda_{1} \mu_{g,i} & \textrm{ (17) } \\
+& \omega_{g,i} \sim \text{Normal} \left(\lambda_{0} + \lambda_{1} \mu_{g,i}, \phi \right ) & \textrm{ (18) } \\
+& \omega_{g,2} - \omega_{g,1} - \left(\lambda_{1} * \left(\mu_{g,2} - \mu_{g,1} \right)\right)  & \textrm{ (19) } \\
 
 
 \end{align}
 ```
+
+
 

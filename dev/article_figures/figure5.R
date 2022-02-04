@@ -1235,8 +1235,92 @@ ggsave(
   limitsize = FALSE
 )
 
+# Only Cancer for supplementary
+data_proportion_cancer =
+  BRCA_tnbc_vs_all |>
+  pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
+  unnest(count_data) |>
+  select(cell_type, sample, outlier, count, type, contains("FDR")) |>
+  with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) %>%
 
-p_other = (
+
+  mutate(significance_c = case_when(
+    `c_FDR_typeHER2+` < 0.025 & `c_FDR_typeER+` < 0.025 ~ "her2+ er+",
+    `c_FDR_typeHER2+` < 0.025 ~ "her2+",
+    `c_FDR_typeER+` < 0.025 ~ "er+",
+    TRUE ~ "none"
+  )) %>%
+  mutate(significance_v = case_when(
+    `v_FDR_typeHER2+` < 0.025 & `v_FDR_typeER+` < 0.025 ~ "her2+ er+",
+    `v_FDR_typeHER2+` < 0.025 ~ "her2+",
+    `v_FDR_typeER+` < 0.025 ~ "er+",
+    TRUE ~ "none"
+  ))  %>%
+  left_join(
+    plot_df %>% filter(dataset == "bc_cells") %>% unnest(data) %>% distinct(cell_type,  color )
+  )  %>%
+  # Only Cncer for supplementary
+  filter( grepl("Cancer", cell_type) ) %>%
+
+  # Rename cell types
+  left_join(
+    read_csv("dev/brca_cell_type_abbreviations.csv") %>%
+      setNames(c("cell_type", "cell_type_pretty"))
+  ) %>%
+
+  mutate(c_FDR = pmin(`c_FDR_typeHER2+`, `c_FDR_typeER+`)) %>%
+  mutate(color = "Diff abundant_TRUE")
+
+plot_brca_boxplot_cancer =
+  ggplot() +
+  stat_summary(
+    aes(type, (generated_proportions)),
+    fun.data = calc_boxplot_stat, geom="boxplot",
+    fatten = 0.5, lwd=0.2,
+    data =
+      simulated_proportion %>%
+
+      # Filter uanitles because of limits
+      inner_join( filter(data_proportion_cancer, !is.na(color)) %>% distinct(cell_type, c_FDR, color)) ,
+    color="blue"
+
+  )+
+
+  geom_boxplot(
+    aes(type, (proportion), fill=color),
+    outlier.shape = NA,
+    fatten = 0.5, lwd=0.2,
+    data = filter(data_proportion_cancer, !outlier) %>% filter(!is.na(color))
+  ) +
+  geom_jitter(aes(type, (proportion), color=outlier), size = 0.2, data = data_proportion_cancer  %>% filter(!is.na(color)), height = 0) +
+
+
+  facet_wrap(~ fct_reorder(cell_type_pretty, as.numeric(color)), scale="free_y", nrow=1) +
+
+  scale_y_continuous(trans="S_sqrt", labels = dropLeadingZero) +
+
+  scale_color_manual(values = c("black", "#e11f28")) +
+  scale_fill_manual(values =  c(
+    "Non-significant_TRUE" = brewer_pal(palette="Reds")(9)[7],
+    "Diff abundant_FALSE" = brewer_pal(palette="Greens")(9)[7],
+    "Diff heterogeneous_FALSE"= brewer_pal(palette="Purples")(9)[7] ,
+    "Diff both_FALSE"= brewer_pal(palette="Blues")(9)[7],
+    "Diff abundant_TRUE" = brewer_pal(palette="Greys")(9)[7]
+  )) +
+  xlab("Biological condition") +
+  ylab("Cell-group proportion") +
+  multipanel_theme +
+  theme(strip.background =element_rect(fill="white", colour = NA), legend.position = "bottom")  +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle=30, hjust = 1)
+  )
+
+
+p_other =
+(  plot_brca_boxplot_cancer /
+(
   (plot_df$UMAP_plot[[2]] + ggtitle(plot_df$dataset[[2]])) + plot_df$estimate_plot[[2]] +
     plot_layout(widths = c(1, 1))
 ) /
@@ -1248,6 +1332,10 @@ p_other = (
    (plot_df$UMAP_plot[[5]] + ggtitle(plot_df$dataset[[5]])) + plot_df$estimate_plot[[5]]  +
     plot_layout(widths = c(1,1))
 )
+)+
+  plot_layout(guides = 'collect') + plot_annotation(tag_levels = 'A') &
+  theme( plot.margin = margin(0, 0, 0, 0, "pt"), legend.position = "bottom", legend.key.size = unit(0.2, 'cm'), plot.tag = element_text(size = 10))
+
 
 ggsave(
   "dev/article_figures/novel_results_other_plot.png",
@@ -1266,6 +1354,8 @@ ggsave(
   height = 183 ,
   limitsize = FALSE
 )
+
+
 
 # # Other mean trend variability trend association
 # data_estimates %>%

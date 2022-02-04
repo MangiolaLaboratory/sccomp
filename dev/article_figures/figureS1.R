@@ -412,77 +412,82 @@ hyperprior = list(
 
 # Plot
 
-# Read input
-df_for_plot =
-  dir("dev/study_of_association", pattern = "estimate", full.names = T) %>%
-  enframe(value = "file") %>%
-  mutate(data_type = "RNA") %>%
+# # Read input
+# df_for_plot =
+#   dir("dev/study_of_association", pattern = "estimate", full.names = T) %>%
+#   enframe(value = "file") %>%
+#   mutate(data_type = "RNA") %>%
+#
+#   bind_rows(
+#     dir("dev/metagenomics", pattern = "estimate", full.names = T) %>%
+#       enframe(value = "file") %>%
+#       mutate(data_type = "metagenomics")
+#   ) %>%
+#
+#   bind_rows(
+#     dir("dev/cytof", pattern = "estimate", full.names = T) %>%
+#       enframe(value = "file") %>%
+#       mutate(data_type = "cytof")
+#   ) %>%
+#   filter(!grepl(".R$", file)) %>%
+#
+#   # Filter out hyperprior because not canging
+#   filter(!grepl("hyperprior", file)) %>%
+#   filter(!grepl("dirichlet", file)) %>%
+#
+#   tidyr::extract(file, "dataset", regex = ".*_?estimate_([^_]+)_?.*.rds", remove = F)  %>%
+#   nest(data = -data_type) %>%
+#   mutate(color = cool_palette[1:n()]) %>%
+#   unnest(data) %>%
+#
+#   # Add cell_type for cytof
+#   mutate(
+#     data = map( file,  ~ readRDS(.x) )
+#   ) %>%
+#
+#   # Process
+#   mutate(file = (file)) %>%
+#   mutate(prior = case_when(
+#     grepl("priorFree", file) ~ "none",
+#     grepl("hyperprior", file) ~ "hyperprior",
+#     TRUE ~ "prior"
+#   ) ) %>%
+#   mutate(prior = factor(prior, levels = c("none", "prior", "hyperprior"))) %>%
+#
+#
+#
+#   # Add lines
+#   mutate(correlation = map(
+#         data,
+#         ~ .x %>%
+#           attr("mean_concentration_association") %>%
+#           t() %>%
+#           as.data.frame %>%
+#           setNames(c("intercept", "slope", "standard_deviation"))
+#       )) %>%
+#   unnest(correlation) %>%
+#
+#   # hide
+#   mutate( intercept = if_else(prior!="none", intercept, 99) ) %>%
+#
+#   # Get dataset size
+#   mutate(dataset_size = map_int(
+#     data,
+#     ~ .x %>% pull(count_data) %>% .[[1]] %>% nrow
+#   )) %>%
+#   unite("dataset_size", c(dataset, dataset_size), sep=" S=", remove = FALSE) %>%
+#
+#   # Get data
+#   mutate(data = map(data,  ~ select( .x, composition_CI,concentration, cell_type )  )) %>%
+#   unnest(data) %>%
+#   unnest(c(composition_CI ,  concentration  ))
+#
+# df_for_plot %>% saveRDS("dev/df_for_plot.rds")
 
-  bind_rows(
-    dir("dev/metagenomics", pattern = "estimate", full.names = T) %>%
-      enframe(value = "file") %>%
-      mutate(data_type = "metagenomics")
-  ) %>%
+df_for_plot = readRDS("dev/df_for_plot.rds")
 
-  bind_rows(
-    dir("dev/cytof", pattern = "estimate", full.names = T) %>%
-      enframe(value = "file") %>%
-      mutate(data_type = "cytof")
-  ) %>%
-  filter(!grepl(".R$", file)) %>%
-
-  # Filter out hyperprior because not canging
-  filter(!grepl("hyperprior", file)) %>%
-  filter(!grepl("dirichlet", file)) %>%
-
-  tidyr::extract(file, "dataset", regex = ".*_?estimate_([^_]+)_?.*.rds", remove = F)  %>%
-  nest(data = -data_type) %>%
-  mutate(color = cool_palette[1:n()]) %>%
-  unnest(data) %>%
-
-  # Add cell_type for cytof
-  mutate(
-    data = map( file,  ~ readRDS(.x) )
-  ) %>%
-
-  # Process
-  mutate(file = (file)) %>%
-  mutate(prior = case_when(
-    grepl("priorFree", file) ~ "none",
-    grepl("hyperprior", file) ~ "hyperprior",
-    TRUE ~ "prior"
-  ) ) %>%
-  mutate(prior = factor(prior, levels = c("none", "prior", "hyperprior"))) %>%
-
-
-
-  # Add lines
-  mutate(correlation = map(
-        data,
-        ~ .x %>%
-          attr("mean_concentration_association") %>%
-          t() %>%
-          as.data.frame %>%
-          setNames(c("intercept", "slope", "standard_deviation"))
-      )) %>%
-  unnest(correlation) %>%
-
-  # hide
-  mutate( intercept = if_else(prior!="none", intercept, 99) ) %>%
-
-  # Get dataset size
-  mutate(dataset_size = map_int(
-    data,
-    ~ .x %>% pull(count_data) %>% .[[1]] %>% nrow
-  )) %>%
-  unite("dataset_size", c(dataset, dataset_size), sep=" S=", remove = FALSE) %>%
-
-  # Get data
-  mutate(data = map(data,  ~ select( .x, composition_CI,concentration, cell_type )  )) %>%
-  unnest(data) %>%
-  unnest(c(composition_CI ,  concentration  ))
-
-df_for_plot %>% saveRDS("dev/df_for_plot.rds")
+# drom 19th dataset
+df_for_plot = df_for_plot %>% filter(dataset != "GSE115189")
 
 plot_shrinkage =
   df_for_plot %>%
@@ -594,7 +599,7 @@ plot_residuals =
       mutate(m = ..4 %>% pull(`.median_(Intercept)`)) %>%
       mutate(weights = ..2) %>%
       mutate(name = as.numeric(name)) %>%
-      ggplot(aes(m, value)) +
+      ggplot(aes(m, -value)) +
       geom_hline(yintercept=0,linetype="dashed") +
       geom_point(size = 0.5) +
       geom_smooth(se=FALSE, span=1, mapping = aes(weight = weights), size=0.5) +
@@ -629,12 +634,12 @@ plot_no_prior =
     ~ .x %>%
       unnest(data) %>%
       filter(prior=="none") %>%
-      ggplot(aes(`.median_(Intercept)`, mean)) +
-      geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  color=cool_palette[3],  alpha = 0.4, size = 0.5 ) +
+      ggplot(aes(`.median_(Intercept)`, -mean)) +
+      geom_errorbar(aes(ymin = -`2.5%`, ymax=-`97.5%`),  color=cool_palette[3],  alpha = 0.4, size = 0.5 ) +
       geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`),  color=cool_palette[3], alpha = 0.4, size = 0.5) +
       geom_point(size=0.1) +
       geom_abline(
-        aes(intercept =  intercept, slope = slope),
+        aes(intercept =  -intercept, slope = -slope),
         linetype = "dotted",
         alpha=0.5
       ) +
@@ -659,12 +664,12 @@ plot_prior =
     data,
     ~ .x %>%
       filter(prior!="none") %>%
-      ggplot(aes(`.median_(Intercept)`, mean)) +
-      geom_errorbar(aes(ymin = `2.5%`, ymax=`97.5%`),  color=cool_palette[2],  alpha = 0.4, size = 0.5) +
+      ggplot(aes(`.median_(Intercept)`, -mean)) +
+      geom_errorbar(aes(ymin = -`2.5%`, ymax=-`97.5%`),  color=cool_palette[2],  alpha = 0.4, size = 0.5) +
       geom_errorbar(aes(xmin = `.lower_(Intercept)`, xmax=`.upper_(Intercept)`),  color=cool_palette[2], alpha = 0.4, size = 0.5) +
       geom_point(size=0.1) +
       geom_abline(
-        aes(intercept =  intercept, slope = slope),
+        aes(intercept =  -intercept, slope = -slope),
         linetype = "dashed",
         alpha=0.5
       ) +
@@ -677,7 +682,7 @@ plot_prior =
       #scale_color_manual(values = unique(.x$color)) +
       guides(color="none") +
       xlab("Inverse-multinomial-logit mean") +
-      ylab("Log-concentration")+
+      ylab("Log-variability")+
       multipanel_theme +
       theme(
         strip.background = element_blank(),
@@ -760,7 +765,7 @@ plot_association_all =
   geom_abline(aes(intercept =  intercept, slope = slope, color = dataset), linetype = "dashed", data = slopes_df) +
   scale_color_brewer(palette="Set1") +
   xlab("Category logit mean") +
-  ylab("Category log-concentration") +
+  ylab("Category log-variability") +
   multipanel_theme
 
 plot_association_all =
@@ -782,7 +787,7 @@ plot_association_all =
   geom_abline(aes(intercept =  intercept, slope = slope, color = dataset), linetype = "dashed", data = slopes_df) +
   scale_color_brewer(palette="Set1") +
   xlab("Category rate") +
-  ylab("Category log-concentration") +
+  ylab("Category log-variability") +
   theme_bw() +
   theme(legend.position = "none")
 
@@ -800,7 +805,7 @@ plot_association_one =
   scale_color_brewer(palette="Set1") +
   guides(color='none') +
   xlab("Category rate") +
-  ylab("Category log-concentration") +
+  ylab("Category log-variability") +
   theme_bw()+
   theme(legend.position = "bottom")
 
