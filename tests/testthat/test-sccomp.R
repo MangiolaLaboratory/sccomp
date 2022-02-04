@@ -47,16 +47,18 @@ test_that("multi beta binomial from Seurat",{
 
     seurat_obj |>
     sccomp_glm(
-      formula = ~ type,
+      formula_composition = ~ type,
+      formula_variability = ~ 1,
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
     )  |>
-    filter(composition_prob_H0<0.05) |>
+    filter(parameter == "typehealthy") |>
+    filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(14)
+    expect_equal(18)
 
 })
 
@@ -64,33 +66,68 @@ test_that("multi beta binomial from SCE",{
 
     sce_obj |>
     sccomp_glm(
-      formula = ~ type,
-      sample, cell_group,
+      formula_composition = ~ type,
+      formula_variability = ~ 1,
+      sample,
+      cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
     )  |>
-    filter(composition_prob_H0<0.05) |>
+    filter(parameter == "typehealthy") |>
+    filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(14)
+    expect_equal(18)
 
 })
+
+res_composition =
+  seurat_obj[[]] |>
+  sccomp_glm(
+    formula_composition = ~ type,
+    formula_variability = ~ 1,
+    sample,
+    cell_group,
+    check_outliers = FALSE,
+    approximate_posterior_inference = "all",
+    cores = 1,
+    mcmc_seed = 42
+  )
+
+res_composition_variability =
+  seurat_obj[[]] |>
+  sccomp_glm(
+    formula_composition = ~ type,
+    formula_variability = ~ type,
+    sample,
+    cell_group,
+    check_outliers = FALSE,
+    approximate_posterior_inference = "all",
+    cores = 1,
+    mcmc_seed = 42
+  )
 
 test_that("multi beta binomial from metadata",{
 
-    seurat_obj[[]] |>
-    sccomp_glm(
-      formula = ~ type,
-      sample, cell_group,
-      check_outliers = FALSE,
-      approximate_posterior_inference = "all",
-      cores = 1,
-      mcmc_seed = 42
-    )  |>
-    filter(composition_prob_H0<0.05) |>
+  res_composition  |>
+    filter(parameter == "typehealthy") |>
+    filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(14)
+    expect_equal(18)
 
 })
 
+test_that("plot test composition",{
+
+  plot_summary(res_composition)
+
+
+})
+
+test_that("plot test composition",{
+
+  plot_summary(res_composition_variability)
+
+
+})

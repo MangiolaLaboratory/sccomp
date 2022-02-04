@@ -19,10 +19,12 @@
 #' @importFrom rlang :=
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
-#' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
+#' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
+#' @param formula_variability A formula. The sample formula used to perform the differential cell_group variability analysis
 #' @param .sample A column name as symbol. The sample identifier
-#' @param .cell_type A column name as symbol. The cell_type identifier
+#' @param .cell_group A column name as symbol. The cell_type identifier
 #' @param .count A column name as symbol. The cell_type abundance (read count)
+#'
 #' @param prior_mean_variable_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
@@ -39,11 +41,13 @@
 #'
 #'
 estimate_multi_beta_binomial_glm = function(.data,
-                                            formula = ~ 1,
-                                            .sample,
-                                            .cell_type,
-                                            .count,
+                                            formula_composition = ~ 1,
                                             formula_variability = ~ 1,
+                                            .sample,
+                                            .cell_group,
+                                            .count,
+
+                                            # Secondary parameters
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
@@ -57,13 +61,13 @@ estimate_multi_beta_binomial_glm = function(.data,
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
+  .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
   CI = 1 - (percent_false_positive/100)
 
   # Produce data list
-  covariate_names = parse_formula(formula)
+  covariate_names = parse_formula(formula_composition)
 
   # Original - old
   # prec_sd ~ normal(0,2);
@@ -76,9 +80,9 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     data_for_model =
       .data %>%
-      data_to_spread ( formula, !!.sample, !!.cell_type, !!.count) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
       data_spread_to_model_input(
-        formula, !!.sample, !!.cell_type, !!.count,
+        formula_composition, !!.sample, !!.cell_group, !!.count,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference == "all",
@@ -126,9 +130,9 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Force variance NOT associated with mean for stringency of outlier detection
     data_for_model =
       .data %>%
-      data_to_spread ( formula, !!.sample, !!.cell_type, !!.count) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
       data_spread_to_model_input(
-        formula, !!.sample, !!.cell_type, !!.count,
+        formula_composition, !!.sample, !!.cell_group, !!.count,
         variance_association = FALSE,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
@@ -173,10 +177,10 @@ estimate_multi_beta_binomial_glm = function(.data,
           mutate(!!.sample := rownames(data_for_model$y)) %>%
           unnest(data) %>%
           nest(data = -M) %>%
-          mutate(!!.cell_type := colnames(data_for_model$y)) %>%
+          mutate(!!.cell_group := colnames(data_for_model$y)) %>%
           unnest(data) ,
 
-        by = c(quo_name(.sample), quo_name(.cell_type))
+        by = c(quo_name(.sample), quo_name(.cell_group))
       ) %>%
 
       # Add truncation
@@ -196,9 +200,9 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Allow variance association
     data_for_model =
       .data %>%
-      data_to_spread ( formula, !!.sample, !!.cell_type, !!.count) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
       data_spread_to_model_input(
-        formula, !!.sample, !!.cell_type, !!.count,
+        formula_composition, !!.sample, !!.cell_group, !!.count,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
@@ -264,10 +268,10 @@ estimate_multi_beta_binomial_glm = function(.data,
           mutate(!!.sample := rownames(data_for_model$y)) %>%
           unnest(data) %>%
           nest(data = -M) %>%
-          mutate(!!.cell_type := colnames(data_for_model$y)) %>%
+          mutate(!!.cell_group := colnames(data_for_model$y)) %>%
           unnest(data) ,
 
-        by = c(quo_name(.sample), quo_name(.cell_type))
+        by = c(quo_name(.sample), quo_name(.cell_group))
       ) %>%
 
       # Add truncation
@@ -349,7 +353,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 #'
 #'
 hypothesis_test_multi_beta_binomial_glm = function( .sample,
-                                                    .cell_type,
+                                                    .cell_group,
                                                     .count,
                                                     fit,
                                                     data_for_model,
@@ -360,7 +364,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
                                                     test_composition_above_logit_fold_change ) {
 
   .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
+  .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
   do_test = ncol(data_for_model$X) > 1
@@ -480,9 +484,10 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 #' @noRd
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
-#' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
+#' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
+#' @param formula_variability A formula. The sample formula used to perform the differential cell_group variability analysis
 #' @param .sample A column name as symbol. The sample identifier
-#' @param .cell_type A column name as symbol. The cell_type identifier
+#' @param .cell_group A column name as symbol. The cell_type identifier
 #' @param .count A column name as symbol. The cell_type abundance (read count)
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
@@ -495,11 +500,13 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 #'
 #'
 multi_beta_binomial_glm = function(.data,
-                                   formula = ~ 1,
-                                   .sample,
-                                   .cell_type,
-                                   .count,
+                                   formula_composition = ~ 1,
                                    formula_variability = ~1,
+                                   .sample,
+                                   .cell_group,
+                                   .count,
+
+                                   # Secondary parameters
                                    prior_mean_variable_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
@@ -516,16 +523,16 @@ multi_beta_binomial_glm = function(.data,
 
   # Prepare column same enquo
   .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
+  .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
 
   result_list =
     estimate_multi_beta_binomial_glm(
       .data = .data,
-      formula = formula,
+      formula_composition = formula_composition,
       .sample = !!.sample,
-      .cell_type = !!.cell_type,
+      .cell_group = !!.cell_group,
       .count = !!.count,
       formula_variability = formula_variability,
       prior_mean_variable_association = prior_mean_variable_association,
@@ -543,7 +550,7 @@ multi_beta_binomial_glm = function(.data,
 
   hypothesis_test_multi_beta_binomial_glm(
     .sample = !!.sample,
-    .cell_type = !!.cell_type,
+    .cell_group = !!.cell_group,
     .count = !!.count,
     result_list$fit,
     result_list$data_for_model,
@@ -555,10 +562,10 @@ multi_beta_binomial_glm = function(.data,
 
     # Add cell name
     left_join(
-      result_list$data_for_model$y %>% colnames() %>% enframe(name = "M", value  = quo_name(.cell_type)),
+      result_list$data_for_model$y %>% colnames() %>% enframe(name = "M", value  = quo_name(.cell_group)),
       by = "M"
     ) %>%
-    select(!!.cell_type, everything(), -M) %>%
+    select(!!.cell_group, everything(), -M) %>%
 
     # Join generated data
     # left_join(result_list$generated_quantities, by="M") %>%
@@ -569,10 +576,10 @@ multi_beta_binomial_glm = function(.data,
         left_join(
           result_list$truncation_df2 %>%
             select(-c(M, N, .variable, mean, se_mean, sd, n_eff, Rhat)) %>%
-            nest(count_data = -!!.cell_type),
-          by = quo_name(.cell_type)
+            nest(count_data = -!!.cell_group),
+          by = quo_name(.cell_group)
         ),
-      ~ (.) %>% left_join(result_list$truncation_df2 %>% nest(count_data = -!!.cell_type),  by = quo_name(.cell_type))
+      ~ (.) %>% left_join(result_list$truncation_df2 %>% nest(count_data = -!!.cell_group),  by = quo_name(.cell_group))
     ) %>%
 
     # Attach association mean concentration
@@ -583,9 +590,9 @@ multi_beta_binomial_glm = function(.data,
 }
 
 #' @importFrom stats model.matrix
-# glm_multi_beta_binomial = function(input_df, formula, .sample){
+# glm_multi_beta_binomial = function(input_df, formula_composition, .sample){
 #
-#   covariate_names = parse_formula(formula)
+#   covariate_names = parse_formula(formula_composition)
 #   .sample = enquo(.sample)
 #
 #   sampling(stanmodels$glm_multi_beta_binomial,
@@ -594,7 +601,7 @@ multi_beta_binomial_glm = function(.data,
 #              M = input_df %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
 #              exposure = input_df$exposure,
 #              y = input_df %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = !!.sample),
-#              X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.),
+#              X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula_composition, data=.),
 #              C = length(covariate_names)
 #            ),
 #            cores = 4

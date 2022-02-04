@@ -4,10 +4,10 @@
 \alias{plot_summary}
 \title{plot_summary}
 \usage{
-plot_summary(.data, .cell_group)
+plot_summary(.data)
 }
 \arguments{
-\item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 }
 \value{
 A \code{ggplot}
@@ -23,7 +23,7 @@ library(dplyr)
 estimate =
   sccomp_glm(
   counts_obj ,
-   ~ type,  sample, cell_group, count,
+   ~ type, ~1, sample, cell_group, count,
     approximate_posterior_inference = "all",
     check_outliers = FALSE,
     cores = 1
