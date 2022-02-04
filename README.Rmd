@@ -53,14 +53,22 @@ devtools::install_github("stemangiola/sccomp")
 
 res =
   seurat_obj |>
-  sccomp_glm(  ~ type, sample, cell_group )
+   formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
 
 ```
 
 ```{r eval=FALSE}
 res =
   sce_obj |>
-  sccomp_glm( ~ type, sample, cell_group)
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
 
 ```
 
@@ -70,7 +78,12 @@ res =
 
 res =
   seurat_obj[[]] |>
-  sccomp_glm(~ type, sample, cell_group )
+  sccomp_glm(
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
 
 ```
 
@@ -81,20 +94,21 @@ res =
 res =
   counts_obj |>
   sccomp_glm( 
-    ~ type, 
-    formula_variability = ~ type, 
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count
   )
 
+res
 ```
 
 
 ## Visualise data + inference
 
 ```{r, out.height="200%"}
-plots = plot_summary(res, cell_group) 
+plots = plot_summary(res) 
 
 
 ```
@@ -122,4 +136,19 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 ```
 
 
+## Differential variability
 
+We can model the cell-group variability also dependent on type, and so test differences in variability
+
+```{r warning=FALSE}
+
+counts_obj |>
+  sccomp_glm( 
+    formula_composition = ~ type, 
+    formula_variability = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    .count = count
+  )
+
+```

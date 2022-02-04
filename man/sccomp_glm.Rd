@@ -6,11 +6,11 @@
 \usage{
 sccomp_glm(
   .data,
-  formula = ~1,
+  formula_composition = ~1,
+  formula_variability = ~1,
   .sample,
   .cell_group,
   .count = NULL,
-  formula_variability = ~1,
   prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope =
     c(-0.73074903, 0.06532897), standard_deviation = c(5.06983, 8.549324)),
   percent_false_positive = 5,
@@ -19,30 +19,6 @@ sccomp_glm(
   test_composition_above_logit_fold_change = 0.2,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
-  variance_association = FALSE,
-  exclude_priors = FALSE,
-  cores = detectCores(),
-  mcmc_seed = sample(1e+05, 1),
-  max_sampling_iterations = 20000,
-  pass_fit = TRUE
-)
-
-sccomp_glm(
-  .data,
-  formula = ~1,
-  .sample,
-  .cell_group,
-  .count = NULL,
-  formula_variability = ~1,
-  prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope =
-    c(-0.73074903, 0.06532897), standard_deviation = c(5.06983, 8.549324)),
-  percent_false_positive = 5,
-  check_outliers = TRUE,
-  approximate_posterior_inference = "outlier_detection",
-  test_composition_above_logit_fold_change = 0.2,
-  verbose = FALSE,
-  noise_model = "multi_beta_binomial",
-  variance_association = FALSE,
   exclude_priors = FALSE,
   cores = detectCores(),
   mcmc_seed = sample(1e+05, 1),
@@ -51,15 +27,17 @@ sccomp_glm(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
-\item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
+\item{formula_composition}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
+
+\item{formula_variability}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
-\item{.cell_group}{A column name as symbol. The cell_type identifier}
+\item{.cell_group}{A column name as symbol. The cell_group identifier}
 
-\item{.count}{A column name as symbol. The cell_type abundance (read count). Used only for data frame count output.}
+\item{.count}{A column name as symbol. The cell_group abundance (read count). Used only for data frame count output.}
 
 \item{prior_mean_variable_association}{A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
 
@@ -75,21 +53,15 @@ sccomp_glm(
 
 \item{noise_model}{A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.}
 
-\item{variance_association}{A boolean. Whether the variance should depend on the factor of interest.}
-
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
 \item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
-
-A nested tibble \code{tbl} with cell_group-wise statistics
 }
 \description{
-This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
-
-This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
+This function runs the data modelling and statistical test for the hypothesis that a cell_group includes outlier biological replicate.
 }
 \examples{
 
@@ -98,19 +70,7 @@ data("counts_obj")
 estimate =
   sccomp_glm(
   counts_obj ,
-   ~ type,  sample, cell_group, count,
-    approximate_posterior_inference = "all",
-    check_outliers = FALSE,
-    cores = 1
-  )
-
-
-data("counts_obj")
-
-estimate =
-  sccomp_glm(
-  counts_obj ,
-   ~ type,  sample, cell_group, count,
+   ~ type, ~1, sample, cell_group, count,
     approximate_posterior_inference = "all",
     check_outliers = FALSE,
     cores = 1

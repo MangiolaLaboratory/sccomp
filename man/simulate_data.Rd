@@ -7,19 +7,7 @@
 simulate_data(
   .data,
   .estimate_object,
-  formula,
-  .sample = NULL,
-  .cell_group = NULL,
-  .coefficients = NULL,
-  variability_multiplier = 5,
-  number_of_draws = 1,
-  mcmc_seed = sample(1e+05, 1)
-)
-
-simulate_data(
-  .data,
-  .estimate_object,
-  formula,
+  formula_composition,
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
@@ -29,15 +17,15 @@ simulate_data(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
 \item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properties.}
 
-\item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
+\item{formula_composition}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
-\item{.cell_group}{A column name as symbol. The cell_type identifier}
+\item{.cell_group}{A column name as symbol. The cell_group identifier}
 
 \item{.coefficients}{Th column names for coefficients, for example, c(b_0, b_1)}
 
@@ -47,12 +35,8 @@ simulate_data(
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
-
-A nested tibble \code{tbl} with cell_group-wise statistics
 }
 \description{
-This function simulates counts from a linear model.
-
 This function simulates counts from a linear model.
 }
 \examples{
@@ -63,32 +47,13 @@ library(dplyr)
 estimate =
   sccomp_glm(
   counts_obj ,
-   ~ type,  sample, cell_group, count,
+   ~ type, ~1,  sample, cell_group, count,
     approximate_posterior_inference = "all",
     check_outliers = FALSE,
     cores = 1
   )
 
-# Set coefficients for cell_types. In this case all coefficients are 0 for simplicity.
-counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-
-# Simulate data
-simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
-
-
-data("counts_obj")
-library(dplyr)
-
-estimate =
-  sccomp_glm(
-  counts_obj ,
-   ~ type,  sample, cell_group, count,
-    approximate_posterior_inference = "all",
-    check_outliers = FALSE,
-    cores = 1
-  )
-
-# Set coefficients for cell_types. In this case all coefficients are 0 for simplicity.
+# Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
 counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
 
 # Simulate data

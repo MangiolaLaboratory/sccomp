@@ -5,11 +5,9 @@
 \title{replicate_data}
 \usage{
 replicate_data(.data, number_of_draws = 1, mcmc_seed = sample(1e+05, 1))
-
-replicate_data(.data, number_of_draws = 1, mcmc_seed = sample(1e+05, 1))
 }
 \arguments{
-\item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
@@ -17,12 +15,8 @@ replicate_data(.data, number_of_draws = 1, mcmc_seed = sample(1e+05, 1))
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
-
-A nested tibble \code{tbl} with cell_group-wise statistics
 }
 \description{
-This function replicates counts from a real-world dataset.
-
 This function replicates counts from a real-world dataset.
 }
 \examples{
@@ -31,20 +25,7 @@ data("counts_obj")
 
   sccomp_glm(
   counts_obj ,
-   ~ type,  sample, cell_group, count,
-    approximate_posterior_inference = "all",
-    check_outliers = FALSE,
-    cores = 1
-  ) |>
-
-  replicate_data()
-
-
-data("counts_obj")
-
-  sccomp_glm(
-  counts_obj ,
-   ~ type,  sample, cell_group, count,
+   ~ type, ~1,  sample, cell_group, count,
     approximate_posterior_inference = "all",
     check_outliers = FALSE,
     cores = 1
