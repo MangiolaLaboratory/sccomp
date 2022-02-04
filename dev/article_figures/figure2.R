@@ -505,22 +505,23 @@ gc()
 covid =  readRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds")
 
 data_proportion =
-    covid %>%
+  covid %>%
+  pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
   distinct() %>%
   unnest(count_data) %>%
-  mutate(significant = composition_pH0_is_criticalTRUE < 0.025) %>%
-  select(cell_type, sample, outlier, count, is_critical, significant, composition_effect_is_criticalTRUE) %>%
+  mutate(significant = c_pH0_is_criticalTRUE < 0.025) %>%
+  select(cell_type, sample, outlier, count, is_critical, significant, c_effect_is_criticalTRUE) %>%
   with_groups(sample, ~ mutate(.x, proportion = (count)/sum(count)) ) %>%
   mutate(Condition = if_else(is_critical, "Critical", "Moderate")) %>%
-  mutate(Effect =composition_effect_is_criticalTRUE  )
+  mutate(Effect =c_effect_is_criticalTRUE  )
 
 
 simulated_proportion =
     covid %>%
   replicate_data( number_of_draws = 100) %>%
-  left_join(data_proportion %>% distinct(is_critical, sample, cell_type, composition_effect_is_criticalTRUE))  %>%
+  left_join(data_proportion %>% distinct(is_critical, sample, cell_type, c_effect_is_criticalTRUE))  %>%
   mutate(Condition = if_else(is_critical, "Critical", "Moderate")) %>%
-  mutate(Effect =composition_effect_is_criticalTRUE  )
+  mutate(Effect =c_effect_is_criticalTRUE  )
 
 rm(covid)
 gc()
@@ -535,7 +536,7 @@ data_simulation_process =
   purrr::reduce(bind_rows) %>%
   filter(cell_type == "Neu") %>%
   mutate(step = forcats::fct_relevel(step, unique(.$step))) %>%
-  mutate(composition_effect_is_criticalTRUE = case_when(step=="Fit model" ~ composition_effect_is_criticalTRUE))
+  mutate(c_effect_is_criticalTRUE = case_when(step=="Fit model" ~ c_effect_is_criticalTRUE))
 
 
 # PLOTS
@@ -543,7 +544,7 @@ plot_simulation_process =
   ggplot() +
 
   geom_boxplot(
-    aes(Condition, proportion, fill = factor(composition_effect_is_criticalTRUE)),
+    aes(Condition, proportion, fill = factor(c_effect_is_criticalTRUE)),
     outlier.shape = NA,
     data = data_simulation_process |> filter(!outlier),
     fatten = 0.5, size=0.5,
@@ -668,25 +669,29 @@ get_plot_qq = function(.data, colors){
     xlab("Observed proportion") +
     ylab("Simulated proportion") +
     guides(color = "none") +
-    multipanel_theme +
-    theme(
-      strip.background = element_blank(),
-      strip.text.x = element_blank()
-    )
+    multipanel_theme
 }
 
 plot_qq_RNA =
   data_for_plot %>%
   filter(data_type=="RNA") %>%
   filter(dataset!="GSE115189") %>% # Drop the made up dataset
-  get_plot_qq(colors = friendly_cols[1:6]) +
+  get_plot_qq(colors = color_df %>% distinct(dataset, .color) %>% deframe()) +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  ) +
   theme(axis.title.x = element_blank()) +
   ggtitle("RNA")
 
 plot_qq_cytof =
   data_for_plot %>%
   filter(data_type=="cytof") %>%
-  get_plot_qq(colors = friendly_cols[7:12]) +
+  get_plot_qq(colors = color_df %>% distinct(dataset, .color) %>% deframe()) +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  )+
   theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
   theme(axis.title.x = element_blank()) +
   ggtitle("CyTOF")
@@ -694,7 +699,11 @@ plot_qq_cytof =
 plot_qq_metagenomics =
   data_for_plot %>%
   filter(data_type=="metagenomics") %>%
-  get_plot_qq(colors = friendly_cols[13:18]) +
+  get_plot_qq(colors = color_df %>% distinct(dataset, .color) %>% deframe())+
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  ) +
   theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
   theme(axis.title.x = element_blank()) +
   ggtitle("Microbiome")
@@ -707,7 +716,7 @@ plot_slopes =
   geom_vline(xintercept  = 1,linetype="dashed", color="grey" ) +
   geom_density() +
   #facet_wrap(~method) +
-  scale_color_manual(values = friendly_cols) +
+  scale_color_manual(values = color_df %>% distinct(dataset, .color) %>% deframe()) +
    scale_x_log10() +
   xlab("Slope qq-plot") +
   ylab("Density") +
@@ -729,7 +738,7 @@ plot_slopes_median_proportion =
       scale_y_log10() +
       ylab("Slope qq-plot") +
       xlab("Observed proportion") +
-      scale_color_manual(values = friendly_cols)  +
+      scale_color_manual(values = color_df %>% distinct(dataset, .color) %>% deframe())  +
       multipanel_theme  +
       theme(
         strip.background = element_blank(),
