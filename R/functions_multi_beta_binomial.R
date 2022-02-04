@@ -419,6 +419,14 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
         v_effect := !!as.symbol(sprintf("%s%s", "50", "%")) ,
         v_upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
       ) %>%
+
+      # Invert concentration to variability
+      mutate(
+        v_lower = -v_lower ,
+        v_effect =  -v_effect,
+        v_upper = -v_upper ,
+      ) %>%
+
       left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
       select(-C, -.variable)
   }
