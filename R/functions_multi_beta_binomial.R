@@ -57,6 +57,8 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             seed = sample(1e5, 1),
                                             verbose = FALSE,
                                             exclude_priors = FALSE,
+                                            bimodal_mean_variability_association = bimodal_mean_variability_association,
+                                            use_data = use_data,
                                             max_sampling_iterations = 20000
 ) {
   # Prepare column same enquo
@@ -86,7 +88,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference == "all",
-        formula_variability = formula_variability
+        formula_variability = formula_variability,
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        use_data = use_data
       )
 
     # Pior
@@ -137,7 +141,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         variance_association = FALSE,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-        formula_variability = ~1
+        formula_variability = ~1,
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        use_data = use_data
       )
 
     # Pior
@@ -208,7 +214,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-        formula_variability = formula_variability
+        formula_variability = formula_variability,
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        use_data = use_data
       )
 
     # Pior
@@ -530,6 +538,8 @@ multi_beta_binomial_glm = function(.data,
                                    seed = sample(1e5, 1),
                                    verbose = FALSE,
                                    exclude_priors = FALSE,
+                                   bimodal_mean_variability_association = FALSE,
+                                   use_data = TRUE,
                                    test_composition_above_logit_fold_change,
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE
@@ -558,6 +568,8 @@ multi_beta_binomial_glm = function(.data,
       seed = seed,
       verbose = verbose,
       exclude_priors = exclude_priors,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      use_data = use_data,
       max_sampling_iterations = max_sampling_iterations
     )
 
