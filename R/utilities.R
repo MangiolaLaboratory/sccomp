@@ -576,7 +576,9 @@ data_spread_to_model_input =
   function(
     .data_spread, formula, .sample, .cell_type, .count,
     variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ,
-    formula_variability = ~ 1){
+    formula_variability = ~ 1,
+    bimodal_mean_variability_association = FALSE,
+    use_data = TRUE){
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -629,7 +631,9 @@ data_spread_to_model_input =
       A = A,
       Ar = Ar,
       truncation_ajustment = truncation_ajustment,
-      is_vb = as.integer(approximate_posterior_inference)
+      is_vb = as.integer(approximate_posterior_inference),
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      use_data = use_data
     )
 
   # Add censoring
