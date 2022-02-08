@@ -1138,19 +1138,43 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
       )
   }
 
+  # Get the exception if no significant cell types. This is not elegant
+  if(nrow(significance_colors)==0){
+    my_boxplot=
+      my_boxplot +
+
+      geom_boxplot(
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL), # fill=Effect),
+        outlier.shape = NA,
+        data =
+          data_proportion |>
+
+          left_join(significance_colors, by = quo_name(.cell_group)),
+        fatten = 0.5,
+        lwd=0.5,
+      )
+  }
+
+  # If I have significance
+  else {
+    my_boxplot=
+      my_boxplot +
+
+      geom_boxplot(
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
+        outlier.shape = NA,
+        data =
+          data_proportion |>
+
+          left_join(significance_colors, by = quo_name(.cell_group)),
+        fatten = 0.5,
+        lwd=0.5,
+      )
+  }
+
+
 
   my_boxplot +
-
-    geom_boxplot(
-      aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
-      outlier.shape = NA,
-      data =
-        data_proportion |>
-
-        left_join(significance_colors, by = quo_name(.cell_group)),
-      fatten = 0.5,
-      lwd=0.5,
-    ) +
     geom_jitter(
       aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
       data = data_proportion,
