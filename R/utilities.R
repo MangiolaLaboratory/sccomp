@@ -636,6 +636,8 @@ data_spread_to_model_input =
   data_for_model$is_truncated = 0
   data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
   data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
+  data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
+  data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
   # Return
   data_for_model

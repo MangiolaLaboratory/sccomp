@@ -53,14 +53,22 @@ devtools::install_github("stemangiola/sccomp")
 
 res =
   seurat_obj |>
-  sccomp_glm(  ~ type, sample, cell_group )
+   formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
 
 ```
 
 ```{r eval=FALSE}
 res =
   sce_obj |>
-  sccomp_glm( ~ type, sample, cell_group)
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
 
 ```
 
@@ -70,7 +78,12 @@ res =
 
 res =
   seurat_obj[[]] |>
-  sccomp_glm(~ type, sample, cell_group )
+  sccomp_glm(
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
 
 ```
 
@@ -81,20 +94,21 @@ res =
 res =
   counts_obj |>
   sccomp_glm( 
-    ~ type, 
-    formula_variability = ~ type, 
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count
   )
 
+res
 ```
 
 
 ## Visualise data + inference
 
 ```{r, out.height="200%"}
-plots = plot_summary(res, cell_group) 
+plots = plot_summary(res) 
 
 
 ```
@@ -109,7 +123,7 @@ plots$boxplot
 Plot of estimates of differential composition (c_) on the x axis, and differential variability (v_) on the y axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
 
 ```{r}
-plots$plot_associations
+plots$credible_intervals_1D
 
 ```
 
@@ -122,4 +136,35 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 ```
 
 
+## Differential variability
 
+We can model the cell-group variability also dependent on type, and so test differences in variability
+
+```{r warning=FALSE}
+
+res = 
+  counts_obj |>
+  sccomp_glm( 
+    formula_composition = ~ type, 
+    formula_variability = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    .count = count
+  )
+
+res
+```
+
+Plot 1D significance plot
+
+```{r}
+plots = plot_summary(res)
+
+plots$credible_intervals_1D
+```
+
+Plot 2D significance plot. This is possible if only differential variability has been tested
+
+```{r}
+plots$credible_intervals_2D
+```
