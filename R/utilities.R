@@ -318,21 +318,23 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   # Avoid bug
-  #if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
+  if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
 
-  fit$summary(par, ~quantile(.x, probs = probs)) %>%
-    rename(.variable = variable ) %>%
-    #rstan::summary(par_names, probs = probs) %$%
-    #summary %>%
-    #as_tibble(rownames = ".variable") %>%
+  fit %>%
+    rstan::summary(par_names, probs = probs) %$%
+    summary %>%
+    as_tibble(rownames = ".variable") %>%
     when(
       is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
       ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
-    )
-    #%>%
-    #filter(.variable == par)
+    ) %>%
+    filter(.variable == par)
 
 }
+
+
+
+
 
 #' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
@@ -359,13 +361,12 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
-#' @importFrom cmdstanr cmdstan_model
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
   seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
 )
-  {
+{
 
 
   # # if analysis approximated
@@ -389,76 +390,56 @@ fit_model = function(
         },
         (.)
       )
+
   # Find optimal number of chains
   if(is.null(chains))
     chains =
       find_optimal_number_of_chains(
         how_many_posterior_draws = output_samples,
-        warmup = warmup_samples,
-        parallelisation_start_penalty = 100
+        warmup = warmup_samples
       ) %>%
       min(cores)
 
-  # rstan_options(threads_per_chain = floor(cores/chains))
-  # Load model
-  if(file.exists("glm_multi_beta_binomial_cmdstanr.rds"))
-    mod = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
-  else {
-    write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
-    mod = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan" )
-    mod  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
-  }
+  # library(VGAM)
+  # ff = VGAM::vglm(
+  #   cbind(a, b) ~ cov,
+  #   dirmultinomial,
+  #   data = tibble(
+  #     a = data_for_model$y[,1],
+  #     b = data_for_model$y[,2],
+  #     cov = data_for_model$X[,2]
+  #   ),
+  #   trace = TRUE
+  # ) %>%
+  # summary()
+  #
+  # print(ff)
 
-  init_list=list(
-    prec_coeff = c(5,0),
-    prec_sd = 1,
-    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE)
-  )
+  # # Define a decent value for alpha as it fails for vb sometimes
+  # init_fun = function(...) list(
+  #   alpha=matrix(rep(data_for_model$prior_prec_intercept[1], data_for_model$A*data_for_model$M),nrow= data_for_model$A),
+  #   beta_raw_raw=matrix(rep(0, data_for_model$C*(data_for_model$M-1)),nrow= data_for_model$C)
+  # )
 
-  init = map(1:chains, ~ init_list) %>%
-    setNames(as.character(1:chains))
-
-  output_directory = "sccomp_draws_files"
-  dir.create(output_directory, showWarnings = FALSE)
+  # If differential variance also capture beta_raw
+  #if(data_for_model$A > 1)
 
   # Fit
-  if(!approximate_posterior_inference){
-
-      mod$sample(
-        data = data_for_model ,
-        chains = chains,
-        parallel_chains = chains,
-        threads_per_chain = 1,
-        iter_warmup = warmup_samples,
-        iter_sampling = as.integer(output_samples /chains),
-        #refresh = ifelse(verbose, 1000, 0),
-        seed = seed,
-        save_warmup = FALSE,
-        init = init,
-        output_dir = output_directory
-      ) %>%
+  if(!approximate_posterior_inference)
+    sampling(
+      model,
+      data = data_for_model,
+      chains = chains,
+      cores = chains,
+      iter = as.integer(output_samples /chains) + warmup_samples,
+      warmup = warmup_samples,
+      refresh = ifelse(verbose, 1000, 0),
+      seed = seed,
+      pars = pars,
+      save_warmup = FALSE
+    ) %>%
       suppressWarnings()
 
-  # fit$draws(
-  #     variables = pars,
-  #     inc_warmup = FALSE,
-  #     format = getOption("cmdstanr_draws_format", "draws_matrix")
-  #   )
-
-    # sampling(
-    #   model,
-    #   data = data_for_model,
-    #   chains = chains,
-    #   cores = chains,
-    #   iter = as.integer(output_samples /chains) + warmup_samples,
-    #   warmup = warmup_samples,
-    #   refresh = ifelse(verbose, 1000, 0),
-    #   seed = seed,
-    #   pars = pars,
-    #   save_warmup = FALSE
-    # ) %>%
-    # suppressWarnings()
-}
   else
     vb_iterative(
       model,
@@ -469,7 +450,7 @@ fit_model = function(
       seed = seed,
       pars = pars
     ) %>%
-    suppressWarnings()
+      suppressWarnings()
 
 
 }
@@ -500,7 +481,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #' @noRd
 beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
-effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
+  effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
 
   fitted %>%
     unnest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration))) %>%
@@ -599,76 +580,72 @@ data_spread_to_model_input =
     bimodal_mean_variability_association = FALSE,
     use_data = TRUE){
 
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
-  .count = enquo(.count)
+    # Prepare column same enquo
+    .sample = enquo(.sample)
+    .cell_type = enquo(.cell_type)
+    .count = enquo(.count)
 
 
-  get_design_matrix = function(formula, .data_spread){
+    get_design_matrix = function(formula, .data_spread){
 
-    .data_spread %>%
-      select(!!.sample, parse_formula(formula)) %>%
-      model.matrix(formula, data=.) %>%
-      apply(2, function(x)
-        x %>% when(
-          sd(.)==0 ~ (.),
+      .data_spread %>%
+        select(!!.sample, parse_formula(formula)) %>%
+        model.matrix(formula, data=.) %>%
+        apply(2, function(x)
+          x %>% when(
+            sd(.)==0 ~ (.),
 
-          # If I only have 0 and 1 for a binomial factor
-          unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
+            # If I only have 0 and 1 for a binomial factor
+            unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
 
-          # If continuous
-          ~ scale(., scale=FALSE)
+            # If continuous
+            ~ scale(., scale=FALSE)
+          )
         )
+    }
+
+    X  = get_design_matrix(formula, .data_spread)
+
+    Xa  = get_design_matrix(formula_variability, .data_spread)
+
+    XA = Xa %>%
+      as_tibble() %>%
+      distinct()
+
+    A = ncol(XA);
+    Ar = nrow(XA);
+
+    covariate_names = parse_formula(formula)
+    cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
+
+    data_for_model =
+      list(
+        N = .data_spread %>% nrow(),
+        M = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
+        exposure = .data_spread$exposure,
+        y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = quo_name(.sample)),
+        X = X,
+        XA = XA,
+        Xa = Xa,
+        C = ncol(X),
+        A = A,
+        Ar = Ar,
+        truncation_ajustment = truncation_ajustment,
+        is_vb = as.integer(approximate_posterior_inference),
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        use_data = use_data
       )
+
+    # Add censoring
+    data_for_model$is_truncated = 0
+    data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
+    data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
+    data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
+    data_for_model$TNS = length(data_for_model$truncation_not_idx)
+
+    # Return
+    data_for_model
   }
-
-  X  = get_design_matrix(formula, .data_spread)
-
-  Xa  = get_design_matrix(formula_variability, .data_spread)
-
-  XA = Xa %>%
-    as_tibble() %>%
-    distinct()
-
-  A = ncol(XA);
-  Ar = nrow(XA);
-
-  covariate_names = parse_formula(formula)
-  cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
-
-  data_for_model =
-    list(
-      N = .data_spread %>% nrow(),
-      M = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
-      exposure = .data_spread$exposure,
-      y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = quo_name(.sample)),
-      X = X,
-      XA = XA,
-      Xa = Xa,
-      C = ncol(X),
-      A = A,
-      Ar = Ar,
-      truncation_ajustment = truncation_ajustment,
-      is_vb = as.integer(approximate_posterior_inference),
-      bimodal_mean_variability_association = bimodal_mean_variability_association,
-      use_data = use_data,
-
-      # For parallel chains
-      grainsize = 1
-
-    )
-
-  # Add censoring
-  data_for_model$is_truncated = 0
-  data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
-  data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
-  data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
-  data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
-  # Return
-  data_for_model
-}
 
 data_to_spread = function(.data, formula, .sample, .cell_type, .count){
 
@@ -738,15 +715,15 @@ data_simulation_to_model_input =
       t()
 
     list(
-        N = .data %>% distinct(!!.sample) %>% nrow(),
-        M = .data %>% distinct(!!.cell_type) %>% nrow(),
-        exposure = .data %>% distinct(!!.sample, !!.exposure) %>% arrange(!!.sample) %>% pull(!!.exposure),
-        X = X,
-        XA = XA,
-        C = ncol(X),
-        A =  ncol(XA),
-        beta = coefficients
-      )
+      N = .data %>% distinct(!!.sample) %>% nrow(),
+      M = .data %>% distinct(!!.cell_type) %>% nrow(),
+      exposure = .data %>% distinct(!!.sample, !!.exposure) %>% arrange(!!.sample) %>% pull(!!.exposure),
+      X = X,
+      XA = XA,
+      C = ncol(X),
+      A =  ncol(XA),
+      beta = coefficients
+    )
 
   }
 
@@ -762,7 +739,9 @@ data_simulation_to_model_input =
 #'
 #' @return A Stan fit object
 find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
-                                         max_number_to_check = 100, warmup = 200, parallelisation_start_penalty = 60) {
+                                         max_number_to_check = 100, warmup = 200) {
+
+  parallelisation_start_penalty = 60
 
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
@@ -809,14 +788,14 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
       !!probability_column_name :=
         1 - (
           max(bigger_zero, smaller_zero) %>%
-        #max(1) %>%
-        divide_by(total_draws)
+            #max(1) %>%
+            divide_by(total_draws)
         )
     )  %>%
     ungroup() %>%
     select(M, !!probability_column_name)
-    # %>%
-    # mutate(false_discovery_rate = cummean(prob_non_zero))
+  # %>%
+  # mutate(false_discovery_rate = cummean(prob_non_zero))
 
 }
 
@@ -830,32 +809,30 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
 
 
-  draws = fit$draws(
-      variables = parameter,
-      inc_warmup = FALSE,
-      format = getOption("cmdstanr_draws_format", "draws_matrix")
-    )
-
-  # draws = rstan::extract(fit, parameter)[[1]]
+  draws = rstan::extract(fit, parameter)[[1]]
 
   total_draws = dim(draws)[1]
 
 
   bigger_zero =
     draws %>%
-      apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
-
+    apply(2, function(y){
+      y %>%
+        apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
+    })
 
 
   smaller_zero =
     draws %>%
+    apply(2, function(y){
+      y %>%
         apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
+    })
+
 
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
-    enframe() %>%
-    tidyr::extract(name, c("C", "M"), "beta\\[([0-9]+),([0-9]+)\\]") %>%
-    mutate(across(c(C, M), ~ as.integer(.x))) %>%
-    tidyr::spread(C, value)
+    as.data.frame() %>%
+    rowid_to_column(var = "M")
 
 }
 
@@ -908,9 +885,9 @@ design_matrix_and_coefficients_to_simulation = function(
 
   input_data =
     expand_grid(
-    sample = rownames(design_df),
-    cell_type = rownames(coefficient_df)
-  ) |>
+      sample = rownames(design_df),
+      cell_type = rownames(coefficient_df)
+    ) |>
     left_join(design_df |> as_tibble(rownames = "sample") , by = "sample") |>
     left_join(coefficient_df |>as_tibble(rownames = "cell_type"), by = "cell_type")
 
