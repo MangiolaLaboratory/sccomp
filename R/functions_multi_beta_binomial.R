@@ -168,11 +168,19 @@ estimate_multi_beta_binomial_glm = function(.data,
         pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
       )
 
-    mod_rng = cmdstan_model("~/PostDoc/sccomp/inst/stan/glm_multi_beta_binomial_generate_date.stan" )
+    # Load model
+    if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
+      mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+    else {
+      write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
+      mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
+      mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+    }
 
     rng = mod_rng$generate_quantities(
-      fit, data = data_for_model,
-      parallel_chains = cores
+      fit,
+      data = data_for_model,
+      parallel_chains = fit$num_chains()
     )
 
     # Detect outliers
@@ -253,24 +261,10 @@ estimate_multi_beta_binomial_glm = function(.data,
         pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised")
       )
 
-    # Load model
-    if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
-      mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-    else {
-      mod_rng = cmdstan_model( glm_multi_beta_binomial_generate )
-      mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-    }
-
-    rng = mod_rng$generate_quantities(
-      fit, data = data_for_model,
-      parallel_chains = cores
-    )
-
-    rng2 =  rstan::gqs(
-      stanmodels$glm_multi_beta_binomial_generate_date,
-      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit2),
-      data = data_for_model
+    rng2 = mod_rng$generate_quantities(
+      fit2,
+      data = data_for_model,
+      parallel_chains = fit$num_chains()
     )
 
     # Detect outliers
@@ -282,9 +276,9 @@ estimate_multi_beta_binomial_glm = function(.data,
           # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
           # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
           rename(
-            .lower := !!as.symbol(colnames(.)[7]) ,
+            .lower := !!as.symbol(colnames(.)[4]) ,
             .median = `50%`,
-            .upper := !!as.symbol(colnames(.)[9])
+            .upper := !!as.symbol(colnames(.)[6])
           ) %>%
           nest(data = -N) %>%
           mutate(!!.sample := rownames(data_for_model$y)) %>%
@@ -309,7 +303,6 @@ estimate_multi_beta_binomial_glm = function(.data,
         truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
         truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up),
       )
-
 
     data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
@@ -607,7 +600,7 @@ multi_beta_binomial_glm = function(.data,
       check_outliers ~ (.) %>%
         left_join(
           result_list$truncation_df2 %>%
-            select(-c(M, N, .variable, mean, se_mean, sd, n_eff, Rhat)) %>%
+            select(-c(M, N, .variable, .lower, .median, .upper)) %>%
             nest(count_data = -!!.cell_group),
           by = quo_name(.cell_group)
         ),
