@@ -318,23 +318,21 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   # Avoid bug
-  if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
+  #if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
 
-  fit %>%
-    rstan::summary(par_names, probs = probs) %$%
-    summary %>%
-    as_tibble(rownames = ".variable") %>%
+  fit$summary(par, ~quantile(.x, probs = probs)) %>%
+    rename(.variable = variable ) %>%
+    #rstan::summary(par_names, probs = probs) %$%
+    #summary %>%
+    #as_tibble(rownames = ".variable") %>%
     when(
       is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
       ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
-    ) %>%
-    filter(.variable == par)
+    )
+    #%>%
+    #filter(.variable == par)
 
 }
-
-
-
-
 
 #' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
@@ -361,6 +359,7 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
+#' @importFrom cmdstanr cmdstan_model
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
@@ -390,56 +389,76 @@ fit_model = function(
         },
         (.)
       )
-
   # Find optimal number of chains
   if(is.null(chains))
     chains =
       find_optimal_number_of_chains(
         how_many_posterior_draws = output_samples,
-        warmup = warmup_samples
+        warmup = warmup_samples,
+        parallelisation_start_penalty = 100
       ) %>%
-        min(cores)
+      min(cores)
 
-  # library(VGAM)
-  # ff = VGAM::vglm(
-  #   cbind(a, b) ~ cov,
-  #   dirmultinomial,
-  #   data = tibble(
-  #     a = data_for_model$y[,1],
-  #     b = data_for_model$y[,2],
-  #     cov = data_for_model$X[,2]
-  #   ),
-  #   trace = TRUE
-  # ) %>%
-  # summary()
-  #
-  # print(ff)
+  # rstan_options(threads_per_chain = floor(cores/chains))
+  # Load model
+  if(file.exists("glm_multi_beta_binomial_cmdstanr.rds"))
+    mod = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
+  else {
+    write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
+    mod = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan" )
+    mod  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
+  }
 
-  # # Define a decent value for alpha as it fails for vb sometimes
-  # init_fun = function(...) list(
-  #   alpha=matrix(rep(data_for_model$prior_prec_intercept[1], data_for_model$A*data_for_model$M),nrow= data_for_model$A),
-  #   beta_raw_raw=matrix(rep(0, data_for_model$C*(data_for_model$M-1)),nrow= data_for_model$C)
-  # )
+  init_list=list(
+    prec_coeff = c(5,0),
+    prec_sd = 1,
+    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE)
+  )
 
-  # If differential variance also capture beta_raw
-  #if(data_for_model$A > 1)
+  init = map(1:chains, ~ init_list) %>%
+    setNames(as.character(1:chains))
+
+  output_directory = "sccomp_draws_files"
+  dir.create(output_directory, showWarnings = FALSE)
 
   # Fit
-  if(!approximate_posterior_inference)
-    sampling(
-      model,
-      data = data_for_model,
-      chains = chains,
-      cores = chains,
-      iter = as.integer(output_samples /chains) + warmup_samples,
-      warmup = warmup_samples,
-      refresh = ifelse(verbose, 1000, 0),
-      seed = seed,
-      pars = pars,
-      save_warmup = FALSE
-    ) %>%
-    suppressWarnings()
+  if(!approximate_posterior_inference){
 
+      mod$sample(
+        data = data_for_model ,
+        chains = chains,
+        parallel_chains = chains,
+        threads_per_chain = 1,
+        iter_warmup = warmup_samples,
+        iter_sampling = as.integer(output_samples /chains),
+        #refresh = ifelse(verbose, 1000, 0),
+        seed = seed,
+        save_warmup = FALSE,
+        init = init,
+        output_dir = output_directory
+      ) %>%
+      suppressWarnings()
+
+  # fit$draws(
+  #     variables = pars,
+  #     inc_warmup = FALSE,
+  #     format = getOption("cmdstanr_draws_format", "draws_matrix")
+  #   )
+
+    # sampling(
+    #   model,
+    #   data = data_for_model,
+    #   chains = chains,
+    #   cores = chains,
+    #   iter = as.integer(output_samples /chains) + warmup_samples,
+    #   warmup = warmup_samples,
+    #   refresh = ifelse(verbose, 1000, 0),
+    #   seed = seed,
+    #   pars = pars,
+    #   save_warmup = FALSE
+    # ) %>%
+    # suppressWarnings()
+}
   else
     vb_iterative(
       model,
@@ -633,7 +652,11 @@ data_spread_to_model_input =
       truncation_ajustment = truncation_ajustment,
       is_vb = as.integer(approximate_posterior_inference),
       bimodal_mean_variability_association = bimodal_mean_variability_association,
-      use_data = use_data
+      use_data = use_data,
+
+      # For parallel chains
+      grainsize = 1
+
     )
 
   # Add censoring
@@ -739,9 +762,7 @@ data_simulation_to_model_input =
 #'
 #' @return A Stan fit object
 find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
-                                         max_number_to_check = 100, warmup = 200) {
-
-  parallelisation_start_penalty = 60
+                                         max_number_to_check = 100, warmup = 200, parallelisation_start_penalty = 60) {
 
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
@@ -809,30 +830,32 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
 
 
-  draws = rstan::extract(fit, parameter)[[1]]
+  draws = fit$draws(
+      variables = parameter,
+      inc_warmup = FALSE,
+      format = getOption("cmdstanr_draws_format", "draws_matrix")
+    )
+
+  # draws = rstan::extract(fit, parameter)[[1]]
 
   total_draws = dim(draws)[1]
 
 
   bigger_zero =
     draws %>%
-    apply(2, function(y){
-      y %>%
       apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
-    })
+
 
 
   smaller_zero =
     draws %>%
-    apply(2, function(y){
-      y %>%
         apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
-    })
-
 
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
-    as.data.frame() %>%
-    rowid_to_column(var = "M")
+    enframe() %>%
+    tidyr::extract(name, c("C", "M"), "beta\\[([0-9]+),([0-9]+)\\]") %>%
+    mutate(across(c(C, M), ~ as.integer(.x))) %>%
+    tidyr::spread(C, value)
 
 }
 
@@ -964,4 +987,204 @@ get_FDR = function(x){
     mutate(FDR = cummean(value)) %>%
     arrange(name) %>%
     pull(FDR)
+}
+
+#' @importFrom patchwork wrap_plots
+plot_1d_intervals = function(.data, .cell_group, my_theme){
+
+  .cell_group = enquo(.cell_group)
+
+  .data |>
+    filter(parameter != "(Intercept)") |>
+
+    # Reshape
+    pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
+    pivot_wider(names_from = estimate, values_from = value) |>
+
+    nest(data = -c(parameter, which)) |>
+    mutate(plot = pmap(
+      list(data, which, parameter),
+      ~  ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
+        geom_vline(xintercept = 0.2, colour="grey") +
+        geom_vline(xintercept = -0.2, colour="grey") +
+        geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<0.025)) +
+        geom_point() +
+        scale_color_brewer(palette = "Set1") +
+        xlab("Credible interval of the slope") +
+        ylab("Cell group") +
+        ggtitle(sprintf("%s %s", ..2, ..3)) +
+        theme(legend.position = "bottom") +
+        my_theme
+    )) %>%
+    pull(plot) |>
+    wrap_plots(ncol=2)
+
+
+}
+
+plot_2d_intervals = function(.data, .cell_group, my_theme){
+
+  .cell_group = enquo(.cell_group)
+
+  # mean-variance association
+  .data %>%
+
+    # Filter where I did not inferred the variance
+    filter(!is.na(v_effect)) %>%
+
+    # Add labels
+    with_groups(
+      parameter,
+      ~ .x %>%
+        arrange(c_FDR) %>%
+        mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < 0.025 & parameter!="(Intercept)", !!.cell_group, ""))
+    ) %>%
+    with_groups(
+      parameter,
+      ~ .x %>%
+        arrange(v_FDR) %>%
+        mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < 0.025 & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
+    ) %>%
+
+    {
+      .x = (.)
+      # Plot
+      ggplot(.x, aes(c_effect, v_effect)) +
+        geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+        geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
+        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
+
+        geom_point(size=0.2)  +
+        annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
+        annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+
+        geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label!="") ) +
+
+        scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+        scale_alpha_manual(values = c(0.4, 1)) +
+        facet_wrap(~parameter, scales="free") +
+        my_theme +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        )
+    }
+
+}
+
+plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, my_theme){
+
+  calc_boxplot_stat <- function(x) {
+    coef <- 1.5
+    n <- sum(!is.na(x))
+    # calculate quantiles
+    stats <- quantile(x, probs = c(0.0, 0.25, 0.5, 0.75, 1.0))
+    names(stats) <- c("ymin", "lower", "middle", "upper", "ymax")
+    iqr <- diff(stats[c(2, 4)])
+    # set whiskers
+    outliers <- x < (stats[2] - coef * iqr) | x > (stats[4] + coef * iqr)
+    if (any(outliers)) {
+      stats[c(1, 5)] <- range(c(stats[2:4], x[!outliers]), na.rm = TRUE)
+    }
+    return(stats)
+  }
+
+  dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
+
+  S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+  IS_sqrt <- function(x){x^2*sign(x)}
+  S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
+
+
+  .cell_group = enquo(.cell_group)
+
+  significance_colors =
+    .data %>%
+    pivot_longer(
+      c(contains("c_"), contains("v_")),
+      names_pattern = "([cv])_([a-zA-Z0-9]+)",
+      names_to = c("which", "stats_name"),
+      values_to = "stats_value"
+    ) %>%
+    filter(stats_name == "FDR") %>%
+    filter(parameter != "(Intercept)") %>%
+    filter(stats_value < 0.025) %>%
+    unite("name", c(which, parameter)) %>%
+    with_groups(!!.cell_group, ~ .x %>% summarise(name = paste(name, collapse = " + ")))
+
+  my_boxplot =  ggplot()
+
+  if("fit" %in% names(attributes(.data))){
+
+    simulated_proportion =
+      .data %>%
+      replicate_data( number_of_draws = 100) %>%
+      left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), sample, !!.cell_group))
+
+    my_boxplot = my_boxplot +
+
+      stat_summary(
+        aes(!!as.symbol(factor_of_interest), (generated_proportions)),
+        fun.data = calc_boxplot_stat, geom="boxplot",
+        fatten = 0.5, lwd=0.2,
+        data =
+          simulated_proportion %>%
+
+          # Filter uanitles because of limits
+          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)) ,
+        color="blue"
+
+      )
+  }
+
+
+  my_boxplot +
+
+    geom_boxplot(
+      aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
+      outlier.shape = NA,
+      data =
+        data_proportion |>
+
+        left_join(significance_colors, by = quo_name(.cell_group)),
+      fatten = 0.5,
+      lwd=0.5,
+    ) +
+    geom_jitter(
+      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
+      data = data_proportion,
+      position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
+      size = 0.5
+    ) +
+
+    # geom_boxplot(
+    #   aes(Condition, generated_proportions),
+    #   outlier.shape = NA, alpha=0.2,
+    #   data = simulated_proportion, fatten = 0.5, size=0.5,
+    # ) +
+    # geom_jitter(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
+
+    facet_wrap(
+      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      scales = "free_y", nrow = 4
+    ) +
+    scale_color_manual(values = c("black", "#e11f28")) +
+    #scale_fill_manual(values = c("white", "#E2D379")) +
+    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
+    #scale_color_distiller(palette = "Spectral") +
+
+    scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
+    scale_fill_discrete(na.value = "white") +
+    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
+    xlab("Biological condition") +
+    ylab("Cell-group proportion") +
+    guides(color="none", alpha="none", size="none") +
+    labs(fill="Compositional difference") +
+    my_theme +
+    theme(axis.title.y = element_blank()) +
+    theme(axis.text.x =  element_text(angle=20, hjust = 1))
+
+
+
 }
