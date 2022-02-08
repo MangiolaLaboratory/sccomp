@@ -17,6 +17,7 @@
 #' @importFrom purrr map_lgl
 #' @importFrom dplyr case_when
 #' @importFrom rlang :=
+#' @importFrom cmdstanr cmdstan_model
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
@@ -110,7 +111,6 @@ estimate_multi_beta_binomial_glm = function(.data,
       fit_model(
         stanmodels$glm_multi_beta_binomial,
         cores= cores,
-        chains = 3,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference == "all",
         verbose = verbose,
@@ -160,7 +160,6 @@ estimate_multi_beta_binomial_glm = function(.data,
       fit_model(
         stanmodels$glm_multi_beta_binomial,
         cores= cores,
-        chains = 3,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         verbose = verbose,
@@ -169,11 +168,11 @@ estimate_multi_beta_binomial_glm = function(.data,
         pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
       )
 
-    rng =  rstan::gqs(
-      stanmodels$glm_multi_beta_binomial_generate_date,
-      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit),
-      data = data_for_model
+    mod_rng = cmdstan_model("~/PostDoc/sccomp/inst/stan/glm_multi_beta_binomial_generate_date.stan" )
+
+    rng = mod_rng$generate_quantities(
+      fit, data = data_for_model,
+      parallel_chains = cores
     )
 
     # Detect outliers
@@ -246,7 +245,6 @@ estimate_multi_beta_binomial_glm = function(.data,
       fit_model(
         stanmodels$glm_multi_beta_binomial,
         cores = cores,
-        chains = 3,
         quantile = my_quantile_step_2,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         verbose = verbose,
@@ -255,7 +253,18 @@ estimate_multi_beta_binomial_glm = function(.data,
         pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised")
       )
 
-    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
+    # Load model
+    if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
+      mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+    else {
+      mod_rng = cmdstan_model( glm_multi_beta_binomial_generate )
+      mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+    }
+
+    rng = mod_rng$generate_quantities(
+      fit, data = data_for_model,
+      parallel_chains = cores
+    )
 
     rng2 =  rstan::gqs(
       stanmodels$glm_multi_beta_binomial_generate_date,
@@ -313,15 +322,12 @@ estimate_multi_beta_binomial_glm = function(.data,
       fit_model(
         stanmodels$glm_multi_beta_binomial,
         cores = cores,
-        chains = 3,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
         verbose = verbose, seed = seed,
         max_sampling_iterations = max_sampling_iterations,
         pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
       )
-
-    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
 
     list(
       fit = fit3,
@@ -403,7 +409,7 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
     summary_to_tibble("beta", "C", "M", probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))) %>%
 
     # Drop columns I dont need
-    select(1, 2, 3, 7, 8, 9) %>%
+    # select(1, 2, 3, 7, 8, 9) %>%
 
     # Rename column to match %
     rename(
@@ -674,14 +680,7 @@ get_mean_precision = function(fit, data_for_model){
 
 get_mean_precision_association = function(fit){
   c(
-    fit %>%
-      summary("prec_coeff") %$%
-      summary %>%
-      .[,1] ,
-
-    fit %>%
-      summary("prec_sd") %$%
-      summary %>%
-      .[,1]
+    fit$summary("prec_coeff")$mean ,
+    fit$summary("prec_sd")$mean
   )
 }
