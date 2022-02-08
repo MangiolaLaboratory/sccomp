@@ -34,7 +34,8 @@ Imports:
     tidyselect,
     utils,
     ggplot2,
-    ggrepel
+    ggrepel,
+    patchwork
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
