@@ -418,6 +418,9 @@ fit_model = function(
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
 
+  output_directory = "sccomp_draws_files"
+  dir.create(output_directory, showWarnings = FALSE)
+
   # Fit
   if(!approximate_posterior_inference){
 
@@ -431,7 +434,8 @@ fit_model = function(
         #refresh = ifelse(verbose, 1000, 0),
         seed = seed,
         save_warmup = FALSE,
-        init = init
+        init = init,
+        output_dir = output_directory
       ) %>%
       suppressWarnings()
 
