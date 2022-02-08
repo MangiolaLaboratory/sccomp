@@ -108,3 +108,54 @@
 #'
 #'
 "glm_multi_beta"
+
+
+
+
+
+
+
+#' glm_multi_beta_binomial
+#'
+#' @description
+#' This object is for cmdstanr
+#'
+#' @importFrom utils data
+#'
+#' @keywords internal
+#'
+#' @format  A text file containing stan code for the Dirichlet model.
+#' @usage data(glm_multi_beta_binomial)
+#'
+#'
+"glm_multi_beta_binomial_generate"
+
+#' glm_multi_beta_binomial
+#'
+#' @description
+#' This object is for cmdstanr
+#'
+#' @importFrom utils data
+#'
+#' @keywords internal
+#'
+#' @format  A text file containing stan code for the Beta only model.
+#' @usage data(glm_multi_beta_binomial_generate)
+#'
+#'
+"glm_multi_beta_binomial_generate"
+
+#' glm_multi_beta_binomial_simulate
+#'
+#' @description
+#' This object is for cmdstanr
+#'
+#' @importFrom utils data
+#'
+#' @keywords internal
+#'
+#' @format  A text file containing stan code for the Beta only model.
+#' @usage data(glm_multi_beta_binomial_simulate)
+#'
+#'
+"glm_multi_beta_binomial_simulate"

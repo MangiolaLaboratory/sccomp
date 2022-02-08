@@ -131,18 +131,17 @@ transformed parameters{
 		matrix[A,M] alpha_intercept_slope;
     matrix[C,M] beta;
 
-for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+    for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
+    // Beta
+    beta = R_ast_inverse * beta_raw; // coefficients on x
 
-// Beta
-beta = R_ast_inverse * beta_raw; // coefficients on x
-
-// All this because if A ==1 we have ocnversion problems
-// This works only with two discrete groups
-if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
-else beta_intercept_slope = (XA * beta[1:A,]);
-if(A == 1)  alpha_intercept_slope = alpha;
-else alpha_intercept_slope = (XA * alpha);
+    // All this because if A ==1 we have ocnversion problems
+    // This works only with two discrete groups
+    if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
+    else beta_intercept_slope = (XA * beta[1:A,]);
+    if(A == 1)  alpha_intercept_slope = alpha;
+    else alpha_intercept_slope = (XA * alpha);
 
 }
 model{
@@ -160,22 +159,22 @@ model{
 
 
   if(use_data == 1){
-    // target += beta_binomial_lpmf(
-    //   y_array[truncation_not_idx] |
-    //   exposure_array[truncation_not_idx],
-    //   (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
-    //   ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
-    // ) ;
+      // target += beta_binomial_lpmf(
+      //   y_array[truncation_not_idx] |
+      //   exposure_array[truncation_not_idx],
+      //   (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
+      //   ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
+      // ) ;
 
-  target +=  reduce_sum(
-    partial_sum_lupmf,
-    y_array[truncation_not_idx],
-    grainsize,
-    exposure_array[truncation_not_idx],
-    mu_array[truncation_not_idx],
-    precision_array[truncation_not_idx]
-  );
-}
+    target +=  reduce_sum(
+      partial_sum_lupmf,
+      y_array[truncation_not_idx],
+      grainsize,
+      exposure_array[truncation_not_idx],
+      mu_array[truncation_not_idx],
+      precision_array[truncation_not_idx]
+    );
+  }
 
 
 
@@ -202,8 +201,8 @@ model{
 
   // If no priors
   } else {
-    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 5 );
-    for (a in 1:A) alpha[a]  ~ normal( 5, 5 );
+    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 2 );
+    for (a in 1:A) alpha[a]  ~ normal( 5, 2 );
   }
 
   // Hyper priors

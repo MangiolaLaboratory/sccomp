@@ -318,23 +318,21 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   # Avoid bug
-  if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
+  #if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
 
-  fit %>%
-    rstan::summary(par_names, probs = probs) %$%
-    summary %>%
-    as_tibble(rownames = ".variable") %>%
+  fit$summary(par, ~quantile(.x, probs = probs)) %>%
+    rename(.variable = variable ) %>%
+    #rstan::summary(par_names, probs = probs) %$%
+    #summary %>%
+    #as_tibble(rownames = ".variable") %>%
     when(
       is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
       ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
-    ) %>%
-    filter(.variable == par)
+    )
+    #%>%
+    #filter(.variable == par)
 
 }
-
-
-
-
 
 #' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
@@ -361,6 +359,7 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
+#' @importFrom cmdstanr cmdstan_model
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
@@ -390,26 +389,72 @@ fit_model = function(
         },
         (.)
       )
+  # Find optimal number of chains
+  if(is.null(chains))
+    chains =
+      find_optimal_number_of_chains(
+        how_many_posterior_draws = output_samples,
+        warmup = warmup_samples,
+        parallelisation_start_penalty = 100
+      ) %>%
+      min(cores)
 
+  # rstan_options(threads_per_chain = floor(cores/chains))
+  # Load model
+  if(file.exists("glm_multi_beta_binomial_cmdstanr.rds"))
+    mod = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
+  else {
+    write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
+    mod = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan" )
+    mod  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
+  }
 
-  rstan_options(threads_per_chain = floor(cores/chains))
+  init_list=list(
+    prec_coeff = c(5,0),
+    prec_sd = 1,
+    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE)
+  )
+
+  init = map(1:chains, ~ init_list) %>%
+    setNames(as.character(1:chains))
 
   # Fit
-  if(!approximate_posterior_inference)
-    sampling(
-      model,
-      data = data_for_model,
-      chains = chains,
-      cores = chains,
-      iter = as.integer(output_samples /chains) + warmup_samples,
-      warmup = warmup_samples,
-      refresh = ifelse(verbose, 1000, 0),
-      seed = seed,
-      pars = pars,
-      save_warmup = FALSE
-    ) %>%
-    suppressWarnings()
+  if(!approximate_posterior_inference){
 
+      mod$sample(
+        data = data_for_model ,
+        chains = chains,
+        parallel_chains = chains,
+        threads_per_chain = 1,
+        iter_warmup = warmup_samples,
+        iter_sampling = as.integer(output_samples /chains),
+        #refresh = ifelse(verbose, 1000, 0),
+        seed = seed,
+        save_warmup = FALSE,
+        init = init
+      ) %>%
+      suppressWarnings()
+
+  # fit$draws(
+  #     variables = pars,
+  #     inc_warmup = FALSE,
+  #     format = getOption("cmdstanr_draws_format", "draws_matrix")
+  #   )
+
+    # sampling(
+    #   model,
+    #   data = data_for_model,
+    #   chains = chains,
+    #   cores = chains,
+    #   iter = as.integer(output_samples /chains) + warmup_samples,
+    #   warmup = warmup_samples,
+    #   refresh = ifelse(verbose, 1000, 0),
+    #   seed = seed,
+    #   pars = pars,
+    #   save_warmup = FALSE
+    # ) %>%
+    # suppressWarnings()
+}
   else
     vb_iterative(
       model,
@@ -610,8 +655,6 @@ data_spread_to_model_input =
 
     )
 
-
-
   # Add censoring
   data_for_model$is_truncated = 0
   data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
@@ -715,9 +758,7 @@ data_simulation_to_model_input =
 #'
 #' @return A Stan fit object
 find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
-                                         max_number_to_check = 100, warmup = 200) {
-
-  parallelisation_start_penalty = 60
+                                         max_number_to_check = 100, warmup = 200, parallelisation_start_penalty = 60) {
 
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
@@ -785,30 +826,32 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
 
 
-  draws = rstan::extract(fit, parameter)[[1]]
+  draws = fit$draws(
+      variables = parameter,
+      inc_warmup = FALSE,
+      format = getOption("cmdstanr_draws_format", "draws_matrix")
+    )
+
+  # draws = rstan::extract(fit, parameter)[[1]]
 
   total_draws = dim(draws)[1]
 
 
   bigger_zero =
     draws %>%
-    apply(2, function(y){
-      y %>%
       apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
-    })
+
 
 
   smaller_zero =
     draws %>%
-    apply(2, function(y){
-      y %>%
         apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
-    })
-
 
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
-    as.data.frame() %>%
-    rowid_to_column(var = "M")
+    enframe() %>%
+    tidyr::extract(name, c("C", "M"), "beta\\[([0-9]+),([0-9]+)\\]") %>%
+    mutate(across(c(C, M), ~ as.integer(.x))) %>%
+    tidyr::spread(C, value)
 
 }
 
