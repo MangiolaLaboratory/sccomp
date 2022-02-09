@@ -21,6 +21,7 @@ library(ggplot2)
 library(forcats)
 library(tidyr)
 library(rstan)
+library(bayesplot)
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
@@ -132,7 +133,11 @@ plots$credible_intervals_1D
 It is possible to directly evaluate the posterior distribution. In this example we plot the Monte Carlo chain for the slope parameter of the first cell type. We can see that has converged and is negative with probability 1.
 
 ```{r}
-res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
+
+attr(res, "fit")$draws(variables = c("beta[2,1]")) %>% 
+mcmc_trace()
+
+
 ```
 
 

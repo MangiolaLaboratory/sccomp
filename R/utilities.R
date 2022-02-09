@@ -132,21 +132,23 @@ vb_iterative = function(model,
                         additional_parameters_to_save = c(),
                         data,
                         seed,
+                        output_dir = output_dir,
                         ...) {
   res = NULL
   i = 0
   while (res %>% is.null | i > 5) {
     res = tryCatch({
-      my_res = vb(
-        model,
+
+      my_res = model$variational(
         data = data,
         output_samples = output_samples,
         iter = iter,
         tol_rel_obj = tol_rel_obj,
         seed = seed,
-        #pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
+        output_dir = output_dir,
         ...
       )
+
       boolFalse <- TRUE
       return(my_res)
     },
@@ -242,8 +244,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   par_names =
     names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
-  fit %>%
-    extract(par, permuted=FALSE) %>%
+  fit$draws(variables = par) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = seq_len(n())) %>%
@@ -251,7 +252,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     #when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
 
     pivot_longer(
-      names_to = c("dummy", ".chain", ".variable", x, y),
+      names_to = c( ".chain", ".variable", x, y),
       cols = contains(par),
       names_sep = "\\.|\\[|,|\\]|:",
       names_ptypes = list(
@@ -267,37 +268,12 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
     ) %>%
-    select(-dummy) %>%
     arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
     group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
     mutate(.draw = seq_len(n())) %>%
     ungroup() %>%
     select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
     filter(.variable == par)
-
-}
-
-draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
-
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
-
-  fit %>%
-    rstan::extract(par_names, permuted=FALSE) %>%
-    as.data.frame %>%
-    as_tibble() %>%
-    mutate(.iteration = seq_len(n())) %>%
-    pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", values_to = ".value") %>%
-
-    mutate(
-      !!as.symbol(x) := as.integer(!!as.symbol(x)),
-    ) %>%
-
-    select(-dummy) %>%
-    arrange(.variable, !!as.symbol(x), .chain) %>%
-    group_by(.variable, !!as.symbol(x)) %>%
-    mutate(.draw = seq_len(n())) %>%
-    ungroup() %>%
-    select(!!as.symbol(x), .chain, .iteration, .draw ,.variable ,     .value)
 
 }
 
@@ -439,35 +415,16 @@ fit_model = function(
       ) %>%
       suppressWarnings()
 
-  # fit$draws(
-  #     variables = pars,
-  #     inc_warmup = FALSE,
-  #     format = getOption("cmdstanr_draws_format", "draws_matrix")
-  #   )
-
-    # sampling(
-    #   model,
-    #   data = data_for_model,
-    #   chains = chains,
-    #   cores = chains,
-    #   iter = as.integer(output_samples /chains) + warmup_samples,
-    #   warmup = warmup_samples,
-    #   refresh = ifelse(verbose, 1000, 0),
-    #   seed = seed,
-    #   pars = pars,
-    #   save_warmup = FALSE
-    # ) %>%
-    # suppressWarnings()
 }
   else
     vb_iterative(
-      model,
+      mod,
       output_samples = output_samples ,
       iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
-      pars = pars
+      output_dir = output_directory
     ) %>%
       suppressWarnings()
 
@@ -855,7 +812,7 @@ get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logi
 
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
     enframe() %>%
-    tidyr::extract(name, c("C", "M"), "beta\\[([0-9]+),([0-9]+)\\]") %>%
+    tidyr::extract(name, c("C", "M"), ".+\\[([0-9]+),([0-9]+)\\]") %>%
     mutate(across(c(C, M), ~ as.integer(.x))) %>%
     tidyr::spread(C, value)
 
