@@ -400,29 +400,14 @@ fit_model = function(
       ) %>%
       min(cores)
 
-  # library(VGAM)
-  # ff = VGAM::vglm(
-  #   cbind(a, b) ~ cov,
-  #   dirmultinomial,
-  #   data = tibble(
-  #     a = data_for_model$y[,1],
-  #     b = data_for_model$y[,2],
-  #     cov = data_for_model$X[,2]
-  #   ),
-  #   trace = TRUE
-  # ) %>%
-  # summary()
-  #
-  # print(ff)
+  init_list=list(
+    prec_coeff = c(5,0),
+    prec_sd = 1,
+    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE)
+  )
 
-  # # Define a decent value for alpha as it fails for vb sometimes
-  # init_fun = function(...) list(
-  #   alpha=matrix(rep(data_for_model$prior_prec_intercept[1], data_for_model$A*data_for_model$M),nrow= data_for_model$A),
-  #   beta_raw_raw=matrix(rep(0, data_for_model$C*(data_for_model$M-1)),nrow= data_for_model$C)
-  # )
-
-  # If differential variance also capture beta_raw
-  #if(data_for_model$A > 1)
+  init = map(1:chains, ~ init_list) %>%
+    setNames(as.character(1:chains))
 
   # Fit
   if(!approximate_posterior_inference)
@@ -436,7 +421,8 @@ fit_model = function(
       refresh = ifelse(verbose, 1000, 0),
       seed = seed,
       pars = pars,
-      save_warmup = FALSE
+      save_warmup = FALSE,
+      init = init
     ) %>%
       suppressWarnings()
 
@@ -967,6 +953,7 @@ get_FDR = function(x){
 }
 
 #' @importFrom patchwork wrap_plots
+#' @importFrom forcats fct_reorder
 plot_1d_intervals = function(.data, .cell_group, my_theme){
 
   .cell_group = enquo(.cell_group)

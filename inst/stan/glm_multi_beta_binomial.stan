@@ -171,8 +171,8 @@ model{
 
   // If no priors
   } else {
-    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 5 );
-    for (a in 1:A) alpha[a]  ~ normal( 5, 5 );
+    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 2 );
+    for (a in 1:A) alpha[a]  ~ normal( 5, 2 );
   }
 
   // Hyper priors
