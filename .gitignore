@@ -37,3 +37,4 @@ dev/reproducible_example_beta_binomial_truncated
 glm_multi_beta_binomial_cmdstanr
 glm_multi_beta_binomial_cmdstanr.rds
 glm_multi_beta_binomial_cmdstanr.stan
+sccomp_draws_files
