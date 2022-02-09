@@ -19,19 +19,16 @@ vignette: >
 #  <img src="figures/logo-01.png" height="139px" width="120px" />
 
 ```{r echo=FALSE}
-knitr::opts_chunk$set( fig.path = "figures/")
+knitr::opts_chunk$set( fig.path = "inst/figures/")
 ```
 
-
-```{r message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 library(sccomp)
 library(ggplot2)
 library(forcats)
 library(tidyr)
-library(tidyseurat)
-library(tidySingleCellExperiment)
-
+library(rstan)
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
@@ -39,7 +36,7 @@ data("counts_obj")
 
 Single-cell transcriptomics allows the unbiased characterisation of the cellular composition of tissues. The cellular composition can be compared between biological or clinical conditions to identify potential cellular drivers. This strategy has been critical to unveil drivers of immune response in cancer and pathogen infection from single-cell data. Developing a robust statistical method for differential composition analyses from single-cell data is crucial for driving discoveries. The compositional data from single-cell experiments has four main properties. The data is in count form; counts underlie inversely correlated proportions that sum to one; larger cell groups are more variable across samples than small groups; real-world data is rich in outlier observation. A model that covers more than two of these properties is currently lacking. **Here, we present a robust and outlier-aware method for testing differential tissue composition from single-cell data. This model can also transfer knowledge from a large set of integrated datasets to increase accuracy further. We present how this model can be applied to identify novel compositional and heterogeneity changes in existing studies.**
 
-# Installation 
+# Installation
 
 **Bioconductor**
 
@@ -58,88 +55,126 @@ devtools::install_github("stemangiola/sccomp")
 
 # Analysis
 
-In this vignette we use the `tidy` representation of single cell experiment objects using `tisyseurat` and `tidySingleCellExperiment`
+## From Seurat Object
 
-## From Seurat objects
+```{r eval=FALSE}
 
-This code demonstrates how to estimate differential tissue composition from a Seurat object. `approximate_posterior_inference` is set to TRUE and `check_outliers` is set to false to speed up execution. `cores` is set up to 1 to comply with Bioconductor CHECK.
+res =
+  seurat_obj |>
+   formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
 
-The tidy data representation nicely shows all information being used for the analysis. **Of course `sccomp_glm` works without loading `tidyseurat` **
-
-```{r}
-seurat_obj
 ```
+
+```{r eval=FALSE}
+res =
+  sce_obj |>
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
+
+```
+
+## From data.frame 
+
+```{r eval=FALSE}
+
+res =
+  seurat_obj[[]] |>
+  sccomp_glm(
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    sample, 
+    cell_group 
+  )
+
+```
+
+## From counts
 
 ```{r warning=FALSE}
 
-seurat_obj |>
+res =
+  counts_obj |>
   sccomp_glm( 
-  ~ type, 
-  sample, cell_group,
-  approximate_posterior_inference = TRUE, 
-  check_outliers = FALSE,
-  cores = 1
-)
+    formula_composition = ~ type, 
+    formula_variability = ~ 1, 
+    .sample = sample,
+    .cell_group = cell_group,
+    .count = count
+  )
+
+res
 ```
 
-## From SingleCellExperiment objects
 
-This code demonstrates how to estimate differential tissue composition from a SingleCellExperiment object.
+## Visualise data + inference
 
-The tidy data representation nicely shows all information being used for the analysis. **Of course `sccomp_glm` works without loading `tidySingleCellExperiment`.**
+```{r, out.height="200%"}
+plots = plot_summary(res) 
+
+
+```
+
+Plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely be descriptively adequate to the data, the blue boxplot should roughly overlay with the black boxplot, which represent the observed data. The outliers are coloured in red.
 
 ```{r}
-sce_obj
+plots$boxplot
+
 ```
 
-```{r warning=FALSE}
-sce_obj |>
- sccomp_glm( 
-  ~ type, 
-  sample, cell_group,
-  approximate_posterior_inference = TRUE, 
-  check_outliers = FALSE,
-  cores = 1
-)
-```
-
-## From metadata objects
-
-This code demonstrates how to estimate differential tissue composition from a Seurat object.
+Plot of estimates of differential composition (c_) on the x axis, and differential variability (v_) on the y axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
 
 ```{r}
-seurat_obj[[]]
+plots$credible_intervals_1D
+
 ```
 
+## Visualisation of the MCMC chains from the posterior distribution
+
+It is possible to directly evaluate the posterior distribution. In this example we plot the Monte Carlo chain for the slope parameter of the first cell type. We can see that has converged and is negative with probability 1.
+
+```{r}
+res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
+```
+
+
+## Differential variability
+
+We can model the cell-group variability also dependent on type, and so test differences in variability
+
 ```{r warning=FALSE}
-seurat_obj[[]] |>
+
+res = 
+  counts_obj |>
   sccomp_glm( 
-  ~ type, 
-  sample, cell_group, 
-  approximate_posterior_inference = TRUE, 
-  check_outliers = FALSE,
-  cores = 1
-)
+    formula_composition = ~ type, 
+    formula_variability = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    .count = count
+  )
 
+res
 ```
 
-## From counts (fast execution)
+Plot 1D significance plot
 
 ```{r}
-counts_obj
+plots = plot_summary(res)
+
+plots$credible_intervals_1D
 ```
 
-```{r warning=FALSE}
+Plot 2D significance plot. This is possible if only differential variability has been tested
 
-counts_obj |>
-sccomp_glm( 
-  ~ type, 
-  sample, cell_group, count, 
-  approximate_posterior_inference = TRUE, 
-  check_outliers = FALSE,
-  cores = 1
-)
-
+```{r}
+plots$credible_intervals_2D
 ```
 
 ```{r}

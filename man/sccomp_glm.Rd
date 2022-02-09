@@ -11,8 +11,8 @@ sccomp_glm(
   .sample,
   .cell_group,
   .count = NULL,
-  prior_mean_variable_association = list(intercept = c(4.436925, 1.304049), slope =
-    c(-0.73074903, 0.06532897), standard_deviation = c(5.06983, 8.549324)),
+  prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0, 0.6),
+    standard_deviation = c(5, 5)),
   percent_false_positive = 5,
   check_outliers = TRUE,
   approximate_posterior_inference = "outlier_detection",
@@ -20,6 +20,8 @@ sccomp_glm(
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
   exclude_priors = FALSE,
+  bimodal_mean_variability_association = FALSE,
+  use_data = TRUE,
   cores = detectCores(),
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
@@ -39,7 +41,7 @@ sccomp_glm(
 
 \item{.count}{A column name as symbol. The cell_group abundance (read count). Used only for data frame count output.}
 
-\item{prior_mean_variable_association}{A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(5.06983, 8.549324)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
+\item{prior_mean_variable_association}{A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,5)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
 
 \item{percent_false_positive}{A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.}
 
