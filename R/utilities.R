@@ -725,9 +725,9 @@ data_simulation_to_model_input =
 #'
 #' @return A Stan fit object
 find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
-                                         max_number_to_check = 100, warmup = 200) {
+                                         max_number_to_check = 100, warmup = 200, parallelisation_start_penalty = 100) {
 
-  parallelisation_start_penalty = 60
+
 
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
