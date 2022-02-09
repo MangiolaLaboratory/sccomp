@@ -180,7 +180,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     rng = mod_rng$generate_quantities(
       fit,
       data = data_for_model,
-      parallel_chains = fit$num_chains()
+      parallel_chains = ifelse(data_for_model$is_vb, 1, fit$num_chains())
     )
 
     # Detect outliers
@@ -264,7 +264,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     rng2 = mod_rng$generate_quantities(
       fit2,
       data = data_for_model,
-      parallel_chains = fit$num_chains()
+      parallel_chains = ifelse(data_for_model$is_vb, 1, fit$num_chains())
     )
 
     # Detect outliers
@@ -422,9 +422,6 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
     alpha_CI =
       fit %>%
       summary_to_tibble("alpha_normalised", "C", "M", probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))) %>%
-
-      # Drop columns I dont need
-      select(1, 2, 3, 7, 8, 9) %>%
 
       # Rename column to match %
       rename(

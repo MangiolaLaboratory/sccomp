@@ -544,25 +544,35 @@ replicate_data.data.frame = function(.data,
                                      mcmc_seed = sample(1e5, 1)){
 
 
-  # Select model based on noise model
-  my_model = attr(.data, "noise_model") %>% when(
-    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date,
-    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  )
+  # # Select model based on noise model
+  # my_model = attr(.data, "noise_model") %>% when(
+  #   (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date,
+  #   (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  # )
 
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
 
-  fit_matrix = as.matrix(attr(.data, "fit") )
+  fit = attr(.data, "fit")
+
+  # Load model
+  if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
+    mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+  else {
+    write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
+    mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
+    mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+  }
+
 
   # Generate quantities
-  rstan::gqs(
-    my_model,
-    draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
-    data = model_input,
-    seed = mcmc_seed
-  ) %>%
+    mod_rng$generate_quantities(
+      fit,
+      data = model_input,
+      parallel_chains = ifelse(model_input$is_vb, 1, fit$num_chains()),
+      seed = mcmc_seed
+    ) %>%
 
     # Parse
     parse_generated_quantities(number_of_draws = number_of_draws) %>%
