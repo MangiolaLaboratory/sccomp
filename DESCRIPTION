@@ -35,14 +35,14 @@ Imports:
     utils,
     ggplot2,
     ggrepel,
-    patchwork
+    patchwork,
+    forcats
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
     markdown,
     ggplot2,
     knitr,
-    forcats,
     tidyseurat,
     tidySingleCellExperiment
 Enhances:
