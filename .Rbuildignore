@@ -3,7 +3,6 @@
 ^\.github
 ^README*
 ^dev$
-^dev*
 ^dev/*
 ^rsconnect
 model_glm_dirichlet_multinomial.rds
