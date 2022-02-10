@@ -32,6 +32,8 @@ heterogeneity changes in existing studies.**
 
 # Installation
 
+## (simple) Suggested for single-cell and CyTOF analyses
+
 **Bioconductor**
 
 ``` r
@@ -47,6 +49,21 @@ if (!requireNamespace("BiocManager")) {
 devtools::install_github("stemangiola/sccomp")
 ```
 
+## (more complex and efficient, until further optimisation of the default installation) Suggested for microbiomics
+
+**Github**
+
+``` r
+install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+check_cmdstan_toolchain()
+install_cmdstan(cores = 2)
+# Then, check the correct cmdstanr installation here
+# https://mc-stan.org/cmdstanr/articles/cmdstanr.html
+
+# Then install sccomp with the cmdstanr branch
+devtools::install_github("stemangiola/sccomp@cmdstanr")
+```
+
 # Analysis
 
 ## From Seurat Object
@@ -60,6 +77,8 @@ res =
     cell_group 
   )
 ```
+
+## From SingleCellExperiment Object
 
 ``` r
 res =
@@ -111,16 +130,16 @@ res
     ## # A tibble: 72 × 8
     ##    cell_group parameter   c_lower c_effect c_upper    c_pH0     c_FDR count_data
     ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>    <dbl>     <dbl> <list>    
-    ##  1 B1         (Intercept)  0.544     0.705  0.858  0        0         <tibble […
-    ##  2 B1         typecancer  -1.19     -0.888 -0.580  0.000250 0.0000417 <tibble […
-    ##  3 B2         (Intercept)  0.176     0.408  0.654  0.0410   0.00272   <tibble […
-    ##  4 B2         typecancer  -1.19     -0.740 -0.297  0.00950  0.00232   <tibble […
-    ##  5 B3         (Intercept) -0.618    -0.418 -0.219  0.0168   0.00136   <tibble […
-    ##  6 B3         typecancer  -0.566    -0.209  0.151  0.481    0.137     <tibble […
-    ##  7 BM         (Intercept) -1.31     -1.11  -0.898  0        0         <tibble […
-    ##  8 BM         typecancer  -0.737    -0.343  0.0624 0.239    0.0480    <tibble […
-    ##  9 CD4 1      (Intercept)  0.349     0.483  0.620  0        0         <tibble […
-    ## 10 CD4 1      typecancer  -0.0798    0.164  0.411  0.629    0.206     <tibble […
+    ##  1 B1         (Intercept)   0.573    0.753  0.940  0        0         <tibble>  
+    ##  2 B1         typecancer   -1.29    -0.943 -0.599  0        0         <tibble>  
+    ##  3 B2         (Intercept)   0.119    0.367  0.627  0.0948   0.00509   <tibble>  
+    ##  4 B2         typecancer   -1.08    -0.633 -0.160  0.0353   0.00432   <tibble>  
+    ##  5 B3         (Intercept)  -0.609   -0.420 -0.211  0.0213   0.00189   <tibble>  
+    ##  6 B3         typecancer   -0.600   -0.209  0.162  0.480    0.153     <tibble>  
+    ##  7 BM         (Intercept)  -1.32    -1.11  -0.898  0        0         <tibble>  
+    ##  8 BM         typecancer   -0.734   -0.342  0.0521 0.249    0.0649    <tibble>  
+    ##  9 CD4 1      (Intercept)   0.328    0.456  0.583  0.000250 0.0000119 <tibble>  
+    ## 10 CD4 1      typecancer   -0.117    0.113  0.351  0.759    0.243     <tibble>  
     ## # … with 62 more rows
 
 ## Visualise data + inference
@@ -130,7 +149,6 @@ plots = plot_summary(res)
 ```
 
     ## Joining, by = c("sample", "cell_group")
-
     ## Joining, by = c("cell_group", "type")
 
 Plot of group proportion, faceted by groups. The blue boxplots represent
@@ -143,7 +161,7 @@ coloured in red.
 plots$boxplot
 ```
 
-![](inst/figures/unnamed-chunk-10-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
 
 Plot of estimates of differential composition (c\_) on the x axis, and
 differential variability (v\_) on the y axis. The error bars represent
@@ -156,7 +174,7 @@ credible interval. Facets represent the covariates in the model.
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
 
 ## Visualisation of the MCMC chains from the posterior distribution
 
@@ -169,7 +187,7 @@ probability 1.
 res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 ```
 
-![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
 
 ## Differential variability
 
@@ -199,18 +217,18 @@ res
 ```
 
     ## # A tibble: 72 × 13
-    ##    cell_group parameter   c_lower c_effect c_upper    c_pH0    c_FDR v_lower
-    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>    <dbl>    <dbl>   <dbl>
-    ##  1 B1         (Intercept)  0.619     0.786   0.968 0        0         -4.88 
-    ##  2 B1         typecancer  -1.25     -0.924  -0.597 0.000750 0.000208   0.942
-    ##  3 B2         (Intercept)  0.239     0.455   0.682 0.0122   0.000946  -4.67 
-    ##  4 B2         typecancer  -1.09     -0.650  -0.180 0.0290   0.00398    2.10 
-    ##  5 B3         (Intercept) -0.633    -0.407  -0.173 0.0385   0.00224   -5.50 
-    ##  6 B3         typecancer  -0.659    -0.212   0.224 0.478    0.133      1.99 
-    ##  7 BM         (Intercept) -1.27     -1.06   -0.823 0        0         -6.05 
-    ##  8 BM         typecancer  -0.741    -0.300   0.142 0.322    0.0805     1.23 
-    ##  9 CD4 1      (Intercept)  0.393     0.533   0.681 0        0         -5.46 
-    ## 10 CD4 1      typecancer  -0.0478    0.229   0.525 0.411    0.106      1.70 
+    ##    cell_group parameter   c_lower c_effect c_upper   c_pH0    c_FDR v_lower
+    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>   <dbl>    <dbl>   <dbl>
+    ##  1 B1         (Intercept)  0.613     0.788   0.962 0       0         -4.89 
+    ##  2 B1         typecancer  -1.27     -0.937  -0.591 0       0          0.973
+    ##  3 B2         (Intercept)  0.239     0.460   0.688 0.00901 0.000635  -4.68 
+    ##  4 B2         typecancer  -1.11     -0.660  -0.198 0.0253  0.00405    2.04 
+    ##  5 B3         (Intercept) -0.618    -0.408  -0.191 0.0290  0.00239   -5.55 
+    ##  6 B3         typecancer  -0.660    -0.222   0.232 0.464   0.142      2.00 
+    ##  7 BM         (Intercept) -1.28     -1.05   -0.824 0       0         -6.10 
+    ##  8 BM         typecancer  -0.776    -0.311   0.155 0.305   0.0713     1.22 
+    ##  9 CD4 1      (Intercept)  0.393     0.529   0.679 0       0         -5.47 
+    ## 10 CD4 1      typecancer  -0.0704    0.223   0.509 0.436   0.130      1.74 
     ## # … with 62 more rows, and 5 more variables: v_effect <dbl>, v_upper <dbl>,
     ## #   v_pH0 <dbl>, v_FDR <dbl>, count_data <list>
 
@@ -221,14 +239,13 @@ plots = plot_summary(res)
 ```
 
     ## Joining, by = c("sample", "cell_group")
-
     ## Joining, by = c("cell_group", "type")
 
 ``` r
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
 
 Plot 2D significance plot. This is possible if only differential
 variability has been tested
@@ -237,4 +254,4 @@ variability has been tested
 plots$credible_intervals_2D
 ```
 
-![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-16-1.png)<!-- -->
