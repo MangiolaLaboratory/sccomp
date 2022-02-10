@@ -132,12 +132,14 @@ model{
 
   // Calculate MU
   matrix[M, N] mu = (Q_ast * beta_raw)';
-
+  vector[N*M] mu_array;
+  vector[N*M] precision_array;
+  
   for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
 
   // Convert the matrix m to a column vector in column-major order.
-  vector[N*M] mu_array = to_vector(mu);
-  vector[N*M] precision_array = to_vector(exp(precision));
+  mu_array = to_vector(mu);
+  precision_array = to_vector(exp(precision));
 
 
   if(use_data == 1){
