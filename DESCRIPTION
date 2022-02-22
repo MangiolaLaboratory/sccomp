@@ -36,7 +36,10 @@ Imports:
     ggplot2,
     ggrepel,
     patchwork,
-    forcats
+    forcats,
+    readr,
+    scales,
+    stringr
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),

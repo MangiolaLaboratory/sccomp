@@ -49,6 +49,8 @@ sccomp_glm(
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
+\item{percent_false_positive}{A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.}
+
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
 \item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
@@ -57,10 +59,34 @@ sccomp_glm(
 
 \item{noise_model}{A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.}
 
+\item{exclude_priors}{A boolean. Whether to run a prior-free model, for benchmarking purposes.}
+
+\item{use_data}{A booelan. Whether to sun the model data free. This can be used for prior predictive check.}
+
 \item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
+
+\item{max_sampling_iterations}{An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.}
+
+\item{pass_fit}{A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.}
 }
 \value{
-A nested tibble \code{tbl} with cell_group-wise statistics
+A nested tibble \code{tbl}, with the following columns
+\itemize{
+\item cell_group - column including the cell groups being tested
+\item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
+
+\item c_lower - lower (2.5\%) quantile of the posterior distribution for a composition (c) parameter.
+\item c_effect - mean of the posterior distribution for a composition (c) parameter.
+\item c_upper - upper (97.5\%) quantile of the posterior distribution fo a composition (c)  parameter.
+\item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
+\item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
+
+\item v_lower - (optional, present if variability is modelled dependent on covariates) lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter
+\item v_effect - (optional, present if variability is modelled dependent on covariates) mean of the posterior distribution for a variability (v) parameter
+\item v_upper - (optional, present if variability is modelled dependent on covariates) upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter
+\item v_pH0 - (optional, present if variability is modelled dependent on covariates) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
+\item v_FDR - (optional, present if variability is modelled dependent on covariates) False-discovery rate of the null hypothesis (no difference), for a variability (v).
+}
 }
 \description{
 The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the covariates (continuous or discrete). The user can define a linear model with an input R formula, where the first covariate is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
