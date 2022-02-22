@@ -2,7 +2,7 @@
 
 #' sccomp_glm main
 #'
-#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_group includes outlier biological replicate.
+#' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the covariates (continuous or discrete). The user can define a linear model with an input R formula, where the first covariate is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
 #'
 #' @import dplyr
 #' @importFrom magrittr %$%
@@ -13,16 +13,18 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #'
-#' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
-#' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
-#' @param formula_variability A formula. The sample formula used to perform the differential cell_group abundance analysis
+#' @param .data A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | covariate columns.
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
-#' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output.
+#' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
-#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
-#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
+#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
+#' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
+#'
+#'
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param verbose A boolean. Prints progression.
@@ -39,7 +41,11 @@
 #' estimate =
 #'   sccomp_glm(
 #'   counts_obj ,
-#'    ~ type, ~1, sample, cell_group, count,
+#'    ~ type,
+#'    ~1,
+#'    sample,
+#'    cell_group,
+#'    count,
 #'     approximate_posterior_inference = "all",
 #'     check_outliers = FALSE,
 #'     cores = 1
@@ -57,16 +63,18 @@ sccomp_glm <- function(.data,
 
                        # Secondary arguments
                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                       percent_false_positive = 5,
                        check_outliers = TRUE,
+                       bimodal_mean_variability_association = FALSE,
+
+                       # Tertiary arguments
+                       cores = detectCores(),
+                       percent_false_positive = 5,
                        approximate_posterior_inference = "outlier_detection",
                        test_composition_above_logit_fold_change = 0.2,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
                        exclude_priors = FALSE,
-                       bimodal_mean_variability_association = FALSE,
                        use_data = TRUE,
-                       cores = detectCores(),
                        mcmc_seed = sample(1e5, 1),
                        max_sampling_iterations = 20000,
                        pass_fit = TRUE) {
@@ -83,16 +91,18 @@ sccomp_glm.Seurat = function(.data,
 
                              # Secondary arguments
                              prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                             percent_false_positive = 5,
                              check_outliers = TRUE,
+                             bimodal_mean_variability_association = FALSE,
+
+                             # Tertiary arguments
+                             cores = detectCores(),
+                             percent_false_positive = 5,
                              approximate_posterior_inference = "outlier_detection",
                              test_composition_above_logit_fold_change = 0.2,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              exclude_priors = FALSE,
-                             bimodal_mean_variability_association = FALSE,
                              use_data = TRUE,
-                             cores = detectCores(),
                              mcmc_seed = sample(1e5, 1),
                              max_sampling_iterations = 20000,
                              pass_fit = TRUE) {
@@ -138,16 +148,18 @@ sccomp_glm.SingleCellExperiment = function(.data,
 
                                            # Secondary arguments
                                            prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                                           percent_false_positive = 5,
                                            check_outliers = TRUE,
+                                           bimodal_mean_variability_association = FALSE,
+
+                                           # Tertiary arguments
+                                           cores = detectCores(),
+                                           percent_false_positive = 5,
                                            approximate_posterior_inference = "outlier_detection",
                                            test_composition_above_logit_fold_change = 0.2,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
                                            exclude_priors = FALSE,
-                                           bimodal_mean_variability_association = FALSE,
                                            use_data = TRUE,
-                                           cores = detectCores(),
                                            mcmc_seed = sample(1e5, 1),
                                            max_sampling_iterations = 20000,
                                            pass_fit = TRUE) {
@@ -195,16 +207,18 @@ sccomp_glm.DFrame = function(.data,
 
                              # Secondary arguments
                              prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                             percent_false_positive = 5,
                              check_outliers = TRUE,
+                             bimodal_mean_variability_association = FALSE,
+
+                             # Tertiary arguments
+                             cores = detectCores(),
+                             percent_false_positive = 5,
                              approximate_posterior_inference = "outlier_detection",
                              test_composition_above_logit_fold_change = 0.2,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              exclude_priors = FALSE,
-                             bimodal_mean_variability_association = FALSE,
                              use_data = TRUE,
-                             cores = detectCores(),
                              mcmc_seed = sample(1e5, 1),
                              max_sampling_iterations = 20000,
                              pass_fit = TRUE) {
@@ -251,16 +265,18 @@ sccomp_glm.data.frame = function(.data,
 
                                  # Secondary arguments
                                  prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                                 percent_false_positive =  5,
                                  check_outliers = TRUE,
+                                 bimodal_mean_variability_association = FALSE,
+
+                                 # Tertiary arguments
+                                 cores = detectCores(),
+                                 percent_false_positive = 5,
                                  approximate_posterior_inference = "outlier_detection",
                                  test_composition_above_logit_fold_change = 0.2,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
                                  exclude_priors = FALSE,
-                                 bimodal_mean_variability_association = FALSE,
                                  use_data = TRUE,
-                                 cores = detectCores(),
                                  mcmc_seed = sample(1e5, 1),
                                  max_sampling_iterations = 20000,
                                  pass_fit = TRUE) {
@@ -347,19 +363,21 @@ sccomp_glm_data_frame_raw = function(.data,
 
                                      # Secondary arguments
                                      prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                                     percent_false_positive =  5,
                                      check_outliers = TRUE,
+                                     bimodal_mean_variability_association = FALSE,
+
+                                     # Tertiary arguments
+                                     cores = detectCores(),
+                                     percent_false_positive = 5,
                                      approximate_posterior_inference = "outlier_detection",
                                      test_composition_above_logit_fold_change = 0.2,
                                      verbose = FALSE,
-                                     my_glm_model,
+                                     noise_model = "multi_beta_binomial",
                                      exclude_priors = FALSE,
-                                     bimodal_mean_variability_association = FALSE,
                                      use_data = TRUE,
-                                     cores = 4,
                                      mcmc_seed = sample(1e5, 1),
                                      max_sampling_iterations = 20000,
-                                     pass_fit = TRUE ) {
+                                     pass_fit = TRUE) {
 
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
@@ -433,16 +451,18 @@ sccomp_glm_data_frame_counts = function(.data,
 
                                         # Secondary arguments
                                         prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                                        percent_false_positive = 5,
                                         check_outliers = TRUE,
+                                        bimodal_mean_variability_association = FALSE,
+
+                                        # Tertiary arguments
+                                        cores = detectCores(),
+                                        percent_false_positive = 5,
                                         approximate_posterior_inference = "outlier_detection",
                                         test_composition_above_logit_fold_change = 0.2,
                                         verbose = FALSE,
-                                        my_glm_model ,
+                                        noise_model = "multi_beta_binomial",
                                         exclude_priors = FALSE,
-                                        bimodal_mean_variability_association = FALSE,
                                         use_data = TRUE,
-                                        cores = 4,
                                         mcmc_seed = sample(1e5, 1),
                                         max_sampling_iterations = 20000,
                                         pass_fit = TRUE) {

@@ -13,39 +13,41 @@ sccomp_glm(
   .count = NULL,
   prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0, 0.6),
     standard_deviation = c(5, 8)),
-  percent_false_positive = 5,
   check_outliers = TRUE,
+  bimodal_mean_variability_association = FALSE,
+  cores = detectCores(),
+  percent_false_positive = 5,
   approximate_posterior_inference = "outlier_detection",
   test_composition_above_logit_fold_change = 0.2,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
   exclude_priors = FALSE,
-  bimodal_mean_variability_association = FALSE,
   use_data = TRUE,
-  cores = detectCores(),
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   pass_fit = TRUE
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+\item{.data}{A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | covariate columns.}
 
-\item{formula_composition}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
+\item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment.}
 
-\item{formula_variability}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
+\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
 \item{.cell_group}{A column name as symbol. The cell_group identifier}
 
-\item{.count}{A column name as symbol. The cell_group abundance (read count). Used only for data frame count output.}
+\item{.count}{A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.}
 
-\item{prior_mean_variable_association}{A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
-
-\item{percent_false_positive}{A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.}
+\item{prior_mean_variable_association}{A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
 
 \item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
+
+\item{bimodal_mean_variability_association}{A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.}
+
+\item{cores}{An integer. How many cored to be used with parallel calculations.}
 
 \item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
 
@@ -55,15 +57,13 @@ sccomp_glm(
 
 \item{noise_model}{A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.}
 
-\item{cores}{An integer. How many cored to be used with parallel calculations.}
-
 \item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
 }
 \description{
-This function runs the data modelling and statistical test for the hypothesis that a cell_group includes outlier biological replicate.
+The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the covariates (continuous or discrete). The user can define a linear model with an input R formula, where the first covariate is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
 }
 \examples{
 
@@ -72,7 +72,11 @@ data("counts_obj")
 estimate =
   sccomp_glm(
   counts_obj ,
-   ~ type, ~1, sample, cell_group, count,
+   ~ type,
+   ~1,
+   sample,
+   cell_group,
+   count,
     approximate_posterior_inference = "all",
     check_outliers = FALSE,
     cores = 1
