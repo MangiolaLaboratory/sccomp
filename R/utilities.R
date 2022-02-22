@@ -296,7 +296,7 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
   # Avoid bug
   #if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
 
-  fit$summary(par, ~quantile(.x, probs = probs)) %>%
+  fit$summary(par, ~quantile(.x, probs = probs,  na.rm=TRUE)) %>%
     rename(.variable = variable ) %>%
     #rstan::summary(par_names, probs = probs) %$%
     #summary %>%
