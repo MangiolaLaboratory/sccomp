@@ -24,7 +24,11 @@
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
 #'
-#'
+#' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
+#' @param exclude_priors A boolean. Whether to run a prior-free model, for benchmarking purposes.
+#' @param use_data A booelan. Whether to sun the model data free. This can be used for prior predictive check.
+#' @param max_sampling_iterations An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.
+#' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param verbose A boolean. Prints progression.
@@ -32,7 +36,23 @@
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
+#' @return A nested tibble `tbl`, with the following columns
+#' \itemize{
+#'   \item cell_group - column including the cell groups being tested
+#'   \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
+#'
+#'   \item c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - upper (97.5%) quantile of the posterior distribution fo a composition (c)  parameter.
+#'   \item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
+#'   \item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
+#'
+#'   \item v_lower - (optional, present if variability is modelled dependent on covariates) lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_effect - (optional, present if variability is modelled dependent on covariates) mean of the posterior distribution for a variability (v) parameter
+#'   \item v_upper - (optional, present if variability is modelled dependent on covariates) upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_pH0 - (optional, present if variability is modelled dependent on covariates) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
+#'   \item v_FDR - (optional, present if variability is modelled dependent on covariates) False-discovery rate of the null hypothesis (no difference), for a variability (v).
+#' }
 #'
 #' @examples
 #'
@@ -363,21 +383,19 @@ sccomp_glm_data_frame_raw = function(.data,
 
                                      # Secondary arguments
                                      prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                     percent_false_positive =  5,
                                      check_outliers = TRUE,
-                                     bimodal_mean_variability_association = FALSE,
-
-                                     # Tertiary arguments
-                                     cores = detectCores(),
-                                     percent_false_positive = 5,
                                      approximate_posterior_inference = "outlier_detection",
                                      test_composition_above_logit_fold_change = 0.2,
                                      verbose = FALSE,
-                                     noise_model = "multi_beta_binomial",
+                                     my_glm_model,
                                      exclude_priors = FALSE,
+                                     bimodal_mean_variability_association = FALSE,
                                      use_data = TRUE,
+                                     cores = 4,
                                      mcmc_seed = sample(1e5, 1),
                                      max_sampling_iterations = 20000,
-                                     pass_fit = TRUE) {
+                                     pass_fit = TRUE ) {
 
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
@@ -451,18 +469,16 @@ sccomp_glm_data_frame_counts = function(.data,
 
                                         # Secondary arguments
                                         prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                                        check_outliers = TRUE,
-                                        bimodal_mean_variability_association = FALSE,
-
-                                        # Tertiary arguments
-                                        cores = detectCores(),
                                         percent_false_positive = 5,
+                                        check_outliers = TRUE,
                                         approximate_posterior_inference = "outlier_detection",
                                         test_composition_above_logit_fold_change = 0.2,
                                         verbose = FALSE,
-                                        noise_model = "multi_beta_binomial",
+                                        my_glm_model ,
                                         exclude_priors = FALSE,
+                                        bimodal_mean_variability_association = FALSE,
                                         use_data = TRUE,
+                                        cores = 4,
                                         mcmc_seed = sample(1e5, 1),
                                         max_sampling_iterations = 20000,
                                         pass_fit = TRUE) {
@@ -623,7 +639,8 @@ replicate_data.data.frame = function(.data,
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
-#' @param .coefficients Th column names for coefficients, for example, c(b_0, b_1)
+#' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
+#' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
@@ -669,6 +686,7 @@ simulate_data <- function(.data,
 #' @importFrom SingleCellExperiment counts
 #' @importFrom purrr map_dbl
 #' @importFrom purrr pmap
+#' @importFrom readr read_file
 #'
 simulate_data.data.frame = function(.data,
                                     .estimate_object,
@@ -694,7 +712,7 @@ simulate_data.data.frame = function(.data,
   my_model = attr(.estimate_object, "noise_model") %>% when(
     (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_simulate_data,
     (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities),
-    (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", readr::read_file("dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
+    (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
 
   )
 

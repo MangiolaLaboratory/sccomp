@@ -1037,6 +1037,8 @@ plot_2d_intervals = function(.data, .cell_group, my_theme){
 
 }
 
+#' @importFrom scales trans_new
+#' @importFrom stringr str_replace
 plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, my_theme){
 
   calc_boxplot_stat <- function(x) {
