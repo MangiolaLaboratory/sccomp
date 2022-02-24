@@ -1,6 +1,7 @@
 ^sccomp\.Rproj$
 ^\.Rproj\.user$
 ^\.github
+^\.git
 ^README*
 ^dev$
 ^dev/*

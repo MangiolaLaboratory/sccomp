@@ -860,7 +860,7 @@ data_proportion =
   with_groups(sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
 
   # If I don't have outliers add them
-  when(!"outlier" %in% colnames(.) ~ mutate(., outlier = F), ~ (.))
+  when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
 
 factor_of_interest = .data %>% attr("covariates") %>% .[1]
 
