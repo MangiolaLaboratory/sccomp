@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.18</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.19</span>
       </span>
     </div>
 
@@ -51,7 +51,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>multi_beta_glm main</h1>
-    <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/master/R/functions_multi_beta.R" class="external-link"><code>R/functions_multi_beta.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/HEAD/R/functions_multi_beta.R" class="external-link"><code>R/functions_multi_beta.R</code></a></small>
     <div class="hidden name"><code>multi_beta_glm.Rd</code></div>
     </div>
 
@@ -59,7 +59,8 @@
     <p>This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.</p>
     </div>
 
-    <div class="ref-usage sourceCode"><pre class="sourceCode r"><code><span class="fu">multi_beta_glm</span><span class="op">(</span>
+    <div id="ref-usage">
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">multi_beta_glm</span><span class="op">(</span>
   <span class="va">.data</span>,
   formula <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,
   <span class="va">.sample</span>,
@@ -68,24 +69,28 @@
   cores <span class="op">=</span> <span class="fu">detect_cores</span><span class="op">(</span><span class="op">)</span>,
   seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span>
 <span class="op">)</span></code></pre></div>
+    </div>
 
-    <div id="ref-sections">
     <div id="arguments">
     <h2>Arguments</h2>
-    
-
-<dl><dt>.data</dt><dd><p>A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column</p></dd>
-</dl><dl><dt>formula</dt><dd><p>A formula. The sample formula used to perform the differential cell_type abundance analysis</p></dd>
-</dl><dl><dt>.sample</dt><dd><p>A column name as symbol. The sample identifier</p></dd>
-</dl><dl><dt>check_outliers</dt><dd><p>A boolean. Whether to check for outliers before the fit.</p></dd>
-</dl><dl><dt>approximate_posterior_inference</dt><dd><p>A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.</p></dd>
-</dl><dl><dt>cores</dt><dd><p>An integer. How many cored to be used with parallel calculations.</p></dd>
-</dl><dl><dt>seed</dt><dd><p>An integer. Used for development and testing purposes</p></dd>
+    <dl><dt>.data</dt>
+<dd><p>A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column</p></dd>
+<dt>formula</dt>
+<dd><p>A formula. The sample formula used to perform the differential cell_type abundance analysis</p></dd>
+<dt>.sample</dt>
+<dd><p>A column name as symbol. The sample identifier</p></dd>
+<dt>check_outliers</dt>
+<dd><p>A boolean. Whether to check for outliers before the fit.</p></dd>
+<dt>approximate_posterior_inference</dt>
+<dd><p>A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.</p></dd>
+<dt>cores</dt>
+<dd><p>An integer. How many cored to be used with parallel calculations.</p></dd>
+<dt>seed</dt>
+<dd><p>An integer. Used for development and testing purposes</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
     <p>A nested tibble <code>tbl</code> with cell_type-wise information: <code>sample wise data</code> | plot | <code>ppc samples failed</code> | <code>exposure deleterious outliers</code></p>
-    </div>
     </div>
 
   </div>
@@ -100,7 +105,8 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.9000.9000.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>
+2.0.2.9000.</p>
 </div>
 
       </footer></div>

@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.18</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.19</span>
       </span>
     </div>
 
@@ -75,19 +75,64 @@
       </header><div class="row">
   <div class="contents col-md-9">
 
-<p>sccomp - Outlier-aware and count-based compositional analysis of single-cell data ================</p>
+<p>sccomp - Outlier-aware and count-based compositional analysis of
+single-cell data ================</p>
 <!-- badges: start -->
 
 <div class="section level1">
 <div class="page-header"><h1 id="section">
 <img src="inst/logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
 </h1></div>
+<p>Single-cell transcriptomics allows the unbiased characterisation of
+the cellular composition of tissues. The cellular composition can be
+compared between biological or clinical conditions to identify potential
+cellular drivers. This strategy has been critical to unveil drivers of
+immune response in cancer and pathogen infection from single-cell data.
+Developing a robust statistical method for differential composition
+analyses from single-cell data is crucial for driving discoveries. The
+compositional data from single-cell experiments has four main
+properties. The data is in count form; counts underlie inversely
+correlated proportions that sum to one; larger cell groups are more
+variable across samples than small groups; real-world data is rich in
+outlier observation. A model that covers more than two of these
+properties is currently lacking. <strong>Here, we present a robust and
+outlier-aware method for testing differential tissue composition from
+single-cell data. This model can also transfer knowledge from a large
+set of integrated datasets to increase accuracy further. We present how
+this model can be applied to identify novel compositional and
+heterogeneity changes in existing studies.</strong></p>
 </div>
 <div class="section level1">
 <h1 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h1>
+<div class="section level2">
+<h2 id="simple-suggested-for-single-cell-and-cytof-analyses">(simple) Suggested for single-cell and CyTOF analyses<a class="anchor" aria-label="anchor" href="#simple-suggested-for-single-cell-and-cytof-analyses"></a>
+</h2>
+<p><strong>Bioconductor</strong></p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"stemangiola/sccomp"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span>
+   <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span>
+ <span class="op">}</span>
+ <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"sccomp"</span><span class="op">)</span></code></pre></div>
+<p><strong>Github</strong></p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"stemangiola/sccomp"</span><span class="op">)</span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="more-complex-and-efficient-until-further-optimisation-of-the-default-installation-suggested-for-microbiomics">(more complex and efficient, until further optimisation of the
+default installation) Suggested for microbiomics<a class="anchor" aria-label="anchor" href="#more-complex-and-efficient-until-further-optimisation-of-the-default-installation-suggested-for-microbiomics"></a>
+</h2>
+<p><strong>Github</strong></p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"cmdstanr"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://mc-stan.org/r-packages/"</span>, <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"repos"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
+<span class="fu">check_cmdstan_toolchain</span><span class="op">(</span><span class="op">)</span>
+<span class="fu">install_cmdstan</span><span class="op">(</span>cores <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>
+<span class="co"># Then, check the correct cmdstanr installation here</span>
+<span class="co"># https://mc-stan.org/cmdstanr/articles/cmdstanr.html</span>
+
+<span class="co"># Then install sccomp with the cmdstanr branch</span>
+<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"stemangiola/sccomp@cmdstanr"</span><span class="op">)</span></code></pre></div>
+</div>
 </div>
 <div class="section level1">
 <h1 id="analysis">Analysis<a class="anchor" aria-label="anchor" href="#analysis"></a>
@@ -95,155 +140,160 @@
 <div class="section level2">
 <h2 id="from-seurat-object">From Seurat Object<a class="anchor" aria-label="anchor" href="#from-seurat-object"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">res</span> <span class="op">=</span>
-  <span class="va">seurat_obj</span> |&gt;
-  <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span>  <span class="op">~</span> <span class="va">type</span>, <span class="va">sample</span>, <span class="va">cell_group</span> <span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">res</span> <span class="op">=</span>
-  <span class="va">sce_obj</span> |&gt;
-  <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> <span class="op">~</span> <span class="va">type</span>, <span class="va">sample</span>, <span class="va">cell_group</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">=</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  seurat_obj <span class="sc">|</span><span class="er">&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>   formula_composition <span class="ot">=</span> <span class="er">~</span> type, </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    formula_variability <span class="ot">=</span> <span class="er">~</span> <span class="dv">1</span>, </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    sample, </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    cell_group </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="er">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="from-singlecellexperiment-object">From SingleCellExperiment Object<a class="anchor" aria-label="anchor" href="#from-singlecellexperiment-object"></a>
+</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">=</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  sce_obj <span class="sc">|</span><span class="er">&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    formula_composition <span class="ot">=</span> <span class="er">~</span> type, </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    formula_variability <span class="ot">=</span> <span class="er">~</span> <span class="dv">1</span>, </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    sample, </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    cell_group </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="er">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="from-dataframe">From data.frame<a class="anchor" aria-label="anchor" href="#from-dataframe"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op">=</span>
   <span class="va">seurat_obj</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span> |&gt;
-  <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span><span class="op">~</span> <span class="va">type</span>, <span class="va">sample</span>, <span class="va">cell_group</span> <span class="op">)</span></code></pre></div>
+  <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span>
+    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, 
+    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, 
+    <span class="va">sample</span>, 
+    <span class="va">cell_group</span> 
+  <span class="op">)</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="from-counts">From counts<a class="anchor" aria-label="anchor" href="#from-counts"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op">=</span>
   <span class="va">counts_obj</span> |&gt;
   <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> 
-    <span class="op">~</span> <span class="va">type</span>, 
-    <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>, 
-    approximate_posterior_inference <span class="op">=</span> <span class="cn">FALSE</span>
+    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, 
+    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, 
+    .sample <span class="op">=</span> <span class="va">sample</span>,
+    .cell_group <span class="op">=</span> <span class="va">cell_group</span>,
+    .count <span class="op">=</span> <span class="va">count</span>
   <span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">res</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 72 × 8</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   c_lower c_effect c_upper    c_pH0     c_FDR count_data</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;list&gt;    </span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept)   0.573    0.753  0.940  0        0         &lt;tibble&gt;  </span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer   -1.29    -0.943 -0.599  0        0         &lt;tibble&gt;  </span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept)   0.119    0.367  0.627  0.0948   0.00509   &lt;tibble&gt;  </span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer   -1.08    -0.633 -0.160  0.0353   0.00432   &lt;tibble&gt;  </span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept)  -0.609   -0.420 -0.211  0.0213   0.00189   &lt;tibble&gt;  </span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer   -0.600   -0.209  0.162  0.480    0.153     &lt;tibble&gt;  </span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept)  -1.32    -1.11  -0.898  0        0         &lt;tibble&gt;  </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer   -0.734   -0.342  0.0521 0.249    0.0649    &lt;tibble&gt;  </span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept)   0.328    0.456  0.583  0.000250 0.0000119 &lt;tibble&gt;  </span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer   -0.117    0.113  0.351  0.759    0.243     &lt;tibble&gt;  </span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 62 more rows</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="visualise-data--inference">Visualise data + inference<a class="anchor" aria-label="anchor" href="#visualise-data--inference"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">data_for_plot</span> <span class="op">=</span> 
-  <span class="va">res</span> |&gt; 
-    <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">count_data</span> <span class="op">)</span> |&gt;
-    <span class="fu">group_by</span><span class="op">(</span><span class="va">sample</span><span class="op">)</span> |&gt;
-    <span class="fu">mutate</span><span class="op">(</span>proportion <span class="op">=</span> <span class="op">(</span><span class="va">count</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">count</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span> |&gt;
-    <span class="fu">ungroup</span><span class="op">(</span><span class="va">sample</span><span class="op">)</span> 
-
- <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_boxplot</span><span class="op">(</span>
-    <span class="fu">aes</span><span class="op">(</span><span class="va">type</span>, <span class="va">proportion</span>, fill<span class="op">=</span><span class="va">composition_prob_H0</span><span class="op">&lt;</span><span class="fl">0.025</span><span class="op">)</span>,
-    outlier.shape <span class="op">=</span> <span class="cn">NA</span>, 
-    data <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">data_for_plot</span>, <span class="op">!</span><span class="va">outlier</span><span class="op">)</span>
-  <span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_jitter</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">type</span>, <span class="va">proportion</span>, color<span class="op">=</span><span class="va">outlier</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">data_for_plot</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction</a></span><span class="op">(</span><span class="va">cell_group</span><span class="op">)</span>, scale<span class="op">=</span><span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">scale_y_continuous</span><span class="op">(</span>trans<span class="op">=</span><span class="st">"logit"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"black"</span>, <span class="st">"#e11f28"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">scale_fill_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>, <span class="st">"#E2D379"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">xlab</span><span class="op">(</span><span class="st">"Biological condition"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">ylab</span><span class="op">(</span><span class="st">"Cell-group proportion"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_bw</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">theme</span><span class="op">(</span>strip.background <span class="op">=</span><span class="fu">element_rect</span><span class="op">(</span>fill<span class="op">=</span><span class="st">"white"</span><span class="op">)</span>, legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></code></pre></div>
-<p><img src="reference/figures/unnamed-chunk-8-1.png"><!-- --></p>
-</div>
-<div class="section level2">
-<h2 id="visualise-credible-intervals-of-slope-parameter">Visualise credible intervals of slope parameter<a class="anchor" aria-label="anchor" href="#visualise-credible-intervals-of-slope-parameter"></a>
-</h2>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">res</span> |&gt;
-  <span class="fu">unnest</span><span class="op">(</span><span class="va">composition_CI</span><span class="op">)</span> |&gt; 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">`.median_typecancer`</span>, y<span class="op">=</span><span class="fu">fct_reorder</span><span class="op">(</span><span class="va">cell_group</span>, <span class="va">.median_typecancer</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_vline</span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fl">0.2</span>, colour<span class="op">=</span><span class="st">"grey"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_vline</span><span class="op">(</span>xintercept <span class="op">=</span> <span class="op">-</span><span class="fl">0.2</span>, colour<span class="op">=</span><span class="st">"grey"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_errorbar</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>xmin<span class="op">=</span><span class="va">`.lower_typecancer`</span>, xmax<span class="op">=</span><span class="va">`.upper_typecancer`</span>, color<span class="op">=</span><span class="va">composition_prob_H0</span><span class="op">&lt;</span><span class="fl">0.025</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_point</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">scale_color_brewer</span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">xlab</span><span class="op">(</span><span class="st">"Credible interval of the slope"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">ylab</span><span class="op">(</span><span class="st">"Cell group"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_bw</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">theme</span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></code></pre></div>
-<p><img src="reference/figures/unnamed-chunk-9-1.png"><!-- --></p>
-</div>
-<div class="section level2">
-<h2 id="visualise-relation-between-proportion-mean-and-overdispersion-the-regression-line-is-inferred-by-sccomp">Visualise relation between proportion mean and overdispersion. The regression line is inferred by sccomp.<a class="anchor" aria-label="anchor" href="#visualise-relation-between-proportion-mean-and-overdispersion-the-regression-line-is-inferred-by-sccomp"></a>
-</h2>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">mean_concentration_association</span> <span class="op">=</span> <span class="va">res</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="st">"mean_concentration_association"</span><span class="op">)</span>
-
-<span class="va">res</span> |&gt; 
-  <span class="fu">unnest</span><span class="op">(</span><span class="va">composition_CI</span><span class="op">)</span> |&gt;
-  <span class="fu">unnest</span><span class="op">(</span><span class="va">concentration</span><span class="op">)</span> |&gt; 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">`.median_(Intercept)`</span>, <span class="op">-</span><span class="va">mean</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_errorbar</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>ymin <span class="op">=</span> <span class="op">-</span><span class="va">`2.5%`</span>, ymax<span class="op">=</span><span class="op">-</span><span class="va">`97.5%`</span><span class="op">)</span>, color<span class="op">=</span><span class="st">"#4DAF4A"</span>, alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_errorbar</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>xmin <span class="op">=</span> <span class="va">`.lower_(Intercept)`</span>, xmax<span class="op">=</span><span class="va">`.upper_(Intercept)`</span><span class="op">)</span>, color<span class="op">=</span><span class="st">"#4DAF4A"</span>, alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_point</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_abline</span><span class="op">(</span>intercept <span class="op">=</span> <span class="va">mean_concentration_association</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, slope <span class="op">=</span> <span class="va">mean_concentration_association</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, color<span class="op">=</span><span class="st">"grey"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">xlab</span><span class="op">(</span><span class="st">"Category logit-proportion mean"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">ylab</span><span class="op">(</span><span class="st">"Category log-overdispersion"</span><span class="op">)</span> <span class="op">+</span>
-    <span class="fu">theme_bw</span><span class="op">(</span><span class="op">)</span> </code></pre></div>
-<p><img src="reference/figures/unnamed-chunk-10-1.png"><!-- --></p>
-</div>
-<div class="section level2">
-<h2 id="posterior-predictive-check">Posterior predictive check<a class="anchor" aria-label="anchor" href="#posterior-predictive-check"></a>
-</h2>
-<p>We can perform posterior predictive checks of the model. This gives information of how the model “interprets trends” in the data, and gives confidence on the estimates. The blue shades are the model generated data.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">data_proportion</span> <span class="op">=</span>
-      <span class="va">res</span> |&gt;
-      <span class="fu">unnest</span><span class="op">(</span><span class="va">count_data</span><span class="op">)</span> |&gt;
-      <span class="fu">select</span><span class="op">(</span><span class="va">cell_group</span>, <span class="va">sample</span>, <span class="va">outlier</span>, <span class="va">count</span>, <span class="va">type</span>, <span class="va">composition_prob_H0</span><span class="op">)</span> |&gt;
-      <span class="fu">with_groups</span><span class="op">(</span><span class="va">sample</span>, <span class="op">~</span> <span class="fu">mutate</span><span class="op">(</span><span class="va">.x</span>, proportion <span class="op">=</span> <span class="op">(</span><span class="va">count</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span><span class="op">)</span> <span class="op">)</span> 
-
-<span class="va">simulated_proportion</span> <span class="op">=</span> 
-  <span class="va">res</span> |&gt;
-  <span class="fu"><a href="reference/replicate_data.html">replicate_data</a></span><span class="op">(</span>number_of_draws <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> |&gt;
-  <span class="fu">left_join</span><span class="op">(</span><span class="va">data_proportion</span> |&gt; <span class="fu">distinct</span><span class="op">(</span><span class="va">type</span>, <span class="va">sample</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = "sample"</span></span></code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  
-  <span class="fu">geom_boxplot</span><span class="op">(</span>
-    <span class="fu">aes</span><span class="op">(</span><span class="va">type</span>, <span class="va">generated_proportions</span><span class="op">)</span>,
-    outlier.shape <span class="op">=</span> <span class="cn">NA</span>, alpha<span class="op">=</span><span class="fl">0.2</span>,
-    data <span class="op">=</span> <span class="va">simulated_proportion</span>, color<span class="op">=</span><span class="st">"blue"</span>
-  <span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_jitter</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">type</span>, <span class="va">generated_proportions</span><span class="op">)</span>, color<span class="op">=</span><span class="st">"blue"</span> ,alpha<span class="op">=</span><span class="fl">0.2</span>, size <span class="op">=</span> <span class="fl">0.6</span>, data <span class="op">=</span> <span class="va">simulated_proportion</span><span class="op">)</span> <span class="op">+</span> 
-  
-    <span class="fu">geom_boxplot</span><span class="op">(</span>
-    <span class="fu">aes</span><span class="op">(</span><span class="va">type</span>, <span class="va">proportion</span>, fill<span class="op">=</span><span class="va">composition_prob_H0</span><span class="op">&lt;</span><span class="fl">0.025</span><span class="op">)</span>,
-    outlier.shape <span class="op">=</span> <span class="cn">NA</span>, 
-    data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">data_proportion</span>, <span class="op">!</span><span class="va">outlier</span><span class="op">)</span>
-  <span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_jitter</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">type</span>, <span class="va">proportion</span>, color<span class="op">=</span><span class="va">outlier</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">data_proportion</span><span class="op">)</span> <span class="op">+</span> 
-  
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction</a></span><span class="op">(</span><span class="va">cell_group</span><span class="op">)</span>, scale<span class="op">=</span><span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">scale_y_continuous</span><span class="op">(</span>trans<span class="op">=</span><span class="st">"logit"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"black"</span>, <span class="st">"#e11f28"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">scale_fill_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>, <span class="st">"#E2D379"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">xlab</span><span class="op">(</span><span class="st">"Biological condition"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">ylab</span><span class="op">(</span><span class="st">"Cell-group proportion"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_bw</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">theme</span><span class="op">(</span>strip.background <span class="op">=</span><span class="fu">element_rect</span><span class="op">(</span>fill<span class="op">=</span><span class="st">"white"</span><span class="op">)</span>, legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></code></pre></div>
-<p><img src="reference/figures/unnamed-chunk-11-1.png"><!-- --></p>
-</div>
-<div class="section level2">
-<h2 id="visualisation-of-the-mcmc-chains-from-the-posterior-distribution">Visualisation of the MCMC chains from the posterior distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mcmc-chains-from-the-posterior-distribution"></a>
-</h2>
-<p>It is possible to directly evaluate the posterior distribution. In this example we plot the Monte Carlo chain for the slope parameter of the first cell type. We can see that has converged and is negative with probability 1.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span> </code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("sample", "cell_group")</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("cell_group", "type")</span></span></code></pre></div>
+<p>Plot of group proportion, faceted by groups. The blue boxplots
+represent the posterior predictive check. If the model is likely be
+descriptively adequate to the data, the blue boxplot should roughly
+overlay with the black boxplot, which represent the observed data. The
+outliers are coloured in red.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">boxplot</span></code></pre></div>
+<p><img src="inst/figures/unnamed-chunk-11-1.png"><!-- --></p>
+<p>Plot of estimates of differential composition (c_) on the x axis, and
+differential variability (v_) on the y axis. The error bars represent
+95% credible intervals. The dashed lines represent the minimal effect
+that the hypothesis test is based on. An effect is labelled as
+significant if bigger than the minimal effect according to the 95%
+credible interval. Facets represent the covariates in the model.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></code></pre></div>
+<p><img src="inst/figures/unnamed-chunk-12-1.png"><!-- --></p>
+</div>
+<div class="section level2">
+<h2 id="visualisation-of-the-mcmc-chains-from-the-posterior-distribution">Visualisation of the MCMC chains from the posterior
+distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mcmc-chains-from-the-posterior-distribution"></a>
+</h2>
+<p>It is possible to directly evaluate the posterior distribution. In
+this example we plot the Monte Carlo chain for the slope parameter of
+the first cell type. We can see that has converged and is negative with
+probability 1.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">rstan</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html" class="external-link">traceplot</a></span><span class="op">(</span><span class="st">"beta[2,1]"</span><span class="op">)</span></code></pre></div>
-<p><img src="reference/figures/unnamed-chunk-12-1.png"><!-- --></p>
+<p><img src="inst/figures/unnamed-chunk-13-1.png"><!-- --></p>
+</div>
+<div class="section level2">
+<h2 id="differential-variability">Differential variability<a class="anchor" aria-label="anchor" href="#differential-variability"></a>
+</h2>
+<p>We can model the cell-group variability also dependent on type, and
+so test differences in variability</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">res</span> <span class="op">=</span> 
+  <span class="va">counts_obj</span> |&gt;
+  <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> 
+    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, 
+    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, 
+    .sample <span class="op">=</span> <span class="va">sample</span>,
+    .cell_group <span class="op">=</span> <span class="va">cell_group</span>,
+    .count <span class="op">=</span> <span class="va">count</span>
+  <span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">res</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 72 × 13</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   c_lower c_effect c_upper   c_pH0    c_FDR v_lower</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept)  0.613     0.788   0.962 0       0         -4.89 </span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer  -1.27     -0.937  -0.591 0       0          0.973</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept)  0.239     0.460   0.688 0.00901 0.000635  -4.68 </span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer  -1.11     -0.660  -0.198 0.0253  0.00405    2.04 </span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept) -0.618    -0.408  -0.191 0.0290  0.00239   -5.55 </span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer  -0.660    -0.222   0.232 0.464   0.142      2.00 </span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept) -1.28     -1.05   -0.824 0       0         -6.10 </span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer  -0.776    -0.311   0.155 0.305   0.0713     1.22 </span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept)  0.393     0.529   0.679 0       0         -5.47 </span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer  -0.0704    0.223   0.509 0.436   0.130      1.74 </span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 62 more rows, and 5 more variables: v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="do">## #   v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, count_data &lt;list&gt;</span></span></code></pre></div>
+<p>Plot 1D significance plot</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("sample", "cell_group")</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("cell_group", "type")</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></code></pre></div>
+<p><img src="inst/figures/unnamed-chunk-15-1.png"><!-- --></p>
+<p>Plot 2D significance plot. This is possible if only differential
+variability has been tested</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></code></pre></div>
+<p><img src="inst/figures/unnamed-chunk-16-1.png"><!-- --></p>
 </div>
 </div>
 
@@ -253,10 +303,9 @@
     <div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li>Browse source code at <br><a href="https://github.com/stemangiola/sccomp/" class="external-link">https://​github.com/​stemangiola/​sccomp/​</a>
-</li>
-<li>Report a bug at <br><a href="https://github.com/stemangiola/sccomp/issues" class="external-link">https://​github.com/​stemangiola/​sccomp/​issues</a>
-</li>
+<li><a href="https://www.bioconductor.org/packages/sccomp" class="external-link">View on Bioconductor</a></li>
+<li><a href="https://github.com/stemangiola/sccomp/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/stemangiola/sccomp/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -268,6 +317,13 @@
 </ul>
 </div>
 
+
+<div class="citation">
+<h2 data-toc-skip>Citation</h2>
+<ul class="list-unstyled">
+<li><a href="authors.html#citation">Citing sccomp</a></li>
+</ul>
+</div>
 
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
@@ -295,7 +351,8 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.9000.9000.9000.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>
+2.0.2.9000.</p>
 </div>
 
       </footer>
