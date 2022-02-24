@@ -48,21 +48,6 @@
 #'
 "glm_dirichlet_multinomial"
 
-#' model_glm_dirichlet_multinomial
-#'
-#' @description
-#' This object is mostly for internal use and comparative purposes, if the dirichlet_multinomial is chosen as noise model.
-#'
-#' @importFrom utils data
-#'
-#' @keywords internal
-#'
-#' @format  A text file containing stan code for the Dirichlet model.
-#' @usage data(model_glm_dirichlet_multinomial)
-#'
-#'
-"model_glm_dirichlet_multinomial"
-
 #' glm_dirichlet_multinomial_generate_quantities
 #'
 #' @description
