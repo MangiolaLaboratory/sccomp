@@ -1040,7 +1040,7 @@ plot_2d_intervals = function(.data, .cell_group, my_theme){
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
-plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, my_theme){
+plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, .sample, my_theme){
 
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
@@ -1065,6 +1065,7 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
 
 
   .cell_group = enquo(.cell_group)
+  .sample = enquo(.sample)
 
   significance_colors =
     .data %>%
@@ -1094,6 +1095,7 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
       stat_summary(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
         fun.data = calc_boxplot_stat, geom="boxplot",
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         fatten = 0.5, lwd=0.2,
         data =
           simulated_proportion %>%
@@ -1111,8 +1113,8 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
       my_boxplot +
 
       geom_boxplot(
-        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL), # fill=Effect),
-        outlier.shape = NA,
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL, label = !!.sample), # fill=Effect),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
 
@@ -1128,8 +1130,8 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
       my_boxplot +
 
       geom_boxplot(
-        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
-        outlier.shape = NA,
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name, label = !!.sample), # fill=Effect),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
 
