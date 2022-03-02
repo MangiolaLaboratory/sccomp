@@ -1105,6 +1105,17 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
         color="blue"
 
       )
+
+    # hideOutliers <- function(x) {
+    #   if (x$hoverinfo == 'y') {
+    #     x$marker = list(opacity = 0)
+    #     x$hoverinfo = NA
+    #   }
+    #   return(x)
+    # }
+    #
+    # my_boxplot[["x"]][["data"]] <- map(my_boxplot[["x"]][["data"]], ~ hideOutliers(.))
+
   }
 
   # Get the exception if no significant cell types. This is not elegant
