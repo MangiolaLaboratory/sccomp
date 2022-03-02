@@ -849,6 +849,7 @@ plot_summary <- function(.data) {
 
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
+  .sample = attr(.data, ".count")
 
 plots = list()
 
@@ -862,10 +863,15 @@ data_proportion =
   # If I don't have outliers add them
   when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
 
-factor_of_interest = .data %>% attr("covariates") %>% .[1]
 
 # Boxplot
-plots$boxplot = plot_boxplot(.data, data_proportion, factor_of_interest, !!.cell_group, multipanel_theme)
+plots$boxplot =
+  .data %>%
+  attr("covariates") %>%
+  map(
+    ~ plot_boxplot(.data, data_proportion, .x, !!.cell_group, !!.sample, multipanel_theme) +
+      ggtitle(sprintf("Grouped by %s", .x))
+  )
 
 # 1D intervals
 plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, multipanel_theme)
