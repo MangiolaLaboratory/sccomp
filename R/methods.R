@@ -870,7 +870,7 @@ plots$boxplot =
   attr("covariates") %>%
   map(
     ~ plot_boxplot(.data, data_proportion, .x, !!.cell_group, !!.sample, multipanel_theme) +
-      ggtitle(sprintf("Grouped by %s", .x))
+      ggtitle(sprintf("Grouped by %s (for multi-covariate models, associations could be hardly observable with unidimensional data stratification)", .x))
   )
 
 # 1D intervals
