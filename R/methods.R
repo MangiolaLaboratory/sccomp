@@ -856,6 +856,10 @@ plots = list()
 
 data_proportion =
   .data %>%
+
+  # Otherwise does not work
+  select(-covariate) %>%
+
   pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
   unnest(count_data) %>%
   with_groups(sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
