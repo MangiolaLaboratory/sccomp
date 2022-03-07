@@ -189,23 +189,27 @@ default installation) Suggested for microbiomics<a class="anchor" aria-label="an
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span></code></pre></div>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: the composition design matrix has columns: (Intercept), typecancer</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: the variability design matrix has columns: (Intercept)</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 72 × 8</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   c_lower c_effect c_upper    c_pH0     c_FDR count_data</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;list&gt;    </span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept)   0.573    0.753  0.940  0        0         &lt;tibble&gt;  </span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer   -1.29    -0.943 -0.599  0        0         &lt;tibble&gt;  </span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept)   0.119    0.367  0.627  0.0948   0.00509   &lt;tibble&gt;  </span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer   -1.08    -0.633 -0.160  0.0353   0.00432   &lt;tibble&gt;  </span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept)  -0.609   -0.420 -0.211  0.0213   0.00189   &lt;tibble&gt;  </span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer   -0.600   -0.209  0.162  0.480    0.153     &lt;tibble&gt;  </span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept)  -1.32    -1.11  -0.898  0        0         &lt;tibble&gt;  </span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer   -0.734   -0.342  0.0521 0.249    0.0649    &lt;tibble&gt;  </span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept)   0.328    0.456  0.583  0.000250 0.0000119 &lt;tibble&gt;  </span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer   -0.117    0.113  0.351  0.759    0.243     &lt;tibble&gt;  </span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 62 more rows</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 72 × 9</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   covariate c_lower c_effect c_upper    c_pH0     c_FDR</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept) &lt;NA&gt;       0.557     0.708  0.869  0        0        </span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer  type      -1.18     -0.890 -0.585  0.000250 0.0000834</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept) &lt;NA&gt;       0.177     0.412  0.651  0.0355   0.00253  </span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer  type      -1.20     -0.753 -0.309  0.00601  0.00163  </span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept) &lt;NA&gt;      -0.661    -0.454 -0.241  0.0113   0.000510 </span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer  type      -0.735    -0.325  0.0723 0.268    0.0635   </span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept) &lt;NA&gt;      -1.31     -1.10  -0.880  0        0        </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer  type      -0.752    -0.335  0.0664 0.259    0.0521   </span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept) &lt;NA&gt;       0.356     0.488  0.626  0        0        </span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer  type      -0.0899    0.161  0.421  0.632    0.197    </span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 62 more rows, and 1 more variable: count_data &lt;list&gt;</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="visualise-data--inference">Visualise data + inference<a class="anchor" aria-label="anchor" href="#visualise-data--inference"></a>
@@ -213,7 +217,9 @@ default installation) Suggested for microbiomics<a class="anchor" aria-label="an
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span> </code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("sample", "cell_group")</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("cell_group", "type")</span></span></code></pre></div>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("cell_group", "type")</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Warning: Ignoring unknown aesthetics: label</span></span></code></pre></div>
 <p>Plot of group proportion, faceted by groups. The blue boxplots
 represent the posterior predictive check. If the model is likely be
 descriptively adequate to the data, the blue boxplot should roughly
@@ -221,6 +227,7 @@ overlay with the black boxplot, which represent the observed data. The
 outliers are coloured in red.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">boxplot</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">## [[1]]</span></span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-11-1.png"><!-- --></p>
 <p>Plot of estimates of differential composition (c_) on the x axis, and
 differential variability (v_) on the y axis. The error bars represent
@@ -228,7 +235,7 @@ differential variability (v_) on the y axis. The error bars represent
 that the hypothesis test is based on. An effect is labelled as
 significant if bigger than the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-12-1.png"><!-- --></p>
 </div>
@@ -240,7 +247,7 @@ distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mc
 this example we plot the Monte Carlo chain for the slope parameter of
 the first cell type. We can see that has converged and is negative with
 probability 1.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">rstan</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html" class="external-link">traceplot</a></span><span class="op">(</span><span class="st">"beta[2,1]"</span><span class="op">)</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-13-1.png"><!-- --></p>
 </div>
@@ -249,7 +256,7 @@ probability 1.</p>
 </h2>
 <p>We can model the cell-group variability also dependent on type, and
 so test differences in variability</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op">=</span> 
   <span class="va">counts_obj</span> |&gt;
   <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> 
@@ -259,39 +266,45 @@ so test differences in variability</p>
     .cell_group <span class="op">=</span> <span class="va">cell_group</span>,
     .count <span class="op">=</span> <span class="va">count</span>
   <span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb17"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: the composition design matrix has columns: (Intercept), typecancer</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="do">## sccomp says: the variability design matrix has columns: (Intercept), typecancer</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 72 × 13</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   c_lower c_effect c_upper   c_pH0    c_FDR v_lower</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept)  0.613     0.788   0.962 0       0         -4.89 </span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer  -1.27     -0.937  -0.591 0       0          0.973</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept)  0.239     0.460   0.688 0.00901 0.000635  -4.68 </span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer  -1.11     -0.660  -0.198 0.0253  0.00405    2.04 </span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept) -0.618    -0.408  -0.191 0.0290  0.00239   -5.55 </span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer  -0.660    -0.222   0.232 0.464   0.142      2.00 </span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept) -1.28     -1.05   -0.824 0       0         -6.10 </span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer  -0.776    -0.311   0.155 0.305   0.0713     1.22 </span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept)  0.393     0.529   0.679 0       0         -5.47 </span></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer  -0.0704    0.223   0.509 0.436   0.130      1.74 </span></span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 62 more rows, and 5 more variables: v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="do">## #   v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, count_data &lt;list&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 72 × 14</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   covariate c_lower c_effect c_upper  c_pH0   c_FDR</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept) &lt;NA&gt;       0.593     0.769  0.953  0      0      </span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer  type      -1.26     -0.915 -0.540  0      0      </span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept) &lt;NA&gt;       0.134     0.387  0.630  0.0658 0.00373</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer  type      -1.03     -0.541 -0.0711 0.0773 0.0160 </span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept) &lt;NA&gt;      -0.649    -0.427 -0.191  0.0275 0.00151</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer  type      -0.661    -0.205  0.262  0.491  0.145  </span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept) &lt;NA&gt;      -1.29     -1.07  -0.825  0      0      </span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer  type      -0.741    -0.291  0.184  0.343  0.0798 </span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept) &lt;NA&gt;       0.370     0.514  0.662  0      0      </span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer  type      -0.0446    0.239  0.538  0.394  0.106  </span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 62 more rows, and 6 more variables: v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="do">## #   v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, count_data &lt;list&gt;</span></span></code></pre></div>
 <p>Plot 1D significance plot</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("sample", "cell_group")</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("cell_group", "type")</span></span></code></pre></div>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("sample", "cell_group")</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Joining, by = c("cell_group", "type")</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Warning: Ignoring unknown aesthetics: label</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-15-1.png"><!-- --></p>
 <p>Plot 2D significance plot. This is possible if only differential
 variability has been tested</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-16-1.png"><!-- --></p>
 </div>
