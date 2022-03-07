@@ -93,6 +93,10 @@ estimate_multi_beta_binomial_glm = function(.data,
         use_data = use_data
       )
 
+    # Print design matrix
+    message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
+    message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
+
     # Pior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
@@ -304,6 +308,10 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     message("sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]")
 
+    # Print design matrix
+    message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
+    message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
+
     fit3 =
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
@@ -472,7 +480,14 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       ),
       ~ (.)
     ) %>%
-    select(parameter  = C_name, everything())
+
+    # Add easy to understand covariate labels
+    left_join(
+      data_for_model$covariate_parameter_dictionary %>%
+        select(covariate, design_matrix_col),
+      by = c("C_name" = "design_matrix_col" )
+    ) %>%
+    select(parameter  = C_name, covariate, everything())
 
 }
 

@@ -629,6 +629,15 @@ data_spread_to_model_input =
     data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
+    # Add parameter covariate ictionary
+    data_for_model$covariate_parameter_dictionary =
+      .data_spread %>%
+      select(parse_formula(formula)) %>%
+      distinct() %>%
+      gather(covariate, parameter) %>%
+      unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE) %>%
+      filter(design_matrix_col %in% colnames(data_for_model$X))
+
     # Return
     data_for_model
   }
