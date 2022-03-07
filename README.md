@@ -123,24 +123,28 @@ res =
 
     ## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]
 
+    ## sccomp says: the composition design matrix has columns: (Intercept), typecancer
+
+    ## sccomp says: the variability design matrix has columns: (Intercept)
+
 ``` r
 res
 ```
 
-    ## # A tibble: 72 × 8
-    ##    cell_group parameter   c_lower c_effect c_upper    c_pH0     c_FDR count_data
-    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>    <dbl>     <dbl> <list>    
-    ##  1 B1         (Intercept)   0.573    0.753  0.940  0        0         <tibble>  
-    ##  2 B1         typecancer   -1.29    -0.943 -0.599  0        0         <tibble>  
-    ##  3 B2         (Intercept)   0.119    0.367  0.627  0.0948   0.00509   <tibble>  
-    ##  4 B2         typecancer   -1.08    -0.633 -0.160  0.0353   0.00432   <tibble>  
-    ##  5 B3         (Intercept)  -0.609   -0.420 -0.211  0.0213   0.00189   <tibble>  
-    ##  6 B3         typecancer   -0.600   -0.209  0.162  0.480    0.153     <tibble>  
-    ##  7 BM         (Intercept)  -1.32    -1.11  -0.898  0        0         <tibble>  
-    ##  8 BM         typecancer   -0.734   -0.342  0.0521 0.249    0.0649    <tibble>  
-    ##  9 CD4 1      (Intercept)   0.328    0.456  0.583  0.000250 0.0000119 <tibble>  
-    ## 10 CD4 1      typecancer   -0.117    0.113  0.351  0.759    0.243     <tibble>  
-    ## # … with 62 more rows
+    ## # A tibble: 72 × 9
+    ##    cell_group parameter   covariate c_lower c_effect c_upper    c_pH0     c_FDR
+    ##    <chr>      <chr>       <chr>       <dbl>    <dbl>   <dbl>    <dbl>     <dbl>
+    ##  1 B1         (Intercept) <NA>       0.557     0.708  0.869  0        0        
+    ##  2 B1         typecancer  type      -1.18     -0.890 -0.585  0.000250 0.0000834
+    ##  3 B2         (Intercept) <NA>       0.177     0.412  0.651  0.0355   0.00253  
+    ##  4 B2         typecancer  type      -1.20     -0.753 -0.309  0.00601  0.00163  
+    ##  5 B3         (Intercept) <NA>      -0.661    -0.454 -0.241  0.0113   0.000510 
+    ##  6 B3         typecancer  type      -0.735    -0.325  0.0723 0.268    0.0635   
+    ##  7 BM         (Intercept) <NA>      -1.31     -1.10  -0.880  0        0        
+    ##  8 BM         typecancer  type      -0.752    -0.335  0.0664 0.259    0.0521   
+    ##  9 CD4 1      (Intercept) <NA>       0.356     0.488  0.626  0        0        
+    ## 10 CD4 1      typecancer  type      -0.0899    0.161  0.421  0.632    0.197    
+    ## # … with 62 more rows, and 1 more variable: count_data <list>
 
 ## Visualise data + inference
 
@@ -151,6 +155,8 @@ plots = plot_summary(res)
     ## Joining, by = c("sample", "cell_group")
     ## Joining, by = c("cell_group", "type")
 
+    ## Warning: Ignoring unknown aesthetics: label
+
 Plot of group proportion, faceted by groups. The blue boxplots represent
 the posterior predictive check. If the model is likely be descriptively
 adequate to the data, the blue boxplot should roughly overlay with the
@@ -160,6 +166,8 @@ coloured in red.
 ``` r
 plots$boxplot
 ```
+
+    ## [[1]]
 
 ![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
 
@@ -212,25 +220,29 @@ res =
 
     ## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]
 
+    ## sccomp says: the composition design matrix has columns: (Intercept), typecancer
+
+    ## sccomp says: the variability design matrix has columns: (Intercept), typecancer
+
 ``` r
 res
 ```
 
-    ## # A tibble: 72 × 13
-    ##    cell_group parameter   c_lower c_effect c_upper   c_pH0    c_FDR v_lower
-    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>   <dbl>    <dbl>   <dbl>
-    ##  1 B1         (Intercept)  0.613     0.788   0.962 0       0         -4.89 
-    ##  2 B1         typecancer  -1.27     -0.937  -0.591 0       0          0.973
-    ##  3 B2         (Intercept)  0.239     0.460   0.688 0.00901 0.000635  -4.68 
-    ##  4 B2         typecancer  -1.11     -0.660  -0.198 0.0253  0.00405    2.04 
-    ##  5 B3         (Intercept) -0.618    -0.408  -0.191 0.0290  0.00239   -5.55 
-    ##  6 B3         typecancer  -0.660    -0.222   0.232 0.464   0.142      2.00 
-    ##  7 BM         (Intercept) -1.28     -1.05   -0.824 0       0         -6.10 
-    ##  8 BM         typecancer  -0.776    -0.311   0.155 0.305   0.0713     1.22 
-    ##  9 CD4 1      (Intercept)  0.393     0.529   0.679 0       0         -5.47 
-    ## 10 CD4 1      typecancer  -0.0704    0.223   0.509 0.436   0.130      1.74 
-    ## # … with 62 more rows, and 5 more variables: v_effect <dbl>, v_upper <dbl>,
-    ## #   v_pH0 <dbl>, v_FDR <dbl>, count_data <list>
+    ## # A tibble: 72 × 14
+    ##    cell_group parameter   covariate c_lower c_effect c_upper  c_pH0   c_FDR
+    ##    <chr>      <chr>       <chr>       <dbl>    <dbl>   <dbl>  <dbl>   <dbl>
+    ##  1 B1         (Intercept) <NA>       0.593     0.769  0.953  0      0      
+    ##  2 B1         typecancer  type      -1.26     -0.915 -0.540  0      0      
+    ##  3 B2         (Intercept) <NA>       0.134     0.387  0.630  0.0658 0.00373
+    ##  4 B2         typecancer  type      -1.03     -0.541 -0.0711 0.0773 0.0160 
+    ##  5 B3         (Intercept) <NA>      -0.649    -0.427 -0.191  0.0275 0.00151
+    ##  6 B3         typecancer  type      -0.661    -0.205  0.262  0.491  0.145  
+    ##  7 BM         (Intercept) <NA>      -1.29     -1.07  -0.825  0      0      
+    ##  8 BM         typecancer  type      -0.741    -0.291  0.184  0.343  0.0798 
+    ##  9 CD4 1      (Intercept) <NA>       0.370     0.514  0.662  0      0      
+    ## 10 CD4 1      typecancer  type      -0.0446    0.239  0.538  0.394  0.106  
+    ## # … with 62 more rows, and 6 more variables: v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, count_data <list>
 
 Plot 1D significance plot
 
@@ -240,6 +252,8 @@ plots = plot_summary(res)
 
     ## Joining, by = c("sample", "cell_group")
     ## Joining, by = c("cell_group", "type")
+
+    ## Warning: Ignoring unknown aesthetics: label
 
 ``` r
 plots$credible_intervals_1D
