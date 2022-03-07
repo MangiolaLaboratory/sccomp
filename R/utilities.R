@@ -1087,8 +1087,13 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
     filter(stats_name == "FDR") %>%
     filter(parameter != "(Intercept)") %>%
     filter(stats_value < 0.025) %>%
-    unite("name", c(which, parameter)) %>%
-    with_groups(!!.cell_group, ~ .x %>% summarise(name = paste(name, collapse = " + ")))
+    filter(covariate == factor_of_interest) %>%
+    unite("name", c(which, parameter), remove = FALSE) %>%
+    distinct() %>%
+    # Get clean parameter
+    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", covariate), "")) %>%
+
+    with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
 
   my_boxplot =  ggplot()
 
@@ -1133,12 +1138,12 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
       my_boxplot +
 
       geom_boxplot(
-        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL, label = !!.sample), # fill=Effect),
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL), # fill=Effect),
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
 
-          left_join(significance_colors, by = quo_name(.cell_group)),
+          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
         fatten = 0.5,
         lwd=0.5,
       )
@@ -1150,12 +1155,12 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
       my_boxplot +
 
       geom_boxplot(
-        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name, label = !!.sample), # fill=Effect),
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
 
-          left_join(significance_colors, by = quo_name(.cell_group)),
+          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
         fatten = 0.5,
         lwd=0.5,
       )
@@ -1165,7 +1170,7 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
 
   my_boxplot +
     geom_jitter(
-      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
+      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest), label = !!.sample),
       data = data_proportion,
       position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
       size = 0.5
@@ -1193,9 +1198,8 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
     guides(color="none", alpha="none", size="none") +
-    labs(fill="Compositional difference") +
+    labs(fill="Significant difference") +
     my_theme +
-    theme(axis.title.y = element_blank()) +
     theme(axis.text.x =  element_text(angle=20, hjust = 1))
 
 
