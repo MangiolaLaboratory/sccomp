@@ -26,7 +26,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -96,12 +96,17 @@
 <span class="r-in">    cores <span class="op">=</span> <span class="fl">1</span></span>
 <span class="r-in">  <span class="op">)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation [ETA: ~20s]</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">estimate</span> |&gt; <span class="fu">plot_summary</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining, by = c("sample", "cell_group")</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining, by = c("cell_group", "type")</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Ignoring unknown aesthetics: label</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $boxplot</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $boxplot[[1]]</span>
 <span class="r-plt img"><img src="plot_summary-1.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $credible_intervals_1D</span>
 <span class="r-plt img"><img src="plot_summary-2.png" alt="" width="700" height="433"></span>

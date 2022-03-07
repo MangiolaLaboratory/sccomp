@@ -43,7 +43,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -79,7 +79,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2022-03-02</h4>
+            <h4 data-toc-skip class="date">2022-03-07</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/HEAD/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="hidden name"><code>introduction.Rmd</code></div>
@@ -176,37 +176,41 @@ heterogeneity changes in existing studies.</strong></p>
 <pre><code><span class="co">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></code></pre>
 <pre><code><span class="co">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></code></pre>
 <pre><code><span class="co">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></code></pre>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<pre><code><span class="co">## sccomp says: the composition design matrix has columns: (Intercept), typecancer</span></code></pre>
+<pre><code><span class="co">## sccomp says: the variability design matrix has columns: (Intercept)</span></code></pre>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 72 × 8</span></span>
-<span class="co">##    cell_group parameter   c_lower c_effect c_upper  c_pH0   c_FDR count_data</span>
-<span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>    </span>
-<span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercept)  0.572     0.753  0.941  0      0       &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer  -<span style="color: #BB0000;">1.30</span>     -<span style="color: #BB0000;">0.935</span> -<span style="color: #BB0000;">0.579</span>  0      0       &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercept)  0.130     0.374  0.631  0.081<span style="text-decoration: underline;">3</span> 0.004<span style="text-decoration: underline;">16</span> &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer  -<span style="color: #BB0000;">1.06</span>     -<span style="color: #BB0000;">0.613</span> -<span style="color: #BB0000;">0.136</span>  0.041<span style="text-decoration: underline;">3</span> 0.008<span style="text-decoration: underline;">12</span> &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercept) -<span style="color: #BB0000;">0.596</span>    -<span style="color: #BB0000;">0.415</span> -<span style="color: #BB0000;">0.218</span>  0.017<span style="text-decoration: underline;">2</span> 0.001<span style="text-decoration: underline;">40</span> &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer  -<span style="color: #BB0000;">0.580</span>    -<span style="color: #BB0000;">0.213</span>  0.155  0.473  0.134   &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercept) -<span style="color: #BB0000;">1.32</span>     -<span style="color: #BB0000;">1.11</span>  -<span style="color: #BB0000;">0.888</span>  0      0       &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer  -<span style="color: #BB0000;">0.741</span>    -<span style="color: #BB0000;">0.335</span>  0.067<span style="text-decoration: underline;">5</span> 0.25   0.059<span style="text-decoration: underline;">7</span>  &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercept)  0.381     0.505  0.631  0      0       &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer  -<span style="color: #BB0000;">0.043</span><span style="color: #BB0000; text-decoration: underline;">7</span>    0.204  0.454  0.488  0.161   &lt;tibble&gt;  </span>
-<span class="co">## <span style="color: #949494;"># … with 62 more rows</span></span></code></pre>
+<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 72 × 9</span></span>
+<span class="co">##    cell_group parameter   covariate c_lower c_effect c_upper  c_pH0    c_FDR</span>
+<span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercept) <span style="color: #BB0000;">NA</span>         0.556     0.743  0.930  0      0       </span>
+<span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer  type      -<span style="color: #BB0000;">1.28</span>     -<span style="color: #BB0000;">0.925</span> -<span style="color: #BB0000;">0.569</span>  0      0       </span>
+<span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercept) <span style="color: #BB0000;">NA</span>         0.106     0.349  0.606  0.112  0.005<span style="text-decoration: underline;">95</span> </span>
+<span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer  type      -<span style="color: #BB0000;">1.08</span>     -<span style="color: #BB0000;">0.609</span> -<span style="color: #BB0000;">0.144</span>  0.041<span style="text-decoration: underline;">7</span> 0.005<span style="text-decoration: underline;">02</span> </span>
+<span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercept) <span style="color: #BB0000;">NA</span>        -<span style="color: #BB0000;">0.681</span>    -<span style="color: #BB0000;">0.468</span> -<span style="color: #BB0000;">0.247</span>  0.011<span style="text-decoration: underline;">5</span> 0.000<span style="text-decoration: underline;">625</span></span>
+<span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer  type      -<span style="color: #BB0000;">0.704</span>    -<span style="color: #BB0000;">0.307</span>  0.094<span style="text-decoration: underline;">3</span> 0.296  0.105   </span>
+<span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercept) <span style="color: #BB0000;">NA</span>        -<span style="color: #BB0000;">1.32</span>     -<span style="color: #BB0000;">1.12</span>  -<span style="color: #BB0000;">0.892</span>  0      0       </span>
+<span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer  type      -<span style="color: #BB0000;">0.734</span>    -<span style="color: #BB0000;">0.326</span>  0.068<span style="text-decoration: underline;">5</span> 0.257  0.077   </span>
+<span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercept) <span style="color: #BB0000;">NA</span>         0.342     0.469  0.606  0      0       </span>
+<span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer  type      -<span style="color: #BB0000;">0.098</span><span style="color: #BB0000; text-decoration: underline;">0</span>    0.173  0.435  0.583  0.162   </span>
+<span class="co">## <span style="color: #949494;"># … with 62 more rows, and 1 more variable: count_data &lt;list&gt;</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="visualise-data-inference">Visualise data + inference<a class="anchor" aria-label="anchor" href="#visualise-data-inference"></a>
 </h3>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="../reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span> </code></pre></div>
 <pre><code><span class="co">## Joining, by = c("sample", "cell_group")</span>
 <span class="co">## Joining, by = c("cell_group", "type")</span></code></pre>
+<pre><code><span class="co">## Warning: Ignoring unknown aesthetics: label</span></code></pre>
 <p>Plot of group proportion, faceted by groups. The blue boxplots
 represent the posterior predictive check. If the model is likely be
 descriptively adequate to the data, the blue boxplot should roughly
 overlay with the black boxplot, which represent the observed data. The
 outliers are coloured in red.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">boxplot</span></code></pre></div>
+<pre><code><span class="co">## [[1]]</span></code></pre>
 <p><img src="inst/figures/unnamed-chunk-10-1.png" width="700"></p>
 <p>Plot of estimates of differential composition (c_) on the x axis, and
 differential variability (v_) on the y axis. The error bars represent
@@ -214,7 +218,7 @@ differential variability (v_) on the y axis. The error bars represent
 that the hypothesis test is based on. An effect is labelled as
 significant if bigger than the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-11-1.png" width="700"></p>
 </div>
@@ -226,7 +230,7 @@ distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mc
 this example we plot the Monte Carlo chain for the slope parameter of
 the first cell type. We can see that has converged and is negative with
 probability 1.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">rstan</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html" class="external-link">traceplot</a></span><span class="op">(</span><span class="st">"beta[2,1]"</span><span class="op">)</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-12-1.png" width="700"></p>
 </div>
@@ -235,7 +239,7 @@ probability 1.</p>
 </h3>
 <p>We can model the cell-group variability also dependent on type, and
 so test differences in variability</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span> <span class="op">=</span> 
   <span class="va">counts_obj</span> |&gt;
   <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> 
@@ -248,37 +252,40 @@ so test differences in variability</p>
 <pre><code><span class="co">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></code></pre>
 <pre><code><span class="co">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></code></pre>
 <pre><code><span class="co">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></code></pre>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<pre><code><span class="co">## sccomp says: the composition design matrix has columns: (Intercept), typecancer</span></code></pre>
+<pre><code><span class="co">## sccomp says: the variability design matrix has columns: (Intercept), typecancer</span></code></pre>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span></code></pre></div>
-<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 72 × 13</span></span>
-<span class="co">##    cell_group parameter   c_lower c_effect c_upper    c_pH0    c_FDR v_lower</span>
-<span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercept)  0.602     0.773  0.948  0        0         -<span style="color: #BB0000;">4.83</span> </span>
-<span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer  -<span style="color: #BB0000;">1.25</span>     -<span style="color: #BB0000;">0.904</span> -<span style="color: #BB0000;">0.556</span>  0.000<span style="text-decoration: underline;">750</span> 0.000<span style="text-decoration: underline;">208</span>   0.930</span>
-<span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercept)  0.156     0.394  0.635  0.052<span style="text-decoration: underline;">5</span>   0.003<span style="text-decoration: underline;">81</span>   -<span style="color: #BB0000;">4.47</span> </span>
-<span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer  -<span style="color: #BB0000;">1.01</span>     -<span style="color: #BB0000;">0.543</span> -<span style="color: #BB0000;">0.066</span><span style="color: #BB0000; text-decoration: underline;">9</span> 0.081<span style="text-decoration: underline;">0</span>   0.020<span style="text-decoration: underline;">2</span>     1.41 </span>
-<span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercept) -<span style="color: #BB0000;">0.644</span>    -<span style="color: #BB0000;">0.417</span> -<span style="color: #BB0000;">0.185</span>  0.034<span style="text-decoration: underline;">2</span>   0.002<span style="text-decoration: underline;">07</span>   -<span style="color: #BB0000;">5.46</span> </span>
-<span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer  -<span style="color: #BB0000;">0.627</span>    -<span style="color: #BB0000;">0.196</span>  0.272  0.506    0.158      1.98 </span>
-<span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercept) -<span style="color: #BB0000;">1.30</span>     -<span style="color: #BB0000;">1.07</span>  -<span style="color: #BB0000;">0.828</span>  0        0         -<span style="color: #BB0000;">6.02</span> </span>
-<span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer  -<span style="color: #BB0000;">0.749</span>    -<span style="color: #BB0000;">0.287</span>  0.163  0.355    0.084<span style="text-decoration: underline;">1</span>     1.22 </span>
-<span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercept)  0.378     0.520  0.666  0        0         -<span style="color: #BB0000;">5.37</span> </span>
-<span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer  -<span style="color: #BB0000;">0.033</span><span style="color: #BB0000; text-decoration: underline;">2</span>    0.246  0.553  0.379    0.108      1.69 </span>
-<span class="co">## <span style="color: #949494;"># … with 62 more rows, and 5 more variables: v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span>
-<span class="co">## <span style="color: #949494;">#   v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, count_data &lt;list&gt;</span></span></code></pre>
+<pre><code><span class="co">## <span style="color: #949494;"># A tibble: 72 × 14</span></span>
+<span class="co">##    cell_group parameter   covariate c_lower c_effect c_upper    c_pH0     c_FDR</span>
+<span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercept) <span style="color: #BB0000;">NA</span>         0.620     0.789   0.961 0        0        </span>
+<span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer  type      -<span style="color: #BB0000;">1.28</span>     -<span style="color: #BB0000;">0.928</span>  -<span style="color: #BB0000;">0.569</span> 0        0        </span>
+<span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercept) <span style="color: #BB0000;">NA</span>         0.172     0.404   0.659 0.043<span style="text-decoration: underline;">3</span>   0.002<span style="text-decoration: underline;">88</span>  </span>
+<span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer  type      -<span style="color: #BB0000;">1.03</span>     -<span style="color: #BB0000;">0.562</span>  -<span style="color: #BB0000;">0.105</span> 0.060<span style="text-decoration: underline;">7</span>   0.008<span style="text-decoration: underline;">02</span>  </span>
+<span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercept) <span style="color: #BB0000;">NA</span>        -<span style="color: #BB0000;">0.628</span>    -<span style="color: #BB0000;">0.410</span>  -<span style="color: #BB0000;">0.188</span> 0.032<span style="text-decoration: underline;">0</span>   0.001<span style="text-decoration: underline;">44</span>  </span>
+<span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer  type      -<span style="color: #BB0000;">0.665</span>    -<span style="color: #BB0000;">0.214</span>   0.229 0.470    0.157    </span>
+<span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercept) <span style="color: #BB0000;">NA</span>        -<span style="color: #BB0000;">1.26</span>     -<span style="color: #BB0000;">1.05</span>   -<span style="color: #BB0000;">0.826</span> 0        0        </span>
+<span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer  type      -<span style="color: #BB0000;">0.730</span>    -<span style="color: #BB0000;">0.295</span>   0.134 0.318    0.081<span style="text-decoration: underline;">1</span>   </span>
+<span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercept) <span style="color: #BB0000;">NA</span>         0.388     0.530   0.677 0.000<span style="text-decoration: underline;">250</span> 0.000<span style="text-decoration: underline;">010</span>9</span>
+<span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer  type      -<span style="color: #BB0000;">0.052</span><span style="color: #BB0000; text-decoration: underline;">6</span>    0.227   0.523 0.427    0.145    </span>
+<span class="co">## <span style="color: #949494;"># … with 62 more rows, and 6 more variables: v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span>
+<span class="co">## <span style="color: #949494;">#   v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, count_data &lt;list&gt;</span></span></code></pre>
 <p>Plot 1D significance plot</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="../reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## Joining, by = c("sample", "cell_group")</span>
 <span class="co">## Joining, by = c("cell_group", "type")</span></code></pre>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<pre><code><span class="co">## Warning: Ignoring unknown aesthetics: label</span></code></pre>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-14-1.png" width="700"></p>
 <p>Plot 2D significance plot. This is possible if only differential
 variability has been tested</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-15-1.png" width="700"></p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## R version 4.1.2 (2021-11-01)</span>
 <span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span>
@@ -310,7 +317,7 @@ variability has been tested</p>
 <span class="co">##  [7] tools_4.1.2                 bslib_0.3.1                </span>
 <span class="co">##  [9] utf8_1.2.2                  R6_2.5.1                   </span>
 <span class="co">## [11] BiocGenerics_0.40.0         colorspace_2.0-3           </span>
-<span class="co">## [13] withr_2.4.3                 tidyselect_1.1.2           </span>
+<span class="co">## [13] withr_2.5.0                 tidyselect_1.1.2           </span>
 <span class="co">## [15] gridExtra_2.3               prettyunits_1.1.1          </span>
 <span class="co">## [17] processx_3.5.2              compiler_4.1.2             </span>
 <span class="co">## [19] textshaping_0.3.6           cli_3.2.0                  </span>
@@ -320,7 +327,7 @@ variability has been tested</p>
 <span class="co">## [27] scales_1.1.1                readr_2.1.2                </span>
 <span class="co">## [29] callr_3.7.0                 pkgdown_2.0.2.9000         </span>
 <span class="co">## [31] systemfonts_1.0.4           stringr_1.4.0              </span>
-<span class="co">## [33] digest_0.6.29               rmarkdown_2.11             </span>
+<span class="co">## [33] digest_0.6.29               rmarkdown_2.12             </span>
 <span class="co">## [35] XVector_0.34.0              pkgconfig_2.0.3            </span>
 <span class="co">## [37] htmltools_0.5.2             MatrixGenerics_1.6.0       </span>
 <span class="co">## [39] highr_0.9                   fastmap_1.1.0              </span>
@@ -347,7 +354,7 @@ variability has been tested</p>
 <span class="co">## [81] RcppParallel_5.1.5          vctrs_0.3.8                </span>
 <span class="co">## [83] tzdb_0.2.0                  gtable_0.3.0               </span>
 <span class="co">## [85] purrr_0.3.4                 cachem_1.0.6               </span>
-<span class="co">## [87] xfun_0.29                   ragg_1.2.2                 </span>
+<span class="co">## [87] xfun_0.30                   ragg_1.2.2                 </span>
 <span class="co">## [89] SingleCellExperiment_1.16.0 tibble_3.1.6               </span>
 <span class="co">## [91] memoise_2.0.1               IRanges_2.28.0             </span>
 <span class="co">## [93] ellipsis_0.3.2</span></code></pre>
