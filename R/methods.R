@@ -849,7 +849,7 @@ plot_summary <- function(.data) {
 
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
-  .sample = attr(.data, ".count")
+  .sample = attr(.data, ".sample")
 
 plots = list()
 
