@@ -71,6 +71,7 @@ devtools::install_github("stemangiola/sccomp@cmdstanr")
 ``` r
 res =
   seurat_obj |>
+  sccomp_glm( 
    formula_composition = ~ type, 
     formula_variability = ~ 1, 
     sample, 
@@ -83,6 +84,7 @@ res =
 ``` r
 res =
   sce_obj |>
+  sccomp_glm( 
     formula_composition = ~ type, 
     formula_variability = ~ 1, 
     sample, 
@@ -132,18 +134,18 @@ res
 ```
 
     ## # A tibble: 72 × 9
-    ##    cell_group parameter   covariate c_lower c_effect c_upper    c_pH0     c_FDR
-    ##    <chr>      <chr>       <chr>       <dbl>    <dbl>   <dbl>    <dbl>     <dbl>
-    ##  1 B1         (Intercept) <NA>       0.557     0.708  0.869  0        0        
-    ##  2 B1         typecancer  type      -1.18     -0.890 -0.585  0.000250 0.0000834
-    ##  3 B2         (Intercept) <NA>       0.177     0.412  0.651  0.0355   0.00253  
-    ##  4 B2         typecancer  type      -1.20     -0.753 -0.309  0.00601  0.00163  
-    ##  5 B3         (Intercept) <NA>      -0.661    -0.454 -0.241  0.0113   0.000510 
-    ##  6 B3         typecancer  type      -0.735    -0.325  0.0723 0.268    0.0635   
-    ##  7 BM         (Intercept) <NA>      -1.31     -1.10  -0.880  0        0        
-    ##  8 BM         typecancer  type      -0.752    -0.335  0.0664 0.259    0.0521   
-    ##  9 CD4 1      (Intercept) <NA>       0.356     0.488  0.626  0        0        
-    ## 10 CD4 1      typecancer  type      -0.0899    0.161  0.421  0.632    0.197    
+    ##    cell_group parameter   covariate c_lower c_effect c_upper   c_pH0   c_FDR
+    ##    <chr>      <chr>       <chr>       <dbl>    <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B1         (Intercept) <NA>       0.557     0.710  0.866  0       0      
+    ##  2 B1         typecancer  type      -1.19     -0.888 -0.587  0       0      
+    ##  3 B2         (Intercept) <NA>       0.177     0.414  0.657  0.0368  0.00286
+    ##  4 B2         typecancer  type      -1.18     -0.748 -0.312  0.00976 0.00177
+    ##  5 B3         (Intercept) <NA>      -0.610    -0.409 -0.205  0.0225  0.00165
+    ##  6 B3         typecancer  type      -0.593    -0.219  0.151  0.461   0.113  
+    ##  7 BM         (Intercept) <NA>      -1.31     -1.10  -0.884  0       0      
+    ##  8 BM         typecancer  type      -0.736    -0.344  0.0415 0.234   0.0643 
+    ##  9 CD4 1      (Intercept) <NA>       0.362     0.490  0.627  0       0      
+    ## 10 CD4 1      typecancer  type      -0.0882    0.161  0.420  0.622   0.163  
     ## # … with 62 more rows, and 1 more variable: count_data <list>
 
 ## Visualise data + inference
@@ -229,18 +231,18 @@ res
 ```
 
     ## # A tibble: 72 × 14
-    ##    cell_group parameter   covariate c_lower c_effect c_upper  c_pH0   c_FDR
-    ##    <chr>      <chr>       <chr>       <dbl>    <dbl>   <dbl>  <dbl>   <dbl>
-    ##  1 B1         (Intercept) <NA>       0.593     0.769  0.953  0      0      
-    ##  2 B1         typecancer  type      -1.26     -0.915 -0.540  0      0      
-    ##  3 B2         (Intercept) <NA>       0.134     0.387  0.630  0.0658 0.00373
-    ##  4 B2         typecancer  type      -1.03     -0.541 -0.0711 0.0773 0.0160 
-    ##  5 B3         (Intercept) <NA>      -0.649    -0.427 -0.191  0.0275 0.00151
-    ##  6 B3         typecancer  type      -0.661    -0.205  0.262  0.491  0.145  
-    ##  7 BM         (Intercept) <NA>      -1.29     -1.07  -0.825  0      0      
-    ##  8 BM         typecancer  type      -0.741    -0.291  0.184  0.343  0.0798 
-    ##  9 CD4 1      (Intercept) <NA>       0.370     0.514  0.662  0      0      
-    ## 10 CD4 1      typecancer  type      -0.0446    0.239  0.538  0.394  0.106  
+    ##    cell_group parameter   covariate c_lower c_effect c_upper    c_pH0     c_FDR
+    ##    <chr>      <chr>       <chr>       <dbl>    <dbl>   <dbl>    <dbl>     <dbl>
+    ##  1 B1         (Intercept) <NA>        0.627    0.796  0.972  0        0        
+    ##  2 B1         typecancer  type       -1.26    -0.930 -0.602  0.000250 0.0000501
+    ##  3 B2         (Intercept) <NA>        0.190    0.417  0.667  0.0315   0.00150  
+    ##  4 B2         typecancer  type       -1.04    -0.561 -0.0636 0.0673   0.0108   
+    ##  5 B3         (Intercept) <NA>       -0.557   -0.360 -0.150  0.0618   0.00526  
+    ##  6 B3         typecancer  type       -0.518   -0.124  0.296  0.648    0.203    
+    ##  7 BM         (Intercept) <NA>       -1.26    -1.05  -0.822  0        0        
+    ##  8 BM         typecancer  type       -0.741   -0.298  0.163  0.323    0.0956   
+    ##  9 CD4 1      (Intercept) <NA>        0.370    0.510  0.655  0        0        
+    ## 10 CD4 1      typecancer  type       -0.117    0.176  0.470  0.569    0.139    
     ## # … with 62 more rows, and 6 more variables: v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, count_data <list>
 

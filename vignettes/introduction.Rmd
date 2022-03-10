@@ -36,7 +36,9 @@ data("counts_obj")
 
 Single-cell transcriptomics allows the unbiased characterisation of the cellular composition of tissues. The cellular composition can be compared between biological or clinical conditions to identify potential cellular drivers. This strategy has been critical to unveil drivers of immune response in cancer and pathogen infection from single-cell data. Developing a robust statistical method for differential composition analyses from single-cell data is crucial for driving discoveries. The compositional data from single-cell experiments has four main properties. The data is in count form; counts underlie inversely correlated proportions that sum to one; larger cell groups are more variable across samples than small groups; real-world data is rich in outlier observation. A model that covers more than two of these properties is currently lacking. **Here, we present a robust and outlier-aware method for testing differential tissue composition from single-cell data. This model can also transfer knowledge from a large set of integrated datasets to increase accuracy further. We present how this model can be applied to identify novel compositional and heterogeneity changes in existing studies.**
 
-# Installation
+# Installation 
+
+## (simple) Suggested for single-cell and CyTOF analyses
 
 **Bioconductor**
 
@@ -53,6 +55,21 @@ if (!requireNamespace("BiocManager")) {
 devtools::install_github("stemangiola/sccomp")
 ```
 
+## (more complex and efficient, until further optimisation of the default installation) Suggested for microbiomics
+
+**Github**
+
+```{r eval=FALSE}
+install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+check_cmdstan_toolchain()
+install_cmdstan(cores = 2)
+# Then, check the correct cmdstanr installation here
+# https://mc-stan.org/cmdstanr/articles/cmdstanr.html
+
+# Then install sccomp with the cmdstanr branch
+devtools::install_github("stemangiola/sccomp@cmdstanr")
+```
+
 # Analysis
 
 ## From Seurat Object
@@ -61,6 +78,7 @@ devtools::install_github("stemangiola/sccomp")
 
 res =
   seurat_obj |>
+  sccomp_glm( 
    formula_composition = ~ type, 
     formula_variability = ~ 1, 
     sample, 
@@ -69,9 +87,12 @@ res =
 
 ```
 
+## From SingleCellExperiment Object
+
 ```{r eval=FALSE}
 res =
   sce_obj |>
+  sccomp_glm( 
     formula_composition = ~ type, 
     formula_variability = ~ 1, 
     sample, 
@@ -176,6 +197,7 @@ Plot 2D significance plot. This is possible if only differential variability has
 ```{r}
 plots$credible_intervals_2D
 ```
+
 
 ```{r}
 sessionInfo()

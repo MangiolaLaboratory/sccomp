@@ -862,7 +862,7 @@ data_proportion =
 
   pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
   unnest(count_data) %>%
-  with_groups(sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
+  with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
 
   # If I don't have outliers add them
   when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
