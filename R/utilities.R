@@ -1103,7 +1103,7 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
     simulated_proportion =
       .data %>%
       replicate_data( number_of_draws = 100) %>%
-      left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), sample, !!.cell_group))
+      left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
 
     my_boxplot = my_boxplot +
 

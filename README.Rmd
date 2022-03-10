@@ -70,6 +70,7 @@ devtools::install_github("stemangiola/sccomp@cmdstanr")
 
 res =
   seurat_obj |>
+  sccomp_glm( 
    formula_composition = ~ type, 
     formula_variability = ~ 1, 
     sample, 
@@ -83,6 +84,7 @@ res =
 ```{r eval=FALSE}
 res =
   sce_obj |>
+  sccomp_glm( 
     formula_composition = ~ type, 
     formula_variability = ~ 1, 
     sample, 
