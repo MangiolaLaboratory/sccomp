@@ -385,7 +385,7 @@ fit_model = function(
       # If it's bigger than 20K CAP because it would get too extreme
       when(
         (.) > max_sampling_iterations ~ {
-          warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+          # warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
           max_sampling_iterations
         },
         (.)
@@ -636,7 +636,8 @@ data_spread_to_model_input =
       distinct() %>%
       gather(covariate, parameter) %>%
       unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE) %>%
-      filter(design_matrix_col %in% colnames(data_for_model$X))
+      filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
+      distinct()
 
     # Return
     data_for_model
@@ -963,7 +964,7 @@ get_FDR = function(x){
 
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
-plot_1d_intervals = function(.data, .cell_group, my_theme){
+plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, my_theme){
 
   .cell_group = enquo(.cell_group)
 
@@ -980,7 +981,7 @@ plot_1d_intervals = function(.data, .cell_group, my_theme){
       ~  ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
         geom_vline(xintercept = 0.2, colour="grey") +
         geom_vline(xintercept = -0.2, colour="grey") +
-        geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<0.025)) +
+        geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
         geom_point() +
         scale_color_brewer(palette = "Set1") +
         xlab("Credible interval of the slope") +
@@ -995,7 +996,7 @@ plot_1d_intervals = function(.data, .cell_group, my_theme){
 
 }
 
-plot_2d_intervals = function(.data, .cell_group, my_theme){
+plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025, my_theme){
 
   .cell_group = enquo(.cell_group)
 
@@ -1010,13 +1011,13 @@ plot_2d_intervals = function(.data, .cell_group, my_theme){
       parameter,
       ~ .x %>%
         arrange(c_FDR) %>%
-        mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < 0.025 & parameter!="(Intercept)", !!.cell_group, ""))
+        mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < significance_threshold & parameter!="(Intercept)", !!.cell_group, ""))
     ) %>%
     with_groups(
       parameter,
       ~ .x %>%
         arrange(v_FDR) %>%
-        mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < 0.025 & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
+        mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < significance_threshold & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
     ) %>%
 
     {
@@ -1025,8 +1026,8 @@ plot_2d_intervals = function(.data, .cell_group, my_theme){
       ggplot(.x, aes(c_effect, v_effect)) +
         geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
         geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<0.025, alpha=`c_FDR`<0.025), size=0.2) +
-        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<0.025, alpha=`v_FDR`<0.025), size=0.2) +
+        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<significance_threshold, alpha=`c_FDR`<significance_threshold), size=0.2) +
+        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<significance_threshold, alpha=`v_FDR`<significance_threshold), size=0.2) +
 
         geom_point(size=0.2)  +
         annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
@@ -1049,7 +1050,7 @@ plot_2d_intervals = function(.data, .cell_group, my_theme){
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
-plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, .sample, my_theme){
+plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, .sample, significance_threshold = 0.025, my_theme){
 
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
@@ -1086,7 +1087,7 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
     ) %>%
     filter(stats_name == "FDR") %>%
     filter(parameter != "(Intercept)") %>%
-    filter(stats_value < 0.025) %>%
+    filter(stats_value < significance_threshold) %>%
     filter(covariate == factor_of_interest) %>%
     unite("name", c(which, parameter), remove = FALSE) %>%
     distinct() %>%
@@ -1142,7 +1143,7 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
-
+          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
           left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
         fatten = 0.5,
         lwd=0.5,
@@ -1159,7 +1160,7 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
-
+          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
           left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
         fatten = 0.5,
         lwd=0.5,
@@ -1185,7 +1186,8 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
 
     facet_wrap(
       vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
-      scales = "free_y", nrow = 4
+      scales = "free_y",
+      nrow = 4
     ) +
     scale_color_manual(values = c("black", "#e11f28")) +
     #scale_fill_manual(values = c("white", "#E2D379")) +

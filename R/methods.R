@@ -811,7 +811,7 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 #'
 #' estimate |> plot_summary()
 #'
-plot_summary <- function(.data) {
+plot_summary <- function(.data, significance_threshold = 0.025) {
 
     multipanel_theme =
     theme_bw() +
@@ -870,18 +870,33 @@ data_proportion =
 
 # Boxplot
 plots$boxplot =
+
+  # Select non numerical types
   .data %>%
-  attr("covariates") %>%
+    slice(1) %>%
+    unnest(count_data) %>%
+    select( attr(.data, "covariates")) %>%
+    select_if(function(x){is.character(x) | is.factor(x) | is.logical(x)}) %>%
+    colnames %>%
+
   map(
-    ~ plot_boxplot(.data, data_proportion, .x, !!.cell_group, !!.sample, multipanel_theme) +
+    ~ plot_boxplot(
+      .data,
+      data_proportion,
+      .x,
+      !!.cell_group,
+      !!.sample,
+      significance_threshold = significance_threshold,
+      multipanel_theme
+    ) +
       ggtitle(sprintf("Grouped by %s (for multi-covariate models, associations could be hardly observable with unidimensional data stratification)", .x))
   )
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, multipanel_theme)
+plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
 
 # 2D intervals
-if("v_effect" %in% colnames(.data))  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, multipanel_theme)
+if("v_effect" %in% colnames(.data))  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
 
 plots
 

@@ -4,7 +4,7 @@
 \alias{plot_summary}
 \title{plot_summary}
 \usage{
-plot_summary(.data)
+plot_summary(.data, significance_threshold = 0.025)
 }
 \arguments{
 \item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
