@@ -114,13 +114,6 @@ res =
 
     ## sccomp says: the variability design matrix has columns: (Intercept)
 
-## Suggested settings for single-cell RNA sequencing
-
-We reccommend to set `bimodal_mean_variability_association  = TRUE`. The bimodality of the mean-variability association can be confirmed from the plots$credible_intervals_2D (see below).
-
-## Suggested settings for CyTOF and microbiome data
-
-We reccommend to set `bimodal_mean_variability_association  = FALSE` (Default).
 
 ``` r
 res
@@ -142,6 +135,14 @@ res
     ## # … with 62 more rows, and 1 more variable: count_data <list>
     
 Of the output table, the estimate columns startwith the prefix `c_` indicate `composition`.
+
+## Suggested settings for single-cell RNA sequencing
+
+We reccommend to set `bimodal_mean_variability_association  = TRUE`. The bimodality of the mean-variability association can be confirmed from the plots$credible_intervals_2D (see below).
+
+## Suggested settings for CyTOF and microbiome data
+
+We reccommend to set `bimodal_mean_variability_association  = FALSE` (Default).
 
 ## Visualise data + inference
 
