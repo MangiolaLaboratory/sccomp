@@ -11,24 +11,7 @@ status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.sv
 
 # <img src="inst/logo-01.png" height="139px" width="120px" />
 
-Single-cell transcriptomics allows the unbiased characterisation of the
-cellular composition of tissues. The cellular composition can be
-compared between biological or clinical conditions to identify potential
-cellular drivers. This strategy has been critical to unveil drivers of
-immune response in cancer and pathogen infection from single-cell data.
-Developing a robust statistical method for differential composition
-analyses from single-cell data is crucial for driving discoveries. The
-compositional data from single-cell experiments has four main
-properties. The data is in count form; counts underlie inversely
-correlated proportions that sum to one; larger cell groups are more
-variable across samples than small groups; real-world data is rich in
-outlier observation. A model that covers more than two of these
-properties is currently lacking. **Here, we present a robust and
-outlier-aware method for testing differential tissue composition from
-single-cell data. This model can also transfer knowledge from a large
-set of integrated datasets to increase accuracy further. We present how
-this model can be applied to identify novel compositional and
-heterogeneity changes in existing studies.**
+Cell omics such as single-cell genomics, proteomics and microbiomics allow the characterisation of tissue and microbial community composition, which can be compared between conditions to identify biological drivers. This strategy has been critical to unveiling markers of disease progression such as cancer and pathogen infection. For cell omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce sccomp, a generalised method for differential composition and variability analyses able to jointly model data count distribution, compositionality, group-specific variability and proportion mean-variability association, with awareness against outliers. Sccomp is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. Here, we demonstrate that mean-variability association is ubiquitous across technologies showing the inadequacy of the very popular Dirichlet-multinomial modelling and provide mandatory principles for differential variability analysis. We show that sccomp accurately fits experimental data, with a 50% incremental improvement over state-of-the-art algorithms. Using sccomp, we identified novel differential constraints and composition in the microenvironment of primary breast cancer. 
 
 # Installation
 
@@ -65,6 +48,8 @@ devtools::install_github("stemangiola/sccomp@cmdstanr")
 ```
 
 # Analysis
+
+`sccomp` can model changes in composition and variability. Normally the furmula for variability is either `~1`, which assumes that the cell-group variability is independent on any covariate, or `~ factor_of_interest`, which assumes that the model is dependent on the factor of interest only. However, more complex models for variability are possible, is the sample size is large. In any case the model for variability must be a subset of the model for composition.
 
 ## From Seurat Object
 
@@ -129,6 +114,14 @@ res =
 
     ## sccomp says: the variability design matrix has columns: (Intercept)
 
+## Suggested settings for single-cell RNA sequencing
+
+We reccommend to set `bimodal_mean_variability_association  = TRUE`. The bimodality of the mean-variability association can be confirmed from the plots$credible_intervals_2D (see below).
+
+## Suggested settings for CyTOF and microbiome data
+
+We reccommend to set `bimodal_mean_variability_association  = FALSE` (Default).
+
 ``` r
 res
 ```
@@ -147,6 +140,8 @@ res
     ##  9 CD4 1      (Intercept) <NA>       0.362     0.490  0.627  0       0      
     ## 10 CD4 1      typecancer  type      -0.0882    0.161  0.420  0.622   0.163  
     ## # … with 62 more rows, and 1 more variable: count_data <list>
+    
+Of the output table, the estimate columns startwith the prefix `c_` indicate `composition`.
 
 ## Visualise data + inference
 
@@ -159,11 +154,7 @@ plots = plot_summary(res)
 
     ## Warning: Ignoring unknown aesthetics: label
 
-Plot of group proportion, faceted by groups. The blue boxplots represent
-the posterior predictive check. If the model is likely be descriptively
-adequate to the data, the blue boxplot should roughly overlay with the
-black boxplot, which represent the observed data. The outliers are
-coloured in red.
+Plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely be descriptively adequate to the data, the blue boxplot should roughly overlay with the black boxplot, which represent the observed data. The outliers are coloured in red. A boxplot will be returned for every (discrete) covariates present in `formula_composition`. The color coding represent the significant associations for composition and/or variability.
 
 ``` r
 plots$boxplot
@@ -245,6 +236,9 @@ res
     ## 10 CD4 1      typecancer  type       -0.117    0.176  0.470  0.569    0.139    
     ## # … with 62 more rows, and 6 more variables: v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, count_data <list>
+    
+Of the output table, the estimate columns startwith the prefix `c_` indicate `composition`, the estimate columns with the prefix `v_` indicate `variability`.
+
 
 Plot 1D significance plot
 
@@ -263,8 +257,9 @@ plots$credible_intervals_1D
 
 ![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
 
-Plot 2D significance plot. This is possible if only differential
-variability has been tested
+Plot 2D significance plot. Data points are cell groups. Error bars are the 95% credible interval. The dashed lines represent the default threshold fold change for which the probabilities (c_pH0, v_pH0) are calculated. pH0 of 0 represent the rejection of the null hypothesis, that no effect is observed.
+
+This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for `(intercept)` (left-hand side facet) is satisfied. A scatterplot (beside the Intercept) is provided for each of the categories of interest. The for each category of interest, the composition and variability effects should be generally uncorrelated. 
 
 ``` r
 plots$credible_intervals_2D
