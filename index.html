@@ -83,24 +83,27 @@ single-cell data ================</p>
 <div class="page-header"><h1 id="section">
 <img src="inst/logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
 </h1></div>
-<p>Single-cell transcriptomics allows the unbiased characterisation of
-the cellular composition of tissues. The cellular composition can be
-compared between biological or clinical conditions to identify potential
-cellular drivers. This strategy has been critical to unveil drivers of
-immune response in cancer and pathogen infection from single-cell data.
-Developing a robust statistical method for differential composition
-analyses from single-cell data is crucial for driving discoveries. The
-compositional data from single-cell experiments has four main
-properties. The data is in count form; counts underlie inversely
-correlated proportions that sum to one; larger cell groups are more
-variable across samples than small groups; real-world data is rich in
-outlier observation. A model that covers more than two of these
-properties is currently lacking. <strong>Here, we present a robust and
-outlier-aware method for testing differential tissue composition from
-single-cell data. This model can also transfer knowledge from a large
-set of integrated datasets to increase accuracy further. We present how
-this model can be applied to identify novel compositional and
-heterogeneity changes in existing studies.</strong></p>
+<p>Cell omics such as single-cell genomics, proteomics and microbiomics
+allow the characterisation of tissue and microbial community
+composition, which can be compared between conditions to identify
+biological drivers. This strategy has been critical to unveiling markers
+of disease progression such as cancer and pathogen infection. For cell
+omic data, no method for differential variability analysis exists, and
+methods for differential composition analysis only take a few
+fundamental data properties into account. Here we introduce sccomp, a
+generalised method for differential composition and variability analyses
+able to jointly model data count distribution, compositionality,
+group-specific variability and proportion mean-variability association,
+with awareness against outliers. Sccomp is an extensive analysis
+framework that allows realistic data simulation and cross-study
+knowledge transfer. Here, we demonstrate that mean-variability
+association is ubiquitous across technologies showing the inadequacy of
+the very popular Dirichlet-multinomial modelling and provide mandatory
+principles for differential variability analysis. We show that sccomp
+accurately fits experimental data, with a 50% incremental improvement
+over state-of-the-art algorithms. Using sccomp, we identified novel
+differential constraints and composition in the microenvironment of
+primary breast cancer.</p>
 </div>
 <div class="section level1">
 <h1 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -137,27 +140,39 @@ default installation) Suggested for microbiomics<a class="anchor" aria-label="an
 <div class="section level1">
 <h1 id="analysis">Analysis<a class="anchor" aria-label="anchor" href="#analysis"></a>
 </h1>
+<p><code>sccomp</code> can model changes in composition and variability.
+Normally the furmula for variability is either <code>~1</code>, which
+assumes that the cell-group variability is independent on any covariate,
+or <code>~ factor_of_interest</code>, which assumes that the model is
+dependent on the factor of interest only. However, more complex models
+for variability are possible, is the sample size is large. In any case
+the model for variability must be a subset of the model for
+composition.</p>
 <div class="section level2">
 <h2 id="from-seurat-object">From Seurat Object<a class="anchor" aria-label="anchor" href="#from-seurat-object"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">=</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  seurat_obj <span class="sc">|</span><span class="er">&gt;</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>   formula_composition <span class="ot">=</span> <span class="er">~</span> type, </span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    formula_variability <span class="ot">=</span> <span class="er">~</span> <span class="dv">1</span>, </span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    sample, </span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    cell_group </span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="er">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">res</span> <span class="op">=</span>
+  <span class="va">seurat_obj</span> |&gt;
+  <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> 
+   formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, 
+    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, 
+    <span class="va">sample</span>, 
+    <span class="va">cell_group</span> 
+  <span class="op">)</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="from-singlecellexperiment-object">From SingleCellExperiment Object<a class="anchor" aria-label="anchor" href="#from-singlecellexperiment-object"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">=</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  sce_obj <span class="sc">|</span><span class="er">&gt;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    formula_composition <span class="ot">=</span> <span class="er">~</span> type, </span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    formula_variability <span class="ot">=</span> <span class="er">~</span> <span class="dv">1</span>, </span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    sample, </span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    cell_group </span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="er">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">res</span> <span class="op">=</span>
+  <span class="va">sce_obj</span> |&gt;
+  <span class="fu"><a href="reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> 
+    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, 
+    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, 
+    <span class="va">sample</span>, 
+    <span class="va">cell_group</span> 
+  <span class="op">)</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="from-dataframe">From data.frame<a class="anchor" aria-label="anchor" href="#from-dataframe"></a>
@@ -197,19 +212,36 @@ default installation) Suggested for microbiomics<a class="anchor" aria-label="an
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 72 × 9</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   covariate c_lower c_effect c_upper    c_pH0     c_FDR</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept) &lt;NA&gt;       0.557     0.708  0.869  0        0        </span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer  type      -1.18     -0.890 -0.585  0.000250 0.0000834</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept) &lt;NA&gt;       0.177     0.412  0.651  0.0355   0.00253  </span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer  type      -1.20     -0.753 -0.309  0.00601  0.00163  </span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept) &lt;NA&gt;      -0.661    -0.454 -0.241  0.0113   0.000510 </span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer  type      -0.735    -0.325  0.0723 0.268    0.0635   </span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept) &lt;NA&gt;      -1.31     -1.10  -0.880  0        0        </span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer  type      -0.752    -0.335  0.0664 0.259    0.0521   </span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept) &lt;NA&gt;       0.356     0.488  0.626  0        0        </span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer  type      -0.0899    0.161  0.421  0.632    0.197    </span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   covariate c_lower c_effect c_upper   c_pH0   c_FDR</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept) &lt;NA&gt;       0.557     0.710  0.866  0       0      </span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer  type      -1.19     -0.888 -0.587  0       0      </span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept) &lt;NA&gt;       0.177     0.414  0.657  0.0368  0.00286</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer  type      -1.18     -0.748 -0.312  0.00976 0.00177</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept) &lt;NA&gt;      -0.610    -0.409 -0.205  0.0225  0.00165</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer  type      -0.593    -0.219  0.151  0.461   0.113  </span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept) &lt;NA&gt;      -1.31     -1.10  -0.884  0       0      </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer  type      -0.736    -0.344  0.0415 0.234   0.0643 </span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept) &lt;NA&gt;       0.362     0.490  0.627  0       0      </span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer  type      -0.0882    0.161  0.420  0.622   0.163  </span></span>
 <span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 62 more rows, and 1 more variable: count_data &lt;list&gt;</span></span></code></pre></div>
+<p>Of the output table, the estimate columns startwith the prefix
+<code>c_</code> indicate <code>composition</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="suggested-settings-for-single-cell-rna-sequencing">Suggested settings for single-cell RNA sequencing<a class="anchor" aria-label="anchor" href="#suggested-settings-for-single-cell-rna-sequencing"></a>
+</h2>
+<p>We reccommend to set
+<code>bimodal_mean_variability_association  = TRUE</code>. The
+bimodality of the mean-variability association can be confirmed from the
+plots$credible_intervals_2D (see below).</p>
+</div>
+<div class="section level2">
+<h2 id="suggested-settings-for-cytof-and-microbiome-data">Suggested settings for CyTOF and microbiome data<a class="anchor" aria-label="anchor" href="#suggested-settings-for-cytof-and-microbiome-data"></a>
+</h2>
+<p>We reccommend to set
+<code>bimodal_mean_variability_association  = FALSE</code>
+(Default).</p>
 </div>
 <div class="section level2">
 <h2 id="visualise-data--inference">Visualise data + inference<a class="anchor" aria-label="anchor" href="#visualise-data--inference"></a>
@@ -224,7 +256,10 @@ default installation) Suggested for microbiomics<a class="anchor" aria-label="an
 represent the posterior predictive check. If the model is likely be
 descriptively adequate to the data, the blue boxplot should roughly
 overlay with the black boxplot, which represent the observed data. The
-outliers are coloured in red.</p>
+outliers are coloured in red. A boxplot will be returned for every
+(discrete) covariates present in <code>formula_composition</code>. The
+color coding represent the significant associations for composition
+and/or variability.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">boxplot</span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">## [[1]]</span></span></code></pre></div>
@@ -278,20 +313,23 @@ so test differences in variability</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">res</span></code></pre></div>
 <div class="sourceCode" id="cb20"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 72 × 14</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   covariate c_lower c_effect c_upper  c_pH0   c_FDR</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept) &lt;NA&gt;       0.593     0.769  0.953  0      0      </span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer  type      -1.26     -0.915 -0.540  0      0      </span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept) &lt;NA&gt;       0.134     0.387  0.630  0.0658 0.00373</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer  type      -1.03     -0.541 -0.0711 0.0773 0.0160 </span></span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept) &lt;NA&gt;      -0.649    -0.427 -0.191  0.0275 0.00151</span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer  type      -0.661    -0.205  0.262  0.491  0.145  </span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept) &lt;NA&gt;      -1.29     -1.07  -0.825  0      0      </span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer  type      -0.741    -0.291  0.184  0.343  0.0798 </span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept) &lt;NA&gt;       0.370     0.514  0.662  0      0      </span></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer  type      -0.0446    0.239  0.538  0.394  0.106  </span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="do">##    cell_group parameter   covariate c_lower c_effect c_upper    c_pH0     c_FDR</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;      &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 B1         (Intercept) &lt;NA&gt;        0.627    0.796  0.972  0        0        </span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 B1         typecancer  type       -1.26    -0.930 -0.602  0.000250 0.0000501</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 B2         (Intercept) &lt;NA&gt;        0.190    0.417  0.667  0.0315   0.00150  </span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 B2         typecancer  type       -1.04    -0.561 -0.0636 0.0673   0.0108   </span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 B3         (Intercept) &lt;NA&gt;       -0.557   -0.360 -0.150  0.0618   0.00526  </span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 B3         typecancer  type       -0.518   -0.124  0.296  0.648    0.203    </span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 BM         (Intercept) &lt;NA&gt;       -1.26    -1.05  -0.822  0        0        </span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 BM         typecancer  type       -0.741   -0.298  0.163  0.323    0.0956   </span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 CD4 1      (Intercept) &lt;NA&gt;        0.370    0.510  0.655  0        0        </span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 CD4 1      typecancer  type       -0.117    0.176  0.470  0.569    0.139    </span></span>
 <span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 62 more rows, and 6 more variables: v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span>
 <span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="do">## #   v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, count_data &lt;list&gt;</span></span></code></pre></div>
+<p>Of the output table, the estimate columns startwith the prefix
+<code>c_</code> indicate <code>composition</code>, the estimate columns
+with the prefix <code>v_</code> indicate <code>variability</code>.</p>
 <p>Plot 1D significance plot</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></code></pre></div>
@@ -302,8 +340,19 @@ so test differences in variability</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-15-1.png"><!-- --></p>
-<p>Plot 2D significance plot. This is possible if only differential
-variability has been tested</p>
+<p>Plot 2D significance plot. Data points are cell groups. Error bars
+are the 95% credible interval. The dashed lines represent the default
+threshold fold change for which the probabilities (c_pH0, v_pH0) are
+calculated. pH0 of 0 represent the rejection of the null hypothesis,
+that no effect is observed.</p>
+<p>This plot is provided only if differential variability has been
+tested. The differential variability estimates are reliable only if the
+linear association between mean and variability for
+<code>(intercept)</code> (left-hand side facet) is satisfied. A
+scatterplot (beside the Intercept) is provided for each of the
+categories of interest. The for each category of interest, the
+composition and variability effects should be generally
+uncorrelated.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-16-1.png"><!-- --></p>

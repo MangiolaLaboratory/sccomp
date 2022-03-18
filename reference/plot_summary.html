@@ -60,13 +60,15 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">plot_summary</span><span class="op">(</span><span class="va">.data</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">plot_summary</span><span class="op">(</span><span class="va">.data</span>, significance_threshold <span class="op">=</span> <span class="fl">0.025</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>.data</dt>
 <dd><p>A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column</p></dd>
+<dt>significance_threshold</dt>
+<dd><p>A real. FDR threshold for labelling significant cell-groups.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
