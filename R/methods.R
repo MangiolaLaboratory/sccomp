@@ -791,6 +791,8 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 #' @importFrom dplyr with_groups
 #'
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#'
 #' @return A `ggplot`
 #'
 #' @export
