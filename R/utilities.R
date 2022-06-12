@@ -366,7 +366,7 @@ fit_model = function(
   warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
   seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
 )
-  {
+{
 
 
   # # if analysis approximated
@@ -385,7 +385,7 @@ fit_model = function(
       # If it's bigger than 20K CAP because it would get too extreme
       when(
         (.) > max_sampling_iterations ~ {
-          warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+          # warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
           max_sampling_iterations
         },
         (.)
@@ -398,31 +398,16 @@ fit_model = function(
         how_many_posterior_draws = output_samples,
         warmup = warmup_samples
       ) %>%
-        min(cores)
+      min(cores)
 
-  # library(VGAM)
-  # ff = VGAM::vglm(
-  #   cbind(a, b) ~ cov,
-  #   dirmultinomial,
-  #   data = tibble(
-  #     a = data_for_model$y[,1],
-  #     b = data_for_model$y[,2],
-  #     cov = data_for_model$X[,2]
-  #   ),
-  #   trace = TRUE
-  # ) %>%
-  # summary()
-  #
-  # print(ff)
+  init_list=list(
+    prec_coeff = c(5,0),
+    prec_sd = 1,
+    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE)
+  )
 
-  # # Define a decent value for alpha as it fails for vb sometimes
-  # init_fun = function(...) list(
-  #   alpha=matrix(rep(data_for_model$prior_prec_intercept[1], data_for_model$A*data_for_model$M),nrow= data_for_model$A),
-  #   beta_raw_raw=matrix(rep(0, data_for_model$C*(data_for_model$M-1)),nrow= data_for_model$C)
-  # )
-
-  # If differential variance also capture beta_raw
-  #if(data_for_model$A > 1)
+  init = map(1:chains, ~ init_list) %>%
+    setNames(as.character(1:chains))
 
   # Fit
   if(!approximate_posterior_inference)
@@ -436,9 +421,10 @@ fit_model = function(
       refresh = ifelse(verbose, 1000, 0),
       seed = seed,
       pars = pars,
-      save_warmup = FALSE
+      save_warmup = FALSE,
+      init = init
     ) %>%
-    suppressWarnings()
+      suppressWarnings()
 
   else
     vb_iterative(
@@ -450,7 +436,7 @@ fit_model = function(
       seed = seed,
       pars = pars
     ) %>%
-    suppressWarnings()
+      suppressWarnings()
 
 
 }
@@ -481,7 +467,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #' @noRd
 beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
-effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
+  effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
 
   fitted %>%
     unnest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration))) %>%
@@ -576,72 +562,86 @@ data_spread_to_model_input =
   function(
     .data_spread, formula, .sample, .cell_type, .count,
     variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ,
-    formula_variability = ~ 1){
+    formula_variability = ~ 1,
+    bimodal_mean_variability_association = FALSE,
+    use_data = TRUE){
 
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
-  .count = enquo(.count)
+    # Prepare column same enquo
+    .sample = enquo(.sample)
+    .cell_type = enquo(.cell_type)
+    .count = enquo(.count)
 
 
-  get_design_matrix = function(formula, .data_spread){
+    get_design_matrix = function(formula, .data_spread){
 
-    .data_spread %>%
-      select(!!.sample, parse_formula(formula)) %>%
-      model.matrix(formula, data=.) %>%
-      apply(2, function(x)
-        x %>% when(
-          sd(.)==0 ~ (.),
+      .data_spread %>%
+        select(!!.sample, parse_formula(formula)) %>%
+        model.matrix(formula, data=.) %>%
+        apply(2, function(x)
+          x %>% when(
+            sd(.)==0 ~ (.),
 
-          # If I only have 0 and 1 for a binomial factor
-          unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
+            # If I only have 0 and 1 for a binomial factor
+            unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
 
-          # If continuous
-          ~ scale(., scale=FALSE)
+            # If continuous
+            ~ scale(., scale=FALSE)
+          )
         )
+    }
+
+    X  = get_design_matrix(formula, .data_spread)
+
+    Xa  = get_design_matrix(formula_variability, .data_spread)
+
+    XA = Xa %>%
+      as_tibble() %>%
+      distinct()
+
+    A = ncol(XA);
+    Ar = nrow(XA);
+
+    covariate_names = parse_formula(formula)
+    cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
+
+    data_for_model =
+      list(
+        N = .data_spread %>% nrow(),
+        M = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
+        exposure = .data_spread$exposure,
+        y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = quo_name(.sample)),
+        X = X,
+        XA = XA,
+        Xa = Xa,
+        C = ncol(X),
+        A = A,
+        Ar = Ar,
+        truncation_ajustment = truncation_ajustment,
+        is_vb = as.integer(approximate_posterior_inference),
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        use_data = use_data
       )
+
+    # Add censoring
+    data_for_model$is_truncated = 0
+    data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
+    data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
+    data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
+    data_for_model$TNS = length(data_for_model$truncation_not_idx)
+
+    # Add parameter covariate ictionary
+    data_for_model$covariate_parameter_dictionary =
+      .data_spread %>%
+      select(parse_formula(formula)) %>%
+      distinct() %>%
+      gather(covariate, parameter) %>%
+      unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE) %>%
+      filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
+      distinct()
+
+    # Return
+    data_for_model
   }
-
-  X  = get_design_matrix(formula, .data_spread)
-
-  Xa  = get_design_matrix(formula_variability, .data_spread)
-
-  XA = Xa %>%
-    as_tibble() %>%
-    distinct()
-
-  A = ncol(XA);
-  Ar = nrow(XA);
-
-  covariate_names = parse_formula(formula)
-  cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
-
-  data_for_model =
-    list(
-      N = .data_spread %>% nrow(),
-      M = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
-      exposure = .data_spread$exposure,
-      y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = quo_name(.sample)),
-      X = X,
-      XA = XA,
-      Xa = Xa,
-      C = ncol(X),
-      A = A,
-      Ar = Ar,
-      truncation_ajustment = truncation_ajustment,
-      is_vb = as.integer(approximate_posterior_inference)
-    )
-
-  # Add censoring
-  data_for_model$is_truncated = 0
-  data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
-  data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
-  data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
-  data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
-  # Return
-  data_for_model
-}
 
 data_to_spread = function(.data, formula, .sample, .cell_type, .count){
 
@@ -711,15 +711,15 @@ data_simulation_to_model_input =
       t()
 
     list(
-        N = .data %>% distinct(!!.sample) %>% nrow(),
-        M = .data %>% distinct(!!.cell_type) %>% nrow(),
-        exposure = .data %>% distinct(!!.sample, !!.exposure) %>% arrange(!!.sample) %>% pull(!!.exposure),
-        X = X,
-        XA = XA,
-        C = ncol(X),
-        A =  ncol(XA),
-        beta = coefficients
-      )
+      N = .data %>% distinct(!!.sample) %>% nrow(),
+      M = .data %>% distinct(!!.cell_type) %>% nrow(),
+      exposure = .data %>% distinct(!!.sample, !!.exposure) %>% arrange(!!.sample) %>% pull(!!.exposure),
+      X = X,
+      XA = XA,
+      C = ncol(X),
+      A =  ncol(XA),
+      beta = coefficients
+    )
 
   }
 
@@ -735,9 +735,9 @@ data_simulation_to_model_input =
 #'
 #' @return A Stan fit object
 find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
-                                         max_number_to_check = 100, warmup = 200) {
+                                         max_number_to_check = 100, warmup = 200, parallelisation_start_penalty = 100) {
 
-  parallelisation_start_penalty = 60
+
 
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
@@ -784,14 +784,14 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
       !!probability_column_name :=
         1 - (
           max(bigger_zero, smaller_zero) %>%
-        #max(1) %>%
-        divide_by(total_draws)
+            #max(1) %>%
+            divide_by(total_draws)
         )
     )  %>%
     ungroup() %>%
     select(M, !!probability_column_name)
-    # %>%
-    # mutate(false_discovery_rate = cummean(prob_non_zero))
+  # %>%
+  # mutate(false_discovery_rate = cummean(prob_non_zero))
 
 }
 
@@ -814,7 +814,7 @@ get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logi
     draws %>%
     apply(2, function(y){
       y %>%
-      apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
+        apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
     })
 
 
@@ -881,9 +881,9 @@ design_matrix_and_coefficients_to_simulation = function(
 
   input_data =
     expand_grid(
-    sample = rownames(design_df),
-    cell_type = rownames(coefficient_df)
-  ) |>
+      sample = rownames(design_df),
+      cell_type = rownames(coefficient_df)
+    ) |>
     left_join(design_df |> as_tibble(rownames = "sample") , by = "sample") |>
     left_join(coefficient_df |>as_tibble(rownames = "cell_type"), by = "cell_type")
 
@@ -960,4 +960,250 @@ get_FDR = function(x){
     mutate(FDR = cummean(value)) %>%
     arrange(name) %>%
     pull(FDR)
+}
+
+#' @importFrom patchwork wrap_plots
+#' @importFrom forcats fct_reorder
+plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, my_theme){
+
+  .cell_group = enquo(.cell_group)
+
+  .data |>
+    filter(parameter != "(Intercept)") |>
+
+    # Reshape
+    pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
+    pivot_wider(names_from = estimate, values_from = value) |>
+
+    nest(data = -c(parameter, which)) |>
+    mutate(plot = pmap(
+      list(data, which, parameter),
+      ~  ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
+        geom_vline(xintercept = 0.2, colour="grey") +
+        geom_vline(xintercept = -0.2, colour="grey") +
+        geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
+        geom_point() +
+        scale_color_brewer(palette = "Set1") +
+        xlab("Credible interval of the slope") +
+        ylab("Cell group") +
+        ggtitle(sprintf("%s %s", ..2, ..3)) +
+        theme(legend.position = "bottom") +
+        my_theme
+    )) %>%
+    pull(plot) |>
+    wrap_plots(ncol=2)
+
+
+}
+
+plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025, my_theme){
+
+  .cell_group = enquo(.cell_group)
+
+  # mean-variance association
+  .data %>%
+
+    # Filter where I did not inferred the variance
+    filter(!is.na(v_effect)) %>%
+
+    # Add labels
+    with_groups(
+      parameter,
+      ~ .x %>%
+        arrange(c_FDR) %>%
+        mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < significance_threshold & parameter!="(Intercept)", !!.cell_group, ""))
+    ) %>%
+    with_groups(
+      parameter,
+      ~ .x %>%
+        arrange(v_FDR) %>%
+        mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < significance_threshold & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
+    ) %>%
+
+    {
+      .x = (.)
+      # Plot
+      ggplot(.x, aes(c_effect, v_effect)) +
+        geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+        geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
+        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<significance_threshold, alpha=`c_FDR`<significance_threshold), size=0.2) +
+        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<significance_threshold, alpha=`v_FDR`<significance_threshold), size=0.2) +
+
+        geom_point(size=0.2)  +
+        annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
+        annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
+
+        geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label!="") ) +
+
+        scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
+        scale_alpha_manual(values = c(0.4, 1)) +
+        facet_wrap(~parameter, scales="free") +
+        my_theme +
+        theme(
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()
+        )
+    }
+
+}
+
+#' @importFrom scales trans_new
+#' @importFrom stringr str_replace
+#' @importFrom stats quantile
+plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, .sample, significance_threshold = 0.025, my_theme){
+
+  calc_boxplot_stat <- function(x) {
+    coef <- 1.5
+    n <- sum(!is.na(x))
+    # calculate quantiles
+    stats <- quantile(x, probs = c(0.0, 0.25, 0.5, 0.75, 1.0))
+    names(stats) <- c("ymin", "lower", "middle", "upper", "ymax")
+    iqr <- diff(stats[c(2, 4)])
+    # set whiskers
+    outliers <- x < (stats[2] - coef * iqr) | x > (stats[4] + coef * iqr)
+    if (any(outliers)) {
+      stats[c(1, 5)] <- range(c(stats[2:4], x[!outliers]), na.rm = TRUE)
+    }
+    return(stats)
+  }
+
+  dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
+
+  S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+  IS_sqrt <- function(x){x^2*sign(x)}
+  S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
+
+
+  .cell_group = enquo(.cell_group)
+  .sample = enquo(.sample)
+
+  significance_colors =
+    .data %>%
+    pivot_longer(
+      c(contains("c_"), contains("v_")),
+      names_pattern = "([cv])_([a-zA-Z0-9]+)",
+      names_to = c("which", "stats_name"),
+      values_to = "stats_value"
+    ) %>%
+    filter(stats_name == "FDR") %>%
+    filter(parameter != "(Intercept)") %>%
+    filter(stats_value < significance_threshold) %>%
+    filter(covariate == factor_of_interest) %>%
+    unite("name", c(which, parameter), remove = FALSE) %>%
+    distinct() %>%
+    # Get clean parameter
+    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", covariate), "")) %>%
+
+    with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+
+  my_boxplot =  ggplot()
+
+  if("fit" %in% names(attributes(.data))){
+
+    simulated_proportion =
+      .data %>%
+      replicate_data( number_of_draws = 100) %>%
+      left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
+
+    my_boxplot = my_boxplot +
+
+      stat_summary(
+        aes(!!as.symbol(factor_of_interest), (generated_proportions)),
+        fun.data = calc_boxplot_stat, geom="boxplot",
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        fatten = 0.5, lwd=0.2,
+        data =
+          simulated_proportion %>%
+
+          # Filter uanitles because of limits
+          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)) ,
+        color="blue"
+
+      )
+
+    # hideOutliers <- function(x) {
+    #   if (x$hoverinfo == 'y') {
+    #     x$marker = list(opacity = 0)
+    #     x$hoverinfo = NA
+    #   }
+    #   return(x)
+    # }
+    #
+    # my_boxplot[["x"]][["data"]] <- map(my_boxplot[["x"]][["data"]], ~ hideOutliers(.))
+
+  }
+
+  # Get the exception if no significant cell types. This is not elegant
+  if(nrow(significance_colors)==0){
+    my_boxplot=
+      my_boxplot +
+
+      geom_boxplot(
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL), # fill=Effect),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        data =
+          data_proportion |>
+          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
+          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
+        fatten = 0.5,
+        lwd=0.5,
+      )
+  }
+
+  # If I have significance
+  else {
+    my_boxplot=
+      my_boxplot +
+
+      geom_boxplot(
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        data =
+          data_proportion |>
+          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
+          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
+        fatten = 0.5,
+        lwd=0.5,
+      )
+  }
+
+
+
+  my_boxplot +
+    geom_jitter(
+      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest), label = !!.sample),
+      data = data_proportion,
+      position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
+      size = 0.5
+    ) +
+
+    # geom_boxplot(
+    #   aes(Condition, generated_proportions),
+    #   outlier.shape = NA, alpha=0.2,
+    #   data = simulated_proportion, fatten = 0.5, size=0.5,
+    # ) +
+    # geom_jitter(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
+
+    facet_wrap(
+      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      scales = "free_y",
+      nrow = 4
+    ) +
+    scale_color_manual(values = c("black", "#e11f28")) +
+    #scale_fill_manual(values = c("white", "#E2D379")) +
+    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
+    #scale_color_distiller(palette = "Spectral") +
+
+    scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
+    scale_fill_discrete(na.value = "white") +
+    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
+    xlab("Biological condition") +
+    ylab("Cell-group proportion") +
+    guides(color="none", alpha="none", size="none") +
+    labs(fill="Significant difference") +
+    my_theme +
+    theme(axis.text.x =  element_text(angle=20, hjust = 1))
+
+
+
 }
