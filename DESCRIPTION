@@ -1,6 +1,6 @@
 Package: sccomp
 Title: Robust Outlier-aware Estimation of Composition and Heterogeneity for Single-cell Data
-Version: 0.99.18
+Version: 0.99.20
 Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
                   role = c("aut", "cre"))
                   )
@@ -12,13 +12,13 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Biarch: true
 Depends: 
-    R (>= 4.1.0),
-    rstan (>= 2.18.1)
+    R (>= 4.1.0)
 Imports: 
     methods,
     Rcpp (>= 0.12.0),
     RcppParallel (>= 5.0.1),
     rstantools (>= 2.1.1),
+    rstan (>= 2.18.1),
     SeuratObject,
     SingleCellExperiment,
     parallel,
@@ -35,14 +35,17 @@ Imports:
     utils,
     ggplot2,
     ggrepel,
-    patchwork
+    patchwork,
+    forcats,
+    readr,
+    scales,
+    stringr
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
     markdown,
     ggplot2,
     knitr,
-    forcats,
     tidyseurat,
     tidySingleCellExperiment
 Enhances:

@@ -1,11 +1,15 @@
 ^sccomp\.Rproj$
 ^\.Rproj\.user$
 ^\.github
+^\.git
 ^README*
 ^dev$
-^dev*
 ^dev/*
 ^rsconnect
 model_glm_dirichlet_multinomial.rds
 model_glm_dirichlet_multinomial_generate_quantities.rds
 model_glm_dirichlet_multinomial_imputation.rds
+^sccode_env
+^sccomp_draws_files
+^glm_multi*
+^model_glm*

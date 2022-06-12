@@ -57,6 +57,8 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             seed = sample(1e5, 1),
                                             verbose = FALSE,
                                             exclude_priors = FALSE,
+                                            bimodal_mean_variability_association = bimodal_mean_variability_association,
+                                            use_data = use_data,
                                             max_sampling_iterations = 20000
 ) {
   # Prepare column same enquo
@@ -86,8 +88,14 @@ estimate_multi_beta_binomial_glm = function(.data,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference == "all",
-        formula_variability = formula_variability
+        formula_variability = formula_variability,
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        use_data = use_data
       )
+
+    # Print design matrix
+    message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
+    message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
 
     # Pior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
@@ -136,7 +144,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         variance_association = FALSE,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-        formula_variability = ~1
+        formula_variability = ~1,
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        use_data = use_data
       )
 
     # Pior
@@ -206,7 +216,9 @@ estimate_multi_beta_binomial_glm = function(.data,
         variance_association = variance_association,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-        formula_variability = formula_variability
+        formula_variability = formula_variability,
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        use_data = use_data
       )
 
     # Pior
@@ -295,6 +307,10 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
 
     message("sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]")
+
+    # Print design matrix
+    message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
+    message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
 
     fit3 =
       data_for_model %>%
@@ -464,7 +480,14 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
       ),
       ~ (.)
     ) %>%
-    select(parameter  = C_name, everything())
+
+    # Add easy to understand covariate labels
+    left_join(
+      data_for_model$covariate_parameter_dictionary %>%
+        select(covariate, design_matrix_col),
+      by = c("C_name" = "design_matrix_col" )
+    ) %>%
+    select(parameter  = C_name, covariate, everything())
 
 }
 
@@ -526,6 +549,8 @@ multi_beta_binomial_glm = function(.data,
                                    seed = sample(1e5, 1),
                                    verbose = FALSE,
                                    exclude_priors = FALSE,
+                                   bimodal_mean_variability_association = FALSE,
+                                   use_data = TRUE,
                                    test_composition_above_logit_fold_change,
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE
@@ -554,6 +579,8 @@ multi_beta_binomial_glm = function(.data,
       seed = seed,
       verbose = verbose,
       exclude_priors = exclude_priors,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      use_data = use_data,
       max_sampling_iterations = max_sampling_iterations
     )
 

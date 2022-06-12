@@ -27,7 +27,9 @@ simulate_data(
 
 \item{.cell_group}{A column name as symbol. The cell_group identifier}
 
-\item{.coefficients}{Th column names for coefficients, for example, c(b_0, b_1)}
+\item{.coefficients}{The column names for coefficients, for example, c(b_0, b_1)}
+
+\item{variability_multiplier}{A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.}
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 

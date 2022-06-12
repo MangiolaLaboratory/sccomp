@@ -11,26 +11,11 @@ status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.sv
 
 # <img src="inst/logo-01.png" height="139px" width="120px" />
 
-Single-cell transcriptomics allows the unbiased characterisation of the
-cellular composition of tissues. The cellular composition can be
-compared between biological or clinical conditions to identify potential
-cellular drivers. This strategy has been critical to unveil drivers of
-immune response in cancer and pathogen infection from single-cell data.
-Developing a robust statistical method for differential composition
-analyses from single-cell data is crucial for driving discoveries. The
-compositional data from single-cell experiments has four main
-properties. The data is in count form; counts underlie inversely
-correlated proportions that sum to one; larger cell groups are more
-variable across samples than small groups; real-world data is rich in
-outlier observation. A model that covers more than two of these
-properties is currently lacking. **Here, we present a robust and
-outlier-aware method for testing differential tissue composition from
-single-cell data. This model can also transfer knowledge from a large
-set of integrated datasets to increase accuracy further. We present how
-this model can be applied to identify novel compositional and
-heterogeneity changes in existing studies.**
+Cell omics such as single-cell genomics, proteomics and microbiomics allow the characterisation of tissue and microbial community composition, which can be compared between conditions to identify biological drivers. This strategy has been critical to unveiling markers of disease progression such as cancer and pathogen infection. For cell omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce sccomp, a generalised method for differential composition and variability analyses able to jointly model data count distribution, compositionality, group-specific variability and proportion mean-variability association, with awareness against outliers. Sccomp is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. Here, we demonstrate that mean-variability association is ubiquitous across technologies showing the inadequacy of the very popular Dirichlet-multinomial modelling and provide mandatory principles for differential variability analysis. We show that sccomp accurately fits experimental data, with a 50% incremental improvement over state-of-the-art algorithms. Using sccomp, we identified novel differential constraints and composition in the microenvironment of primary breast cancer. 
 
 # Installation
+
+## (simple) Suggested for single-cell and CyTOF analyses
 
 **Bioconductor**
 
@@ -47,13 +32,31 @@ if (!requireNamespace("BiocManager")) {
 devtools::install_github("stemangiola/sccomp")
 ```
 
+## (more complex and efficient, until further optimisation of the default installation) Suggested for microbiomics
+
+**Github**
+
+``` r
+install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+check_cmdstan_toolchain()
+install_cmdstan(cores = 2)
+# Then, check the correct cmdstanr installation here
+# https://mc-stan.org/cmdstanr/articles/cmdstanr.html
+
+# Then install sccomp with the cmdstanr branch
+devtools::install_github("stemangiola/sccomp@cmdstanr")
+```
+
 # Analysis
+
+`sccomp` can model changes in composition and variability. Normally the furmula for variability is either `~1`, which assumes that the cell-group variability is independent on any covariate, or `~ factor_of_interest`, which assumes that the model is dependent on the factor of interest only. However, more complex models for variability are possible, is the sample size is large. In any case the model for variability must be a subset of the model for composition.
 
 ## From Seurat Object
 
 ``` r
 res =
   seurat_obj |>
+  sccomp_glm( 
    formula_composition = ~ type, 
     formula_variability = ~ 1, 
     sample, 
@@ -61,9 +64,12 @@ res =
   )
 ```
 
+## From SingleCellExperiment Object
+
 ``` r
 res =
   sce_obj |>
+  sccomp_glm( 
     formula_composition = ~ type, 
     formula_variability = ~ 1, 
     sample, 
@@ -104,24 +110,39 @@ res =
 
     ## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]
 
+    ## sccomp says: the composition design matrix has columns: (Intercept), typecancer
+
+    ## sccomp says: the variability design matrix has columns: (Intercept)
+
+
 ``` r
 res
 ```
 
-    ## # A tibble: 72 × 8
-    ##    cell_group parameter   c_lower c_effect c_upper   c_pH0    c_FDR count_data  
-    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>   <dbl>    <dbl> <list>      
-    ##  1 B1         (Intercept)   0.465    0.639  0.815  0       0        <tibble [20…
-    ##  2 B1         typecancer   -1.22    -0.885 -0.560  0       0        <tibble [20…
-    ##  3 B2         (Intercept)   0.120    0.336  0.547  0.104   0.0176   <tibble [20…
-    ##  4 B2         typecancer   -1.16    -0.746 -0.344  0.00450 0.000775 <tibble [20…
-    ##  5 B3         (Intercept)  -0.668   -0.484 -0.281  0.00400 0.000375 <tibble [20…
-    ##  6 B3         typecancer   -0.584   -0.217  0.131  0.462   0.122    <tibble [20…
-    ##  7 BM         (Intercept)  -1.38    -1.17  -0.974  0       0        <tibble [20…
-    ##  8 BM         typecancer   -0.750   -0.353  0.0410 0.214   0.0521   <tibble [20…
-    ##  9 CD4 1      (Intercept)   0.276    0.423  0.576  0.00150 0.000136 <tibble [20…
-    ## 10 CD4 1      typecancer   -0.122    0.168  0.460  0.590   0.191    <tibble [20…
-    ## # … with 62 more rows
+    ## # A tibble: 72 × 9
+    ##    cell_group parameter   covariate c_lower c_effect c_upper   c_pH0   c_FDR
+    ##    <chr>      <chr>       <chr>       <dbl>    <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B1         (Intercept) <NA>       0.557     0.710  0.866  0       0      
+    ##  2 B1         typecancer  type      -1.19     -0.888 -0.587  0       0      
+    ##  3 B2         (Intercept) <NA>       0.177     0.414  0.657  0.0368  0.00286
+    ##  4 B2         typecancer  type      -1.18     -0.748 -0.312  0.00976 0.00177
+    ##  5 B3         (Intercept) <NA>      -0.610    -0.409 -0.205  0.0225  0.00165
+    ##  6 B3         typecancer  type      -0.593    -0.219  0.151  0.461   0.113  
+    ##  7 BM         (Intercept) <NA>      -1.31     -1.10  -0.884  0       0      
+    ##  8 BM         typecancer  type      -0.736    -0.344  0.0415 0.234   0.0643 
+    ##  9 CD4 1      (Intercept) <NA>       0.362     0.490  0.627  0       0      
+    ## 10 CD4 1      typecancer  type      -0.0882    0.161  0.420  0.622   0.163  
+    ## # … with 62 more rows, and 1 more variable: count_data <list>
+    
+Of the output table, the estimate columns startwith the prefix `c_` indicate `composition`.
+
+## Suggested settings for single-cell RNA sequencing
+
+We reccommend to set `bimodal_mean_variability_association  = TRUE`. The bimodality of the mean-variability association can be confirmed from the plots$credible_intervals_2D (see below).
+
+## Suggested settings for CyTOF and microbiome data
+
+We reccommend to set `bimodal_mean_variability_association  = FALSE` (Default).
 
 ## Visualise data + inference
 
@@ -130,20 +151,19 @@ plots = plot_summary(res)
 ```
 
     ## Joining, by = c("sample", "cell_group")
-
     ## Joining, by = c("cell_group", "type")
 
-Plot of group proportion, faceted by groups. The blue boxplots represent
-the posterior predictive check. If the model is likely be descriptively
-adequate to the data, the blue boxplot should roughly overlay with the
-black boxplot, which represent the observed data. The outliers are
-coloured in red.
+    ## Warning: Ignoring unknown aesthetics: label
+
+Plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely be descriptively adequate to the data, the blue boxplot should roughly overlay with the black boxplot, which represent the observed data. The outliers are coloured in red. A boxplot will be returned for every (discrete) covariates present in `formula_composition`. The color coding represent the significant associations for composition and/or variability.
 
 ``` r
 plots$boxplot
 ```
 
-![](inst/figures/unnamed-chunk-10-1.png)<!-- -->
+    ## [[1]]
+
+![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
 
 Plot of estimates of differential composition (c\_) on the x axis, and
 differential variability (v\_) on the y axis. The error bars represent
@@ -156,7 +176,7 @@ credible interval. Facets represent the covariates in the model.
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
 
 ## Visualisation of the MCMC chains from the posterior distribution
 
@@ -169,7 +189,7 @@ probability 1.
 res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 ```
 
-![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
 
 ## Differential variability
 
@@ -194,25 +214,32 @@ res =
 
     ## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]
 
+    ## sccomp says: the composition design matrix has columns: (Intercept), typecancer
+
+    ## sccomp says: the variability design matrix has columns: (Intercept), typecancer
+
 ``` r
 res
 ```
 
-    ## # A tibble: 72 × 13
-    ##    cell_group parameter   c_lower c_effect c_upper   c_pH0    c_FDR v_lower
-    ##    <chr>      <chr>         <dbl>    <dbl>   <dbl>   <dbl>    <dbl>   <dbl>
-    ##  1 B1         (Intercept)   0.452   0.612   0.782  0       0          -5.17
-    ##  2 B1         typecancer   -1.27   -0.941  -0.586  0       0           1.25
-    ##  3 B2         (Intercept)   0.171   0.366   0.572  0.0513  0.00246    -4.96
-    ##  4 B2         typecancer   -1.06   -0.660  -0.252  0.0128  0.00156     1.65
-    ##  5 B3         (Intercept)  -0.682  -0.495  -0.301  0.00250 0.000130   -5.86
-    ##  6 B3         typecancer   -0.620  -0.232   0.178  0.435   0.148       1.44
-    ##  7 BM         (Intercept)  -1.40   -1.18   -0.974  0       0          -6.40
-    ##  8 BM         typecancer   -0.822  -0.411   0.0101 0.154   0.0384      1.05
-    ##  9 CD4 1      (Intercept)   0.230   0.379   0.531  0.00725 0.000427   -5.48
-    ## 10 CD4 1      typecancer   -0.220   0.0762  0.393  0.778   0.273       1.13
-    ## # … with 62 more rows, and 5 more variables: v_effect <dbl>, v_upper <dbl>,
-    ## #   v_pH0 <dbl>, v_FDR <dbl>, count_data <list>
+    ## # A tibble: 72 × 14
+    ##    cell_group parameter   covariate c_lower c_effect c_upper    c_pH0     c_FDR
+    ##    <chr>      <chr>       <chr>       <dbl>    <dbl>   <dbl>    <dbl>     <dbl>
+    ##  1 B1         (Intercept) <NA>        0.627    0.796  0.972  0        0        
+    ##  2 B1         typecancer  type       -1.26    -0.930 -0.602  0.000250 0.0000501
+    ##  3 B2         (Intercept) <NA>        0.190    0.417  0.667  0.0315   0.00150  
+    ##  4 B2         typecancer  type       -1.04    -0.561 -0.0636 0.0673   0.0108   
+    ##  5 B3         (Intercept) <NA>       -0.557   -0.360 -0.150  0.0618   0.00526  
+    ##  6 B3         typecancer  type       -0.518   -0.124  0.296  0.648    0.203    
+    ##  7 BM         (Intercept) <NA>       -1.26    -1.05  -0.822  0        0        
+    ##  8 BM         typecancer  type       -0.741   -0.298  0.163  0.323    0.0956   
+    ##  9 CD4 1      (Intercept) <NA>        0.370    0.510  0.655  0        0        
+    ## 10 CD4 1      typecancer  type       -0.117    0.176  0.470  0.569    0.139    
+    ## # … with 62 more rows, and 6 more variables: v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, count_data <list>
+    
+Of the output table, the estimate columns startwith the prefix `c_` indicate `composition`, the estimate columns with the prefix `v_` indicate `variability`.
+
 
 Plot 1D significance plot
 
@@ -221,20 +248,22 @@ plots = plot_summary(res)
 ```
 
     ## Joining, by = c("sample", "cell_group")
-
     ## Joining, by = c("cell_group", "type")
+
+    ## Warning: Ignoring unknown aesthetics: label
 
 ``` r
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
 
-Plot 2D significance plot. This is possible if only differential
-variability has been tested
+Plot 2D significance plot. Data points are cell groups. Error bars are the 95% credible interval. The dashed lines represent the default threshold fold change for which the probabilities (c_pH0, v_pH0) are calculated. pH0 of 0 represent the rejection of the null hypothesis, that no effect is observed.
+
+This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for `(intercept)` (left-hand side facet) is satisfied. A scatterplot (beside the Intercept) is provided for each of the categories of interest. The for each category of interest, the composition and variability effects should be generally uncorrelated. 
 
 ``` r
 plots$credible_intervals_2D
 ```
 
-![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-16-1.png)<!-- -->
