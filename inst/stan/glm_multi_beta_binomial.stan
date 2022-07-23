@@ -99,7 +99,7 @@ transformed data{
 }
 parameters{
 	matrix[C, M-1] beta_raw_raw;
-	matrix[A, M] alpha;
+	matrix[A, M] alpha; // Variability
 
 	// To exclude
   real prec_coeff[2];
@@ -134,7 +134,7 @@ model{
   matrix[M, N] mu = (Q_ast * beta_raw)';
   vector[N*M] mu_array;
   vector[N*M] precision_array;
-  
+
   for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
 
   // Convert the matrix m to a column vector in column-major order.
