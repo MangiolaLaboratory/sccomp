@@ -1225,7 +1225,7 @@ draws_to_statistics = function(draws, contrasts, X, false_positive_rate, test_co
 
   factor_of_interest = X %>% colnames()
 
-  if(contrasts == "NULL"){
+  if(contrasts |> identical("NULL")){
 
     draws =
       draws |>

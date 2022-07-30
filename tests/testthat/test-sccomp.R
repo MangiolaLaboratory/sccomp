@@ -64,7 +64,7 @@ test_that("multi beta binomial from Seurat",{
 
 test_that("multi beta binomial contrasts from Seurat",{
 
-  seurat_obj |>
+  res = seurat_obj |>
     sccomp_glm(
       formula_composition = ~ 0 + type,
       formula_variability = ~ 1,
@@ -74,11 +74,12 @@ test_that("multi beta binomial contrasts from Seurat",{
       approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
-    )  |>
-    filter(parameter == "typehealthy") |>
-    filter(c_pH0<0.1) |>
-    nrow() |>
-    expect_equal(18)
+    )
+
+    expect_equal(
+      res[1,"c_effect"] |> as.numeric(),
+      -res[2,"c_effect"] |> as.numeric()
+    )
 
 })
 
