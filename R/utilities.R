@@ -798,11 +798,12 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 #' @importFrom magrittr divide_by
 #' @importFrom magrittr multiply_by
 #' @importFrom stats C
+#' @importFrom stats setNames
 #'
 #' @keywords internal
 #' @noRd
 #'
-get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
+get_probability_non_zero_ = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
 
 
   draws = rstan::extract(fit, parameter)[[1]]
@@ -829,6 +830,18 @@ get_probability_non_zero = function(fit, parameter, prefix = "", test_above_logi
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
     as.data.frame() %>%
     rowid_to_column(var = "M")
+
+}
+
+get_probability_non_zero = function(draws, test_above_logit_fold_change = 0, probability_column_name){
+
+  draws %>%
+    with_groups(c(M, C_name), ~ .x |> summarise(
+      bigger_zero = which(.value>test_above_logit_fold_change) |> length(),
+      smaller_zero = which(.value< -test_above_logit_fold_change) |> length(),
+      n=n()
+    )) |>
+    mutate(!!as.symbol(probability_column_name) :=  (1 - (pmax(bigger_zero, smaller_zero) / n)))
 
 }
 
@@ -1206,4 +1219,83 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
 
 
 
+}
+
+draws_to_statistics = function(draws, contrasts, X, false_positive_rate, test_composition_above_logit_fold_change, prefix = ""){
+
+  factor_of_interest = X %>% colnames()
+
+  if(contrasts == "NULL"){
+
+    draws =
+      draws |>
+      left_join(tibble(C=seq_len(ncol(X)), parameter = colnames(X)), by = "C") %>%
+      select(-C, -.variable)
+  }
+  else {
+    draws =
+      draws |>
+      pivot_wider(names_from = C, values_from = .value) %>%
+      setNames(colnames(.)[1:5] |> c(factor_of_interest)) |>
+      mutate_from_expr_list(contrasts) |>
+      select(-!!factor_of_interest)
+
+    # If no contrasts of interest just retunrn an empty data frame
+    if(ncol(draws)==5) return(draws |> distinct(M))
+
+    draws =
+      draws |>
+      pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value")
+
+  }
+
+  draws =
+    draws |>
+    with_groups(c(M, parameter), ~ .x |> summarise(
+      lower = quantile(.value, false_positive_rate/2),
+      effect = quantile(.value, 0.5),
+      upper = quantile(.value, 1-(false_positive_rate/2)),
+      bigger_zero = which(.value>test_composition_above_logit_fold_change) |> length(),
+      smaller_zero = which(.value< -test_composition_above_logit_fold_change) |> length(),
+      n=n()
+    )) |>
+
+    # Calculate probability non 0
+    mutate(pH0 =  (1 - (pmax(bigger_zero, smaller_zero) / n))) |>
+    with_groups(parameter, ~ mutate(.x, FDR = get_FDR(pH0))) |>
+
+    select(M, parameter, lower, effect, upper, pH0, FDR)
+
+  # Setting up names separately because |> is not flexible enough
+  draws |>
+    setNames(c(colnames(draws)[1:2], sprintf("%s%s", prefix, colnames(draws)[3:ncol(draws)])))
+}
+
+enquos_from_list_of_symbols <- function(...) {
+  enquos(...)
+}
+
+contrasts_to_enquos = function(contrasts){
+  contrasts |> enquo() |> quo_names() |> syms() %>% do.call(enquos_from_list_of_symbols, .)
+}
+
+#' @importFrom purrr map_dfc
+#' @importFrom tibble add_column
+#' @importFrom dplyr last_col
+mutate_from_expr_list = function(x, formula_expr){
+  map_dfc(
+    formula_expr,
+    ~ x |>
+      mutate_ignore_error(!!.x := eval(rlang::parse_expr(.x))) |>
+      select(-colnames(x))
+  ) |>
+    add_column(x, .before = 1)
+
+}
+
+mutate_ignore_error = function(x, ...){
+  tryCatch(
+    {  x |> mutate(...) },
+    error=function(cond) {  x  }
+  )
 }
