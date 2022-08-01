@@ -919,7 +919,7 @@ plots$boxplot =
 plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
 
 # 2D intervals
-if("v_effect" %in% colnames(.data))  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
+if("v_effect" %in% colnames(.data) && (.data |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
 
 plots
 

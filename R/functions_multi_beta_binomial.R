@@ -48,6 +48,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             .count,
 
                                             # Secondary parameters
+                                            contrasts = NULL,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
@@ -89,6 +90,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference == "all",
         formula_variability = formula_variability,
+        contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data
       )
@@ -145,6 +147,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         formula_variability = ~1,
+        contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data
       )
@@ -217,6 +220,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         formula_variability = formula_variability,
+        contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data
       )
@@ -386,7 +390,6 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-  contrasts = contrasts |> enquo() |> quo_names()
 
   abundance_CI =
     fit %>%
@@ -402,6 +405,10 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
   variability_CI =
     fit %>%
     draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
+
+    # We want variability, not concentration
+    mutate(.value = -.value) |>
+
     draws_to_statistics(
       contrasts,
       data_for_model$XA,
@@ -496,7 +503,7 @@ multi_beta_binomial_glm = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-  contrasts = enquo(contrasts)
+  contrasts = contrasts |> enquo() |> quo_names()
 
   result_list =
     estimate_multi_beta_binomial_glm(
@@ -506,6 +513,7 @@ multi_beta_binomial_glm = function(.data,
       .cell_group = !!.cell_group,
       .count = !!.count,
       formula_variability = formula_variability,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive,
       check_outliers = check_outliers,
@@ -531,7 +539,7 @@ multi_beta_binomial_glm = function(.data,
     result_list$truncation_df2,
     variance_association = variance_association,
     test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
-    contrasts = !!contrasts
+    contrasts = contrasts
   ) %>%
 
     # Add cell name
@@ -559,7 +567,9 @@ multi_beta_binomial_glm = function(.data,
     # Attach association mean concentration
     add_attr(get_mean_precision_association(result_list$fit), "mean_concentration_association") %>%
     when(pass_fit ~ add_attr(., result_list$fit, "fit"), ~ (.)) %>%
-    add_attr(result_list$data_for_model, "model_input")
+    add_attr(result_list$data_for_model, "model_input") |>
+    add_attr(contrasts, "contrasts")
+
 
 }
 

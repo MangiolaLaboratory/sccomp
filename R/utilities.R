@@ -554,6 +554,8 @@ parse_formula <- function(fm) {
 
 #' @importFrom purrr when
 #' @importFrom stats model.matrix
+#' @importFrom tidyr expand_grid
+#' @importFrom stringr str_detect
 #'
 #' @keywords internal
 #' @noRd
@@ -563,6 +565,7 @@ data_spread_to_model_input =
     .data_spread, formula, .sample, .cell_type, .count,
     variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ,
     formula_variability = ~ 1,
+    contrasts = NULL,
     bimodal_mean_variability_association = FALSE,
     use_data = TRUE){
 
@@ -582,7 +585,7 @@ data_spread_to_model_input =
             sd(.)==0 ~ (.),
 
             # If I only have 0 and 1 for a binomial factor
-            unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ .-0.5,
+            unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ (.),
 
             # If continuous
             ~ scale(., scale=FALSE)
@@ -629,15 +632,29 @@ data_spread_to_model_input =
     data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
-    # Add parameter covariate ictionary
+    # Add parameter covariate dictionary
     data_for_model$covariate_parameter_dictionary =
       .data_spread %>%
       select(parse_formula(formula)) %>%
       distinct() %>%
       gather(covariate, parameter) %>%
-      unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE) %>%
+      unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
+      select(-parameter) |>
       filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
       distinct()
+
+    # If constrasts is set it is a bit more complicated
+    if(! contrasts |> identical("NULL"))
+      data_for_model$covariate_parameter_dictionary =
+        data_for_model$covariate_parameter_dictionary |>
+        distinct() |>
+        expand_grid(parameter=contrasts) |>
+        filter(str_detect(contrasts, design_matrix_col )) |>
+        select(-design_matrix_col) |>
+        rename(design_matrix_col = parameter) |>
+        distinct()
+
+    data_for_model$intercept_in_design = X[,1] |> unique() |> identical(1)
 
     # Return
     data_for_model
@@ -977,6 +994,7 @@ get_FDR = function(x){
 
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
+#' @importFrom tidyr drop_na
 plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, my_theme){
 
   .cell_group = enquo(.cell_group)
@@ -986,6 +1004,7 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
 
     # Reshape
     pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
+    drop_na() |>
     pivot_wider(names_from = estimate, values_from = value) |>
 
     nest(data = -c(parameter, which)) |>
@@ -1063,7 +1082,9 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025,
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
-plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group, .sample, significance_threshold = 0.025, my_theme){
+plot_boxplot = function(
+    .data, data_proportion, factor_of_interest, .cell_group, .sample, significance_threshold = 0.025, my_theme
+    ){
 
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
@@ -1090,24 +1111,54 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
   .cell_group = enquo(.cell_group)
   .sample = enquo(.sample)
 
-  significance_colors =
-    .data %>%
-    pivot_longer(
-      c(contains("c_"), contains("v_")),
-      names_pattern = "([cv])_([a-zA-Z0-9]+)",
-      names_to = c("which", "stats_name"),
-      values_to = "stats_value"
-    ) %>%
-    filter(stats_name == "FDR") %>%
-    filter(parameter != "(Intercept)") %>%
-    filter(stats_value < significance_threshold) %>%
-    filter(covariate == factor_of_interest) %>%
-    unite("name", c(which, parameter), remove = FALSE) %>%
-    distinct() %>%
-    # Get clean parameter
-    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", covariate), "")) %>%
 
+  if(.data |> attr("contrasts") |> identical("NULL"))
+    significance_colors =
+      .data %>%
+      pivot_longer(
+        c(contains("c_"), contains("v_")),
+        names_pattern = "([cv])_([a-zA-Z0-9]+)",
+        names_to = c("which", "stats_name"),
+        values_to = "stats_value"
+      ) %>%
+      filter(stats_name == "FDR") %>%
+      filter(parameter != "(Intercept)") %>%
+      filter(stats_value < significance_threshold) %>%
+      filter(covariate == factor_of_interest) %>%
+      unite("name", c(which, parameter), remove = FALSE) %>%
+      distinct() %>%
+      # Get clean parameter
+      mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", covariate), "")) %>%
+
+      with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+
+  else
+    significance_colors =
+      .data %>%
+        pivot_longer(
+          c(contains("c_"), contains("v_")),
+          names_pattern = "([cv])_([a-zA-Z0-9]+)",
+          names_to = c("which", "stats_name"),
+          values_to = "stats_value"
+        ) %>%
+        filter(stats_name == "FDR") %>%
+        filter(parameter != "(Intercept)") %>%
+        filter(stats_value < significance_threshold) %>%
+        filter(covariate == factor_of_interest) |>
+        mutate(count_data = map(count_data, ~ .x |> select(factor_of_interest) |> distinct())) |>
+        unnest(count_data) |>
+
+        # Filter relevant parameters
+        mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
+        filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
+
+        # Rename
+        select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
+
+    # Merge contrasts
     with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+
+
 
   my_boxplot =  ggplot()
 
@@ -1184,7 +1235,7 @@ plot_boxplot = function(.data, data_proportion, factor_of_interest, .cell_group,
 
   my_boxplot +
     geom_jitter(
-      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest), label = !!.sample),
+      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
       data = data_proportion,
       position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
       size = 0.5
@@ -1240,7 +1291,7 @@ draws_to_statistics = function(draws, contrasts, X, false_positive_rate, test_co
       mutate_from_expr_list(contrasts) |>
       select(-!!factor_of_interest)
 
-    # If no contrasts of interest just retunrn an empty data frame
+    # If no contrasts of interest just return an empty data frame
     if(ncol(draws)==5) return(draws |> distinct(M))
 
     draws =
