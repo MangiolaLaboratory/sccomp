@@ -35,6 +35,14 @@ functions{
     return y;
   }
 
+  matrix average_by_col(matrix beta){
+    return to_matrix(
+      rep_row_vector(1.0, rows(beta)) * beta / rows(beta),
+      1, cols(beta), 0
+    );
+
+
+  }
 
 }
 data{
@@ -67,6 +75,9 @@ data{
   int<lower=0, upper=1> exclude_priors;
   int<lower=0, upper=1> bimodal_mean_variability_association;
   int<lower=0, upper=1> use_data;
+
+  // Does the design icludes intercept
+  int <lower=0, upper=1> intercept_in_design;
 
 }
 transformed data{
@@ -112,20 +123,25 @@ transformed parameters{
 		matrix[A,M] beta_intercept_slope;
 		matrix[A,M] alpha_intercept_slope;
     matrix[M, N] precision = (Xa * alpha)';
-matrix[C,M] beta;
+    matrix[C,M] beta;
 
-for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
 
-// Beta
-beta = R_ast_inverse * beta_raw; // coefficients on x
+  // Beta
+  beta = R_ast_inverse * beta_raw; // coefficients on x
 
-// All this because if A ==1 we have ocnversion problems
-// This works only with two discrete groups
-if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
-else beta_intercept_slope = (XA * beta[1:A,]);
-if(A == 1)  alpha_intercept_slope = alpha;
-else alpha_intercept_slope = (XA * alpha);
+  // All this because if A ==1 we have conversion problems
+  // This works only with two discrete groups
+  if(A == 1) {
+
+    // If I have an intercept in the design matrix
+    if(intercept_in_design) beta_intercept_slope = to_matrix(beta[1,], 1, M, 0);
+    else beta_intercept_slope = average_by_col(beta);
+  }
+  else beta_intercept_slope = (XA * beta[1:A,]);
+  if(A == 1)  alpha_intercept_slope = alpha;
+  else alpha_intercept_slope = (XA * alpha);
 
 }
 model{
@@ -134,7 +150,7 @@ model{
   matrix[M, N] mu = (Q_ast * beta_raw)';
   vector[N*M] mu_array;
   vector[N*M] precision_array;
-  
+
   for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
 
   // Convert the matrix m to a column vector in column-major order.
