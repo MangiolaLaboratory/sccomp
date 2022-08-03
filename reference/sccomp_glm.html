@@ -60,77 +60,118 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">sccomp_glm</span><span class="op">(</span>
-  <span class="va">.data</span>,
-  formula_composition <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,
-  formula_variability <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,
-  <span class="va">.sample</span>,
-  <span class="va">.cell_group</span>,
-  .count <span class="op">=</span> <span class="cn">NULL</span>,
-  prior_mean_variable_association <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span><span class="op">)</span>, slope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.6</span><span class="op">)</span>,
-    standard_deviation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span>,
-  check_outliers <span class="op">=</span> <span class="cn">TRUE</span>,
-  bimodal_mean_variability_association <span class="op">=</span> <span class="cn">FALSE</span>,
-  cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span>,
-  percent_false_positive <span class="op">=</span> <span class="fl">5</span>,
-  approximate_posterior_inference <span class="op">=</span> <span class="st">"outlier_detection"</span>,
-  test_composition_above_logit_fold_change <span class="op">=</span> <span class="fl">0.2</span>,
-  verbose <span class="op">=</span> <span class="cn">FALSE</span>,
-  noise_model <span class="op">=</span> <span class="st">"multi_beta_binomial"</span>,
-  exclude_priors <span class="op">=</span> <span class="cn">FALSE</span>,
-  use_data <span class="op">=</span> <span class="cn">TRUE</span>,
-  mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span>,
-  max_sampling_iterations <span class="op">=</span> <span class="fl">20000</span>,
-  pass_fit <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sccomp_glm</span><span class="op">(</span></span>
+<span>  <span class="va">.data</span>,</span>
+<span>  formula_composition <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,</span>
+<span>  formula_variability <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,</span>
+<span>  <span class="va">.sample</span>,</span>
+<span>  <span class="va">.cell_group</span>,</span>
+<span>  .count <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  prior_mean_variable_association <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span><span class="op">)</span>, slope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.6</span><span class="op">)</span>,</span>
+<span>    standard_deviation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  check_outliers <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  bimodal_mean_variability_association <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  percent_false_positive <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  approximate_posterior_inference <span class="op">=</span> <span class="st">"outlier_detection"</span>,</span>
+<span>  test_composition_above_logit_fold_change <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  noise_model <span class="op">=</span> <span class="st">"multi_beta_binomial"</span>,</span>
+<span>  exclude_priors <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  use_data <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  max_sampling_iterations <span class="op">=</span> <span class="fl">20000</span>,</span>
+<span>  pass_fit <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>.data</dt>
 <dd><p>A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | covariate columns.</p></dd>
+
+
 <dt>formula_composition</dt>
 <dd><p>A formula. The formula describing the model for differential abundance, for example ~treatment.</p></dd>
+
+
 <dt>formula_variability</dt>
 <dd><p>A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.</p></dd>
+
+
 <dt>.sample</dt>
 <dd><p>A column name as symbol. The sample identifier</p></dd>
+
+
 <dt>.cell_group</dt>
 <dd><p>A column name as symbol. The cell_group identifier</p></dd>
+
+
 <dt>.count</dt>
 <dd><p>A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.</p></dd>
+
+
 <dt>prior_mean_variable_association</dt>
 <dd><p>A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.</p></dd>
+
+
 <dt>check_outliers</dt>
 <dd><p>A boolean. Whether to check for outliers before the fit.</p></dd>
+
+
 <dt>bimodal_mean_variability_association</dt>
 <dd><p>A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.</p></dd>
+
+
 <dt>cores</dt>
 <dd><p>An integer. How many cored to be used with parallel calculations.</p></dd>
+
+
 <dt>percent_false_positive</dt>
 <dd><p>A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.</p></dd>
+
+
 <dt>approximate_posterior_inference</dt>
 <dd><p>A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.</p></dd>
+
+
 <dt>test_composition_above_logit_fold_change</dt>
 <dd><p>A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.</p></dd>
+
+
 <dt>verbose</dt>
 <dd><p>A boolean. Prints progression.</p></dd>
+
+
 <dt>noise_model</dt>
 <dd><p>A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.</p></dd>
+
+
 <dt>exclude_priors</dt>
 <dd><p>A boolean. Whether to run a prior-free model, for benchmarking purposes.</p></dd>
+
+
 <dt>use_data</dt>
 <dd><p>A booelan. Whether to sun the model data free. This can be used for prior predictive check.</p></dd>
+
+
 <dt>mcmc_seed</dt>
 <dd><p>An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()</p></dd>
+
+
 <dt>max_sampling_iterations</dt>
 <dd><p>An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.</p></dd>
+
+
 <dt>pass_fit</dt>
 <dd><p>A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A nested tibble <code>tbl</code>, with the following columns</p><ul><li><p>cell_group - column including the cell groups being tested</p></li>
+    
+
+<p>A nested tibble <code>tbl</code>, with the following columns</p><ul><li><p>cell_group - column including the cell groups being tested</p></li>
 <li><p>parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability</p></li>
 <li><p>c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.</p></li>
 <li><p>c_effect - mean of the posterior distribution for a composition (c) parameter.</p></li>
@@ -146,25 +187,25 @@
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">estimate</span> <span class="op">=</span></span>
-<span class="r-in">  <span class="fu">sccomp_glm</span><span class="op">(</span></span>
-<span class="r-in">  <span class="va">counts_obj</span> ,</span>
-<span class="r-in">   <span class="op">~</span> <span class="va">type</span>,</span>
-<span class="r-in">   <span class="op">~</span><span class="fl">1</span>,</span>
-<span class="r-in">   <span class="va">sample</span>,</span>
-<span class="r-in">   <span class="va">cell_group</span>,</span>
-<span class="r-in">   <span class="va">count</span>,</span>
-<span class="r-in">    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span>
-<span class="r-in">    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span class="r-in">    cores <span class="op">=</span> <span class="fl">1</span></span>
-<span class="r-in">  <span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">estimate</span> <span class="op">=</span></span></span>
+<span class="r-in"><span>  <span class="fu">sccomp_glm</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">counts_obj</span> ,</span></span>
+<span class="r-in"><span>   <span class="op">~</span> <span class="va">type</span>,</span></span>
+<span class="r-in"><span>   <span class="op">~</span><span class="fl">1</span>,</span></span>
+<span class="r-in"><span>   <span class="va">sample</span>,</span></span>
+<span class="r-in"><span>   <span class="va">cell_group</span>,</span></span>
+<span class="r-in"><span>   <span class="va">count</span>,</span></span>
+<span class="r-in"><span>    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span></span>
+<span class="r-in"><span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>    cores <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation [ETA: ~20s]</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
-<span class="r-in"></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -179,8 +220,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>
-2.0.2.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.9000.</p>
 </div>
 
       </footer></div>

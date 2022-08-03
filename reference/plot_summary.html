@@ -60,26 +60,33 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">plot_summary</span><span class="op">(</span><span class="va">.data</span>, significance_threshold <span class="op">=</span> <span class="fl">0.025</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_summary</span><span class="op">(</span><span class="va">.data</span>, significance_threshold <span class="op">=</span> <span class="fl">0.025</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>.data</dt>
 <dd><p>A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column</p></dd>
+
+
 <dt>significance_threshold</dt>
 <dd><p>A real. FDR threshold for labelling significant cell-groups.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A <code>ggplot</code></p>
+    
+
+<p>A <code>ggplot</code></p>
+
+
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span>
-<span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘dplyr’</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:stats’:</span>
@@ -88,20 +95,20 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:base’:</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     intersect, setdiff, setequal, union</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">estimate</span> <span class="op">=</span></span>
-<span class="r-in">  <span class="fu"><a href="sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span></span>
-<span class="r-in">  <span class="va">counts_obj</span> ,</span>
-<span class="r-in">   <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>, <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span>
-<span class="r-in">    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span>
-<span class="r-in">    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span class="r-in">    cores <span class="op">=</span> <span class="fl">1</span></span>
-<span class="r-in">  <span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">estimate</span> <span class="op">=</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">counts_obj</span> ,</span></span>
+<span class="r-in"><span>   <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>, <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span></span>
+<span class="r-in"><span>    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span></span>
+<span class="r-in"><span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>    cores <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation [ETA: ~20s]</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">estimate</span> |&gt; <span class="fu">plot_summary</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">estimate</span> <span class="op">|&gt;</span> <span class="fu">plot_summary</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining, by = c("sample", "cell_group")</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining, by = c("cell_group", "type")</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Ignoring unknown aesthetics: label</span>
@@ -113,7 +120,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> $credible_intervals_1D</span>
 <span class="r-plt img"><img src="plot_summary-2.png" alt="" width="700" height="433"></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -128,8 +135,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>
-2.0.2.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.9000.</p>
 </div>
 
       </footer></div>

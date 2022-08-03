@@ -60,55 +60,63 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">replicate_data</span><span class="op">(</span><span class="va">.data</span>, number_of_draws <span class="op">=</span> <span class="fl">1</span>, mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">replicate_data</span><span class="op">(</span><span class="va">.data</span>, number_of_draws <span class="op">=</span> <span class="fl">1</span>, mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>.data</dt>
 <dd><p>A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column</p></dd>
+
+
 <dt>number_of_draws</dt>
 <dd><p>An integer. How may copies of the data you want to draw from the model joint posterior distribution.</p></dd>
+
+
 <dt>mcmc_seed</dt>
 <dd><p>An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A nested tibble <code>tbl</code> with cell_group-wise statistics</p>
+    
+
+<p>A nested tibble <code>tbl</code> with cell_group-wise statistics</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in">  <span class="fu"><a href="sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span></span>
-<span class="r-in">  <span class="va">counts_obj</span> ,</span>
-<span class="r-in">   <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>,  <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span>
-<span class="r-in">    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span>
-<span class="r-in">    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span class="r-in">    cores <span class="op">=</span> <span class="fl">1</span></span>
-<span class="r-in">  <span class="op">)</span> |&gt;</span>
-<span class="r-in"></span>
-<span class="r-in">  <span class="fu">replicate_data</span><span class="op">(</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">counts_obj</span> ,</span></span>
+<span class="r-in"><span>   <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>,  <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span></span>
+<span class="r-in"><span>    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span></span>
+<span class="r-in"><span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>    cores <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="fu">replicate_data</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation [ETA: ~20s]</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    generated_proportions generated_counts replicate sample       cell_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>                0.047<span style="text-decoration: underline;">9</span>              240         1 10x_6K       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>                0.035<span style="text-decoration: underline;">3</span>              285         1 10x_8K       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>                0.038<span style="text-decoration: underline;">3</span>               96         1 GSE115189    B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>                0.041<span style="text-decoration: underline;">1</span>              253         1 SCP345_580   B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>                0.060<span style="text-decoration: underline;">8</span>              418         1 SCP345_860   B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>                0.062<span style="text-decoration: underline;">6</span>              179         1 SCP424_pbmc1 B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>                0.062<span style="text-decoration: underline;">6</span>              200         1 SCP424_pbmc2 B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>                0.057<span style="text-decoration: underline;">1</span>               34         1 SCP591       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>                0.031<span style="text-decoration: underline;">0</span>              148         1 SI-GA-E5     B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>                0.016<span style="text-decoration: underline;">3</span>              124         1 SI-GA-E7     B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>                0.053<span style="text-decoration: underline;">8</span>              270         1 10x_6K       B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>                0.049<span style="text-decoration: underline;">4</span>              399         1 10x_8K       B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>                0.046<span style="text-decoration: underline;">1</span>              115         1 GSE115189    B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>                0.080<span style="text-decoration: underline;">9</span>              498         1 SCP345_580   B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>                0.083<span style="text-decoration: underline;">4</span>              573         1 SCP345_860   B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>                0.035<span style="text-decoration: underline;">3</span>              101         1 SCP424_pbmc1 B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>                0.034<span style="text-decoration: underline;">1</span>              108         1 SCP424_pbmc2 B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>                0.076<span style="text-decoration: underline;">8</span>               46         1 SCP591       B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>                0.054<span style="text-decoration: underline;">8</span>              262         1 SI-GA-E5     B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>                0.081<span style="text-decoration: underline;">5</span>              623         1 SI-GA-E7     B1        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 710 more rows</span></span>
-<span class="r-in"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -123,8 +131,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>
-2.0.2.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.9000.</p>
 </div>
 
       </footer></div>
