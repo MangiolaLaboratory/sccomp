@@ -644,7 +644,7 @@ data_spread_to_model_input =
       distinct()
 
     # If constrasts is set it is a bit more complicated
-    if(! contrasts |> identical("NULL"))
+    if(! contrasts |> is.null())
       data_for_model$covariate_parameter_dictionary =
         data_for_model$covariate_parameter_dictionary |>
         distinct() |>
@@ -1112,7 +1112,7 @@ plot_boxplot = function(
   .sample = enquo(.sample)
 
 
-  if(.data |> attr("contrasts") |> identical("NULL"))
+  if(.data |> attr("contrasts") |> is.null())
     significance_colors =
       .data %>%
       pivot_longer(
@@ -1165,8 +1165,7 @@ plot_boxplot = function(
   if("fit" %in% names(attributes(.data))){
 
     simulated_proportion =
-      .data %>%
-      replicate_data( number_of_draws = 100) %>%
+      replicate_data(.data, number_of_draws = 100) %>%
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
 
     my_boxplot = my_boxplot +
@@ -1276,7 +1275,7 @@ draws_to_statistics = function(draws, contrasts, X, false_positive_rate, test_co
 
   factor_of_interest = X %>% colnames()
 
-  if(contrasts |> identical("NULL")){
+  if(contrasts |> is.null()){
 
     draws =
       draws |>
