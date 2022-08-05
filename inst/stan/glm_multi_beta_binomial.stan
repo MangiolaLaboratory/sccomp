@@ -120,8 +120,8 @@ parameters{
 }
 transformed parameters{
 		matrix[C,M] beta_raw;
-		matrix[A,M] beta_intercept_slope;
-		matrix[A,M] alpha_intercept_slope;
+		matrix[Ar,M] beta_intercept_slope;
+		matrix[Ar,M] alpha_intercept_slope;
     matrix[M, N] precision = (Xa * alpha)';
     matrix[C,M] beta;
 
@@ -143,6 +143,9 @@ transformed parameters{
   if(A == 1)  alpha_intercept_slope = alpha;
   else alpha_intercept_slope = (XA * alpha);
 
+  // // Do non centered parameterisation
+   for (a in 1:Ar) for(m in 1:M) alpha_intercept_slope[a,m] = (beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1]) + prec_sd * alpha_intercept_slope[a,m];
+
 }
 model{
 
@@ -156,7 +159,6 @@ model{
   // Convert the matrix m to a column vector in column-major order.
   mu_array = to_vector(mu);
   precision_array = to_vector(exp(precision));
-
 
   if(use_data == 1){
     target += beta_binomial_lpmf(
@@ -172,10 +174,9 @@ model{
 
     for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
 
-
     // If mean-variability association is bimodal such as for single-cell RNA use mixed model
     if(bimodal_mean_variability_association == 1){
-      for (a in 1:A)
+      for (a in 1:Ar)
       for(m in 1:M)
         target += log_mix(mix_p,
                         normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
@@ -184,7 +185,9 @@ model{
 
     // If no bimodal
     } else {
-      to_vector(alpha_intercept_slope) ~ normal(to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd );
+
+      to_vector(alpha_intercept_slope) ~ std_normal();
+     // to_vector(alpha_intercept_slope) ~ normal(to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd);
     }
 
   // If no priors
