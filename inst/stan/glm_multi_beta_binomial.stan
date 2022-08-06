@@ -109,40 +109,28 @@ parameters{
 }
 transformed parameters{
 		matrix[C,M] beta_raw;
-		matrix[A,M] beta_intercept_slope;
-		matrix[A,M] alpha_intercept_slope;
     matrix[M, N] precision = (Xa * alpha)';
-matrix[C,M] beta;
+    matrix[C,M] beta;
 
 for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
-
-// Beta
 beta = R_ast_inverse * beta_raw; // coefficients on x
-
-// All this because if A ==1 we have ocnversion problems
-// This works only with two discrete groups
-if(A == 1) beta_intercept_slope = to_matrix(beta[A,], A, M, 0);
-else beta_intercept_slope = (XA * beta[1:A,]);
-if(A == 1)  alpha_intercept_slope = alpha;
-else alpha_intercept_slope = (XA * alpha);
 
 }
 model{
 
-  // Calculate MU
-  matrix[M, N] mu = (Q_ast * beta_raw)';
-  vector[N*M] mu_array;
-  vector[N*M] precision_array;
-  
-  for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
-
-  // Convert the matrix m to a column vector in column-major order.
-  mu_array = to_vector(mu);
-  precision_array = to_vector(exp(precision));
-
-
   if(use_data == 1){
+     // Calculate MU
+     matrix[M, N] mu = (Q_ast * beta_raw)';
+     vector[N*M] mu_array;
+     vector[N*M] precision_array;
+
+      for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+
+      // Convert the matrix m to a column vector in column-major order.
+     mu_array = to_vector(mu);
+     precision_array = to_vector(exp(precision));
+
     target += beta_binomial_lpmf(
       y_array[truncation_not_idx] |
       exposure_array[truncation_not_idx],
@@ -155,20 +143,19 @@ model{
   if(exclude_priors == 0){
 
     for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
-
+    if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 1 );
 
     // If mean-variability association is bimodal such as for single-cell RNA use mixed model
     if(bimodal_mean_variability_association == 1){
-      for (a in 1:A)
       for(m in 1:M)
         target += log_mix(mix_p,
-                        normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                        normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                        normal_lpdf(alpha[1,m] | beta[1,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+                        normal_lpdf(alpha[1,m] | beta[1,m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
                       );
 
     // If no bimodal
     } else {
-      to_vector(alpha_intercept_slope) ~ normal(to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd );
+      to_vector(alpha[1]) ~ normal(to_vector(beta[1]) * prec_coeff[2] + prec_coeff[1], prec_sd );
     }
 
   // If no priors
