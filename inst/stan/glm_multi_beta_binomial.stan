@@ -120,45 +120,28 @@ parameters{
 }
 transformed parameters{
 		matrix[C,M] beta_raw;
-		matrix[A,M] beta_intercept_slope;
-		matrix[A,M] alpha_intercept_slope;
     matrix[M, N] precision = (Xa * alpha)';
     matrix[C,M] beta;
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
-
-  // Beta
   beta = R_ast_inverse * beta_raw; // coefficients on x
-
-  // All this because if A ==1 we have conversion problems
-  // This works only with two discrete groups
-  if(A == 1) {
-
-    // If I have an intercept in the design matrix
-    if(intercept_in_design) beta_intercept_slope = to_matrix(beta[1,], 1, M, 0);
-    else beta_intercept_slope = average_by_col(beta);
-  }
-  else beta_intercept_slope = (XA * beta[1:A,]);
-  if(A == 1)  alpha_intercept_slope = alpha;
-  else alpha_intercept_slope = (XA * alpha);
 
 }
 model{
 
-  // Calculate MU
-  matrix[M, N] mu = (Q_ast * beta_raw)';
-  vector[N*M] mu_array;
-  vector[N*M] precision_array;
-
-  for(n in 1:N) { mu[,n] = softmax(mu[,n]); }
-
-  // Convert the matrix m to a column vector in column-major order.
-  mu_array = to_vector(mu);
-  precision_array = to_vector(exp(precision));
-
-
   if(use_data == 1){
+     // Calculate MU
+     matrix[M, N] mu = (Q_ast * beta_raw)';
+     vector[N*M] mu_array;
+     vector[N*M] precision_array;
+
+      for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+
+      // Convert the matrix m to a column vector in column-major order.
+     mu_array = to_vector(mu);
+     precision_array = to_vector(exp(precision));
+
     target += beta_binomial_lpmf(
       y_array[truncation_not_idx] |
       exposure_array[truncation_not_idx],
@@ -169,29 +152,33 @@ model{
 
   // Priors
   if(exclude_priors == 0){
-
-    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
-
-
+  
+    // Setup baseline correlation between variability and abundance
+    row_vector[M] abundance_baseline = intercept_in_design ? beta[1] : average_by_col(beta);
+    row_vector[M] variability_baseline = intercept_in_design ? alpha[1] : average_by_col(alpha);
+    
     // If mean-variability association is bimodal such as for single-cell RNA use mixed model
     if(bimodal_mean_variability_association == 1){
-      for (a in 1:A)
       for(m in 1:M)
         target += log_mix(mix_p,
-                        normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                        normal_lpdf(alpha_intercept_slope[a,m] | beta_intercept_slope[a,m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                        normal_lpdf(abundance_baseline[m] | abundance_baseline[m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+                        normal_lpdf(abundance_baseline[m] | abundance_baseline[m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
                       );
 
     // If no bimodal
     } else {
-      to_vector(alpha_intercept_slope) ~ normal(to_vector(beta_intercept_slope) * prec_coeff[2] + prec_coeff[1], prec_sd );
+      abundance_baseline ~ normal(abundance_baseline * prec_coeff[2] + prec_coeff[1], prec_sd );
     }
 
-  // If no priors
-  } else {
-    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 2 );
-    for (a in 1:A) alpha[a]  ~ normal( 5, 2 );
-  }
+  } 
+
+// Priors abundance
+beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
+if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
+
+// Priors variability
+alpha[a]  ~ normal( prec_coeff[1], prec_sd );
+if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 1 );
 
   // Hyper priors
   mix_p ~ beta(1,5);
