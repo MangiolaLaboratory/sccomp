@@ -503,7 +503,7 @@ multi_beta_binomial_glm = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-  contrasts = contrasts |> enquo() |> quo_names()
+  #contrasts = contrasts |> enquo() |> quo_names()
 
   result_list =
     estimate_multi_beta_binomial_glm(
