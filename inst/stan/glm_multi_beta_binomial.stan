@@ -40,12 +40,32 @@ functions{
       rep_row_vector(1.0, rows(beta)) * beta / rows(beta);
   }
 
+real abundance_variability_regression(row_vector variability, row_vector abundance, real[] prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
+
+  real lp = 0;
+      // If mean-variability association is bimodal such as for single-cell RNA use mixed model
+    if(bimodal_mean_variability_association == 1){
+      for(m in 1:cols(variability))
+        lp += log_mix(mix_p,
+                        normal_lpdf(variability[m] | abundance[m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+                        normal_lpdf(variability[m] | abundance[m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                      );
+
+    // If no bimodal
+    } else {
+      lp =  normal_lpdf(variability | abundance * prec_coeff[2] + prec_coeff[1], prec_sd );
+    }
+
+    return(lp);
+}
+
 }
 data{
   int<lower=1> N;
   int<lower=1> M;
   int<lower=1> C;
-  int<lower=1> A;
+  int<lower=1> A; // How many column in variability design\
+  int<lower=1> A_intercept_columns; // How many intercept column in varibility design
   int<lower=1> Ar; // Rows of unique variability design
   int exposure[N];
   int y[N,M];
@@ -116,7 +136,6 @@ parameters{
 }
 transformed parameters{
 		matrix[C,M] beta_raw;
-
     matrix[M, N] precision = (Xa * alpha)';
     matrix[C,M] beta;
 
@@ -125,6 +144,9 @@ transformed parameters{
   beta = R_ast_inverse * beta_raw; // coefficients on x
 
 }
+
+
+
 model{
 
   if(use_data == 1){
@@ -150,26 +172,42 @@ model{
   // Priors
   if(exclude_priors == 0){
 
-    // If mean-variability association is bimodal such as for single-cell RNA use mixed model
-    if(bimodal_mean_variability_association == 1){
-      for(m in 1:M)
-        target += log_mix(mix_p,
-                        normal_lpdf(alpha[1, m] | beta[1, m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                        normal_lpdf(alpha[1, m] | beta[1, m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
-                      );
 
-    // If no bimodal
-    } else {
-      alpha[1] ~ normal(beta[1] * prec_coeff[2] + prec_coeff[1], prec_sd );
+    // If interceopt in design or I have complex variability design
+    if(intercept_in_design || A > 1){
+
+      // Loop across the intercept columns
+      for(a in 1:A_intercept_columns)
+        target += abundance_variability_regression(
+          alpha[a],
+          beta[a],
+          prec_coeff,
+          prec_sd,
+          bimodal_mean_variability_association,
+          mix_p
+        );
+
+      // Variability effect
+      if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
     }
 
-    if(A>1) for(a in 2:A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
+    // If intercept-less model and A == 1 I have to average the whole beta covariate
+    else{
+      target += abundance_variability_regression(
+        alpha[1],
+        average_by_col(beta),
+        prec_coeff,
+        prec_sd,
+        bimodal_mean_variability_association,
+          mix_p
+      );
 
+    }
   }
   else{
      // Priors variability
-    alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
-    if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 2 );
+    for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+    if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
   }
 
   // Priors abundance
