@@ -48,6 +48,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             .count,
 
                                             # Secondary parameters
+                                            contrasts = NULL,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
@@ -89,6 +90,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference == "all",
         formula_variability = formula_variability,
+        contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data
       )
@@ -145,6 +147,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         formula_variability = ~1,
+        contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data
       )
@@ -217,6 +220,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         formula_variability = formula_variability,
+        contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data
       )
@@ -364,6 +368,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 #' @param data_for_model Parsed data
 #' @param check_outliers A boolean
 #' @param truncation_df2 Truncation data frame
+#' @param contrasts A vector of expressions. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be `constrasts = c(treatmentyes - treatmentno)`.
 #'
 #' @noRd
 #'
@@ -379,115 +384,52 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
                                                     check_outliers,
                                                     truncation_df2 = NULL,
                                                     variance_association = FALSE,
-                                                    test_composition_above_logit_fold_change ) {
+                                                    test_composition_above_logit_fold_change,
+                                                    contrasts = NULL) {
 
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
-  do_test = ncol(data_for_model$X) > 1
-
-  # parsed_beta =
-  #   fit %>%
-  #   summary_to_tibble("beta", "C", "M") %>%
-  #   left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
-  #   nest(beta_posterior_1 = -M)
-
-
-
-  # Parse fit
-  false_positive_rate = percent_false_positive/100
-  factor_of_interest = data_for_model$X %>% colnames()
-  median_factor_of_interest = sprintf(".median_%s", factor_of_interest)
-  effect_column_name = sprintf("c_effect_%s", factor_of_interest)
-
-
-  beta_CI =
+  abundance_CI =
     fit %>%
-    summary_to_tibble("beta", "C", "M", probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))) %>%
+    draws_to_tibble_x_y("beta", "C", "M") |>
+    draws_to_statistics(
+      contrasts,
+      data_for_model$X,
+      percent_false_positive/100,
+      test_composition_above_logit_fold_change,
+      "c_"
+    )
 
-    # Drop columns I dont need
-    select(1, 2, 3, 7, 8, 9) %>%
+  variability_CI =
+    fit %>%
+    draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
 
-    # Rename column to match %
-    rename(
-      c_lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
-      c_effect := !!as.symbol(sprintf("%s%s", "50", "%")) ,
-      c_upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
-    ) %>%
-    left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
-    select(-C, -.variable)
+    # We want variability, not concentration
+    mutate(.value = -.value) |>
 
-  if(data_for_model$A > 1) {
-    variability_effect_column_name = sprintf("v_effect_%s", factor_of_interest) %>% as.symbol()
+    draws_to_statistics(
+      contrasts,
+      data_for_model$XA,
+      percent_false_positive/100,
+      test_composition_above_logit_fold_change,
+      "v_"
+    )
 
-    factor_of_interest_variance = data_for_model$Xa %>% colnames()
-    median_factor_of_interest_variance = sprintf(".median_%s", factor_of_interest_variance)
-
-    alpha_CI =
-      fit %>%
-      summary_to_tibble("alpha_normalised", "C", "M", probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))) %>%
-
-      # Drop columns I dont need
-      select(1, 2, 3, 7, 8, 9) %>%
-
-      # Rename column to match %
-      rename(
-        v_lower := !!as.symbol(sprintf("%s%s", false_positive_rate/2*100, "%")) ,
-        v_effect := !!as.symbol(sprintf("%s%s", "50", "%")) ,
-        v_upper := !!as.symbol(sprintf("%s%s", (1-(false_positive_rate/2))*100, "%")) ,
-      ) %>%
-
-      # Invert concentration to variability
-      mutate(
-        v_lower = -v_lower ,
-        v_effect =  -v_effect,
-        v_upper = -v_upper ,
-      ) %>%
-
-      left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
-      select(-C, -.variable)
-  }
-
-
-  beta_CI %>%
-
-    # Add probability if do_test
-    when(
-      do_test ~ left_join(
-        .,
-        get_probability_non_zero(fit, "beta", prefix="c", test_above_logit_fold_change = test_composition_above_logit_fold_change) %>%
-          setNames(c("M",  factor_of_interest)) %>%
-          gather(C_name, c_pH0, -M) %>%
-          with_groups(C_name, ~ mutate(.x, c_FDR = get_FDR(c_pH0))),
-        by=c("M", "C_name")
-      ),
-      ~ (.)
-    ) %>%
+  abundance_CI |>
 
     # Add ALPHA
-    when(do_test & (data_for_model$A > 1) ~ left_join(.,  alpha_CI ,  by=c("M", "C_name")), ~(.)) %>%
-
-    # ADD CI alpha
-    when(
-      do_test & (data_for_model$A > 1) ~ left_join(
-        .,
-        get_probability_non_zero(fit, "alpha_normalised", prefix="v", test_above_logit_fold_change = 0.2) %>%
-        setNames(c("M",  factor_of_interest_variance)) %>%
-          gather(C_name, v_pH0, -M) %>%
-          with_groups(C_name, ~ mutate(.x, v_FDR = get_FDR(v_pH0))),
-        by=c("M", "C_name")
-      ),
-      ~ (.)
-    ) %>%
+    left_join(variability_CI) |>
+    suppressMessages() |>
 
     # Add easy to understand covariate labels
     left_join(
-      data_for_model$covariate_parameter_dictionary %>%
+      data_for_model$covariate_parameter_dictionary |>
         select(covariate, design_matrix_col),
-      by = c("C_name" = "design_matrix_col" )
+      by = c("parameter" = "design_matrix_col" )
     ) %>%
-    select(parameter  = C_name, covariate, everything())
+    select(parameter, covariate, everything())
 
 }
 
@@ -540,6 +482,7 @@ multi_beta_binomial_glm = function(.data,
                                    .count,
 
                                    # Secondary parameters
+                                   contrasts = NULL,
                                    prior_mean_variable_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
@@ -560,7 +503,7 @@ multi_beta_binomial_glm = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-
+  #contrasts = contrasts |> enquo() |> quo_names()
 
   result_list =
     estimate_multi_beta_binomial_glm(
@@ -570,6 +513,7 @@ multi_beta_binomial_glm = function(.data,
       .cell_group = !!.cell_group,
       .count = !!.count,
       formula_variability = formula_variability,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive,
       check_outliers = check_outliers,
@@ -594,7 +538,8 @@ multi_beta_binomial_glm = function(.data,
     percent_false_positive,
     result_list$truncation_df2,
     variance_association = variance_association,
-    test_composition_above_logit_fold_change = test_composition_above_logit_fold_change
+    test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
+    contrasts = contrasts
   ) %>%
 
     # Add cell name
@@ -622,7 +567,9 @@ multi_beta_binomial_glm = function(.data,
     # Attach association mean concentration
     add_attr(get_mean_precision_association(result_list$fit), "mean_concentration_association") %>%
     when(pass_fit ~ add_attr(., result_list$fit, "fit"), ~ (.)) %>%
-    add_attr(result_list$data_for_model, "model_input")
+    add_attr(result_list$data_for_model, "model_input") |>
+    add_attr(contrasts, "contrasts")
+
 
 }
 

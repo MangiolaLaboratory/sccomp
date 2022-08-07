@@ -11,6 +11,7 @@ sccomp_glm(
   .sample,
   .cell_group,
   .count = NULL,
+  contrasts = NULL,
   prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0, 0.6),
     standard_deviation = c(5, 8)),
   check_outliers = TRUE,
@@ -40,6 +41,8 @@ sccomp_glm(
 \item{.cell_group}{A column name as symbol. The cell_group identifier}
 
 \item{.count}{A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.}
+
+\item{contrasts}{A vector of expressions. For example if your formula is \code{~ 0 + treatment} and the covariate treatment has values \code{yes} and \code{no}, your contrast could be \code{constrasts = c(treatmentyes - treatmentno)}.}
 
 \item{prior_mean_variable_association}{A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
 

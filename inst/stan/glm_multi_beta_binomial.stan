@@ -35,6 +35,14 @@ functions{
     return y;
   }
 
+  matrix average_by_col(matrix beta){
+    return to_matrix(
+      rep_row_vector(1.0, rows(beta)) * beta / rows(beta),
+      1, cols(beta), 0
+    );
+
+
+  }
 
 }
 data{
@@ -67,6 +75,9 @@ data{
   int<lower=0, upper=1> exclude_priors;
   int<lower=0, upper=1> bimodal_mean_variability_association;
   int<lower=0, upper=1> use_data;
+
+  // Does the design icludes intercept
+  int <lower=0, upper=1> intercept_in_design;
 
 }
 transformed data{
@@ -112,9 +123,9 @@ transformed parameters{
     matrix[M, N] precision = (Xa * alpha)';
     matrix[C,M] beta;
 
-for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
 
-beta = R_ast_inverse * beta_raw; // coefficients on x
+  beta = R_ast_inverse * beta_raw; // coefficients on x
 
 }
 model{
@@ -141,28 +152,33 @@ model{
 
   // Priors
   if(exclude_priors == 0){
-
-    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, x_raw_sigma );
-    if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 1 );
-
+  
+    // Setup baseline correlation between variability and abundance
+    row_vector[M] abundance_baseline = intercept_in_design ? beta[1] : average_by_col(beta);
+    row_vector[M] variability_baseline = intercept_in_design ? alpha[1] : average_by_col(alpha);
+    
     // If mean-variability association is bimodal such as for single-cell RNA use mixed model
     if(bimodal_mean_variability_association == 1){
       for(m in 1:M)
         target += log_mix(mix_p,
-                        normal_lpdf(alpha[1,m] | beta[1,m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                        normal_lpdf(alpha[1,m] | beta[1,m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                        normal_lpdf(abundance_baseline[m] | abundance_baseline[m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+                        normal_lpdf(abundance_baseline[m] | abundance_baseline[m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
                       );
 
     // If no bimodal
     } else {
-      to_vector(alpha[1]) ~ normal(to_vector(beta[1]) * prec_coeff[2] + prec_coeff[1], prec_sd );
+      abundance_baseline ~ normal(abundance_baseline * prec_coeff[2] + prec_coeff[1], prec_sd );
     }
 
-  // If no priors
-  } else {
-    for(i in 1:C) to_vector(beta_raw_raw[i]) ~ normal ( 0, 2 );
-    for (a in 1:A) alpha[a]  ~ normal( 5, 2 );
-  }
+  } 
+
+// Priors abundance
+beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
+if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
+
+// Priors variability
+alpha[a]  ~ normal( prec_coeff[1], prec_sd );
+if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 1 );
 
   // Hyper priors
   mix_p ~ beta(1,5);
@@ -175,8 +191,12 @@ model{
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
 
-
-  if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
+  if(intercept_in_design){
+    if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
+  }
+  else{
+    for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
+  }
 
 }
 
