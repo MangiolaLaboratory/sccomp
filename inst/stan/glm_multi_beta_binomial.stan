@@ -35,13 +35,9 @@ functions{
     return y;
   }
 
-  matrix average_by_col(matrix beta){
-    return to_matrix(
-      rep_row_vector(1.0, rows(beta)) * beta / rows(beta),
-      1, cols(beta), 0
-    );
-
-
+  row_vector average_by_col(matrix beta){
+    return
+      rep_row_vector(1.0, rows(beta)) * beta / rows(beta);
   }
 
 }
@@ -152,33 +148,30 @@ model{
 
   // Priors
   if(exclude_priors == 0){
-  
-    // Setup baseline correlation between variability and abundance
-    row_vector[M] abundance_baseline = intercept_in_design ? beta[1] : average_by_col(beta);
-    row_vector[M] variability_baseline = intercept_in_design ? alpha[1] : average_by_col(alpha);
-    
+
     // If mean-variability association is bimodal such as for single-cell RNA use mixed model
     if(bimodal_mean_variability_association == 1){
+      for (a in 1:A)
       for(m in 1:M)
         target += log_mix(mix_p,
-                        normal_lpdf(abundance_baseline[m] | abundance_baseline[m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                        normal_lpdf(abundance_baseline[m] | abundance_baseline[m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                        normal_lpdf(alpha[a, m] | beta[a, m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+                        normal_lpdf(alpha[a, m] | beta[a, m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
                       );
 
     // If no bimodal
     } else {
-      abundance_baseline ~ normal(abundance_baseline * prec_coeff[2] + prec_coeff[1], prec_sd );
+      for(a in 1:A) alpha[a] ~ normal(beta[a] * prec_coeff[2] + prec_coeff[1], prec_sd );
     }
 
-  } 
+  }
 
-// Priors abundance
-beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
-if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
+  // Priors abundance
+  beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
+  if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
 
-// Priors variability
-alpha[a]  ~ normal( prec_coeff[1], prec_sd );
-if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 1 );
+  // Priors variability
+  alpha[1]  ~ normal( prec_coeff[1], prec_sd );
+  if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 1 );
 
   // Hyper priors
   mix_p ~ beta(1,5);
