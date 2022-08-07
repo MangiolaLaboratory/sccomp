@@ -13,7 +13,7 @@ sccomp_glm(
   .count = NULL,
   contrasts = NULL,
   prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0, 0.6),
-    standard_deviation = c(5, 8)),
+    standard_deviation = c(20, 40)),
   check_outliers = TRUE,
   bimodal_mean_variability_association = FALSE,
   cores = detectCores(),
@@ -44,7 +44,7 @@ sccomp_glm(
 
 \item{contrasts}{A vector of expressions. For example if your formula is \code{~ 0 + treatment} and the covariate treatment has values \code{yes} and \code{no}, your contrast could be \code{constrasts = c(treatmentyes - treatmentno)}.}
 
-\item{prior_mean_variable_association}{A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
+\item{prior_mean_variable_association}{A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
 
 \item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
 

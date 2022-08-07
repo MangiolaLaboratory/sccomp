@@ -152,27 +152,31 @@ model{
 
     // If mean-variability association is bimodal such as for single-cell RNA use mixed model
     if(bimodal_mean_variability_association == 1){
-      for (a in 1:Ar)
       for(m in 1:M)
         target += log_mix(mix_p,
-                        normal_lpdf(alpha[a, m] | beta[a, m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                        normal_lpdf(alpha[a, m] | beta[a, m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                        normal_lpdf(alpha[1, m] | beta[1, m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+                        normal_lpdf(alpha[1, m] | beta[1, m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
                       );
 
     // If no bimodal
     } else {
-      for(a in 1:A) alpha[a] ~ normal(beta[a] * prec_coeff[2] + prec_coeff[1], prec_sd );
+      alpha[1] ~ normal(beta[1] * prec_coeff[2] + prec_coeff[1], prec_sd );
     }
 
+    if(A>1) for(a in 2:A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
+
+  }
+  else{
+     // Priors variability
+    alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+    if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 2 );
   }
 
   // Priors abundance
   beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
   if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
 
-  // Priors variability
-  alpha[1]  ~ normal( prec_coeff[1], prec_sd );
-  if(A>1) for(a in 2:A) to_vector(alpha[a]) ~ normal ( 0, 1 );
+
 
   // Hyper priors
   mix_p ~ beta(1,5);

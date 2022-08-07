@@ -637,7 +637,7 @@ data_spread_to_model_input =
       .data_spread %>%
       select(parse_formula(formula)) %>%
       distinct() %>%
-      gather(covariate, parameter) %>%
+      pivot_longer(everything(), names_to =  "covariate", values_to = "parameter") %>%
       unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
       select(-parameter) |>
       filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
