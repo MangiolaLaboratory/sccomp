@@ -116,6 +116,7 @@ parameters{
 }
 transformed parameters{
 		matrix[C,M] beta_raw;
+
     matrix[M, N] precision = (Xa * alpha)';
     matrix[C,M] beta;
 
@@ -151,7 +152,7 @@ model{
 
     // If mean-variability association is bimodal such as for single-cell RNA use mixed model
     if(bimodal_mean_variability_association == 1){
-      for (a in 1:A)
+      for (a in 1:Ar)
       for(m in 1:M)
         target += log_mix(mix_p,
                         normal_lpdf(alpha[a, m] | beta[a, m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
