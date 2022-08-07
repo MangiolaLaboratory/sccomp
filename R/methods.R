@@ -896,6 +896,7 @@ plots$boxplot =
 
   # Select non numerical types
   .data %>%
+  filter(!is.na(covariate)) |>
    distinct(covariate) %>%
     pull(covariate) |>
 
