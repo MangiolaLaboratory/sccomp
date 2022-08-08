@@ -1089,8 +1089,9 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025,
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
 plot_boxplot = function(
-    .data, data_proportion, factor_of_interest, .cell_group, .sample, significance_threshold = 0.025, my_theme
-    ){
+    .data, data_proportion, factor_of_interest, .cell_group,
+    .sample, significance_threshold = 0.025, my_theme
+  ){
 
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
