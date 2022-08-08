@@ -126,7 +126,7 @@ transformed data{
 }
 parameters{
 	matrix[C, M-1] beta_raw_raw;
-	matrix[A, M] alpha;
+	matrix[A, M] alpha; // Variability
 
 	// To exclude
   real prec_coeff[2];

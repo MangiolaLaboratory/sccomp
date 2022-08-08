@@ -589,6 +589,8 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   replicate_data()
 #'
 replicate_data <- function(.data,
+                           formula_composition = NULL,
+                           formula_variability = NULL,
                            number_of_draws = 1,
                            mcmc_seed = sample(1e5, 1)) {
   UseMethod("replicate_data", .data)
@@ -597,6 +599,8 @@ replicate_data <- function(.data,
 #' @export
 #'
 replicate_data.data.frame = function(.data,
+                                     formula_composition = NULL,
+                                     formula_variability = NULL,
                                      number_of_draws = 1,
                                      mcmc_seed = sample(1e5, 1)){
 
@@ -613,11 +617,57 @@ replicate_data.data.frame = function(.data,
 
   fit_matrix = as.matrix(attr(.data, "fit") )
 
+  # Add subset of coefficients
+  if(is.null(formula_composition)) {
+    X_which =
+    .data |>
+      attr("model_input") %$%
+      X |>
+    ncol() |>
+    seq_len()
+  }
+  else {
+    X_which =  .data |>
+      attr("model_input") %$%
+      X %>%
+      colnames() %in%
+      colnames(model.matrix(formula_composition, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
+      which()
+
+  }
+
+  if(is.null(formula_variability)) {
+    XA_which =
+      .data |>
+      attr("model_input") %$%
+      XA |>
+      ncol() |>
+      seq_len()
+  }
+  else{
+    XA_which =
+      .data |>
+      attr("model_input") %$%
+      XA %>%
+      colnames() %in%
+      colnames(model.matrix(formula_variability, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
+      which()
+  }
+
+
   # Generate quantities
   rstan::gqs(
     my_model,
     draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
-    data = model_input,
+    data = model_input |> c(
+
+      # Add subset of coefficients
+      length_X_which = length(X_which),
+      length_XA_which = length(XA_which),
+      X_which,
+      XA_which
+
+    ),
     seed = mcmc_seed
   ) %>%
 
@@ -692,6 +742,7 @@ replicate_data.data.frame = function(.data,
 simulate_data <- function(.data,
                           .estimate_object,
                           formula_composition,
+                          formula_variability,
                        .sample = NULL,
                        .cell_group = NULL,
                        .coefficients = NULL,
@@ -712,6 +763,7 @@ simulate_data <- function(.data,
 simulate_data.data.frame = function(.data,
                                     .estimate_object,
                                     formula_composition,
+                                    formula_variability,
                                     .sample = NULL,
                                     .cell_group = NULL,
                                     .coefficients = NULL,
@@ -743,7 +795,11 @@ simulate_data.data.frame = function(.data,
     nest(data___ = -!!.sample) %>%
     mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) %>%
     unnest(data___) %>%
-    data_simulation_to_model_input(formula_composition, !!.sample, !!.cell_group, .exposure, !!.coefficients )
+    data_simulation_to_model_input(
+      formula_composition, formula_variability,
+      !!.sample, !!.cell_group, .exposure, !!.coefficients,
+      .estimate_object = .estimate_object
+    )
 
 
 
