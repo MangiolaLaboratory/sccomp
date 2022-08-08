@@ -634,9 +634,12 @@ data_spread_to_model_input =
 
     # Add parameter covariate dictionary
     data_for_model$covariate_parameter_dictionary =
-      .data_spread %>%
-      select(parse_formula(formula)) %>%
-      distinct() %>%
+      .data_spread  |>
+      select(parse_formula(formula))  |>
+      distinct()  |>
+
+      # Drop numerical
+      select_if(function(x) !is.numeric(x)) |>
       pivot_longer(everything(), names_to =  "covariate", values_to = "parameter") %>%
       unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
       select(-parameter) |>
