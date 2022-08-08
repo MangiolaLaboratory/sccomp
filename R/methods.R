@@ -21,7 +21,7 @@
 #' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
 #' @param contrasts A vector of expressions. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be `constrasts = c(treatmentyes - treatmentno)`.
-#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
+#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
 #'
@@ -84,7 +84,7 @@ sccomp_glm <- function(.data,
 
                        # Secondary arguments
                        contrasts = NULL,
-                       prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                       prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                        check_outliers = TRUE,
                        bimodal_mean_variability_association = FALSE,
 
@@ -113,7 +113,7 @@ sccomp_glm.Seurat = function(.data,
 
                              # Secondary arguments
                              contrasts = NULL,
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
                              bimodal_mean_variability_association = FALSE,
 
@@ -173,7 +173,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
 
                                            # Secondary arguments
                                            contrasts = NULL,
-                                           prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                           prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                            check_outliers = TRUE,
                                            bimodal_mean_variability_association = FALSE,
 
@@ -235,7 +235,7 @@ sccomp_glm.DFrame = function(.data,
 
                              # Secondary arguments
                              contrasts = NULL,
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
                              bimodal_mean_variability_association = FALSE,
 
@@ -296,7 +296,7 @@ sccomp_glm.data.frame = function(.data,
 
                                  # Secondary arguments
                                  contrasts = NULL,
-                                 prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                 prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                  check_outliers = TRUE,
                                  bimodal_mean_variability_association = FALSE,
 
@@ -398,7 +398,7 @@ sccomp_glm_data_frame_raw = function(.data,
 
                                      # Secondary arguments
                                      contrasts = NULL,
-                                     prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                     prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = "outlier_detection",
@@ -487,7 +487,7 @@ sccomp_glm_data_frame_counts = function(.data,
 
                                         # Secondary arguments
                                         contrasts = NULL,
-                                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = "outlier_detection",
@@ -896,6 +896,7 @@ plots$boxplot =
 
   # Select non numerical types
   .data %>%
+  filter(!is.na(covariate)) |>
    distinct(covariate) %>%
     pull(covariate) |>
 
