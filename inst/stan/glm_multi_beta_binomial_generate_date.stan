@@ -5,7 +5,7 @@ data {
 	int A;
 	int exposure[N];
 	matrix[N, C] X;
-  // matrix[N, A] XA;
+  matrix[N, A] Xa; // The variability design
 
 	int is_truncated;
 	real<lower=1> truncation_ajustment;
@@ -34,7 +34,7 @@ generated quantities{
   real generated_exposure[N];
 
   matrix[M,N] mu = (X[,X_which] * beta[X_which,])';
-  matrix[M,N] precision = (X[,XA_which] * alpha[XA_which,])'  / (is_truncated ? truncation_ajustment : 1);
+  matrix[M,N] precision = (Xa[,XA_which] * alpha[XA_which,])' / (is_truncated ? truncation_ajustment : 1);
 
 	for(i in 1:N) mu[,i] = softmax(mu[,i]);
 	for(i in 1:N) {

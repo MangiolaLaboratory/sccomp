@@ -20,7 +20,8 @@
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
-#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
+#' @param contrasts A vector of expressions. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be `constrasts = c(treatmentyes - treatmentno)`.
+#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
 #'
@@ -82,7 +83,8 @@ sccomp_glm <- function(.data,
                        .count = NULL,
 
                        # Secondary arguments
-                       prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                       contrasts = NULL,
+                       prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                        check_outliers = TRUE,
                        bimodal_mean_variability_association = FALSE,
 
@@ -110,7 +112,8 @@ sccomp_glm.Seurat = function(.data,
                              .count = NULL,
 
                              # Secondary arguments
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                             contrasts = NULL,
+                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
                              bimodal_mean_variability_association = FALSE,
 
@@ -133,12 +136,14 @@ sccomp_glm.Seurat = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
 
+
   .data[[]] %>%
     sccomp_glm(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
 
       !!.sample,!!.cell_group,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
@@ -167,7 +172,8 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            .count = NULL,
 
                                            # Secondary arguments
-                                           prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                           contrasts = NULL,
+                                           prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                            check_outliers = TRUE,
                                            bimodal_mean_variability_association = FALSE,
 
@@ -191,6 +197,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
 
+
   .data %>%
     colData() %>%
     sccomp_glm(
@@ -199,6 +206,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
 
       !!.sample,!!.cell_group,
       check_outliers = check_outliers,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -226,7 +234,8 @@ sccomp_glm.DFrame = function(.data,
                              .count = NULL,
 
                              # Secondary arguments
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                             contrasts = NULL,
+                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
                              bimodal_mean_variability_association = FALSE,
 
@@ -251,12 +260,14 @@ sccomp_glm.DFrame = function(.data,
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
+
   .data %>%
     as.data.frame %>%
     sccomp_glm(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       !!.sample,!!.cell_group,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
@@ -284,7 +295,8 @@ sccomp_glm.data.frame = function(.data,
                                  .count = NULL,
 
                                  # Secondary arguments
-                                 prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                 contrasts = NULL,
+                                 prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                  check_outliers = TRUE,
                                  bimodal_mean_variability_association = FALSE,
 
@@ -306,6 +318,7 @@ sccomp_glm.data.frame = function(.data,
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
+
   # Choose linear model
   my_glm_model =
     noise_model %>%
@@ -324,6 +337,7 @@ sccomp_glm.data.frame = function(.data,
 
         !!.sample,
         !!.cell_group,
+        contrasts = contrasts,
         prior_mean_variable_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
@@ -349,6 +363,7 @@ sccomp_glm.data.frame = function(.data,
         !!.sample,
         !!.cell_group,
         !!.count,
+        contrasts = contrasts,
         prior_mean_variable_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
@@ -382,7 +397,8 @@ sccomp_glm_data_frame_raw = function(.data,
                                      .count = NULL,
 
                                      # Secondary arguments
-                                     prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                     contrasts = NULL,
+                                     prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = "outlier_detection",
@@ -404,6 +420,7 @@ sccomp_glm_data_frame_raw = function(.data,
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
+
 
   # Check if columns exist
   check_columns_exist(.data, c(
@@ -444,6 +461,7 @@ sccomp_glm_data_frame_raw = function(.data,
       .cell_group = !!.cell_group,
       .count = count,
       my_glm_model = my_glm_model,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
@@ -468,7 +486,8 @@ sccomp_glm_data_frame_counts = function(.data,
                                         .count = NULL,
 
                                         # Secondary arguments
-                                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                        contrasts = NULL,
+                                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = "outlier_detection",
@@ -487,6 +506,7 @@ sccomp_glm_data_frame_counts = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
+
 
   #Check column class
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)
@@ -519,6 +539,7 @@ sccomp_glm_data_frame_counts = function(.data,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
       .count = !!.count,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
@@ -931,11 +952,9 @@ plots$boxplot =
 
   # Select non numerical types
   .data %>%
-    slice(1) %>%
-    unnest(count_data) %>%
-    select( attr(.data, "covariates")) %>%
-    select_if(function(x){is.character(x) | is.factor(x) | is.logical(x)}) %>%
-    colnames %>%
+  filter(!is.na(covariate)) |>
+   distinct(covariate) %>%
+    pull(covariate) |>
 
   map(
     ~ plot_boxplot(
@@ -954,7 +973,7 @@ plots$boxplot =
 plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
 
 # 2D intervals
-if("v_effect" %in% colnames(.data))  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
+if("v_effect" %in% colnames(.data) && (.data |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
 
 plots
 
