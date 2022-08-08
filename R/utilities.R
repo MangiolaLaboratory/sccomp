@@ -634,10 +634,13 @@ data_spread_to_model_input =
 
     # Add parameter covariate dictionary
     data_for_model$covariate_parameter_dictionary =
-      .data_spread %>%
-      select(parse_formula(formula)) %>%
-      distinct() %>%
-      gather(covariate, parameter) %>%
+      .data_spread  |>
+      select(parse_formula(formula))  |>
+      distinct()  |>
+
+      # Drop numerical
+      select_if(function(x) !is.numeric(x)) |>
+      pivot_longer(everything(), names_to =  "covariate", values_to = "parameter") %>%
       unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
       select(-parameter) |>
       filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
@@ -655,6 +658,9 @@ data_spread_to_model_input =
         distinct()
 
     data_for_model$intercept_in_design = X[,1] |> unique() |> identical(1)
+
+    # How many intercept columns
+    data_for_model$A_intercept_columns = when(data_for_model$intercept_in_design, (.) ~ 1, ~ .data_spread |> select(covariate_names[1]) |> distinct() |> nrow() )
 
     # Return
     data_for_model
