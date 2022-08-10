@@ -634,6 +634,8 @@ data_spread_to_model_input =
 
     # Add parameter covariate dictionary
     data_for_model$covariate_parameter_dictionary =
+
+      # For discrete
       .data_spread  |>
       select(parse_formula(formula))  |>
       distinct()  |>
@@ -644,7 +646,21 @@ data_spread_to_model_input =
       unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
       select(-parameter) |>
       filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
-      distinct()
+      distinct() |>
+
+      # For continuous
+      bind_rows(
+        tibble(
+          design_matrix_col =  .data_spread  |>
+            select(parse_formula(formula))  |>
+            distinct()  |>
+
+            # Drop numerical
+            select_if(function(x) is.numeric(x)) |>
+            names()
+        ) |>
+          mutate(covariate = design_matrix_col)
+      )
 
     # If constrasts is set it is a bit more complicated
     if(! contrasts |> is.null())
