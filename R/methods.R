@@ -624,7 +624,8 @@ replicate_data.data.frame = function(.data,
       attr("model_input") %$%
       X |>
     ncol() |>
-    seq_len()
+    seq_len()  |>
+      as.array()
   }
   else {
     X_which =  .data |>
@@ -642,7 +643,8 @@ replicate_data.data.frame = function(.data,
       attr("model_input") %$%
       XA |>
       ncol() |>
-      seq_len()
+      seq_len() |>
+      as.array()
   }
   else{
     XA_which =
