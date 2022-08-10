@@ -648,7 +648,7 @@ replicate_data.data.frame = function(.data,
     XA_which =
       .data |>
       attr("model_input") %$%
-      XA %>%
+      Xa %>%
       colnames() %in%
       colnames(model.matrix(formula_variability, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
       which()
