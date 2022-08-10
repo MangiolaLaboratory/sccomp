@@ -8,6 +8,7 @@ simulate_data(
   .data,
   .estimate_object,
   formula_composition,
+  formula_variability,
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
