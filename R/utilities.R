@@ -1356,3 +1356,18 @@ mutate_ignore_error = function(x, ...){
     error=function(cond) {  x  }
   )
 }
+
+simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
+
+  mu = model_input$X %*% model_input$beta
+
+  proportions =
+    rnorm(length(mu), mu, sd) %>%
+    matrix(nrow = nrow(model_input$X)) %>%
+    boot::inv.logit()
+  apply(1, function(x) x/sum(x)) %>%
+    t()
+
+  rownames(proportions) = rownames(model_input$X)
+  colnames(proportions) = colnames(model_input$beta )
+}
