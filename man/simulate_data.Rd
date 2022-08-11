@@ -8,6 +8,7 @@ simulate_data(
   .data,
   .estimate_object,
   formula_composition,
+  formula_variability = NULL,
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
@@ -22,6 +23,8 @@ simulate_data(
 \item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properties.}
 
 \item{formula_composition}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
+
+\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
@@ -47,18 +50,17 @@ data("counts_obj")
 library(dplyr)
 
 estimate =
-  sccomp_glm(
-  counts_obj ,
-   ~ type, ~1,  sample, cell_group, count,
-    approximate_posterior_inference = "all",
-    check_outliers = FALSE,
-    cores = 1
-  )
+ sccomp_glm(
+ counts_obj ,
+  ~ type, ~1,  sample, cell_group, count,
+   approximate_posterior_inference = "all",
+   check_outliers = FALSE,
+   cores = 1
+ )
 
 # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
 counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-
 # Simulate data
-simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
+simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
 
 }
