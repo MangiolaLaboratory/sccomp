@@ -178,7 +178,17 @@ estimate_multi_beta_binomial_glm = function(.data,
       stanmodels$glm_multi_beta_binomial_generate_date,
       #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
       draws =  as.matrix(fit),
-      data = data_for_model
+
+      # This is for the new data generation with selected covariates to do adjustment
+      data = data_for_model |> c(list(
+
+        # Add subset of coefficients
+        length_X_which = ncol(data_for_model$X),
+        length_XA_which = ncol(data_for_model$XA),
+        X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
+        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array()
+
+      ))
     )
 
     # Detect outliers
@@ -266,7 +276,15 @@ estimate_multi_beta_binomial_glm = function(.data,
       stanmodels$glm_multi_beta_binomial_generate_date,
       #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
       draws =  as.matrix(fit2),
-      data = data_for_model
+      data = data_for_model |> c(list(
+
+        # Add subset of coefficients
+        length_X_which = ncol(data_for_model$X),
+        length_XA_which = ncol(data_for_model$XA),
+        X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
+        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array()
+
+      ))
     )
 
     # Detect outliers

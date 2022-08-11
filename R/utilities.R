@@ -634,6 +634,8 @@ data_spread_to_model_input =
 
     # Add parameter covariate dictionary
     data_for_model$covariate_parameter_dictionary =
+
+      # For discrete
       .data_spread  |>
       select(parse_formula(formula))  |>
       distinct()  |>
@@ -644,7 +646,21 @@ data_spread_to_model_input =
       unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
       select(-parameter) |>
       filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
-      distinct()
+      distinct() |>
+
+      # For continuous
+      bind_rows(
+        tibble(
+          design_matrix_col =  .data_spread  |>
+            select(parse_formula(formula))  |>
+            distinct()  |>
+
+            # Drop numerical
+            select_if(function(x) is.numeric(x)) |>
+            names()
+        ) |>
+          mutate(covariate = design_matrix_col)
+      )
 
     # If constrasts is set it is a bit more complicated
     if(! contrasts |> is.null())
@@ -927,7 +943,7 @@ design_matrix_and_coefficients_to_simulation = function(
 
                 .estimate_object = .estimate_object,
 
-                formula = ~ covariate_1 ,
+                formula_composition = ~ covariate_1 ,
                 .sample = sample,
                 .cell_group = cell_type,
                 .coefficients = c(beta_1, beta_2),
@@ -1089,8 +1105,9 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025,
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
 plot_boxplot = function(
-    .data, data_proportion, factor_of_interest, .cell_group, .sample, significance_threshold = 0.025, my_theme
-    ){
+    .data, data_proportion, factor_of_interest, .cell_group,
+    .sample, significance_threshold = 0.025, my_theme
+  ){
 
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
@@ -1354,4 +1371,19 @@ mutate_ignore_error = function(x, ...){
     {  x |> mutate(...) },
     error=function(cond) {  x  }
   )
+}
+
+simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
+
+  mu = model_input$X %*% model_input$beta
+
+  proportions =
+    rnorm(length(mu), mu, sd) %>%
+    matrix(nrow = nrow(model_input$X)) %>%
+    boot::inv.logit()
+  apply(1, function(x) x/sum(x)) %>%
+    t()
+
+  rownames(proportions) = rownames(model_input$X)
+  colnames(proportions) = colnames(model_input$beta )
 }

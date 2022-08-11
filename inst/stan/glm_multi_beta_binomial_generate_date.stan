@@ -10,6 +10,12 @@ data {
 	int is_truncated;
 	real<lower=1> truncation_ajustment;
 
+	// Which column of design, coefficient matrices should be used to generate the data
+	int length_X_which;
+	int length_XA_which;
+	int X_which[length_X_which];
+	int XA_which[length_XA_which];
+
 }
 parameters {
 
@@ -27,10 +33,8 @@ generated quantities{
   // Vector of the generated exposure
   real generated_exposure[N];
 
-  matrix[M,N] mu = (X * beta)';
-
-  matrix[M,N] precision = (Xa * alpha)' / (is_truncated ? truncation_ajustment : 1);
-  //matrix[M,N] precision = (X[,1:A] * alpha)'  / (is_truncated ? truncation_ajustment : 1);
+  matrix[M,N] mu = (X[,X_which] * beta[X_which,])';
+  matrix[M,N] precision = (Xa[,XA_which] * alpha[XA_which,])' / (is_truncated ? truncation_ajustment : 1);
 
 	for(i in 1:N) mu[,i] = softmax(mu[,i]);
 	for(i in 1:N) {

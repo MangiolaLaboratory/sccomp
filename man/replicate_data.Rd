@@ -4,10 +4,20 @@
 \alias{replicate_data}
 \title{replicate_data}
 \usage{
-replicate_data(.data, number_of_draws = 1, mcmc_seed = sample(1e+05, 1))
+replicate_data(
+  .data,
+  formula_composition = NULL,
+  formula_variability = NULL,
+  number_of_draws = 1,
+  mcmc_seed = sample(1e+05, 1)
+)
 }
 \arguments{
 \item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+
+\item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.}
+
+\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.}
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 

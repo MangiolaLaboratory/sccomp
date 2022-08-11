@@ -567,6 +567,8 @@ sccomp_glm_data_frame_counts = function(.data,
 #'
 #'
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
@@ -589,6 +591,8 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   replicate_data()
 #'
 replicate_data <- function(.data,
+                           formula_composition = NULL,
+                           formula_variability = NULL,
                            number_of_draws = 1,
                            mcmc_seed = sample(1e5, 1)) {
   UseMethod("replicate_data", .data)
@@ -597,6 +601,8 @@ replicate_data <- function(.data,
 #' @export
 #'
 replicate_data.data.frame = function(.data,
+                                     formula_composition = NULL,
+                                     formula_variability = NULL,
                                      number_of_draws = 1,
                                      mcmc_seed = sample(1e5, 1)){
 
@@ -613,11 +619,59 @@ replicate_data.data.frame = function(.data,
 
   fit_matrix = as.matrix(attr(.data, "fit") )
 
+  # Add subset of coefficients
+  if(is.null(formula_composition)) {
+    X_which =
+    .data |>
+      attr("model_input") %$%
+      X |>
+    ncol() |>
+    seq_len()  |>
+      as.array()
+  }
+  else {
+    X_which =  .data |>
+      attr("model_input") %$%
+      X %>%
+      colnames() %in%
+      colnames(model.matrix(formula_composition, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
+      which()
+
+  }
+
+  if(is.null(formula_variability)) {
+    XA_which =
+      .data |>
+      attr("model_input") %$%
+      XA |>
+      ncol() |>
+      seq_len() |>
+      as.array()
+  }
+  else{
+    XA_which =
+      .data |>
+      attr("model_input") %$%
+      Xa %>%
+      colnames() %in%
+      colnames(model.matrix(formula_variability, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
+      which()
+  }
+
+
   # Generate quantities
   rstan::gqs(
     my_model,
     draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
-    data = model_input,
+    data = model_input |> c(
+
+      # Add subset of coefficients
+      length_X_which = length(X_which),
+      length_XA_which = length(XA_which),
+      X_which,
+      XA_which
+
+    ),
     seed = mcmc_seed
   ) %>%
 
@@ -658,6 +712,7 @@ replicate_data.data.frame = function(.data,
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
 #' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properties.
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
@@ -675,23 +730,24 @@ replicate_data.data.frame = function(.data,
 #' library(dplyr)
 #'
 #' estimate =
-#'   sccomp_glm(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     approximate_posterior_inference = "all",
-#'     check_outliers = FALSE,
-#'     cores = 1
-#'   )
+#'  sccomp_glm(
+#'  counts_obj ,
+#'   ~ type, ~1,  sample, cell_group, count,
+#'    approximate_posterior_inference = "all",
+#'    check_outliers = FALSE,
+#'    cores = 1
+#'  )
 #'
 #' # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
 #' counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-#'
+
 #' # Simulate data
-#' simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
+#' simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
 #'
 simulate_data <- function(.data,
                           .estimate_object,
                           formula_composition,
+                          formula_variability = NULL,
                        .sample = NULL,
                        .cell_group = NULL,
                        .coefficients = NULL,
@@ -712,6 +768,7 @@ simulate_data <- function(.data,
 simulate_data.data.frame = function(.data,
                                     .estimate_object,
                                     formula_composition,
+                                    formula_variability = NULL,
                                     .sample = NULL,
                                     .cell_group = NULL,
                                     .coefficients = NULL,
@@ -743,9 +800,11 @@ simulate_data.data.frame = function(.data,
     nest(data___ = -!!.sample) %>%
     mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) %>%
     unnest(data___) %>%
-    data_simulation_to_model_input(formula_composition, !!.sample, !!.cell_group, .exposure, !!.coefficients )
-
-
+    data_simulation_to_model_input(
+      formula_composition,
+      #formula_variability,
+      !!.sample, !!.cell_group, .exposure, !!.coefficients
+    )
 
     # [1]  5.6260004 -0.6940178
     # prec_sd  = 0.816423129
@@ -782,21 +841,6 @@ simulate_data.data.frame = function(.data,
     )
 
 
-}
-
-simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
-
-  mu = model_input$X %*% model_input$beta
-
-  proportions =
-    rnorm(length(mu), mu, sd) %>%
-    matrix(nrow = nrow(model_input$X)) %>%
-    boot::inv.logit()
-    apply(1, function(x) x/sum(x)) %>%
-    t()
-
-  rownames(proportions) = rownames(model_input$X)
-  colnames(proportions) = colnames(model_input$beta )
 }
 
 
