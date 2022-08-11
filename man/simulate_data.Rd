@@ -24,6 +24,8 @@ simulate_data(
 
 \item{formula_composition}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
 
+\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.}
+
 \item{.sample}{A column name as symbol. The sample identifier}
 
 \item{.cell_group}{A column name as symbol. The cell_group identifier}
