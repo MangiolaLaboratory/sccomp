@@ -1109,7 +1109,6 @@ plot_boxplot = function(
     .sample, significance_threshold = 0.025, my_theme
   ){
 
-
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
     n <- sum(!is.na(x))
