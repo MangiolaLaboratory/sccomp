@@ -943,7 +943,7 @@ design_matrix_and_coefficients_to_simulation = function(
 
                 .estimate_object = .estimate_object,
 
-                formula = ~ covariate_1 ,
+                formula_composition = ~ covariate_1 ,
                 .sample = sample,
                 .cell_group = cell_type,
                 .coefficients = c(beta_1, beta_2),
