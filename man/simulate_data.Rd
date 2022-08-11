@@ -48,18 +48,17 @@ data("counts_obj")
 library(dplyr)
 
 estimate =
-  sccomp_glm(
-  counts_obj ,
-   ~ type, ~1,  sample, cell_group, count,
-    approximate_posterior_inference = "all",
-    check_outliers = FALSE,
-    cores = 1
-  )
+ sccomp_glm(
+ counts_obj ,
+  ~ type, ~1,  sample, cell_group, count,
+   approximate_posterior_inference = "all",
+   check_outliers = FALSE,
+   cores = 1
+ )
 
 # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
 counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-
 # Simulate data
-simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
+simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
 
 }

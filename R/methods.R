@@ -727,19 +727,19 @@ replicate_data.data.frame = function(.data,
 #' library(dplyr)
 #'
 #' estimate =
-#'   sccomp_glm(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     approximate_posterior_inference = "all",
-#'     check_outliers = FALSE,
-#'     cores = 1
-#'   )
+#'  sccomp_glm(
+#'  counts_obj ,
+#'   ~ type, ~1,  sample, cell_group, count,
+#'    approximate_posterior_inference = "all",
+#'    check_outliers = FALSE,
+#'    cores = 1
+#'  )
 #'
 #' # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
 #' counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-#'
+
 #' # Simulate data
-#' simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
+#' simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
 #'
 simulate_data <- function(.data,
                           .estimate_object,
@@ -798,12 +798,10 @@ simulate_data.data.frame = function(.data,
     mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) %>%
     unnest(data___) %>%
     data_simulation_to_model_input(
-      formula_composition, formula_variability,
-      !!.sample, !!.cell_group, .exposure, !!.coefficients,
-      .estimate_object = .estimate_object
+      formula_composition,
+      #formula_variability,
+      !!.sample, !!.cell_group, .exposure, !!.coefficients
     )
-
-
 
     # [1]  5.6260004 -0.6940178
     # prec_sd  = 0.816423129
@@ -840,21 +838,6 @@ simulate_data.data.frame = function(.data,
     )
 
 
-}
-
-simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
-
-  mu = model_input$X %*% model_input$beta
-
-  proportions =
-    rnorm(length(mu), mu, sd) %>%
-    matrix(nrow = nrow(model_input$X)) %>%
-    boot::inv.logit()
-    apply(1, function(x) x/sum(x)) %>%
-    t()
-
-  rownames(proportions) = rownames(model_input$X)
-  colnames(proportions) = colnames(model_input$beta )
 }
 
 
