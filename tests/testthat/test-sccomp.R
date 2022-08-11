@@ -45,7 +45,7 @@ data("counts_obj")
 
 test_that("multi beta binomial from Seurat",{
 
-    seurat_obj |>
+  seurat_obj |>
     sccomp_glm(
       formula_composition = ~ type,
       formula_variability = ~ 1,
@@ -58,7 +58,28 @@ test_that("multi beta binomial from Seurat",{
     filter(parameter == "typehealthy") |>
     filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(18)
+    expect_equal(17)
+
+})
+
+test_that("multi beta binomial contrasts from Seurat",{
+
+  res = seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ 0 + type,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      cores = 1,
+      mcmc_seed = 42
+    )
+
+    expect_equal(
+      res[1,"c_effect"] |> as.numeric(),
+      -res[2,"c_effect"] |> as.numeric()
+    )
 
 })
 
@@ -78,7 +99,7 @@ test_that("multi beta binomial from SCE",{
     filter(parameter == "typehealthy") |>
     filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(18)
+    expect_equal(17)
 
 })
 
@@ -114,7 +135,7 @@ test_that("multi beta binomial from metadata",{
     filter(parameter == "typehealthy") |>
     filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(18)
+    expect_equal(17)
 
 })
 

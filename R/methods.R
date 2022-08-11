@@ -2,7 +2,7 @@
 
 #' sccomp_glm main
 #'
-#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_group includes outlier biological replicate.
+#' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the covariates (continuous or discrete). The user can define a linear model with an input R formula, where the first covariate is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
 #'
 #' @import dplyr
 #' @importFrom magrittr %$%
@@ -13,16 +13,23 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #'
-#' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
-#' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
-#' @param formula_variability A formula. The sample formula used to perform the differential cell_group abundance analysis
+#' @param .data A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | covariate columns.
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
-#' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output.
+#' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
-#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
-#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
+#' @param contrasts A vector of expressions. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be `constrasts = c(treatmentyes - treatmentno)`.
+#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
+#' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
+#'
+#' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
+#' @param exclude_priors A boolean. Whether to run a prior-free model, for benchmarking purposes.
+#' @param use_data A booelan. Whether to sun the model data free. This can be used for prior predictive check.
+#' @param max_sampling_iterations An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.
+#' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param verbose A boolean. Prints progression.
@@ -30,7 +37,23 @@
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
+#' @return A nested tibble `tbl`, with the following columns
+#' \itemize{
+#'   \item cell_group - column including the cell groups being tested
+#'   \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
+#'
+#'   \item c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - upper (97.5%) quantile of the posterior distribution fo a composition (c)  parameter.
+#'   \item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
+#'   \item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
+#'
+#'   \item v_lower - (optional, present if variability is modelled dependent on covariates) lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_effect - (optional, present if variability is modelled dependent on covariates) mean of the posterior distribution for a variability (v) parameter
+#'   \item v_upper - (optional, present if variability is modelled dependent on covariates) upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_pH0 - (optional, present if variability is modelled dependent on covariates) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
+#'   \item v_FDR - (optional, present if variability is modelled dependent on covariates) False-discovery rate of the null hypothesis (no difference), for a variability (v).
+#' }
 #'
 #' @examples
 #'
@@ -39,7 +62,11 @@
 #' estimate =
 #'   sccomp_glm(
 #'   counts_obj ,
-#'    ~ type, ~1, sample, cell_group, count,
+#'    ~ type,
+#'    ~1,
+#'    sample,
+#'    cell_group,
+#'    count,
 #'     approximate_posterior_inference = "all",
 #'     check_outliers = FALSE,
 #'     cores = 1
@@ -56,17 +83,20 @@ sccomp_glm <- function(.data,
                        .count = NULL,
 
                        # Secondary arguments
-                       prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                       percent_false_positive = 5,
+                       contrasts = NULL,
+                       prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                        check_outliers = TRUE,
-                       approximate_posterior_inference = "outlier_detection",
+                       bimodal_mean_variability_association = FALSE,
+
+                       # Tertiary arguments
+                       cores = detectCores(),
+                       percent_false_positive = 5,
+                       approximate_posterior_inference = "all",
                        test_composition_above_logit_fold_change = 0.2,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
                        exclude_priors = FALSE,
-                       bimodal_mean_variability_association = FALSE,
                        use_data = TRUE,
-                       cores = detectCores(),
                        mcmc_seed = sample(1e5, 1),
                        max_sampling_iterations = 20000,
                        pass_fit = TRUE) {
@@ -82,17 +112,20 @@ sccomp_glm.Seurat = function(.data,
                              .count = NULL,
 
                              # Secondary arguments
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                             percent_false_positive = 5,
+                             contrasts = NULL,
+                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
-                             approximate_posterior_inference = "outlier_detection",
+                             bimodal_mean_variability_association = FALSE,
+
+                             # Tertiary arguments
+                             cores = detectCores(),
+                             percent_false_positive = 5,
+                             approximate_posterior_inference = "all",
                              test_composition_above_logit_fold_change = 0.2,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              exclude_priors = FALSE,
-                             bimodal_mean_variability_association = FALSE,
                              use_data = TRUE,
-                             cores = detectCores(),
                              mcmc_seed = sample(1e5, 1),
                              max_sampling_iterations = 20000,
                              pass_fit = TRUE) {
@@ -103,12 +136,14 @@ sccomp_glm.Seurat = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
 
+
   .data[[]] %>%
     sccomp_glm(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
 
       !!.sample,!!.cell_group,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
@@ -137,17 +172,20 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            .count = NULL,
 
                                            # Secondary arguments
-                                           prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                                           percent_false_positive = 5,
+                                           contrasts = NULL,
+                                           prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                            check_outliers = TRUE,
-                                           approximate_posterior_inference = "outlier_detection",
+                                           bimodal_mean_variability_association = FALSE,
+
+                                           # Tertiary arguments
+                                           cores = detectCores(),
+                                           percent_false_positive = 5,
+                                           approximate_posterior_inference = "all",
                                            test_composition_above_logit_fold_change = 0.2,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
                                            exclude_priors = FALSE,
-                                           bimodal_mean_variability_association = FALSE,
                                            use_data = TRUE,
-                                           cores = detectCores(),
                                            mcmc_seed = sample(1e5, 1),
                                            max_sampling_iterations = 20000,
                                            pass_fit = TRUE) {
@@ -159,6 +197,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
 
+
   .data %>%
     colData() %>%
     sccomp_glm(
@@ -167,6 +206,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
 
       !!.sample,!!.cell_group,
       check_outliers = check_outliers,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -194,17 +234,20 @@ sccomp_glm.DFrame = function(.data,
                              .count = NULL,
 
                              # Secondary arguments
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                             percent_false_positive = 5,
+                             contrasts = NULL,
+                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
-                             approximate_posterior_inference = "outlier_detection",
+                             bimodal_mean_variability_association = FALSE,
+
+                             # Tertiary arguments
+                             cores = detectCores(),
+                             percent_false_positive = 5,
+                             approximate_posterior_inference = "all",
                              test_composition_above_logit_fold_change = 0.2,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              exclude_priors = FALSE,
-                             bimodal_mean_variability_association = FALSE,
                              use_data = TRUE,
-                             cores = detectCores(),
                              mcmc_seed = sample(1e5, 1),
                              max_sampling_iterations = 20000,
                              pass_fit = TRUE) {
@@ -217,12 +260,14 @@ sccomp_glm.DFrame = function(.data,
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
 
+
   .data %>%
     as.data.frame %>%
     sccomp_glm(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       !!.sample,!!.cell_group,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
@@ -250,17 +295,20 @@ sccomp_glm.data.frame = function(.data,
                                  .count = NULL,
 
                                  # Secondary arguments
-                                 prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
-                                 percent_false_positive =  5,
+                                 contrasts = NULL,
+                                 prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                  check_outliers = TRUE,
-                                 approximate_posterior_inference = "outlier_detection",
+                                 bimodal_mean_variability_association = FALSE,
+
+                                 # Tertiary arguments
+                                 cores = detectCores(),
+                                 percent_false_positive = 5,
+                                 approximate_posterior_inference = "all",
                                  test_composition_above_logit_fold_change = 0.2,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
                                  exclude_priors = FALSE,
-                                 bimodal_mean_variability_association = FALSE,
                                  use_data = TRUE,
-                                 cores = detectCores(),
                                  mcmc_seed = sample(1e5, 1),
                                  max_sampling_iterations = 20000,
                                  pass_fit = TRUE) {
@@ -269,6 +317,7 @@ sccomp_glm.data.frame = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
+
 
   # Choose linear model
   my_glm_model =
@@ -288,6 +337,7 @@ sccomp_glm.data.frame = function(.data,
 
         !!.sample,
         !!.cell_group,
+        contrasts = contrasts,
         prior_mean_variable_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
@@ -313,6 +363,7 @@ sccomp_glm.data.frame = function(.data,
         !!.sample,
         !!.cell_group,
         !!.count,
+        contrasts = contrasts,
         prior_mean_variable_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
@@ -346,10 +397,11 @@ sccomp_glm_data_frame_raw = function(.data,
                                      .count = NULL,
 
                                      # Secondary arguments
-                                     prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                     contrasts = NULL,
+                                     prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
-                                     approximate_posterior_inference = "outlier_detection",
+                                     approximate_posterior_inference = "all",
                                      test_composition_above_logit_fold_change = 0.2,
                                      verbose = FALSE,
                                      my_glm_model,
@@ -368,6 +420,7 @@ sccomp_glm_data_frame_raw = function(.data,
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
+
 
   # Check if columns exist
   check_columns_exist(.data, c(
@@ -408,6 +461,7 @@ sccomp_glm_data_frame_raw = function(.data,
       .cell_group = !!.cell_group,
       .count = count,
       my_glm_model = my_glm_model,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
@@ -432,10 +486,11 @@ sccomp_glm_data_frame_counts = function(.data,
                                         .count = NULL,
 
                                         # Secondary arguments
-                                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)),
+                                        contrasts = NULL,
+                                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
-                                        approximate_posterior_inference = "outlier_detection",
+                                        approximate_posterior_inference = "all",
                                         test_composition_above_logit_fold_change = 0.2,
                                         verbose = FALSE,
                                         my_glm_model ,
@@ -451,6 +506,7 @@ sccomp_glm_data_frame_counts = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
+
 
   #Check column class
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)
@@ -483,6 +539,7 @@ sccomp_glm_data_frame_counts = function(.data,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
       .count = !!.count,
+      contrasts = contrasts,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
@@ -510,6 +567,8 @@ sccomp_glm_data_frame_counts = function(.data,
 #'
 #'
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
@@ -532,6 +591,8 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   replicate_data()
 #'
 replicate_data <- function(.data,
+                           formula_composition = NULL,
+                           formula_variability = NULL,
                            number_of_draws = 1,
                            mcmc_seed = sample(1e5, 1)) {
   UseMethod("replicate_data", .data)
@@ -540,6 +601,8 @@ replicate_data <- function(.data,
 #' @export
 #'
 replicate_data.data.frame = function(.data,
+                                     formula_composition = NULL,
+                                     formula_variability = NULL,
                                      number_of_draws = 1,
                                      mcmc_seed = sample(1e5, 1)){
 
@@ -566,10 +629,58 @@ replicate_data.data.frame = function(.data,
   }
 
 
+  # Add subset of coefficients
+  if(is.null(formula_composition)) {
+    X_which =
+    .data |>
+      attr("model_input") %$%
+      X |>
+    ncol() |>
+    seq_len()  |>
+      as.array()
+  }
+  else {
+    X_which =  .data |>
+      attr("model_input") %$%
+      X %>%
+      colnames() %in%
+      colnames(model.matrix(formula_composition, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
+      which()
+
+  }
+
+  if(is.null(formula_variability)) {
+    XA_which =
+      .data |>
+      attr("model_input") %$%
+      XA |>
+      ncol() |>
+      seq_len() |>
+      as.array()
+  }
+  else{
+    XA_which =
+      .data |>
+      attr("model_input") %$%
+      Xa %>%
+      colnames() %in%
+      colnames(model.matrix(formula_variability, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
+      which()
+  }
+
+
   # Generate quantities
     mod_rng$generate_quantities(
       fit,
-      data = model_input,
+      data = model_input |> c(
+
+        # Add subset of coefficients
+        length_X_which = length(X_which),
+        length_XA_which = length(XA_which),
+        X_which,
+        XA_which
+
+      ),
       parallel_chains = ifelse(model_input$is_vb, 1, fit$num_chains()),
       seed = mcmc_seed
     ) %>%
@@ -611,9 +722,11 @@ replicate_data.data.frame = function(.data,
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
 #' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properties.
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
-#' @param .coefficients Th column names for coefficients, for example, c(b_0, b_1)
+#' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
+#' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
@@ -627,23 +740,24 @@ replicate_data.data.frame = function(.data,
 #' library(dplyr)
 #'
 #' estimate =
-#'   sccomp_glm(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     approximate_posterior_inference = "all",
-#'     check_outliers = FALSE,
-#'     cores = 1
-#'   )
+#'  sccomp_glm(
+#'  counts_obj ,
+#'   ~ type, ~1,  sample, cell_group, count,
+#'    approximate_posterior_inference = "all",
+#'    check_outliers = FALSE,
+#'    cores = 1
+#'  )
 #'
 #' # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
 #' counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-#'
+
 #' # Simulate data
-#' simulate_data(counts_obj, estimate, ~type, sample, cell_group, c(b_0, b_1))
+#' simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
 #'
 simulate_data <- function(.data,
                           .estimate_object,
                           formula_composition,
+                          formula_variability = NULL,
                        .sample = NULL,
                        .cell_group = NULL,
                        .coefficients = NULL,
@@ -659,10 +773,12 @@ simulate_data <- function(.data,
 #' @importFrom SingleCellExperiment counts
 #' @importFrom purrr map_dbl
 #' @importFrom purrr pmap
+#' @importFrom readr read_file
 #'
 simulate_data.data.frame = function(.data,
                                     .estimate_object,
                                     formula_composition,
+                                    formula_variability = NULL,
                                     .sample = NULL,
                                     .cell_group = NULL,
                                     .coefficients = NULL,
@@ -684,7 +800,7 @@ simulate_data.data.frame = function(.data,
   my_model = attr(.estimate_object, "noise_model") %>% when(
     (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_simulate_data,
     (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities),
-    (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", readr::read_file("dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
+    (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
 
   )
 
@@ -694,9 +810,11 @@ simulate_data.data.frame = function(.data,
     nest(data___ = -!!.sample) %>%
     mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) %>%
     unnest(data___) %>%
-    data_simulation_to_model_input(formula_composition, !!.sample, !!.cell_group, .exposure, !!.coefficients )
-
-
+    data_simulation_to_model_input(
+      formula_composition,
+      #formula_variability,
+      !!.sample, !!.cell_group, .exposure, !!.coefficients
+    )
 
     # [1]  5.6260004 -0.6940178
     # prec_sd  = 0.816423129
@@ -735,21 +853,6 @@ simulate_data.data.frame = function(.data,
 
 }
 
-simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
-
-  mu = model_input$X %*% model_input$beta
-
-  proportions =
-    rnorm(length(mu), mu, sd) %>%
-    matrix(nrow = nrow(model_input$X)) %>%
-    boot::inv.logit()
-    apply(1, function(x) x/sum(x)) %>%
-    t()
-
-  rownames(proportions) = rownames(model_input$X)
-  colnames(proportions) = colnames(model_input$beta )
-}
-
 
 #' plot_summary
 #'
@@ -763,6 +866,8 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 #' @importFrom dplyr with_groups
 #'
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#'
 #' @return A `ggplot`
 #'
 #' @export
@@ -783,7 +888,7 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
 #'
 #' estimate |> plot_summary()
 #'
-plot_summary <- function(.data) {
+plot_summary <- function(.data, significance_threshold = 0.025) {
 
     multipanel_theme =
     theme_bw() +
@@ -821,29 +926,52 @@ plot_summary <- function(.data) {
 
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
+  .sample = attr(.data, ".sample")
 
 plots = list()
 
 
 data_proportion =
   .data %>%
+
+  # Otherwise does not work
+  select(-covariate) %>%
+
   pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
   unnest(count_data) %>%
-  with_groups(sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
+  with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
 
   # If I don't have outliers add them
-  when(!"outlier" %in% colnames(.) ~ mutate(., outlier = F), ~ (.))
+  when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
 
-factor_of_interest = .data %>% attr("covariates") %>% .[1]
 
 # Boxplot
-plots$boxplot = plot_boxplot(.data, data_proportion, factor_of_interest, !!.cell_group, multipanel_theme)
+plots$boxplot =
+
+  # Select non numerical types
+  .data %>%
+  filter(!is.na(covariate)) |>
+   distinct(covariate) %>%
+    pull(covariate) |>
+
+  map(
+    ~ plot_boxplot(
+      .data,
+      data_proportion,
+      .x,
+      !!.cell_group,
+      !!.sample,
+      significance_threshold = significance_threshold,
+      multipanel_theme
+    ) +
+      ggtitle(sprintf("Grouped by %s (for multi-covariate models, associations could be hardly observable with unidimensional data stratification)", .x))
+  )
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, multipanel_theme)
+plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
 
 # 2D intervals
-if("v_effect" %in% colnames(.data))  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, multipanel_theme)
+if("v_effect" %in% colnames(.data) && (.data |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
 
 plots
 
