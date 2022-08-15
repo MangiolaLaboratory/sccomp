@@ -13,7 +13,7 @@ replicate_data(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+\item{.data}{A tibble. The result of sccomp_glm.}
 
 \item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.}
 
