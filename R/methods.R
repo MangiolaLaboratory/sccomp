@@ -625,8 +625,8 @@ replicate_data.data.frame = function(.data,
     .data |>
       attr("model_input") %$%
       X |>
-    ncol() |>
-    seq_len()  |>
+      ncol() |>
+      seq_len()  |>
       as.array()
   }
   else {
@@ -635,7 +635,8 @@ replicate_data.data.frame = function(.data,
       X %>%
       colnames() %in%
       colnames(model.matrix(formula_composition, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
-      which()
+      which() |>
+      as.array()
 
   }
 
@@ -655,7 +656,8 @@ replicate_data.data.frame = function(.data,
       Xa %>%
       colnames() %in%
       colnames(model.matrix(formula_variability, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
-      which()
+      which() |>
+      as.array()
   }
 
 
