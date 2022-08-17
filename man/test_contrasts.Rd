@@ -16,6 +16,8 @@ test_contrasts(
 
 \item{contrasts}{A vector of character strings. For example if your formula is \code{~ 0 + treatment} and the covariate treatment has values \code{yes} and \code{no}, your contrast could be "constrasts = c(treatmentyes - treatmentno)".}
 
+\item{percent_false_positive}{A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.}
+
 \item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
 }
 \value{
