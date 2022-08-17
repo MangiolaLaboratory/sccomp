@@ -29,7 +29,6 @@
 #' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
-#' @param variance_association A boolean. Whether the variance should be associated to the factor of interest.
 #' @param verbose A boolean. Prints progression.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
@@ -53,7 +52,6 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
                                             approximate_posterior_inference = "all",
-                                            variance_association = FALSE,
                                             cores = detectCores(), # For development purpose,
                                             seed = sample(1e5, 1),
                                             verbose = FALSE,
@@ -86,7 +84,6 @@ estimate_multi_beta_binomial_glm = function(.data,
       data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
-        variance_association = variance_association,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference == "all",
         formula_variability = formula_variability,
@@ -143,7 +140,6 @@ estimate_multi_beta_binomial_glm = function(.data,
       data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
-        variance_association = FALSE,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         formula_variability = ~1,
@@ -226,7 +222,6 @@ estimate_multi_beta_binomial_glm = function(.data,
       data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
-        variance_association = variance_association,
         truncation_ajustment = 1.1,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
         formula_variability = formula_variability,
@@ -362,96 +357,6 @@ estimate_multi_beta_binomial_glm = function(.data,
 
 }
 
-#' multi_beta_binomial main
-#'
-#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
-#'
-#' @importFrom tibble as_tibble
-#' @import dplyr
-#' @importFrom tidyr spread
-#' @importFrom magrittr %$%
-#' @importFrom magrittr divide_by
-#' @importFrom magrittr multiply_by
-#' @importFrom purrr map2
-#' @importFrom purrr map_int
-#' @importFrom magrittr multiply_by
-#' @importFrom magrittr equals
-#' @importFrom purrr map
-#' @importFrom tibble rowid_to_column
-#' @importFrom purrr map_lgl
-#' @importFrom dplyr case_when
-#' @importFrom dplyr with_groups
-#'
-#' @param fit The fit object
-#' @param data_for_model Parsed data
-#' @param check_outliers A boolean
-#' @param truncation_df2 Truncation data frame
-#' @param contrasts A vector of expressions. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be `constrasts = c(treatmentyes - treatmentno)`.
-#'
-#' @noRd
-#'
-#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
-#'
-#'
-hypothesis_test_multi_beta_binomial_glm = function( .sample,
-                                                    .cell_group,
-                                                    .count,
-                                                    fit,
-                                                    data_for_model,
-                                                    percent_false_positive,
-                                                    check_outliers,
-                                                    truncation_df2 = NULL,
-                                                    variance_association = FALSE,
-                                                    test_composition_above_logit_fold_change,
-                                                    contrasts = NULL) {
-
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .count = enquo(.count)
-
-  abundance_CI =
-    fit %>%
-    draws_to_tibble_x_y("beta", "C", "M") |>
-    draws_to_statistics(
-      contrasts,
-      data_for_model$X,
-      percent_false_positive/100,
-      test_composition_above_logit_fold_change,
-      "c_"
-    )
-
-  variability_CI =
-    fit %>%
-    draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
-
-    # We want variability, not concentration
-    mutate(.value = -.value) |>
-
-    draws_to_statistics(
-      contrasts,
-      data_for_model$XA,
-      percent_false_positive/100,
-      test_composition_above_logit_fold_change,
-      "v_"
-    )
-
-  abundance_CI |>
-
-    # Add ALPHA
-    left_join(variability_CI) |>
-    suppressMessages() |>
-
-    # Add easy to understand covariate labels
-    left_join(
-      data_for_model$covariate_parameter_dictionary |>
-        select(covariate, design_matrix_col),
-      by = c("parameter" = "design_matrix_col" )
-    ) %>%
-    select(parameter, covariate, everything())
-
-}
-
-
 
 #' multi_beta_binomial main
 #'
@@ -484,7 +389,6 @@ hypothesis_test_multi_beta_binomial_glm = function( .sample,
 #' @param .count A column name as symbol. The cell_type abundance (read count)
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
-#' @param variance_association A boolean. Whether the variance should be associated to the factor of interest.
 #' @param verbose A boolean. Prints progression.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
@@ -505,7 +409,6 @@ multi_beta_binomial_glm = function(.data,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
                                    approximate_posterior_inference = TRUE,
-                                   variance_association = FALSE,
                                    cores = detectCores(), # For development purpose,
                                    seed = sample(1e5, 1),
                                    verbose = FALSE,
@@ -523,7 +426,7 @@ multi_beta_binomial_glm = function(.data,
   .count = enquo(.count)
   #contrasts = contrasts |> enquo() |> quo_names()
 
-  result_list =
+  estimates_list =
     estimate_multi_beta_binomial_glm(
       .data = .data,
       formula_composition = formula_composition,
@@ -536,7 +439,6 @@ multi_beta_binomial_glm = function(.data,
       percent_false_positive = percent_false_positive,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
-      variance_association = variance_association,
       cores = cores, # For development purpose,
       seed = seed,
       verbose = verbose,
@@ -546,47 +448,35 @@ multi_beta_binomial_glm = function(.data,
       max_sampling_iterations = max_sampling_iterations
     )
 
+  # Create a dummy tibble
+  tibble() |>
+    # Attach association mean concentration
+    add_attr(estimates_list$fit, "fit") %>%
+    add_attr(estimates_list$data_for_model, "model_input") |>
+    add_attr(estimates_list$truncation_df2, "truncation_df2") |>
+    add_attr(.sample, ".sample") |>
+    add_attr(.cell_group, ".cell_group") |>
+    add_attr(.count, ".count") |>
+    add_attr(check_outliers, "check_outliers") |>
 
-  hypothesis_test_multi_beta_binomial_glm(
-    .sample = !!.sample,
-    .cell_group = !!.cell_group,
-    .count = !!.count,
-    result_list$fit,
-    result_list$data_for_model,
-    percent_false_positive,
-    result_list$truncation_df2,
-    variance_association = variance_association,
-    test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
-    contrasts = contrasts
-  ) %>%
 
-    # Add cell name
-    left_join(
-      result_list$data_for_model$y %>% colnames() %>% enframe(name = "M", value  = quo_name(.cell_group)),
-      by = "M"
-    ) %>%
-    select(!!.cell_group, everything(), -M) %>%
+    test_contrasts(
+      contrasts = contrasts,
+      percent_false_positive = percent_false_positive,
+      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change
+    ) |>
 
-    # Join generated data
-    # left_join(result_list$generated_quantities, by="M") %>%
-
-    # Add outlier
-    when(
-      check_outliers ~ (.) %>%
-        left_join(
-          result_list$truncation_df2 %>%
-            select(-c(M, N, .variable, mean, se_mean, sd, n_eff, Rhat)) %>%
-            nest(count_data = -!!.cell_group),
-          by = quo_name(.cell_group)
-        ),
-      ~ (.) %>% left_join(result_list$truncation_df2 %>% nest(count_data = -!!.cell_group),  by = quo_name(.cell_group))
-    ) %>%
+    # Add osme attributes
+    add_attr(get_mean_precision_association(estimates_list$fit), "mean_concentration_association") %>%
+    when(pass_fit ~ add_attr(., estimates_list$fit, "fit"), ~ (.)) |>
 
     # Attach association mean concentration
-    add_attr(get_mean_precision_association(result_list$fit), "mean_concentration_association") %>%
-    when(pass_fit ~ add_attr(., result_list$fit, "fit"), ~ (.)) %>%
-    add_attr(result_list$data_for_model, "model_input") |>
-    add_attr(contrasts, "contrasts")
+    add_attr(estimates_list$data_for_model, "model_input") |>
+    add_attr(estimates_list$truncation_df2, "truncation_df2") |>
+    add_attr(.sample, ".sample") |>
+    add_attr(.cell_group, ".cell_group") |>
+    add_attr(.count, ".count") |>
+    add_attr(check_outliers, "check_outliers")
 
 
 }

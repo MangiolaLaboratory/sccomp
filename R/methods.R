@@ -20,7 +20,7 @@
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
-#' @param contrasts A vector of expressions. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be `constrasts = c(treatmentyes - treatmentno)`.
+#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
 #' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
@@ -67,7 +67,6 @@
 #'    sample,
 #'    cell_group,
 #'    count,
-#'     approximate_posterior_inference = "all",
 #'     check_outliers = FALSE,
 #'     cores = 1
 #'   )
@@ -561,12 +560,131 @@ sccomp_glm_data_frame_counts = function(.data,
 }
 
 
+#' test_contrasts
+#'
+#' @description This function test ocntrasts from a sccomp result.
+#'
+#'
+#' @param .data A tibble. The result of sccomp_glm.
+#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
+#' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#'
+#' @return A nested tibble `tbl` with cell_group-wise statistics
+#'
+#' @export
+#'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#'   estimates =
+#'   sccomp_glm(
+#'   counts_obj ,
+#'    ~ 0 + type, ~1,  sample, cell_group, count,
+#'     check_outliers = FALSE,
+#'     cores = 1
+#'   ) |>
+#'
+#'   test_contrasts("typecancer - typebenign")
+#'
+test_contrasts <- function(.data,
+                           contrasts,
+                           percent_false_positive = 5,
+                           test_composition_above_logit_fold_change = 0.2) {
+  UseMethod("test_contrasts", .data)
+}
+
+#' @export
+#'
+test_contrasts.data.frame = function(.data,
+                                     contrasts,
+                                     percent_false_positive = 5,
+                                     test_composition_above_logit_fold_change = 0.2){
+
+
+  .sample = .data |>  attr(".sample")
+  .cell_group = .data |>  attr(".cell_group")
+  .count = .data |>  attr(".count")
+  check_outliers = .data |>  attr("check_outliers")
+  model_input = .data |> attr("model_input")
+  truncation_df2 =  .data |>  attr("truncation_df2")
+  fit = .data |>  attr("fit")
+
+  abundance_CI =
+    fit %>%
+    draws_to_tibble_x_y("beta", "C", "M") |>
+    draws_to_statistics(
+      contrasts,
+      model_input$X,
+      percent_false_positive/100,
+      test_composition_above_logit_fold_change,
+      "c_"
+    )
+
+  variability_CI =
+    fit %>%
+    draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
+
+    # We want variability, not concentration
+    mutate(.value = -.value) |>
+
+    draws_to_statistics(
+      contrasts,
+      model_input$XA,
+      percent_false_positive/100,
+      test_composition_above_logit_fold_change,
+      "v_"
+    )
+
+  # Merge and parse
+  abundance_CI |>
+
+    # Add ALPHA
+    left_join(variability_CI) |>
+    suppressMessages() |>
+
+    # Add easy to understand covariate labels
+    left_join(
+      model_input$covariate_parameter_dictionary |>
+        select(covariate, design_matrix_col),
+      by = c("parameter" = "design_matrix_col" )
+    ) %>%
+    select(parameter, covariate, everything()) %>%
+
+    # Add cell name
+    left_join(
+      model_input %$%
+        y %>%
+        colnames() |>
+        enframe(name = "M", value  = quo_name(.cell_group)),
+      by = "M"
+    ) %>%
+    select(!!.cell_group, everything(), -M) %>%
+
+    # Add outlier
+    when(
+      check_outliers ~ (.) %>%
+        left_join(
+          truncation_df2 |>
+            select(-c(M, N, .variable, mean, se_mean, sd, n_eff, Rhat)) %>%
+            nest(count_data = -!!.cell_group),
+          by = quo_name(.cell_group)
+        ),
+      ~ (.) %>% left_join(
+        truncation_df2  |>
+          nest(count_data = -!!.cell_group),
+        by = quo_name(.cell_group)
+      )
+    )
+}
+
 #' replicate_data
 #'
 #' @description This function replicates counts from a real-world dataset.
 #'
 #'
-#' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param .data A tibble. The result of sccomp_glm.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.

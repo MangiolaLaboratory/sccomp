@@ -563,7 +563,7 @@ parse_formula <- function(fm) {
 data_spread_to_model_input =
   function(
     .data_spread, formula, .sample, .cell_type, .count,
-    variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ,
+    truncation_ajustment = 1, approximate_posterior_inference ,
     formula_variability = ~ 1,
     contrasts = NULL,
     bimodal_mean_variability_association = FALSE,
@@ -704,7 +704,7 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count){
 #' @noRd
 #'
 data_simulation_to_model_input =
-  function(.data, formula, .sample, .cell_type, .exposure, .coefficients, variance_association = FALSE, truncation_ajustment = 1, approximate_posterior_inference ){
+  function(.data, formula, .sample, .cell_type, .exposure, .coefficients, truncation_ajustment = 1, approximate_posterior_inference ){
 
     # Prepare column same enquo
     .sample = enquo(.sample)
@@ -729,8 +729,8 @@ data_simulation_to_model_input =
         .x
       }
 
-    XA = variance_association %>%
-      when((.) == FALSE ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
+    XA = covariate_names %>%
+      when((.) == "1" ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
       as_tibble() %>%
       distinct()
 
