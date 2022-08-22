@@ -1176,10 +1176,11 @@ plot_boxplot = function(
         filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
 
         # Rename
-        select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
+        #select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
+        select(!!.cell_group, name = parameter) |>
 
     # Merge contrasts
-    with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    with_groups(c(!!.cell_group,), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
 
 
 
