@@ -95,6 +95,10 @@ data{
   // Does the design icludes intercept
   int <lower=0, upper=1> intercept_in_design;
 
+  // Random intercept
+  int N_grouping;
+  int<lower=1, upper=N_grouping> random_intercept_grouping[N];
+
 }
 transformed data{
   vector[2*M] Q_r = Q_sum_to_zero_QR(M);
@@ -125,7 +129,7 @@ transformed data{
   exposure_array = rep_each(exposure, M);
 }
 parameters{
-	matrix[C, M-1] beta_raw_raw;
+	matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
 	matrix[A, M] alpha; // Variability
 
 	// To exclude
@@ -133,15 +137,20 @@ parameters{
   real<lower=0> prec_sd;
 
   real<lower=0, upper=1> mix_p;
+
+  // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
+  matrix[N_grouping, M-1] random_intercept;
+  real random_intercept_sigma[M-1];
 }
 transformed parameters{
 		matrix[C,M] beta_raw;
+
     matrix[M, N] precision = (Xa * alpha)';
     matrix[C,M] beta;
 
-  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+    for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+    beta = R_ast_inverse * beta_raw; // coefficients on x
 
-  beta = R_ast_inverse * beta_raw; // coefficients on x
 
 }
 
@@ -149,11 +158,29 @@ transformed parameters{
 
 model{
 
-  if(use_data == 1){
-     // Calculate MU
-     matrix[M, N] mu = (Q_ast * beta_raw)';
+
+if(use_data == 1){
+
+    // Random intercept
+    matrix[M, N] mu;
+    row_vector[M-1] intercept;
+    matrix[C,M-1] beta_raw_raw_for_random_intercept;
+		matrix[C,M] beta_raw_for_random_intercept;
      vector[N*M] mu_array;
      vector[N*M] precision_array;
+
+    for(n in 1:N){
+
+      // Replace intercept with random one
+      intercept = beta_raw_raw[1];
+      intercept += random_intercept[random_intercept_grouping[n]];
+      beta_raw_raw_for_random_intercept = append_row(intercept, beta_raw_raw[2:C,]);
+
+      for(c in 1:C)	beta_raw_for_random_intercept[c,] =  sum_to_zero_QR(beta_raw_raw_for_random_intercept[c,], Q_r);
+
+      // Calculate MU
+      mu[,n] = (X[n] * beta_raw_for_random_intercept)';
+  }
 
 
       for(n in 1:N)  mu[,n] = softmax(mu[,n]);
@@ -177,7 +204,7 @@ model{
     // If interceopt in design or I have complex variability design
     if(intercept_in_design || A > 1){
 
-      // Loop across the intercept columns
+      // Loop across the intercept columns in case of a intercept-less design (covariate are intercepts)
       for(a in 1:A_intercept_columns)
         target += abundance_variability_regression(
           alpha[a],
@@ -215,6 +242,13 @@ model{
   beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
   if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
 
+
+// Random intercept
+  for(m in 1:(M-1)){
+    random_intercept[,m] ~ normal(0, random_intercept_sigma[m]);
+    sum(random_intercept[,m]) ~ normal(0, 0.001*N_grouping);
+    random_intercept_sigma[m] ~ normal(0,1);
+  }
 
 
   // Hyper priors
