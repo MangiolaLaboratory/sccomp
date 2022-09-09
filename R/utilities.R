@@ -679,6 +679,8 @@ data_spread_to_model_input =
 
     data_for_model$intercept_in_design = X[,1] |> unique() |> identical(1)
 
+    data_for_model$A_intercept_columns = when(data_for_model$intercept_in_design, (.) ~ 1, ~ .data_spread |> select(covariate_names[1]) |> distinct() |> nrow() )
+
     # Return
     data_for_model
   }
