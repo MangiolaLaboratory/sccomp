@@ -567,13 +567,14 @@ data_spread_to_model_input =
     formula_variability = ~ 1,
     contrasts = NULL,
     bimodal_mean_variability_association = FALSE,
-    use_data = TRUE){
+    use_data = TRUE,
+    .grouping_for_random_intercept){
 
     # Prepare column same enquo
     .sample = enquo(.sample)
     .cell_type = enquo(.cell_type)
     .count = enquo(.count)
-
+    .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
     get_design_matrix = function(formula, .data_spread){
 
@@ -622,7 +623,10 @@ data_spread_to_model_input =
         truncation_ajustment = truncation_ajustment,
         is_vb = as.integer(approximate_posterior_inference),
         bimodal_mean_variability_association = bimodal_mean_variability_association,
-        use_data = use_data
+        use_data = use_data,
+
+        N_grouping = .data_spread |> distinct(!!.grouping_for_random_intercept) |> nrow(),
+        random_intercept_grouping = .data_spread |> pull(!!.grouping_for_random_intercept)
       )
 
     # Add censoring
@@ -675,25 +679,26 @@ data_spread_to_model_input =
 
     data_for_model$intercept_in_design = X[,1] |> unique() |> identical(1)
 
-    # How many intercept columns
-    data_for_model$A_intercept_columns = when(data_for_model$intercept_in_design, (.) ~ 1, ~ .data_spread |> select(covariate_names[1]) |> distinct() |> nrow() )
-
     # Return
     data_for_model
   }
 
-data_to_spread = function(.data, formula, .sample, .cell_type, .count){
+data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_intercept){
 
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
+  .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
   .data %>%
     nest(data = -!!.sample) %>%
     mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
     unnest(data) %>%
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula)) %>%
-    spread(!!.cell_type, !!.count)
+    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), !!.grouping_for_random_intercept) %>%
+    spread(!!.cell_type, !!.count) |>
+
+    # Mutate random intercept grouping to number
+    mutate(!!.grouping_for_random_intercept := factor(!!.grouping_for_random_intercept))
 
 }
 

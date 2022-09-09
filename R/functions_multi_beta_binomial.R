@@ -17,6 +17,7 @@
 #' @importFrom purrr map_lgl
 #' @importFrom dplyr case_when
 #' @importFrom rlang :=
+#' @importFrom rlang quo_is_symbolic
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
@@ -48,6 +49,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
                                             # Secondary parameters
                                             contrasts = NULL,
+                                            .grouping_for_random_intercept = NULL,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
@@ -64,6 +66,16 @@ estimate_multi_beta_binomial_glm = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
+  .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
+
+  # If no random intercept fake it
+  if(!quo_is_symbolic(.grouping_for_random_intercept)){
+
+    .grouping_for_random_intercept = quo(!! sym("random_intercept"))
+
+    .data = .data |> mutate(!!.grouping_for_random_intercept := !!.sample)
+  }
+
 
   CI = 1 - (percent_false_positive/100)
 
@@ -81,7 +93,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
@@ -89,7 +101,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula_variability = formula_variability,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
-        use_data = use_data
+        use_data = use_data,
+        !!.grouping_for_random_intercept
       )
 
     # Print design matrix
