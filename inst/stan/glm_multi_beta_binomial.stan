@@ -22,6 +22,19 @@ functions{
     return x;
   }
 
+  vector sum_to_zero_QR_vector(vector x_raw, vector Q_r) {
+    int N = num_elements(x_raw) + 1;
+    vector [N] x;
+    real x_aux = 0;
+
+    for(i in 1:N-1){
+      x[i] = x_aux + x_raw[i] * Q_r[i];
+      x_aux = x_aux + x_raw[i] * Q_r[i+N];
+    }
+    x[N] = x_aux;
+    return x;
+  }
+
   int[] rep_each(int[] x, int K) {
     int N = size(x);
     int y[N * K];
@@ -37,27 +50,27 @@ functions{
 
   row_vector average_by_col(matrix beta){
     return
-      rep_row_vector(1.0, rows(beta)) * beta / rows(beta);
+    rep_row_vector(1.0, rows(beta)) * beta / rows(beta);
   }
 
-real abundance_variability_regression(row_vector variability, row_vector abundance, real[] prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
+  real abundance_variability_regression(row_vector variability, row_vector abundance, real[] prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
 
-  real lp = 0;
-      // If mean-variability association is bimodal such as for single-cell RNA use mixed model
+    real lp = 0;
+    // If mean-variability association is bimodal such as for single-cell RNA use mixed model
     if(bimodal_mean_variability_association == 1){
       for(m in 1:cols(variability))
-        lp += log_mix(mix_p,
-                        normal_lpdf(variability[m] | abundance[m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-                        normal_lpdf(variability[m] | abundance[m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
-                      );
+      lp += log_mix(mix_p,
+      normal_lpdf(variability[m] | abundance[m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
+      normal_lpdf(variability[m] | abundance[m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+      );
 
-    // If no bimodal
+      // If no bimodal
     } else {
       lp =  normal_lpdf(variability | abundance * prec_coeff[2] + prec_coeff[1], prec_sd );
     }
 
     return(lp);
-}
+  }
 
 }
 data{
@@ -102,6 +115,10 @@ data{
 }
 transformed data{
   vector[2*M] Q_r = Q_sum_to_zero_QR(M);
+
+  // Random intercept
+  vector[2*N_grouping] Q_r_random_intercept = Q_sum_to_zero_QR(N_grouping);
+
   real x_raw_sigma = inv_sqrt(1 - inv(M));
 
   matrix[N, C] Q_ast;
@@ -129,27 +146,27 @@ transformed data{
   exposure_array = rep_each(exposure, M);
 }
 parameters{
-	matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
-	matrix[A, M] alpha; // Variability
+  matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
+  matrix[A, M] alpha; // Variability
 
-	// To exclude
+  // To exclude
   real prec_coeff[2];
   real<lower=0> prec_sd;
 
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
-  matrix[N_grouping-1, M-1] random_intercept;
+  matrix[N_grouping-1, M-1] random_intercept_raw;
   real<lower=0> random_intercept_sigma[M-1];
 }
 transformed parameters{
-		matrix[C,M] beta_raw;
+  matrix[C,M] beta_raw;
 
-    matrix[M, N] precision = (Xa * alpha)';
-    matrix[C,M] beta;
+  matrix[M, N] precision = (Xa * alpha)';
+  matrix[C,M] beta;
 
-    for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-    beta = R_ast_inverse * beta_raw; // coefficients on x
+  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+  beta = R_ast_inverse * beta_raw; // coefficients on x
 
 
 }
@@ -159,42 +176,53 @@ transformed parameters{
 model{
 
 
-if(use_data == 1){
+  if(use_data == 1){
 
-    // Random intercept
-    matrix[M, N] mu;
-    row_vector[M-1] intercept;
-    matrix[C,M-1] beta_raw_raw_for_random_intercept;
-		matrix[C,M] beta_raw_for_random_intercept;
-    vector[N*M] mu_array;
-    vector[N*M] precision_array;
+      matrix[M, N] mu;
+      vector[N*M] mu_array;
+      vector[N*M] precision_array;
 
-    for(n in 1:N){
-
-      // Replace intercept with random one
-      intercept = beta_raw_raw[1];
-      // intercept += random_intercept[random_intercept_grouping[n]];
-      beta_raw_raw_for_random_intercept = append_row(intercept, beta_raw_raw[2:C,]);
-
-      for(c in 1:C)	beta_raw_for_random_intercept[c,] =  sum_to_zero_QR(beta_raw_raw_for_random_intercept[c,], Q_r);
-
-      // Calculate MU
-      mu[,n] = (X[n] * beta_raw_for_random_intercept)';
-  }
+    if(N_grouping>1){
+      // Random intercept
+      row_vector[M-1] intercept;
+      matrix[C,M-1] beta_raw_raw_for_random_intercept;
+      matrix[C,M] beta_raw_for_random_intercept;
 
 
-      for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+      // Reconstitute sum to 0 random intercepts
+      matrix[N_grouping, M-1] random_intercept;
+      random_intercept[1:(N_grouping-1)] = random_intercept_raw;
+      for(m in 1:(M-1)) random_intercept[, m] = sum_to_zero_QR_vector(random_intercept_raw[,m], Q_r_random_intercept);
 
-      // Convert the matrix m to a column vector in column-major order.
-     mu_array = to_vector(mu);
-     precision_array = to_vector(exp(precision));
+      for(n in 1:N){
+
+        // Replace intercept with random one
+        intercept = beta_raw_raw[1];
+        intercept += random_intercept[random_intercept_grouping[n]];
+        beta_raw_raw_for_random_intercept = append_row(intercept, beta_raw_raw[2:C,]);
+
+        for(c in 1:C)	beta_raw_for_random_intercept[c,] =  sum_to_zero_QR(beta_raw_raw_for_random_intercept[c,], Q_r);
+
+        // Calculate MU
+        mu[,n] = (X[n] * beta_raw_for_random_intercept)';
+      }
+    }
+
+    else
+    mu = (X * beta_raw)';
+
+    for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+
+    // Convert the matrix m to a column vector in column-major order.
+    mu_array = to_vector(mu);
+    precision_array = to_vector(exp(precision));
 
     target += beta_binomial_lpmf(
       y_array[truncation_not_idx] |
       exposure_array[truncation_not_idx],
       (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
       ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
-    ) ;
+      ) ;
   }
 
   // Priors
@@ -206,17 +234,17 @@ if(use_data == 1){
 
       // Loop across the intercept columns in case of a intercept-less design (covariate are intercepts)
       for(a in 1:A_intercept_columns)
-        target += abundance_variability_regression(
-          alpha[a],
-          beta[a],
-          prec_coeff,
-          prec_sd,
-          bimodal_mean_variability_association,
-          mix_p
+      target += abundance_variability_regression(
+        alpha[a],
+        beta[a],
+        prec_coeff,
+        prec_sd,
+        bimodal_mean_variability_association,
+        mix_p
         );
 
-      // Variability effect
-      if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
+        // Variability effect
+        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
     }
 
     // If intercept-less model and A == 1 I have to average the whole beta covariate
@@ -227,13 +255,13 @@ if(use_data == 1){
         prec_coeff,
         prec_sd,
         bimodal_mean_variability_association,
-          mix_p
-      );
+        mix_p
+        );
 
     }
   }
   else{
-     // Priors variability
+    // Priors variability
     for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
     if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
   }
@@ -243,10 +271,9 @@ if(use_data == 1){
   if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
 
 
-// Random intercept
+  // Random intercept
   for(m in 1:(M-1)){
-    random_intercept[,m] ~ normal(0, random_intercept_sigma[m]);
-    sum(random_intercept[,m]) ~ normal(0, 0.001*N_grouping);
+    random_intercept_raw[,m] ~ normal(0, random_intercept_sigma[m]);
     random_intercept_sigma[m] ~ normal(0,1);
   }
 
