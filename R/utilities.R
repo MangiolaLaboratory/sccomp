@@ -606,14 +606,14 @@ data_spread_to_model_input =
     Ar = nrow(XA);
 
     covariate_names = parse_formula(formula)
-    cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% colnames()
+    cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure, -!!.grouping_for_random_intercept) %>% colnames()
 
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
-        M = .data_spread %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
+        M = .data_spread %>% select(-!!.sample, -covariate_names, -exposure, -!!.grouping_for_random_intercept) %>% ncol(),
         exposure = .data_spread$exposure,
-        y = .data_spread %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = quo_name(.sample)),
+        y = .data_spread %>% select(-covariate_names, -exposure, -!!.grouping_for_random_intercept) %>% as_matrix(rownames = quo_name(.sample)),
         X = X,
         XA = XA,
         Xa = Xa,
@@ -626,7 +626,7 @@ data_spread_to_model_input =
         use_data = use_data,
 
         N_grouping = .data_spread |> distinct(!!.grouping_for_random_intercept) |> nrow(),
-        random_intercept_grouping = .data_spread |> pull(!!.grouping_for_random_intercept)
+        random_intercept_grouping = .data_spread |> pull(!!.grouping_for_random_intercept) |> as.array()
       )
 
     # Add censoring
@@ -700,7 +700,7 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
     spread(!!.cell_type, !!.count) |>
 
     # Mutate random intercept grouping to number
-    mutate(!!.grouping_for_random_intercept := factor(!!.grouping_for_random_intercept))
+    mutate(!!.grouping_for_random_intercept := factor(!!.grouping_for_random_intercept) |> as.integer())
 
 }
 
