@@ -139,8 +139,8 @@ parameters{
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
-  matrix[N_grouping, M-1] random_intercept;
-  real random_intercept_sigma[M-1];
+  matrix[N_grouping-1, M-1] random_intercept;
+  real<lower=0> random_intercept_sigma[M-1];
 }
 transformed parameters{
 		matrix[C,M] beta_raw;
@@ -166,14 +166,14 @@ if(use_data == 1){
     row_vector[M-1] intercept;
     matrix[C,M-1] beta_raw_raw_for_random_intercept;
 		matrix[C,M] beta_raw_for_random_intercept;
-     vector[N*M] mu_array;
-     vector[N*M] precision_array;
+    vector[N*M] mu_array;
+    vector[N*M] precision_array;
 
     for(n in 1:N){
 
       // Replace intercept with random one
       intercept = beta_raw_raw[1];
-      intercept += random_intercept[random_intercept_grouping[n]];
+      // intercept += random_intercept[random_intercept_grouping[n]];
       beta_raw_raw_for_random_intercept = append_row(intercept, beta_raw_raw[2:C,]);
 
       for(c in 1:C)	beta_raw_for_random_intercept[c,] =  sum_to_zero_QR(beta_raw_raw_for_random_intercept[c,], Q_r);
