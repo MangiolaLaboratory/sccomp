@@ -661,9 +661,9 @@ data_spread_to_model_input =
 
         # Random intercept
         N_random_intercepts = random_intercept_grouping |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow(),
-        N_minus_sum = random_intercept_grouping |> filter(minus_sum>0) |> distinct(mean_idx) |> nrow(),
+        N_minus_sum = random_intercept_grouping |> filter(minus_sum>0) |> distinct(minus_sum) |> nrow(),
         random_intercept_grouping = random_intercept_grouping |> as_matrix(),
-        paring_cov_random_intercept = random_intercept_grouping |> distinct(cov, mean_idx) |> filter(mean_idx>0)
+        paring_cov_random_intercept = random_intercept_grouping |> distinct(cov, mean_idx) |> filter(mean_idx>0) |> as_matrix()
       )
 
     # Add censoring
