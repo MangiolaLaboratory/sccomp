@@ -163,7 +163,7 @@ parameters{
   row_vector[(M-1) * (N_random_intercepts>0)] random_intercept_sigma_raw;
 
   // If I have just one group
-  real<multiplier = exp(random_intercept_sigma_mu)> zero_random_intercept[N_random_intercepts>0];
+  real zero_random_intercept[N_random_intercepts>0];
 
 }
 transformed parameters{
@@ -189,7 +189,7 @@ transformed parameters{
   // Building the - sum
   //
   // Loop across covariates
-  for(a in 1:A_intercept_columns){
+  for(a in 1:N_minus_sum){
 
     // Reset sum to zero
     row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
@@ -214,17 +214,17 @@ transformed parameters{
     if(random_intercept_grouping[n, 3] > 0)
 
     // Non centered parametrisation
-      random_intercept[n] = random_intercept_raw[random_intercept_grouping[n, 3]] .* exp(random_intercept_sigma);
+      random_intercept[n] = random_intercept_raw[random_intercept_grouping[n, 3]] .* exp(random_intercept_sigma / 3.0);
 
     // If there are more than 1 random intercepts for the N (last) group
     // Take the -sum(random intercept) so we keep N-1 degrees of freedom for the random intercept
     // To avoid heavy correlations
     else if(random_intercept_grouping[n, 4] > 0)
-        random_intercept[n] = random_intercept_minus_sum[random_intercept_grouping[n, 4]];
+        random_intercept[n] = random_intercept_minus_sum[random_intercept_grouping[n, 4]] .* exp(random_intercept_sigma / 3.0);
 
     // If one covariate has no random intercept take a parameter with mean 0 and sd informed hierarchically
     else
-        random_intercept[n] = rep_row_vector(zero_random_intercept[N_random_intercepts>0], M-1);
+        random_intercept[n] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
   }
 }
 
@@ -242,7 +242,6 @@ model{
 
     if(N_random_intercepts>0){
       // Random intercept
-      row_vector[M-1] intercept;
       matrix[C,M-1] beta_raw_raw_for_random_intercept;
       matrix[C,M] beta_raw_for_random_intercept;
 
@@ -268,6 +267,8 @@ model{
     mu_array = to_vector(mu);
     precision_array = to_vector(exp(precision));
 
+// print(min(mu_array));
+
     target += beta_binomial_lpmf(
       y_array[truncation_not_idx] |
       exposure_array[truncation_not_idx],
@@ -283,7 +284,7 @@ model{
     random_intercept_sigma_mu ~ std_normal();
     random_intercept_sigma_sigma ~ std_normal();
     // If I have just one group
-    zero_random_intercept ~ normal(0, exp(random_intercept_sigma_mu));
+    zero_random_intercept ~ std_normal();
   }
   // Priors
   if(exclude_priors == 0){
