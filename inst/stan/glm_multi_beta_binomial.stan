@@ -156,12 +156,14 @@ parameters{
 
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
   matrix[N_random_intercepts, M-1] random_intercept_raw;
+
+  // sd of random intercept
   real random_intercept_sigma_mu[N_random_intercepts>0];
   real random_intercept_sigma_sigma[N_random_intercepts>0];
-  vector[(M-1) * (N_random_intercepts>0)] random_intercept_sigma_raw;
+  row_vector[(M-1) * (N_random_intercepts>0)] random_intercept_sigma_raw;
 
   // If I have just one group
-  real zero_random_intercept[N_random_intercepts>0];
+  real<multiplier = exp(random_intercept_sigma_mu)> zero_random_intercept[N_random_intercepts>0];
 
 }
 transformed parameters{
@@ -176,13 +178,13 @@ transformed parameters{
   // Initialisation
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
   matrix[N, M-1] random_intercept;
-  vector[M-1] random_intercept_sigma;
+  row_vector[M-1] random_intercept_sigma;
 
 
   // random intercept
   if(N_random_intercepts>0){
 
-  random_intercept_sigma = random_intercept_sigma_mu[N_random_intercepts>0] + random_intercept_sigma_sigma[N_random_intercepts>0] * random_intercept_sigma_raw;
+  random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
 
   // Building the - sum
   //
@@ -210,7 +212,9 @@ transformed parameters{
     // If there are more than 1 random intercepts for the N -1 groups
     // Take the random intercept parameter
     if(random_intercept_grouping[n, 3] > 0)
-      random_intercept[n] = random_intercept_raw[random_intercept_grouping[n, 3]];
+
+    // Non centered parametrisation
+      random_intercept[n] = random_intercept_raw[random_intercept_grouping[n, 3]] .* exp(random_intercept_sigma);
 
     // If there are more than 1 random intercepts for the N (last) group
     // Take the -sum(random intercept) so we keep N-1 degrees of freedom for the random intercept
@@ -274,7 +278,7 @@ model{
 
   if(N_random_intercepts>0){
     // Random intercept
-    for(m in 1:(M-1))   random_intercept_raw[,m] ~ normal(0, exp(random_intercept_sigma[m]));
+    for(m in 1:(M-1))   random_intercept_raw[,m] ~ std_normal();
     random_intercept_sigma_raw ~ std_normal();
     random_intercept_sigma_mu ~ std_normal();
     random_intercept_sigma_sigma ~ std_normal();
