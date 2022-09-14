@@ -552,6 +552,50 @@ parse_formula <- function(fm) {
     as.character(attr(terms(fm), "variables"))[-1]
 }
 
+
+#' @importFrom glue glue
+#' @importFrom magrittr subtract
+get_random_intercept_design = function(.data, .sample, .grouping_for_random_intercept, intercept){
+
+  .sample = enquo(.sample)
+  .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
+
+  .data %>%
+    select(!!.sample, cov = intercept, group = !!.grouping_for_random_intercept) |>
+    mutate(mean_idx = glue("{cov}{group}") |> as.factor() |> as.integer()) |>
+    with_groups(cov, ~ .x |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
+    mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
+    mutate(minus_sum = if_else(mean_idx==0, as.factor(cov) |> as.integer(), 0L)) |>
+
+    # drop minus_sum if we just have one group per covariate
+    with_groups(cov, ~ .x |> when(length(unique(.x$group)) == 1 ~ mutate(., minus_sum = 0), ~ (.)))  |>
+
+
+    mutate(cov = as.factor(cov) |> as.integer()) |>
+    distinct()
+
+}
+
+get_design_matrix = function(formula, .data_spread, .sample){
+
+  .sample = enquo(.sample)
+
+  .data_spread %>%
+    select(!!.sample, parse_formula(formula)) %>%
+    model.matrix(formula, data=.) %>%
+    apply(2, function(x)
+      x %>% when(
+        sd(.)==0 ~ (.),
+
+        # If I only have 0 and 1 for a binomial factor
+        unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ (.),
+
+        # If continuous
+        ~ scale(., scale=FALSE)
+      )
+    )
+}
+
 #' @importFrom purrr when
 #' @importFrom stats model.matrix
 #' @importFrom tidyr expand_grid
@@ -576,27 +620,11 @@ data_spread_to_model_input =
     .count = enquo(.count)
     .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
-    get_design_matrix = function(formula, .data_spread){
 
-      .data_spread %>%
-        select(!!.sample, parse_formula(formula)) %>%
-        model.matrix(formula, data=.) %>%
-        apply(2, function(x)
-          x %>% when(
-            sd(.)==0 ~ (.),
 
-            # If I only have 0 and 1 for a binomial factor
-            unique(.) %>% sort() %>% equals(c(0,1)) %>% all() ~ (.),
+    X  = get_design_matrix(formula, .data_spread, !!.sample)
 
-            # If continuous
-            ~ scale(., scale=FALSE)
-          )
-        )
-    }
-
-    X  = get_design_matrix(formula, .data_spread)
-
-    Xa  = get_design_matrix(formula_variability, .data_spread)
+    Xa  = get_design_matrix(formula_variability, .data_spread, !!.sample)
 
     XA = Xa %>%
       as_tibble() %>%
@@ -607,6 +635,12 @@ data_spread_to_model_input =
 
     covariate_names = parse_formula(formula)
     cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure, -!!.grouping_for_random_intercept) %>% colnames()
+
+    # Random intercept
+    random_intercept_grouping =
+      .data_spread |>
+      get_random_intercept_design(!!.sample, !!.grouping_for_random_intercept, covariate_names[1]) |>
+      select(-!!.sample)
 
     data_for_model =
       list(
@@ -625,8 +659,11 @@ data_spread_to_model_input =
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
 
-        N_grouping = .data_spread |> distinct(!!.grouping_for_random_intercept) |> nrow(),
-        random_intercept_grouping = .data_spread |> pull(!!.grouping_for_random_intercept) |> as.array()
+        # Random intercept
+        N_random_intercepts = random_intercept_grouping |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow(),
+        N_minus_sum = random_intercept_grouping |> filter(minus_sum>0) |> distinct(mean_idx) |> nrow(),
+        random_intercept_grouping = random_intercept_grouping |> as_matrix(),
+        paring_cov_random_intercept = random_intercept_grouping |> distinct(cov, mean_idx) |> filter(mean_idx>0)
       )
 
     # Add censoring
@@ -1394,3 +1431,5 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
   rownames(proportions) = rownames(model_input$X)
   colnames(proportions) = colnames(model_input$beta )
 }
+
+
