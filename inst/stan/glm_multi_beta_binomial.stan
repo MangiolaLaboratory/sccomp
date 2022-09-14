@@ -156,13 +156,12 @@ parameters{
 
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
   matrix[N_random_intercepts, M-1] random_intercept_raw;
-
-  real random_intercept_sigma_mu;
-  real random_intercept_sigma_sigma;
-  vector[M-1] random_intercept_sigma_raw;
+  real random_intercept_sigma_mu[N_random_intercepts>0];
+  real random_intercept_sigma_sigma[N_random_intercepts>0];
+  vector[(M-1) * (N_random_intercepts>0)] random_intercept_sigma_raw;
 
   // If I have just one group
-  real zero_random_intercept;
+  real zero_random_intercept[N_random_intercepts>0];
 
 }
 transformed parameters{
@@ -174,15 +173,17 @@ transformed parameters{
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   beta = R_ast_inverse * beta_raw; // coefficients on x
 
-  // random intercept
+  // Initialisation
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
-
   matrix[N, M-1] random_intercept;
+  vector[M-1] random_intercept_sigma;
 
-  vector[M-1] random_intercept_sigma = random_intercept_sigma_mu + random_intercept_sigma_sigma * random_intercept_sigma_raw;
 
-
+  // random intercept
   if(N_random_intercepts>0){
+
+  random_intercept_sigma = random_intercept_sigma_mu[N_random_intercepts>0] + random_intercept_sigma_sigma[N_random_intercepts>0] * random_intercept_sigma_raw;
+
   // Building the - sum
   //
   // Loop across covariates
@@ -219,7 +220,7 @@ transformed parameters{
 
     // If one covariate has no random intercept take a parameter with mean 0 and sd informed hierarchically
     else
-        random_intercept[n] = rep_row_vector(zero_random_intercept, M-1);
+        random_intercept[n] = rep_row_vector(zero_random_intercept[N_random_intercepts>0], M-1);
   }
 }
 
@@ -271,6 +272,15 @@ model{
       ) ;
   }
 
+  if(N_random_intercepts>0){
+    // Random intercept
+    for(m in 1:(M-1))   random_intercept_raw[,m] ~ normal(0, exp(random_intercept_sigma[m]));
+    random_intercept_sigma_raw ~ std_normal();
+    random_intercept_sigma_mu ~ std_normal();
+    random_intercept_sigma_sigma ~ std_normal();
+    // If I have just one group
+    zero_random_intercept ~ normal(0, exp(random_intercept_sigma_mu));
+  }
   // Priors
   if(exclude_priors == 0){
 
@@ -315,15 +325,6 @@ model{
   // Priors abundance
   beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
   if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
-
-
-  // Random intercept
-  for(m in 1:(M-1))   random_intercept_raw[,m] ~ normal(0, exp(random_intercept_sigma[m]));
-  random_intercept_sigma_raw ~ std_normal();
-  random_intercept_sigma_mu ~ std_normal();
-  random_intercept_sigma_sigma ~ std_normal();
-  // If I have just one group
-  zero_random_intercept ~ normal(0, exp(random_intercept_sigma_mu));
 
 
   // Hyper priors
