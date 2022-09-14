@@ -109,15 +109,14 @@ data{
   int <lower=0, upper=1> intercept_in_design;
 
   // Random intercept
-  int N_grouping;
-  int<lower=1, upper=N_grouping> random_intercept_grouping[N];
+  int N_random_intercepts;
+  int N_minus_sum;
+  int random_intercept_grouping[N, 4];
+  int paring_cov_random_intercept[N_random_intercepts, 2];
 
 }
 transformed data{
   vector[2*M] Q_r = Q_sum_to_zero_QR(M);
-
-  // Random intercept
-  vector[2*N_grouping] Q_r_random_intercept = Q_sum_to_zero_QR(N_grouping);
 
   real x_raw_sigma = inv_sqrt(1 - inv(M));
 
@@ -156,8 +155,15 @@ parameters{
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
-  matrix[N_grouping-1, M-1] random_intercept_raw;
-  real<lower=0> random_intercept_sigma[M-1];
+  matrix[N_random_intercepts, M-1] random_intercept_raw;
+
+  real random_intercept_sigma_mu;
+  real random_intercept_sigma_sigma;
+  vector[M-1] random_intercept_sigma_raw;
+
+  // If I have just one group
+  real zero_random_intercept;
+
 }
 transformed parameters{
   matrix[C,M] beta_raw;
@@ -168,9 +174,56 @@ transformed parameters{
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   beta = R_ast_inverse * beta_raw; // coefficients on x
 
+  // random intercept
+  matrix[N_minus_sum, M-1] random_intercept_minus_sum;
 
+  matrix[N, M-1] random_intercept;
+
+  vector[M-1] random_intercept_sigma = random_intercept_sigma_mu + random_intercept_sigma_sigma * random_intercept_sigma_raw;
+
+
+  if(N_random_intercepts>0){
+  // Building the - sum
+  //
+  // Loop across covariates
+  for(a in 1:A_intercept_columns){
+
+    // Reset sum to zero
+    row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
+
+    // Loop across random intercept - 1
+    for(n in 1:N_random_intercepts){
+      if(paring_cov_random_intercept[n,1] == a)
+        temp_random_intercept += random_intercept_raw[n];
+    }
+
+    // The sum to zero for each covariate
+    random_intercept_minus_sum[a] = temp_random_intercept * -1;
+  }
+
+
+
+  // Bulding the random intercept vector of size N (number of samples)
+  for(n in 1:N){
+
+    // If there are more than 1 random intercepts for the N -1 groups
+    // Take the random intercept parameter
+    if(random_intercept_grouping[n, 3] > 0)
+      random_intercept[n] = random_intercept_raw[random_intercept_grouping[n, 3]];
+
+    // If there are more than 1 random intercepts for the N (last) group
+    // Take the -sum(random intercept) so we keep N-1 degrees of freedom for the random intercept
+    // To avoid heavy correlations
+    else if(random_intercept_grouping[n, 4] > 0)
+        random_intercept[n] = random_intercept_minus_sum[random_intercept_grouping[n, 4]];
+
+    // If one covariate has no random intercept take a parameter with mean 0 and sd informed hierarchically
+    else
+        random_intercept[n] = rep_row_vector(zero_random_intercept, M-1);
+  }
 }
 
+}
 
 
 model{
@@ -182,25 +235,17 @@ model{
       vector[N*M] mu_array;
       vector[N*M] precision_array;
 
-    if(N_grouping>1){
+    if(N_random_intercepts>0){
       // Random intercept
       row_vector[M-1] intercept;
       matrix[C,M-1] beta_raw_raw_for_random_intercept;
       matrix[C,M] beta_raw_for_random_intercept;
 
-
-      // Reconstitute sum to 0 random intercepts
-      matrix[N_grouping, M-1] random_intercept;
-      random_intercept[1:(N_grouping-1)] = random_intercept_raw;
-      for(m in 1:(M-1)) random_intercept[, m] = sum_to_zero_QR_vector(random_intercept_raw[,m], Q_r_random_intercept);
-
       for(n in 1:N){
 
         // Replace intercept with random one
-        intercept = beta_raw_raw[1];
-        intercept += random_intercept[random_intercept_grouping[n]];
-        beta_raw_raw_for_random_intercept = append_row(intercept, beta_raw_raw[2:C,]);
-
+        beta_raw_raw_for_random_intercept = beta_raw_raw;
+        beta_raw_raw_for_random_intercept[1] = beta_raw_raw_for_random_intercept[1] + random_intercept[n];
         for(c in 1:C)	beta_raw_for_random_intercept[c,] =  sum_to_zero_QR(beta_raw_raw_for_random_intercept[c,], Q_r);
 
         // Calculate MU
@@ -211,6 +256,7 @@ model{
     else
     mu = (X * beta_raw)';
 
+    // Calculate proportions
     for(n in 1:N)  mu[,n] = softmax(mu[,n]);
 
     // Convert the matrix m to a column vector in column-major order.
@@ -272,10 +318,12 @@ model{
 
 
   // Random intercept
-  for(m in 1:(M-1)){
-    random_intercept_raw[,m] ~ normal(0, random_intercept_sigma[m]);
-    random_intercept_sigma[m] ~ normal(0,1);
-  }
+  for(m in 1:(M-1))   random_intercept_raw[,m] ~ normal(0, exp(random_intercept_sigma[m]));
+  random_intercept_sigma_raw ~ std_normal();
+  random_intercept_sigma_mu ~ std_normal();
+  random_intercept_sigma_sigma ~ std_normal();
+  // If I have just one group
+  zero_random_intercept ~ normal(0, exp(random_intercept_sigma_mu));
 
 
   // Hyper priors

@@ -45,6 +45,9 @@ data("counts_obj")
 
 test_that("multi beta binomial from Seurat",{
 
+  library(tidyseurat)
+  seurat_obj = seurat_obj |> nest(data = -c(sample, type)) |> mutate(group__ = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4,4, 4, 4)) |> unnest(data)
+
   seurat_obj |>
     sccomp_glm(
       formula_composition = ~ type,
