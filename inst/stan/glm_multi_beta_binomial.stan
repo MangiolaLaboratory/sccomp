@@ -174,7 +174,8 @@ transformed parameters{
   matrix[C,M] beta;
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-  beta = beta_raw; // coefficients on x
+
+  beta = R_ast_inverse * beta_raw; // coefficients on x
 
   // Initialisation
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
@@ -237,7 +238,7 @@ model{
       mu = (X * beta_raw)' + mu_random_intercept;
     }
 
-    else mu = (X * beta_raw)';
+    else mu = (Q_ast * beta_raw)';
 
     // Calculate proportions
     for(n in 1:N)  mu[,n] = softmax(mu[,n]);
