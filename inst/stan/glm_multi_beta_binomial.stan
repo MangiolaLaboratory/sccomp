@@ -220,8 +220,8 @@ model{
   }
 
   // // Priors abundance
-  // beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
-  // if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
+  beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
+  if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
 
 
 
