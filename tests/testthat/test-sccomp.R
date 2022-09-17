@@ -59,10 +59,11 @@ test_that("multilevel multi beta binomial from Seurat",{
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
+      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 1,
       mcmc_seed = 42
     ) |>
-    filter(parameter == "typehealthy") |>
+    filter(parameter == "typecancer - typehealthy") |>
     filter(c_pH0<0.1) |>
     nrow() |>
     expect_equal(17)
