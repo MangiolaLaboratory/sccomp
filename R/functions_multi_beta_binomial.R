@@ -83,7 +83,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
   } else{
     .grouping_for_random_intercept = quo(!! sym("random_intercept"))
-    .data = .data |> mutate(!!.grouping_for_random_intercept := 1)
+    .data = .data |> mutate(!!.grouping_for_random_intercept := "1")
   }
 
   # Original - old
