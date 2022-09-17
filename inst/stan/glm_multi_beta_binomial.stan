@@ -207,13 +207,21 @@ model{
   }
   else{
      // Priors variability
-    for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
-    if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
+     if(intercept_in_design || A > 1){
+       for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
+     }
+
+     // if ~ 0 + covariuate
+     else {
+       alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+     }
+
   }
 
-  // Priors abundance
-  beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
-  if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
+  // // Priors abundance
+  // beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
+  // if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
 
 
 
