@@ -46,8 +46,6 @@ data("counts_obj")
 test_that("multilevel multi beta binomial from Seurat",{
 
   library(tidyseurat)
-  library(glue)
-  library(magrittr)
   seurat_obj =
     seurat_obj |>
     nest(data = -c(sample, type)) |>
@@ -78,7 +76,7 @@ test_that("multi beta binomial from Seurat",{
   #debugonce(sccomp:::estimate_multi_beta_binomial_glm)
   seurat_obj |>
     sccomp_glm(
-      formula_composition = ~ 0 + type + (type | group__),
+      formula_composition = ~  type,
       formula_variability = ~ 1,
       sample, cell_group,
       check_outliers = FALSE,
