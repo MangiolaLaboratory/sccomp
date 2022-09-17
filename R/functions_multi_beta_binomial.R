@@ -10,6 +10,7 @@
 #' @importFrom magrittr multiply_by
 #' @importFrom purrr map2
 #' @importFrom purrr map_int
+#' @importFrom purrr map_chr
 #' @importFrom magrittr multiply_by
 #' @importFrom magrittr equals
 #' @importFrom purrr map
@@ -66,21 +67,24 @@ estimate_multi_beta_binomial_glm = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-  .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
-  # If no random intercept fake it
-  if(!quo_is_symbolic(.grouping_for_random_intercept)){
-
-    .grouping_for_random_intercept = quo(!! sym("random_intercept"))
-
-    .data = .data |> mutate(!!.grouping_for_random_intercept := 1)
-  }
-
-
+  # Credible interval
   CI = 1 - (percent_false_positive/100)
 
   # Produce data list
   covariate_names = parse_formula(formula_composition)
+
+  # Random intercept
+  random_intercept_elements = parse_formula_random_intercept(formula_composition)
+
+  # If no random intercept fake it
+  if(!is.null(random_intercept_elements$grouping)){
+    .grouping_for_random_intercept = quo(!! sym(random_intercept_elements$grouping))
+
+  } else{
+    .grouping_for_random_intercept = quo(!! sym("random_intercept"))
+    .data = .data |> mutate(!!.grouping_for_random_intercept := 1)
+  }
 
   # Original - old
   # prec_sd ~ normal(0,2);
@@ -131,7 +135,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         verbose = verbose,
         seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept")
       )
 
     list(
@@ -180,7 +184,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         verbose = verbose,
         seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept")
       )
 
     rng =  rstan::gqs(
@@ -195,8 +199,11 @@ estimate_multi_beta_binomial_glm = function(.data,
         length_X_which = ncol(data_for_model$X),
         length_XA_which = ncol(data_for_model$XA),
         X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
-        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array()
+        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
 
+        # Random intercept
+        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
+        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array()
       ))
     )
 
@@ -275,7 +282,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         verbose = verbose,
         seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised")
+        pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
       )
 
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
@@ -352,7 +359,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
         verbose = verbose, seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised")
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept")
       )
 
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)

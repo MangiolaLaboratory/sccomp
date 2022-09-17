@@ -457,12 +457,13 @@ sccomp_glm_data_frame_raw = function(.data,
 
     # Add formula_composition information
     when(
-      length(parse_formula(formula_composition))>0 ~ left_join(.,
-                                                   .data %>%
-                                                     select(!!.sample, parse_formula(formula_composition), !!.grouping_for_random_intercept ) %>%
-                                                     distinct(),
-                                                   by = quo_name(.sample)
-                                                  ),
+      length(parse_formula(formula_composition))>0 ~
+        left_join(.,
+                  .data %>%
+                    select(!!.sample, parse_formula(formula_composition), parse_formula_random_intercept(formula_composition)$grouping) %>%
+                    distinct(),
+                  by = quo_name(.sample)
+        ),
       ~ (.)
     ) %>%
 
@@ -808,27 +809,42 @@ replicate_data.data.frame = function(.data,
       length_X_which = length(X_which),
       length_XA_which = length(XA_which),
       X_which,
-      XA_which
+      XA_which,
+
+      # Random intercept
+      length_X_random_intercept_which =
+        .data |>
+        attr("model_input") %$%
+        X_random_intercept |>
+        ncol(),
+      X_random_intercept_which =
+        .data |>
+        attr("model_input") %$%
+        X_random_intercept |>
+        ncol() |>
+        seq_len() |>
+        as.array() |>
+        list()
 
     ),
     seed = mcmc_seed
   ) %>%
 
-    # Parse
-    parse_generated_quantities(number_of_draws = number_of_draws) %>%
+  # Parse
+  parse_generated_quantities(number_of_draws = number_of_draws) %>%
 
-    # Get sample name
-    nest(data = -N) %>%
-    arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$y)) %>%
-    unnest(data) %>%
+  # Get sample name
+  nest(data = -N) %>%
+  arrange(N) %>%
+  mutate(!!.sample := rownames(model_input$y)) %>%
+  unnest(data) %>%
 
-    # get cell type name
-    nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(model_input$y)) %>%
-    unnest(data) %>%
+  # get cell type name
+  nest(data = -M) %>%
+  mutate(!!.cell_group := colnames(model_input$y)) %>%
+  unnest(data) %>%
 
-    select(-N, -M)
+  select(-N, -M)
 
   # %>%
   #   nest(generated_data = -c(!!.sample, !!.cell_group))

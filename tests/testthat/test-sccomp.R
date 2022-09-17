@@ -45,12 +45,12 @@ data("counts_obj")
 
 test_that("multi beta binomial from Seurat",{
 
-  library(tidyseurat)
-  seurat_obj = seurat_obj |> nest(data = -c(sample, type)) |> mutate(group__ = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4,4, 4, 4)) |> unnest(data)
 
+
+  #debugonce(sccomp:::estimate_multi_beta_binomial_glm)
   seurat_obj |>
     sccomp_glm(
-      formula_composition = ~ type,
+      formula_composition = ~ 0 + type + (type | group__),
       formula_variability = ~ 1,
       sample, cell_group,
       check_outliers = FALSE,
