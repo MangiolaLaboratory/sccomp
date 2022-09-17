@@ -66,7 +66,7 @@ test_that("multilevel multi beta binomial from Seurat",{
     filter(parameter == "typecancer - typehealthy") |>
     filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(17)
+    expect_equal(15)
 
 })
 
