@@ -111,8 +111,10 @@ data{
   // Random intercept
   int N_random_intercepts;
   int N_minus_sum;
-  int random_intercept_grouping[N, 4];
   int paring_cov_random_intercept[N_random_intercepts, 2];
+  int N_grouping;
+  matrix[N, N_grouping] X_random_intercept;
+  int idx_group_random_intercepts[N_grouping, 2];
 
 }
 transformed data{
@@ -168,65 +170,54 @@ parameters{
 }
 transformed parameters{
   matrix[C,M] beta_raw;
-
   matrix[M, N] precision = (Xa * alpha)';
   matrix[C,M] beta;
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-  beta = R_ast_inverse * beta_raw; // coefficients on x
+  beta = beta_raw; // coefficients on x
 
   // Initialisation
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
-  matrix[N, M-1] random_intercept;
   row_vector[M-1] random_intercept_sigma;
 
+  matrix[N_grouping, M-1] beta_random_intercept;
 
   // random intercept
   if(N_random_intercepts>0){
 
-  random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
+    random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
 
-  // Building the - sum
-  //
-  // Loop across covariates
-  for(a in 1:N_minus_sum){
+    // Building the - sum
+    //
+    // Loop across covariates
+    for(a in 1:N_minus_sum){
 
-    // Reset sum to zero
-    row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
+      // Reset sum to zero
+      row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
 
-    // Loop across random intercept - 1
-    for(n in 1:N_random_intercepts){
-      if(paring_cov_random_intercept[n,1] == a)
+      // Loop across random intercept - 1
+      for(n in 1:N_random_intercepts){
+        if(paring_cov_random_intercept[n,1] == a)
         temp_random_intercept += random_intercept_raw[n];
+      }
+
+      // The sum to zero for each covariate
+      random_intercept_minus_sum[a] = temp_random_intercept * -1;
     }
 
-    // The sum to zero for each covariate
-    random_intercept_minus_sum[a] = temp_random_intercept * -1;
+
+    // Build the beta_random_intercept
+    for(n in 1:N_grouping){
+        if(idx_group_random_intercepts[n,2]>0)
+          beta_random_intercept[idx_group_random_intercepts[n, 1]] = random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
+        else if(idx_group_random_intercepts[n,2]<0)
+           beta_random_intercept[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]]  .* exp(random_intercept_sigma / 3.0);
+        else
+          beta_random_intercept[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
+    }
+
   }
 
-
-
-  // Bulding the random intercept vector of size N (number of samples)
-  for(n in 1:N){
-
-    // If there are more than 1 random intercepts for the N -1 groups
-    // Take the random intercept parameter
-    if(random_intercept_grouping[n, 3] > 0)
-
-    // Non centered parametrisation
-      random_intercept[n] = random_intercept_raw[random_intercept_grouping[n, 3]] .* exp(random_intercept_sigma / 3.0);
-
-    // If there are more than 1 random intercepts for the N (last) group
-    // Take the -sum(random intercept) so we keep N-1 degrees of freedom for the random intercept
-    // To avoid heavy correlations
-    else if(random_intercept_grouping[n, 4] > 0)
-        random_intercept[n] = random_intercept_minus_sum[random_intercept_grouping[n, 4]] .* exp(random_intercept_sigma / 3.0);
-
-    // If one covariate has no random intercept take a parameter with mean 0 and sd informed hierarchically
-    else
-        random_intercept[n] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
-  }
-}
 
 }
 
@@ -236,29 +227,17 @@ model{
 
   if(use_data == 1){
 
-      matrix[M, N] mu;
-      vector[N*M] mu_array;
-      vector[N*M] precision_array;
+    matrix[M, N] mu;
+    vector[N*M] mu_array;
+    vector[N*M] precision_array;
 
+    // Random intercept
     if(N_random_intercepts>0){
-      // Random intercept
-      matrix[C,M-1] beta_raw_raw_for_random_intercept;
-      matrix[C,M] beta_raw_for_random_intercept;
-
-      for(n in 1:N){
-
-        // Replace intercept with random one
-        beta_raw_raw_for_random_intercept = beta_raw_raw;
-        beta_raw_raw_for_random_intercept[1] = beta_raw_raw_for_random_intercept[1] + random_intercept[n];
-        for(c in 1:C)	beta_raw_for_random_intercept[c,] =  sum_to_zero_QR(beta_raw_raw_for_random_intercept[c,], Q_r);
-
-        // Calculate MU
-        mu[,n] = (X[n] * beta_raw_for_random_intercept)';
-      }
+      matrix[M, N] mu_random_intercept = append_row((X_random_intercept * beta_random_intercept)', rep_row_vector(0, N));
+      mu = (X * beta_raw)' + mu_random_intercept;
     }
 
-    else
-    mu = (X * beta_raw)';
+    else mu = (X * beta_raw)';
 
     // Calculate proportions
     for(n in 1:N)  mu[,n] = softmax(mu[,n]);
@@ -267,7 +246,7 @@ model{
     mu_array = to_vector(mu);
     precision_array = to_vector(exp(precision));
 
-// print(min(mu_array));
+    // print(min(mu_array));
 
     target += beta_binomial_lpmf(
       y_array[truncation_not_idx] |

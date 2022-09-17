@@ -16,11 +16,22 @@ data {
 	int X_which[length_X_which];
 	int XA_which[length_XA_which];
 
+	// Random intercept
+	int length_X_random_intercept_which;
+	int X_random_intercept_which[length_X_random_intercept_which];
+	int N_grouping;
+	matrix[N, N_grouping] X_random_intercept;
+
+
+
 }
 parameters {
 
 	matrix[C,M] beta;
 	matrix[A,M] alpha;
+
+	// Random intercept
+	matrix[N_grouping, M-1] beta_random_intercept;
 
 }
 generated quantities{
@@ -34,9 +45,19 @@ generated quantities{
   real generated_exposure[N];
 
   matrix[M,N] mu = (X[,X_which] * beta[X_which,])';
+
+  // Random intercept
+  if(N_grouping>0){
+      matrix[M, N] mu_random_intercept = append_row((X_random_intercept[,X_random_intercept_which] * beta_random_intercept[X_random_intercept_which,])', rep_row_vector(0, N));
+      mu = mu + mu_random_intercept;
+  }
+
   matrix[M,N] precision = (Xa[,XA_which] * alpha[XA_which,])' / (is_truncated ? truncation_ajustment : 1);
 
+  // Calculate proportions
 	for(i in 1:N) mu[,i] = softmax(mu[,i]);
+
+	// Generate
 	for(i in 1:N) {
     	counts_uncorrected[i,] = beta_binomial_rng(
     	  exposure[i],

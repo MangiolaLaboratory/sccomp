@@ -30,15 +30,72 @@ add_attr = function(var, attribute, name) {
 #'
 #' @param fm A formula
 #'
+#' @importFrom stringr str_subset
+#' @importFrom magrittr extract2
+#'
 #' @return A character vector
 #'
 #' @keywords internal
 #' @noRd
 parse_formula <- function(fm) {
-  if (attr(terms(fm), "response") == 1)
-    stop("The formula must be of the kind \"~ covariates\" ")
+  stopifnot("The formula must be of the kind \"~ covariates\" " = attr(terms(fm), "response") == 0)
+
+    as.character(attr(terms(fm), "variables")) |>
+    str_subset("\\|", negate = TRUE) %>%
+
+      # Does not work the following
+      # |>
+      # extract2(-1)
+      .[-1]
+}
+
+
+#' Formula parser
+#'
+#' @param fm A formula
+#'
+#' @importFrom stringr str_subset
+#' @importFrom stringr str_split
+#' @importFrom stringr str_remove_all
+#' @importFrom rlang set_names
+#'
+#' @importFrom magrittr extract2
+#'
+#' @return A character vector
+#'
+#' @keywords internal
+#' @noRd
+parse_formula_random_intercept <- function(fm) {
+
+  stopifnot("The formula must be of the kind \"~ covariates\" " = attr(terms(fm), "response") == 0)
+
+  random_intercept_elements =
+    as.character(attr(terms(fm), "variables")) |>
+
+    # Select random intercept part
+    str_subset("\\|")
+
+  if(length(random_intercept_elements) > 0)
+    random_intercept_elements |>
+
+      # Divide grouping from covariates
+      str_split("\\|") |>
+      extract2(1) |>
+
+      # Divide covariates
+      str_split("\\+") |>
+
+      # Clean
+      map(~ str_remove_all(.x," ")) |>
+
+      # Format
+      set_names(c("covariate", "grouping"))
   else
-    as.character(attr(terms(fm), "variables"))[-1]
+    list(NULL, NULL) |>
+    set_names(c("covariate", "grouping"))
+
+
+
 }
 
 #' Get matrix from tibble
@@ -332,10 +389,6 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 
 }
 
-
-
-
-
 #' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
 
@@ -534,23 +587,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 
 }
 
-#' .formula parser
-#'
-#' @keywords internal
-#' @noRd
-#'
-#' @importFrom stats terms
-#'
-#' @param fm a formula
-#' @return A character vector
-#'
-#'
-parse_formula <- function(fm) {
-  if (attr(terms(fm), "response") == 1)
-    stop("tidybulk says: The .formula must be of the kind \"~ covariates\" ")
-  else
-    as.character(attr(terms(fm), "variables"))[-1]
-}
+
 
 
 #' @importFrom glue glue
@@ -561,6 +598,10 @@ get_random_intercept_design = function(.data, .sample, .grouping_for_random_inte
   .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
   .data %>%
+
+    # Mutate random intercept grouping to number
+    mutate(!!.grouping_for_random_intercept := factor(!!.grouping_for_random_intercept) |> as.integer()) |>
+
     select(!!.sample, cov = intercept, group = !!.grouping_for_random_intercept) |>
     mutate(mean_idx = glue("{cov}{group}") |> as.factor() |> as.integer()) |>
     with_groups(cov, ~ .x |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
@@ -596,10 +637,77 @@ get_design_matrix = function(formula, .data_spread, .sample){
     )
 }
 
+check_random_intercept_design = function(.data, covariate_names, formula, X, .grouping_for_random_intercept){
+
+  .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
+
+  # Random intercept
+  random_intercept_elements = parse_formula_random_intercept(formula)
+
+  # Check that the group column is categorical
+  stopifnot("sccomp says: the grouping column should be categorical (not numeric)" =
+              .data |>
+              pull(!!.grouping_for_random_intercept) |>
+              class() %in%
+              c("factor", "logical", "character")
+  )
+
+  # Check sanity of the grouping if only random intercept
+  stopifnot(
+    "sccomp says: the random intercept completely confounded with one or more discrete covariates" =
+      !(
+        random_intercept_elements$covariate |> identical("1") &
+          .data |>
+          select(!!.grouping_for_random_intercept, covariate_names) |>
+          select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
+          distinct() |>
+          count(!!.grouping_for_random_intercept) |>
+          pull(n) |>
+          equals(1) |>
+          any()
+      )
+  )
+
+  # Check if random intercept with random continuous slope. At the moment is not possible
+  # Because it would require I believe a multivariate prior
+  stopifnot(
+    "sccomp says: continuous random slope is not supported yet" =
+      !(
+        random_intercept_elements$covariate |> str_subset("1", negate = TRUE) |> length() |> gt(0) &&
+          .data |>
+          select(
+            random_intercept_elements$covariate |> str_subset("1", negate = TRUE)
+          ) |>
+          map_chr(class) %in%
+          c("integer", "numeric")
+      )
+  )
+
+  # Check if random intercept with random continuous slope. At the moment is not possible
+  # Because it would require I believe a multivariate prior
+  stopifnot(
+    "sccomp says: currently, discrete random slope is only supported in a intercept-free model. For example ~ 0 + treatment + (treatment | group)" =
+    !(
+      # If I have both random intercept and random discrete slope
+      (
+        (random_intercept_elements$covariate %in% "1") |> any() &&
+        random_intercept_elements$covariate |> length() |> gt(1)
+      ) |
+
+      # If I have random slope and non-intercept-free model
+      (
+        random_intercept_elements$covariate |> str_subset("1", negate = TRUE) |> length() |> gt(0) &
+          X[,1] |> unique() |> equals(1) |> all()
+      )
+    )
+  )
+}
+
 #' @importFrom purrr when
 #' @importFrom stats model.matrix
 #' @importFrom tidyr expand_grid
 #' @importFrom stringr str_detect
+#' @importFrom stringr str_remove_all
 #'
 #' @keywords internal
 #' @noRd
@@ -622,9 +730,27 @@ data_spread_to_model_input =
 
 
 
-    X  = get_design_matrix(formula, .data_spread, !!.sample)
+    X  =
 
-    Xa  = get_design_matrix(formula_variability, .data_spread, !!.sample)
+      # Drop random intercept
+      formula |>
+      as.character() |>
+      str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+      paste(collapse="") |>
+      as.formula() |>
+
+      get_design_matrix(.data_spread, !!.sample)
+
+    Xa  =
+
+      # Drop random intercept
+      formula_variability |>
+      as.character() |>
+      str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+      paste(collapse="") |>
+      as.formula() |>
+
+      get_design_matrix(.data_spread, !!.sample)
 
     XA = Xa %>%
       as_tibble() %>%
@@ -637,10 +763,16 @@ data_spread_to_model_input =
     cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure, -!!.grouping_for_random_intercept) %>% colnames()
 
     # Random intercept
+
+    # Random intercept
+    check_random_intercept_design(.data_spread, covariate_names, formula, X,  !!.grouping_for_random_intercept)
     random_intercept_grouping =
       .data_spread |>
-      get_random_intercept_design(!!.sample, !!.grouping_for_random_intercept, covariate_names[1]) |>
-      select(-!!.sample)
+      get_random_intercept_design(
+        !!.sample,
+        !!.grouping_for_random_intercept,
+        parse_formula_random_intercept(formula)$covariate
+      )
 
     data_for_model =
       list(
@@ -662,8 +794,19 @@ data_spread_to_model_input =
         # Random intercept
         N_random_intercepts = random_intercept_grouping |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow(),
         N_minus_sum = random_intercept_grouping |> filter(minus_sum>0) |> distinct(minus_sum) |> nrow(),
-        random_intercept_grouping = random_intercept_grouping |> as_matrix(),
-        paring_cov_random_intercept = random_intercept_grouping |> distinct(cov, mean_idx) |> filter(mean_idx>0) |> as_matrix()
+        paring_cov_random_intercept = random_intercept_grouping |> distinct(cov, mean_idx) |> filter(mean_idx>0) |> as_matrix(),
+        X_random_intercept =
+          get_design_matrix(~ 0 + group,
+                            random_intercept_grouping |>
+                              mutate(group = as.factor(group)),
+                            !!.sample),
+        N_grouping = random_intercept_grouping |> distinct(group) |> nrow(),
+        idx_group_random_intercepts =
+          random_intercept_grouping |>
+          mutate(minus_sum = -minus_sum) |>
+          mutate(idx = mean_idx + minus_sum) |>
+          distinct(group, idx) |>
+          as_matrix()
       )
 
     # Add censoring
@@ -734,10 +877,7 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
     mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
     unnest(data) %>%
     select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), !!.grouping_for_random_intercept) %>%
-    spread(!!.cell_type, !!.count) |>
-
-    # Mutate random intercept grouping to number
-    mutate(!!.grouping_for_random_intercept := factor(!!.grouping_for_random_intercept) |> as.integer())
+    spread(!!.cell_type, !!.count)
 
 }
 
@@ -996,7 +1136,6 @@ design_matrix_and_coefficients_to_simulation = function(
 
 
 }
-
 
 design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, precision = 100, seed = sample(1:100000, size = 1)){
 
