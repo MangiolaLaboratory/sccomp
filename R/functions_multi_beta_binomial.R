@@ -248,7 +248,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula_variability = formula_variability,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
-        use_data = use_data
+        use_data = use_data,
+        !!.grouping_for_random_intercept
       )
 
     # Pior
