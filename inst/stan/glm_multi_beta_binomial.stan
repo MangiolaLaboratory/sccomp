@@ -173,15 +173,13 @@ transformed parameters{
   matrix[M, N] precision = (Xa * alpha)';
   matrix[C,M] beta;
 
-  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-
-  beta = R_ast_inverse * beta_raw; // coefficients on x
-
   // Initialisation
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
   row_vector[M-1] random_intercept_sigma;
-
   matrix[N_grouping, M-1] beta_random_intercept;
+
+  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+  beta = R_ast_inverse * beta_raw; // coefficients on x
 
   // random intercept
   if(N_random_intercepts>0){
