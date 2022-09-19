@@ -154,7 +154,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Force variance NOT associated with mean for stringency of outlier detection
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
@@ -162,7 +162,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         formula_variability = ~1,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
-        use_data = use_data
+        use_data = use_data,
+        !!.grouping_for_random_intercept
       )
 
     # Pior
@@ -239,7 +240,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Allow variance association
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
