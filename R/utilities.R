@@ -1414,7 +1414,13 @@ plot_boxplot = function(
   }
 
   # Get the exception if no significant cell types. This is not elegant
-  if(nrow(significance_colors)==0){
+  if(nrow(significance_colors)==0 |
+
+     # This is needed in case of contrasts
+     length(intersect(
+    significance_colors |> pull(!!as.symbol(factor_of_interest)),
+    data_proportion |> pull(!!as.symbol(factor_of_interest))
+    )) == 0){
     my_boxplot=
       my_boxplot +
 
