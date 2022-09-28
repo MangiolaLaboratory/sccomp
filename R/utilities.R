@@ -600,19 +600,19 @@ get_random_intercept_design = function(.data, .sample, .grouping_for_random_inte
   .data %>%
 
     # Mutate random intercept grouping to number
-    mutate(!!.grouping_for_random_intercept := factor(!!.grouping_for_random_intercept) |> as.integer()) |>
+    mutate(group___ := factor(!!.grouping_for_random_intercept) |> as.integer()) |>
 
     # If intercept is not defined create it
     when(is.null(.intercept) ~ mutate(., .intercept := "1"), ~ mutate(., .intercept := !!as.symbol(.intercept))) |>
 
-    select(!!.sample, cov = .intercept, group = !!.grouping_for_random_intercept) |>
-    mutate(mean_idx = glue("{cov}{group}") |> as.factor() |> as.integer()) |>
+    select(!!.sample, !!.grouping_for_random_intercept, cov = .intercept, group___ ) |>
+    mutate(mean_idx = glue("{cov}{group___}") |> as.factor() |> as.integer()) |>
     with_groups(cov, ~ .x |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
     mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
     mutate(minus_sum = if_else(mean_idx==0, as.factor(cov) |> as.integer(), 0L)) |>
 
-    # drop minus_sum if we just have one group per covariate
-    with_groups(cov, ~ .x |> when(length(unique(.x$group)) == 1 ~ mutate(., minus_sum = 0), ~ (.)))  |>
+    # drop minus_sum if we just have one group___ per covariate
+    with_groups(cov, ~ .x |> when(length(unique(.x$group___)) == 1 ~ mutate(., minus_sum = 0), ~ (.)))  |>
 
 
     mutate(cov = as.factor(cov) |> as.integer()) |>
@@ -781,9 +781,9 @@ data_spread_to_model_input =
     paring_cov_random_intercept = random_intercept_grouping |> distinct(cov, mean_idx) |> filter(mean_idx>0) |> as_matrix()
     X_random_intercept =
       random_intercept_grouping |>
-      mutate(group = as.factor(group)) |>
+      mutate(group___ = as.factor(group___)) |>
       when(
-        N_random_intercepts > 0 ~ get_design_matrix(~ 0 + group,  ., !!.sample),
+        N_random_intercepts > 0 ~ get_design_matrix(~ 0 + group___,  ., !!.sample),
         ~ matrix(rep(1, nrow(.data_spread)))
       )
 
@@ -806,16 +806,17 @@ data_spread_to_model_input =
         use_data = use_data,
 
         # Random intercept
+        random_intercept_grouping = random_intercept_grouping,
         N_random_intercepts = N_random_intercepts,
         N_minus_sum = N_minus_sum,
         paring_cov_random_intercept = paring_cov_random_intercept,
         X_random_intercept = X_random_intercept,
-        N_grouping = random_intercept_grouping |> distinct(group) |> nrow(),
+        N_grouping = random_intercept_grouping |> distinct(group___) |> nrow(),
         idx_group_random_intercepts =
           random_intercept_grouping |>
           mutate(minus_sum = -minus_sum) |>
           mutate(idx = mean_idx + minus_sum) |>
-          distinct(group, idx) |>
+          distinct(group___, idx) |>
           as_matrix()
       )
 
