@@ -657,16 +657,17 @@ test_contrasts.data.frame = function(.data,
       "v_"
     )
 
-  grouping_CI =
-    fit %>%
-    draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
-    draws_to_statistics(
-      NULL,
-      model_input$X_random_intercept,
-      percent_false_positive/100,
-      test_composition_above_logit_fold_change,
-      "c_"
-    )
+  if(model_input$N_grouping > 1)
+    grouping_CI =
+      fit %>%
+      draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
+      draws_to_statistics(
+        NULL,
+        model_input$X_random_intercept,
+        percent_false_positive/100,
+        test_composition_above_logit_fold_change,
+        "c_"
+      )
 
   # Merge and parse
   abundance_CI |>
@@ -675,7 +676,10 @@ test_contrasts.data.frame = function(.data,
     left_join(variability_CI) |>
 
     # Grouping random intercept
-    bind_rows(grouping_CI) |>
+    when(
+      model_input$N_grouping > 1  ~ bind_rows(., grouping_CI) ,
+      ~ (.)
+      ) |>
 
     suppressMessages() |>
 
