@@ -46,13 +46,15 @@ generated quantities{
 
   matrix[M,N] mu = (X[,X_which] * beta[X_which,])';
 
-  matrix[M,N] precision = (Xa[,XA_which] * alpha[XA_which,])' / (is_truncated ? truncation_ajustment : 1);
-
   // Random intercept
   if(N_grouping>1){
       matrix[M, N] mu_random_intercept = append_row((X_random_intercept[,X_random_intercept_which] * beta_random_intercept[X_random_intercept_which,])', rep_row_vector(0, N));
       mu = mu + mu_random_intercept;
   }
+
+  matrix[M,N] precision = (Xa[,XA_which] * alpha[XA_which,])' / (is_truncated ? truncation_ajustment : 1);
+
+
 
   // Calculate proportions
 	for(i in 1:N) mu[,i] = softmax(mu[,i]);

@@ -207,17 +207,22 @@ transformed parameters{
 
     // Build the beta_random_intercept
     for(n in 1:N_grouping){
-        if(idx_group_random_intercepts[n,2]>0)
-          beta_random_intercept[idx_group_random_intercepts[n, 1]] = random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
-        else if(idx_group_random_intercepts[n,2]<0)
-           beta_random_intercept[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]]  .* exp(random_intercept_sigma / 3.0);
-        else
-          beta_random_intercept[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
+      if(idx_group_random_intercepts[n,2]>0)
+        beta_random_intercept[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   * exp(1 / 3.0);
+      else if(idx_group_random_intercepts[n,2]<0)
+        beta_random_intercept[idx_group_random_intercepts[n, 1]] = rep_row_vector(0.0, M-1); // random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]]  .* exp(1 / 3.0);
+      else
+        beta_random_intercept[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(1 / 3.0), M-1) ;
     }
 
   }
 
+  matrix[M, N] mu_random_intercept;
 
+    // Random intercept
+    if(N_random_intercepts>0){
+       mu_random_intercept = append_row((X_random_intercept * beta_random_intercept)', rep_row_vector(0, N));
+    }
 }
 
 
@@ -232,8 +237,7 @@ model{
 
     // Random intercept
     if(N_random_intercepts>0){
-      matrix[M, N] mu_random_intercept = append_row((X_random_intercept * beta_random_intercept)', rep_row_vector(0, N));
-      mu = (X * beta_raw)' + mu_random_intercept;
+      mu = (Q_ast * beta_raw)' + mu_random_intercept;
     }
 
     else mu = (Q_ast * beta_raw)';
@@ -255,15 +259,7 @@ model{
       ) ;
   }
 
-  if(N_random_intercepts>0){
-    // Random intercept
-    for(m in 1:(M-1))   random_intercept_raw[,m] ~ std_normal();
-    random_intercept_sigma_raw ~ std_normal();
-    random_intercept_sigma_mu ~ std_normal();
-    random_intercept_sigma_sigma ~ std_normal();
-    // If I have just one group
-    zero_random_intercept ~ std_normal();
-  }
+
   // Priors
   if(exclude_priors == 0){
 
@@ -298,23 +294,42 @@ model{
         );
 
     }
+
+    // Priors abundance
+    beta_raw_raw[1] ~ normal ( 0, x_raw_sigma * 2 );
+    if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma * 2 );
+
+    // Hyper priors
+    mix_p ~ beta(1,5);
+    prec_coeff[1] ~ normal(prior_prec_intercept[1], 3);
+    prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
+    prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
+
+    // Random intercept
+    if(N_random_intercepts>0){
+      random_intercept_sigma_raw ~ std_normal();
+      random_intercept_sigma_mu ~ std_normal();
+      random_intercept_sigma_sigma ~ std_normal();
+
+    }
+
+
   }
-  else{
-    // Priors variability
-    for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
-    if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
-  }
 
-  // Priors abundance
-  beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
-  if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
+      // Random intercept
+    if(N_random_intercepts>0){
+      for(m in 1:(M-1))   random_intercept_raw[,m] ~ std_normal();
 
+      // If I have just one group
+      zero_random_intercept ~ std_normal();
+    }
 
-  // Hyper priors
-  mix_p ~ beta(1,5);
-  prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
-  prec_coeff[2] ~ normal(prior_prec_slope[1], prior_prec_slope[2]);
-  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
+  // else{
+    //   // Priors variability
+    //   for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+    //   if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
+    // }
+
 
 }
 
