@@ -299,7 +299,11 @@ estimate_multi_beta_binomial_glm = function(.data,
         length_X_which = ncol(data_for_model$X),
         length_XA_which = ncol(data_for_model$XA),
         X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
-        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array()
+        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
+
+        # Random intercept
+        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
+        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array()
 
       ))
     )
