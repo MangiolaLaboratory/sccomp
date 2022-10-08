@@ -456,7 +456,8 @@ fit_model = function(
   init_list=list(
     prec_coeff = c(5,0),
     prec_sd = 1,
-    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE)
+    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
+    beta_raw_raw = matrix(rep(0, data_for_model$C * (data_for_model$M-1)), nrow = data_for_model$C, byrow = TRUE)
   )
 
   init = map(1:chains, ~ init_list) %>%
