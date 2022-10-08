@@ -157,7 +157,7 @@ parameters{
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
-  matrix[N_random_intercepts, M-1] random_intercept_raw;
+  matrix[N_random_intercepts * (N_random_intercepts>0), M-1] random_intercept_raw;
 
   // sd of random intercept
   real random_intercept_sigma_mu[N_random_intercepts>0];
