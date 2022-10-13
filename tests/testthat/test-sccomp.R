@@ -73,6 +73,35 @@ test_that("multilevel multi beta binomial from Seurat",{
 
 })
 
+test_that("wrongly-set groups",{
+
+  library(tidyseurat)
+  seurat_obj =
+    seurat_obj |>
+    nest(data = -c(sample, type)) |>
+    mutate(group__ = c(1,1,1,1,1, 2,2,2,2,2, 1,1,1,1,1, 2,2,2,2,2) |> as.character()) |>
+    unnest(data)
+
+    expect_error(
+      object =
+        seurat_obj |>
+        ## filter(cell_group %in% c("NK cycling", "B immature")) |>
+        sccomp_glm(
+          formula_composition = ~ 0 + type + (type | group__),
+          formula_variability = ~ 1,
+          sample, cell_group,
+          check_outliers = FALSE,
+          approximate_posterior_inference = FALSE,
+          contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
+          cores = 20,
+          mcmc_seed = 42
+        ) ,
+      regexp = "should be present in only one covariate"
+    )
+
+})
+
+
 test_that("multi beta binomial from Seurat",{
 
   seurat_obj |>

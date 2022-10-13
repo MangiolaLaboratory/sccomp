@@ -705,6 +705,26 @@ check_random_intercept_design = function(.data, covariate_names, formula, X, .gr
       )
     )
   )
+
+  # Check the same group spans multiple covariates
+  stopifnot(
+    "sccomp says: the groups in the formula (covariate | group) should be present in only one covariate" =
+      !(
+        # If I have random discrete slope
+        random_intercept_elements$covariate != "1" &
+        !is.null(random_intercept_elements$covariate) &
+
+          # If I duplicated groups
+        .data |>
+        select(!!.grouping_for_random_intercept, covariate_names) |>
+        distinct() |>
+        count(!!.grouping_for_random_intercept) |>
+        pull(n) |>
+        max() |>
+        gt(1)
+
+      )
+  )
 }
 
 #' @importFrom purrr when
@@ -766,8 +786,6 @@ data_spread_to_model_input =
     covariate_names = parse_formula(formula)
     covariate_names_variability = parse_formula(formula_variability)
     cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure, -!!.grouping_for_random_intercept) %>% colnames()
-
-    # Random intercept
 
     # Random intercept
     check_random_intercept_design(.data_spread, covariate_names, formula, X,  !!.grouping_for_random_intercept)
