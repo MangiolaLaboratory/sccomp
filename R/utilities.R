@@ -641,7 +641,7 @@ get_design_matrix = function(formula, .data_spread, .sample){
     )
 }
 
-check_random_intercept_design = function(.data, covariate_names, formula, X, .grouping_for_random_intercept){
+check_random_intercept_design = function(.data, covariate_names, covariate_names_variability, formula, X, .grouping_for_random_intercept){
 
   .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
@@ -716,7 +716,7 @@ check_random_intercept_design = function(.data, covariate_names, formula, X, .gr
 
           # If I duplicated groups
         .data |>
-        select(!!.grouping_for_random_intercept, covariate_names) |>
+        select(!!.grouping_for_random_intercept, covariate_names_variability) |>
         distinct() |>
         count(!!.grouping_for_random_intercept) |>
         pull(n) |>
@@ -788,7 +788,7 @@ data_spread_to_model_input =
     cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure, -!!.grouping_for_random_intercept) %>% colnames()
 
     # Random intercept
-    check_random_intercept_design(.data_spread, covariate_names, formula, X,  !!.grouping_for_random_intercept)
+    check_random_intercept_design(.data_spread, covariate_names, covariate_names_variability, formula, X,  !!.grouping_for_random_intercept)
     random_intercept_grouping =
       .data_spread |>
       get_random_intercept_design(
