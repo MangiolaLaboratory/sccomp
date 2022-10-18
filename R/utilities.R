@@ -1322,7 +1322,7 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025,
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
     .sample, significance_threshold = 0.025, my_theme
-  ){
+){
 
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
@@ -1352,46 +1352,46 @@ plot_boxplot = function(
 
   if(.data |> attr("contrasts") |> is.null())
     significance_colors =
-      .data %>%
-      pivot_longer(
-        c(contains("c_"), contains("v_")),
-        names_pattern = "([cv])_([a-zA-Z0-9]+)",
-        names_to = c("which", "stats_name"),
-        values_to = "stats_value"
-      ) %>%
-      filter(stats_name == "FDR") %>%
-      filter(parameter != "(Intercept)") %>%
-      filter(stats_value < significance_threshold) %>%
-      filter(covariate == factor_of_interest) %>%
-      unite("name", c(which, parameter), remove = FALSE) %>%
-      distinct() %>%
-      # Get clean parameter
-      mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", covariate), "")) %>%
+    .data %>%
+    pivot_longer(
+      c(contains("c_"), contains("v_")),
+      names_pattern = "([cv])_([a-zA-Z0-9]+)",
+      names_to = c("which", "stats_name"),
+      values_to = "stats_value"
+    ) %>%
+    filter(stats_name == "FDR") %>%
+    filter(parameter != "(Intercept)") %>%
+    filter(stats_value < significance_threshold) %>%
+    filter(covariate == factor_of_interest) %>%
+    unite("name", c(which, parameter), remove = FALSE) %>%
+    distinct() %>%
+    # Get clean parameter
+    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", covariate), "")) %>%
 
-      with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
 
   else
     significance_colors =
-      .data %>%
-        pivot_longer(
-          c(contains("c_"), contains("v_")),
-          names_pattern = "([cv])_([a-zA-Z0-9]+)",
-          names_to = c("which", "stats_name"),
-          values_to = "stats_value"
-        ) %>%
-        filter(stats_name == "FDR") %>%
-        filter(parameter != "(Intercept)") %>%
-        filter(stats_value < significance_threshold) %>%
-        filter(covariate == factor_of_interest) |>
-        mutate(count_data = map(count_data, ~ .x |> select(factor_of_interest) |> distinct())) |>
-        unnest(count_data) |>
+    .data %>%
+    pivot_longer(
+      c(contains("c_"), contains("v_")),
+      names_pattern = "([cv])_([a-zA-Z0-9]+)",
+      names_to = c("which", "stats_name"),
+      values_to = "stats_value"
+    ) %>%
+    filter(stats_name == "FDR") %>%
+    filter(parameter != "(Intercept)") %>%
+    filter(stats_value < significance_threshold) %>%
+    filter(covariate == factor_of_interest) |>
+    mutate(count_data = map(count_data, ~ .x |> select(factor_of_interest) |> distinct())) |>
+    unnest(count_data) |>
 
-        # Filter relevant parameters
-        mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
-        filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
+    # Filter relevant parameters
+    mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
+    filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
 
-        # Rename
-        select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
+    # Rename
+    select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
 
     # Merge contrasts
     with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))

@@ -65,8 +65,7 @@ dirichlet_multinomial_glm = function(.data,
     data_to_spread (.data, formula, !!.sample, !!.cell_type, !!.count) %>%
     data_spread_to_model_input(
       formula, !!.sample, !!.cell_type, !!.count,
-      approximate_posterior_inference= approximate_posterior_inference == "all",
-      variance_association = variance_association
+      approximate_posterior_inference= approximate_posterior_inference == "all"
     )
 
   false_positive_rate = percent_false_positive/100
@@ -242,8 +241,7 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
   data_for_model =
     .data %>%
     data_to_spread (formula, !!.sample, !!.cell_type, !!.count) %>%
-    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference = approximate_posterior_inference,
-                               variance_association = variance_association)
+    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference = approximate_posterior_inference)
 
   # .count = enquo(.count)
   #
