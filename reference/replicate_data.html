@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.20</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.30</span>
       </span>
     </div>
 
@@ -60,13 +60,27 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">replicate_data</span><span class="op">(</span><span class="va">.data</span>, number_of_draws <span class="op">=</span> <span class="fl">1</span>, mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">replicate_data</span><span class="op">(</span></span>
+<span>  <span class="va">.data</span>,</span>
+<span>  formula_composition <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  formula_variability <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  number_of_draws <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>.data</dt>
-<dd><p>A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column</p></dd>
+<dd><p>A tibble. The result of sccomp_glm.</p></dd>
+
+
+<dt>formula_composition</dt>
+<dd><p>A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.</p></dd>
+
+
+<dt>formula_variability</dt>
+<dd><p>A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.</p></dd>
 
 
 <dt>number_of_draws</dt>
@@ -104,18 +118,17 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    generated_proportions generated_counts replicate sample       cell_group</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>                0.053<span style="text-decoration: underline;">8</span>              270         1 10x_6K       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>                0.049<span style="text-decoration: underline;">4</span>              399         1 10x_8K       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>                0.046<span style="text-decoration: underline;">1</span>              115         1 GSE115189    B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>                0.080<span style="text-decoration: underline;">9</span>              498         1 SCP345_580   B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>                0.083<span style="text-decoration: underline;">4</span>              573         1 SCP345_860   B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>                0.035<span style="text-decoration: underline;">3</span>              101         1 SCP424_pbmc1 B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>                0.034<span style="text-decoration: underline;">1</span>              108         1 SCP424_pbmc2 B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>                0.076<span style="text-decoration: underline;">8</span>               46         1 SCP591       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>                0.054<span style="text-decoration: underline;">8</span>              262         1 SI-GA-E5     B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>                0.081<span style="text-decoration: underline;">5</span>              623         1 SI-GA-E7     B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>                0.045<span style="text-decoration: underline;">9</span>              231         1 10x_6K       B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>                0.052<span style="text-decoration: underline;">1</span>              421         1 10x_8K       B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>                0.093<span style="text-decoration: underline;">2</span>              234         1 GSE115189    B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>                0.101               621         1 SCP345_580   B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>                0.092<span style="text-decoration: underline;">6</span>              636         1 SCP345_860   B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>                0.106               303         1 SCP424_pbmc1 B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>                0.044<span style="text-decoration: underline;">5</span>              142         1 SCP424_pbmc2 B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>                0.118                71         1 SCP591       B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>                0.048<span style="text-decoration: underline;">1</span>              230         1 SI-GA-E5     B1        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>                0.030<span style="text-decoration: underline;">4</span>              232         1 SI-GA-E7     B1        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 710 more rows</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ Use `print(n = ...)` to see more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

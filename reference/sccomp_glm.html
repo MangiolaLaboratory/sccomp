@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.20</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.30</span>
       </span>
     </div>
 
@@ -67,13 +67,14 @@
 <span>  <span class="va">.sample</span>,</span>
 <span>  <span class="va">.cell_group</span>,</span>
 <span>  .count <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  contrasts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prior_mean_variable_association <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span><span class="op">)</span>, slope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.6</span><span class="op">)</span>,</span>
-<span>    standard_deviation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    standard_deviation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">40</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  check_outliers <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  bimodal_mean_variability_association <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  percent_false_positive <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  approximate_posterior_inference <span class="op">=</span> <span class="st">"outlier_detection"</span>,</span>
+<span>  approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span>
 <span>  test_composition_above_logit_fold_change <span class="op">=</span> <span class="fl">0.2</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  noise_model <span class="op">=</span> <span class="st">"multi_beta_binomial"</span>,</span>
@@ -111,8 +112,12 @@
 <dd><p>A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.</p></dd>
 
 
+<dt>contrasts</dt>
+<dd><p>A vector of character strings. For example if your formula is <code>~ 0 + treatment</code> and the covariate treatment has values <code>yes</code> and <code>no</code>, your contrast could be "constrasts = c(treatmentyes - treatmentno)".</p></dd>
+
+
 <dt>prior_mean_variable_association</dt>
-<dd><p>A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(5,8)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.</p></dd>
+<dd><p>A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.</p></dd>
 
 
 <dt>check_outliers</dt>
@@ -198,7 +203,6 @@
 <span class="r-in"><span>   <span class="va">sample</span>,</span></span>
 <span class="r-in"><span>   <span class="va">cell_group</span>,</span></span>
 <span class="r-in"><span>   <span class="va">count</span>,</span></span>
-<span class="r-in"><span>    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span></span>
 <span class="r-in"><span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>    cores <span class="op">=</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
