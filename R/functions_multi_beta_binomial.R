@@ -106,7 +106,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept
+        !!.grouping_for_random_intercept,
+        random_intercept_elements
       )
 
     # Print design matrix
@@ -163,7 +164,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept
+        !!.grouping_for_random_intercept,
+        random_intercept_elements
       )
 
     # Pior
@@ -249,7 +251,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept
+        !!.grouping_for_random_intercept,
+        random_intercept_elements
       )
 
     # Pior
