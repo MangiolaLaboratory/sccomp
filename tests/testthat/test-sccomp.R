@@ -142,6 +142,61 @@ test_that("multi beta binomial contrasts from Seurat",{
 
 })
 
+test_that("multi beta binomial contrasts from Seurat",{
+
+  res = seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ type,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      cores = 1,
+      mcmc_seed = 42
+    )
+
+  expect_equal(
+    res[1,"c_effect"] |> as.numeric(),
+    -res[2,"c_effect"] |> as.numeric()
+  )
+
+})
+
+test_that("remove unwanted variation",{
+
+  library(tidyseurat)
+
+  data =
+    seurat_obj |>
+
+    # Add batch
+    nest(data = -c(sample, type)) |>
+    mutate(batch = rep(c(0,1), 10)) |>
+    unnest(data)
+
+  # Estimate
+  estimate =
+    data |>
+    sccomp_glm(
+      formula_composition = ~ type + batch,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      cores = 1,
+      mcmc_seed = 42
+    )
+
+  estimate |> remove_unwanted_variation(~ type)
+
+  expect_equal(
+    res[1,"c_effect"] |> as.numeric(),
+    -res[2,"c_effect"] |> as.numeric()
+  )
+
+})
+
 test_that("multi beta binomial from SCE",{
 
     sce_obj |>
