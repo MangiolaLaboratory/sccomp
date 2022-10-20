@@ -13,3 +13,5 @@ model_glm_dirichlet_multinomial_imputation.rds
 ^sccomp_draws_files
 ^glm_multi*
 ^model_glm*
+inst/stan/glm_multi_beta_binomial
+inst/stan/glm_multi_beta_binomial_generate_date
