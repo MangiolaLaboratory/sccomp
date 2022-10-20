@@ -43,6 +43,28 @@ data("counts_obj")
 #
 # })
 
+test_that("Generate data",{
+
+
+  seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ type ,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = FALSE,
+      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    replicate_data() |>
+    nrow() |>
+    expect_equal(11)
+
+})
+
 test_that("multilevel multi beta binomial from Seurat",{
 
   library(tidyseurat)
@@ -100,7 +122,6 @@ test_that("wrongly-set groups",{
     )
 
 })
-
 
 test_that("multi beta binomial from Seurat",{
 
