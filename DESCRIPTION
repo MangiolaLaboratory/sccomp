@@ -39,7 +39,8 @@ Imports:
     forcats,
     readr,
     scales,
-    stringr
+    stringr,
+    glue
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
