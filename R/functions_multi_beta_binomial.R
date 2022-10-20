@@ -50,7 +50,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
                                             # Secondary parameters
                                             contrasts = NULL,
-                                            .grouping_for_random_intercept = NULL,
+                                            #.grouping_for_random_intercept = NULL,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
@@ -434,7 +434,7 @@ multi_beta_binomial_glm = function(.data,
 
                                    # Secondary parameters
                                    contrasts = NULL,
-                                   .grouping_for_random_intercept = NULL,
+                                   #.grouping_for_random_intercept = NULL,
                                    prior_mean_variable_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
@@ -454,7 +454,7 @@ multi_beta_binomial_glm = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-  .grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
+  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
   #contrasts = contrasts |> enquo() |> quo_names()
 
   estimates_list =
@@ -466,7 +466,7 @@ multi_beta_binomial_glm = function(.data,
       .count = !!.count,
       formula_variability = formula_variability,
       contrasts = contrasts,
-      .grouping_for_random_intercept = !!.grouping_for_random_intercept,
+      #.grouping_for_random_intercept = !!.grouping_for_random_intercept,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive,
       check_outliers = check_outliers,
