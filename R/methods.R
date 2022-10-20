@@ -817,9 +817,48 @@ replicate_data.data.frame = function(.data,
       as.array()
   }
 
+  # Random intercept
+  if(.data |> attr("model_input") %$% N_grouping |> gt(1) |> not())
+    X_random_intercept_which = array()[0]
+  else {
+    # Random intercept
+    formula_composition = .data |> attr("formula_composition")
+    .grouping_for_random_intercept = quo(!! sym(parse_formula_random_intercept(formula_composition)$grouping))
+
+    random_intercept_grouping =
+      .data |>
+      select(count_data) |>
+      unnest(count_data) |>
+      distinct()  %>%
+      get_random_intercept_design(
+        !!.sample,
+        !!.grouping_for_random_intercept,
+        parse_formula_random_intercept(formula_composition)$covariate
+      )
+
+    X_random_intercept =
+      get_design_matrix(
+        ~ 0 + group___,
+        random_intercept_grouping |>
+          mutate(group___ = as.factor(group___)),
+        !!.sample
+      )
+
+    # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
+    X_random_intercept_which =
+      .data |>
+      attr("model_input") %$%
+      X_random_intercept %>%
+      colnames() %in%
+      colnames(X_random_intercept) |>
+      which() |>
+      as.array() |>
+      list()
+  }
 
   # Generate quantities
-  rstan::gqs(
+  fit =
+    rstan::gqs(
     my_model,
     draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
     data = model_input |> c(
@@ -847,10 +886,21 @@ replicate_data.data.frame = function(.data,
 
     ),
     seed = mcmc_seed
-  ) %>%
+  )
+
+  # mean generated
+  means_df =
+    fit |>
+    summary_to_tibble("mu", "M", "N") |>
+    select(M, N, generated_proportion_means = mean)
+
+  fit %>%
 
   # Parse
   parse_generated_quantities(number_of_draws = number_of_draws) %>%
+
+  # Add means
+  left_join(means_df, by = c("M", "N")) |>
 
   # Get sample name
   nest(data = -N) %>%
@@ -900,23 +950,16 @@ replicate_data.data.frame = function(.data,
 #'   remove_unwanted_variation(counts_obj, estimates)
 #'
 remove_unwanted_variation <- function(.data,
-                                      formula_composition = ~1,
-                                      formula_variability = ~1) {
+                                      formula_composition = ~1) {
   UseMethod("remove_unwanted_variation", .data)
 }
 
 #' @export
 #'
 remove_unwanted_variation.data.frame = function(.data,
-                                                formula_composition = ~1,
-                                                formula_variability = ~1){
+                                                formula_composition = ~1){
 
 
-  # Select model based on noise model
-  my_model = attr(.data, "noise_model") %>% when(
-    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date,
-    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  )
 
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
@@ -926,109 +969,67 @@ remove_unwanted_variation.data.frame = function(.data,
 
   fit_matrix = as.matrix(attr(.data, "fit") )
 
-  # Subtract subset of coefficients
+  message("sccomp says: calculating residuals")
 
-  X_which =
+  # Residuals
+  residuals =
     .data |>
-    attr("model_input") %$%
-    X %>%
-    colnames() %in%
-    colnames(model.matrix(formula_composition, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
-    not() |>
-    which() |>
-    array(dim=2)
-
-  XA_which = 1L |>
-
-    # Weird, otherwise, error dims declared=(1); dims found=()
-    array(dim=2)
-
-  # Random intercept
-  if(.data |> attr("model_input") %$% N_grouping |> gt(1) |> not())
-    X_random_intercept_which = array()[0]
-
-  else {
-    random_intercept_grouping =
-      .data |>
-      select(count_data) |>
-      unnest(count_data) |>
-      distinct()  %>%
-      get_random_intercept_design(
-        !!.sample,
-        !!.grouping_for_random_intercept,
-        parse_formula_random_intercept(formula)$covariate
-      )
-
-    X_random_intercept =
-      random_intercept_grouping |>
-      mutate(group___ = as.factor(group___)) |>
-      when(
-        N_random_intercepts > 0 ~ get_design_matrix(~ 0 + group___,  ., !!.sample),
-        ~ matrix(rep(1, nrow(.data_spread)))
-      )
-
-    X_random_intercept_which =
-      .data |>
+    replicate_data(
+      number_of_draws = min(dim(fit_matrix)[1], 500)
+    ) |>
+    distinct(!!.sample, !!.cell_group, generated_proportion_means) |>
+    mutate( generated_proportion_means =
+             generated_proportion_means |>
+             compress_zero_one() |>
+             boot::logit()
+    )|>
+  # Join counts
+  left_join(
+    .data |>
       attr("model_input") %$%
-      X_random_intercept |>
-      ncol() |>
-      seq_len() |>
-      as.array() |>
-      list()
-  }
+      y |>
+      as_tibble(rownames = quo_name(.sample)) |>
+      pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
+      with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
+
+      with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  ) |>
+
+      mutate(observed_proportion =
+               observed_proportion |>
+               compress_zero_one() |>
+               boot::logit()
+      ),
+    by = c(quo_name(.sample), quo_name(.cell_group))
+  ) |>
+  mutate(logit_residuals = observed_proportion - generated_proportion_means) |>
+  select(!!.sample, !!.cell_group, logit_residuals, exposure)
 
 
+  message("sccomp says: regressing out unwanted covariates")
 
   # Generate quantities
-  rstan::gqs(
-    my_model,
-    draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=dim(fit_matrix)[1]),, drop=FALSE],
-    data = model_input |> c(
-
-      # Add subset of coefficients
-      length_X_which = length(X_which),
-      length_XA_which = length(XA_which),
-      X_which = X_which,
-      XA_which = XA_which,
-
-      # Random intercept
-      X_random_intercept_which = X_random_intercept_which,
-      length_X_random_intercept_which = length(X_random_intercept_which)
-    )
-  ) %>%
-
-    # Parse
-    summary_to_tibble("mu", "M", "N") |>
-
-    # Get sample name
-    nest(data = -N) %>%
-    arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$y)) %>%
-    unnest(data) %>%
-
-    # get cell type name
-    nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(model_input$y)) %>%
-    unnest(data) %>%
-
-    # Join counts
-    left_join(
-      .data |>
-        attr("model_input") %$%
-        y |>
-        as_tibble(rownames = quo_name(.sample)) |>
-        pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
-        with_groups(sample,
-                    ~ .x |>
-                      mutate(observed_proportion := !!.count / sum(!!.count )) |>
-                      mutate(exposure := sum(!!.count))
-        ),
-      by = c(quo_name(.sample), quo_name(.cell_group))
+  .data |>
+    replicate_data(
+      formula_composition = formula_composition,
+      number_of_draws = min(dim(fit_matrix)[1], 500)
     ) |>
-    mutate( adjusted_proportions = pmax(observed_proportion - `50%`, 0)) |>
-    mutate(adjusted_counts = adjusted_proportions * exposure) |>
+    distinct(!!.sample, !!.cell_group, generated_proportion_means) |>
+    mutate(generated_proportion_means =
+             generated_proportion_means |>
+             compress_zero_one() |>
+             boot::logit()
+    ) |>
+    left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
+    mutate(adjusted_proportion = generated_proportion_means + logit_residuals) |>
+    mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
+    with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
 
-      select(!!.sample, !!.cell_group, adjusted_proportions, adjusted_counts)
+    # Recostituite counts
+    mutate(adjusted_counts = adjusted_proportion * exposure) |>
+
+    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, logit_residuals)
+
+
 
 }
 

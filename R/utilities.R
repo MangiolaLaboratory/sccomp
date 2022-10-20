@@ -1609,4 +1609,9 @@ simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
   colnames(proportions) = colnames(model_input$beta )
 }
 
+compress_zero_one = function(y){
+  # https://stats.stackexchange.com/questions/48028/beta-regression-of-proportion-data-including-1-and-0
 
+  n = length(y)
+  (y * (n-1) + 0.5) / n
+}
