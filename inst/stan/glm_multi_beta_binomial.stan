@@ -228,7 +228,6 @@ model{
     matrix[M, N] mu;
     vector[N*M] mu_array;
     vector[N*M] precision_array;
-
     matrix[M, N] mu_random_intercept;
 
     // Random intercept
@@ -292,15 +291,32 @@ model{
 
     }
 
-    // Priors abundance
-    beta_raw_raw[1] ~ normal ( 0, x_raw_sigma  );
-    if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma  );
+  }
+  else{
+     // Priors variability
+     if(intercept_in_design || A > 1){
+       for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
+     }
+
+     // if ~ 0 + covariuate
+     else {
+       alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+     }
+
+  }
+
+  // // Priors abundance
+  beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
+
+  if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
 
     // Hyper priors
     mix_p ~ beta(1,5);
     prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
     prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
     prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
+
 
     // Random intercept
     if(N_random_intercepts>0){
@@ -316,10 +332,8 @@ model{
 
     }
 
-
   }
 
-}
 
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;

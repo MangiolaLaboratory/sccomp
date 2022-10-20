@@ -67,12 +67,12 @@ test_that("Generate data",{
 
 test_that("multilevel multi beta binomial from Seurat",{
 
-  library(tidyseurat)
-  seurat_obj =
-    seurat_obj |>
-    nest(data = -c(sample, type)) |>
-    mutate(group__ = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4,4, 4, 4) |> as.character()) |>
-    unnest(data)
+  # library(tidyseurat)
+  # seurat_obj =
+  #   seurat_obj |>
+  #   nest(data = -c(sample, type)) |>
+  #   mutate(group__ = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4,4, 4, 4) |> as.character()) |>
+  #   unnest(data)
 
   seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
@@ -81,7 +81,7 @@ test_that("multilevel multi beta binomial from Seurat",{
       formula_variability = ~ 1,
       sample, cell_group,
       check_outliers = FALSE,
-      approximate_posterior_inference = FALSE,
+      approximate_posterior_inference = "all",
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 20,
       mcmc_seed = 42
@@ -91,29 +91,29 @@ test_that("multilevel multi beta binomial from Seurat",{
     filter(parameter == "typecancer - typehealthy") |>
     filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(11)
+    expect_equal(13)
 
 })
 
 test_that("wrongly-set groups",{
 
-  library(tidyseurat)
-  seurat_obj =
-    seurat_obj |>
-    nest(data = -c(sample, type)) |>
-    mutate(group__ = c(1,1,1,1,1, 2,2,2,2,2, 1,1,1,1,1, 2,2,2,2,2) |> as.character()) |>
-    unnest(data)
+  # library(tidyseurat)
+  # seurat_obj =
+  #   seurat_obj |>
+  #   nest(data = -c(sample, type)) |>
+  #   mutate(group__wrong = c(1,1,1,1,1, 2,2,2,2,2, 1,1,1,1,1, 2,2,2,2,2) |> as.character()) |>
+  #   unnest(data)
 
     expect_error(
       object =
         seurat_obj |>
         ## filter(cell_group %in% c("NK cycling", "B immature")) |>
         sccomp_glm(
-          formula_composition = ~ 0 + type + (type | group__),
+          formula_composition = ~ 0 + type + (type | group__wrong),
           formula_variability = ~ 1,
           sample, cell_group,
           check_outliers = FALSE,
-          approximate_posterior_inference = FALSE,
+          approximate_posterior_inference = "all",
           contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
           cores = 20,
           mcmc_seed = 42
@@ -138,7 +138,7 @@ test_that("multi beta binomial from Seurat",{
     filter(parameter == "typehealthy") |>
     filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(17)
+    expect_equal(18)
 
 })
 
