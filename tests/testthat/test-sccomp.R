@@ -103,19 +103,21 @@ test_that("multilevelcontinuous",{
   data("sce_obj")
   data("counts_obj")
   library(tidyseurat)
+  library(glue)
   seurat_obj =
     seurat_obj |>
     mutate(group__ = glue::glue("GROUP{group__}")) |>
     nest(data = -c(sample, type)) |>
+    mutate(group2__ = glue("GROUP2{sample(c(1, 2), replace = T, size = n())}") ) |>
     mutate(continuous_covariate = rnorm(n())) |>
-  unnest(data)
+    unnest(data)
 
   library(purrr)
-  #debugonce(sccomp:::data_spread_to_model_input)
+  # debugonce(sccomp:::estimate_multi_beta_binomial_glm)
   seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
     sccomp_glm(
-      formula_composition = ~ 0 + type + continuous_covariate + (type | group__) + (continuous_covariate | group__),
+      formula_composition = ~ 0 + type + continuous_covariate + (type | group__) + (continuous_covariate | type),
       formula_variability = ~ 1,
       sample, cell_group,
       check_outliers = FALSE,

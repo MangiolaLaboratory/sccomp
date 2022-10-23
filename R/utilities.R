@@ -744,9 +744,10 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
         stopifnot(
           "sccomp says: the random intercept completely confounded with one or more discrete covariates" =
             !(
-              .y |> identical("1") &
+              .y |> identical("1") &&
+                !.data_ |> select(.y) |> pull(1) |> is("numeric") &&
                 .data_ |>
-                select(.x, covariate_names) |>
+                select(.x, .y) |>
                 select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
                 distinct() %>%
 
@@ -919,7 +920,7 @@ data_spread_to_model_input =
             get_design_matrix(~ 0 + group___label,  !!.sample) |>
 
             # If countinuous multiply the matrix by the covariate
-            when(..4 ~ apply(., 2, function(x) x * ..1$covariate___) , ~ (.))
+            when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + covariate___,  !!.sample) )) , ~ (.))
         )) |>
 
         # Merge
