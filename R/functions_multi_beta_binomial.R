@@ -78,12 +78,12 @@ estimate_multi_beta_binomial_glm = function(.data,
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
 
   # If no random intercept fake it
-  if(!is.null(random_intercept_elements$grouping)){
-    .grouping_for_random_intercept = quo(!! sym(random_intercept_elements$grouping))
+  if(!is.null(random_intercept_elements[[1]]$grouping)){
+    .grouping_for_random_intercept = random_intercept_elements |> map(~ quo(!! sym(.x$grouping)))
 
   } else{
-    .grouping_for_random_intercept = quo(!! sym("random_intercept"))
-    .data = .data |> mutate(!!.grouping_for_random_intercept := "1")
+    .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
+    .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
   }
 
   # Original - old
@@ -97,7 +97,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
@@ -106,7 +106,6 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept,
         random_intercept_elements
       )
 
@@ -164,7 +163,6 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept,
         random_intercept_elements
       )
 
@@ -251,7 +249,6 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept,
         random_intercept_elements
       )
 
