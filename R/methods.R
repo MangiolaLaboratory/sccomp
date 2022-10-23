@@ -450,6 +450,8 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula_composition)
   ))
 
+  random_intercept_elements =
+  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> map(~.x$grouping) |> unlist()
 
   # Make counts
   .data %>%
@@ -460,7 +462,7 @@ sccomp_glm_data_frame_raw = function(.data,
       length(parse_formula(formula_composition))>0 ~
         left_join(.,
                   .data %>%
-                    select(!!.sample, parse_formula(formula_composition), parse_formula_random_intercept(formula_composition)$grouping) %>%
+                    select(!!.sample, parse_formula(formula_composition), .grouping_for_random_intercept) %>%
                     distinct(),
                   by = quo_name(.sample)
         ),

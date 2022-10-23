@@ -95,6 +95,43 @@ test_that("multilevel multi beta binomial from Seurat",{
 
 })
 
+test_that("multilevelcontinuous",{
+
+  library(dplyr)
+  library(sccomp)
+  data("seurat_obj")
+  data("sce_obj")
+  data("counts_obj")
+  library(tidyseurat)
+  seurat_obj =
+    seurat_obj |>
+    mutate(group__ = glue::glue("GROUP{group__}")) |>
+    nest(data = -c(sample, type)) |>
+    mutate(continuous_covariate = rnorm(n())) |>
+  unnest(data)
+
+  library(purrr)
+  #debugonce(sccomp:::data_spread_to_model_input)
+  seurat_obj |>
+    ## filter(cell_group %in% c("NK cycling", "B immature")) |>
+    sccomp_glm(
+      formula_composition = ~ 0 + type + continuous_covariate + (type | group__) + (continuous_covariate | group__),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    filter(parameter == "typecancer - typehealthy") |>
+    filter(c_pH0<0.1) |>
+    nrow() |>
+    expect_equal(13)
+
+})
+
 test_that("wrongly-set groups",{
 
   # library(tidyseurat)
