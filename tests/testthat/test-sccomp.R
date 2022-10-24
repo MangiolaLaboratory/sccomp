@@ -77,7 +77,7 @@ test_that("Generate data",{
     ) |>
 
 
-    replicate_data() |>
+    replicate_data(~ 0 + type) |>
     nrow() |>
     expect_equal(11)
 
