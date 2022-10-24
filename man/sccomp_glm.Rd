@@ -12,7 +12,6 @@ sccomp_glm(
   .cell_group,
   .count = NULL,
   contrasts = NULL,
-  .grouping_for_random_intercept = NULL,
   prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0, 0.6),
     standard_deviation = c(20, 40)),
   check_outliers = TRUE,
