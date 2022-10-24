@@ -63,6 +63,24 @@ test_that("Generate data",{
     nrow() |>
     expect_equal(11)
 
+  # With grouping
+  seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ 0 + type + (type | group__),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = FALSE,
+      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    replicate_data() |>
+    nrow() |>
+    expect_equal(11)
+
 })
 
 test_that("multilevel multi beta binomial from Seurat",{

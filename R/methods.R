@@ -450,8 +450,7 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula_composition)
   ))
 
-  random_intercept_elements =
-  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> map(~.x$grouping) |> unlist()
+  random_intercept_elements = parse_formula_random_intercept(formula_composition) |> map(~.x$grouping) |> unlist()
 
   # Make counts
   .data %>%
@@ -825,7 +824,6 @@ replicate_data.data.frame = function(.data,
   else {
     # Random intercept
     formula_composition = .data |> attr("formula_composition")
-    .grouping_for_random_intercept = quo(!! sym(parse_formula_random_intercept(formula_composition)$grouping))
 
     random_intercept_grouping =
       .data |>
@@ -834,17 +832,28 @@ replicate_data.data.frame = function(.data,
       distinct()  %>%
       get_random_intercept_design(
         !!.sample,
-        !!.grouping_for_random_intercept,
-        parse_formula_random_intercept(formula_composition)$covariate
+        parse_formula_random_intercept(formula_composition)
       )
 
     X_random_intercept =
-      get_design_matrix(
-        ~ 0 + group___,
-        random_intercept_grouping |>
-          mutate(group___ = as.factor(group___)),
-        !!.sample
-      )
+      random_intercept_grouping |>
+      mutate(design_matrix = pmap(
+        list(design, grouping, covariate, is_covariate_continuous),
+        ~ ..1 |>
+
+          # Get matrix
+          get_design_matrix(~ 0 + group___label,  !!.sample) |>
+
+          # If countinuous multiply the matrix by the covariate
+          when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + covariate___,  !!.sample) )) , ~ (.))
+      )) |>
+
+      # Merge
+      pull(design_matrix) |>
+      bind_cols() %>%
+
+      # Clean matrix names
+      set_names(str_remove_all(colnames(.), "group___label"))
 
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_intercept_which =
@@ -854,8 +863,7 @@ replicate_data.data.frame = function(.data,
       colnames() %in%
       colnames(X_random_intercept) |>
       which() |>
-      as.array() |>
-      list()
+      as.array()
   }
 
   # Generate quantities
@@ -872,19 +880,8 @@ replicate_data.data.frame = function(.data,
       XA_which,
 
       # Random intercept
-      length_X_random_intercept_which =
-        .data |>
-        attr("model_input") %$%
-        X_random_intercept |>
-        ncol(),
-      X_random_intercept_which =
-        .data |>
-        attr("model_input") %$%
-        X_random_intercept |>
-        ncol() |>
-        seq_len() |>
-        as.array() |>
-        list()
+      X_random_intercept_which = X_random_intercept_which,
+      length_X_random_intercept_which = length(X_random_intercept_which)
 
     ),
     seed = mcmc_seed
