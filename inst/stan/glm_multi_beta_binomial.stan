@@ -186,9 +186,7 @@ transformed parameters{
 
     random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
 
-    // Building the - sum
-    //
-    // Loop across covariates
+    // Building the - sum, Loop across covariates
     for(a in 1:N_minus_sum){
 
       // Reset sum to zero
