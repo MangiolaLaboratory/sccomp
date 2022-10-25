@@ -61,7 +61,7 @@ test_that("Generate data",{
 
     replicate_data() |>
     nrow() |>
-    expect_equal(11)
+    expect_equal(600)
 
 })
 
@@ -167,7 +167,7 @@ test_that("multi beta binomial contrasts from Seurat",{
 
   res = seurat_obj |>
     sccomp_glm(
-      formula_composition = ~ type,
+      formula_composition = ~ 0 + type,
       formula_variability = ~ 1,
       sample, cell_group,
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
@@ -209,12 +209,9 @@ test_that("remove unwanted variation",{
       mcmc_seed = 42
     )
 
-  estimate |> remove_unwanted_variation(~ type)
+  estimate |>
+    remove_unwanted_variation(~ type)
 
-  expect_equal(
-    res[1,"c_effect"] |> as.numeric(),
-    -res[2,"c_effect"] |> as.numeric()
-  )
 
 })
 
