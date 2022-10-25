@@ -847,7 +847,8 @@ replicate_data.data.frame = function(.data,
       bind_cols() %>%
 
       # Clean matrix names
-      set_names(str_remove_all(colnames(.), "group___label"))
+      set_names(str_remove_all(colnames(.), "group___label")) |>
+      colnames()
 
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_intercept_which =
@@ -855,7 +856,7 @@ replicate_data.data.frame = function(.data,
       attr("model_input") %$%
       X_random_intercept %>%
       colnames() %in%
-      colnames(X_random_intercept) |>
+      colnames_X_random_intercept |>
       which() |>
       as.array()
   }
