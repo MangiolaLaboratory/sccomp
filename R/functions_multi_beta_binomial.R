@@ -78,8 +78,8 @@ estimate_multi_beta_binomial_glm = function(.data,
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
 
   # If no random intercept fake it
-  if(!is.null(random_intercept_elements[[1]]$grouping)){
-    .grouping_for_random_intercept = random_intercept_elements |> map(~ quo(!! sym(.x$grouping)))
+  if(nrow(random_intercept_elements)>0){
+    .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
 
   } else{
     .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
@@ -121,7 +121,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     # Check that design matrix is not too big
     if(ncol(data_for_model$X)>20)
-      warning("sccomp says: the design matrix has more than 20 columns. Possibly some numerical covariates are erroneously of type character/factor.")
+      message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical covariates are erroneously of type character/factor.")
 
     fit =
       data_for_model %>%
