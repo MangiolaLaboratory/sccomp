@@ -748,7 +748,7 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
         stopifnot(
           "sccomp says: the random intercept completely confounded with one or more discrete covariates" =
             !(
-              !.y |> identical("(Intercept)") &&
+              !.y |> equals("(Intercept)") &&
                 .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
                 .data_ |>
                 select(.x, one_of(.y)) |>
@@ -787,8 +787,8 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
             !(
               # If I have both random intercept and random discrete slope
 
-                (.y %in% "(Intercept)") |> any() &&
-
+                .y |> equals("(Intercept)") |> any() &&
+                  length(.y) > 1 &&
                 # If I have random slope and non-intercept-free model
                 .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
 

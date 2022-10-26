@@ -85,12 +85,24 @@ test_that("Generate data",{
 
 test_that("multilevel multi beta binomial from Seurat",{
 
-  # library(tidyseurat)
-  # seurat_obj =
-  #   seurat_obj |>
-  #   nest(data = -c(sample, type)) |>
-  #   mutate(group__ = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4,4, 4, 4) |> as.character()) |>
-  #   unnest(data)
+  seurat_obj |>
+    ## filter(cell_group %in% c("NK cycling", "B immature")) |>
+    sccomp_glm(
+      formula_composition = ~ type + (1 | group__),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    filter(parameter == "typehealthy") |>
+    filter(c_pH0<0.1) |>
+    nrow() |>
+    expect_equal(16)
+
 
   seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
@@ -131,9 +143,11 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 
 
     filter(parameter == "continuous_covariate") |>
-    filter(c_pH0<0.1) |>
-    nrow() |>
-    expect_equal(1)
+    filter(c_pH0<0.1)
+
+  #|>
+  #  nrow() |>
+  #  expect_equal(1)
 
 })
 
