@@ -113,6 +113,35 @@ test_that("multilevel multi beta binomial from Seurat",{
 
 })
 
+test_that("multilevel multi beta binomial from Seurat with intercept and continuous covariate",{
+
+  library(dplyr)
+  library(sccomp)
+  data("seurat_obj")
+  data("sce_obj")
+  data("counts_obj")
+
+  #debugonce(sccomp:::data_spread_to_model_input)
+  seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ continuous_covariate + (1 + continuous_covariate | group__),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    filter(parameter == "typecancer - typehealthy") |>
+    filter(c_pH0<0.1) |>
+    nrow() |>
+    expect_equal(13)
+
+})
+
+
 test_that("multilevel continuous",{
 
 

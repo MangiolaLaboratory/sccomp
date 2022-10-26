@@ -78,8 +78,7 @@ parse_formula_random_intercept <- function(fm) {
 
   if(length(random_intercept_elements) > 0){
 
-    df =
-      random_intercept_elements |>
+    random_intercept_elements |>
 
       # Divide grouping from covariates
       str_split("\\|") |>
@@ -95,23 +94,20 @@ parse_formula_random_intercept <- function(fm) {
       unnest(covariate) |>
 
       # Clean
-      mutate(covariate = covariate |> str_remove_all(" "), grouping = grouping |> str_remove_all(" ")) |>
+      mutate(covariate = map(covariate, ~ .x |> str_remove_all(" ")), grouping = grouping |> str_remove_all(" ")) |>
 
       # Nest
-      nest(data = -grouping) |>
-      mutate(data = map(data, ~ list(.x$covariate)))
+      unnest(covariate) |>
 
-    map2(
-      df$grouping, df$data,
-      ~ c("grouping" = .x, "covariate" = .y)
-    )
+      # Rename intercept
+      mutate(covariate = if_else(covariate=="1", "(Intercept)", covariate)) |>
+
+      distinct()
 
   }
 
   else
-    list(NULL, NULL) |>
-    set_names(c("covariate", "grouping")) |>
-    list()
+    tibble(covariate = character(), grouping = character())
 
 }
 
@@ -605,9 +601,6 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 
 }
 
-
-
-
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
 get_random_intercept_design = function(.data_, .sample, random_intercept_elements ){
@@ -615,7 +608,7 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
   .sample = enquo(.sample)
 
   # If intercept is not defined create it
-  if(random_intercept_elements |> unlist() |> is.null())
+  if(nrow(random_intercept_elements) == 0 )
     return(
       .data_ |>
         distinct(!!.sample) |>
@@ -626,11 +619,14 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
 
   # Otherwise process
   random_intercept_elements |>
-    map_dfr(~ tibble(grouping = .x$grouping, covariate = .x$covariate)) |>
-    mutate(is_covariate_continuous = map_lgl(covariate, ~ .data_ |> select(.x) |> pull(1) |> is("numeric"))) |>
+    mutate(is_covariate_continuous = map_lgl(covariate, ~ .x != "(Intercept)" && .data_ |> select(.x) |> pull(1) |> is("numeric"))) |>
     mutate(design = pmap(
       list(grouping, covariate, is_covariate_continuous),
       ~ {
+
+        # Make exception for random intercept
+        if(..2 == "(Intercept)")
+          .data_ = .data_ |> mutate(`(Intercept)` = 1)
 
         .data_ =
           .data_ |>
@@ -731,10 +727,12 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
 
   # Loop across groupings
   random_intercept_elements |>
-    map_dfr(~ tibble(grouping = .x$grouping, covariate = .x$covariate)) |>
+    nest(covariates = covariate ) |>
     mutate(checked = map2(
-      grouping, covariate,
+      grouping, covariates,
       ~ {
+
+        .y = unlist(.y)
 
         # Check that the group column is categorical
         stopifnot("sccomp says: the grouping column should be categorical (not numeric)" =
@@ -750,10 +748,10 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
         stopifnot(
           "sccomp says: the random intercept completely confounded with one or more discrete covariates" =
             !(
-              .y |> identical("1") &&
-                !.data_ |> select(.y) |> pull(1) |> is("numeric") &&
+              !.y |> identical("(Intercept)") &&
+                .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
                 .data_ |>
-                select(.x, .y) |>
+                select(.x, one_of(.y)) |>
                 select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
                 distinct() %>%
 
@@ -788,51 +786,33 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
           "sccomp says: currently, discrete random slope is only supported in a intercept-free model. For example ~ 0 + treatment + (treatment | group)" =
             !(
               # If I have both random intercept and random discrete slope
-              (
-                (.y %in% "1") |> any() &&
-                  .y |> length() |> gt(1)
-              ) |
+
+                (.y %in% "(Intercept)") |> any() &
 
                 # If I have random slope and non-intercept-free model
-                (
-                  .y |> str_subset("1", negate = TRUE) |> length() |> gt(0) &
-                    X[,1] |> unique() |> equals(1) |> all()
-                )
-            )
-        )
-
-        # Check the same group spans multiple covariates
-        stopifnot(
-          "sccomp says: the groups in the formula (covariate | group) should be present in only one covariate" =
-            !(
-              # If I have random discrete slope
-              .y != "1" &
-                !is.null(.y) &
-                !.data_ |>
-                select(.y) |>
-                pull(1) |>
-                is("numeric") &
-
-                # If I duplicated groups
-                .data_ |>
-                select(.x, .y) |>
-                distinct() %>%
-
-                # TEMPORARY FIX
-                set_names(c("grouping___temp", colnames(.)[2])) |>
-
-                count(grouping___temp) |>
-                pull(n) |>
-                max() |>
-                gt(1)
+                .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
 
             )
         )
-
 
 
       }
-    ))
+    )) |>
+
+    unnest(covariates) |>
+    nest(groupings = grouping) |>
+    mutate(checked = map(groupings, ~{
+      # Check the same group spans multiple covariates
+      stopifnot(
+        "sccomp says: the groups in the formula (covariate | group) should be present in only one covariate, including the intercept" =
+          !(
+              # If I duplicated groups
+              .x |> nrow() |> gt(1)
+
+          )
+      )
+
+    }))
 
 
 
@@ -864,8 +844,9 @@ data_spread_to_model_input =
     .count = enquo(.count)
     .grouping_for_random_intercept =
       random_intercept_elements |>
-      map(~ .x$grouping) |>
-      unlist() |>
+      pull(grouping) |>
+      unique() |>
+
       when(is.null(.) ~ "random_intercept", ~ (.))
 
 
@@ -906,7 +887,7 @@ data_spread_to_model_input =
     cell_cluster_names = .data_spread %>% select(-!!.sample, -covariate_names, -exposure, -!!.grouping_for_random_intercept) %>% colnames()
 
     # Random intercept
-    if(random_intercept_elements |> unlist() |> is.null() |> not()) {
+    if(nrow(random_intercept_elements)>0 ) {
       check_random_intercept_design(.data_spread, covariate_names, random_intercept_elements, formula, X)
       random_intercept_grouping = get_random_intercept_design(.data_spread, !!.sample,  random_intercept_elements )
 
@@ -1000,37 +981,45 @@ data_spread_to_model_input =
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
     # Add parameter covariate dictionary
-    data_for_model$covariate_parameter_dictionary =
+    data_for_model$covariate_parameter_dictionary = tibble(covariate = character(), parameter = character())
 
-      # For discrete
-      .data_spread  |>
-      select(parse_formula(formula))  |>
-      distinct()  |>
+    if(.data_spread  |> select(parse_formula(formula)) |> lapply(class) %in% c("factor", "character") |> any())
+      data_for_model$covariate_parameter_dictionary =
+      data_for_model$covariate_parameter_dictionary |> bind_rows(
+        # For discrete
+        .data_spread  |>
+          select(parse_formula(formula))  |>
+          distinct()  |>
 
-      # Drop numerical
-      select_if(function(x) !is.numeric(x)) |>
-      pivot_longer(everything(), names_to =  "covariate", values_to = "parameter") %>%
-      unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
-      select(-parameter) |>
-      filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
-      distinct() |>
+          # Drop numerical
+          select_if(function(x) !is.numeric(x)) |>
+          pivot_longer(everything(), names_to =  "covariate", values_to = "parameter") %>%
+          unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
+          select(-parameter) |>
+          filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
+          distinct()
 
-      # For continuous
-      bind_rows(
-        tibble(
-          design_matrix_col =  .data_spread  |>
-            select(parse_formula(formula))  |>
-            distinct()  |>
-
-            # Drop numerical
-            select_if(function(x) is.numeric(x)) |>
-            names()
-        ) |>
-          mutate(covariate = design_matrix_col)
       )
 
+ # For continuous
+    if(.data_spread  |> select(parse_formula(formula)) |> lapply(class) |> equals("numeric") |> any())
+      data_for_model$covariate_parameter_dictionary =
+      data_for_model$covariate_parameter_dictionary |>
+          bind_rows(
+            tibble(
+              design_matrix_col =  .data_spread  |>
+                select(parse_formula(formula))  |>
+                distinct()  |>
+
+                # Drop numerical
+                select_if(function(x) is.numeric(x)) |>
+                names()
+            ) |>
+              mutate(covariate = design_matrix_col)
+)
+
     # If constrasts is set it is a bit more complicated
-    if(! contrasts |> is.null())
+    if(! is.null(contrasts))
       data_for_model$covariate_parameter_dictionary =
         data_for_model$covariate_parameter_dictionary |>
         distinct() |>

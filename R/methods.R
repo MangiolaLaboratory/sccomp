@@ -431,7 +431,7 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula_composition)
   ))
 
-  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> map(~.x$grouping) |> unlist()
+  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
 
   # Make counts
   .data %>%
