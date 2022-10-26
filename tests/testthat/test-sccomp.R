@@ -61,7 +61,7 @@ test_that("Generate data",{
 
     replicate_data() |>
     nrow() |>
-    expect_equal(11)
+    expect_equal(600)
 
   # With grouping
   seurat_obj |>
@@ -79,7 +79,7 @@ test_that("Generate data",{
 
     replicate_data(~ 0 + type) |>
     nrow() |>
-    expect_equal(11)
+    expect_equal(600)
 
 })
 
@@ -115,11 +115,7 @@ test_that("multilevel multi beta binomial from Seurat",{
 
 test_that("multilevel multi beta binomial from Seurat with intercept and continuous covariate",{
 
-  library(dplyr)
-  library(sccomp)
-  data("seurat_obj")
-  data("sce_obj")
-  data("counts_obj")
+
 
   #debugonce(sccomp:::data_spread_to_model_input)
   seurat_obj |>
@@ -134,10 +130,10 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
     ) |>
 
 
-    filter(parameter == "typecancer - typehealthy") |>
+    filter(parameter == "continuous_covariate") |>
     filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(13)
+    expect_equal(1)
 
 })
 
@@ -160,6 +156,7 @@ test_that("multilevel continuous",{
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
+      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 20,
       mcmc_seed = 42
     ) |>
@@ -168,7 +165,7 @@ test_that("multilevel continuous",{
     filter(parameter == "typecancer - typehealthy") |>
     filter(c_pH0<0.1) |>
     nrow() |>
-    expect_equal(13)
+    expect_equal(16)
 
 })
 
@@ -195,7 +192,7 @@ test_that("wrongly-set groups",{
           cores = 20,
           mcmc_seed = 42
         ) ,
-      regexp = "should be present in only one covariate"
+      regexp = "should not be shared"
     )
 
 })
@@ -244,7 +241,7 @@ test_that("multi beta binomial contrasts from Seurat",{
 
   res = seurat_obj |>
     sccomp_glm(
-      formula_composition = ~ type,
+      formula_composition = ~ 0 + type,
       formula_variability = ~ 1,
       sample, cell_group,
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
@@ -287,11 +284,6 @@ test_that("remove unwanted variation",{
     )
 
   estimate |> remove_unwanted_variation(~ type)
-
-  expect_equal(
-    res[1,"c_effect"] |> as.numeric(),
-    -res[2,"c_effect"] |> as.numeric()
-  )
 
 })
 

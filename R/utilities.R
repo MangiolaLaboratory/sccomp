@@ -610,11 +610,11 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
   # If intercept is not defined create it
   if(nrow(random_intercept_elements) == 0 )
     return(
-      .data_ |>
-        distinct(!!.sample) |>
-        mutate(group___ = "1", group___label = "1___NA", covariate___ = "1", group___numeric = 1, covariate___numeric = 1, mean_idx = 0, minus_sum=0) |>
-        slice(0) |>
-        nest(design = everything())
+      random_intercept_elements |>
+        mutate(
+          design = list(),
+          is_covariate_continuous = logical()
+        )
     )
 
   # Otherwise process
@@ -787,7 +787,7 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
             !(
               # If I have both random intercept and random discrete slope
 
-                (.y %in% "(Intercept)") |> any() &
+                (.y %in% "(Intercept)") |> any() &&
 
                 # If I have random slope and non-intercept-free model
                 .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
@@ -796,21 +796,40 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
         )
 
 
-      }
-    )) |>
+         stopifnot(
+          "sccomp says: the groups in the formula (covariate | group) should not be shared across covariate groups" =
+            !(
+              # If I duplicated groups
+              .y != "(Intercept)" &&
+              .data_ |> select(.y) |> lapply(class) != "numeric" &&
+                .data_ |>
+                select(.x, unlist(.y)) |>
+                distinct() %>%
+                set_names(as.character(1:ncol(.))) |>
+                count(`1`) |>
+                filter(n>1) |>
+                nrow() |>
+                gt(1)
 
-    unnest(covariates) |>
-    nest(groupings = grouping) |>
-    mutate(checked = map(groupings, ~{
+            )
+        )
+
+      }
+    ))
+
+  random_intercept_elements |>
+    nest(groupings = grouping ) |>
+    mutate(checked = map2(covariate, groupings, ~{
       # Check the same group spans multiple covariates
       stopifnot(
         "sccomp says: the groups in the formula (covariate | group) should be present in only one covariate, including the intercept" =
           !(
               # If I duplicated groups
-              .x |> nrow() |> gt(1)
+            .y |> unlist() |> length() |> gt(1)
 
           )
       )
+
 
     }))
 
@@ -847,7 +866,7 @@ data_spread_to_model_input =
       pull(grouping) |>
       unique() |>
 
-      when(is.null(.) ~ "random_intercept", ~ (.))
+      when(length(.)==0 ~ "random_intercept", ~ (.))
 
 
     X  =
@@ -981,7 +1000,7 @@ data_spread_to_model_input =
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
     # Add parameter covariate dictionary
-    data_for_model$covariate_parameter_dictionary = tibble(covariate = character(), parameter = character())
+    data_for_model$covariate_parameter_dictionary = tibble()
 
     if(.data_spread  |> select(parse_formula(formula)) |> lapply(class) %in% c("factor", "character") |> any())
       data_for_model$covariate_parameter_dictionary =
