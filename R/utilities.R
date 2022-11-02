@@ -744,26 +744,26 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
         )
 
 
-        # Check sanity of the grouping if only random intercept
-        stopifnot(
-          "sccomp says: the random intercept completely confounded with one or more discrete covariates" =
-            !(
-              !.y |> equals("(Intercept)") &&
-                .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
-                .data_ |>
-                select(.x, one_of(.y)) |>
-                select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
-                distinct() %>%
-
-                # TEMPORARY FIX
-                set_names(c(colnames(.)[1], 'covariate___temp')) |>
-
-                count(covariate___temp) |>
-                pull(n) |>
-                equals(1) |>
-                any()
-            )
-        )
+        # # Check sanity of the grouping if only random intercept
+        # stopifnot(
+        #   "sccomp says: the random intercept completely confounded with one or more discrete covariates" =
+        #     !(
+        #       !.y |> equals("(Intercept)") &&
+        #         .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
+        #         .data_ |>
+        #         select(.x, one_of(.y)) |>
+        #         select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
+        #         distinct() %>%
+        #
+        #         # TEMPORARY FIX
+        #         set_names(c(colnames(.)[1], 'covariate___temp')) |>
+        #
+        #         count(covariate___temp) |>
+        #         pull(n) |>
+        #         equals(1) |>
+        #         any()
+        #     )
+        # )
 
         # # Check if random intercept with random continuous slope. At the moment is not possible
         # # Because it would require I believe a multivariate prior
