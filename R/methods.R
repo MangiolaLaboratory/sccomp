@@ -632,7 +632,7 @@ test_contrasts.data.frame = function(.data,
     mutate(.value = -.value) |>
 
     draws_to_statistics(
-      NULL,
+      contrasts,
       model_input$XA,
       percent_false_positive/100,
       test_composition_above_logit_fold_change,
