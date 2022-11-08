@@ -81,6 +81,7 @@ test_that("Generate data",{
     nrow() |>
     expect_equal(600)
 
+
 })
 
 test_that("multilevel multi beta binomial from Seurat",{
@@ -297,7 +298,8 @@ test_that("remove unwanted variation",{
       mcmc_seed = 42
     )
 
-  estimate |> remove_unwanted_variation(~ type)
+  estimate |>
+    remove_unwanted_variation(~ type)
 
 })
 
