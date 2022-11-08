@@ -20,7 +20,7 @@
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
-#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
+#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be constrasts = c("treatmentyes - treatmentno").
 #' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
