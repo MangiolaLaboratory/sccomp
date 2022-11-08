@@ -1691,7 +1691,7 @@ draws_to_statistics = function(draws, contrasts, X, false_positive_rate, test_co
       pivot_wider(names_from = C, values_from = .value) %>%
       setNames(colnames(.)[1:5] |> c(factor_of_interest)) |>
       mutate_from_expr_list(contrasts) |>
-      select(-!!factor_of_interest)
+      select(-!!(factor_of_interest |> setdiff(contrasts)))
 
     # If no contrasts of interest just return an empty data frame
     if(ncol(draws)==5) return(draws |> distinct(M))
@@ -1736,12 +1736,18 @@ contrasts_to_enquos = function(contrasts){
 #' @importFrom tibble add_column
 #' @importFrom dplyr last_col
 mutate_from_expr_list = function(x, formula_expr){
-  map_dfc(
+  map2_dfc(
     formula_expr,
-    ~ x |>
-      mutate_ignore_error(!!.x := eval(rlang::parse_expr(.x))) |>
+    names(formula_expr),
+    ~ {
+
+      # If contrasts have name use that name as column
+      column_name = ifelse(is.null(.y), .x, .y)
+
+      x |>
+      mutate_ignore_error(!!column_name := eval(rlang::parse_expr(.x))) |>
       select(-colnames(x))
-  ) |>
+  }) |>
     add_column(x, .before = 1)
 
 }
