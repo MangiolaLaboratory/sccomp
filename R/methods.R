@@ -767,6 +767,7 @@ replicate_data.data.frame = function(.data,
     unnest(count_data) |>
     distinct() |>
     get_design_matrix(
+
       # Drop random intercept
       formula_composition |>
         as.character() |>
@@ -795,6 +796,7 @@ replicate_data.data.frame = function(.data,
       unnest(count_data) |>
       distinct() |>
       get_design_matrix(
+
         # Drop random intercept
         formula_variability |>
           as.character() |>
@@ -814,9 +816,15 @@ replicate_data.data.frame = function(.data,
       which() |>
       as.array()
 
-    # Random intercept
+    # If I want to replicate data with intercept and I don't have intercept in my fit
+  create_intercept =
+    .data |> attr("model_input") %$% intercept_in_design |> not() &
+    "(Intercept)" %in% colnames_X
+  if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first covariate in your formula ~ 0 + <COVARIATE>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
+
+  # Random intercept
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
-  if(random_intercept_elements |> unlist() |> is.null()) X_random_intercept_which = array()[0]
+  if(random_intercept_elements |> nrow() |> equals(0)) X_random_intercept_which = array()[0]
   else {
 
     random_intercept_grouping =
@@ -876,7 +884,10 @@ replicate_data.data.frame = function(.data,
 
       # Random intercept
       X_random_intercept_which = X_random_intercept_which,
-      length_X_random_intercept_which = length(X_random_intercept_which)
+      length_X_random_intercept_which = length(X_random_intercept_which),
+
+      # Should I create intercept for generate quantities
+      create_intercept = create_intercept
 
     ),
     seed = mcmc_seed
