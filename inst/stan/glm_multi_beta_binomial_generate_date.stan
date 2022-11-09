@@ -1,3 +1,9 @@
+functions{
+    row_vector average_by_col(matrix beta){
+    return
+    rep_row_vector(1.0, rows(beta)) * beta / rows(beta);
+  }
+  }
 data {
 	int N;
 	int M;
@@ -22,8 +28,13 @@ data {
 	int N_grouping;
 	matrix[N, N_grouping] X_random_intercept;
 
-
-
+  // Should I create intercept for generate quantities
+  int<lower=0, upper=1> create_intercept;
+  int<lower=0> A_intercept_columns;
+}
+transformed data{
+  // If needed recreate the intercept
+  matrix[N,1] X_intercept = to_matrix(rep_vector(1, N));
 }
 parameters {
 
@@ -34,9 +45,16 @@ parameters {
 	matrix[N_grouping, M-1] beta_random_intercept;
 
 }
+transformed parameters{
+  // // If needed recreate the intercept
+  // matrix[1,M] beta_intercept;
+  // matrix[1,M] alpha_intercept;
+
+}
 generated quantities{
 
   int counts_uncorrected[N, M];
+
 
   // Matrix for correcting for exposure
   matrix[N, M] counts;
@@ -44,19 +62,55 @@ generated quantities{
   // Vector of the generated exposure
   real generated_exposure[N];
 
-  matrix[M,N] mu = (X[,X_which] * beta[X_which,])';
+  // Subset for mean and deviation
+  matrix[N, length_X_which] my_X = X[,X_which];
+  matrix[length_X_which,M] my_beta = beta[X_which,];
+  matrix[N, length_XA_which] my_Xa = Xa[,XA_which];
+  matrix[length_XA_which,M] my_alpha = alpha[XA_which,];
 
+  matrix[M,N] mu;
   matrix[M,N] precision;
 
+  // If needed recreate the intercept
+  if(create_intercept == 1){
+
+    // Create mean and deviation
+    mu = (
+      append_col(
+        to_matrix(rep_vector(1, N)), // Intercept
+        my_X // Rest
+        ) *
+        append_row(
+          average_by_col(beta[1:A_intercept_columns,]), // Intercept
+          my_beta // Rest
+        )
+    )';
+
+    precision = (
+      append_col(
+        to_matrix(rep_vector(1, N)), // Intercept
+        my_Xa // Rest
+        ) *
+        append_row(
+          average_by_col(alpha[1:A_intercept_columns,]), // Intercept
+          my_alpha // Rest
+          )
+    )' /
+    (is_truncated ? truncation_ajustment : 1);
+
+  }
+  else {
+    // Create mean and deviation
+    mu = (my_X * my_beta)';
+    precision = (my_Xa * my_alpha)' / (is_truncated ? truncation_ajustment : 1);
+
+  }
+
   // Random intercept
-  if(N_grouping>1){
+  if(length_X_random_intercept_which>0){
       matrix[M, N] mu_random_intercept = append_row((X_random_intercept[,X_random_intercept_which] * beta_random_intercept[X_random_intercept_which,])', rep_row_vector(0, N));
       mu = mu + mu_random_intercept;
   }
-
-  precision = (Xa[,XA_which] * alpha[XA_which,])' / (is_truncated ? truncation_ajustment : 1);
-
-
 
   // Calculate proportions
 	for(i in 1:N) mu[,i] = softmax(mu[,i]);
