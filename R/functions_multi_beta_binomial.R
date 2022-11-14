@@ -154,7 +154,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Force variance NOT associated with mean for stringency of outlier detection
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
@@ -204,7 +204,8 @@ estimate_multi_beta_binomial_glm = function(.data,
 
         # Random intercept
         length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array()
+        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        create_intercept = FALSE
       ))
     )
 
@@ -240,7 +241,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Allow variance association
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
@@ -303,7 +304,8 @@ estimate_multi_beta_binomial_glm = function(.data,
 
         # Random intercept
         length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array()
+        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        create_intercept = FALSE
 
       ))
     )
