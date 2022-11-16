@@ -1674,33 +1674,37 @@ plot_boxplot = function(
 
 }
 
-draws_to_statistics = function(draws, contrasts, X, false_positive_rate, test_composition_above_logit_fold_change, prefix = ""){
+draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, prefix = ""){
 
-  factor_of_interest = X %>% colnames()
-
-  if(contrasts |> is.null()){
-
-    draws =
-      draws |>
-      left_join(tibble(C=seq_len(ncol(X)), parameter = colnames(X)), by = "C") %>%
-      select(-C, -.variable)
-  }
-  else {
-    draws =
-      draws |>
-      pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(factor_of_interest)) |>
-      mutate_from_expr_list(contrasts) |>
-      select(-!!(factor_of_interest |> setdiff(contrasts)))
+  # factor_of_interest = X %>% colnames()
+  #
+  # if(contrasts |> is.null()){
+  #
+  #   draws =
+  #     draws |>
+  #     left_join(tibble(C=seq_len(ncol(X)), parameter = colnames(X)), by = "C") %>%
+  #     select(-C, -.variable)
+  # }
+  # else {
+  #   draws =
+  #     draws |>
+  #     pivot_wider(names_from = C, values_from = .value) %>%
+  #     setNames(colnames(.)[1:5] |> c(factor_of_interest)) |>
+  #     mutate_from_expr_list(contrasts) |>
+  #     select(-!!(factor_of_interest |> setdiff(contrasts)))
 
     # If no contrasts of interest just return an empty data frame
-    if(ncol(draws)==5) return(draws |> distinct(M))
+    if(ncol(draws)==4) return(draws |> distinct(M))
 
     draws =
       draws |>
-      pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value")
+      pivot_longer(-c(1:4), names_to = "parameter", values_to = ".value") |>
 
-  }
+      # Reorder because pivot long is bad
+      mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:4)])) |>
+      arrange(parameter)
+
+  # }
 
   draws =
     draws |>
@@ -1745,8 +1749,9 @@ mutate_from_expr_list = function(x, formula_expr){
       column_name = ifelse(is.null(.y), .x, .y)
 
       x |>
-      mutate_ignore_error(!!column_name := eval(rlang::parse_expr(.x))) |>
-      select(-colnames(x))
+        mutate_ignore_error(!!column_name := eval(rlang::parse_expr(.x))) |>
+        # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
+        select(-colnames(x))
   }) |>
     add_column(x, .before = 1)
 

@@ -591,7 +591,7 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   test_contrasts("typecancer - typebenign")
 #'
 test_contrasts <- function(.data,
-                           contrasts,
+                           contrasts = NULL,
                            percent_false_positive = 5,
                            test_composition_above_logit_fold_change = 0.2) {
   UseMethod("test_contrasts", .data)
@@ -600,7 +600,7 @@ test_contrasts <- function(.data,
 #' @export
 #'
 test_contrasts.data.frame = function(.data,
-                                     contrasts,
+                                     contrasts = NULL,
                                      percent_false_positive = 5,
                                      test_composition_above_logit_fold_change = 0.2){
 
@@ -613,17 +613,57 @@ test_contrasts.data.frame = function(.data,
   truncation_df2 =  .data |>  attr("truncation_df2")
   fit = .data |>  attr("fit")
 
-  abundance_CI =
+  # Beta
+  beta_factor_of_interest = .data |> attr("model_input") %$% X |> colnames()
+  beta =
     fit %>%
     draws_to_tibble_x_y("beta", "C", "M") |>
+    pivot_wider(names_from = C, values_from = .value) %>%
+    setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
+
+  # Random intercept
+  beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
+  beta_random_intercept =
+    fit %>%
+    draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
+    pivot_wider(names_from = C, values_from = .value) %>%
+    setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
+
+  # Abundance
+  abundance_CI =
+    select(beta, -.variable) |>
+    left_join(
+        select(beta_random_intercept, -.variable),
+        by = c("M", ".chain", ".iteration", ".draw")
+    ) |>
+
+    # If I have constrasts calculate
+    when(
+      !is.null(contrasts) ~
+        mutate_from_expr_list(., contrasts) |>
+        select(-!!(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts))) ,
+      ~ (.)
+    ) |>
+
     draws_to_statistics(
-      contrasts,
-      model_input$X,
       percent_false_positive/100,
       test_composition_above_logit_fold_change,
       "c_"
     )
 
+  # abundance_CI =
+  #   fit %>%
+  #   draws_to_tibble_x_y("beta", "C", "M") |>
+  #   draws_to_statistics(
+  #     contrasts,
+  #     model_input$X,
+  #     percent_false_positive/100,
+  #     test_composition_above_logit_fold_change,
+  #     "c_"
+  #   )
+
+  # Variability
+  variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()
   variability_CI =
     fit %>%
     draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
@@ -631,25 +671,32 @@ test_contrasts.data.frame = function(.data,
     # We want variability, not concentration
     mutate(.value = -.value) |>
 
+    pivot_wider(names_from = C, values_from = .value) %>%
+    setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
+
+    select( -.variable) |>
+
+    # If I have constrasts calculate
+    when(!is.null(contrasts) ~ mutate_from_expr_list(contrasts), ~ (.)) |>
+
     draws_to_statistics(
-      contrasts,
-      model_input$XA,
       percent_false_positive/100,
       test_composition_above_logit_fold_change,
       "v_"
     )
 
-  if(model_input$N_grouping > 1)
-    grouping_CI =
-      fit %>%
-      draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
-      draws_to_statistics(
-        NULL,
-        model_input$X_random_intercept,
-        percent_false_positive/100,
-        test_composition_above_logit_fold_change,
-        "c_"
-      )
+  # # grouping
+  # if(model_input$N_grouping > 1)
+  #   grouping_CI =
+  #     fit %>%
+  #     draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
+  #     draws_to_statistics(
+  #       NULL,
+  #       model_input$X_random_intercept,
+  #       percent_false_positive/100,
+  #       test_composition_above_logit_fold_change,
+  #       "c_"
+  #     )
 
   # Merge and parse
   abundance_CI |>
@@ -657,11 +704,11 @@ test_contrasts.data.frame = function(.data,
     # Add ALPHA
     left_join(variability_CI) |>
 
-    # Grouping random intercept
-    when(
-      model_input$N_grouping > 1  ~ bind_rows(., grouping_CI) ,
-      ~ (.)
-      ) |>
+    # # Grouping random intercept
+    # when(
+    #   model_input$N_grouping > 1  ~ bind_rows(., grouping_CI) ,
+    #   ~ (.)
+    #   ) |>
 
     suppressMessages() |>
 
@@ -955,14 +1002,16 @@ replicate_data.data.frame = function(.data,
 #'   remove_unwanted_variation(counts_obj, estimates)
 #'
 remove_unwanted_variation <- function(.data,
-                                      formula_composition = ~1) {
+                                      formula_composition = ~1,
+                                      formula_variability = NULL) {
   UseMethod("remove_unwanted_variation", .data)
 }
 
 #' @export
 #'
 remove_unwanted_variation.data.frame = function(.data,
-                                                formula_composition = ~1){
+                                                formula_composition = ~1,
+                                                formula_variability = NULL){
 
 
 
@@ -1016,6 +1065,7 @@ remove_unwanted_variation.data.frame = function(.data,
   .data |>
     replicate_data(
       formula_composition = formula_composition,
+      formula_variability = formula_variability,
       number_of_draws = min(dim(fit_matrix)[1], 500)
     ) |>
     distinct(!!.sample, !!.cell_group, generated_proportion_means) |>
