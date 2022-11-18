@@ -1740,19 +1740,18 @@ contrasts_to_enquos = function(contrasts){
 #' @importFrom tibble add_column
 #' @importFrom dplyr last_col
 mutate_from_expr_list = function(x, formula_expr){
+
+  if(formula_expr |> names() |> is.null())
+    names(formula_expr) = formula_expr
+
   map2_dfc(
     formula_expr,
     names(formula_expr),
-    ~ {
-
-      # If contrasts have name use that name as column
-      column_name = ifelse(is.null(.y), .x, .y)
-
-      x |>
-        mutate_ignore_error(!!column_name := eval(rlang::parse_expr(.x))) |>
+    ~  x |>
+        mutate_ignore_error(!!.y := eval(rlang::parse_expr(.x))) |>
         # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
         select(-colnames(x))
-  }) |>
+  ) |>
     add_column(x, .before = 1)
 
 }

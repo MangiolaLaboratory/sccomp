@@ -677,7 +677,7 @@ test_contrasts.data.frame = function(.data,
     select( -.variable) |>
 
     # If I have constrasts calculate
-    when(!is.null(contrasts) ~ mutate_from_expr_list(contrasts), ~ (.)) |>
+    when(!is.null(contrasts) ~ mutate_from_expr_list(., contrasts), ~ (.)) |>
 
     draws_to_statistics(
       percent_false_positive/100,
