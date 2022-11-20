@@ -597,6 +597,7 @@ test_contrasts <- function(.data,
   UseMethod("test_contrasts", .data)
 }
 
+
 #' @export
 #'
 test_contrasts.data.frame = function(.data,
@@ -611,105 +612,31 @@ test_contrasts.data.frame = function(.data,
   check_outliers = .data |>  attr("check_outliers")
   model_input = .data |> attr("model_input")
   truncation_df2 =  .data |>  attr("truncation_df2")
-  fit = .data |>  attr("fit")
 
-  # Beta
-  beta_factor_of_interest = .data |> attr("model_input") %$% X |> colnames()
-  beta =
-    fit %>%
-    draws_to_tibble_x_y("beta", "C", "M") |>
-    pivot_wider(names_from = C, values_from = .value) %>%
-    setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
-
-  # Random intercept
-  beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
-  beta_random_intercept =
-    fit %>%
-    draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
-    pivot_wider(names_from = C, values_from = .value) %>%
-    setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
-
-  # Abundance
   abundance_CI =
-    select(beta, -.variable) |>
-    left_join(
-        select(beta_random_intercept, -.variable),
-        by = c("M", ".chain", ".iteration", ".draw")
-    ) |>
-
-    # If I have constrasts calculate
-    when(
-      !is.null(contrasts) ~
-        mutate_from_expr_list(., contrasts) |>
-        select(-!!(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts))) ,
-      ~ (.)
-    ) |>
-
+    get_abundance_contrast_draws(.data, contrasts) |>
     draws_to_statistics(
       percent_false_positive/100,
       test_composition_above_logit_fold_change,
+      !!.cell_group,
       "c_"
     )
 
-  # abundance_CI =
-  #   fit %>%
-  #   draws_to_tibble_x_y("beta", "C", "M") |>
-  #   draws_to_statistics(
-  #     contrasts,
-  #     model_input$X,
-  #     percent_false_positive/100,
-  #     test_composition_above_logit_fold_change,
-  #     "c_"
-  #   )
-
   # Variability
-  variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()
   variability_CI =
-    fit %>%
-    draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
-
-    # We want variability, not concentration
-    mutate(.value = -.value) |>
-
-    pivot_wider(names_from = C, values_from = .value) %>%
-    setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
-
-    select( -.variable) |>
-
-    # If I have constrasts calculate
-    when(!is.null(contrasts) ~ mutate_from_expr_list(., contrasts), ~ (.)) |>
-
+    get_variability_contrast_draws(.data, contrasts) |>
     draws_to_statistics(
       percent_false_positive/100,
       test_composition_above_logit_fold_change,
+      !!.cell_group,
       "v_"
     )
-
-  # # grouping
-  # if(model_input$N_grouping > 1)
-  #   grouping_CI =
-  #     fit %>%
-  #     draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
-  #     draws_to_statistics(
-  #       NULL,
-  #       model_input$X_random_intercept,
-  #       percent_false_positive/100,
-  #       test_composition_above_logit_fold_change,
-  #       "c_"
-  #     )
 
   # Merge and parse
   abundance_CI |>
 
     # Add ALPHA
     left_join(variability_CI) |>
-
-    # # Grouping random intercept
-    # when(
-    #   model_input$N_grouping > 1  ~ bind_rows(., grouping_CI) ,
-    #   ~ (.)
-    #   ) |>
-
     suppressMessages() |>
 
     # Add easy to understand covariate labels
@@ -720,14 +647,6 @@ test_contrasts.data.frame = function(.data,
     ) %>%
     select(parameter, covariate, everything()) %>%
 
-    # Add cell name
-    left_join(
-      model_input %$%
-        y %>%
-        colnames() |>
-        enframe(name = "M", value  = quo_name(.cell_group)),
-      by = "M"
-    ) %>%
     select(!!.cell_group, everything(), -M) %>%
 
     # Add outlier
