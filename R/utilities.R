@@ -1674,41 +1674,14 @@ plot_boxplot = function(
 
 }
 
-draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, prefix = ""){
+draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
 
-  # factor_of_interest = X %>% colnames()
-  #
-  # if(contrasts |> is.null()){
-  #
-  #   draws =
-  #     draws |>
-  #     left_join(tibble(C=seq_len(ncol(X)), parameter = colnames(X)), by = "C") %>%
-  #     select(-C, -.variable)
-  # }
-  # else {
-  #   draws =
-  #     draws |>
-  #     pivot_wider(names_from = C, values_from = .value) %>%
-  #     setNames(colnames(.)[1:5] |> c(factor_of_interest)) |>
-  #     mutate_from_expr_list(contrasts) |>
-  #     select(-!!(factor_of_interest |> setdiff(contrasts)))
+  .cell_group = enquo(.cell_group)
 
-    # If no contrasts of interest just return an empty data frame
-    if(ncol(draws)==4) return(draws |> distinct(M))
-
-    draws =
-      draws |>
-      pivot_longer(-c(1:4), names_to = "parameter", values_to = ".value") |>
-
-      # Reorder because pivot long is bad
-      mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:4)])) |>
-      arrange(parameter)
-
-  # }
 
   draws =
     draws |>
-    with_groups(c(M, parameter), ~ .x |> summarise(
+    with_groups(c(!!.cell_group, M, parameter), ~ .x |> summarise(
       lower = quantile(.value, false_positive_rate/2),
       effect = quantile(.value, 0.5),
       upper = quantile(.value, 1-(false_positive_rate/2)),
@@ -1721,11 +1694,11 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     mutate(pH0 =  (1 - (pmax(bigger_zero, smaller_zero) / n))) |>
     with_groups(parameter, ~ mutate(.x, FDR = get_FDR(pH0))) |>
 
-    select(M, parameter, lower, effect, upper, pH0, FDR)
+    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR)
 
   # Setting up names separately because |> is not flexible enough
   draws |>
-    setNames(c(colnames(draws)[1:2], sprintf("%s%s", prefix, colnames(draws)[3:ncol(draws)])))
+    setNames(c(colnames(draws)[1:3], sprintf("%s%s", prefix, colnames(draws)[3:ncol(draws)])))
 }
 
 enquos_from_list_of_symbols <- function(...) {
@@ -1783,4 +1756,113 @@ compress_zero_one = function(y){
 
   n = length(y)
   (y * (n-1) + 0.5) / n
+}
+
+# this can be helpful if we want to draw PCA with uncertainty
+get_abundance_contrast_draws = function(.data, contrasts){
+
+  .cell_group = .data |>  attr(".cell_group")
+
+  # Beta
+  beta_factor_of_interest = .data |> attr("model_input") %$% X |> colnames()
+  beta =
+    .data |>
+    attr("fit") %>%
+    draws_to_tibble_x_y("beta", "C", "M") |>
+    pivot_wider(names_from = C, values_from = .value) %>%
+    setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
+
+  # Random intercept
+  beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
+  beta_random_intercept =
+    .data |>
+    attr("fit") %>%
+    draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
+    pivot_wider(names_from = C, values_from = .value) %>%
+    setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
+
+  # Abundance
+  draws =
+    select(beta, -.variable) |>
+      left_join(
+        select(beta_random_intercept, -.variable),
+        by = c("M", ".chain", ".iteration", ".draw")
+      ) |>
+
+      # If I have constrasts calculate
+      when(
+        !is.null(contrasts) ~
+          mutate_from_expr_list(., contrasts) |>
+          select(-!!(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts))) ,
+        ~ (.)
+      ) |>
+
+      # Add cell name
+      left_join(
+        .data |>
+          attr("model_input") %$%
+          y %>%
+          colnames() |>
+          enframe(name = "M", value  = quo_name(.cell_group)),
+        by = "M"
+      ) %>%
+      select(!!.cell_group, everything())
+
+
+  # If no contrasts of interest just return an empty data frame
+  if(ncol(draws)==5) return(draws |> distinct(M))
+
+  draws |>
+    pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
+
+    # Reorder because pivot long is bad
+    mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
+    arrange(parameter)
+
+}
+
+
+get_variability_contrast_draws = function(.data, contrasts){
+
+  .cell_group = .data |>  attr(".cell_group")
+
+  variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()
+
+  draws =
+
+  .data |>
+    attr("fit") %>%
+    draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
+
+    # We want variability, not concentration
+    mutate(.value = -.value) |>
+
+    pivot_wider(names_from = C, values_from = .value) %>%
+    setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
+
+    select( -.variable) |>
+
+    # If I have constrasts calculate
+    when(!is.null(contrasts) ~ mutate_from_expr_list(., contrasts), ~ (.)) |>
+
+    # Add cell name
+    left_join(
+      .data |> attr("model_input") %$%
+        y %>%
+        colnames() |>
+        enframe(name = "M", value  = quo_name(.cell_group)),
+      by = "M"
+    ) %>%
+    select(!!.cell_group, everything())
+
+  # If no contrasts of interest just return an empty data frame
+  if(ncol(draws)==5) return(draws |> distinct(M))
+
+  draws |>
+    pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
+
+    # Reorder because pivot long is bad
+    mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
+    arrange(x)
+
 }
