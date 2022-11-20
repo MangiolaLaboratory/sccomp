@@ -633,7 +633,8 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
           select(!!.sample, ..1, ..2) |>
           set_names(c(quo_name(.sample), "group___", "covariate___")) |>
           mutate(group___numeric = group___, covariate___numeric = covariate___) |>
-          mutate(group___label := glue("{group___}___{.y}"))
+          mutate(group___label := glue("{group___}___{.y}")) |>
+          mutate(factor___ = ..2)
 
         # If covariate is continuous
         if(..3)
@@ -804,6 +805,13 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
               .data_ |> select(.y) |> lapply(class) != "numeric" &&
                 .data_ |>
                 select(.x, unlist(.y)) |>
+
+                # Drop the covariate represented by the intercept if any
+                mutate(factor = .y) |>
+                unite("covariate_name", c(factor, covariate), sep = "", remove = FALSE) |>
+                filter(covariate_name %in% colnames(X)) |>
+
+                # Count
                 distinct() %>%
                 set_names(as.character(1:ncol(.))) |>
                 count(`1`) |>
@@ -923,13 +931,35 @@ data_spread_to_model_input =
           random_intercept_grouping |>
           mutate(design_matrix = pmap(
             list(design, grouping, covariate, is_covariate_continuous),
-            ~ ..1 |>
+            ~ {
 
-              # Get matrix
-              get_design_matrix(~ 0 + group___label,  !!.sample) |>
+              # This code make sures I don't get random effects for covariates that are not in the design matrix,
+              # for example if there is an intercept term
 
-              # If countinuous multiply the matrix by the covariate
-              when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + covariate___,  !!.sample) )) , ~ (.))
+              # possible_covariates
+              possible_covariates =
+                ..1 |>
+                unite("covariate_name", c(factor___, covariate___), sep = "") |>
+                distinct(covariate_name) |>
+
+                # Make exception for (Intercept). In the future I have to make this a bit more elegant.
+                mutate(covariate_name = covariate_name |> str_replace("\\(Intercept\\)1", "\\(Intercept\\)")) |>
+                pull(covariate_name)
+
+              # Which possible covariate I have (for example do I have intercept free model or not?)
+              weight_random_slopes =
+                X[,colnames(X) %in% possible_covariates, drop=FALSE] |>
+                rowSums()
+
+              ..1 |>
+
+                # Get matrix
+                get_design_matrix(~ 0 + group___label,  !!.sample) |>
+
+                # If countinuous multiply the matrix by the covariate
+                apply(2, function(x) x * weight_random_slopes)
+
+            }
           )) |>
 
           # Merge
@@ -1698,7 +1728,7 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
 
   # Setting up names separately because |> is not flexible enough
   draws |>
-    setNames(c(colnames(draws)[1:3], sprintf("%s%s", prefix, colnames(draws)[3:ncol(draws)])))
+    setNames(c(colnames(draws)[1:3], sprintf("%s%s", prefix, colnames(draws)[4:ncol(draws)])))
 }
 
 enquos_from_list_of_symbols <- function(...) {
@@ -1863,6 +1893,6 @@ get_variability_contrast_draws = function(.data, contrasts){
 
     # Reorder because pivot long is bad
     mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
-    arrange(x)
+    arrange(parameter)
 
 }
