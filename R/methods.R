@@ -613,6 +613,7 @@ test_contrasts.data.frame = function(.data,
   model_input = .data |> attr("model_input")
   truncation_df2 =  .data |>  attr("truncation_df2")
 
+  # Abundance
   abundance_CI =
     get_abundance_contrast_draws(.data, contrasts) |>
     draws_to_statistics(
