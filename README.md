@@ -1,5 +1,5 @@
 sccomp - Outlier-aware and count-based compositional analysis of
-single-cell data
+single-cell data 
 ================
 
 <!-- badges: start -->
