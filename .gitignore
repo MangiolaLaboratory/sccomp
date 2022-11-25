@@ -8,7 +8,7 @@ sccomp.Rproj
 Meta
 doc
 sccode_env*
-src/stanExports*
+#src/stanExports*
 slurm*
 makeflow*
 dmbvs-pid-50624.out
