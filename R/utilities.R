@@ -799,30 +799,31 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
         )
 
 
-         stopifnot(
-          "sccomp says: the groups in the formula (covariate | group) should not be shared across covariate groups" =
-            !(
-              # If I duplicated groups
-              .y != "(Intercept)" &&
-              .data_ |> select(.y) |> lapply(class) != "numeric" &&
-                .data_ |>
-                select(.x, unlist(.y)) |>
-
-                # Drop the covariate represented by the intercept if any
-                mutate(factor = .y) |>
-                unite("covariate_name", c(factor, covariate), sep = "", remove = FALSE) |>
-                filter(covariate_name %in% colnames(X)) |>
-
-                # Count
-                distinct() %>%
-                set_names(as.character(1:ncol(.))) |>
-                count(`1`) |>
-                filter(n>1) |>
-                nrow() |>
-                gt(1)
-
-            )
-        )
+        # I HAVE TO REVESIT THIS
+        #  stopifnot(
+        #   "sccomp says: the groups in the formula (covariate | group) should not be shared across covariate groups" =
+        #     !(
+        #       # If I duplicated groups
+        #       .y  |> identical("(Intercept)") |> not() &&
+        #       .data_ |> select(.y |> setdiff("(Intercept)")) |> lapply(class) != "numeric" &&
+        #         .data_ |>
+        #         select(.x, .y |> setdiff("(Intercept)")) |>
+        #
+        #         # Drop the covariate represented by the intercept if any
+        #         mutate(factor = .y |> setdiff("(Intercept)")) |>
+        #         unite("covariate_name", c(factor, covariate), sep = "", remove = FALSE) |>
+        #         filter(covariate_name %in% colnames(X)) |>
+        #
+        #         # Count
+        #         distinct() %>%
+        #         set_names(as.character(1:ncol(.))) |>
+        #         count(`1`) |>
+        #         filter(n>1) |>
+        #         nrow() |>
+        #         gt(1)
+        #
+        #     )
+        # )
 
       }
     ))
@@ -1744,6 +1745,7 @@ contrasts_to_enquos = function(contrasts){
 #' @importFrom purrr map_dfc
 #' @importFrom tibble add_column
 #' @importFrom dplyr last_col
+#' @importFrom purrr map2_dfc
 mutate_from_expr_list = function(x, formula_expr){
 
   if(formula_expr |> names() |> is.null())
@@ -1821,6 +1823,8 @@ get_abundance_contrast_draws = function(.data, contrasts){
       draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
       pivot_wider(names_from = C, values_from = .value) %>%
       setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
+  } else {
+    beta_random_intercept_factor_of_interest = ""
   }
 
 
@@ -1841,7 +1845,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
       when(
         !is.null(contrasts) ~
           mutate_from_expr_list(., contrasts) |>
-          select(-!!(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts))) ,
+          select(- one_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) ,
         ~ (.)
       ) |>
 
@@ -1858,7 +1862,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 
 
   # If no contrasts of interest just return an empty data frame
-  if(ncol(draws)==5) return(draws |> distinct(M))
+  if(ncol(draws)==5) return(draws |> distinct(M, !!.cell_group))
 
   draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
