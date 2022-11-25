@@ -1869,7 +1869,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 
 }
 
-
+#' @importFrom forcats fct_relevel
 get_variability_contrast_draws = function(.data, contrasts){
 
   .cell_group = .data |>  attr(".cell_group")
