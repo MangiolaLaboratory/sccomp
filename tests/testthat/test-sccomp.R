@@ -63,16 +63,47 @@ test_that("Generate data",{
     nrow() |>
     expect_equal(600)
 
+  # With grouping
+  seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ 0 + type + (type | group__),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = FALSE,
+      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    replicate_data(~ 0 + type) |>
+    nrow() |>
+    expect_equal(600)
+
+
 })
 
 test_that("multilevel multi beta binomial from Seurat",{
 
-  # library(tidyseurat)
-  # seurat_obj =
-  #   seurat_obj |>
-  #   nest(data = -c(sample, type)) |>
-  #   mutate(group__ = c(1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4,4, 4, 4) |> as.character()) |>
-  #   unnest(data)
+  seurat_obj |>
+    ## filter(cell_group %in% c("NK cycling", "B immature")) |>
+    sccomp_glm(
+      formula_composition = ~ type + (1 | group__),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    filter(parameter == "typehealthy") |>
+    filter(c_pH0<0.1) |>
+    nrow() |>
+    expect_equal(16)
+
 
   seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
@@ -92,6 +123,64 @@ test_that("multilevel multi beta binomial from Seurat",{
     filter(c_pH0<0.1) |>
     nrow() |>
     expect_equal(13)
+
+})
+
+test_that("multilevel multi beta binomial from Seurat with intercept and continuous covariate",{
+
+
+
+  #debugonce(sccomp:::data_spread_to_model_input)
+  seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ continuous_covariate + (1 + continuous_covariate | group__),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    filter(parameter == "continuous_covariate") |>
+    filter(c_pH0<0.1)
+
+  #|>
+  #  nrow() |>
+  #  expect_equal(1)
+
+})
+
+
+test_that("multilevel continuous",{
+
+
+  # seurat_obj =
+  #   seurat_obj |>
+  #   mutate(group__ = glue::glue("GROUP{group__}")) |>
+  #   nest(data = -c(sample, type)) |>
+  #   mutate(group2__ = glue("GROUP2{sample(c(1, 2), replace = T, size = n())}") ) |>
+  #   mutate(continuous_covariate = rnorm(n())) |>
+  #   unnest(data)
+
+  seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ 0 + type + continuous_covariate + (type | group__) + (continuous_covariate | type),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = "all",
+      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
+      cores = 20,
+      mcmc_seed = 42
+    ) |>
+
+
+    filter(parameter == "typecancer - typehealthy") |>
+    filter(c_pH0<0.1) |>
+    nrow() |>
+    expect_equal(16)
 
 })
 
@@ -118,7 +207,7 @@ test_that("wrongly-set groups",{
           cores = 20,
           mcmc_seed = 42
         ) ,
-      regexp = "should be present in only one covariate"
+      regexp = "should not be shared"
     )
 
 })
@@ -211,7 +300,6 @@ test_that("remove unwanted variation",{
 
   estimate |>
     remove_unwanted_variation(~ type)
-
 
 })
 

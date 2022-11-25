@@ -83,7 +83,6 @@ sccomp_glm <- function(.data,
 
                        # Secondary arguments
                        contrasts = NULL,
-                       #.grouping_for_random_intercept = NULL,
                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                        check_outliers = TRUE,
                        bimodal_mean_variability_association = FALSE,
@@ -113,7 +112,6 @@ sccomp_glm.Seurat = function(.data,
 
                              # Secondary arguments
                              contrasts = NULL,
-                             #.grouping_for_random_intercept = NULL,
                              prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
                              bimodal_mean_variability_association = FALSE,
@@ -136,7 +134,6 @@ sccomp_glm.Seurat = function(.data,
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
   .data[[]] %>%
     sccomp_glm(
@@ -145,7 +142,6 @@ sccomp_glm.Seurat = function(.data,
 
       !!.sample,!!.cell_group,
       contrasts = contrasts,
-      #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
@@ -175,7 +171,6 @@ sccomp_glm.SingleCellExperiment = function(.data,
 
                                            # Secondary arguments
                                            contrasts = NULL,
-                                           #.grouping_for_random_intercept = NULL,
                                            prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                            check_outliers = TRUE,
                                            bimodal_mean_variability_association = FALSE,
@@ -199,7 +194,6 @@ sccomp_glm.SingleCellExperiment = function(.data,
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
 
   .data %>%
@@ -211,7 +205,6 @@ sccomp_glm.SingleCellExperiment = function(.data,
       !!.sample,!!.cell_group,
       check_outliers = check_outliers,
       contrasts = contrasts,
-      #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -240,7 +233,6 @@ sccomp_glm.DFrame = function(.data,
 
                              # Secondary arguments
                              contrasts = NULL,
-                             #.grouping_for_random_intercept = NULL,
                              prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
                              bimodal_mean_variability_association = FALSE,
@@ -265,8 +257,6 @@ sccomp_glm.DFrame = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
-
 
   .data %>%
     as.data.frame %>%
@@ -275,7 +265,6 @@ sccomp_glm.DFrame = function(.data,
       formula_variability = formula_variability,
       !!.sample,!!.cell_group,
       contrasts = contrasts,
-      #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
@@ -304,7 +293,6 @@ sccomp_glm.data.frame = function(.data,
 
                                  # Secondary arguments
                                  contrasts = NULL,
-                                 #.grouping_for_random_intercept = NULL,
                                  prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                  check_outliers = TRUE,
                                  bimodal_mean_variability_association = FALSE,
@@ -326,8 +314,6 @@ sccomp_glm.data.frame = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
-
 
   # Choose linear model
   my_glm_model =
@@ -348,7 +334,6 @@ sccomp_glm.data.frame = function(.data,
         !!.sample,
         !!.cell_group,
         contrasts = contrasts,
-        #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
         prior_mean_variable_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
@@ -375,7 +360,6 @@ sccomp_glm.data.frame = function(.data,
         !!.cell_group,
         !!.count,
         contrasts = contrasts,
-        #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
         prior_mean_variable_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
@@ -410,7 +394,6 @@ sccomp_glm_data_frame_raw = function(.data,
 
                                      # Secondary arguments
                                      contrasts = NULL,
-                                     #.grouping_for_random_intercept = NULL,
                                      prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
@@ -433,8 +416,6 @@ sccomp_glm_data_frame_raw = function(.data,
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
-
 
   # Check if columns exist
   check_columns_exist(.data, c(
@@ -450,6 +431,7 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula_composition)
   ))
 
+  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
 
   # Make counts
   .data %>%
@@ -460,7 +442,7 @@ sccomp_glm_data_frame_raw = function(.data,
       length(parse_formula(formula_composition))>0 ~
         left_join(.,
                   .data %>%
-                    select(!!.sample, parse_formula(formula_composition), parse_formula_random_intercept(formula_composition)$grouping) %>%
+                    select(!!.sample, parse_formula(formula_composition), .grouping_for_random_intercept) %>%
                     distinct(),
                   by = quo_name(.sample)
         ),
@@ -609,16 +591,17 @@ sccomp_glm_data_frame_counts = function(.data,
 #'   test_contrasts("typecancer - typebenign")
 #'
 test_contrasts <- function(.data,
-                           contrasts,
+                           contrasts = NULL,
                            percent_false_positive = 5,
                            test_composition_above_logit_fold_change = 0.2) {
   UseMethod("test_contrasts", .data)
 }
 
+
 #' @export
 #'
 test_contrasts.data.frame = function(.data,
-                                     contrasts,
+                                     contrasts = NULL,
                                      percent_false_positive = 5,
                                      test_composition_above_logit_fold_change = 0.2){
 
@@ -629,58 +612,32 @@ test_contrasts.data.frame = function(.data,
   check_outliers = .data |>  attr("check_outliers")
   model_input = .data |> attr("model_input")
   truncation_df2 =  .data |>  attr("truncation_df2")
-  fit = .data |>  attr("fit")
 
+  # Abundance
   abundance_CI =
-    fit %>%
-    draws_to_tibble_x_y("beta", "C", "M") |>
+    get_abundance_contrast_draws(.data, contrasts) |>
     draws_to_statistics(
-      contrasts,
-      model_input$X,
       percent_false_positive/100,
       test_composition_above_logit_fold_change,
+      !!.cell_group,
       "c_"
     )
 
+  # Variability
   variability_CI =
-    fit %>%
-    draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
-
-    # We want variability, not concentration
-    mutate(.value = -.value) |>
-
+    get_variability_contrast_draws(.data, contrasts) |>
     draws_to_statistics(
-      NULL,
-      model_input$XA,
       percent_false_positive/100,
       test_composition_above_logit_fold_change,
+      !!.cell_group,
       "v_"
     )
-
-  if(model_input$N_grouping > 1)
-    grouping_CI =
-      fit %>%
-      draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
-      draws_to_statistics(
-        NULL,
-        model_input$X_random_intercept,
-        percent_false_positive/100,
-        test_composition_above_logit_fold_change,
-        "c_"
-      )
 
   # Merge and parse
   abundance_CI |>
 
     # Add ALPHA
     left_join(variability_CI) |>
-
-    # Grouping random intercept
-    when(
-      model_input$N_grouping > 1  ~ bind_rows(., grouping_CI) ,
-      ~ (.)
-      ) |>
-
     suppressMessages() |>
 
     # Add easy to understand covariate labels
@@ -691,14 +648,6 @@ test_contrasts.data.frame = function(.data,
     ) %>%
     select(parameter, covariate, everything()) %>%
 
-    # Add cell name
-    left_join(
-      model_input %$%
-        y %>%
-        colnames() |>
-        enframe(name = "M", value  = quo_name(.cell_group)),
-      by = "M"
-    ) %>%
     select(!!.cell_group, everything(), -M) %>%
 
     # Add outlier
@@ -776,54 +725,74 @@ replicate_data.data.frame = function(.data,
 
   fit_matrix = as.matrix(attr(.data, "fit") )
 
-  # Add subset of coefficients
-  if(is.null(formula_composition)) {
-    X_which =
+  # Composition
+  if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
+
+  colnames_X =
     .data |>
-      attr("model_input") %$%
-      X |>
-      ncol() |>
-      seq_len()  |>
-      as.array()
-  }
-  else {
-    X_which =  .data |>
+    select(count_data) |>
+    unnest(count_data) |>
+    distinct() |>
+    get_design_matrix(
+
+      # Drop random intercept
+      formula_composition |>
+        as.character() |>
+        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+        paste(collapse="") |>
+        as.formula(),
+      !!.sample
+    ) |>
+    colnames()
+
+    X_which =
+      .data |>
       attr("model_input") %$%
       X %>%
       colnames() %in%
-      colnames(model.matrix(formula_composition, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
+      colnames_X |>
       which() |>
       as.array()
 
-  }
+    # Variability
+    if(is.null(formula_variability)) formula_variability =  .data |> attr("formula_variability")
 
-  if(is.null(formula_variability)) {
-    XA_which =
+    colnames_XA =
       .data |>
-      attr("model_input") %$%
-      XA |>
-      ncol() |>
-      seq_len() |>
-      as.array()
-  }
-  else{
+      select(count_data) |>
+      unnest(count_data) |>
+      distinct() |>
+      get_design_matrix(
+
+        # Drop random intercept
+        formula_variability |>
+          as.character() |>
+          str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+          paste(collapse="") |>
+          as.formula(),
+        !!.sample
+      ) |>
+      colnames()
+
     XA_which =
       .data |>
       attr("model_input") %$%
       Xa %>%
       colnames() %in%
-      colnames(model.matrix(formula_variability, data=.data |> select(count_data) |> unnest(count_data) |> distinct() )) |>
+      colnames_XA |>
       which() |>
       as.array()
-  }
+
+    # If I want to replicate data with intercept and I don't have intercept in my fit
+  create_intercept =
+    .data |> attr("model_input") %$% intercept_in_design |> not() &
+    "(Intercept)" %in% colnames_X
+  if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first covariate in your formula ~ 0 + <COVARIATE>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
 
   # Random intercept
-  if(.data |> attr("model_input") %$% N_grouping |> gt(1) |> not())
-    X_random_intercept_which = array()[0]
+  random_intercept_elements = parse_formula_random_intercept(formula_composition)
+  if(random_intercept_elements |> nrow() |> equals(0)) X_random_intercept_which = array()[0]
   else {
-    # Random intercept
-    formula_composition = .data |> attr("formula_composition")
-    .grouping_for_random_intercept = quo(!! sym(parse_formula_random_intercept(formula_composition)$grouping))
 
     random_intercept_grouping =
       .data |>
@@ -832,17 +801,29 @@ replicate_data.data.frame = function(.data,
       distinct()  %>%
       get_random_intercept_design(
         !!.sample,
-        !!.grouping_for_random_intercept,
-        parse_formula_random_intercept(formula_composition)$covariate
+        parse_formula_random_intercept(formula_composition)
       )
 
-    X_random_intercept =
-      get_design_matrix(
-        ~ 0 + group___,
-        random_intercept_grouping |>
-          mutate(group___ = as.factor(group___)),
-        !!.sample
-      )
+    colnames_X_random_intercept =
+      random_intercept_grouping |>
+      mutate(design_matrix = pmap(
+        list(design, grouping, covariate, is_covariate_continuous),
+        ~ ..1 |>
+
+          # Get matrix
+          get_design_matrix(~ 0 + group___label,  !!.sample) |>
+
+          # If countinuous multiply the matrix by the covariate
+          when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + covariate___,  !!.sample) )) , ~ (.))
+      )) |>
+
+      # Merge
+      pull(design_matrix) |>
+      bind_cols() %>%
+
+      # Clean matrix names
+      set_names(str_remove_all(colnames(.), "group___label")) |>
+      colnames()
 
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_intercept_which =
@@ -850,10 +831,9 @@ replicate_data.data.frame = function(.data,
       attr("model_input") %$%
       X_random_intercept %>%
       colnames() %in%
-      colnames(X_random_intercept) |>
+      colnames_X_random_intercept |>
       which() |>
-      as.array() |>
-      list()
+      as.array()
   }
 
   # Generate quantities
@@ -870,19 +850,11 @@ replicate_data.data.frame = function(.data,
       XA_which,
 
       # Random intercept
-      length_X_random_intercept_which =
-        .data |>
-        attr("model_input") %$%
-        X_random_intercept |>
-        ncol(),
-      X_random_intercept_which =
-        .data |>
-        attr("model_input") %$%
-        X_random_intercept |>
-        ncol() |>
-        seq_len() |>
-        as.array() |>
-        list()
+      X_random_intercept_which = X_random_intercept_which,
+      length_X_random_intercept_which = length(X_random_intercept_which),
+
+      # Should I create intercept for generate quantities
+      create_intercept = create_intercept
 
     ),
     seed = mcmc_seed
@@ -950,14 +922,16 @@ replicate_data.data.frame = function(.data,
 #'   remove_unwanted_variation(counts_obj, estimates)
 #'
 remove_unwanted_variation <- function(.data,
-                                      formula_composition = ~1) {
+                                      formula_composition = ~1,
+                                      formula_variability = NULL) {
   UseMethod("remove_unwanted_variation", .data)
 }
 
 #' @export
 #'
 remove_unwanted_variation.data.frame = function(.data,
-                                                formula_composition = ~1){
+                                                formula_composition = ~1,
+                                                formula_variability = NULL){
 
 
 
@@ -1011,6 +985,7 @@ remove_unwanted_variation.data.frame = function(.data,
   .data |>
     replicate_data(
       formula_composition = formula_composition,
+      formula_variability = formula_variability,
       number_of_draws = min(dim(fit_matrix)[1], 500)
     ) |>
     distinct(!!.sample, !!.cell_group, generated_proportion_means) |>
