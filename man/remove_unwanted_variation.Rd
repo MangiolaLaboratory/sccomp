@@ -4,7 +4,11 @@
 \alias{remove_unwanted_variation}
 \title{remove_unwanted_variation}
 \usage{
-remove_unwanted_variation(.data, formula_composition = ~1)
+remove_unwanted_variation(
+  .data,
+  formula_composition = ~1,
+  formula_variability = NULL
+)
 }
 \arguments{
 \item{.data}{A tibble. The result of sccomp_glm.}

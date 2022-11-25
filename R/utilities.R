@@ -1805,21 +1805,37 @@ get_abundance_contrast_draws = function(.data, contrasts){
     setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
 
   # Random intercept
-  beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
-  beta_random_intercept =
+  is_random_intercept =
     .data |>
-    attr("fit") %>%
-    draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
-    pivot_wider(names_from = C, values_from = .value) %>%
-    setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
+    attr("fit") |>
+    names() |>
+    str_subset("beta_random_intercept") |>
+    length() |>
+    gt(0)
+
+  if(is_random_intercept){
+    beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
+    beta_random_intercept =
+      .data |>
+      attr("fit") %>%
+      draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
+      pivot_wider(names_from = C, values_from = .value) %>%
+      setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
+  }
+
 
   # Abundance
   draws =
     select(beta, -.variable) |>
-      left_join(
+
+    # Random intercept
+    when(
+      is_random_intercept ~ left_join(.,
         select(beta_random_intercept, -.variable),
         by = c("M", ".chain", ".iteration", ".draw")
-      ) |>
+      ),
+      ~ (.)
+    ) |>
 
       # If I have constrasts calculate
       when(
