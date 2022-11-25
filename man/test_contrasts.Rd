@@ -6,7 +6,7 @@
 \usage{
 test_contrasts(
   .data,
-  contrasts,
+  contrasts = NULL,
   percent_false_positive = 5,
   test_composition_above_logit_fold_change = 0.2
 )

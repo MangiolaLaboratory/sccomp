@@ -344,7 +344,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
       mutate(
         truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
-        truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up),
+        truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up)
       )
 
 
