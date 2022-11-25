@@ -156,7 +156,7 @@ plots = plot_summary(res)
 Plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely be descriptively adequate to the data, the blue boxplot should roughly overlay with the black boxplot, which represent the observed data. The outliers are coloured in red. A boxplot will be returned for every (discrete) covariates present in `formula_composition`. The color coding represent the significant associations for composition and/or variability.
 
 
-```{r}
+```{r eval=FALSE}
 plots$boxplot
 
 ```
