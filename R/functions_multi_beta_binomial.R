@@ -78,12 +78,12 @@ estimate_multi_beta_binomial_glm = function(.data,
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
 
   # If no random intercept fake it
-  if(!is.null(random_intercept_elements$grouping)){
-    .grouping_for_random_intercept = quo(!! sym(random_intercept_elements$grouping))
+  if(nrow(random_intercept_elements)>0){
+    .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
 
   } else{
-    .grouping_for_random_intercept = quo(!! sym("random_intercept"))
-    .data = .data |> mutate(!!.grouping_for_random_intercept := "1")
+    .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
+    .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
   }
 
   # Original - old
@@ -97,7 +97,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
@@ -106,7 +106,6 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept,
         random_intercept_elements
       )
 
@@ -122,7 +121,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     # Check that design matrix is not too big
     if(ncol(data_for_model$X)>20)
-      warning("sccomp says: the design matrix has more than 20 columns. Possibly some numerical covariates are erroneously of type character/factor.")
+      message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical covariates are erroneously of type character/factor.")
 
     fit =
       data_for_model %>%
@@ -155,7 +154,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Force variance NOT associated with mean for stringency of outlier detection
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
@@ -164,7 +163,6 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept,
         random_intercept_elements
       )
 
@@ -206,7 +204,8 @@ estimate_multi_beta_binomial_glm = function(.data,
 
         # Random intercept
         length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array()
+        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        create_intercept = FALSE
       ))
     )
 
@@ -242,7 +241,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     # Allow variance association
     data_for_model =
       .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, !!.grouping_for_random_intercept) %>%
+      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
       data_spread_to_model_input(
         formula_composition, !!.sample, !!.cell_group, !!.count,
         truncation_ajustment = 1.1,
@@ -251,7 +250,6 @@ estimate_multi_beta_binomial_glm = function(.data,
         contrasts = contrasts,
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-        !!.grouping_for_random_intercept,
         random_intercept_elements
       )
 
@@ -306,7 +304,8 @@ estimate_multi_beta_binomial_glm = function(.data,
 
         # Random intercept
         length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array()
+        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        create_intercept = FALSE
 
       ))
     )

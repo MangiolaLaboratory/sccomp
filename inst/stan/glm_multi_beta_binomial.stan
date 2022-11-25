@@ -134,12 +134,13 @@ transformed data{
   Q_ast = qr_thin_Q(X) * sqrt(N - 1);
   R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
 
+// IGNORE DECOMPOSITION BECAUSE OF THE RANDOM EFFECT MODEL
   // If I get crazy diagonal matrix omit it
-  if(max(R_ast_inverse)>1000){
-    print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
+  // if(max(R_ast_inverse)>1000){
+  //   print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
     Q_ast = X;
     R_ast_inverse = diag_matrix(rep_vector(1.0, C));
-  }
+  // }
 
   // Data vectorised
   y_array =  to_array_1d(y);
@@ -176,10 +177,11 @@ transformed parameters{
   // Initialisation
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
   row_vector[M-1] random_intercept_sigma;
-  matrix[N_grouping, M-1] beta_random_intercept;
+  matrix[N_grouping, M-1] beta_random_intercept_raw;
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-  beta = R_ast_inverse * beta_raw; // coefficients on x
+  //beta = R_ast_inverse * beta_raw; // coefficients on x
+  beta =  beta_raw;
 
   // random intercept
   if(N_random_intercepts>0){
@@ -203,14 +205,14 @@ transformed parameters{
     }
 
 
-    // Build the beta_random_intercept
+    // Build the beta_random_intercept_raw
     for(n in 1:N_grouping){
       if(idx_group_random_intercepts[n,2]>0)
-        beta_random_intercept[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
       else if(idx_group_random_intercepts[n,2]<0)
-        beta_random_intercept[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]] .* exp(random_intercept_sigma / 3.0);
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]] .* exp(random_intercept_sigma / 3.0);
       else
-        beta_random_intercept[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
     }
 
   }
@@ -230,7 +232,7 @@ model{
 
     // Random intercept
     if(N_random_intercepts>0){
-      mu_random_intercept = append_row((X_random_intercept * beta_random_intercept)', rep_row_vector(0, N));
+      mu_random_intercept = append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
       mu = (Q_ast * beta_raw)' + mu_random_intercept;
     }
 
@@ -276,11 +278,12 @@ model{
         if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
     }
 
-    // If intercept-less model and A == 1 I have to average the whole beta covariate
+    // If intercept-less model and A == 1 I have to average the whole beta baseline design columns
+    // (that can be thought about intercept themself)
     else{
       target += abundance_variability_regression(
         alpha[1],
-        average_by_col(beta),
+        average_by_col(beta[1:A_intercept_columns,]),
         prec_coeff,
         prec_sd,
         bimodal_mean_variability_association,
@@ -336,12 +339,20 @@ model{
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
 
+  // Rondom effect
+  matrix[N_grouping, M] beta_random_intercept;
+
+
   if(intercept_in_design){
     if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
   }
   else{
     for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
   }
+
+  // Rondom effect
+  beta_random_intercept[,1:(M-1)] = beta_random_intercept_raw;
+  for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(beta_random_intercept_raw[n,]);
 
 }
 
