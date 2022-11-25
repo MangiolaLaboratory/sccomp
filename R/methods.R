@@ -615,13 +615,20 @@ test_contrasts.data.frame = function(.data,
 
   # Abundance
   abundance_CI =
-    get_abundance_contrast_draws(.data, contrasts) |>
-    draws_to_statistics(
-      percent_false_positive/100,
-      test_composition_above_logit_fold_change,
-      !!.cell_group,
-      "c_"
-    )
+    get_abundance_contrast_draws(.data, contrasts) %>%
+
+    # If my constrasts do not match my model. I have to do something more elegant.
+    when(
+      "parameter" %in% colnames(.) ~  draws_to_statistics(
+        .,
+        percent_false_positive/100,
+        test_composition_above_logit_fold_change,
+        !!.cell_group,
+        "c_"
+      ),
+    ~ (.)
+  )
+
 
   # Variability
   variability_CI =
