@@ -232,37 +232,6 @@ vb_iterative = function(model,
   return(res)
 }
 
-#' function to pass initialisation values
-#'
-#' @importFrom stats setNames
-#' @importFrom stats rnorm
-#' @importFrom stats sd
-#'
-#' @keywords internal
-#' @noRd
-#'
-#' @return A list
-inits_fx =
-  function () {
-    pars =
-      res_discovery %>%
-      filter(`.variable` != "counts_rng") %>%
-      distinct(`.variable`) %>%
-      pull(1)
-
-    foreach(
-      par = pars,
-      .final = function(x)
-        setNames(x, pars)
-    ) %do% {
-      res_discovery %>%
-        filter(`.variable` == par) %>%
-        mutate(init = rnorm(n(), mean, sd)) %>%
-        mutate(init = 0) %>%
-        select(`.variable`, S, G, init) %>%
-        pull(init)
-    }
-  }
 
 #' fit_to_counts_rng
 #'

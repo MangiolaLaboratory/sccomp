@@ -45,7 +45,6 @@ Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
     markdown,
-    ggplot2,
     knitr,
     tidyseurat,
     tidySingleCellExperiment
