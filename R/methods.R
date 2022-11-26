@@ -1182,7 +1182,6 @@ simulate_data.data.frame = function(.data,
 #' @examples
 #'
 #' data("counts_obj")
-#' library(dplyr)
 #'
 #' estimate =
 #'   sccomp_glm(
@@ -1193,7 +1192,7 @@ simulate_data.data.frame = function(.data,
 #'     cores = 1
 #'   )
 #'
-#' estimate |> plot_summary()
+#' # estimate |> plot_summary()
 #'
 plot_summary <- function(.data, significance_threshold = 0.025) {
 

@@ -20,7 +20,6 @@ This function plots a summary of the results of the model.
 \examples{
 
 data("counts_obj")
-library(dplyr)
 
 estimate =
   sccomp_glm(
@@ -31,6 +30,6 @@ estimate =
     cores = 1
   )
 
-estimate |> plot_summary()
+# estimate |> plot_summary()
 
 }
