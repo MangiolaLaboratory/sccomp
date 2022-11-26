@@ -39,6 +39,6 @@ data("counts_obj")
     cores = 1
   )
 
-  remove_unwanted_variation(counts_obj, estimates)
+  remove_unwanted_variation(estimates)
 
 }

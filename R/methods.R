@@ -926,7 +926,7 @@ replicate_data.data.frame = function(.data,
 #'     cores = 1
 #'   )
 #'
-#'   remove_unwanted_variation(counts_obj, estimates)
+#'   remove_unwanted_variation(estimates)
 #'
 remove_unwanted_variation <- function(.data,
                                       formula_composition = ~1,
