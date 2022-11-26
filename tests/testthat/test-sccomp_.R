@@ -6,6 +6,7 @@ data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 
+
 # test_that("dirichlet multinomial outliers",{
 #
 #   library(dplyr)
@@ -54,7 +55,7 @@ test_that("Generate data",{
       check_outliers = FALSE,
       approximate_posterior_inference = FALSE,
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
-      cores = 20,
+      cores = 1,
       mcmc_seed = 42
     ) |>
 
@@ -72,7 +73,7 @@ test_that("Generate data",{
       check_outliers = FALSE,
       approximate_posterior_inference = FALSE,
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
-      cores = 20,
+      cores = 1,
       mcmc_seed = 42
     ) |>
 
@@ -94,7 +95,7 @@ test_that("multilevel multi beta binomial from Seurat",{
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
-      cores = 20,
+      cores = 1,
       mcmc_seed = 42
     ) |>
 
@@ -114,7 +115,7 @@ test_that("multilevel multi beta binomial from Seurat",{
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
-      cores = 20,
+      cores = 1,
       mcmc_seed = 42
     ) |>
 
@@ -138,7 +139,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
-      cores = 20,
+      cores = 1,
       mcmc_seed = 42
     ) |>
 
@@ -172,7 +173,7 @@ test_that("multilevel continuous",{
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
-      cores = 20,
+      cores = 1,
       mcmc_seed = 42
     ) |>
 
@@ -204,7 +205,7 @@ test_that("multilevel continuous",{
 #           check_outliers = FALSE,
 #           approximate_posterior_inference = "all",
 #           contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
-#           cores = 20,
+#           cores = 1,
 #           mcmc_seed = 42
 #         ) ,
 #       regexp = "should not be shared"
