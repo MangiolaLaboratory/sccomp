@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.30</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.4</span>
       </span>
     </div>
 
@@ -128,6 +128,14 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘dplyr’</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:stats’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     filter, lag</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:base’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     intersect, setdiff, setequal, union</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">estimate</span> <span class="op">=</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span></span></span>
@@ -148,16 +156,16 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    sample type   phenotype     count cell_…¹   b_0   b_1 gener…² gener…³ repli…⁴</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K benign b_cell_macro…    42 BM          0     0 1.96<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>      50       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K benign B_cell:immat…   361 B1          0     0 0   <span style="color: #949494;"> </span>         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K benign B_cell:immat…    57 B2          0     0 0   <span style="color: #949494;"> </span>         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K benign B_cell:Memor…    40 B3          0     0 1.24<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>      31       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K benign Dendritic_CD…    75 Dm          0     0 1.77<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>     455       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K benign HSC_-G-CSF_L…   187 H1          0     0 4.78<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>       1       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K benign HSC_-G-CSF_S…   269 H2          0     0 6.49<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>     166       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K benign HSC_Bcell_ma…   190 H3          0     0 0   <span style="color: #949494;"> </span>         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K benign Mixed_CD3_cl…   123 TM1         0     0 0   <span style="color: #949494;"> </span>         0       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K benign Mixed_CD3_cl…    19 TM2         0     0 0   <span style="color: #949494;"> </span>         0       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K benign b_cell_macro…    42 BM          0     0  0            0       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K benign B_cell:immat…   361 B1          0     0  0            0       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K benign B_cell:immat…    57 B2          0     0  0.318     <span style="text-decoration: underline;">1</span>956       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K benign B_cell:Memor…    40 B3          0     0  0            0       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K benign Dendritic_CD…    75 Dm          0     0  0.052<span style="text-decoration: underline;">4</span>     322       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K benign HSC_-G-CSF_L…   187 H1          0     0  0            0       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K benign HSC_-G-CSF_S…   269 H2          0     0  0            0       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K benign HSC_Bcell_ma…   190 H3          0     0  0            0       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K benign Mixed_CD3_cl…   123 TM1         0     0  0.049<span style="text-decoration: underline;">9</span>     307       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K benign Mixed_CD3_cl…    19 TM2         0     0  0.343     <span style="text-decoration: underline;">2</span>113       1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 710 more rows, and abbreviated variable names ¹​cell_group,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ²​generated_proportions, ³​generated_counts, ⁴​replicate</span></span>
 <span class="r-in"><span></span></span>
@@ -175,7 +183,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

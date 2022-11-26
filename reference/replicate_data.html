@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.30</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.4</span>
       </span>
     </div>
 
@@ -115,20 +115,21 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation [ETA: ~20s]</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    generated_proportions generated_counts replicate sample       cell_group</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>                0.045<span style="text-decoration: underline;">9</span>              231         1 10x_6K       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>                0.052<span style="text-decoration: underline;">1</span>              421         1 10x_8K       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>                0.093<span style="text-decoration: underline;">2</span>              234         1 GSE115189    B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>                0.101               621         1 SCP345_580   B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>                0.092<span style="text-decoration: underline;">6</span>              636         1 SCP345_860   B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>                0.106               303         1 SCP424_pbmc1 B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>                0.044<span style="text-decoration: underline;">5</span>              142         1 SCP424_pbmc2 B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>                0.118                71         1 SCP591       B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>                0.048<span style="text-decoration: underline;">1</span>              230         1 SI-GA-E5     B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>                0.030<span style="text-decoration: underline;">4</span>              232         1 SI-GA-E7     B1        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 710 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    generated_proportions generated_counts replicate generated_p…¹ sample cell_…²</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 10x_6K B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 10x_8K B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 GSE11… B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 SCP34… B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 SCP34… B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 SCP42… B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 SCP42… B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 SCP591 B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 SI-GA… B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>                   <span style="color: #BB0000;">NaN</span>                0         1             0 SI-GA… B1     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 710 more rows, and abbreviated variable names</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ¹​generated_proportion_means, ²​cell_group</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -144,7 +145,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
