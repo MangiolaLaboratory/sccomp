@@ -35,14 +35,7 @@ clean_names = function(x){
 ## from http://tr.im/hH5A
 
 
-softmax <- function (x) {
-  logsumexp <- function (x) {
-    y = max(x)
-    y + log(sum(exp(x - y)))
-  }
 
-  exp(x - logsumexp(x))
-}
 
 data_for_immune_proportion = readRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion.rds")
 data_for_immune_proportion_relative = readRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion_relative.rds")
@@ -1007,7 +1000,7 @@ count_significance_sex_immune_load_tissue =
   differential_composition_sex_absolute |>
   test_contrasts(
     contrasts =
-        differential_composition_sex_relative |>
+      differential_composition_sex_absolute |>
         filter(parameter |> str_detect("_male___sex")) |>
         distinct(parameter) |>
         mutate(contrast = glue("sexmale  + `{parameter}`") |> as.character()) |>
