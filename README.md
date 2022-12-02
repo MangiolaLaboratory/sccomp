@@ -35,7 +35,7 @@ primary breast cancer.
 
 # CELLxGENE harmonised human atlas
 
-[Download]([https://www.google.com](https://wehieduau-my.sharepoint.com/:u:/g/personal/mangiola_s_wehi_edu_au/EZuVg8kuGJdPvQi2tZwOOp4BWbxuvIUuf8hg24hxLQXgFQ?e=sA60EU))
+[Download](https://wehieduau-my.sharepoint.com/:u:/g/personal/mangiola_s_wehi_edu_au/EZuVg8kuGJdPvQi2tZwOOp4BWbxuvIUuf8hg24hxLQXgFQ?e=sA60EU)
 
 # Installation
 
