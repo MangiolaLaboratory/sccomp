@@ -33,6 +33,7 @@ This function replicates counts from a real-world dataset.
 
 data("counts_obj")
 
+if(.Platform$OS.type == "unix")
   sccomp_glm(
   counts_obj ,
    ~ type, ~1,  sample, cell_group, count,

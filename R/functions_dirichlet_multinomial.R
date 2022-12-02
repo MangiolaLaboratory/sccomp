@@ -103,13 +103,6 @@ dirichlet_multinomial_glm = function(.data,
       } %>%
       beta_to_CI(censoring_iteration = 1, false_positive_rate = false_positive_rate, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) %>%
 
-      # # Join filtered
-      # mutate(
-      #   significant =
-      #     !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-      #     !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-      # ) %>%
-
       # add probability
       left_join( get_probability_non_zero_OLD(parsed_fit, prefix = "composition"), by="M" ) %>%
 

@@ -1780,7 +1780,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
     .data |>
     attr("fit") |>
     names() |>
-    str_subset("beta_random_intercept") |>
+    str_subset("beta_random_intercept_raw") |>
     length() |>
     gt(0)
 

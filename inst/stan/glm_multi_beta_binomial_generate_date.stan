@@ -35,6 +35,9 @@ data {
 transformed data{
   // If needed recreate the intercept
   matrix[N,1] X_intercept = to_matrix(rep_vector(1, N));
+
+  // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
+  int N_grouping_WINDOWS_BUG_FIX = max(N_grouping, 1);
 }
 parameters {
 
@@ -42,7 +45,7 @@ parameters {
 	matrix[A,M] alpha;
 
 	// Random intercept
-	matrix[N_grouping, M-1] beta_random_intercept;
+	matrix[N_grouping_WINDOWS_BUG_FIX, M-1] beta_random_intercept;
 
 }
 transformed parameters{
