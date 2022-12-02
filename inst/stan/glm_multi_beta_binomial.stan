@@ -130,6 +130,9 @@ transformed data{
   int truncation_down_array[N*M];
   int exposure_array[N*M];
 
+  // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
+  int N_grouping_WINDOWS_BUG_FIX = max(N_grouping, 1);
+
   // thin and scale the QR decomposition
   Q_ast = qr_thin_Q(X) * sqrt(N - 1);
   R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
@@ -339,8 +342,9 @@ model{
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
 
+
   // Rondom effect
-  matrix[N_grouping, M] beta_random_intercept;
+  matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
 
 
   if(intercept_in_design){
@@ -350,9 +354,15 @@ generated quantities {
     for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
   }
 
+
+  // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
+  if(N_grouping==0) beta_random_intercept[1] = rep_row_vector(0.0, M);
+
   // Rondom effect
-  beta_random_intercept[,1:(M-1)] = beta_random_intercept_raw;
+  else{
+     beta_random_intercept[,1:(M-1)] = beta_random_intercept_raw;
   for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(beta_random_intercept_raw[n,]);
+  }
 
 }
 
