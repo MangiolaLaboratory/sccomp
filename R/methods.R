@@ -674,7 +674,7 @@ test_contrasts.data.frame = function(.data,
     )
 }
 
-#' replicate_data
+#' sccomp_replicate
 #'
 #' @description This function replicates counts from a real-world dataset.
 #'
@@ -702,203 +702,148 @@ test_contrasts.data.frame = function(.data,
 #'     cores = 1
 #'   ) |>
 #'
-#'   replicate_data()
+#'   sccomp_replicate()
 #'
-replicate_data <- function(.data,
-                           formula_composition = NULL,
-                           formula_variability = NULL,
-                           number_of_draws = 1,
-                           mcmc_seed = sample(1e5, 1)) {
-  UseMethod("replicate_data", .data)
+sccomp_replicate <- function(fit,
+                             formula_composition = NULL,
+                             formula_variability = NULL,
+                             number_of_draws = 1,
+                             mcmc_seed = sample(1e5, 1)) {
+  UseMethod("sccomp_replicate", .data)
 }
 
 #' @export
 #'
-replicate_data.data.frame = function(.data,
+sccomp_replicate.data.frame = function(fit,
+                                       formula_composition = NULL,
+                                       formula_variability = NULL,
+                                       number_of_draws = 1,
+                                       mcmc_seed = sample(1e5, 1)){
+
+
+
+  rng =
+    replicate_data(
+      fit,
+      formula_composition = formula_composition,
+      formula_variability = formula_variability,
+      number_of_draws = number_of_draws,
+      mcmc_seed = mcmc_seed
+    )
+
+  model_input = attr(.data, "model_input")
+
+  # mean generated
+  rng |>
+
+    # Parse
+    parse_generated_quantities(number_of_draws = number_of_draws) %>%
+
+    # Get sample name
+    nest(data = -N) %>%
+    arrange(N) %>%
+    mutate(!!.sample := rownames(model_input$y)) %>%
+    unnest(data) %>%
+
+    # get cell type name
+    nest(data = -M) %>%
+    mutate(!!.cell_group := colnames(model_input$y)) %>%
+    unnest(data) %>%
+
+    select(-N, -M) |>
+    select(!!.cell_group, !!.sample, everything())
+
+}
+
+#' sccomp_predict
+#'
+#' @description This function replicates counts from a real-world dataset.
+#'
+#'
+#' @param .data A tibble. The result of sccomp_glm.
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
+#' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
+#'
+#' @return A nested tibble `tbl` with cell_group-wise statistics
+#'
+#' @export
+#'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#' if(.Platform$OS.type == "unix")
+#'   sccomp_glm(
+#'   counts_obj ,
+#'    ~ type, ~1,  sample, cell_group, count,
+#'     approximate_posterior_inference = "all",
+#'     check_outliers = FALSE,
+#'     cores = 1
+#'   ) |>
+#'
+#'   sccomp_predict()
+#'
+sccomp_predict <- function(fit,
+                           formula_composition = NULL,
+                           new_data =
+                             fit |>
+                             select(count_data) |>
+                             unnest(count_data) |>
+                             distinct(),
+                           number_of_draws = NULL,
+                           mcmc_seed = sample(1e5, 1)) {
+  UseMethod("sccomp_predict", .data)
+}
+
+#' @export
+#'
+sccomp_predict.data.frame = function(fit,
                                      formula_composition = NULL,
-                                     formula_variability = NULL,
-                                     number_of_draws = 1,
+                                     new_data =
+                                       fit |>
+                                       select(count_data) |>
+                                       unnest(count_data) |>
+                                       distinct(),
+                                     number_of_draws = NULL,
                                      mcmc_seed = sample(1e5, 1)){
 
 
-  # Select model based on noise model
-  my_model = attr(.data, "noise_model") %>% when(
-    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date,
-    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  )
+
+  rng =
+    replicate_data(
+      fit,
+      formula_composition = formula_composition,
+      formula_variability = formula_variability,
+      new_data = new_data,
+      number_of_draws = number_of_draws,
+      mcmc_seed = mcmc_seed
+    )
 
   model_input = attr(.data, "model_input")
-  .sample = attr(.data, ".sample")
-  .cell_group = attr(.data, ".cell_group")
-
-  fit_matrix = as.matrix(attr(.data, "fit") )
-
-  # Composition
-  if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
-
-  colnames_X =
-    .data |>
-    select(count_data) |>
-    unnest(count_data) |>
-    distinct() |>
-    get_design_matrix(
-
-      # Drop random intercept
-      formula_composition |>
-        as.character() |>
-        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
-        paste(collapse="") |>
-        as.formula(),
-      !!.sample
-    ) |>
-    colnames()
-
-    X_which =
-      .data |>
-      attr("model_input") %$%
-      X %>%
-      colnames() %in%
-      colnames_X |>
-      which() |>
-      as.array()
-
-    # Variability
-    if(is.null(formula_variability)) formula_variability =  .data |> attr("formula_variability")
-
-    colnames_XA =
-      .data |>
-      select(count_data) |>
-      unnest(count_data) |>
-      distinct() |>
-      get_design_matrix(
-
-        # Drop random intercept
-        formula_variability |>
-          as.character() |>
-          str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
-          paste(collapse="") |>
-          as.formula(),
-        !!.sample
-      ) |>
-      colnames()
-
-    XA_which =
-      .data |>
-      attr("model_input") %$%
-      Xa %>%
-      colnames() %in%
-      colnames_XA |>
-      which() |>
-      as.array()
-
-    # If I want to replicate data with intercept and I don't have intercept in my fit
-  create_intercept =
-    .data |> attr("model_input") %$% intercept_in_design |> not() &
-    "(Intercept)" %in% colnames_X
-  if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first covariate in your formula ~ 0 + <COVARIATE>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
-
-  # Random intercept
-  random_intercept_elements = parse_formula_random_intercept(formula_composition)
-  if(random_intercept_elements |> nrow() |> equals(0)) X_random_intercept_which = array()[0]
-  else {
-
-    random_intercept_grouping =
-      .data |>
-      select(count_data) |>
-      unnest(count_data) |>
-      distinct()  %>%
-      get_random_intercept_design(
-        !!.sample,
-        parse_formula_random_intercept(formula_composition)
-      )
-
-    colnames_X_random_intercept =
-      random_intercept_grouping |>
-      mutate(design_matrix = pmap(
-        list(design, grouping, covariate, is_covariate_continuous),
-        ~ ..1 |>
-
-          # Get matrix
-          get_design_matrix(~ 0 + group___label,  !!.sample) |>
-
-          # If countinuous multiply the matrix by the covariate
-          when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + covariate___,  !!.sample) )) , ~ (.))
-      )) |>
-
-      # Merge
-      pull(design_matrix) |>
-      bind_cols() %>%
-
-      # Clean matrix names
-      set_names(str_remove_all(colnames(.), "group___label")) |>
-      colnames()
-
-    # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
-    X_random_intercept_which =
-      .data |>
-      attr("model_input") %$%
-      X_random_intercept %>%
-      colnames() %in%
-      colnames_X_random_intercept |>
-      which() |>
-      as.array()
-  }
-
-  # Generate quantities
-  fit =
-    rstan::gqs(
-    my_model,
-    draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
-    data = model_input |> c(
-
-      # Add subset of coefficients
-      length_X_which = length(X_which),
-      length_XA_which = length(XA_which),
-      X_which,
-      XA_which,
-
-      # Random intercept
-      X_random_intercept_which = X_random_intercept_which,
-      length_X_random_intercept_which = length(X_random_intercept_which),
-
-      # Should I create intercept for generate quantities
-      create_intercept = create_intercept
-
-    ),
-    seed = mcmc_seed
-  )
 
   # mean generated
-  means_df =
-    fit |>
+  rng |>
     summary_to_tibble("mu", "M", "N") |>
-    select(M, N, generated_proportion_means = mean)
+    select(M, N, proportion_mean = mean, proportion_lower = `2.5%`, proportion_upper = `97.5%`) |>
 
-  fit %>%
+    # Get sample name
+    nest(data = -N) %>%
+    arrange(N) %>%
+    mutate(!!.sample := rownames(model_input$y)) %>%
+    unnest(data) %>%
 
-  # Parse
-  parse_generated_quantities(number_of_draws = number_of_draws) %>%
+    # get cell type name
+    nest(data = -M) %>%
+    mutate(!!.cell_group := colnames(model_input$y)) %>%
+    unnest(data) %>%
 
-  # Add means
-  left_join(means_df, by = c("M", "N")) |>
-
-  # Get sample name
-  nest(data = -N) %>%
-  arrange(N) %>%
-  mutate(!!.sample := rownames(model_input$y)) %>%
-  unnest(data) %>%
-
-  # get cell type name
-  nest(data = -M) %>%
-  mutate(!!.cell_group := colnames(model_input$y)) %>%
-  unnest(data) %>%
-
-  select(-N, -M)
-
-  # %>%
-  #   nest(generated_data = -c(!!.sample, !!.cell_group))
+    select(-N, -M) |>
+    select(!!.cell_group, !!.sample, everything())
 
 }
+
 
 #' remove_unwanted_variation
 #'

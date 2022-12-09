@@ -1887,3 +1887,158 @@ get_variability_contrast_draws = function(.data, contrasts){
     arrange(parameter)
 
 }
+
+#' @export
+#'
+replicate_data = function(.data,
+                                     formula_composition = NULL,
+                                     formula_variability = NULL,
+                                     new_data = .data |>
+                                       select(count_data) |>
+                                       unnest(count_data) |>
+                                       distinct(),
+                                     number_of_draws = 1,
+                                     mcmc_seed = sample(1e5, 1)){
+
+
+  # Select model based on noise model
+  my_model = attr(.data, "noise_model") %>% when(
+    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date,
+    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  )
+
+  model_input = attr(.data, "model_input")
+  .sample = attr(.data, ".sample")
+  .cell_group = attr(.data, ".cell_group")
+
+  fit_matrix = as.matrix(attr(.data, "fit") )
+
+  # Composition
+  if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
+
+  new_X =
+    new_data |>
+    get_design_matrix(
+
+      # Drop random intercept
+      formula_composition |>
+        as.character() |>
+        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+        paste(collapse="") |>
+        as.formula(),
+      !!.sample
+    )
+
+  X_which =
+    colnames(new_X) |>
+    match(
+      model_input %$%
+        X %>%
+        colnames()
+    ) |>
+    as.array()
+
+  # Variability
+  if(is.null(formula_variability)) formula_variability =  .data |> attr("formula_variability")
+
+  new_Xa =
+    new_data |>
+    get_design_matrix(
+
+      # Drop random intercept
+      formula_variability |>
+        as.character() |>
+        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+        paste(collapse="") |>
+        as.formula(),
+      !!.sample
+    )
+
+  XA_which =
+    colnames(new_Xa) |>
+    match(
+      model_input %$%
+        Xa %>%
+        colnames()
+    ) |>
+    as.array()
+
+  # If I want to replicate data with intercept and I don't have intercept in my fit
+  create_intercept =
+    model_input %$% intercept_in_design |> not() &
+    "(Intercept)" %in% colnames(new_X)
+  if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first covariate in your formula ~ 0 + <COVARIATE>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
+
+  # Random intercept
+  random_intercept_elements = parse_formula_random_intercept(formula_composition)
+  if(random_intercept_elements |> nrow() |> equals(0)) X_random_intercept_which = array()[0]
+  else {
+
+    random_intercept_grouping =
+      new_data %>%
+      get_random_intercept_design(
+        !!.sample,
+        parse_formula_random_intercept(formula_composition)
+      )
+
+    new_X_random_intercept =
+      random_intercept_grouping |>
+      mutate(design_matrix = pmap(
+        list(design, grouping, covariate, is_covariate_continuous),
+        ~ ..1 |>
+
+          # Get matrix
+          get_design_matrix(~ 0 + group___label,  !!.sample) |>
+
+          # If countinuous multiply the matrix by the covariate
+          when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + covariate___,  !!.sample) )) , ~ (.))
+      )) |>
+
+      # Merge
+      pull(design_matrix) |>
+      bind_cols() %>%
+
+      # Clean matrix names
+      set_names(str_remove_all(colnames(.), "group___label"))
+
+    # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
+    X_random_intercept_which =
+      colnames(new_X_random_intercept) |>
+      match(
+        model_input %$%
+          X_random_intercept %>%
+          colnames()
+      ) |>
+      as.array()
+  }
+
+  # New X
+  model_input$X = new_X
+  model_input$Xa = new_Xa
+  model_input$X_random_intercept = new_X_random_intercept
+
+  # Generate quantities
+  rstan::gqs(
+    my_model,
+    draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
+    data = model_input |> c(
+
+      # Add subset of coefficients
+      length_X_which = length(X_which),
+      length_XA_which = length(XA_which),
+      X_which,
+      XA_which,
+
+      # Random intercept
+      X_random_intercept_which = X_random_intercept_which,
+      length_X_random_intercept_which = length(X_random_intercept_which),
+
+      # Should I create intercept for generate quantities
+      create_intercept = create_intercept
+
+    ),
+    seed = mcmc_seed
+  )
+
+
+}
