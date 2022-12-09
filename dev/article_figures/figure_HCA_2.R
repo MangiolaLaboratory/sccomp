@@ -547,44 +547,11 @@ gc()
 
 
 # Sex
-
-# data_for_immune_proportion_sex =
-#   data_for_immune_proportion |>
-#
-#   # filter
-#   filter(development_stage!="unknown") |>
-#   filter(sex != "unknown") |>
-#   filter(age_days >= 19 * 365) |>
-#
-#   # Keep shared tissues
-#   nest(data = -c(.sample, sex, tissue_harmonised)) |>
-#   add_count(sex, tissue_harmonised) |>
-#   filter(n>2) |>
-#   select(-n) |>
-#   nest(data = -c(sex, tissue_harmonised)) |>
-#   add_count(tissue_harmonised) |>
-#   filter(n==2) |>
-#   unnest(data) |>
-#   unnest(data) %>%
-#
-#   # Filter tissue only having > 2 datasets
-#   inner_join(
-#     (.) |>
-#       distinct( sex, tissue_harmonised, file_id) |>
-#       count(sex, tissue_harmonised, name = "count_file_id") |>
-#       with_groups(tissue_harmonised, ~ .x |> mutate(min_count_file_id = min(count_file_id))) |>
-#       filter(min_count_file_id>1)
-#   )
-#
-# data_for_immune_proportion_sex |> saveRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion_sex.rds")
-
 differential_composition_sex_relative = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_sex_relative2.rds")
 differential_composition_sex_absolute = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_sex_absolute2.rds")
 
 
 # Summary stats
-
-
 data_for_immune_proportion_sex |>
   distinct(.sample, sex, tissue_harmonised, file_id) |>
 
