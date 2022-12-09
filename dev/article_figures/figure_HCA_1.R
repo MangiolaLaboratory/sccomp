@@ -179,8 +179,6 @@ plot_proportion_confidence =
 
 
 # Technology
-
-
 softmax <- function (x) {
   logsumexp <- function (x) {
     y = max(x)
@@ -192,88 +190,7 @@ softmax <- function (x) {
 
 
 # # Relative
-# data_for_immune_proportion_relative_assay =
-#   readRDS("~/PostDoc/HCAquery/dev/cell_metadata_with_harmonised_annotation.rds") |>
-#
-# 	left_join(
-# 		#get_metadata() |>
-# 		readRDS("~/PostDoc/HCAquery/dev/metadata_annotated.rds") |>
-# 			dplyr::select(.cell, cell_type, file_id, assay, age_days, development_stage, sex, ethnicity) |>
-# 			as_tibble()
-# 	) |>
-#
-# 	# Fix hematopoietic misclassification
-# 	mutate(cell_type_harmonised = if_else(cell_type_harmonised=="non_immune" & cell_type |> str_detect("hematopoietic"), "stem", cell_type_harmonised)) |>
-#
-# 	# Filter out
-# 	filter(!cell_type |> str_detect("erythrocyte")) |>
-# 	filter(!cell_type |> str_detect("platelet")) |>
-#
-# 	mutate(is_immune = cell_type_harmonised!="non_immune") |>
-#
-# 	# Filter only immune
-# 	filter(is_immune ) |>
-#
-# 	# Format same covatriates
-# 	mutate(ethnicity = case_when(
-# 		ethnicity |> str_detect("Chinese|Asian") ~ "Chinese",
-# 		ethnicity |> str_detect("African") ~ "African",
-# 		TRUE ~ ethnicity
-# 	)) |>
-#
-# 	filter(development_stage!="unknown") |>
-#
-# 	# Fix samples with multiple assays
-# 	unite(".sample", c(.sample , assay), remove = FALSE) |>
-#
-# 	# Fix groups
-# 	unite("group", c(file_id, assay), remove = FALSE) |>
-#
-#   # Order the assays
-#   nest(data = -assay) |>
-#   mutate(n_tissues = map_int(data, ~ .x |> distinct(tissue_harmonised) |> nrow())) |>
-#   filter(n_tissues>3) |>
-#   unnest(data) |>
-#   add_count(assay) |>
-#   mutate(assay = assay |> fct_reorder(desc(n))) |>
-# mutate(assay = assay |> str_replace_all(" ", "_") |> str_replace_all("-", "_")  |> str_remove_all("'"))
-
-# data_for_immune_proportion_relative_assay |> saveRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion_relative_assay.rds")
-
-data_for_immune_proportion_relative_assay = readRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion_relative_assay.rds")
-
-
-# job::job({
-# 	res_relative_assay =
-# 	  data_for_immune_proportion_relative_assay |>
-#
-# 		# Scale days
-# 		mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-#
-# 		# Estimate
-# 		sccomp_glm(
-# 			formula_composition = ~ 0 + assay + tissue_harmonised + sex + ethnicity + age_days + (assay | group) ,
-# 			formula_variability = ~ 0 + assay + tissue_harmonised + sex + ethnicity,
-# 			.sample, cell_type_harmonised,
-# 			check_outliers = F,
-# 			approximate_posterior_inference = FALSE,
-# 			contrasts = c(
-# "assay10x_3_v3 - assay10x_3_v2" ,
-# "assaysci_RNA_seq - assay10x_3_v2" ,
-# "assaymicrowell_seq - assay10x_3_v2" ,
-# "assay10x_5_v2 - assay10x_3_v2" ,
-# "assay10x_5_v1 - assay10x_3_v2" ,
-# "assaySmart_seq2  - assay10x_3_v2"
-# 			),
-# 			cores = 20,
-# 			mcmc_seed = 42, verbose = T
-# 		)
-#
-# 	res_relative_assay |> saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_assay.rds")
-# })
-
-
-res_relative = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_assay.rds")
+res_relative_contrasts = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_assay.rds")
 
 contrasts = c(
   "assay10x_3_v3 - assay10x_3_v2" ,
@@ -283,14 +200,6 @@ contrasts = c(
   "assay10x_5_v1 - assay10x_3_v2" ,
   "assaySmart_seq2  - assay10x_3_v2"
 )
-
-res_relative_contrasts =
-  res_relative |>
-  test_contrasts(
-    contrasts = contrasts
-  )
-
-
 
 library(ggforce)
 library(ggpubr)
