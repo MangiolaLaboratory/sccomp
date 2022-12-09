@@ -67,70 +67,6 @@ names(cell_type_color) = names(cell_type_color) |>  str_replace("macrophage", "m
 
 # Track of immune system in life
 
-# # Study age absolute
-# job::job({
-#
-# 	data_for_immune_proportion |>
-#
-# 		# Drop only-immune organs
-# 		filter(!tissue_harmonised %in% c("blood", "lymph node", "spleen", "bone")) |>
-# 		mutate(is_immune = as.character(is_immune)) |>
-#
-# 		# Mutate days
-# 		mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-# 		filter(development_stage!="unknown") |>
-#
-# 		sccomp_glm(
-# 			formula_composition = ~ age_days + tissue_harmonised + sex + ethnicity  + assay + (1 | group) + (age_days | tissue_harmonised),
-# 			formula_variability = ~ age_days + tissue_harmonised ,
-# 			.sample, is_immune,
-# 			check_outliers = F,
-# 			approximate_posterior_inference = FALSE,
-# 			cores = 20,
-# 			mcmc_seed = 42, verbose = T
-# 		) |>
-#
-# 		saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_age2.rds")
-#
-# })
-#
-# # Study age relative
-# job::job({
-#
-# 		data_for_immune_proportion_relative |>
-#
-# 		# Scale days
-# 		mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-#     filter(development_stage!="unknown") |>
-#
-# 		# Estimate
-# 		sccomp_glm(
-# 			formula_composition = ~ age_days + tissue_harmonised + sex + ethnicity  + assay + (1 | group) + (age_days | tissue_harmonised),
-# 			formula_variability = ~ age_days + tissue_harmonised ,
-# 			.sample, cell_type_harmonised,
-# 			check_outliers = F,
-# 			approximate_posterior_inference = FALSE,
-# 			cores = 20,
-# 			mcmc_seed = 42, verbose = T
-# 		) |>
-#     saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_age_relative2.rds")
-# })
-
-
-
-# job::job({
-#   readRDS(
-#     "~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_age_relative.rds"
-#   ) |>
-#     remove_unwanted_variation( ~ age_days, ~ age_days) |>
-#     saveRDS("~/PostDoc/HCAquery/dev/proportions_age_adjusted_relative.rds")
-# })
-# job::job({
-#   readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_age2.rds") |>
-#     remove_unwanted_variation( ~ age_days, ~ age_days) |>
-#     saveRDS("~/PostDoc/HCAquery/dev/proportions_age_adjusted_absolute.rds")
-# })
-
 differential_composition_age_relative = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_age_relative2.rds")
 differential_composition_age = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_age3.rds")
 
@@ -612,99 +548,35 @@ gc()
 
 # Sex
 
-data_for_immune_proportion_sex =
-  data_for_immune_proportion |>
-
-  # Drop only-immune organs
-  filter(!tissue_harmonised %in% c("blood", "lymph node", "spleen", "bone")) |>
-  mutate(is_immune = as.character(is_immune)) |>
-
-  # filter
-  filter(development_stage!="unknown") |>
-  filter(sex != "unknown") |>
-
-  # Keep shared tissues
-  nest(data = -c(.sample, sex, tissue_harmonised)) |>
-  add_count(sex, tissue_harmonised) |>
-  filter(n>2) |>
-  select(-n) |>
-  nest(data = -c(sex, tissue_harmonised)) |>
-  add_count(tissue_harmonised) |>
-  filter(n==2) |>
-  unnest(data) |>
-  unnest(data) %>%
-
-  # Filter tissue only having > 2 datasets
-  inner_join(
-    (.) |>
-      distinct( sex, tissue_harmonised, file_id) |>
-      count(sex, tissue_harmonised, name = "count_file_id") |>
-      with_groups(tissue_harmonised, ~ .x |> mutate(min_count_file_id = min(count_file_id))) |>
-      filter(min_count_file_id>1)
-  )
-
-# # Study sex absolute
-# job::job({
+# data_for_immune_proportion_sex =
+#   data_for_immune_proportion |>
 #
-# data_for_immune_proportion_sex|>
+#   # filter
+#   filter(development_stage!="unknown") |>
+#   filter(sex != "unknown") |>
+#   filter(age_days >= 19 * 365) |>
 #
-#     # Scale days
-#     mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
+#   # Keep shared tissues
+#   nest(data = -c(.sample, sex, tissue_harmonised)) |>
+#   add_count(sex, tissue_harmonised) |>
+#   filter(n>2) |>
+#   select(-n) |>
+#   nest(data = -c(sex, tissue_harmonised)) |>
+#   add_count(tissue_harmonised) |>
+#   filter(n==2) |>
+#   unnest(data) |>
+#   unnest(data) %>%
 #
-#     unite("group", c(tissue_harmonised , file_id, sex), remove = FALSE) |>
-#     unite("tissue_harmonised_sex", c(tissue_harmonised , sex), remove = FALSE) |>
+#   # Filter tissue only having > 2 datasets
+#   inner_join(
+#     (.) |>
+#       distinct( sex, tissue_harmonised, file_id) |>
+#       count(sex, tissue_harmonised, name = "count_file_id") |>
+#       with_groups(tissue_harmonised, ~ .x |> mutate(min_count_file_id = min(count_file_id))) |>
+#       filter(min_count_file_id>1)
+#   )
 #
-#     # Estimate
-#     sccomp_glm(
-#       formula_composition = ~ sex + tissue_harmonised + ethnicity  + age_days +  assay + (1 | group) + (sex | tissue_harmonised_sex),
-#       formula_variability = ~ sex + tissue_harmonised + ethnicity,
-#       .sample, is_immune,
-#       check_outliers = F,
-#       approximate_posterior_inference = FALSE,
-#       cores = 20,
-#       mcmc_seed = 42, verbose = T
-#     ) |>
-#     saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_sex_absolute2.rds")
-# })
-#
-# # Study sex relative
-# job::job({
-#
-# 		data_for_immune_proportion_relative |>
-#
-#     # filter
-#     filter(development_stage!="unknown") |>
-#     filter(sex != "unknown") |>
-#
-#     # Keep shared tissues
-#     nest(data = -c(.sample, sex, tissue_harmonised)) |>
-#     add_count(sex, tissue_harmonised) |>
-#     filter(n>2) |>
-#     select(-n) |>
-#     nest(data = -c(sex, tissue_harmonised)) |>
-#     add_count(tissue_harmonised) |>
-#     filter(n==2) |>
-#     unnest(data) |>
-#     unnest(data) |>
-#
-# 		# Scale days
-# 		mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-#
-#     unite("group", c(tissue_harmonised , file_id, sex), remove = FALSE) |>
-#     unite("tissue_harmonised_sex", c(tissue_harmonised , sex), remove = FALSE) |>
-#
-# 		# Estimate
-# 		sccomp_glm(
-# 			formula_composition = ~ sex + tissue_harmonised + ethnicity  + age_days +  assay + (1 | group) + (sex | tissue_harmonised_sex),
-# 			formula_variability = ~ sex + tissue_harmonised + ethnicity,
-# 			.sample, cell_type_harmonised,
-# 			check_outliers = F,
-# 			approximate_posterior_inference = FALSE,
-# 			cores = 20,
-# 			mcmc_seed = 42, verbose = T
-# 		) |>
-#     saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_sex_relative2.rds")
-# })
+# data_for_immune_proportion_sex |> saveRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion_sex.rds")
 
 differential_composition_sex_relative = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_sex_relative2.rds")
 differential_composition_sex_absolute = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_sex_absolute2.rds")
@@ -746,9 +618,6 @@ data_for_immune_proportion_sex |>
   )
 
 
-# differential_composition_sex_absolute |>
-# 		remove_unwanted_variation(~ sex, ~ sex) |>
-# 		saveRDS("~/PostDoc/HCAquery/dev/proportions_sex_absolute_adjusted.rds")
 
 proportions_sex_absolute_adjusted = readRDS("~/PostDoc/HCAquery/dev/proportions_sex_absolute_adjusted.rds")
 
@@ -885,7 +754,6 @@ sex_relative_organ_cell_type =
       mutate(tissue_harmonised = tissue_harmonised |> str_remove("_male")) |>
       deframe( )
   )
-#
 
 #
 df_heatmap_sex_relative_organ_cell_type =
@@ -1136,73 +1004,6 @@ circle_plot = function(res) {
 }
 
 
-# # Study ethnicity absolute
-# job::job({
-#
-#   data_for_immune_proportion |>
-#
-#     # Drop only-immune organs
-#     filter(!tissue_harmonised %in% c("blood", "lymph node", "spleen", "bone")) |>
-#     mutate(is_immune = as.character(is_immune)) |>
-#
-# 		filter(development_stage!="unknown") |>
-#
-#     # filter
-#     filter(ethnicity != "Pacific Islander") |>
-#
-# 		# Scale days
-# 		mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-#
-#     unite("group", c(tissue_harmonised , file_id, ethnicity), remove = FALSE) |>
-#     unite("tissue_harmonised_ethnicity", c(tissue_harmonised , ethnicity), remove = FALSE) |>
-#
-# filter(ethnicity %in% c("Hispanic or Latin American", "European", "Chinese", "African")) |>
-#
-#
-# 		# Estimate
-# 		sccomp_glm(
-# 		  			formula_composition = ~ 0 + ethnicity + tissue_harmonised + sex  + age_days +  assay  + (ethnicity | tissue_harmonised_ethnicity),
-# 		  			formula_variability = ~ 0 + ethnicity + tissue_harmonised + sex,
-# 			.sample, is_immune,
-# 			check_outliers = F,
-# 			approximate_posterior_inference = FALSE,
-# 			cores = 20,
-# 			mcmc_seed = 42, verbose = T
-# 		) |>
-#     saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_ethnicity_absolute2.rds")
-# })
-
-# data_for_immune_proportion_relative = readRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion_relative.rds")
-
-
-# # Study ethnicity relative
-# job::job({
-#
-# 		data_for_immune_proportion_relative |>
-#
-# 		# Scale days
-# 		mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-#
-#     unite("group", c(tissue_harmonised , file_id, ethnicity), remove = FALSE) |>
-#     unite("tissue_harmonised_ethnicity", c(tissue_harmonised , ethnicity), remove = FALSE) |>
-#
-#     filter(ethnicity %in% c("Hispanic or Latin American", "European", "Chinese", "African")) |>
-#
-# 		# Estimate
-# 		sccomp_glm(
-# 			formula_composition = ~ 0 + ethnicity + tissue_harmonised + sex  + age_days +  assay  + (ethnicity | tissue_harmonised_ethnicity),
-# 			formula_variability = ~ 0 + ethnicity + tissue_harmonised + sex,
-# 			.sample, cell_type_harmonised,
-# 			check_outliers = F,
-# 			approximate_posterior_inference = FALSE,
-# 			cores = 20,
-# 			mcmc_seed = 42, verbose = T
-# 		) |>
-#     saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_ethnicity_relative2.rds")
-# })
-
-
-
 differential_composition_ethnicity_absolute = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_ethnicity_absolute2.rds")
 
 
@@ -1278,10 +1079,6 @@ ethnicity_absolute_organ |>
   ylab("Ethnicity") +
   theme_multipanel
 
-# Counts RUV Absolute
-# differential_composition_ethnicity_absolute |>
-#   remove_unwanted_variation(~ 0 + ethnicity + (ethnicity | tissue_harmonised_ethnicity), ~ ethnicity) |>
-#   saveRDS("~/PostDoc/HCAquery/dev/proportions_ethnicity_tissue_absolute_adjusted.rds")
 
 proportions_ethnicity_tissue_absolute_adjusted =
   readRDS("~/PostDoc/HCAquery/dev/proportions_ethnicity_tissue_absolute_adjusted.rds")

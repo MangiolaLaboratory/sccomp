@@ -9,8 +9,6 @@ library(glue)
 source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/a0853a1a4e8a46baf33bad6268b09001d49faf51/ggplot_theme_multipanel")
 
 ## from http://tr.im/hH5A
-
-
 softmax <- function (x) {
   logsumexp <- function (x) {
     y = max(x)
@@ -32,20 +30,12 @@ clean_names = function(x){
   )
 }
 
-## from http://tr.im/hH5A
+
+source("https://gist.githubusercontent.com/stemangiola/cfa08c45c28fdf223d4996a6c1256a39/raw/7c78b50dce501fc7ce0b2a8d8efd3aded91134aa/color_cell_types.R")
+cell_type_color = color_array
+names(cell_type_color) = names(cell_type_color) |>  str_replace("macrophage", "macro")
 
 
-softmax <- function (x) {
-  logsumexp <- function (x) {
-    y = max(x)
-    y + log(sum(exp(x - y)))
-  }
-
-  exp(x - logsumexp(x))
-}
-
-data_for_immune_proportion = readRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion.rds")
-data_for_immune_proportion_relative = readRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion_relative.rds")
 
 tissue_color =
   data_for_immune_proportion_relative |>
@@ -55,93 +45,14 @@ tissue_color =
   deframe()
 
 
-source("https://gist.githubusercontent.com/stemangiola/cfa08c45c28fdf223d4996a6c1256a39/raw/7c78b50dce501fc7ce0b2a8d8efd3aded91134aa/color_cell_types.R")
-cell_type_color = color_array
-names(cell_type_color) = names(cell_type_color) |>  str_replace("macrophage", "macro")
+# LOADING RESULTS
+result_directory = "/home/users/allstaff/mangiola.s/PostDoc/HCAquery/dev/run_5_dec_2022/"
 
-
-# # - Immune proportion per tissue
-# data_for_immune_proportion =
-#   cell_metadata_with_harmonised_annotation |>
-#
-#   left_join(
-#     # get_metadata() |>
-#   	 get_metadata("~/PostDoc/HCAquery/dev/metadata.sqlite") |>
-#     	dplyr::select(.cell, cell_type, file_id, assay, age_days, development_stage, sex, ethnicity) |>
-#     	as_tibble()
-#   ) |>
-#
-#   # # Filter only whole tissue
-#   # filter(
-#   #   !name |> str_detect(regex('immune', ignore_case = T)) |
-#   #     tissue_harmonised %in% c("blood", "lymph node", "bone") |
-#   #     is_primary_data.y == "PRIMARY"
-#   # ) |>
-#
-#   # Filter Immune enriched dataset
-#   filter(file_id != "e756c34a-abe7-4822-9a35-55ef12270247") |>
-#   filter(file_id != "ca4a7d56-739b-4e3c-8ecd-28704914cc14") |>
-#   filter(file_id != "59dfc135-19c1-4380-a9e8-958908273756" | tissue_harmonised != "intestine") |>
-#
-#   # nest(data = -c(.sample, tissue_harmonised)) |>
-#   # filter(map_int(data, ~ .x |> filter(cell_type_harmonised == "non_immune") |> nrow()) > 0 | tissue_harmonised %in% c("blood", "lymph node", "bone")) |>
-#   # unnest(data) |>
-#
-#   mutate(is_immune = cell_type_harmonised!="non_immune") |>
-#
-#   # Fix hematopoietic misclassificsation
-#   mutate(is_immune = if_else(!is_immune & cell_type |> str_detect("hematopoietic"), TRUE, is_immune)) |>
-#
-#   # Filter out
-#   filter(!cell_type |> str_detect("erythrocyte")) |>
-#   filter(!cell_type |> str_detect("platelet")) |>
-#
-# 	# Frmat sme covatriates
-# 	mutate(assay = if_else(assay |> str_detect("10x|scRNA-seq"), "10x", assay)) |>
-# 	mutate(ethnicity = case_when(
-# 		ethnicity |> str_detect("Chinese|Asian") ~ "Chinese",
-# 		ethnicity |> str_detect("African") ~ "African",
-# 		TRUE ~ ethnicity
-# 	)) |>
-#
-# 	# Fix samples with multiple assays
-# 	unite(".sample", c(.sample , assay), remove = FALSE) |>
-#
-# 	# Fix groups
-# 	unite("group", c(tissue_harmonised , file_id), remove = FALSE)
-#
-# data_for_immune_proportion |> saveRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion.rds")
-
-data_for_immune_proportion = readRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion.rds")
-
-# # Study annotation
-# job::job({
-#
-# 	res_absolute =
-# 		data_for_immune_proportion |>
-# 		mutate(is_immune = as.character(is_immune)) |>
-#
-# 		# Mutate days
-# 		mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-# 		filter(development_stage!="unknown") |>
-#
-#
-# 		sccomp_glm(
-# 			formula_composition = ~ 0 + tissue_harmonised + sex + ethnicity  + age_days + assay + (tissue_harmonised | group),
-# 			formula_variability = ~ 0 + tissue_harmonised + sex + ethnicity ,
-# 			.sample, is_immune,
-# 			check_outliers = F,
-# 			approximate_posterior_inference = FALSE,
-# 			cores = 20,
-# 			mcmc_seed = 42, verbose = T
-# 		)
-#
-# 	res_absolute |> saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition.rds")
-#
-# })
+res_absolute = readRDS(glue("{result_directory}/immune_non_immune_differential_composition.rds"))
 
 res_absolute = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition.rds")
 
+lymphoid_organs = c("blood", "spleen", "bone", "thymus", "lymph node")
 
 res_generated_proportions =
   res_absolute |>
@@ -176,12 +87,23 @@ plot_immune_proportion_dataset =
       with_groups(tissue_harmonised, ~ .x |> summarise(median_generated = median(generated_proportions, na.rm = TRUE)))
   ) |>
 
+  # Label lymphoid organs
+  mutate(is_lymphoid = tissue_harmonised %in% c("blood", "spleen", "bone", "thymus", "lymph node")) |>
+
   clean_names() |>
 
+  # Arrange
+  arrange(is_lymphoid, median_generated) %>%
+  mutate(tissue_harmonised = factor(tissue_harmonised, levels = unique(.$tissue_harmonised))) |>
+
+  # Cap
+  mutate(sum = sum |> pmax(500)) |>
+  mutate(sum = sum |> pmin(100000)) |>
+
   # Plot
-  ggplot(aes( proportion, fct_reorder(tissue_harmonised, median_generated))) +
+  ggplot(aes( proportion, tissue_harmonised)) +
   ggforestplot::geom_stripes(odd = "#33333333", even = "#00000000") +
-  geom_point(aes(size = sum, color=file_id)) +
+  geom_jitter(aes(size = sum, color=file_id), width = 0) +
   geom_boxplot(aes(generated_proportions, fct_reorder(tissue_harmonised, median_generated)), color="black", data =
                  res_generated_proportions |>
                  with_groups(tissue_harmonised, ~ .x |> mutate(median_generated = median(generated_proportions, na.rm = TRUE))) |>
@@ -189,7 +111,7 @@ plot_immune_proportion_dataset =
                fill = NA, outlier.shape = NA, lwd=0.2
   ) +
   guides(color="none") +
-  scale_size(trans = "log10", range = c(0.1, 1.5), limits = c(1000, 10000)) +
+  scale_size(trans = "sqrt", range = c(0.1, 1.5), limits = c(500, 100000)) +
   scale_color_manual(values = dittoSeq::dittoColors()) +
   scale_x_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
   xlab("Immune proportion (sqrt)") +
@@ -290,94 +212,20 @@ plot_abundance_variability =
   scale_fill_brewer(palette = "Set1") +
   theme_multipanel
 
-cell_metadata_with_harmonised_annotation =
-  readRDS("~/PostDoc/HCAquery/dev/cell_metadata_with_harmonised_annotation.rds")
-
-# Stats
-cell_metadata_with_harmonised_annotation |>
-
-  mutate(is_immune = cell_type_harmonised!="non_immune") |>
-
-  # Stats
-  dplyr::count(.sample, tissue_harmonised, is_immune) |>
-  with_groups(.sample, ~ .x |> mutate(proportion = n/sum(n))) |>
-  filter(tissue_harmonised=="heart" & proportion > 0.75)
-
-
-# # Relative
-# data_for_immune_proportion_relative =
-# 	cell_metadata_with_harmonised_annotation |>
+# cell_metadata_with_harmonised_annotation =
+#   readRDS("~/PostDoc/HCAquery/dev/cell_metadata_with_harmonised_annotation.rds")
 #
-# 	left_join(
-# 		#get_metadata() |>
-# 		 get_metadata("~/PostDoc/HCAquery/dev/metadata.sqlite") |>
-# 			dplyr::select(.cell, cell_type, file_id, assay, age_days, development_stage, sex, ethnicity) |>
-# 			as_tibble()
-# 	) |>
+# # Stats
+# cell_metadata_with_harmonised_annotation |>
 #
-# 	# Fix hematopoietic misclassification
-# 	mutate(cell_type_harmonised = if_else(cell_type_harmonised=="non_immune" & cell_type |> str_detect("hematopoietic"), "stem", cell_type_harmonised)) |>
+#   mutate(is_immune = cell_type_harmonised!="non_immune") |>
 #
-# 	# Filter out
-# 	filter(!cell_type |> str_detect("erythrocyte")) |>
-# 	filter(!cell_type |> str_detect("platelet")) |>
-#
-# 	mutate(is_immune = cell_type_harmonised!="non_immune") |>
-#
-# 	# Filter only immune
-# 	filter(is_immune ) |>
-#
-# 	# Frmat sme covatriates
-# 	mutate(assay = if_else(assay |> str_detect("10x|scRNA-seq"), "10x", assay)) |>
-# 	mutate(ethnicity = case_when(
-# 		ethnicity |> str_detect("Chinese|Asian") ~ "Chinese",
-# 		ethnicity |> str_detect("African") ~ "African",
-# 		TRUE ~ ethnicity
-# 	)) |>
-#
-# 	filter(development_stage!="unknown") |>
-#
-# 	# Fix samples with multiple assays
-# 	unite(".sample", c(.sample , assay), remove = FALSE) |>
-#
-# 	# Fix groups
-# 	unite("group", c(tissue_harmonised , file_id), remove = FALSE)
-#
-# data_for_immune_proportion_relative |> saveRDS("dev/data_for_immune_proportion_relative.rds")
-
-data_for_immune_proportion_relative = readRDS("~/PostDoc/HCAquery/dev/data_for_immune_proportion_relative.rds")
+#   # Stats
+#   dplyr::count(.sample, tissue_harmonised, is_immune) |>
+#   with_groups(.sample, ~ .x |> mutate(proportion = n/sum(n))) |>
+#   filter(tissue_harmonised=="heart" & proportion > 0.75)
 
 
-# job::job({
-# 	res_relative =
-# 		data_for_immune_proportion_relative |>
-#
-# 		# Scale days
-# 		mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-#
-# 		# Estimate
-# 		sccomp_glm(
-# 			formula_composition = ~ 0 + tissue_harmonised + sex + ethnicity  + age_days + assay + (tissue_harmonised | group),
-# 			formula_variability = ~ 0 + tissue_harmonised + sex + ethnicity,
-# 			.sample, cell_type_harmonised,
-# 			check_outliers = F,
-# 			approximate_posterior_inference = FALSE,
-# 			cores = 20,
-# 			mcmc_seed = 42, verbose = T
-# 		)
-#
-# 	res_relative |> saveRDS("dev/immune_non_immune_differential_composition_relative_5.rds")
-# })
-
-
-res_relative = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_5.rds")
-
-# job::job({
-# 	readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_5.rds") |>
-# 		remove_unwanted_variation(~ 0 + tissue_harmonised) |>
-# 		saveRDS("~/PostDoc/HCAquery/dev/proportions_tissue_adjusted_5.rds")
-# })
-# job::job({ readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_4.rds") |> remove_unwanted_variation(~ age_days) })
 
 proportions_tissue_adjusted = readRDS("~/PostDoc/HCAquery/dev/proportions_tissue_adjusted_5.rds")
 
@@ -386,40 +234,7 @@ proportions_tissue_adjusted = readRDS("~/PostDoc/HCAquery/dev/proportions_tissue
 
 proportions_tissue_replicate = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_5_replicate.rds")
 
-
-# PCA
-# # Study annotation
-# job::job({
-#
-#   res_absolute_cell_types =
-# data_for_immune_proportion |>
-#
-# # Mutate days
-# mutate(age_days = age_days  |> scale(center = FALSE) |> as.numeric()) |>
-# filter(development_stage!="unknown") |>
-#
-#
-#     sccomp_glm(
-#       formula_composition = ~ 0 + tissue_harmonised + sex + ethnicity  + age_days + assay + (tissue_harmonised | group) + (age_days | tissue_harmonised),
-#       formula_variability = ~ 0 + tissue_harmonised + sex + ethnicity ,
-#       .sample, cell_type_harmonised,
-#       check_outliers = F,
-#       approximate_posterior_inference = FALSE,
-#       cores = 20,
-#       mcmc_seed = 42, verbose = T
-#     )
-#
-#   res_absolute_cell_types |> saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_cell_types.rds")
-#
-# })
-
-res_absolute_cell_types = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_cell_types.rds")
-
-# job::job({
-#   readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_cell_types.rds") |>
-# 		remove_unwanted_variation(~ 0 + tissue_harmonised) |>
-# 		saveRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_cell_types_adjusted.rds")
-# })
+res_absolute_cell_types = readRDS("dev/immune_non_immune_differential_composition_relative_5.rds")
 
 proportions_tissue_adjusted = readRDS("~/PostDoc/HCAquery/dev/proportions_tissue_adjusted_5.rds")
 immune_non_immune_differential_composition_cell_types_adjusted = readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_cell_types_adjusted.rds")
