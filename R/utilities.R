@@ -1680,6 +1680,7 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
 
   .cell_group = enquo(.cell_group)
 
+  has_convergence = "Rhat" %in% colnames(draws)
 
   draws =
     draws |>
@@ -1689,6 +1690,8 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
       upper = quantile(.value, 1-(false_positive_rate/2)),
       bigger_zero = which(.value>test_composition_above_logit_fold_change) |> length(),
       smaller_zero = which(.value< -test_composition_above_logit_fold_change) |> length(),
+      Rhat = case_when(has_convergence ~ unique(Rhat)),
+      n_eff = case_when(has_convergence ~ unique(n_eff)),
       n=n()
     )) |>
 
@@ -1696,7 +1699,8 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     mutate(pH0 =  (1 - (pmax(bigger_zero, smaller_zero) / n))) |>
     with_groups(parameter, ~ mutate(.x, FDR = get_FDR(pH0))) |>
 
-    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR)
+    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, one_of("Rhat", "n_eff")) |>
+    suppressWarnings()
 
   # Setting up names separately because |> is not flexible enough
   draws |>
@@ -1813,6 +1817,8 @@ get_abundance_contrast_draws = function(.data, contrasts){
       # If I have constrasts calculate
       when(
         !is.null(contrasts) ~
+
+          # ARITHMETICS
           mutate_from_expr_list(., contrasts) |>
           select(- one_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) ,
         ~ (.)
@@ -1833,8 +1839,36 @@ get_abundance_contrast_draws = function(.data, contrasts){
   # If no contrasts of interest just return an empty data frame
   if(ncol(draws)==5) return(draws |> distinct(M, !!.cell_group))
 
+  # Get convergence
+  convergence_df =
+    .data |>
+      attr("fit") |>
+      summary_to_tibble("beta", "C", "M") |>
+
+      # Add cell name
+      left_join(
+        .data |>
+          attr("model_input") %$%
+          y %>%
+          colnames() |>
+          enframe(name = "M", value  = quo_name(.cell_group)),
+        by = "M"
+      ) |>
+
+      # Covariate names
+      left_join(
+        beta_factor_of_interest |>
+          enframe(name = "C", value = "parameter"),
+        by = "C"
+      ) |>
+
+      select(!!.cell_group, parameter, n_eff, Rhat)
+
   draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
+
+    # Attach convergence if I have no contrasts
+    left_join(convergence_df, by = c(quo_name(.cell_group), "parameter")) |>
 
     # Reorder because pivot long is bad
     mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
@@ -1879,8 +1913,36 @@ get_variability_contrast_draws = function(.data, contrasts){
   # If no contrasts of interest just return an empty data frame
   if(ncol(draws)==5) return(draws |> distinct(M))
 
+  # Get convergence
+  convergence_df =
+    .data |>
+    attr("fit") |>
+    summary_to_tibble("alpha_normalised", "C", "M") |>
+
+    # Add cell name
+    left_join(
+      .data |>
+        attr("model_input") %$%
+        y %>%
+        colnames() |>
+        enframe(name = "M", value  = quo_name(.cell_group)),
+      by = "M"
+    ) |>
+
+    # Covariate names
+    left_join(
+      variability_factor_of_interest |>
+        enframe(name = "C", value = "parameter"),
+      by = "C"
+    ) |>
+
+    select(!!.cell_group, parameter, n_eff, Rhat)
+
   draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
+
+    # Attach convergence if I have no contrasts
+    left_join(convergence_df, by = c(quo_name(.cell_group), "parameter")) |>
 
     # Reorder because pivot long is bad
     mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
