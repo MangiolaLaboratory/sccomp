@@ -85,29 +85,23 @@ data{
   matrix[N, C] X;
   matrix[Ar, A] XA; // The unique variability design
   matrix[N, A] Xa; // The variability design
-
   // Truncation
   int is_truncated;
   int truncation_up[N,M];
   int truncation_down[N,M];
   int<lower=1, upper=N*M> TNS; // truncation_not_size
   int<lower=1, upper=N*M> truncation_not_idx[TNS];
-
   int<lower=0, upper=1> is_vb;
-
   // Prior info
   real prior_prec_intercept[2] ;
   real prior_prec_slope[2] ;
   real prior_prec_sd[2] ;
-
   // Exclude priors for testing purposes
   int<lower=0, upper=1> exclude_priors;
   int<lower=0, upper=1> bimodal_mean_variability_association;
   int<lower=0, upper=1> use_data;
-
   // Does the design icludes intercept
   int <lower=0, upper=1> intercept_in_design;
-
   // Random intercept
   int N_random_intercepts;
   int N_minus_sum;
@@ -115,36 +109,27 @@ data{
   int N_grouping;
   matrix[N, N_grouping] X_random_intercept;
   int idx_group_random_intercepts[N_grouping, 2];
-
 }
 transformed data{
   vector[2*M] Q_r = Q_sum_to_zero_QR(M);
-
   real x_raw_sigma = inv_sqrt(1 - inv(M));
-
   matrix[N, C] Q_ast;
   matrix[C, C] R_ast;
   matrix[C, C] R_ast_inverse;
-
   int y_array[N*M];
   int truncation_down_array[N*M];
   int exposure_array[N*M];
-
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   int N_grouping_WINDOWS_BUG_FIX = max(N_grouping, 1);
-
   // thin and scale the QR decomposition
   Q_ast = qr_thin_Q(X) * sqrt(N - 1);
   R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
-
-// IGNORE DECOMPOSITION BECAUSE OF THE RANDOM EFFECT MODEL
   // If I get crazy diagonal matrix omit it
-  // if(max(R_ast_inverse)>1000){
-  //   print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
+  if(max(R_ast_inverse)>1000){
+    print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
     Q_ast = X;
     R_ast_inverse = diag_matrix(rep_vector(1.0, C));
-  // }
-
+  }
   // Data vectorised
   y_array =  to_array_1d(y);
   truncation_down_array = to_array_1d(truncation_down);
@@ -153,61 +138,45 @@ transformed data{
 parameters{
   matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
   matrix[A, M] alpha; // Variability
-
   // To exclude
   real prec_coeff[2];
   real<lower=0> prec_sd;
-
   real<lower=0, upper=1> mix_p;
-
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
   matrix[N_random_intercepts * (N_random_intercepts>0), M-1] random_intercept_raw;
-
   // sd of random intercept
   real random_intercept_sigma_mu[N_random_intercepts>0];
   real random_intercept_sigma_sigma[N_random_intercepts>0];
   row_vector[(M-1) * (N_random_intercepts>0)] random_intercept_sigma_raw;
-
   // If I have just one group
   real zero_random_intercept[N_random_intercepts>0];
-
 }
 transformed parameters{
   matrix[C,M] beta_raw;
   matrix[M, N] precision = (Xa * alpha)';
   matrix[C,M] beta;
-
   // Initialisation
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
   row_vector[M-1] random_intercept_sigma;
   matrix[N_grouping, M-1] beta_random_intercept_raw;
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-  //beta = R_ast_inverse * beta_raw; // coefficients on x
-  beta =  beta_raw;
-
+  beta = R_ast_inverse * beta_raw; // coefficients on x
   // random intercept
   if(N_random_intercepts>0){
-
     random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
-
     // Building the - sum, Loop across covariates
     for(a in 1:N_minus_sum){
-
       // Reset sum to zero
       row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
-
       // Loop across random intercept - 1
       for(n in 1:N_random_intercepts){
         if(paring_cov_random_intercept[n,1] == a)
         temp_random_intercept += random_intercept_raw[n];
       }
-
       // The sum to zero for each covariate
       random_intercept_minus_sum[a] = temp_random_intercept * -1;
     }
-
-
     // Build the beta_random_intercept_raw
     for(n in 1:N_grouping){
       if(idx_group_random_intercepts[n,2]>0)
@@ -217,39 +186,26 @@ transformed parameters{
       else
         beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
     }
-
   }
-
 }
-
-
 model{
-
-
   if(use_data == 1){
-
     matrix[M, N] mu;
     vector[N*M] mu_array;
     vector[N*M] precision_array;
     matrix[M, N] mu_random_intercept;
-
     // Random intercept
     if(N_random_intercepts>0){
       mu_random_intercept = append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
       mu = (Q_ast * beta_raw)' + mu_random_intercept;
     }
-
     else mu = (Q_ast * beta_raw)';
-
     // Calculate proportions
     for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-
     // Convert the matrix m to a column vector in column-major order.
     mu_array = to_vector(mu);
     precision_array = to_vector(exp(precision));
-
     // print(min(mu_array));
-
     target += beta_binomial_lpmf(
       y_array[truncation_not_idx] |
       exposure_array[truncation_not_idx],
@@ -257,15 +213,10 @@ model{
       ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
       ) ;
   }
-
-
   // Priors
   if(exclude_priors == 0){
-
-
     // If interceopt in design or I have complex variability design
     if(intercept_in_design || A > 1){
-
       // Loop across the intercept columns in case of a intercept-less design (covariate are intercepts)
       for(a in 1:A_intercept_columns)
       target += abundance_variability_regression(
@@ -276,11 +227,9 @@ model{
         bimodal_mean_variability_association,
         mix_p
         );
-
         // Variability effect
         if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
     }
-
     // If intercept-less model and A == 1 I have to average the whole beta baseline design columns
     // (that can be thought about intercept themself)
     else{
@@ -294,7 +243,6 @@ model{
         );
 
     }
-
   }
   else{
      // Priors variability
@@ -302,47 +250,31 @@ model{
        for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
         if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
      }
-
      // if ~ 0 + covariuate
      else {
        alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
      }
-
   }
-
   // // Priors abundance
   beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
-
   if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
-
     // Hyper priors
     mix_p ~ beta(1,5);
     prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
     prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
     prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
-
-
     // Random intercept
     if(N_random_intercepts>0){
-
       for(m in 1:(M-1))   random_intercept_raw[,m] ~ std_normal();
-
       random_intercept_sigma_raw ~ std_normal();
       random_intercept_sigma_mu ~ std_normal();
       random_intercept_sigma_sigma ~ std_normal();
-
        // If I have just one group
     zero_random_intercept ~ std_normal();
-
     }
-
   }
-
-
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
-
-
   // Rondom effect
   matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
 
@@ -365,4 +297,3 @@ generated quantities {
   }
 
 }
-
