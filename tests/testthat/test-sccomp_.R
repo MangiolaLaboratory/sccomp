@@ -54,7 +54,6 @@ test_that("Generate data",{
       sample, cell_group,
       check_outliers = FALSE,
       approximate_posterior_inference = FALSE,
-      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 1,
       mcmc_seed = 42
     ) |>
@@ -87,7 +86,8 @@ test_that("Generate data",{
 
 test_that("multilevel multi beta binomial from Seurat",{
 
-  seurat_obj |>
+  res =
+    seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
     sccomp_glm(
       formula_composition = ~ type + (1 | group__),
@@ -97,16 +97,24 @@ test_that("multilevel multi beta binomial from Seurat",{
       approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
-    ) |>
+    )
 
-
+  # Check order
+  res |>
     filter(parameter == "typehealthy") |>
-    filter(c_pH0<0.1) |>
+    arrange(desc(abs(c_effect))) |>
+    slice(1:3) |>
+    pull(cell_group) |>
+    expect_equal(c("CD4 cm high cytokine", "CD4 ribosome" ,        "B mem"  ))
+
+  # Check convergence
+  res |>
+    filter(c_R_k_hat > 4) |>
     nrow() |>
-    expect_equal(18)
+    expect_equal(0)
 
-
-  seurat_obj |>
+  res =
+    seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
     sccomp_glm(
       formula_composition = ~ 0 + type + (type | group__),
@@ -117,22 +125,28 @@ test_that("multilevel multi beta binomial from Seurat",{
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 1,
       mcmc_seed = 42
-    ) |>
+    )
 
-
+  res |>
     filter(parameter == "typecancer - typehealthy") |>
-    filter(c_pH0<0.1) |>
+    arrange(desc(abs(c_effect))) |>
+    slice(1:3) |>
+    pull(cell_group) |>
+    expect_equal(c("CD4 cm high cytokine" ,"B mem"    ,            "CD4 ribosome"    ))
+
+  # Check convergence
+  res |>
+    filter(c_R_k_hat > 4) |>
     nrow() |>
-    expect_equal(15)
+    expect_equal(0)
 
 })
 
 test_that("multilevel multi beta binomial from Seurat with intercept and continuous covariate",{
 
 
-
-  #debugonce(sccomp:::data_spread_to_model_input)
-  seurat_obj |>
+  res =
+    seurat_obj |>
     sccomp_glm(
       formula_composition = ~ continuous_covariate + (1 + continuous_covariate | group__),
       formula_variability = ~ 1,
@@ -141,15 +155,22 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
-    ) |>
+    )
 
 
+  res |>
     filter(parameter == "continuous_covariate") |>
-    filter(c_pH0<0.1)
+    arrange(desc(abs(c_effect))) |>
+    slice(1) |>
+    pull(cell_group) |>
+    expect_equal(c("CD8 em 1"))
 
-  #|>
-  #  nrow() |>
-  #  expect_equal(1)
+  # Check convergence
+  res |>
+    filter(c_R_k_hat > 4) |>
+    nrow() |>
+    expect_equal(0)
+
 
 })
 
@@ -165,7 +186,8 @@ test_that("multilevel continuous",{
   #   mutate(continuous_covariate = rnorm(n())) |>
   #   unnest(data)
 
-  seurat_obj |>
+  res =
+    seurat_obj |>
     sccomp_glm(
       formula_composition = ~ 0 + type + continuous_covariate + (type | group__) + (continuous_covariate | type),
       formula_variability = ~ 1,
@@ -175,13 +197,20 @@ test_that("multilevel continuous",{
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 1,
       mcmc_seed = 42
-    ) |>
+    )
 
-
+  res |>
     filter(parameter == "typecancer - typehealthy") |>
-    filter(c_pH0<0.1) |>
+    arrange(desc(abs(c_effect))) |>
+    slice(1) |>
+    pull(cell_group) |>
+    expect_equal(c("CD4 cm high cytokine"  ))
+
+  # Check convergence
+  res |>
+    filter(c_R_k_hat > 4) |>
     nrow() |>
-    expect_equal(15)
+    expect_equal(0)
 
 })
 
@@ -215,7 +244,8 @@ test_that("multilevel continuous",{
 
 test_that("multi beta binomial from Seurat",{
 
-  seurat_obj |>
+  res =
+    seurat_obj |>
     sccomp_glm(
       formula_composition = ~  type,
       formula_variability = ~ 1,
@@ -224,11 +254,20 @@ test_that("multi beta binomial from Seurat",{
       approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
-    )  |>
+    )
+
+  res |>
     filter(parameter == "typehealthy") |>
-    filter(c_pH0<0.1) |>
+    arrange(desc(abs(c_effect))) |>
+    slice(1) |>
+    pull(cell_group) |>
+    expect_equal(c("B mem"  ))
+
+  # Check convergence
+  res |>
+    filter(c_R_k_hat > 4) |>
     nrow() |>
-    expect_equal(18)
+    expect_equal(0)
 
 })
 
@@ -306,7 +345,8 @@ test_that("remove unwanted variation",{
 
 test_that("multi beta binomial from SCE",{
 
-    sce_obj |>
+    res =
+      sce_obj |>
     sccomp_glm(
       formula_composition = ~ type,
       formula_variability = ~ 1,
@@ -316,12 +356,20 @@ test_that("multi beta binomial from SCE",{
       approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42
-    )  |>
-    filter(parameter == "typehealthy") |>
-    filter(c_pH0<0.1) |>
-    nrow() |>
-    expect_equal(18)
+    )
 
+  res |>
+    filter(parameter == "typehealthy") |>
+    arrange(desc(abs(c_effect))) |>
+    slice(1) |>
+    pull(cell_group) |>
+    expect_equal(c("B mem"  ))
+
+  # Check convergence
+  res |>
+    filter(c_R_k_hat > 4) |>
+    nrow() |>
+    expect_equal(0)
 })
 
 res_composition =
@@ -354,9 +402,16 @@ test_that("multi beta binomial from metadata",{
 
   res_composition  |>
     filter(parameter == "typehealthy") |>
-    filter(c_pH0<0.1) |>
+    arrange(desc(abs(c_effect))) |>
+    slice(1) |>
+    pull(cell_group) |>
+    expect_equal(c("B mem"  ))
+
+  # Check convergence
+  res_composition |>
+    filter(c_R_k_hat > 4) |>
     nrow() |>
-    expect_equal(18)
+    expect_equal(0)
 
 })
 
