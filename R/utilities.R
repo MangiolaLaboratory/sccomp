@@ -688,7 +688,7 @@ get_design_matrix = function(.data_spread, formula, .sample){
         unique(.) %>% sort() %>% identical(c(0,1)) %>% all() ~ (.),
 
         # If continuous
-        ~ scale(., scale=FALSE)
+        ~ scale(.)
       )
     )
 }
@@ -1994,6 +1994,23 @@ replicate_data = function(.data,
   # Composition
   if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
 
+  # Match covariates with old data
+  nrow_new_data = nrow(new_data)
+  new_data =
+
+    # Old data
+    .data |>
+    select(count_data) |>
+    unnest(count_data) |>
+    select(-count) |>
+    distinct() |>
+    select(one_of(colnames(new_data))) |>
+
+    # New data
+    bind_rows(
+      new_data
+    )
+
   new_X =
     new_data |>
     get_design_matrix(
@@ -2005,7 +2022,8 @@ replicate_data = function(.data,
         paste(collapse="") |>
         as.formula(),
       !!.sample
-    )
+    ) |>
+    tail(nrow_new_data)
 
   X_which =
     colnames(new_X) |>
@@ -2030,7 +2048,8 @@ replicate_data = function(.data,
         paste(collapse="") |>
         as.formula(),
       !!.sample
-    )
+    ) |>
+    tail(nrow_new_data)
 
   XA_which =
     colnames(new_Xa) |>
@@ -2049,7 +2068,10 @@ replicate_data = function(.data,
 
   # Random intercept
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
-  if(random_intercept_elements |> nrow() |> equals(0)) X_random_intercept_which = array()[0]
+  if(random_intercept_elements |> nrow() |> equals(0)) {
+    X_random_intercept_which = array()[0]
+    new_X_random_intercept = matrix(rep(0, 0))[0,, drop=FALSE]
+  }
   else {
 
     random_intercept_grouping =
@@ -2077,7 +2099,9 @@ replicate_data = function(.data,
       bind_cols() %>%
 
       # Clean matrix names
-      set_names(str_remove_all(colnames(.), "group___label"))
+      set_names(str_remove_all(colnames(.), "group___label")) |>
+
+      tail(nrow_new_data)
 
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_intercept_which =
@@ -2094,6 +2118,7 @@ replicate_data = function(.data,
   model_input$X = new_X
   model_input$Xa = new_Xa
   model_input$X_random_intercept = new_X_random_intercept
+  model_input$N = nrow_new_data
 
   # Generate quantities
   rstan::gqs(

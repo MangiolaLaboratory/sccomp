@@ -710,7 +710,7 @@ sccomp_replicate <- function(fit,
                              formula_variability = NULL,
                              number_of_draws = 1,
                              mcmc_seed = sample(1e5, 1)) {
-  UseMethod("sccomp_replicate", .data)
+  UseMethod("sccomp_replicate", fit)
 }
 
 #' @export
@@ -795,7 +795,7 @@ sccomp_predict <- function(fit,
                              distinct(),
                            number_of_draws = NULL,
                            mcmc_seed = sample(1e5, 1)) {
-  UseMethod("sccomp_predict", .data)
+  UseMethod("sccomp_predict", fit)
 }
 
 #' @export
@@ -816,7 +816,6 @@ sccomp_predict.data.frame = function(fit,
     replicate_data(
       fit,
       formula_composition = formula_composition,
-      formula_variability = formula_variability,
       new_data = new_data,
       number_of_draws = number_of_draws,
       mcmc_seed = mcmc_seed
