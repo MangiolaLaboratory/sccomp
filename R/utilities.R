@@ -1680,8 +1680,6 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
 
   .cell_group = enquo(.cell_group)
 
-  has_convergence = "Rhat" %in% colnames(draws)
-
   draws =
     draws |>
     with_groups(c(!!.cell_group, M, parameter), ~ .x |> summarise(
@@ -1690,8 +1688,8 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
       upper = quantile(.value, 1-(false_positive_rate/2)),
       bigger_zero = which(.value>test_composition_above_logit_fold_change) |> length(),
       smaller_zero = which(.value< -test_composition_above_logit_fold_change) |> length(),
-      Rhat = case_when(has_convergence ~ unique(Rhat)),
-      n_eff = case_when(has_convergence ~ unique(n_eff)),
+      R_k_hat = unique(R_k_hat),
+      n_eff = unique(n_eff),
       n=n()
     )) |>
 
@@ -1699,7 +1697,7 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     mutate(pH0 =  (1 - (pmax(bigger_zero, smaller_zero) / n))) |>
     with_groups(parameter, ~ mutate(.x, FDR = get_FDR(pH0))) |>
 
-    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, one_of("Rhat", "n_eff")) |>
+    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, n_eff, R_k_hat) |>
     suppressWarnings()
 
   # Setting up names separately because |> is not flexible enough
@@ -1860,9 +1858,17 @@ get_abundance_contrast_draws = function(.data, contrasts){
         beta_factor_of_interest |>
           enframe(name = "C", value = "parameter"),
         by = "C"
-      ) |>
+      )
 
-      select(!!.cell_group, parameter, n_eff, Rhat)
+  convergence_df =
+    convergence_df |>
+    when(
+      "Rhat" %in% colnames(.) ~ rename(., R_k_hat = Rhat),
+      "khat" %in% colnames(.) ~ rename(., R_k_hat = khat)
+    ) |>
+
+    select(!!.cell_group, parameter, n_eff, R_k_hat) |>
+    suppressWarnings()
 
   draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
@@ -1934,9 +1940,19 @@ get_variability_contrast_draws = function(.data, contrasts){
       variability_factor_of_interest |>
         enframe(name = "C", value = "parameter"),
       by = "C"
+    )
+
+
+  convergence_df =
+    convergence_df |>
+    when(
+      "Rhat" %in% colnames(.) ~ rename(., R_k_hat = Rhat),
+      "khat" %in% colnames(.) ~ rename(., R_k_hat = khat)
     ) |>
 
-    select(!!.cell_group, parameter, n_eff, Rhat)
+    select(!!.cell_group, parameter, n_eff, R_k_hat) |>
+    suppressWarnings()
+
 
   draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
