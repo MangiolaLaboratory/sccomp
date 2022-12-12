@@ -662,7 +662,8 @@ test_contrasts.data.frame = function(.data,
       check_outliers ~ (.) %>%
         left_join(
           truncation_df2 |>
-            select(-c(M, N, .variable, mean, se_mean, sd, n_eff, Rhat)) %>%
+            select(-c(M, N, .variable, mean, se_mean, sd, n_eff, one_of("Rhat", "khat"))) |>
+            suppressWarnings() |>
             nest(count_data = -!!.cell_group),
           by = quo_name(.cell_group)
         ),
