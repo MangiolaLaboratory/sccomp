@@ -361,9 +361,9 @@ test_that("multi beta binomial from SCE",{
   res |>
     filter(parameter == "typehealthy") |>
     arrange(desc(abs(c_effect))) |>
-    slice(1:3) |>
+    slice(1) |>
     pull(cell_group) |>
-    expect_equal(c("B mem" ,  "CD4 cm high cytokine", "CD4 ribosome"   ))
+    expect_equal(c("B mem"  ))
 
   # Check convergence
   res |>
@@ -403,9 +403,9 @@ test_that("multi beta binomial from metadata",{
   res_composition  |>
     filter(parameter == "typehealthy") |>
     arrange(desc(abs(c_effect))) |>
-    slice(1:3) |>
+    slice(1) |>
     pull(cell_group) |>
-    expect_equal(c("B mem", "CD4 cm high cytokine", "CD4 ribosome"   ))
+    expect_equal(c("B mem"  ))
 
   # Check convergence
   res_composition |>
