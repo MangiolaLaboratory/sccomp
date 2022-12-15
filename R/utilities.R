@@ -1996,6 +1996,19 @@ replicate_data = function(.data,
 
   # Match covariates with old data
   nrow_new_data = nrow(new_data)
+  new_exposure = new_data |>
+    nest(data = -!!.sample) |>
+    mutate(exposure = map_dbl(
+      data,
+      ~ when(
+        .x,
+        "count" %in% colnames(.) ~ sum(.x$count),
+        ~ 5000
+  ))) |>
+    select(!!.sample, exposure) |>
+    deframe() |>
+    as.array()
+
   new_data =
 
     # Old data
@@ -2023,15 +2036,18 @@ replicate_data = function(.data,
         as.formula(),
       !!.sample
     ) |>
-    tail(nrow_new_data)
+    tail(nrow_new_data) %>%
+
+    # Remove columns that are not in the original design matrix
+    .[,colnames(.) %in% colnames(model_input$X)]
 
   X_which =
     colnames(new_X) |>
     match(
-      model_input %$%
-        X %>%
+      model_input$X %>%
         colnames()
     ) |>
+    na.omit() |>
     as.array()
 
   # Variability
@@ -2049,7 +2065,10 @@ replicate_data = function(.data,
         as.formula(),
       !!.sample
     ) |>
-    tail(nrow_new_data)
+    tail(nrow_new_data) %>%
+
+    # Remove columns that are not in the original design matrix
+    .[,colnames(.) %in% colnames(model_input$X)]
 
   XA_which =
     colnames(new_Xa) |>
@@ -2058,6 +2077,7 @@ replicate_data = function(.data,
         Xa %>%
         colnames()
     ) |>
+    na.omit() |>
     as.array()
 
   # If I want to replicate data with intercept and I don't have intercept in my fit
@@ -2070,7 +2090,10 @@ replicate_data = function(.data,
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
   if(random_intercept_elements |> nrow() |> equals(0)) {
     X_random_intercept_which = array()[0]
-    new_X_random_intercept = matrix(rep(0, 0))[0,, drop=FALSE]
+    new_X_random_intercept = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+
+    # Update N_groupings
+    model_input$N_grouping = 0
   }
   else {
 
@@ -2119,6 +2142,7 @@ replicate_data = function(.data,
   model_input$Xa = new_Xa
   model_input$X_random_intercept = new_X_random_intercept
   model_input$N = nrow_new_data
+  model_input$exposure = new_exposure
 
   # Generate quantities
   rstan::gqs(
@@ -2144,4 +2168,15 @@ replicate_data = function(.data,
   )
 
 
+}
+
+get_model_from_data = function(file_compiled_model, model_code){
+  if(file.exists(file_compiled_model))
+    readRDS(file_compiled_model)
+  else {
+    model_generate = stan_model(model_code = model_code)
+    model_generate  %>% saveRDS(file_compiled_model)
+    model_generate
+
+  }
 }

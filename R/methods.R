@@ -811,6 +811,10 @@ sccomp_predict.data.frame = function(fit,
                                      mcmc_seed = sample(1e5, 1)){
 
 
+  model_input = attr(fit, "model_input")
+  .sample = attr(fit, ".sample")
+  .cell_group = attr(fit, ".cell_group")
+  sample_names = new_data |> distinct(!!.sample) |> pull(!!.sample)
 
   rng =
     replicate_data(
@@ -821,8 +825,6 @@ sccomp_predict.data.frame = function(fit,
       mcmc_seed = mcmc_seed
     )
 
-  model_input = attr(.data, "model_input")
-
   # mean generated
   rng |>
     summary_to_tibble("mu", "M", "N") |>
@@ -831,7 +833,7 @@ sccomp_predict.data.frame = function(fit,
     # Get sample name
     nest(data = -N) %>%
     arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$y)) %>%
+    mutate(!!.sample := sample_names) %>%
     unnest(data) %>%
 
     # get cell type name
