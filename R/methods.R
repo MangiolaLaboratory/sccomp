@@ -1109,7 +1109,7 @@ simulate_data.data.frame = function(.data,
   my_model = attr(.estimate_object, "noise_model") %>% when(
     (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_simulate_data,
     (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities),
-    (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
+    (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
 
   )
 

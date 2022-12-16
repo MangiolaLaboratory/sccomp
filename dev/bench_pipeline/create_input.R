@@ -20,11 +20,19 @@ max_cell_counts_per_sample = as.integer(args[4])
 add_outliers = as.integer(args[5])
 output_file = args[6]
 
+# slope = 1.9
+# n_samples = 15
+# n_cell_type = 20
+# max_cell_counts_per_sample = 1000
+# add_outliers = 1
+
+
 outlier_probability = 0.1
 
+output_file |> dirname() |> dir.create(showWarnings = FALSE, recursive = TRUE)
 
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
-beta_0 = readRDS("dev/beta_0.rds") %>% sort()
+beta_0 = readRDS("~/PostDoc/sccomp_dev/dev/beta_0.rds") %>% sort()
 beta_0= (-(n_cell_type/2):(n_cell_type/2))[seq_len(n_cell_type)] * 0.08912
 
 is_odd = function(x) { ( seq_len(length(x)) %% 2 ) == 1 }
@@ -61,13 +69,13 @@ tibble(run = 1:50) %>%
         mutate(sample = as.character(sample), cell_type = as.character(cell_type)) %>%
         unnest(coefficients)
 
-      estimate = readRDS("dev/oligo_breast_estimate.rds")
+      estimate = readRDS("~/PostDoc/sccomp_dev/dev/oligo_breast_estimate.rds")
       attr(estimate, "noise_model") = "logit_normal_multinomial"
 
       my_simulated_data =
         simulate_data(input_data,
                       estimate, # Use logit normal
-                      formula = ~ type ,
+                      formula_composition = ~ type ,
                       .sample = sample,
                       .cell_group = cell_type,
                       .coefficients = c(beta_0, beta_1),
