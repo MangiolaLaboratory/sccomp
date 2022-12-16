@@ -152,18 +152,32 @@ parameters{
   real zero_random_intercept[N_random_intercepts>0];
 }
 transformed parameters{
+
+  // Initialisation
   matrix[C,M] beta_raw;
   matrix[M, N] precision = (Xa * alpha)';
   matrix[C,M] beta;
-  // Initialisation
+
+  // Random effects
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
   row_vector[M-1] random_intercept_sigma;
   matrix[N_grouping, M-1] beta_random_intercept_raw;
 
+  // locations distribution
+  matrix[M, N] mu;
+
+  // vectorisation
+  vector[N*M] mu_array;
+  vector[N*M] precision_array;
+
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   beta = R_ast_inverse * beta_raw; // coefficients on x
+
+  // Calculate locations distribution
+  mu = (Q_ast * beta_raw)';
+
   // random intercept
-  if(N_random_intercepts>0){
+  if(N_random_intercepts>0 ){
     random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
     // Building the - sum, Loop across covariates
     for(a in 1:N_minus_sum){
@@ -186,26 +200,23 @@ transformed parameters{
       else
         beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
     }
+
+    // Update with summing mu_random_intercept
+    mu = mu + append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
   }
+
+  // Calculate proportions
+  for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+
+  // Convert the matrix m to a column vector in column-major order.
+  mu_array = to_vector(mu);
+  precision_array = to_vector(exp(precision));
+
 }
 model{
+
+  // Fit main distribution
   if(use_data == 1){
-    matrix[M, N] mu;
-    vector[N*M] mu_array;
-    vector[N*M] precision_array;
-    matrix[M, N] mu_random_intercept;
-    // Random intercept
-    if(N_random_intercepts>0){
-      mu_random_intercept = append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
-      mu = (Q_ast * beta_raw)' + mu_random_intercept;
-    }
-    else mu = (Q_ast * beta_raw)';
-    // Calculate proportions
-    for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-    // Convert the matrix m to a column vector in column-major order.
-    mu_array = to_vector(mu);
-    precision_array = to_vector(exp(precision));
-    // print(min(mu_array));
     target += beta_binomial_lpmf(
       y_array[truncation_not_idx] |
       exposure_array[truncation_not_idx],
@@ -213,6 +224,7 @@ model{
       ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
       ) ;
   }
+
   // Priors
   if(exclude_priors == 0){
     // If interceopt in design or I have complex variability design
@@ -255,29 +267,33 @@ model{
        alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
      }
   }
+
   // // Priors abundance
   beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
   if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
-    // Hyper priors
-    mix_p ~ beta(1,5);
-    prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
-    prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
-    prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
-    // Random intercept
-    if(N_random_intercepts>0){
-      for(m in 1:(M-1))   random_intercept_raw[,m] ~ std_normal();
-      random_intercept_sigma_raw ~ std_normal();
-      random_intercept_sigma_mu ~ std_normal();
-      random_intercept_sigma_sigma ~ std_normal();
-       // If I have just one group
-    zero_random_intercept ~ std_normal();
-    }
+
+  // Hyper priors
+  mix_p ~ beta(1,5);
+  prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
+  prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
+  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
+  // Random intercept
+  if(N_random_intercepts>0){
+    for(m in 1:(M-1))   random_intercept_raw[,m] ~ std_normal();
+    random_intercept_sigma_raw ~ std_normal();
+    random_intercept_sigma_mu ~ std_normal();
+    random_intercept_sigma_sigma ~ std_normal();
+     // If I have just one group
+  zero_random_intercept ~ std_normal();
   }
+}
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
   // Rondom effect
   matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
 
+  // LOO
+  vector[TNS] log_lik;
 
   if(intercept_in_design){
     if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
@@ -285,7 +301,6 @@ generated quantities {
   else{
     for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
   }
-
 
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   if(N_grouping==0) beta_random_intercept[1] = rep_row_vector(0.0, M);
@@ -295,5 +310,17 @@ generated quantities {
      beta_random_intercept[,1:(M-1)] = beta_random_intercept_raw;
   for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(beta_random_intercept_raw[n,]);
   }
+
+  // LOO
+  for (n in 1:TNS) {
+    log_lik[n] = beta_binomial_lpmf(
+      y_array[truncation_not_idx[n]] |
+      exposure_array[truncation_not_idx[n]],
+      (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
+      ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
+      ) ;
+  }
+
+
 
 }

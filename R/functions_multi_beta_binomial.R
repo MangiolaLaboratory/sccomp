@@ -135,7 +135,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         verbose = verbose,
         seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept")
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
       )
 
     list(
@@ -367,7 +367,7 @@ estimate_multi_beta_binomial_glm = function(.data,
         approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
         verbose = verbose, seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept")
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
       )
 
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
