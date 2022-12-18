@@ -10,17 +10,19 @@ data {
 	int C;
 	int A;
 	int exposure[N];
-	matrix[N, C] X;
-  matrix[N, A] Xa; // The variability design
-
-	int is_truncated;
-	real<lower=1> truncation_ajustment;
 
 	// Which column of design, coefficient matrices should be used to generate the data
 	int length_X_which;
 	int length_XA_which;
 	int X_which[length_X_which];
 	int XA_which[length_XA_which];
+	matrix[N, length_X_which] X;
+  matrix[N, length_XA_which] Xa; // The variability design
+
+	int is_truncated;
+	real<lower=1> truncation_ajustment;
+
+
 
 	// Random intercept
 	int length_X_random_intercept_which;
@@ -66,9 +68,7 @@ generated quantities{
   real generated_exposure[N];
 
   // Subset for mean and deviation
-  matrix[N, length_X_which] my_X = X[,X_which];
   matrix[length_X_which,M] my_beta = beta[X_which,];
-  matrix[N, length_XA_which] my_Xa = Xa[,XA_which];
   matrix[length_XA_which,M] my_alpha = alpha[XA_which,];
 
   matrix[M,N] mu;
@@ -81,7 +81,7 @@ generated quantities{
     mu = (
       append_col(
         to_matrix(rep_vector(1, N)), // Intercept
-        my_X // Rest
+        X // Rest
         ) *
         append_row(
           average_by_col(beta[1:A_intercept_columns,]), // Intercept
@@ -92,7 +92,7 @@ generated quantities{
     precision = (
       append_col(
         to_matrix(rep_vector(1, N)), // Intercept
-        my_Xa // Rest
+        Xa // Rest
         ) *
         append_row(
           average_by_col(alpha[1:A_intercept_columns,]), // Intercept
@@ -104,8 +104,8 @@ generated quantities{
   }
   else {
     // Create mean and deviation
-    mu = (my_X * my_beta)';
-    precision = (my_Xa * my_alpha)' / (is_truncated ? truncation_ajustment : 1);
+    mu = (X * my_beta)';
+    precision = (Xa * my_alpha)' / (is_truncated ? truncation_ajustment : 1);
 
   }
 
