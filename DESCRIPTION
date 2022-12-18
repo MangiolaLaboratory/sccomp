@@ -47,7 +47,8 @@ Suggests:
     markdown,
     knitr,
     tidyseurat,
-    tidySingleCellExperiment
+    tidySingleCellExperiment,
+    loo
 Enhances:
     furrr,
     extraDistr

@@ -119,9 +119,9 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
     data_for_model$exclude_priors = exclude_priors
 
-    # Check that design matrix is not too big
-    if(ncol(data_for_model$X)>20)
-      message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical covariates are erroneously of type character/factor.")
+    # # Check that design matrix is not too big
+    # if(ncol(data_for_model$X)>20)
+    #   message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical covariates are erroneously of type character/factor.")
 
     fit =
       data_for_model %>%

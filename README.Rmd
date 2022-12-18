@@ -36,10 +36,8 @@ Cell omics such as single-cell genomics, proteomics and microbiomics allow the c
 **Bioconductor**
 
 ```{r eval=FALSE}
-if (!requireNamespace("BiocManager")) {
-   install.packages("BiocManager")
- }
- BiocManager::install("sccomp")
+if (!requireNamespace("BiocManager")) install.packages("BiocManager")
+BiocManager::install("sccomp")
 ```
 
 **Github**
@@ -67,46 +65,15 @@ devtools::install_github("stemangiola/sccomp@cmdstanr")
 
 `sccomp` can model changes in composition and variability. Normally the furmula for variability is either `~1`, which assumes that the cell-group variability is independent on any covariate, or `~ factor_of_interest`, which assumes that the model is dependent on the factor of interest only. However, more complex models for variability are possible, is the sample size is large. In any case the model for variability must be a subset of the model for composition.
 
-## From Seurat Object
+## From Seurat, SingleCellExperiment, metadata objects 
 
 ```{r eval=FALSE}
 
-res =
-  seurat_obj |>
+single_cell_object |>
   sccomp_glm( 
    formula_composition = ~ type, 
-    formula_variability = ~ 1, 
-    sample, 
-    cell_group 
-  )
-
-```
-
-## From SingleCellExperiment Object
-
-```{r eval=FALSE}
-res =
-  sce_obj |>
-  sccomp_glm( 
-    formula_composition = ~ type, 
-    formula_variability = ~ 1, 
-    sample, 
-    cell_group 
-  )
-
-```
-
-## From data.frame 
-
-```{r eval=FALSE}
-
-res =
-  seurat_obj[[]] |>
-  sccomp_glm(
-    formula_composition = ~ type, 
-    formula_variability = ~ 1, 
-    sample, 
-    cell_group 
+   .sample =  sample, 
+   .cell_group = cell_group 
   )
 
 ```
@@ -119,42 +86,90 @@ res =
   counts_obj |>
   sccomp_glm( 
     formula_composition = ~ type, 
-    formula_variability = ~ 1, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count
   )
 
 res
+```
+
+Of the output table, the estimate columns star twith the prefix `c_` indicate `composition`, or with `v_` indicate `variability` (when formula_variability is set).
+
+
+## Differential variability
+
+```{r}
+
+seurat_obj |>
+  sccomp_glm( 
+   formula_composition = ~ type, 
+    formula_variability = ~ type,
+    .sample = sample,
+    .cell_group = cell_group,
+  )
+
 ```
 
 ## With contrasts
 
 ```{r warning=FALSE}
 
-res =
-  counts_obj |>
+seurat_obj |>
   sccomp_glm( 
     formula_composition = ~ 0 + type, 
-    formula_variability = ~ 1, 
-    contrasts =  c(typecancer - typebenign, typebenign - typecancer),
+    contrasts =  c("typecancer - typebenign", "typebenign - typecancer"),
     .sample = sample,
-    .cell_group = cell_group,
-    .count = count
+    .cell_group = cell_group
   )
 
-res
 ```
 
-Of the output table, the estimate columns startwith the prefix `c_` indicate `composition`.
+## Model comparison (e.g. Bayesian ANOVA) with `loo`
+
+In the following example the model with association with factors better fits the data compares to the baseline model with no factor association. For comparisons `check_outliers` must be set to FALSE as the leave-one-out must work with the same amount of data, while outlier elimination does not guarantee it.
+
+If `elpd_diff` is away from zero of > 5 `se_diff` difference of 5 we are confident that a model is better than the other [reference](https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola). In this case -79.9 / 11.5 = -6.9, therefore we can conclude that model one, the one with factor association, is better than model two.
+
+```{r}
+library(loo)
+
+# Fit first model
+model_with_factor_association = 
+  seurat_obj |>
+  sccomp_glm( 
+   formula_composition = ~ type, 
+   .sample =  sample, 
+   .cell_group = cell_group, 
+   check_outliers = FALSE
+  )
+
+# Fit second model
+model_without_association = 
+  seurat_obj |>
+  sccomp_glm( 
+   formula_composition = ~ 1, 
+   .sample =  sample, 
+   .cell_group = cell_group, 
+   check_outliers = FALSE
+  )
+
+loo_with_factor_association <- loo(model_with_factor_association |> attr("fit"))
+loo_without_association <- loo(model_without_association |> attr("fit"))
+
+# Compare models
+loo_compare(loo_with_factor_association, loo_without_association)
+
+```
+
 
 ## Suggested settings for single-cell RNA sequencing
 
-We reccommend to set `bimodal_mean_variability_association  = TRUE`. The bimodality of the mean-variability association can be confirmed from the plots$credible_intervals_2D (see below).
+We recommend to set `bimodal_mean_variability_association  = TRUE`. The bimodality of the mean-variability association can be confirmed from the plots$credible_intervals_2D (see below).
 
 ## Suggested settings for CyTOF and microbiome data
 
-We reccommend to set `bimodal_mean_variability_association  = FALSE` (Default).
+We recommend to set `bimodal_mean_variability_association  = FALSE` (Default).
 
 ## Visualise data + inference
 
@@ -164,7 +179,7 @@ plots = plot_summary(res)
 
 ```
 
-Plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely be descriptively adequate to the data, the blue boxplot should roughly overlay with the black boxplot, which represent the observed data. The outliers are coloured in red. A boxplot will be returned for every (discrete) covariates present in `formula_composition`. The color coding represent the significant associations for composition and/or variability.
+Plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely be descriptively adequate to the data, the blue box plot should roughly overlay with the black box plot, which represent the observed data. The outliers are coloured in red. A box plot will be returned for every (discrete) covariates present in `formula_composition`. The color coding represent the significant associations for composition and/or variability.
 
 
 ```{r}

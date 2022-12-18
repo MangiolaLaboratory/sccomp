@@ -90,7 +90,7 @@ sccomp_glm <- function(.data,
                        # Tertiary arguments
                        cores = detectCores(),
                        percent_false_positive = 5,
-                       approximate_posterior_inference = "all",
+                       approximate_posterior_inference = "none",
                        test_composition_above_logit_fold_change = 0.2,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
@@ -119,7 +119,7 @@ sccomp_glm.Seurat = function(.data,
                              # Tertiary arguments
                              cores = detectCores(),
                              percent_false_positive = 5,
-                             approximate_posterior_inference = "all",
+                             approximate_posterior_inference = "none",
                              test_composition_above_logit_fold_change = 0.2,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
@@ -178,7 +178,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            # Tertiary arguments
                                            cores = detectCores(),
                                            percent_false_positive = 5,
-                                           approximate_posterior_inference = "all",
+                                           approximate_posterior_inference = "none",
                                            test_composition_above_logit_fold_change = 0.2,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
@@ -240,7 +240,7 @@ sccomp_glm.DFrame = function(.data,
                              # Tertiary arguments
                              cores = detectCores(),
                              percent_false_positive = 5,
-                             approximate_posterior_inference = "all",
+                             approximate_posterior_inference = "none",
                              test_composition_above_logit_fold_change = 0.2,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
@@ -300,7 +300,7 @@ sccomp_glm.data.frame = function(.data,
                                  # Tertiary arguments
                                  cores = detectCores(),
                                  percent_false_positive = 5,
-                                 approximate_posterior_inference = "all",
+                                 approximate_posterior_inference = "none",
                                  test_composition_above_logit_fold_change = 0.2,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
@@ -397,7 +397,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
-                                     approximate_posterior_inference = "all",
+                                     approximate_posterior_inference = "none",
                                      test_composition_above_logit_fold_change = 0.2,
                                      verbose = FALSE,
                                      my_glm_model,
@@ -489,7 +489,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
-                                        approximate_posterior_inference = "all",
+                                        approximate_posterior_inference = "none",
                                         test_composition_above_logit_fold_change = 0.2,
                                         verbose = FALSE,
                                         my_glm_model ,
@@ -650,6 +650,13 @@ test_contrasts.data.frame = function(.data,
     # Add easy to understand covariate labels
     left_join(
       model_input$covariate_parameter_dictionary |>
+
+        # If I don't have covariates (~1)
+        when(
+          !"covariate" %in% colnames(.) ~ tibble(covariate=character(), design_matrix_col = character()),
+          ~ (.)
+        ) |>
+
         select(covariate, design_matrix_col),
       by = c("parameter" = "design_matrix_col" )
     ) %>%
@@ -1112,7 +1119,6 @@ simulate_data.data.frame = function(.data,
     (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
 
   )
-
 
   model_input =
     .data %>%
