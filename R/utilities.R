@@ -498,6 +498,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #' @importFrom tidyr pivot_wider
 #' @importFrom stats C
 #' @importFrom rlang :=
+#' @importFrom tibble enframe
 #'
 #' @keywords internal
 #' @noRd
@@ -588,7 +589,10 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
 
   # Otherwise process
   random_intercept_elements |>
-    mutate(is_factor_continuous = map_lgl(factor, ~ .x != "(Intercept)" && .data_ |> select(.x) |> pull(1) |> is("numeric"))) |>
+    mutate(is_factor_continuous = map_lgl(
+      factor,
+      ~ .x != "(Intercept)" && .data_ |> select(.x) |> pull(1) |> is("numeric")
+    )) |>
     mutate(design = pmap(
       list(grouping, factor, is_factor_continuous),
       ~ {
@@ -883,11 +887,11 @@ data_spread_to_model_input =
 
     factor_names = parse_formula(formula)
     factor_names_variability = parse_formula(formula_variability)
-    cell_cluster_names = .data_spread %>% select(-!!.sample, -factor_names, -exposure, -!!.grouping_for_random_intercept) %>% colnames()
+    cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% colnames()
 
     # Random intercept
     if(nrow(random_intercept_elements)>0 ) {
-      check_random_intercept_design(.data_spread, factor_names, random_intercept_elements, formula, X)
+      check_random_intercept_design(.data_spread, any_of(factor_names), random_intercept_elements, formula, X)
       random_intercept_grouping = get_random_intercept_design(.data_spread, !!.sample,  random_intercept_elements )
 
       N_random_intercepts = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow())) |> pull(n) |> sum()
@@ -971,9 +975,9 @@ data_spread_to_model_input =
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
-        M = .data_spread %>% select(-!!.sample, -factor_names, -exposure, -!!.grouping_for_random_intercept) %>% ncol(),
+        M = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% ncol(),
         exposure = .data_spread$exposure,
-        y = .data_spread %>% select(-factor_names, -exposure, -!!.grouping_for_random_intercept) %>% as_matrix(rownames = quo_name(.sample)),
+        y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% as_matrix(rownames = quo_name(.sample)),
         X = X,
         XA = XA,
         Xa = Xa,
@@ -1052,7 +1056,11 @@ data_spread_to_model_input =
 
     data_for_model$intercept_in_design = X[,1] |> unique() |> identical(1)
 
-    data_for_model$A_intercept_columns = when(data_for_model$intercept_in_design | length(factor_names_variability)==0, (.) ~ 1, ~ .data_spread |> select(factor_names[1]) |> distinct() |> nrow() )
+    data_for_model$A_intercept_columns =
+      when(
+        data_for_model$intercept_in_design | length(factor_names_variability)==0, (.) ~ 1,
+        ~ .data_spread |> select(any_of(factor_names[1])) |> distinct() |> nrow()
+      )
 
     # Return
     data_for_model
@@ -1093,7 +1101,7 @@ data_simulation_to_model_input =
 
     sample_data =
       .data %>%
-      select(!!.sample, factor_names) %>%
+      select(!!.sample, any_of(factor_names)) %>%
       distinct() %>%
       arrange(!!.sample)
     X =
@@ -1454,10 +1462,10 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025,
       .x = (.)
       # Plot
       ggplot(.x, aes(c_effect, v_effect)) +
-        geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-        geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", size=0.3) +
-        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<significance_threshold, alpha=`c_FDR`<significance_threshold), size=0.2) +
-        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<significance_threshold, alpha=`v_FDR`<significance_threshold), size=0.2) +
+        geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", linewidth=0.3) +
+        geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", linewidth=0.3) +
+        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<significance_threshold, alpha=`c_FDR`<significance_threshold), linewidth=0.2) +
+        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<significance_threshold, alpha=`v_FDR`<significance_threshold), linewidth=0.2) +
 
         geom_point(size=0.2)  +
         annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
@@ -1564,7 +1572,7 @@ plot_boxplot = function(
   if("fit" %in% names(attributes(.data))){
 
     simulated_proportion =
-      replicate_data(.data, number_of_draws = 100) %>%
+      sccomp_replicate(.data, number_of_draws = 100) %>%
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
 
     my_boxplot = my_boxplot +
@@ -1968,15 +1976,14 @@ get_variability_contrast_draws = function(.data, contrasts){
 
 #' @export
 #'
+#' @importFrom tibble deframe
+#'
 replicate_data = function(.data,
-                                     formula_composition = NULL,
-                                     formula_variability = NULL,
-                                     new_data = .data |>
-                                       select(count_data) |>
-                                       unnest(count_data) |>
-                                       distinct(),
-                                     number_of_draws = 1,
-                                     mcmc_seed = sample(1e5, 1)){
+          formula_composition = NULL,
+          formula_variability = NULL,
+          new_data = NULL,
+          number_of_draws = 1,
+          mcmc_seed = sample(1e5, 1)){
 
 
   # Select model based on noise model
@@ -1994,6 +2001,15 @@ replicate_data = function(.data,
   # Composition
   if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
 
+  # New data
+  if(new_data |> is.null())
+    new_data =
+    .data |>
+    select(count_data) |>
+    unnest(count_data) |>
+    distinct() |>
+    .subset(!!.sample)
+
   # Match factors with old data
   nrow_new_data = nrow(new_data)
   new_exposure = new_data |>
@@ -2009,6 +2025,7 @@ replicate_data = function(.data,
     deframe() |>
     as.array()
 
+  # Update data
   new_data =
 
     # Old data
@@ -2039,7 +2056,7 @@ replicate_data = function(.data,
     tail(nrow_new_data) %>%
 
     # Remove columns that are not in the original design matrix
-    .[,colnames(.) %in% colnames(model_input$X)]
+    .[,colnames(.) %in% colnames(model_input$X), drop=FALSE]
 
   X_which =
     colnames(new_X) |>
@@ -2068,7 +2085,7 @@ replicate_data = function(.data,
     tail(nrow_new_data) %>%
 
     # Remove columns that are not in the original design matrix
-    .[,colnames(.) %in% colnames(model_input$X)]
+    .[,colnames(.) %in% colnames(model_input$Xa), drop=FALSE]
 
   XA_which =
     colnames(new_Xa) |>

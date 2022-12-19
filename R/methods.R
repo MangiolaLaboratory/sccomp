@@ -677,7 +677,7 @@ test_contrasts.data.frame = function(.data,
       check_outliers ~ (.) %>%
         left_join(
           truncation_df2 |>
-            select(-c(M, N, .variable, mean, se_mean, sd, n_eff, one_of("Rhat", "khat"))) |>
+            select(-c(M, N, .variable, mean, se_mean, sd, n_eff, R_k_hat)) |>
             suppressWarnings() |>
             nest(count_data = -!!.cell_group),
           by = quo_name(.cell_group)
@@ -695,7 +695,7 @@ test_contrasts.data.frame = function(.data,
 #' @description This function replicates counts from a real-world dataset.
 #'
 #'
-#' @param .data A tibble. The result of sccomp_glm.
+#' @param fit The result of sccomp_glm.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
@@ -736,7 +736,8 @@ sccomp_replicate.data.frame = function(fit,
                                        number_of_draws = 1,
                                        mcmc_seed = sample(1e5, 1)){
 
-
+  .sample = attr(fit, ".sample")
+  .cell_group = attr(fit, ".cell_group")
 
   rng =
     replicate_data(
@@ -747,7 +748,7 @@ sccomp_replicate.data.frame = function(fit,
       mcmc_seed = mcmc_seed
     )
 
-  model_input = attr(.data, "model_input")
+  model_input = attr(fit, "model_input")
 
   # mean generated
   rng |>
@@ -776,7 +777,7 @@ sccomp_replicate.data.frame = function(fit,
 #' @description This function replicates counts from a real-world dataset.
 #'
 #'
-#' @param .data A tibble. The result of sccomp_glm.
+#' @param fit The result of sccomp_glm.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
@@ -803,11 +804,7 @@ sccomp_replicate.data.frame = function(fit,
 #'
 sccomp_predict <- function(fit,
                            formula_composition = NULL,
-                           new_data =
-                             fit |>
-                             select(count_data) |>
-                             unnest(count_data) |>
-                             distinct(),
+                           new_data = NULL,
                            number_of_draws = NULL,
                            mcmc_seed = sample(1e5, 1)) {
   UseMethod("sccomp_predict", fit)
@@ -817,11 +814,7 @@ sccomp_predict <- function(fit,
 #'
 sccomp_predict.data.frame = function(fit,
                                      formula_composition = NULL,
-                                     new_data =
-                                       fit |>
-                                       select(count_data) |>
-                                       unnest(count_data) |>
-                                       distinct(),
+                                     new_data = NULL,
                                      number_of_draws = NULL,
                                      mcmc_seed = sample(1e5, 1)){
 
@@ -829,6 +822,15 @@ sccomp_predict.data.frame = function(fit,
   model_input = attr(fit, "model_input")
   .sample = attr(fit, ".sample")
   .cell_group = attr(fit, ".cell_group")
+
+  if(new_data |> is.null())
+    new_data =
+      fit |>
+      select(count_data) |>
+      unnest(count_data) |>
+      distinct() |>
+      .subset(!!.sample)
+
   sample_names = new_data |> distinct(!!.sample) |> pull(!!.sample)
 
   rng =
@@ -916,13 +918,13 @@ remove_unwanted_variation.data.frame = function(.data,
   # Residuals
   residuals =
     .data |>
-    replicate_data(
+    sccomp_predict(
       number_of_draws = min(dim(fit_matrix)[1], 500)
     ) |>
-    distinct(!!.sample, !!.cell_group, generated_proportion_means) |>
-    mutate( generated_proportion_means =
-             generated_proportion_means |>
-             compress_zero_one() |>
+    distinct(!!.sample, !!.cell_group, proportion_mean) |>
+    mutate( proportion_mean =
+              proportion_mean |>
+             #compress_zero_one() |>
              boot::logit()
     )|>
   # Join counts
@@ -943,7 +945,7 @@ remove_unwanted_variation.data.frame = function(.data,
       ),
     by = c(quo_name(.sample), quo_name(.cell_group))
   ) |>
-  mutate(logit_residuals = observed_proportion - generated_proportion_means) |>
+  mutate(logit_residuals = observed_proportion - proportion_mean) |>
   select(!!.sample, !!.cell_group, logit_residuals, exposure)
 
 
@@ -951,19 +953,18 @@ remove_unwanted_variation.data.frame = function(.data,
 
   # Generate quantities
   .data |>
-    replicate_data(
+    sccomp_predict(
       formula_composition = formula_composition,
-      formula_variability = formula_variability,
       number_of_draws = min(dim(fit_matrix)[1], 500)
     ) |>
-    distinct(!!.sample, !!.cell_group, generated_proportion_means) |>
-    mutate(generated_proportion_means =
-             generated_proportion_means |>
-             compress_zero_one() |>
+    distinct(!!.sample, !!.cell_group, proportion_mean) |>
+    mutate(proportion_mean =
+             proportion_mean |>
+             # compress_zero_one() |>
              boot::logit()
     ) |>
     left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
-    mutate(adjusted_proportion = generated_proportion_means + logit_residuals) |>
+    mutate(adjusted_proportion = proportion_mean + logit_residuals) |>
     mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
     with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
 
@@ -1162,8 +1163,8 @@ plot_summary <- function(.data, significance_threshold = 0.025) {
     theme_bw() +
     theme(
       panel.border = element_blank(),
-      axis.line = element_line(size=0.5),
-      panel.grid.major = element_line(size = 0.1),
+      axis.line = element_line(linewidth=0.5),
+      panel.grid.major = element_line(linewidth = 0.1),
       panel.grid.minor = element_blank(),
       legend.position = "bottom",
       strip.background = element_blank(),
@@ -1186,10 +1187,10 @@ plot_summary <- function(.data, significance_threshold = 0.025) {
       # Title
       plot.title = element_text(size=7),
 
-      axis.line.x = element_line(size=0.2),
-      axis.line.y = element_line(size=0.2),
-      axis.ticks.x = element_line(size=0.2),
-      axis.ticks.y = element_line(size=0.2)
+      axis.line.x = element_line(linewidth=0.2),
+      axis.line.y = element_line(linewidth=0.2),
+      axis.ticks.x = element_line(linewidth=0.2),
+      axis.ticks.y = element_line(linewidth=0.2)
     )
 
   .cell_group = attr(.data, ".cell_group")

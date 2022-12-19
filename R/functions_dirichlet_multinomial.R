@@ -158,6 +158,7 @@ dirichlet_multinomial_glm = function(.data,
 #' @importFrom rlang :=
 #' @importFrom purrr map2_lgl
 #' @importFrom stats setNames
+#' @importFrom tibble enframe
 fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration = 1, chains, seed, approximate_posterior_inference){
 
 

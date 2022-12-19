@@ -76,9 +76,9 @@ glm_multi_beta = function(input_df, formula, .sample){
   sampling(model_glm_multi_beta,
            data = list(
              N = input_df %>% nrow(),
-             M = input_df %>% select(-!!.sample, -factor_names) %>% ncol(),
-             y = input_df %>% select(-factor_names) %>% as_matrix(rownames = !!.sample),
-             X = input_df %>% select(!!.sample, factor_names) %>% model.matrix(formula, data=.)
+             M = input_df %>% select(-!!.sample, -any_of(factor_names)) %>% ncol(),
+             y = input_df %>% select(-any_of(factor_names)) %>% as_matrix(rownames = !!.sample),
+             X = input_df %>% select(!!.sample, any_of(factor_names)) %>% model.matrix(formula, data=.)
            ),
            cores = 4
   )
