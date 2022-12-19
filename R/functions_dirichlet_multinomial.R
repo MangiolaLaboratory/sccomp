@@ -607,13 +607,4 @@ generate_quantities = function(fit, data_for_model, model_generate){
 
 }
 
-get_model_from_data = function(file_compiled_model, model_code){
-  if(file.exists(file_compiled_model))
-    readRDS(file_compiled_model)
-  else {
-    model_generate = stan_model(model_code = model_code)
-    model_generate  %>% saveRDS(file_compiled_model)
-    model_generate
 
-  }
-}
