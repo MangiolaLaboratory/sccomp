@@ -15,6 +15,10 @@ status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.sv
 
 <!-- badges: end -->
 
+```{r echo=FALSE}
+knitr::opts_chunk$set( fig.path = "inst/figures/")
+```
+
 ```{r child="man/fragments/intro.Rmd"}
 ```
 
