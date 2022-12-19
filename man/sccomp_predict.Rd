@@ -13,7 +13,7 @@ sccomp_predict(
 )
 }
 \arguments{
-\item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.}
+\item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
@@ -21,7 +21,7 @@ sccomp_predict(
 
 \item{.data}{A tibble. The result of sccomp_glm.}
 
-\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.}
+\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics

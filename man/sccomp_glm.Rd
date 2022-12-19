@@ -30,11 +30,11 @@ sccomp_glm(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | covariate columns.}
+\item{.data}{A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.}
 
 \item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment.}
 
-\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.}
+\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors.}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
@@ -42,7 +42,7 @@ sccomp_glm(
 
 \item{.count}{A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.}
 
-\item{contrasts}{A vector of character strings. For example if your formula is \code{~ 0 + treatment} and the covariate treatment has values \code{yes} and \code{no}, your contrast could be constrasts = c("treatmentyes - treatmentno").}
+\item{contrasts}{A vector of character strings. For example if your formula is \code{~ 0 + treatment} and the factor treatment has values \code{yes} and \code{no}, your contrast could be constrasts = c("treatmentyes - treatmentno").}
 
 \item{prior_mean_variable_association}{A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
 
@@ -84,15 +84,15 @@ A nested tibble \code{tbl}, with the following columns
 \item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
 \item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
 
-\item v_lower - (optional, present if variability is modelled dependent on covariates) lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter
-\item v_effect - (optional, present if variability is modelled dependent on covariates) mean of the posterior distribution for a variability (v) parameter
-\item v_upper - (optional, present if variability is modelled dependent on covariates) upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter
-\item v_pH0 - (optional, present if variability is modelled dependent on covariates) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
-\item v_FDR - (optional, present if variability is modelled dependent on covariates) False-discovery rate of the null hypothesis (no difference), for a variability (v).
+\item v_lower - (present if variability formula is set) lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter
+\item v_effect - (present if variability formula is set) mean of the posterior distribution for a variability (v) parameter
+\item v_upper - (present if variability formula is set) upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter
+\item v_pH0 - (present if variability formula is set) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
+\item v_FDR - (present if variability formula is set) False-discovery rate of the null hypothesis (no difference), for a variability (v).
 }
 }
 \description{
-The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the covariates (continuous or discrete). The user can define a linear model with an input R formula, where the first covariate is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
+The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
 }
 \examples{
 

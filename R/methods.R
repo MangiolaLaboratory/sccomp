@@ -2,7 +2,7 @@
 
 #' sccomp_glm main
 #'
-#' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the covariates (continuous or discrete). The user can define a linear model with an input R formula, where the first covariate is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
+#' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
 #'
 #' @import dplyr
 #' @importFrom magrittr %$%
@@ -13,14 +13,14 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #'
-#' @param .data A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | covariate columns.
+#' @param .data A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors.
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
-#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be constrasts = c("treatmentyes - treatmentno").
+#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be constrasts = c("treatmentyes - treatmentno").
 #' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
@@ -41,18 +41,26 @@
 #' \itemize{
 #'   \item cell_group - column including the cell groups being tested
 #'   \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
+#'   \item factor - The factor in the formula corresponding to the covariate, if exists (e.g. it does not exist in case og Intercept or contrasts, which usually are combination of parameters)
 #'
 #'   \item c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
 #'   \item c_effect - mean of the posterior distribution for a composition (c) parameter.
 #'   \item c_upper - upper (97.5%) quantile of the posterior distribution fo a composition (c)  parameter.
 #'   \item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
 #'   \item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
+#'   \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
 #'
-#'   \item v_lower - (present if variability formula is set) lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_effect - (present if variability formula is set) mean of the posterior distribution for a variability (v) parameter
-#'   \item v_upper - (present if variability formula is set) upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_pH0 - (present if variability formula is set) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
-#'   \item v_FDR - (present if variability formula is set) False-discovery rate of the null hypothesis (no difference), for a variability (v).
+#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter
+#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_pH0 - Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
+#'   \item v_FDR - False-discovery rate of the null hypothesis (no difference), for a variability (v).
+#'   \item v_n_eff - Effective sample size for a variability (v) parameter - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+#'
+#'   \item count_data Nested input count data.
+#'
 #' }
 #'
 #' @examples
@@ -558,7 +566,7 @@ sccomp_glm_data_frame_counts = function(.data,
     add_attr(.sample, ".sample") %>%
     add_attr(.cell_group, ".cell_group") %>%
     add_attr(.count, ".count") %>%
-    add_attr(parse_formula(formula_composition), "covariates" )
+    add_attr(parse_formula(formula_composition), "factors" )
 }
 
 
@@ -568,7 +576,7 @@ sccomp_glm_data_frame_counts = function(.data,
 #'
 #'
 #' @param .data A tibble. The result of sccomp_glm.
-#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the covariate treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
+#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #'
@@ -647,20 +655,20 @@ test_contrasts.data.frame = function(.data,
     left_join(variability_CI) |>
     suppressMessages() |>
 
-    # Add easy to understand covariate labels
+    # Add easy to understand factor labels
     left_join(
-      model_input$covariate_parameter_dictionary |>
+      model_input$factor_parameter_dictionary |>
 
-        # If I don't have covariates (~1)
+        # If I don't have factors (~1)
         when(
-          !"covariate" %in% colnames(.) ~ tibble(covariate=character(), design_matrix_col = character()),
+          !"factor" %in% colnames(.) ~ tibble(factor=character(), design_matrix_col = character()),
           ~ (.)
         ) |>
 
-        select(covariate, design_matrix_col),
+        select(factor, design_matrix_col),
       by = c("parameter" = "design_matrix_col" )
     ) %>%
-    select(parameter, covariate, everything()) %>%
+    select(parameter, factor, everything()) %>%
 
     select(!!.cell_group, everything(), -M) %>%
 
@@ -688,8 +696,8 @@ test_contrasts.data.frame = function(.data,
 #'
 #'
 #' @param .data A tibble. The result of sccomp_glm.
-#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
@@ -769,8 +777,8 @@ sccomp_replicate.data.frame = function(fit,
 #'
 #'
 #' @param .data A tibble. The result of sccomp_glm.
-#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
@@ -856,12 +864,12 @@ sccomp_predict.data.frame = function(fit,
 
 #' remove_unwanted_variation
 #'
-#' @description This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula `~ covariate_1 + covariate_2` and use this formula to remove unwanted variation `~ covariate_1`, the `covariate_2` will be factored out.
+#' @description This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula `~ factor_1 + factor_2` and use this formula to remove unwanted variation `~ factor_1`, the `factor_2` will be factored out.
 #'
 #'
 #' @param .data A tibble. The result of sccomp_glm.
-#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates. This formula can be a sub-formula of your estimated model; in this case all other covariate will be factored out.
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
@@ -939,7 +947,7 @@ remove_unwanted_variation.data.frame = function(.data,
   select(!!.sample, !!.cell_group, logit_residuals, exposure)
 
 
-  message("sccomp says: regressing out unwanted covariates")
+  message("sccomp says: regressing out unwanted factors")
 
   # Generate quantities
   .data |>
@@ -981,10 +989,10 @@ remove_unwanted_variation.data.frame = function(.data,
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #'
-#' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properties.
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors.
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
@@ -1126,7 +1134,7 @@ simulate_data.data.frame = function(.data,
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr with_groups
 #'
-#' @param .data A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column
+#' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
 #'
 #' @return A `ggplot`
@@ -1195,7 +1203,7 @@ data_proportion =
   .data %>%
 
   # Otherwise does not work
-  select(-covariate) %>%
+  select(-factor) %>%
 
   pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
   unnest(count_data) %>%
@@ -1210,9 +1218,9 @@ plots$boxplot =
 
   # Select non numerical types
   .data %>%
-  filter(!is.na(covariate)) |>
-   distinct(covariate) %>%
-    pull(covariate) |>
+  filter(!is.na(factor)) |>
+   distinct(factor) %>%
+    pull(factor) |>
 
   map(
     ~ plot_boxplot(
@@ -1224,7 +1232,7 @@ plots$boxplot =
       significance_threshold = significance_threshold,
       multipanel_theme
     ) +
-      ggtitle(sprintf("Grouped by %s (for multi-covariate models, associations could be hardly observable with unidimensional data stratification)", .x))
+      ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
   )
 
 # 1D intervals

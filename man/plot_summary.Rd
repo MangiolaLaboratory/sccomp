@@ -7,7 +7,7 @@
 plot_summary(.data, significance_threshold = 0.025)
 }
 \arguments{
-\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
 
 \item{significance_threshold}{A real. FDR threshold for labelling significant cell-groups.}
 }

@@ -20,7 +20,7 @@
 #' @importFrom rlang :=
 #' @importFrom rlang quo_is_symbolic
 #'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
 #' @param formula_variability A formula. The sample formula used to perform the differential cell_group variability analysis
 #' @param .sample A column name as symbol. The sample identifier
@@ -72,7 +72,7 @@ estimate_multi_beta_binomial_glm = function(.data,
   CI = 1 - (percent_false_positive/100)
 
   # Produce data list
-  covariate_names = parse_formula(formula_composition)
+  factor_names = parse_formula(formula_composition)
 
   # Random intercept
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
@@ -121,7 +121,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     # # Check that design matrix is not too big
     # if(ncol(data_for_model$X)>20)
-    #   message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical covariates are erroneously of type character/factor.")
+    #   message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical factors are erroneously of type character/factor.")
 
     fit =
       data_for_model %>%
@@ -193,7 +193,7 @@ estimate_multi_beta_binomial_glm = function(.data,
       #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
       draws =  as.matrix(fit),
 
-      # This is for the new data generation with selected covariates to do adjustment
+      # This is for the new data generation with selected factors to do adjustment
       data = data_for_model |> c(list(
 
         # Add subset of coefficients
@@ -409,7 +409,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 #' @keywords internal
 #' @noRd
 #'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
 #' @param formula_variability A formula. The sample formula used to perform the differential cell_group variability analysis
 #' @param .sample A column name as symbol. The sample identifier
@@ -517,17 +517,17 @@ multi_beta_binomial_glm = function(.data,
 #' @importFrom stats model.matrix
 # glm_multi_beta_binomial = function(input_df, formula_composition, .sample){
 #
-#   covariate_names = parse_formula(formula_composition)
+#   factor_names = parse_formula(formula_composition)
 #   .sample = enquo(.sample)
 #
 #   sampling(stanmodels$glm_multi_beta_binomial,
 #            data = list(
 #              N = input_df %>% nrow(),
-#              M = input_df %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
+#              M = input_df %>% select(-!!.sample, -factor_names, -exposure) %>% ncol(),
 #              exposure = input_df$exposure,
-#              y = input_df %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = !!.sample),
-#              X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula_composition, data=.),
-#              C = length(covariate_names)
+#              y = input_df %>% select(-factor_names, -exposure) %>% as_matrix(rownames = !!.sample),
+#              X = input_df %>% select(!!.sample, factor_names) %>% model.matrix(formula_composition, data=.),
+#              C = length(factor_names)
 #            ),
 #            cores = 4
 #   )
@@ -543,7 +543,7 @@ get_mean_precision = function(fit, data_for_model){
     select( M, mean, `2.5%` , `97.5%`) %>%
     nest(concentration = -M)
 
-  # WRONG ATTEMPT TO PLOT ALPHA FROM MULTIPLE COVARIATES
+  # WRONG ATTEMPT TO PLOT ALPHA FROM MULTIPLE factorS
   # fit %>%
   #   draws_to_tibble_x_y("alpha", "C", "M") %>%
   #   nest(data = -c(M)) %>%

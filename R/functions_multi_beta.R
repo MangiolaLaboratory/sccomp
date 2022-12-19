@@ -16,7 +16,7 @@
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
 #'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
@@ -60,7 +60,7 @@ multi_beta_glm = function(.data,
 #' @importFrom stats model.matrix
 glm_multi_beta = function(input_df, formula, .sample){
 
-  covariate_names = parse_formula(formula)
+  factor_names = parse_formula(formula)
   .sample = enquo(.sample)
 
   # Load model
@@ -76,9 +76,9 @@ glm_multi_beta = function(input_df, formula, .sample){
   sampling(model_glm_multi_beta,
            data = list(
              N = input_df %>% nrow(),
-             M = input_df %>% select(-!!.sample, -covariate_names) %>% ncol(),
-             y = input_df %>% select(-covariate_names) %>% as_matrix(rownames = !!.sample),
-             X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula, data=.)
+             M = input_df %>% select(-!!.sample, -factor_names) %>% ncol(),
+             y = input_df %>% select(-factor_names) %>% as_matrix(rownames = !!.sample),
+             X = input_df %>% select(!!.sample, factor_names) %>% model.matrix(formula, data=.)
            ),
            cores = 4
   )
