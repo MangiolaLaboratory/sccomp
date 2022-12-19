@@ -18,13 +18,13 @@ simulate_data(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | covariate columns | Pvalue column | a significance column}
+\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
 
 \item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properties.}
 
 \item{formula_composition}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
 
-\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each covariates.}
+\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors.}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 

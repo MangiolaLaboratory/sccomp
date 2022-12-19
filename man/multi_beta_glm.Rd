@@ -15,7 +15,7 @@ multi_beta_glm(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column}
+\item{.data}{A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column}
 
 \item{formula}{A formula. The sample formula used to perform the differential cell_type abundance analysis}
 

@@ -18,7 +18,7 @@
 #' @importFrom rlang :=
 #' @importFrom rstan stan_model
 #'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_type A column name as symbol. The cell_type identifier
@@ -178,7 +178,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
     left_join(tibble(.sample = rownames(data_for_model$y), N = seq_len(nrow(data_for_model$y))), by = ".sample" %>% setNames(quo_name(.sample))) %>%
     left_join(tibble(.cell_type = colnames(data_for_model$y), M = seq_len(ncol(data_for_model$y))), by = ".cell_type" %>% setNames(quo_name(.cell_type))) %>%
 
-    # Add covariate from design
+    # Add factor from design
     left_join(fit_and_generated, by = c("M", "N")) %>%
 
     # Add theoretical data quantiles
@@ -245,7 +245,7 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
   #   distinct() %>%
   #   spread(M, !!.count)
 
-  # .data_wide_no_covariates = .data_wide %>% select(-parse_formula(formula))
+  # .data_wide_no_factors = .data_wide %>% select(-parse_formula(formula))
 
   to_exclude =
     .data %>%

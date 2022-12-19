@@ -14,7 +14,7 @@ test_contrasts(
 \arguments{
 \item{.data}{A tibble. The result of sccomp_glm.}
 
-\item{contrasts}{A vector of character strings. For example if your formula is \code{~ 0 + treatment} and the covariate treatment has values \code{yes} and \code{no}, your contrast could be "constrasts = c(treatmentyes - treatmentno)".}
+\item{contrasts}{A vector of character strings. For example if your formula is \code{~ 0 + treatment} and the factor treatment has values \code{yes} and \code{no}, your contrast could be "constrasts = c(treatmentyes - treatmentno)".}
 
 \item{percent_false_positive}{A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.}
 

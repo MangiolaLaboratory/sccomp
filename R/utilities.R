@@ -38,7 +38,7 @@ add_attr = function(var, attribute, name) {
 #' @keywords internal
 #' @noRd
 parse_formula <- function(fm) {
-  stopifnot("The formula must be of the kind \"~ covariates\" " = attr(terms(fm), "response") == 0)
+  stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
 
     as.character(attr(terms(fm), "variables")) |>
     str_subset("\\|", negate = TRUE) %>%
@@ -68,7 +68,7 @@ parse_formula <- function(fm) {
 #' @noRd
 parse_formula_random_intercept <- function(fm) {
 
-  stopifnot("The formula must be of the kind \"~ covariates\" " = attr(terms(fm), "response") == 0)
+  stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
 
   random_intercept_elements =
     as.character(attr(terms(fm), "variables")) |>
@@ -80,34 +80,34 @@ parse_formula_random_intercept <- function(fm) {
 
     random_intercept_elements |>
 
-      # Divide grouping from covariates
+      # Divide grouping from factors
       str_split("\\|") |>
 
       # Set name
-      map(~ .x |> set_names(c("covariate", "grouping"))) |>
+      map(~ .x |> set_names(c("factor", "grouping"))) |>
 
       # Convert to tibble
       map_dfr(~ .x) |>
 
-      # Divide covariates
-      mutate(covariate = map(covariate, ~ .x |> str_split("\\+"))) |>
-      unnest(covariate) |>
+      # Divide factors
+      mutate(`factor` = map(`factor`, ~ .x |> str_split("\\+"))) |>
+      unnest(`factor`) |>
 
       # Clean
-      mutate(covariate = map(covariate, ~ .x |> str_remove_all(" ")), grouping = grouping |> str_remove_all(" ")) |>
+      mutate(`factor` = map(`factor`, ~ .x |> str_remove_all(" ")), grouping = grouping |> str_remove_all(" ")) |>
 
       # Nest
-      unnest(covariate) |>
+      unnest(`factor`) |>
 
       # Rename intercept
-      mutate(covariate = if_else(covariate=="1", "(Intercept)", covariate)) |>
+      mutate(`factor` = if_else(`factor`=="1", "(Intercept)", `factor`)) |>
 
       distinct()
 
   }
 
   else
-    tibble(covariate = character(), grouping = character())
+    tibble(`factor` = character(), grouping = character())
 
 }
 
@@ -380,7 +380,7 @@ label_deleterious_outliers = function(.my_data){
     mutate(outlier_above = !!.count > `95%`) %>%
     mutate(outlier_below = !!.count < `5%`) %>%
 
-    # Mark if on the right of the covariate scale
+    # Mark if on the right of the factor scale
     mutate(is_group_right = !!as.symbol(colnames(X)[2]) > mean( !!as.symbol(colnames(X)[2]) )) %>%
 
     # Check if outlier might be deleterious for the statistics
@@ -583,18 +583,18 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
       random_intercept_elements |>
         mutate(
           design = list(),
-          is_covariate_continuous = logical()
+          is_factor_continuous = logical()
         )
     )
 
   # Otherwise process
   random_intercept_elements |>
-    mutate(is_covariate_continuous = map_lgl(
-      covariate,
+    mutate(is_factor_continuous = map_lgl(
+      `factor`,
       ~ .x != "(Intercept)" && .data_ |> select(.x) |> pull(1) |> is("numeric")
     )) |>
     mutate(design = pmap(
-      list(grouping, covariate, is_covariate_continuous),
+      list(grouping, `factor`, is_factor_continuous),
       ~ {
 
         # Make exception for random intercept
@@ -604,14 +604,14 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
         .data_ =
           .data_ |>
           select(!!.sample, ..1, ..2) |>
-          set_names(c(quo_name(.sample), "group___", "covariate___")) |>
-          mutate(group___numeric = group___, covariate___numeric = covariate___) |>
+          set_names(c(quo_name(.sample), "group___", "factor___")) |>
+          mutate(group___numeric = group___, factor___numeric = factor___) |>
 
           mutate(group___label := glue("{group___}___{.y}")) |>
           mutate(factor___ = ..2)
 
 
-        # If covariate is continuous
+        # If factor is continuous
         if(..3)
           .data_ %>%
 
@@ -619,31 +619,31 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
           mutate(group___numeric = factor(group___numeric) |> as.integer()) |>
 
           # If intercept is not defined create it
-          mutate(., covariate___numeric = 1L) |>
+          mutate(., factor___numeric = 1L) |>
 
-          # If categorical make sure the group is independent for covariates
+          # If categorical make sure the group is independent for factors
           mutate(mean_idx = glue("{group___numeric}") |> as.factor() |> as.integer()) |>
           mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx)) |>
           mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
           mutate(minus_sum = if_else(mean_idx==0, 1L, 0L)) |>
           distinct()
 
-        # If covariate is discrete
+        # If factor is discrete
         else
           .data_ %>%
 
           # Mutate random intercept grouping to number
           mutate(group___numeric = factor(group___numeric) |> as.integer()) |>
 
-          # If categorical make sure the group is independent for covariates
-          mutate(mean_idx = glue("{covariate___numeric}{group___numeric}") |> as.factor() |> as.integer()) |>
-          with_groups(covariate___numeric, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
+          # If categorical make sure the group is independent for factors
+          mutate(mean_idx = glue("{factor___numeric}{group___numeric}") |> as.factor() |> as.integer()) |>
+          with_groups(factor___numeric, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
           mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
-          mutate(minus_sum = if_else(mean_idx==0, as.factor(covariate___numeric) |> as.integer(), 0L)) |>
+          mutate(minus_sum = if_else(mean_idx==0, as.factor(factor___numeric) |> as.integer(), 0L)) |>
 
-          # drop minus_sum if we just have one group___numeric per covariate
-          with_groups(covariate___numeric, ~ ..1 |> when(length(unique(..1$group___numeric)) == 1 ~ mutate(., minus_sum = 0), ~ (.)))  |>
-          mutate(covariate___numeric = as.factor(covariate___numeric) |> as.integer()) |>
+          # drop minus_sum if we just have one group___numeric per factor
+          with_groups(factor___numeric, ~ ..1 |> when(length(unique(..1$group___numeric)) == 1 ~ mutate(., minus_sum = 0), ~ (.)))  |>
+          mutate(factor___numeric = as.factor(factor___numeric) |> as.integer()) |>
           distinct()
       }
     )) |>
@@ -652,22 +652,22 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
     mutate(
       max_mean_idx = map_int(design, ~ ..1 |> pull(mean_idx) |> max()),
       max_minus_sum = map_int(design, ~ ..1 |> pull(minus_sum) |> max()),
-      max_covariate_numeric = map_int(design, ~ ..1 |> pull(covariate___numeric) |> max()),
+      max_factor_numeric = map_int(design, ~ ..1 |> pull(factor___numeric) |> max()),
       max_group_numeric = map_int(design, ~ ..1 |> pull(group___numeric) |> max())
     ) |>
     mutate(
       min_mean_idx = cumsum(max_mean_idx) - max_mean_idx ,
       min_minus_sum = cumsum(max_minus_sum) - max_minus_sum,
-      max_covariate_numeric = cumsum(max_covariate_numeric) - max_covariate_numeric,
+      max_factor_numeric = cumsum(max_factor_numeric) - max_factor_numeric,
       max_group_numeric = cumsum(max_group_numeric) - max_group_numeric
     ) |>
     mutate(design = pmap(
-      list(design, min_mean_idx, min_minus_sum, max_covariate_numeric, max_group_numeric),
+      list(design, min_mean_idx, min_minus_sum, max_factor_numeric, max_group_numeric),
       ~ ..1 |>
         mutate(
           mean_idx = if_else(mean_idx>0, mean_idx + ..2, mean_idx),
           minus_sum = if_else(minus_sum>0, minus_sum + ..3, minus_sum),
-          covariate___numeric = covariate___numeric + ..4,
+          factor___numeric = factor___numeric + ..4,
           group___numeric = group___numeric + ..5
 
         )
@@ -697,15 +697,15 @@ get_design_matrix = function(.data_spread, formula, .sample){
     )
 }
 
-check_random_intercept_design = function(.data, covariate_names, random_intercept_elements, formula, X){
+check_random_intercept_design = function(.data, factor_names, random_intercept_elements, formula, X){
 
   .data_ = .data
 
   # Loop across groupings
   random_intercept_elements |>
-    nest(covariates = covariate ) |>
+    nest(factors = `factor` ) |>
     mutate(checked = map2(
-      grouping, covariates,
+      grouping, factors,
       ~ {
 
         .y = unlist(.y)
@@ -722,7 +722,7 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
 
         # # Check sanity of the grouping if only random intercept
         # stopifnot(
-        #   "sccomp says: the random intercept completely confounded with one or more discrete covariates" =
+        #   "sccomp says: the random intercept completely confounded with one or more discrete factors" =
         #     !(
         #       !.y |> equals("(Intercept)") &&
         #         .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
@@ -732,9 +732,9 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
         #         distinct() %>%
         #
         #         # TEMPORARY FIX
-        #         set_names(c(colnames(.)[1], 'covariate___temp')) |>
+        #         set_names(c(colnames(.)[1], 'factor___temp')) |>
         #
-        #         count(covariate___temp) |>
+        #         count(factor___temp) |>
         #         pull(n) |>
         #         equals(1) |>
         #         any()
@@ -774,7 +774,7 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
 
         # I HAVE TO REVESIT THIS
         #  stopifnot(
-        #   "sccomp says: the groups in the formula (covariate | group) should not be shared across covariate groups" =
+        #   "sccomp says: the groups in the formula (factor | group) should not be shared across factor groups" =
         #     !(
         #       # If I duplicated groups
         #       .y  |> identical("(Intercept)") |> not() &&
@@ -782,10 +782,10 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
         #         .data_ |>
         #         select(.x, .y |> setdiff("(Intercept)")) |>
         #
-        #         # Drop the covariate represented by the intercept if any
-        #         mutate(factor = .y |> setdiff("(Intercept)")) |>
-        #         unite("covariate_name", c(factor, covariate), sep = "", remove = FALSE) |>
-        #         filter(covariate_name %in% colnames(X)) |>
+        #         # Drop the factor represented by the intercept if any
+        #         mutate(`parameter` = .y |> setdiff("(Intercept)")) |>
+        #         unite("factor_name", c(parameter, factor), sep = "", remove = FALSE) |>
+        #         filter(factor_name %in% colnames(X)) |>
         #
         #         # Count
         #         distinct() %>%
@@ -803,10 +803,10 @@ check_random_intercept_design = function(.data, covariate_names, random_intercep
 
   random_intercept_elements |>
     nest(groupings = grouping ) |>
-    mutate(checked = map2(covariate, groupings, ~{
-      # Check the same group spans multiple covariates
+    mutate(checked = map2(`factor`, groupings, ~{
+      # Check the same group spans multiple factors
       stopifnot(
-        "sccomp says: the groups in the formula (covariate | group) should be present in only one covariate, including the intercept" =
+        "sccomp says: the groups in the formula (factor | group) should be present in only one factor, including the intercept" =
           !(
               # If I duplicated groups
             .y |> unlist() |> length() |> gt(1)
@@ -885,20 +885,20 @@ data_spread_to_model_input =
     A = ncol(XA);
     Ar = nrow(XA);
 
-    covariate_names = parse_formula(formula)
-    covariate_names_variability = parse_formula(formula_variability)
-    cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(covariate_names), -exposure, -!!.grouping_for_random_intercept) %>% colnames()
+    factor_names = parse_formula(formula)
+    factor_names_variability = parse_formula(formula_variability)
+    cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% colnames()
 
     # Random intercept
     if(nrow(random_intercept_elements)>0 ) {
-      check_random_intercept_design(.data_spread, any_of(covariate_names), random_intercept_elements, formula, X)
+      check_random_intercept_design(.data_spread, any_of(factor_names), random_intercept_elements, formula, X)
       random_intercept_grouping = get_random_intercept_design(.data_spread, !!.sample,  random_intercept_elements )
 
       N_random_intercepts = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow())) |> pull(n) |> sum()
       N_minus_sum = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(minus_sum>0) |> distinct(minus_sum) |> nrow())) |> pull(n) |> sum()
       paring_cov_random_intercept =
         random_intercept_grouping |>
-        mutate(mat = map(design, ~ .x |> distinct(covariate___numeric, mean_idx) |> filter(mean_idx>0) )) |>
+        mutate(mat = map(design, ~ .x |> distinct(factor___numeric, mean_idx) |> filter(mean_idx>0) )) |>
         select(mat) |>
         unnest(mat) |>
         as_matrix()
@@ -906,25 +906,25 @@ data_spread_to_model_input =
         X_random_intercept =
           random_intercept_grouping |>
           mutate(design_matrix = pmap(
-            list(design, grouping, covariate, is_covariate_continuous),
+            list(design, grouping, `factor`, is_factor_continuous),
             ~ {
 
-              # This code make sures I don't get random effects for covariates that are not in the design matrix,
+              # This code make sures I don't get random effects for factors that are not in the design matrix,
               # for example if there is an intercept term
 
-              # possible_covariates
-              possible_covariates =
+              # possible_factors
+              possible_factors =
                 ..1 |>
-                unite("covariate_name", c(factor___, covariate___), sep = "") |>
-                distinct(covariate_name) |>
+                unite("factor_name", c(factor___, factor___), sep = "") |>
+                distinct(factor_name) |>
 
                 # Make exception for (Intercept). In the future I have to make this a bit more elegant.
-                mutate(covariate_name = covariate_name |> str_replace("\\(Intercept\\)1", "\\(Intercept\\)")) |>
-                pull(covariate_name)
+                mutate(factor_name = factor_name |> str_replace("\\(Intercept\\)1", "\\(Intercept\\)")) |>
+                pull(factor_name)
 
-              # Which possible covariate I have (for example do I have intercept free model or not?)
+              # Which possible factor I have (for example do I have intercept free model or not?)
               weight_random_slopes =
-                X[,colnames(X) %in% possible_covariates, drop=FALSE] |>
+                X[,colnames(X) %in% possible_factors, drop=FALSE] |>
                 rowSums()
 
               ..1 |>
@@ -932,7 +932,7 @@ data_spread_to_model_input =
                 # Get matrix
                 get_design_matrix(~ 0 + group___label,  !!.sample) |>
 
-                # If countinuous multiply the matrix by the covariate
+                # If countinuous multiply the matrix by the factor
                 apply(2, function(x) x * weight_random_slopes)
 
             }
@@ -975,9 +975,9 @@ data_spread_to_model_input =
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
-        M = .data_spread %>% select(-!!.sample, -any_of(covariate_names), -exposure, -!!.grouping_for_random_intercept) %>% ncol(),
+        M = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% ncol(),
         exposure = .data_spread$exposure,
-        y = .data_spread %>% select(-any_of(covariate_names), -exposure, -!!.grouping_for_random_intercept) %>% as_matrix(rownames = quo_name(.sample)),
+        y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% as_matrix(rownames = quo_name(.sample)),
         X = X,
         XA = XA,
         Xa = Xa,
@@ -1005,12 +1005,12 @@ data_spread_to_model_input =
     data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
-    # Add parameter covariate dictionary
-    data_for_model$covariate_parameter_dictionary = tibble()
+    # Add parameter factor dictionary
+    data_for_model$factor_parameter_dictionary = tibble()
 
     if(.data_spread  |> select(parse_formula(formula)) |> lapply(class) %in% c("factor", "character") |> any())
-      data_for_model$covariate_parameter_dictionary =
-      data_for_model$covariate_parameter_dictionary |> bind_rows(
+      data_for_model$factor_parameter_dictionary =
+      data_for_model$factor_parameter_dictionary |> bind_rows(
         # For discrete
         .data_spread  |>
           select(parse_formula(formula))  |>
@@ -1018,8 +1018,8 @@ data_spread_to_model_input =
 
           # Drop numerical
           select_if(function(x) !is.numeric(x)) |>
-          pivot_longer(everything(), names_to =  "covariate", values_to = "parameter") %>%
-          unite("design_matrix_col", c(covariate, parameter), sep="", remove = FALSE)  |>
+          pivot_longer(everything(), names_to =  "factor", values_to = "parameter") %>%
+          unite("design_matrix_col", c(`factor`, parameter), sep="", remove = FALSE)  |>
           select(-parameter) |>
           filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
           distinct()
@@ -1028,8 +1028,8 @@ data_spread_to_model_input =
 
  # For continuous
     if(.data_spread  |> select(parse_formula(formula)) |> lapply(class) |> equals("numeric") |> any())
-      data_for_model$covariate_parameter_dictionary =
-      data_for_model$covariate_parameter_dictionary |>
+      data_for_model$factor_parameter_dictionary =
+      data_for_model$factor_parameter_dictionary |>
           bind_rows(
             tibble(
               design_matrix_col =  .data_spread  |>
@@ -1040,13 +1040,13 @@ data_spread_to_model_input =
                 select_if(function(x) is.numeric(x)) |>
                 names()
             ) |>
-              mutate(covariate = design_matrix_col)
+              mutate(`factor` = design_matrix_col)
 )
 
     # If constrasts is set it is a bit more complicated
     if(! is.null(contrasts))
-      data_for_model$covariate_parameter_dictionary =
-        data_for_model$covariate_parameter_dictionary |>
+      data_for_model$factor_parameter_dictionary =
+        data_for_model$factor_parameter_dictionary |>
         distinct() |>
         expand_grid(parameter=contrasts) |>
         filter(str_detect(contrasts, design_matrix_col )) |>
@@ -1058,8 +1058,8 @@ data_spread_to_model_input =
 
     data_for_model$A_intercept_columns =
       when(
-        data_for_model$intercept_in_design | length(covariate_names_variability)==0, (.) ~ 1,
-        ~ .data_spread |> select(any_of(covariate_names[1])) |> distinct() |> nrow()
+        data_for_model$intercept_in_design | length(factor_names_variability)==0, (.) ~ 1,
+        ~ .data_spread |> select(any_of(factor_names[1])) |> distinct() |> nrow()
       )
 
     # Return
@@ -1071,13 +1071,13 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
-  .grouping_for_random_intercept = .grouping_for_random_intercept |> map(~ .x |> quo_name()) |> unlist()
+  .grouping_for_random_intercept = .grouping_for_random_intercept |> map(~ .x |> quo_name() ) |> unlist()
 
   .data %>%
     nest(data = -!!.sample) %>%
     mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
     unnest(data) %>%
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), .grouping_for_random_intercept) %>%
+    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_intercept)) %>%
     spread(!!.cell_type, !!.count)
 
 }
@@ -1097,11 +1097,11 @@ data_simulation_to_model_input =
     .exposure = enquo(.exposure)
     .coefficients = enquo(.coefficients)
 
-    covariate_names = parse_formula(formula)
+    factor_names = parse_formula(formula)
 
     sample_data =
       .data %>%
-      select(!!.sample, any_of(covariate_names)) %>%
+      select(!!.sample, any_of(factor_names)) %>%
       distinct() %>%
       arrange(!!.sample)
     X =
@@ -1114,7 +1114,7 @@ data_simulation_to_model_input =
         .x
       }
 
-    XA = covariate_names %>%
+    XA = factor_names %>%
       when((.) == "1" ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
       as_tibble() %>%
       distinct()
@@ -1311,7 +1311,7 @@ design_matrix_and_coefficients_to_simulation = function(
   coefficient_df = as.data.frame(coefficient_matrix)
 
   rownames(design_df) = sprintf("sample_%s", seq_len(nrow(design_df)))
-  colnames(design_df) = sprintf("covariate_%s", seq_len(ncol(design_df)))
+  colnames(design_df) = sprintf("factor_%s", seq_len(ncol(design_df)))
 
   rownames(coefficient_df) = sprintf("cell_type_%s", seq_len(nrow(coefficient_df)))
   colnames(coefficient_df) = sprintf("beta_%s", seq_len(ncol(coefficient_df)))
@@ -1328,7 +1328,7 @@ design_matrix_and_coefficients_to_simulation = function(
 
                 .estimate_object = .estimate_object,
 
-                formula_composition = ~ covariate_1 ,
+                formula_composition = ~ factor_1 ,
                 .sample = sample,
                 .cell_group = cell_type,
                 .coefficients = c(beta_1, beta_2),
@@ -1345,7 +1345,7 @@ design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, c
   # coefficient_df = as.data.frame(coefficient_matrix)
   #
   # rownames(design_df) = sprintf("sample_%s", 1:nrow(design_df))
-  # colnames(design_df) = sprintf("covariate_%s", 1:ncol(design_df))
+  # colnames(design_df) = sprintf("factor_%s", 1:ncol(design_df))
   #
   # rownames(coefficient_df) = sprintf("cell_type_%s", 1:nrow(coefficient_df))
   # colnames(coefficient_df) = sprintf("beta_%s", 1:ncol(coefficient_df))
@@ -1359,8 +1359,8 @@ design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, c
 
   extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * precision) %>%
     as_tibble(.name_repair = "unique", rownames = "sample") %>%
-    mutate(covariate_1= design_matrix) %>%
-    gather(cell_type, generated_counts, -sample, -covariate_1) %>%
+    mutate(factor_1= design_matrix) %>%
+    gather(cell_type, generated_counts, -sample, -factor_1) %>%
     mutate(generated_counts = as.integer(generated_counts))
 
 
@@ -1531,11 +1531,11 @@ plot_boxplot = function(
     filter(stats_name == "FDR") %>%
     filter(parameter != "(Intercept)") %>%
     filter(stats_value < significance_threshold) %>%
-    filter(covariate == factor_of_interest) %>%
+    filter(`factor` == factor_of_interest) %>%
     unite("name", c(which, parameter), remove = FALSE) %>%
     distinct() %>%
     # Get clean parameter
-    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", covariate), "")) %>%
+    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
 
     with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
 
@@ -1551,7 +1551,7 @@ plot_boxplot = function(
     filter(stats_name == "FDR") %>%
     filter(parameter != "(Intercept)") %>%
     filter(stats_value < significance_threshold) %>%
-    filter(covariate == factor_of_interest) |>
+    filter(`factor` == factor_of_interest) |>
     mutate(count_data = map(count_data, ~ .x |> select(factor_of_interest) |> distinct())) |>
     unnest(count_data) |>
 
@@ -1861,7 +1861,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
         by = "M"
       ) |>
 
-      # Covariate names
+      # factor names
       left_join(
         beta_factor_of_interest |>
           enframe(name = "C", value = "parameter"),
@@ -1943,7 +1943,7 @@ get_variability_contrast_draws = function(.data, contrasts){
       by = "M"
     ) |>
 
-    # Covariate names
+    # factor names
     left_join(
       variability_factor_of_interest |>
         enframe(name = "C", value = "parameter"),
@@ -2010,7 +2010,7 @@ replicate_data = function(.data,
     distinct() |>
     .subset(!!.sample)
 
-  # Match covariates with old data
+  # Match factors with old data
   nrow_new_data = nrow(new_data)
   new_exposure = new_data |>
     nest(data = -!!.sample) |>
@@ -2101,7 +2101,7 @@ replicate_data = function(.data,
   create_intercept =
     model_input %$% intercept_in_design |> not() &
     "(Intercept)" %in% colnames(new_X)
-  if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first covariate in your formula ~ 0 + <COVARIATE>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
+  if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
 
   # Random intercept
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
@@ -2124,14 +2124,14 @@ replicate_data = function(.data,
     new_X_random_intercept =
       random_intercept_grouping |>
       mutate(design_matrix = pmap(
-        list(design, grouping, covariate, is_covariate_continuous),
+        list(design, grouping, `factor`, is_factor_continuous),
         ~ ..1 |>
 
           # Get matrix
           get_design_matrix(~ 0 + group___label,  !!.sample) |>
 
-          # If countinuous multiply the matrix by the covariate
-          when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + covariate___,  !!.sample) )) , ~ (.))
+          # If countinuous multiply the matrix by the factor
+          when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + factor___,  !!.sample) )) , ~ (.))
       )) |>
 
       # Merge
