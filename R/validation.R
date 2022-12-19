@@ -39,7 +39,7 @@ check_if_any_NA = function(.data, columns){
 
   if(
     .data %>%
-    drop_na(columns) %>%
+    drop_na(all_of(columns)) %>%
     nrow %>% st(      .data %>% nrow    )
   )
     stop(sprintf("There are NA values in you tibble for any of the column %s", paste(columns, collapse=", ")))

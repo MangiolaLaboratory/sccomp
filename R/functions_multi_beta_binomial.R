@@ -515,25 +515,6 @@ multi_beta_binomial_glm = function(.data,
 }
 
 #' @importFrom stats model.matrix
-# glm_multi_beta_binomial = function(input_df, formula_composition, .sample){
-#
-#   covariate_names = parse_formula(formula_composition)
-#   .sample = enquo(.sample)
-#
-#   sampling(stanmodels$glm_multi_beta_binomial,
-#            data = list(
-#              N = input_df %>% nrow(),
-#              M = input_df %>% select(-!!.sample, -covariate_names, -exposure) %>% ncol(),
-#              exposure = input_df$exposure,
-#              y = input_df %>% select(-covariate_names, -exposure) %>% as_matrix(rownames = !!.sample),
-#              X = input_df %>% select(!!.sample, covariate_names) %>% model.matrix(formula_composition, data=.),
-#              C = length(covariate_names)
-#            ),
-#            cores = 4
-#   )
-#
-# }
-
 get_mean_precision = function(fit, data_for_model){
   fit %>%
     summary_to_tibble("alpha", "C", "M") %>%

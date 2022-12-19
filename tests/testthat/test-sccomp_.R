@@ -1,5 +1,3 @@
-context('sccomp')
-
 library(dplyr)
 library(sccomp)
 data("seurat_obj")
@@ -59,7 +57,7 @@ test_that("Generate data",{
     ) |>
 
 
-    replicate_data() |>
+    sccomp_replicate() |>
     nrow() |>
     expect_equal(600)
 
@@ -77,7 +75,7 @@ test_that("Generate data",{
     ) |>
 
 
-    replicate_data(~ 0 + type) |>
+    sccomp_replicate(~ 0 + type) |>
     nrow() |>
     expect_equal(600)
 
@@ -422,7 +420,7 @@ test_that("plot test composition",{
 
 })
 
-test_that("plot test composition",{
+test_that("plot test variability",{
 
   plot_summary(res_composition_variability)
 
