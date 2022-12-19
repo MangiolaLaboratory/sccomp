@@ -48,11 +48,11 @@
 #'   \item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
 #'   \item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
 #'
-#'   \item v_lower - (optional, present if variability is modelled dependent on covariates) lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_effect - (optional, present if variability is modelled dependent on covariates) mean of the posterior distribution for a variability (v) parameter
-#'   \item v_upper - (optional, present if variability is modelled dependent on covariates) upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_pH0 - (optional, present if variability is modelled dependent on covariates) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
-#'   \item v_FDR - (optional, present if variability is modelled dependent on covariates) False-discovery rate of the null hypothesis (no difference), for a variability (v).
+#'   \item v_lower - (present if variability formula is set) lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_effect - (present if variability formula is set) mean of the posterior distribution for a variability (v) parameter
+#'   \item v_upper - (present if variability formula is set) upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_pH0 - (present if variability formula is set) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
+#'   \item v_FDR - (present if variability formula is set) False-discovery rate of the null hypothesis (no difference), for a variability (v).
 #' }
 #'
 #' @examples

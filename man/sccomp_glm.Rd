@@ -18,7 +18,7 @@ sccomp_glm(
   bimodal_mean_variability_association = FALSE,
   cores = detectCores(),
   percent_false_positive = 5,
-  approximate_posterior_inference = "all",
+  approximate_posterior_inference = "none",
   test_composition_above_logit_fold_change = 0.2,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",

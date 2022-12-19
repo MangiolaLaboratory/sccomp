@@ -93,7 +93,7 @@ estimate_multi_beta_binomial_glm = function(.data,
   # If we are NOT checking outliers
   if(!check_outliers){
 
-    message("sccomp says: estimation [ETA: ~20s]")
+    message("sccomp says: estimation")
 
     data_for_model =
       .data %>%
@@ -149,7 +149,7 @@ estimate_multi_beta_binomial_glm = function(.data,
   # If we are checking outliers
   else{
 
-    message("sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]")
+    message("sccomp says: outlier identification first pass - step 1/3")
 
     # Force variance NOT associated with mean for stringency of outlier detection
     data_for_model =
@@ -266,7 +266,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_not_idx = (data_for_model$truncation_down >= 0) %>% t() %>% as.vector()  %>% which()
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
-    message("sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]")
+    message("sccomp says: outlier identification second pass - step 2/3")
 
     my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
 
@@ -351,7 +351,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
 
-    message("sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]")
+    message("sccomp says: outlier-free model fitting - step 3/3")
 
     # Print design matrix
     message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
