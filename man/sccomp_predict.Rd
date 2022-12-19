@@ -8,7 +8,7 @@ sccomp_predict(
   fit,
   formula_composition = NULL,
   new_data = NULL,
-  number_of_draws = NULL,
+  number_of_draws = 500,
   mcmc_seed = sample(1e+05, 1)
 )
 }
@@ -17,11 +17,11 @@ sccomp_predict(
 
 \item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 
+\item{new_data}{A sample-wise data frame including the column that represent the factors in your formula. If you want to predict proportions for 10 samples, there should be 10 rows. T}
+
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
 \item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
-
-\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics

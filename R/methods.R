@@ -779,7 +779,7 @@ sccomp_replicate.data.frame = function(fit,
 #'
 #' @param fit The result of sccomp_glm.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
+#' @param new_data A sample-wise data frame including the column that represent the factors in your formula. If you want to predict proportions for 10 samples, there should be 10 rows. T
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
@@ -805,7 +805,7 @@ sccomp_replicate.data.frame = function(fit,
 sccomp_predict <- function(fit,
                            formula_composition = NULL,
                            new_data = NULL,
-                           number_of_draws = NULL,
+                           number_of_draws = 500,
                            mcmc_seed = sample(1e5, 1)) {
   UseMethod("sccomp_predict", fit)
 }
@@ -815,7 +815,7 @@ sccomp_predict <- function(fit,
 sccomp_predict.data.frame = function(fit,
                                      formula_composition = NULL,
                                      new_data = NULL,
-                                     number_of_draws = NULL,
+                                     number_of_draws = 500,
                                      mcmc_seed = sample(1e5, 1)){
 
 

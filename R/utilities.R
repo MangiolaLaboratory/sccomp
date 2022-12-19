@@ -1974,8 +1974,6 @@ get_variability_contrast_draws = function(.data, contrasts){
 
 }
 
-#' @export
-#'
 #' @importFrom tibble deframe
 #'
 replicate_data = function(.data,
