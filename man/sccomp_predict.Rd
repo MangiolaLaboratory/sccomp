@@ -7,19 +7,19 @@
 sccomp_predict(
   fit,
   formula_composition = NULL,
-  new_data = distinct(unnest(select(fit, count_data), count_data)),
+  new_data = NULL,
   number_of_draws = NULL,
   mcmc_seed = sample(1e+05, 1)
 )
 }
 \arguments{
+\item{fit}{The result of sccomp_glm.}
+
 \item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
 \item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
-
-\item{.data}{A tibble. The result of sccomp_glm.}
 
 \item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 }

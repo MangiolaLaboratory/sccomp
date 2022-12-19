@@ -77,18 +77,26 @@ A nested tibble \code{tbl}, with the following columns
 \itemize{
 \item cell_group - column including the cell groups being tested
 \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
+\item factor - The factor in the formula corresponding to the covariate, if exists (e.g. it does not exist in case og Intercept or contrasts, which usually are combination of parameters)
 
 \item c_lower - lower (2.5\%) quantile of the posterior distribution for a composition (c) parameter.
 \item c_effect - mean of the posterior distribution for a composition (c) parameter.
 \item c_upper - upper (97.5\%) quantile of the posterior distribution fo a composition (c)  parameter.
 \item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
 \item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
+\item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+\item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
 
-\item v_lower - (present if variability formula is set) lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter
-\item v_effect - (present if variability formula is set) mean of the posterior distribution for a variability (v) parameter
-\item v_upper - (present if variability formula is set) upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter
-\item v_pH0 - (present if variability formula is set) Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
-\item v_FDR - (present if variability formula is set) False-discovery rate of the null hypothesis (no difference), for a variability (v).
+\item v_lower - Lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter
+\item v_effect - Mean of the posterior distribution for a variability (v) parameter
+\item v_upper - Upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter
+\item v_pH0 - Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
+\item v_FDR - False-discovery rate of the null hypothesis (no difference), for a variability (v).
+\item v_n_eff - Effective sample size for a variability (v) parameter - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+\item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+
+\item count_data Nested input count data.
+
 }
 }
 \description{
