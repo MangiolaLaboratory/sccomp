@@ -22,7 +22,7 @@ dev/*rds
 dev/*rda
 dev/*pdf
 dev/dplyr-master/*
-dev/bench_pipeline*
+#dev/bench_pipeline*
 #dev/article_figures*
 dev/metagenomics*
 dev/rlm_robust*
@@ -30,7 +30,6 @@ dev/scCODA*
 dev/cytof*
 dev/qq_plot_simulations*
 dev/study_of_association*
-dev/benchmark*
 dev/*.gz
 dev/*csv
 dev/reproducible_example_beta_binomial_truncated
