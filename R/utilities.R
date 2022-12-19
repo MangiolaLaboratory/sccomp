@@ -90,24 +90,24 @@ parse_formula_random_intercept <- function(fm) {
       map_dfr(~ .x) |>
 
       # Divide factors
-      mutate(factor = map(factor, ~ .x |> str_split("\\+"))) |>
-      unnest(factor) |>
+      mutate(`factor` = map(`factor`, ~ .x |> str_split("\\+"))) |>
+      unnest(`factor`) |>
 
       # Clean
-      mutate(factor = map(factor, ~ .x |> str_remove_all(" ")), grouping = grouping |> str_remove_all(" ")) |>
+      mutate(`factor` = map(`factor`, ~ .x |> str_remove_all(" ")), grouping = grouping |> str_remove_all(" ")) |>
 
       # Nest
-      unnest(factor) |>
+      unnest(`factor`) |>
 
       # Rename intercept
-      mutate(factor = if_else(factor=="1", "(Intercept)", factor)) |>
+      mutate(`factor` = if_else(`factor`=="1", "(Intercept)", `factor`)) |>
 
       distinct()
 
   }
 
   else
-    tibble(factor = character(), grouping = character())
+    tibble(`factor` = character(), grouping = character())
 
 }
 
@@ -590,11 +590,11 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
   # Otherwise process
   random_intercept_elements |>
     mutate(is_factor_continuous = map_lgl(
-      factor,
+      `factor`,
       ~ .x != "(Intercept)" && .data_ |> select(.x) |> pull(1) |> is("numeric")
     )) |>
     mutate(design = pmap(
-      list(grouping, factor, is_factor_continuous),
+      list(grouping, `factor`, is_factor_continuous),
       ~ {
 
         # Make exception for random intercept
@@ -703,7 +703,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
 
   # Loop across groupings
   random_intercept_elements |>
-    nest(factors = factor ) |>
+    nest(factors = `factor` ) |>
     mutate(checked = map2(
       grouping, factors,
       ~ {
@@ -783,8 +783,8 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
         #         select(.x, .y |> setdiff("(Intercept)")) |>
         #
         #         # Drop the factor represented by the intercept if any
-        #         mutate(factor = .y |> setdiff("(Intercept)")) |>
-        #         unite("factor_name", c(factor, factor), sep = "", remove = FALSE) |>
+        #         mutate(`parameter` = .y |> setdiff("(Intercept)")) |>
+        #         unite("factor_name", c(parameter, factor), sep = "", remove = FALSE) |>
         #         filter(factor_name %in% colnames(X)) |>
         #
         #         # Count
@@ -803,7 +803,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
 
   random_intercept_elements |>
     nest(groupings = grouping ) |>
-    mutate(checked = map2(factor, groupings, ~{
+    mutate(checked = map2(`factor`, groupings, ~{
       # Check the same group spans multiple factors
       stopifnot(
         "sccomp says: the groups in the formula (factor | group) should be present in only one factor, including the intercept" =
@@ -906,7 +906,7 @@ data_spread_to_model_input =
         X_random_intercept =
           random_intercept_grouping |>
           mutate(design_matrix = pmap(
-            list(design, grouping, factor, is_factor_continuous),
+            list(design, grouping, `factor`, is_factor_continuous),
             ~ {
 
               # This code make sures I don't get random effects for factors that are not in the design matrix,
@@ -1019,7 +1019,7 @@ data_spread_to_model_input =
           # Drop numerical
           select_if(function(x) !is.numeric(x)) |>
           pivot_longer(everything(), names_to =  "factor", values_to = "parameter") %>%
-          unite("design_matrix_col", c(factor, parameter), sep="", remove = FALSE)  |>
+          unite("design_matrix_col", c(`factor`, parameter), sep="", remove = FALSE)  |>
           select(-parameter) |>
           filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
           distinct()
@@ -1040,7 +1040,7 @@ data_spread_to_model_input =
                 select_if(function(x) is.numeric(x)) |>
                 names()
             ) |>
-              mutate(factor = design_matrix_col)
+              mutate(`factor` = design_matrix_col)
 )
 
     # If constrasts is set it is a bit more complicated
@@ -1071,13 +1071,13 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
-  .grouping_for_random_intercept = .grouping_for_random_intercept |> map(~ .x |> quo_name()) |> unlist()
+  .grouping_for_random_intercept = .grouping_for_random_intercept |> map(~ .x |> quo_name() ) |> unlist()
 
   .data %>%
     nest(data = -!!.sample) %>%
     mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
     unnest(data) %>%
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), .grouping_for_random_intercept) %>%
+    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_intercept)) %>%
     spread(!!.cell_type, !!.count)
 
 }
@@ -1531,11 +1531,11 @@ plot_boxplot = function(
     filter(stats_name == "FDR") %>%
     filter(parameter != "(Intercept)") %>%
     filter(stats_value < significance_threshold) %>%
-    filter(factor == factor_of_interest) %>%
+    filter(`factor` == factor_of_interest) %>%
     unite("name", c(which, parameter), remove = FALSE) %>%
     distinct() %>%
     # Get clean parameter
-    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", factor), "")) %>%
+    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
 
     with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
 
@@ -1551,7 +1551,7 @@ plot_boxplot = function(
     filter(stats_name == "FDR") %>%
     filter(parameter != "(Intercept)") %>%
     filter(stats_value < significance_threshold) %>%
-    filter(factor == factor_of_interest) |>
+    filter(`factor` == factor_of_interest) |>
     mutate(count_data = map(count_data, ~ .x |> select(factor_of_interest) |> distinct())) |>
     unnest(count_data) |>
 
@@ -2124,7 +2124,7 @@ replicate_data = function(.data,
     new_X_random_intercept =
       random_intercept_grouping |>
       mutate(design_matrix = pmap(
-        list(design, grouping, factor, is_factor_continuous),
+        list(design, grouping, `factor`, is_factor_continuous),
         ~ ..1 |>
 
           # Get matrix

@@ -450,7 +450,7 @@ sccomp_glm_data_frame_raw = function(.data,
       length(parse_formula(formula_composition))>0 ~
         left_join(.,
                   .data %>%
-                    select(!!.sample, parse_formula(formula_composition), .grouping_for_random_intercept) %>%
+                    select(!!.sample, parse_formula(formula_composition), any_of(.grouping_for_random_intercept)) %>%
                     distinct(),
                   by = quo_name(.sample)
         ),
@@ -661,14 +661,14 @@ test_contrasts.data.frame = function(.data,
 
         # If I don't have factors (~1)
         when(
-          !"factor" %in% colnames(.) ~ tibble(factor=character(), design_matrix_col = character()),
+          !"factor" %in% colnames(.) ~ tibble(`factor`=character(), design_matrix_col = character()),
           ~ (.)
         ) |>
 
-        select(factor, design_matrix_col),
+        select(`factor`, design_matrix_col),
       by = c("parameter" = "design_matrix_col" )
     ) %>%
-    select(parameter, factor, everything()) %>%
+    select(parameter, `factor`, everything()) %>%
 
     select(!!.cell_group, everything(), -M) %>%
 
@@ -1204,7 +1204,7 @@ data_proportion =
   .data %>%
 
   # Otherwise does not work
-  select(-factor) %>%
+  select(-`factor`) %>%
 
   pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
   unnest(count_data) %>%
@@ -1219,9 +1219,9 @@ plots$boxplot =
 
   # Select non numerical types
   .data %>%
-  filter(!is.na(factor)) |>
-   distinct(factor) %>%
-    pull(factor) |>
+  filter(!is.na(`factor`)) |>
+   distinct(`factor`) %>%
+    pull(`factor`) |>
 
   map(
     ~ plot_boxplot(
