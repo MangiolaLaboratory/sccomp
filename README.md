@@ -81,16 +81,16 @@ counts_obj |>
     ## # A tibble: 72 × 18
     ##    cell_group parameter   factor c_lower c_eff…¹ c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>       <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercept) <NA>     0.869   1.06   1.24   0       0         4529.
-    ##  2 B1         typecancer  type    -1.21   -0.878 -0.538  0       0         4296.
-    ##  3 B2         (Intercept) <NA>     0.423   0.697  0.959  5.00e-4 3.75e-5   3358.
-    ##  4 B2         typecancer  type    -1.21   -0.784 -0.363  3.75e-3 6.11e-4   4084.
-    ##  5 B3         (Intercept) <NA>    -0.643  -0.383 -0.136  7.17e-2 4.01e-3   5204.
-    ##  6 B3         typecancer  type    -0.616  -0.224  0.137  4.54e-1 1.37e-1   4037.
-    ##  7 BM         (Intercept) <NA>    -1.27   -1.02  -0.754  0       0         5698.
-    ##  8 BM         typecancer  type    -0.764  -0.347  0.0320 2.24e-1 3.62e-2   4352.
-    ##  9 CD4 1      (Intercept) <NA>     0.121   0.324  0.522  1.03e-1 1.15e-2   3652.
-    ## 10 CD4 1      typecancer  type    -0.110   0.157  0.425  6.36e-1 2.19e-1   2916.
+    ##  1 B1         (Intercept) <NA>     0.873   1.06   1.23   0       0         4746.
+    ##  2 B1         typecancer  type    -1.23   -0.878 -0.527  2.50e-4 6.25e-5   2626.
+    ##  3 B2         (Intercept) <NA>     0.415   0.691  0.950  7.50e-4 6.25e-5   5154.
+    ##  4 B2         typecancer  type    -1.21   -0.772 -0.351  5.50e-3 8.33e-4   4362.
+    ##  5 B3         (Intercept) <NA>    -0.632  -0.387 -0.152  6.07e-2 3.38e-3   4135.
+    ##  6 B3         typecancer  type    -0.605  -0.225  0.142  4.47e-1 1.39e-1   3179.
+    ##  7 BM         (Intercept) <NA>    -1.29   -1.02  -0.750  0       0         4836.
+    ##  8 BM         typecancer  type    -0.756  -0.346  0.0353 2.35e-1 5.7 e-2   3588.
+    ##  9 CD4 1      (Intercept) <NA>     0.116   0.322  0.509  1.12e-1 1.15e-2   3516.
+    ## 10 CD4 1      typecancer  type    -0.103   0.164  0.435  6.04e-1 2.20e-1   2549.
     ## # … with 62 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
     ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable name ¹​c_effect
@@ -116,16 +116,16 @@ seurat_obj |>
     ## # A tibble: 60 × 18
     ##    cell_group     param…¹ factor c_lower c_eff…² c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>          <chr>   <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature     typeca… type    -2.01   -1.57   -1.12  0       0            NA
-    ##  2 B immature     typehe… type     1.12    1.57    2.01  0       0            NA
-    ##  3 B mem          typeca… type    -2.31   -1.71   -1.11  0       0            NA
-    ##  4 B mem          typehe… type     1.11    1.71    2.31  0       0            NA
-    ##  5 CD4 cm high c… typeca… type     0.940   1.86    3.00  0       0            NA
-    ##  6 CD4 cm high c… typehe… type    -3.00   -1.86   -0.940 0       0            NA
-    ##  7 CD4 cm riboso… typeca… type     0.571   1.24    1.97  1.50e-3 3.89e-4      NA
-    ##  8 CD4 cm riboso… typehe… type    -1.97   -1.24   -0.571 1.50e-3 3.89e-4      NA
-    ##  9 CD4 cm S100A4  typeca… type    -1.24   -0.882  -0.540 2.50e-4 5.00e-5      NA
-    ## 10 CD4 cm S100A4  typehe… type     0.540   0.882   1.24  2.50e-4 5.00e-5      NA
+    ##  1 B immature     typeca… type    -2.03   -1.58   -1.12  0       0            NA
+    ##  2 B immature     typehe… type     1.12    1.58    2.03  0       0            NA
+    ##  3 B mem          typeca… type    -2.51   -1.93   -1.34  0       0            NA
+    ##  4 B mem          typehe… type     1.34    1.93    2.51  0       0            NA
+    ##  5 CD4 cm high c… typeca… type     0.952   1.86    2.93  2.50e-4 5.00e-5      NA
+    ##  6 CD4 cm high c… typehe… type    -2.93   -1.86   -0.952 2.50e-4 5.00e-5      NA
+    ##  7 CD4 cm riboso… typeca… type     0.553   1.25    2.00  1.00e-3 2.81e-4      NA
+    ##  8 CD4 cm riboso… typehe… type    -2.00   -1.25   -0.553 1.00e-3 2.81e-4      NA
+    ##  9 CD4 cm S100A4  typeca… type    -1.27   -0.886  -0.540 0       0            NA
+    ## 10 CD4 cm S100A4  typehe… type     0.540   0.886   1.27  0       0            NA
     ## # … with 50 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
     ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable names
@@ -182,6 +182,10 @@ loo_compare(
 )
 ```
 
+    ##        elpd_diff se_diff
+    ## model1   0.0       0.0  
+    ## model2 -79.9      11.3
+
 ## Differential variability, binary factor
 
 We can model the cell-group variability also dependent on the type, and
@@ -205,16 +209,16 @@ res
     ## # A tibble: 60 × 18
     ##    cell_group     param…¹ factor c_lower c_eff…² c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>          <chr>   <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature     (Inter… <NA>     0.582   0.965   1.33  5.00e-4 5.36e-5   5635.
-    ##  2 B immature     typehe… type     0.967   1.49    2.00  0       0         3507.
-    ##  3 B mem          (Inter… <NA>    -1.65   -1.08   -0.467 3.00e-3 4.03e-4   3873.
-    ##  4 B mem          typehe… type     1.24    2.00    2.75  2.50e-4 8.33e-5   3301.
-    ##  5 CD4 cm high c… (Inter… <NA>    -0.831  -0.390   0.103 2.08e-1 3.12e-2   4146.
-    ##  6 CD4 cm high c… typehe… type    -3.19   -1.39    1.51  1.86e-1 4.81e-2   2131.
-    ##  7 CD4 cm riboso… (Inter… <NA>     0.166   0.491   0.850 4.10e-2 2.82e-3   3992.
-    ##  8 CD4 cm riboso… typehe… type    -2.45   -1.74   -0.841 2.25e-3 6.25e-4   4160.
-    ##  9 CD4 cm S100A4  (Inter… <NA>     1.76    2.01    2.26  0       0         6267.
-    ## 10 CD4 cm S100A4  typehe… type     0.337   0.743   1.16  2.50e-3 1.00e-3   3289.
+    ##  1 B immature     (Inter… <NA>     0.599   0.967   1.33  2.50e-4 1.92e-5   5475.
+    ##  2 B immature     typehe… type     0.972   1.48    2.01  0       0         3797.
+    ##  3 B mem          (Inter… <NA>    -1.65   -1.08   -0.485 3.00e-3 2.50e-4   3272.
+    ##  4 B mem          typehe… type     1.29    1.99    2.76  0       0         2681.
+    ##  5 CD4 cm high c… (Inter… <NA>    -0.829  -0.389   0.107 2.07e-1 2.40e-2   4299.
+    ##  6 CD4 cm high c… typehe… type    -3.24   -1.39    1.47  1.98e-1 4.96e-2   2844.
+    ##  7 CD4 cm riboso… (Inter… <NA>     0.158   0.499   0.857 4.00e-2 2.76e-3   3827.
+    ##  8 CD4 cm riboso… typehe… type    -2.47   -1.75   -0.825 1.75e-3 6.00e-4   2875.
+    ##  9 CD4 cm S100A4  (Inter… <NA>     1.76    2.01    2.26  0       0         6613.
+    ## 10 CD4 cm S100A4  typehe… type     0.364   0.739   1.15  2.50e-3 9.17e-4   4323.
     ## # … with 50 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
     ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable names

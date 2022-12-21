@@ -106,7 +106,7 @@ This is achieved through model comparison with `loo`. In the following example, 
 If `elpd_diff` is away from zero of \> 5 `se_diff` difference of 5, we are confident that a model is better than the other [reference](https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola).
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model one, the one with factor association, is better than model two.
 
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(loo)
 
 # Fit first model
