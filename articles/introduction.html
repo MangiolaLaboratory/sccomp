@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.5</span>
       </span>
     </div>
 
@@ -79,7 +79,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2022-12-02</h4>
+            <h4 data-toc-skip class="date">2022-12-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/HEAD/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="hidden name"><code>introduction.Rmd</code></div>
@@ -92,268 +92,302 @@ Mangiola</h4>
 <p><a href="https://www.tidyverse.org/lifecycle/#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a> <a href="https://github.com/stemangiola/tidyseurat/actions/" class="external-link"><img src="https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg" alt="R build status"></a> <!-- badges: end --></p>
 <div class="section level2">
 <h2 id="section">
-<img src="figures/logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
+<img src="inst/logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
 </h2>
-<p>Cell omics such as single-cell genomics, proteomics and microbiomics
-allow the characterisation of tissue and microbial community
-composition, which can be compared between conditions to identify
-biological drivers. This strategy has been critical to unveiling markers
-of disease progression such as cancer and pathogen infection. For cell
-omic data, no method for differential variability analysis exists, and
-methods for differential composition analysis only take a few
-fundamental data properties into account. Here we introduce sccomp, a
-generalised method for differential composition and variability analyses
-able to jointly model data count distribution, compositionality,
-group-specific variability and proportion mean-variability association,
-with awareness against outliers. Sccomp is an extensive analysis
-framework that allows realistic data simulation and cross-study
-knowledge transfer. Here, we demonstrate that mean-variability
-association is ubiquitous across technologies showing the inadequacy of
-the very popular Dirichlet-multinomial modelling and provide mandatory
-principles for differential variability analysis. We show that sccomp
-accurately fits experimental data, with a 50% incremental improvement
-over state-of-the-art algorithms. Using sccomp, we identified novel
-differential constraints and composition in the microenvironment of
-primary breast cancer.</p>
+<p>Sccomp is a generalised method for differential composition and
+variability analyses.</p>
+<div class="section level3">
+<h3 id="characteristics">Characteristics<a class="anchor" aria-label="anchor" href="#characteristics"></a>
+</h3>
+<ul>
+<li>Modelling counts</li>
+<li>Modelling proportionality</li>
+<li>Modelling cell-type specific variability</li>
+<li>Cell-type information share for variability shrinkage</li>
+<li>Testing differential variability</li>
+<li>Probabilistic outlier identification</li>
+<li>Cross-dataset learning (hyperpriors).</li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<div class="section level3">
-<h3 id="simple-suggested-for-single-cell-and-cytof-analyses">(simple) Suggested for single-cell and CyTOF analyses<a class="anchor" aria-label="anchor" href="#simple-suggested-for-single-cell-and-cytof-analyses"></a>
-</h3>
 <p><strong>Bioconductor</strong></p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>   <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
-<span> <span class="op">}</span></span>
-<span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"sccomp"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"sccomp"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Github</strong></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"stemangiola/sccomp"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="more-complex-and-efficient-until-further-optimisation-of-the-default-installation-suggested-for-microbiomics">(more complex and efficient, until further optimisation of the
-default installation) Suggested for microbiomics<a class="anchor" aria-label="anchor" href="#more-complex-and-efficient-until-further-optimisation-of-the-default-installation-suggested-for-microbiomics"></a>
-</h3>
-<p><strong>Github</strong></p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"cmdstanr"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://mc-stan.org/r-packages/"</span>, <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"repos"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu">check_cmdstan_toolchain</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">install_cmdstan</span><span class="op">(</span>cores <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co"># Then, check the correct cmdstanr installation here</span></span>
-<span><span class="co"># https://mc-stan.org/cmdstanr/articles/cmdstanr.html</span></span>
-<span></span>
-<span><span class="co"># Then install sccomp with the cmdstanr branch</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"stemangiola/sccomp@cmdstanr"</span><span class="op">)</span></span></code></pre></div>
-</div>
 </div>
 <div class="section level2">
 <h2 id="analysis">Analysis<a class="anchor" aria-label="anchor" href="#analysis"></a>
 </h2>
 <p><code>sccomp</code> can model changes in composition and variability.
-Normally the furmula for variability is either <code>~1</code>, which
-assumes that the cell-group variability is independent on any covariate,
+By default, the formula for variability is either <code>~1</code>, which
+assumes that the cell-group variability is independent of any covariate
 or <code>~ factor_of_interest</code>, which assumes that the model is
-dependent on the factor of interest only. However, more complex models
-for variability are possible, is the sample size is large. In any case
-the model for variability must be a subset of the model for
-composition.</p>
+dependent on the factor of interest only. The variability model must be
+a subset of the model for composition.</p>
 <div class="section level3">
-<h3 id="from-seurat-object">From Seurat Object<a class="anchor" aria-label="anchor" href="#from-seurat-object"></a>
+<h3 id="binary-factor">Binary factor<a class="anchor" aria-label="anchor" href="#binary-factor"></a>
 </h3>
+<div class="section level4">
+<h4 id="from-seurat-singlecellexperiment-metadata-objects">From Seurat, SingleCellExperiment, metadata objects<a class="anchor" aria-label="anchor" href="#from-seurat-singlecellexperiment-metadata-objects"></a>
+</h4>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">single_cell_object</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
+<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
+<span>    .sample <span class="op">=</span>  <span class="va">sample</span>, </span>
+<span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>, </span>
+<span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    cores <span class="op">=</span> <span class="fl">1</span> </span>
+<span>  <span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="from-counts">From counts<a class="anchor" aria-label="anchor" href="#from-counts"></a>
+</h4>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span></span>
-<span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
-<span>   formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
-<span>    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, </span>
-<span>    <span class="va">sample</span>, </span>
-<span>    <span class="va">cell_group</span> </span>
-<span>  <span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="from-singlecellexperiment-object">From SingleCellExperiment Object<a class="anchor" aria-label="anchor" href="#from-singlecellexperiment-object"></a>
-</h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span></span>
-<span>  <span class="va">sce_obj</span> <span class="op">|&gt;</span></span>
+<code class="sourceCode R"><span><span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
-<span>    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, </span>
-<span>    <span class="va">sample</span>, </span>
-<span>    <span class="va">cell_group</span> </span>
-<span>  <span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="from-data-frame">From data.frame<a class="anchor" aria-label="anchor" href="#from-data-frame"></a>
-</h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span></span>
-<span>  <span class="va">seurat_obj</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span></span>
-<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
-<span>    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, </span>
-<span>    <span class="va">sample</span>, </span>
-<span>    <span class="va">cell_group</span> </span>
-<span>  <span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="from-counts">From counts<a class="anchor" aria-label="anchor" href="#from-counts"></a>
-</h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span></span>
-<span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
-<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
-<span>    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, </span>
 <span>    .sample <span class="op">=</span> <span class="va">sample</span>,</span>
 <span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>,</span>
-<span>    .count <span class="op">=</span> <span class="va">count</span></span>
+<span>    .count <span class="op">=</span> <span class="va">count</span>, </span>
+<span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    cores <span class="op">=</span> <span class="fl">1</span> </span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></span></code></pre>
-<pre><code><span><span class="co">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></span></code></pre>
-<pre><code><span><span class="co">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span></code></pre>
-<pre><code><span><span class="co">## sccomp says: the composition design matrix has columns: (Intercept), typecancer</span></span></code></pre>
-<pre><code><span><span class="co">## sccomp says: the variability design matrix has columns: (Intercept)</span></span></code></pre>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 72 × 14</span></span></span>
-<span><span class="co">##    cell_group parameter covar…¹ c_lower c_eff…²  c_upper   c_pH0   c_FDR v_lower</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Interce… <span style="color: #BB0000;">NA</span>       1.07     1.25   1.43    0       0   <span style="color: #949494;"> </span>     -<span style="color: #BB0000;">5.88</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecanc… type    -<span style="color: #BB0000;">1.09</span>    -<span style="color: #BB0000;">0.808</span> -<span style="color: #BB0000;">0.540</span>   0       0   <span style="color: #949494;"> </span>     <span style="color: #BB0000;">NA</span>   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Interce… <span style="color: #BB0000;">NA</span>       0.613    0.844  1.07    0       0   <span style="color: #949494;"> </span>     -<span style="color: #BB0000;">5.72</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecanc… type    -<span style="color: #BB0000;">0.997</span>   -<span style="color: #BB0000;">0.650</span> -<span style="color: #BB0000;">0.292</span>   0.006<span style="text-decoration: underline;">00</span> 9.62<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   <span style="color: #BB0000;">NA</span>   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.342</span>   -<span style="color: #BB0000;">0.169</span>  0.009<span style="text-decoration: underline;">12</span> 0.635   4.38<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   -<span style="color: #BB0000;">6.93</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecanc… type    -<span style="color: #BB0000;">0.375</span>   -<span style="color: #BB0000;">0.126</span>  0.130   0.716   1.56<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   <span style="color: #BB0000;">NA</span>   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.11</span>    -<span style="color: #BB0000;">0.936</span> -<span style="color: #BB0000;">0.763</span>   0       0   <span style="color: #949494;"> </span>     -<span style="color: #BB0000;">7.57</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecanc… type    -<span style="color: #BB0000;">0.615</span>   -<span style="color: #BB0000;">0.337</span> -<span style="color: #BB0000;">0.041</span><span style="color: #BB0000; text-decoration: underline;">6</span>  0.183   3.55<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   <span style="color: #BB0000;">NA</span>   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Interce… <span style="color: #BB0000;">NA</span>       0.257    0.389  0.523   0.004<span style="text-decoration: underline;">00</span> 3.33<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   -<span style="color: #BB0000;">6.75</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecanc… type     0.017<span style="text-decoration: underline;">3</span>   0.202  0.385   0.494   1.03<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   <span style="color: #BB0000;">NA</span>   </span></span>
-<span><span class="co">## <span style="color: #949494;"># … with 62 more rows, 5 more variables: v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, count_data &lt;list&gt;, and abbreviated variable names</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   ¹​covariate, ²​c_effect</span></span></span></code></pre>
-<p>Of the output table, the estimate columns startwith the prefix
-<code>c_</code> indicate <code>composition</code>.</p>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 72 × 18</span></span></span>
+<span><span class="co">##    cell_group parameter   factor c_lower c_eff…¹ c_upper   c_pH0   c_FDR c_n_eff</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercept) <span style="color: #BB0000;">NA</span>       0.869   1.06   1.24   0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>     <span style="text-decoration: underline;">4</span>016.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer  type    -<span style="color: #BB0000;">1.23</span>   -<span style="color: #BB0000;">0.870</span> -<span style="color: #BB0000;">0.525</span>  5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 1.25<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   <span style="text-decoration: underline;">2</span>917.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercept) <span style="color: #BB0000;">NA</span>       0.417   0.694  0.961  5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>   <span style="text-decoration: underline;">5</span>010.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer  type    -<span style="color: #BB0000;">1.21</span>   -<span style="color: #BB0000;">0.767</span> -<span style="color: #BB0000;">0.355</span>  4.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span> 7.78<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   <span style="text-decoration: underline;">3</span>274.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercept) <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.634</span>  -<span style="color: #BB0000;">0.380</span> -<span style="color: #BB0000;">0.126</span>  7.75<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 4.24<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>   <span style="text-decoration: underline;">4</span>951.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer  type    -<span style="color: #BB0000;">0.623</span>  -<span style="color: #BB0000;">0.230</span>  0.123  4.35<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span> 1.26<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   <span style="text-decoration: underline;">4</span>219.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercept) <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.28</span>   -<span style="color: #BB0000;">1.01</span>  -<span style="color: #BB0000;">0.755</span>  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>     <span style="text-decoration: underline;">4</span>560.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer  type    -<span style="color: #BB0000;">0.746</span>  -<span style="color: #BB0000;">0.347</span>  0.051<span style="text-decoration: underline;">7</span> 2.30<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span> 5.04<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   <span style="text-decoration: underline;">3</span>350.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercept) <span style="color: #BB0000;">NA</span>       0.134   0.325  0.514  9.9 <span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 1.11<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   <span style="text-decoration: underline;">3</span>486.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer  type    -<span style="color: #BB0000;">0.111</span>   0.157  0.418  6.21<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span> 2.19<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   <span style="text-decoration: underline;">3</span>509.</span></span>
+<span><span class="co">## <span style="color: #949494;"># … with 62 more rows, 9 more variables: c_R_k_hat &lt;dbl&gt;, v_lower &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, v_n_eff &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   v_R_k_hat &lt;dbl&gt;, count_data &lt;list&gt;, and abbreviated variable name ¹​c_effect</span></span></span></code></pre>
+<p>Of the output table, the estimate columns start with the prefix
+<code>c_</code> indicate <code>composition</code>, or with
+<code>v_</code> indicate <code>variability</code> (when
+formula_variability is set).</p>
+</div>
 </div>
 <div class="section level3">
-<h3 id="suggested-settings-for-single-cell-rna-sequencing">Suggested settings for single-cell RNA sequencing<a class="anchor" aria-label="anchor" href="#suggested-settings-for-single-cell-rna-sequencing"></a>
+<h3 id="contrasts">Contrasts<a class="anchor" aria-label="anchor" href="#contrasts"></a>
 </h3>
-<p>We reccommend to set
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
+<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">type</span>, </span>
+<span>    contrasts <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"typecancer - typehealthy"</span>, <span class="st">"typehealthy - typecancer"</span><span class="op">)</span>,</span>
+<span>    .sample <span class="op">=</span> <span class="va">sample</span>,</span>
+<span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>, </span>
+<span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    cores <span class="op">=</span> <span class="fl">1</span> </span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 60 × 18</span></span></span>
+<span><span class="co">##    cell_group     param…¹ factor c_lower c_eff…² c_upper   c_pH0   c_FDR c_n_eff</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature     typeca… type    -<span style="color: #BB0000;">2.04</span>   -<span style="color: #BB0000;">1.60</span>   -<span style="color: #BB0000;">1.17</span>  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature     typehe… type     1.17    1.60    2.04  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem          typeca… type    -<span style="color: #BB0000;">2.55</span>   -<span style="color: #BB0000;">1.94</span>   -<span style="color: #BB0000;">1.31</span>  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem          typehe… type     1.31    1.94    2.55  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high c… typeca… type     0.966   1.87    2.92  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high c… typehe… type    -<span style="color: #BB0000;">2.92</span>   -<span style="color: #BB0000;">1.87</span>   -<span style="color: #BB0000;">0.966</span> 0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm riboso… typeca… type     0.551   1.24    1.95  7.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 1.79<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm riboso… typehe… type    -<span style="color: #BB0000;">1.95</span>   -<span style="color: #BB0000;">1.24</span>   -<span style="color: #BB0000;">0.551</span> 7.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 1.79<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4  typeca… type    -<span style="color: #BB0000;">1.29</span>   -<span style="color: #BB0000;">0.911</span>  -<span style="color: #BB0000;">0.560</span> 0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4  typehe… type     0.560   0.911   1.29  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #949494;"># … with 50 more rows, 9 more variables: c_R_k_hat &lt;dbl&gt;, v_lower &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, v_n_eff &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   v_R_k_hat &lt;dbl&gt;, count_data &lt;list&gt;, and abbreviated variable names</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   ¹​parameter, ²​c_effect</span></span></span></code></pre>
+</div>
+<div class="section level3">
+<h3 id="categorical-factor-e-g--bayesian-anova">Categorical factor (e.g. Bayesian ANOVA)<a class="anchor" aria-label="anchor" href="#categorical-factor-e-g--bayesian-anova"></a>
+</h3>
+<p>This is achieved through model comparison with <code>loo</code>. In
+the following example, the model with association with factors better
+fits the data compared to the baseline model with no factor association.
+For comparisons <code>check_outliers</code> must be set to FALSE as the
+leave-one-out must work with the same amount of data, while outlier
+elimination does not guarantee it.</p>
+<p>If <code>elpd_diff</code> is away from zero of &gt; 5
+<code>se_diff</code> difference of 5, we are confident that a model is
+better than the other <a href="https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola" class="external-link">reference</a>.
+In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model
+one, the one with factor association, is better than model two.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/loo/" class="external-link">loo</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit first model</span></span>
+<span><span class="va">model_with_factor_association</span> <span class="op">=</span> </span>
+<span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
+<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
+<span>    .sample <span class="op">=</span>  <span class="va">sample</span>, </span>
+<span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>, </span>
+<span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>, </span>
+<span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    cores <span class="op">=</span> <span class="fl">1</span>, </span>
+<span>    enable_loo <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit second model</span></span>
+<span><span class="va">model_without_association</span> <span class="op">=</span> </span>
+<span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
+<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, </span>
+<span>    .sample <span class="op">=</span>  <span class="va">sample</span>, </span>
+<span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>, </span>
+<span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>, </span>
+<span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    cores <span class="op">=</span> <span class="fl">1</span> , </span>
+<span>    enable_loo <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Compare models</span></span>
+<span><span class="fu"><a href="https://mc-stan.org/loo/reference/loo_compare.html" class="external-link">loo_compare</a></span><span class="op">(</span></span>
+<span>  <span class="va">model_with_factor_association</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://mc-stan.org/loo/reference/loo.html" class="external-link">loo</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="va">model_without_association</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://mc-stan.org/loo/reference/loo.html" class="external-link">loo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="differential-variability-binary-factor">Differential variability, binary factor<a class="anchor" aria-label="anchor" href="#differential-variability-binary-factor"></a>
+</h3>
+<p>We can model the cell-group variability also dependent on the type,
+and so test differences in variability</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
+<span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
+<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
+<span>    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>,</span>
+<span>    .sample <span class="op">=</span> <span class="va">sample</span>,</span>
+<span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>,</span>
+<span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    cores <span class="op">=</span> <span class="fl">1</span> </span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">res</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 60 × 18</span></span></span>
+<span><span class="co">##    cell_group     param…¹ factor c_lower c_eff…² c_upper   c_pH0   c_FDR c_n_eff</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature     (Inter… <span style="color: #BB0000;">NA</span>       0.583   0.951  1.33   0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>     <span style="text-decoration: underline;">5</span>780.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature     typehe… type     1.00    1.49   2.01   0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>     <span style="text-decoration: underline;">4</span>263.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem          (Inter… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.31</span>   -<span style="color: #BB0000;">0.755</span> -<span style="color: #BB0000;">0.152</span>  3.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 2.47<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>   <span style="text-decoration: underline;">3</span>673.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem          typehe… type     0.896   1.67   2.43   5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 1.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   <span style="text-decoration: underline;">3</span>774.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high c… (Inter… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.867</span>  -<span style="color: #BB0000;">0.389</span>  0.094<span style="text-decoration: underline;">8</span> 2.10<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span> 2.42<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   <span style="text-decoration: underline;">4</span>446.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high c… typehe… type    -<span style="color: #BB0000;">3.20</span>   -<span style="color: #BB0000;">1.36</span>   1.32   1.84<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span> 4.57<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   <span style="text-decoration: underline;">2</span>755.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm riboso… (Inter… <span style="color: #BB0000;">NA</span>       0.142   0.485  0.840  4.85<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 6.39<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>   <span style="text-decoration: underline;">4</span>974.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm riboso… typehe… type    -<span style="color: #BB0000;">2.46</span>   -<span style="color: #BB0000;">1.72</span>  -<span style="color: #BB0000;">0.768</span>  1.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span> 6.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   <span style="text-decoration: underline;">2</span>311.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4  (Inter… <span style="color: #BB0000;">NA</span>       1.74    2.00   2.23   0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>     <span style="text-decoration: underline;">5</span>473.</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4  typehe… type     0.359   0.755  1.16   3.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span> 1.04<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>   <span style="text-decoration: underline;">3</span>150.</span></span>
+<span><span class="co">## <span style="color: #949494;"># … with 50 more rows, 9 more variables: c_R_k_hat &lt;dbl&gt;, v_lower &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, v_n_eff &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   v_R_k_hat &lt;dbl&gt;, count_data &lt;list&gt;, and abbreviated variable names</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   ¹​parameter, ²​c_effect</span></span></span></code></pre>
+</div>
+</div>
+<div class="section level2">
+<h2 id="suggested-settings">Suggested settings<a class="anchor" aria-label="anchor" href="#suggested-settings"></a>
+</h2>
+<div class="section level3">
+<h3 id="for-single-cell-rna-sequencing">For single-cell RNA sequencing<a class="anchor" aria-label="anchor" href="#for-single-cell-rna-sequencing"></a>
+</h3>
+<p>We recommend setting
 <code>bimodal_mean_variability_association  = TRUE</code>. The
 bimodality of the mean-variability association can be confirmed from the
 plots$credible_intervals_2D (see below).</p>
 </div>
 <div class="section level3">
-<h3 id="suggested-settings-for-cytof-and-microbiome-data">Suggested settings for CyTOF and microbiome data<a class="anchor" aria-label="anchor" href="#suggested-settings-for-cytof-and-microbiome-data"></a>
+<h3 id="for-cytof-and-microbiome-data">For CyTOF and microbiome data<a class="anchor" aria-label="anchor" href="#for-cytof-and-microbiome-data"></a>
 </h3>
-<p>We reccommend to set
+<p>We recommend setting
 <code>bimodal_mean_variability_association  = FALSE</code>
 (Default).</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a>
+</h2>
 <div class="section level3">
-<h3 id="visualise-data-inference">Visualise data + inference<a class="anchor" aria-label="anchor" href="#visualise-data-inference"></a>
+<h3 id="summary-plots">Summary plots<a class="anchor" aria-label="anchor" href="#summary-plots"></a>
 </h3>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="../reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span> </span></code></pre></div>
-<pre><code><span><span class="co">## Joining, by = c("sample", "cell_group")</span></span>
+<pre><code><span><span class="co">## Joining, by = c("cell_group", "sample")</span></span>
 <span><span class="co">## Joining, by = c("cell_group", "type")</span></span></code></pre>
-<p>Plot of group proportion, faceted by groups. The blue boxplots
-represent the posterior predictive check. If the model is likely be
-descriptively adequate to the data, the blue boxplot should roughly
-overlay with the black boxplot, which represent the observed data. The
-outliers are coloured in red. A boxplot will be returned for every
-(discrete) covariates present in <code>formula_composition</code>. The
-color coding represent the significant associations for composition
+<pre><code><span><span class="co">## Warning: Expected 2 pieces. Additional pieces discarded in 4 rows [6, 7, 13,</span></span>
+<span><span class="co">## 14].</span></span></code></pre>
+<p>A plot of group proportion, faceted by groups. The blue boxplots
+represent the posterior predictive check. If the model is likely to be
+descriptively adequate to the data, the blue box plot should roughly
+overlay with the black box plot, which represents the observed data. The
+outliers are coloured in red. A box plot will be returned for every
+(discrete) covariate present in <code>formula_composition</code>. The
+colour coding represents the significant associations for composition
 and/or variability.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">boxplot</span></span></code></pre></div>
-<p>Plot of estimates of differential composition (c_) on the x axis, and
-differential variability (v_) on the y axis. The error bars represent
-95% credible intervals. The dashed lines represent the minimal effect
-that the hypothesis test is based on. An effect is labelled as
+<pre><code><span><span class="co">## [[1]]</span></span></code></pre>
+<p><img src="introduction_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
+<p>A plot of estimates of differential composition (c_) on the x-axis
+and differential variability (v_) on the y-axis. The error bars
+represent 95% credible intervals. The dashed lines represent the minimal
+effect that the hypothesis test is based on. An effect is labelled as
 significant if bigger than the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-12-1.png" width="700"></p>
+<p><img src="introduction_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="visualisation-of-the-mcmc-chains-from-the-posterior-distribution">Visualisation of the MCMC chains from the posterior
 distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mcmc-chains-from-the-posterior-distribution"></a>
 </h3>
 <p>It is possible to directly evaluate the posterior distribution. In
-this example we plot the Monte Carlo chain for the slope parameter of
-the first cell type. We can see that has converged and is negative with
-probability 1.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+this example, we plot the Monte Carlo chain for the slope parameter of
+the first cell type. We can see that it has converged and is negative
+with probability 1.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">rstan</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html" class="external-link">traceplot</a></span><span class="op">(</span><span class="st">"beta[2,1]"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-13-1.png" width="700"></p>
-</div>
-<div class="section level3">
-<h3 id="differential-variability">Differential variability<a class="anchor" aria-label="anchor" href="#differential-variability"></a>
-</h3>
-<p>We can model the cell-group variability also dependent on type, and
-so test differences in variability</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
-<span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span> </span>
-<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
-<span>    formula_variability <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
-<span>    .sample <span class="op">=</span> <span class="va">sample</span>,</span>
-<span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>,</span>
-<span>    .count <span class="op">=</span> <span class="va">count</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## sccomp says: outlier identification first pass - step 1/3 [ETA: ~20s]</span></span></code></pre>
-<pre><code><span><span class="co">## sccomp says: outlier identification second pass - step 2/3 [ETA: ~60s]</span></span></code></pre>
-<pre><code><span><span class="co">## sccomp says: outlier-free model fitting - step 3/3 [ETA: ~20s]</span></span></code></pre>
-<pre><code><span><span class="co">## sccomp says: the composition design matrix has columns: (Intercept), typecancer</span></span></code></pre>
-<pre><code><span><span class="co">## sccomp says: the variability design matrix has columns: (Intercept), typecancer</span></span></code></pre>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 72 × 14</span></span></span>
-<span><span class="co">##    cell_group parameter  covar…¹ c_lower c_eff…² c_upper   c_pH0   c_FDR v_lower</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercep… <span style="color: #BB0000;">NA</span>       1.15     1.30   1.45   0       0   <span style="color: #949494;"> </span>    -<span style="color: #BB0000;">5.94</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer type    -<span style="color: #BB0000;">1.12</span>    -<span style="color: #BB0000;">0.895</span> -<span style="color: #BB0000;">0.662</span>  0       0   <span style="color: #949494;"> </span>    -<span style="color: #BB0000;">1.25</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercep… <span style="color: #BB0000;">NA</span>       0.609    0.821  1.04   0       0   <span style="color: #949494;"> </span>    -<span style="color: #BB0000;">6.35</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer type    -<span style="color: #BB0000;">1.06</span>    -<span style="color: #BB0000;">0.657</span> -<span style="color: #BB0000;">0.284</span>  0.009<span style="text-decoration: underline;">00</span> 1.41<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>   0.292</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercep… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.506</span>   -<span style="color: #BB0000;">0.323</span> -<span style="color: #BB0000;">0.137</span>  0.099   4.94<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>  -<span style="color: #BB0000;">7.21</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer type    -<span style="color: #BB0000;">0.513</span>   -<span style="color: #BB0000;">0.237</span>  0.057<span style="text-decoration: underline;">6</span> 0.394   8.23<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>  -<span style="color: #BB0000;">0.716</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercep… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.951</span>   -<span style="color: #BB0000;">0.793</span> -<span style="color: #BB0000;">0.625</span>  0       0   <span style="color: #949494;"> </span>    -<span style="color: #BB0000;">7.29</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer type    -<span style="color: #BB0000;">0.517</span>   -<span style="color: #BB0000;">0.280</span> -<span style="color: #BB0000;">0.050</span><span style="color: #BB0000; text-decoration: underline;">6</span> 0.257   4.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>  -<span style="color: #BB0000;">1.74</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercep… <span style="color: #BB0000;">NA</span>       0.236    0.384  0.535  0.007<span style="text-decoration: underline;">50</span> 6.02<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>  -<span style="color: #BB0000;">6.89</span> </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer type    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">8</span>   0.157  0.342  0.669   2.02<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>  -<span style="color: #BB0000;">0.945</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># … with 62 more rows, 5 more variables: v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, count_data &lt;list&gt;, and abbreviated variable names</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   ¹​covariate, ²​c_effect</span></span></span></code></pre>
+<p><img src="introduction_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
 <p>Plot 1D significance plot</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="fu"><a href="../reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Joining, by = c("sample", "cell_group")</span></span>
+<pre><code><span><span class="co">## Joining, by = c("cell_group", "sample")</span></span>
 <span><span class="co">## Joining, by = c("cell_group", "type")</span></span></code></pre>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<pre><code><span><span class="co">## Warning: Expected 2 pieces. Additional pieces discarded in 4 rows [6, 7, 13,</span></span>
+<span><span class="co">## 14].</span></span></code></pre>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-15-1.png" width="700"></p>
+<p><img src="introduction_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
 <p>Plot 2D significance plot. Data points are cell groups. Error bars
 are the 95% credible interval. The dashed lines represent the default
 threshold fold change for which the probabilities (c_pH0, v_pH0) are
-calculated. pH0 of 0 represent the rejection of the null hypothesis,
-that no effect is observed.</p>
+calculated. pH0 of 0 represent the rejection of the null hypothesis that
+no effect is observed.</p>
 <p>This plot is provided only if differential variability has been
 tested. The differential variability estimates are reliable only if the
 linear association between mean and variability for
 <code>(intercept)</code> (left-hand side facet) is satisfied. A
-scatterplot (beside the Intercept) is provided for each of the
-categories of interest. The for each category of interest, the
-composition and variability effects should be generally
-uncorrelated.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+scatterplot (besides the Intercept) is provided for each category of
+interest. The for each category of interest, the composition and
+variability effects should be generally uncorrelated.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-16-1.png" width="700"></p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<p><img src="introduction_files/figure-html/unnamed-chunk-14-1.png" width="700"></p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.2.2 (2022-10-31)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
@@ -376,56 +410,56 @@ uncorrelated.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
 <span><span class="co">## [1] rstan_2.21.7         StanHeaders_2.21.0-7 tidyr_1.2.1         </span></span>
-<span><span class="co">## [4] forcats_0.5.2        ggplot2_3.4.0        sccomp_1.3.4        </span></span>
+<span><span class="co">## [4] forcats_0.5.2        ggplot2_3.4.0        sccomp_1.3.5        </span></span>
 <span><span class="co">## [7] dplyr_1.0.10         BiocStyle_2.26.0    </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##   [1] bitops_1.0-7                matrixStats_0.63.0         </span></span>
 <span><span class="co">##   [3] fs_1.5.2                    RColorBrewer_1.1-3         </span></span>
-<span><span class="co">##   [5] rprojroot_2.0.3             GenomeInfoDb_1.34.3        </span></span>
-<span><span class="co">##   [7] tools_4.2.2                 bslib_0.4.1                </span></span>
+<span><span class="co">##   [5] rprojroot_2.0.3             GenomeInfoDb_1.34.4        </span></span>
+<span><span class="co">##   [7] tools_4.2.2                 bslib_0.4.2                </span></span>
 <span><span class="co">##   [9] utf8_1.2.2                  R6_2.5.1                   </span></span>
 <span><span class="co">##  [11] BiocGenerics_0.44.0         colorspace_2.0-3           </span></span>
 <span><span class="co">##  [13] withr_2.5.0                 sp_1.5-1                   </span></span>
 <span><span class="co">##  [15] gridExtra_2.3               prettyunits_1.1.1          </span></span>
 <span><span class="co">##  [17] processx_3.8.0              tidyselect_1.2.0           </span></span>
-<span><span class="co">##  [19] compiler_4.2.2              progressr_0.11.0           </span></span>
+<span><span class="co">##  [19] compiler_4.2.2              progressr_0.12.0           </span></span>
 <span><span class="co">##  [21] textshaping_0.3.6           cli_3.4.1                  </span></span>
 <span><span class="co">##  [23] Biobase_2.58.0              desc_1.4.2                 </span></span>
 <span><span class="co">##  [25] DelayedArray_0.24.0         labeling_0.4.2             </span></span>
-<span><span class="co">##  [27] bookdown_0.30               sass_0.4.4                 </span></span>
+<span><span class="co">##  [27] bookdown_0.31               sass_0.4.4                 </span></span>
 <span><span class="co">##  [29] scales_1.2.1                readr_2.1.3                </span></span>
-<span><span class="co">##  [31] callr_3.7.3                 pkgdown_2.0.6              </span></span>
-<span><span class="co">##  [33] systemfonts_1.0.4           stringr_1.4.1              </span></span>
-<span><span class="co">##  [35] digest_0.6.30               rmarkdown_2.18             </span></span>
+<span><span class="co">##  [31] callr_3.7.3                 pkgdown_2.0.7              </span></span>
+<span><span class="co">##  [33] systemfonts_1.0.4           stringr_1.5.0              </span></span>
+<span><span class="co">##  [35] digest_0.6.31               rmarkdown_2.19             </span></span>
 <span><span class="co">##  [37] XVector_0.38.0              pkgconfig_2.0.3            </span></span>
-<span><span class="co">##  [39] htmltools_0.5.3             parallelly_1.32.1          </span></span>
+<span><span class="co">##  [39] htmltools_0.5.4             parallelly_1.33.0          </span></span>
 <span><span class="co">##  [41] MatrixGenerics_1.10.0       highr_0.9                  </span></span>
 <span><span class="co">##  [43] fastmap_1.1.0               rlang_1.0.6                </span></span>
 <span><span class="co">##  [45] farver_2.1.1                jquerylib_0.1.4            </span></span>
-<span><span class="co">##  [47] generics_0.1.3              jsonlite_1.8.3             </span></span>
+<span><span class="co">##  [47] generics_0.1.3              jsonlite_1.8.4             </span></span>
 <span><span class="co">##  [49] inline_0.3.19               RCurl_1.98-1.9             </span></span>
 <span><span class="co">##  [51] magrittr_2.0.3              GenomeInfoDbData_1.2.9     </span></span>
 <span><span class="co">##  [53] loo_2.5.1                   patchwork_1.1.2            </span></span>
 <span><span class="co">##  [55] Matrix_1.5-3                Rcpp_1.0.9                 </span></span>
-<span><span class="co">##  [57] munsell_0.5.0               S4Vectors_0.36.0           </span></span>
+<span><span class="co">##  [57] munsell_0.5.0               S4Vectors_0.36.1           </span></span>
 <span><span class="co">##  [59] fansi_1.0.3                 lifecycle_1.0.3            </span></span>
 <span><span class="co">##  [61] stringi_1.7.8               yaml_2.3.6                 </span></span>
 <span><span class="co">##  [63] SummarizedExperiment_1.28.0 zlibbioc_1.44.0            </span></span>
 <span><span class="co">##  [65] pkgbuild_1.4.0              grid_4.2.2                 </span></span>
-<span><span class="co">##  [67] parallel_4.2.2              listenv_0.8.0              </span></span>
+<span><span class="co">##  [67] parallel_4.2.2              listenv_0.9.0              </span></span>
 <span><span class="co">##  [69] ggrepel_0.9.2               crayon_1.5.2               </span></span>
 <span><span class="co">##  [71] lattice_0.20-45             hms_1.1.2                  </span></span>
 <span><span class="co">##  [73] ps_1.7.2                    knitr_1.41                 </span></span>
-<span><span class="co">##  [75] pillar_1.8.1                GenomicRanges_1.50.1       </span></span>
+<span><span class="co">##  [75] pillar_1.8.1                GenomicRanges_1.50.2       </span></span>
 <span><span class="co">##  [77] boot_1.3-28.1               future.apply_1.10.0        </span></span>
 <span><span class="co">##  [79] codetools_0.2-18            stats4_4.2.2               </span></span>
 <span><span class="co">##  [81] rstantools_2.2.0            glue_1.6.2                 </span></span>
-<span><span class="co">##  [83] evaluate_0.18               SeuratObject_4.1.3         </span></span>
+<span><span class="co">##  [83] evaluate_0.19               SeuratObject_4.1.3         </span></span>
 <span><span class="co">##  [85] BiocManager_1.30.19         RcppParallel_5.1.5         </span></span>
 <span><span class="co">##  [87] vctrs_0.5.1                 tzdb_0.3.0                 </span></span>
 <span><span class="co">##  [89] gtable_0.3.1                purrr_0.3.5                </span></span>
-<span><span class="co">##  [91] future_1.29.0               cachem_1.0.6               </span></span>
+<span><span class="co">##  [91] future_1.30.0               cachem_1.0.6               </span></span>
 <span><span class="co">##  [93] xfun_0.35                   ragg_1.2.4                 </span></span>
 <span><span class="co">##  [95] SingleCellExperiment_1.20.0 tibble_3.1.8               </span></span>
 <span><span class="co">##  [97] memoise_2.0.1               IRanges_2.32.0             </span></span>
@@ -451,7 +485,7 @@ uncorrelated.</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer>

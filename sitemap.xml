@@ -46,13 +46,16 @@
     <loc>/reference/remove_unwanted_variation.html</loc>
   </url>
   <url>
-    <loc>/reference/replicate_data.html</loc>
-  </url>
-  <url>
     <loc>/reference/sccomp-package.html</loc>
   </url>
   <url>
     <loc>/reference/sccomp_glm.html</loc>
+  </url>
+  <url>
+    <loc>/reference/sccomp_predict.html</loc>
+  </url>
+  <url>
+    <loc>/reference/sccomp_replicate.html</loc>
   </url>
   <url>
     <loc>/reference/sce_obj.html</loc>
