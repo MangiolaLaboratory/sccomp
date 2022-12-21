@@ -85,6 +85,7 @@ data{
   matrix[N, C] X;
   matrix[Ar, A] XA; // The unique variability design
   matrix[N, A] Xa; // The variability design
+
   // Truncation
   int is_truncated;
   int truncation_up[N,M];
@@ -92,16 +93,20 @@ data{
   int<lower=1, upper=N*M> TNS; // truncation_not_size
   int<lower=1, upper=N*M> truncation_not_idx[TNS];
   int<lower=0, upper=1> is_vb;
+
   // Prior info
   real prior_prec_intercept[2] ;
   real prior_prec_slope[2] ;
   real prior_prec_sd[2] ;
+
   // Exclude priors for testing purposes
   int<lower=0, upper=1> exclude_priors;
   int<lower=0, upper=1> bimodal_mean_variability_association;
   int<lower=0, upper=1> use_data;
+
   // Does the design icludes intercept
   int <lower=0, upper=1> intercept_in_design;
+
   // Random intercept
   int N_random_intercepts;
   int N_minus_sum;
@@ -109,6 +114,9 @@ data{
   int N_grouping;
   matrix[N, N_grouping] X_random_intercept;
   int idx_group_random_intercepts[N_grouping, 2];
+
+  // LOO
+  int<lower=0, upper=1> enable_loo;
 }
 transformed data{
   vector[2*M] Q_r = Q_sum_to_zero_QR(M);
@@ -313,15 +321,15 @@ generated quantities {
   }
 
   // LOO
-  for (n in 1:TNS) {
-    log_lik[n] = beta_binomial_lpmf(
-      y_array[truncation_not_idx[n]] |
-      exposure_array[truncation_not_idx[n]],
-      (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
-      ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
-      ) ;
-  }
-
+  if(enable_loo==1)
+    for (n in 1:TNS) {
+      log_lik[n] = beta_binomial_lpmf(
+        y_array[truncation_not_idx[n]] |
+        exposure_array[truncation_not_idx[n]],
+        (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
+        ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
+        ) ;
+    }
 
 
 }

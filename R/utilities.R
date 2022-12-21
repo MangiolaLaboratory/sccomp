@@ -995,7 +995,10 @@ data_spread_to_model_input =
         paring_cov_random_intercept = paring_cov_random_intercept,
         N_grouping = N_grouping,
         X_random_intercept = X_random_intercept,
-        idx_group_random_intercepts = idx_group_random_intercepts
+        idx_group_random_intercepts = idx_group_random_intercepts,
+
+        ## LOO
+        enable_loo = FALSE
       )
 
     # Add censoring

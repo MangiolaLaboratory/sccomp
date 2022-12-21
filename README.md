@@ -17,10 +17,13 @@ variability analyses.
 
 ## Characteristics
 
-Modelling counts Modelling proportionality Modelling cell-type specific
-variability Cell-type information share for variability shrinkage
-Performing differential variability Probabilistic outlier identification
-Cross-dataset learning (hyperpriors).
+-   Modelling counts
+-   Modelling proportionality
+-   Modelling cell-type specific variability
+-   Cell-type information share for variability shrinkage
+-   Testing differential variability
+-   Probabilistic outlier identification
+-   Cross-dataset learning (hyperpriors).
 
 # Installation
 
@@ -75,29 +78,19 @@ counts_obj |>
   )
 ```
 
-    ## sccomp says: outlier identification first pass - step 1/3
-
-    ## sccomp says: outlier identification second pass - step 2/3
-
-    ## sccomp says: outlier-free model fitting - step 3/3
-
-    ## sccomp says: the composition design matrix has columns: (Intercept), typecancer
-
-    ## sccomp says: the variability design matrix has columns: (Intercept)
-
     ## # A tibble: 72 × 18
     ##    cell_group parameter   factor c_lower c_eff…¹ c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>       <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercept) <NA>     0.875   1.06   1.24   0       0         4599.
-    ##  2 B1         typecancer  type    -1.22   -0.872 -0.536  2.50e-4 3.57e-5   3217.
-    ##  3 B2         (Intercept) <NA>     0.420   0.694  0.962  5.00e-4 2.63e-5   4732.
-    ##  4 B2         typecancer  type    -1.20   -0.770 -0.354  4.25e-3 5.83e-4   3307.
-    ##  5 B3         (Intercept) <NA>    -0.632  -0.387 -0.150  6.20e-2 3.5 e-3   3891.
-    ##  6 B3         typecancer  type    -0.590  -0.222  0.137  4.53e-1 1.33e-1   3250.
-    ##  7 BM         (Intercept) <NA>    -1.28   -1.01  -0.762  0       0         4583.
-    ##  8 BM         typecancer  type    -0.781  -0.351  0.0272 2.22e-1 4.49e-2   3358.
-    ##  9 CD4 1      (Intercept) <NA>     0.119   0.322  0.514  1.12e-1 1.18e-2   3956.
-    ## 10 CD4 1      typecancer  type    -0.109   0.161  0.436  6.20e-1 2.14e-1   3385.
+    ##  1 B1         (Intercept) <NA>     0.869   1.06   1.24   0       0         4529.
+    ##  2 B1         typecancer  type    -1.21   -0.878 -0.538  0       0         4296.
+    ##  3 B2         (Intercept) <NA>     0.423   0.697  0.959  5.00e-4 3.75e-5   3358.
+    ##  4 B2         typecancer  type    -1.21   -0.784 -0.363  3.75e-3 6.11e-4   4084.
+    ##  5 B3         (Intercept) <NA>    -0.643  -0.383 -0.136  7.17e-2 4.01e-3   5204.
+    ##  6 B3         typecancer  type    -0.616  -0.224  0.137  4.54e-1 1.37e-1   4037.
+    ##  7 BM         (Intercept) <NA>    -1.27   -1.02  -0.754  0       0         5698.
+    ##  8 BM         typecancer  type    -0.764  -0.347  0.0320 2.24e-1 3.62e-2   4352.
+    ##  9 CD4 1      (Intercept) <NA>     0.121   0.324  0.522  1.03e-1 1.15e-2   3652.
+    ## 10 CD4 1      typecancer  type    -0.110   0.157  0.425  6.36e-1 2.19e-1   2916.
     ## # … with 62 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
     ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable name ¹​c_effect
@@ -112,7 +105,7 @@ formula_variability is set).
 seurat_obj |>
   sccomp_glm( 
     formula_composition = ~ 0 + type, 
-    contrasts =  c("typecancer - typebenign", "typebenign - typecancer"),
+    contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
@@ -120,31 +113,23 @@ seurat_obj |>
   )
 ```
 
-    ## sccomp says: outlier identification first pass - step 1/3
-
-    ## sccomp says: outlier identification second pass - step 2/3
-
-    ## sccomp says: outlier-free model fitting - step 3/3
-
-    ## sccomp says: the composition design matrix has columns: typecancer, typehealthy
-
-    ## sccomp says: the variability design matrix has columns: (Intercept)
-
-    ## # A tibble: 30 × 11
-    ##    cell_group param…¹ factor v_lower v_eff…² v_upper v_pH0 v_FDR v_n_eff v_R_k…³
-    ##    <chr>      <chr>   <chr>    <dbl>   <dbl>   <dbl> <dbl> <dbl>   <dbl>   <dbl>
-    ##  1 B immature (Inter… <NA>     -5.09   -4.57   -3.99     0     0   4732.    1.00
-    ##  2 B mem      (Inter… <NA>     -4.85   -4.33   -3.75     0     0   4359.    1.00
-    ##  3 CD4 cm hi… (Inter… <NA>     -5.18   -4.62   -3.94     0     0   3663.    1.00
-    ##  4 CD4 cm ri… (Inter… <NA>     -5.86   -5.25   -4.60     0     0   5744.    1.00
-    ##  5 CD4 cm S1… (Inter… <NA>     -5.78   -5.13   -4.51     0     0   5492.    1.00
-    ##  6 CD4 em hi… (Inter… <NA>     -5.56   -4.96   -4.32     0     0   5040.    1.00
-    ##  7 CD4 naive  (Inter… <NA>     -4.97   -4.39   -3.76     0     0   4070.    1.00
-    ##  8 CD4 ribos… (Inter… <NA>     -5.24   -4.70   -4.13     0     0   4509.    1.00
-    ##  9 CD8 em 1   (Inter… <NA>     -5.44   -4.88   -4.25     0     0   5060.    1.00
-    ## 10 CD8 em 2   (Inter… <NA>     -5.34   -4.65   -3.90     0     0   4087.    1.00
-    ## # … with 20 more rows, 1 more variable: count_data <list>, and abbreviated
-    ## #   variable names ¹​parameter, ²​v_effect, ³​v_R_k_hat
+    ## # A tibble: 60 × 18
+    ##    cell_group     param…¹ factor c_lower c_eff…² c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>          <chr>   <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B immature     typeca… type    -2.01   -1.57   -1.12  0       0            NA
+    ##  2 B immature     typehe… type     1.12    1.57    2.01  0       0            NA
+    ##  3 B mem          typeca… type    -2.31   -1.71   -1.11  0       0            NA
+    ##  4 B mem          typehe… type     1.11    1.71    2.31  0       0            NA
+    ##  5 CD4 cm high c… typeca… type     0.940   1.86    3.00  0       0            NA
+    ##  6 CD4 cm high c… typehe… type    -3.00   -1.86   -0.940 0       0            NA
+    ##  7 CD4 cm riboso… typeca… type     0.571   1.24    1.97  1.50e-3 3.89e-4      NA
+    ##  8 CD4 cm riboso… typehe… type    -1.97   -1.24   -0.571 1.50e-3 3.89e-4      NA
+    ##  9 CD4 cm S100A4  typeca… type    -1.24   -0.882  -0.540 2.50e-4 5.00e-5      NA
+    ## 10 CD4 cm S100A4  typehe… type     0.540   0.882   1.24  2.50e-4 5.00e-5      NA
+    ## # … with 50 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
+    ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
+    ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable names
+    ## #   ¹​parameter, ²​c_effect
 
 ## Categorical factor (e.g. Bayesian ANOVA)
 
@@ -163,22 +148,7 @@ one, the one with factor association, is better than model two.
 
 ``` r
 library(loo)
-```
 
-    ## This is loo version 2.5.1
-
-    ## - Online documentation and vignettes at mc-stan.org/loo
-
-    ## - As of v2.0.0 loo defaults to 1 core but we recommend using as many as possible. Use the 'cores' argument or set options(mc.cores = NUM_CORES) for an entire session.
-
-    ## 
-    ## Attaching package: 'loo'
-
-    ## The following object is masked from 'package:rstan':
-    ## 
-    ##     loo
-
-``` r
 # Fit first model
 model_with_factor_association = 
   seurat_obj |>
@@ -188,17 +158,10 @@ model_with_factor_association =
     .cell_group = cell_group, 
     check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, 
+    enable_loo = TRUE
   )
-```
 
-    ## sccomp says: estimation
-
-    ## sccomp says: the composition design matrix has columns: (Intercept), typehealthy
-
-    ## sccomp says: the variability design matrix has columns: (Intercept)
-
-``` r
 # Fit second model
 model_without_association = 
   seurat_obj |>
@@ -208,36 +171,16 @@ model_without_association =
     .cell_group = cell_group, 
     check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1 , 
+    enable_loo = TRUE
   )
-```
 
-    ## sccomp says: estimation
-
-    ## sccomp says: the composition design matrix has columns: (Intercept)
-
-    ## sccomp says: the variability design matrix has columns: (Intercept)
-
-``` r
-loo_with_factor_association <- loo(model_with_factor_association |> attr("fit"))
-```
-
-    ## Warning: Some Pareto k diagnostic values are too high. See help('pareto-k-diagnostic') for details.
-
-``` r
-loo_without_association <- loo(model_without_association |> attr("fit"))
-```
-
-    ## Warning: Some Pareto k diagnostic values are too high. See help('pareto-k-diagnostic') for details.
-
-``` r
 # Compare models
-loo_compare(loo_with_factor_association, loo_without_association)
+loo_compare(
+  model_with_factor_association |> attr("fit") |> loo(),
+  model_without_association |> attr("fit") |> loo()
+)
 ```
-
-    ##        elpd_diff se_diff
-    ## model1   0.0       0.0  
-    ## model2 -81.4      11.4
 
 ## Differential variability, binary factor
 
@@ -255,35 +198,23 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   )
-```
 
-    ## sccomp says: outlier identification first pass - step 1/3
-
-    ## sccomp says: outlier identification second pass - step 2/3
-
-    ## sccomp says: outlier-free model fitting - step 3/3
-
-    ## sccomp says: the composition design matrix has columns: (Intercept), typehealthy
-
-    ## sccomp says: the variability design matrix has columns: (Intercept), typehealthy
-
-``` r
 res
 ```
 
     ## # A tibble: 60 × 18
     ##    cell_group     param…¹ factor c_lower c_eff…² c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>          <chr>   <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature     (Inter… <NA>     0.578   0.954   1.34  2.50e-4 1.92e-5   5989.
-    ##  2 B immature     typehe… type     0.975   1.50    2.05  0       0         4213.
-    ##  3 B mem          (Inter… <NA>    -1.29   -0.751  -0.158 3.40e-2 2.38e-3   6040.
-    ##  4 B mem          typehe… type     0.939   1.66    2.41  0       0         4531.
-    ##  5 CD4 cm high c… (Inter… <NA>    -0.871  -0.396   0.102 2.08e-1 3.14e-2   3927.
-    ##  6 CD4 cm high c… typehe… type    -3.16   -1.35    1.53  1.93e-1 4.74e-2   2590.
-    ##  7 CD4 cm riboso… (Inter… <NA>     0.152   0.486   0.822 4.43e-2 4.47e-3   4426.
-    ##  8 CD4 cm riboso… typehe… type    -2.43   -1.73   -0.866 1.75e-3 6.00e-4   3482.
-    ##  9 CD4 cm S100A4  (Inter… <NA>     1.74    2.00    2.23  0       0         5319.
-    ## 10 CD4 cm S100A4  typehe… type     0.374   0.762   1.18  1.75e-3 7.92e-4   3599.
+    ##  1 B immature     (Inter… <NA>     0.582   0.965   1.33  5.00e-4 5.36e-5   5635.
+    ##  2 B immature     typehe… type     0.967   1.49    2.00  0       0         3507.
+    ##  3 B mem          (Inter… <NA>    -1.65   -1.08   -0.467 3.00e-3 4.03e-4   3873.
+    ##  4 B mem          typehe… type     1.24    2.00    2.75  2.50e-4 8.33e-5   3301.
+    ##  5 CD4 cm high c… (Inter… <NA>    -0.831  -0.390   0.103 2.08e-1 3.12e-2   4146.
+    ##  6 CD4 cm high c… typehe… type    -3.19   -1.39    1.51  1.86e-1 4.81e-2   2131.
+    ##  7 CD4 cm riboso… (Inter… <NA>     0.166   0.491   0.850 4.10e-2 2.82e-3   3992.
+    ##  8 CD4 cm riboso… typehe… type    -2.45   -1.74   -0.841 2.25e-3 6.25e-4   4160.
+    ##  9 CD4 cm S100A4  (Inter… <NA>     1.76    2.01    2.26  0       0         6267.
+    ## 10 CD4 cm S100A4  typehe… type     0.337   0.743   1.16  2.50e-3 1.00e-3   3289.
     ## # … with 50 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
     ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable names

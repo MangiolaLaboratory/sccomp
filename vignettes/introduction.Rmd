@@ -106,7 +106,7 @@ Of the output table, the estimate columns start with the prefix `c_` indicate `c
 seurat_obj |>
   sccomp_glm( 
     formula_composition = ~ 0 + type, 
-    contrasts =  c("typecancer - typebenign", "typebenign - typecancer"),
+    contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
@@ -135,7 +135,8 @@ model_with_factor_association =
     .cell_group = cell_group, 
     check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, 
+    enable_loo = TRUE
   )
 
 # Fit second model
@@ -147,7 +148,8 @@ model_without_association =
     .cell_group = cell_group, 
     check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1 , 
+    enable_loo = TRUE
   )
 
 # Compare models

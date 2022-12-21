@@ -27,6 +27,7 @@
 #' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
+#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
 #' @param verbose A boolean. Prints progression.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
@@ -47,6 +48,7 @@ dirichlet_multinomial_glm = function(.data,
                                      check_outliers = FALSE,
                                      approximate_posterior_inference = "none",
                                      variance_association = FALSE,
+                                     enable_loo = FALSE,
                                      test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
                                      exclude_priors = FALSE,

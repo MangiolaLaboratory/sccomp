@@ -16,6 +16,7 @@ sccomp_glm(
     standard_deviation = c(20, 40)),
   check_outliers = TRUE,
   bimodal_mean_variability_association = FALSE,
+  enable_loo = FALSE,
   cores = detectCores(),
   percent_false_positive = 5,
   approximate_posterior_inference = "none",
@@ -49,6 +50,8 @@ sccomp_glm(
 \item{check_outliers}{A boolean. Whether to check for outliers before the fit.}
 
 \item{bimodal_mean_variability_association}{A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.}
+
+\item{enable_loo}{A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.}
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
