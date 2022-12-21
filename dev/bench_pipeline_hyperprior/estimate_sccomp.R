@@ -31,7 +31,7 @@ if(add_hyperpriors==0){
 
 } else if(add_hyperpriors==2) {
   # BRCA1_s41467-021-21783-3
-  prior_mean_variable_association = list(intercept = c(5.8281775, 0.1457238), slope = c(-0.8904407,  0.1061705), standard_deviation = c(53.71133,66.01899))
+  prior_mean_variable_association = list(intercept = c(5.8281775, 0.5), slope = c(-0.8904407,  0.1061705), standard_deviation = c(53.71133,66.01899))
 } else if(add_hyperpriors==3) {
   # Wrong hyperprior
   prior_mean_variable_association = list(intercept = c(10, 0.15), slope = c(1,  0.10), standard_deviation = c(37.45106,76.65637))

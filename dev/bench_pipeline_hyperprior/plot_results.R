@@ -1,8 +1,11 @@
+library(tidyverse)
 library(patchwork)
 library(bayestestR)
 library(yardstick)
 library(forcats)
 library(glue)
+library(ggplot2)
+library(purrr)
 source("https://gist.githubusercontent.com/stemangiola/fc67b08101df7d550683a5100106561c/raw/a0853a1a4e8a46baf33bad6268b09001d49faf51/ggplot_theme_multipanel")
 
 #
@@ -30,16 +33,17 @@ levels_algorithm =
   c("sccomp", "speckle" , "logitLinear" , "ttest"  , "quasiBinomial" , "rlm" , "DirichletMultinomial" , "random"   )
 
 plot_auc =
-  dir("~/PostDoc/sccomp_dev/dev/benchmark_results_hyperprior/", pattern = "auc", full.names = TRUE) %>%
+  dir("~/PostDoc/sccomp_dev/dev/benchmark_results_hyperprior_19Dec2022/", pattern = "auc", full.names = TRUE) %>%
+  c(dir("~/PostDoc/sccomp_dev/dev/benchmark_results_hyperprior/", pattern = "auc", full.names = TRUE) ) |>
   map_dfr(~ .x %>% readRDS()) %>%
   nest(data = c(name, auc)) %>%
-  mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc))) %>%
+  mutate(random_auc = map_dbl(data, ~ .x %>% filter(name=="random") %>% pull(auc) %>% head(1))) %>%
   unnest(data) %>%
 
   # filter( name !="speckle") %>%
   #filter(n_samples >2) %>%
   mutate(name = if_else(name=="random", "zrandom", name)) %>%
-
+  filter(name != "zrandom") |>
   # Filter too small slope
   filter(slope>0.1) %>%
 
