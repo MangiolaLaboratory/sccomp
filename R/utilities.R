@@ -1049,7 +1049,7 @@ data_spread_to_model_input =
         data_for_model$factor_parameter_dictionary |>
         distinct() |>
         expand_grid(parameter=contrasts) |>
-        filter(str_detect(contrasts, design_matrix_col )) |>
+        filter(str_detect(parameter, design_matrix_col )) |>
         select(-design_matrix_col) |>
         rename(design_matrix_col = parameter) |>
         distinct()
