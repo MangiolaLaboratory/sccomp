@@ -100,9 +100,10 @@ parse_formula_random_intercept <- function(fm) {
       unnest(`factor`) |>
 
       # Rename intercept
-      mutate(`factor` = if_else(`factor`=="1", "(Intercept)", `factor`)) |>
+      mutate(`factor` = if_else(`factor`=="1", "(Intercept)", `factor`))
 
-      distinct()
+    #|>
+    #  distinct()
 
   }
 
@@ -625,8 +626,10 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
           mutate(mean_idx = glue("{group___numeric}") |> as.factor() |> as.integer()) |>
           mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx)) |>
           mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
-          mutate(minus_sum = if_else(mean_idx==0, 1L, 0L)) |>
-          distinct()
+          mutate(minus_sum = if_else(mean_idx==0, 1L, 0L))
+
+        #|>
+        #  distinct()
 
         # If factor is discrete
         else
@@ -643,8 +646,10 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
 
           # drop minus_sum if we just have one group___numeric per factor
           with_groups(factor___numeric, ~ ..1 |> when(length(unique(..1$group___numeric)) == 1 ~ mutate(., minus_sum = 0), ~ (.)))  |>
-          mutate(factor___numeric = as.factor(factor___numeric) |> as.integer()) |>
-          distinct()
+          mutate(factor___numeric = as.factor(factor___numeric) |> as.integer())
+
+        #|>
+        #  distinct()
       }
     )) |>
 
@@ -2026,7 +2031,8 @@ replicate_data = function(.data,
     deframe() |>
     as.array()
 
-  # Update data
+  # Update data, merge with old data because
+  # I need the same ordering of the design matrix
   new_data =
 
     # Old data
@@ -2132,7 +2138,18 @@ replicate_data = function(.data,
           get_design_matrix(~ 0 + group___label,  !!.sample) |>
 
           # If countinuous multiply the matrix by the factor
-          when(..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(..1, ~ 0 + factor___,  !!.sample) )) , ~ (.))
+          when(
+            ..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(
+              new_data ,
+              # |>
+              #
+              #   # I think this is needed if I don't have a new data
+              #   tail(nrow_new_data) ,
+              as.formula(glue("~ 0 + {..3}")),
+              !!.sample
+            ))) ,
+            ~ (.)
+          )
       )) |>
 
       # Merge
