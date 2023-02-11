@@ -302,7 +302,7 @@ generated quantities {
   matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
 
   // LOO
-  vector[TNS] log_lik;
+  vector[TNS] log_lik = rep_vector(0, TNS);
 
   if(intercept_in_design){
     if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
