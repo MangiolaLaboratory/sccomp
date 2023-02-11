@@ -1796,11 +1796,10 @@ get_abundance_contrast_draws = function(.data, contrasts){
   # Random intercept
   is_random_intercept =
     .data |>
-    attr("fit") |>
-    names() |>
-    str_subset("beta_random_intercept_raw") |>
-    length() |>
-    gt(0)
+    attr("model_input") %$%
+    N_random_intercepts |>
+    equals(0) |>
+    not()
 
   if(is_random_intercept){
     beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
