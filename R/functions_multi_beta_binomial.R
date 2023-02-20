@@ -502,21 +502,7 @@ multi_beta_binomial_glm = function(.data,
       contrasts = contrasts,
       percent_false_positive = percent_false_positive,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change
-    ) |>
-
-    # Add osme attributes
-    add_attr(get_mean_precision_association(estimates_list$fit), "mean_concentration_association") %>%
-    when(pass_fit ~ add_attr(., estimates_list$fit, "fit"), ~ (.)) |>
-
-    # Attach association mean concentration
-    add_attr(estimates_list$data_for_model, "model_input") |>
-    add_attr(estimates_list$truncation_df2, "truncation_df2") |>
-    add_attr(.sample, ".sample") |>
-    add_attr(.cell_group, ".cell_group") |>
-    add_attr(.count, ".count") |>
-    add_attr(check_outliers, "check_outliers") |>
-    add_attr(formula_composition, "formula_composition") |>
-    add_attr(formula_variability, "formula_variability")
+    )
 
 
 }
