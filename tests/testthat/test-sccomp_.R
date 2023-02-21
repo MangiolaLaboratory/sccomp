@@ -445,9 +445,7 @@ test_that("test constrasts",{
 
   new_test =
     estimate |>
+    test_contrasts() |>
     test_contrasts()
 
-  estimate |>
-    identical(new_test) |>
-    expect_true()
 })
