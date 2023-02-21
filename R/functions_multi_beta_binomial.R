@@ -496,7 +496,8 @@ multi_beta_binomial_glm = function(.data,
     add_attr(.cell_group, ".cell_group") |>
     add_attr(.count, ".count") |>
     add_attr(check_outliers, "check_outliers") |>
-
+    add_attr(formula_composition, "formula_composition") |>
+    add_attr(formula_variability, "formula_variability") |>
 
     test_contrasts(
       contrasts = contrasts,
