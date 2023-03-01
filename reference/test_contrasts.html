@@ -64,7 +64,8 @@
 <span>  <span class="va">.data</span>,</span>
 <span>  contrasts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  percent_false_positive <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  test_composition_above_logit_fold_change <span class="op">=</span> <span class="fl">0.2</span></span>
+<span>  test_composition_above_logit_fold_change <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  pass_fit <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -84,6 +85,10 @@
 
 <dt>test_composition_above_logit_fold_change</dt>
 <dd><p>A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.</p></dd>
+
+
+<dt>pass_fit</dt>
+<dd><p>A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.</p></dd>
 
 </dl></div>
     <div id="value">
