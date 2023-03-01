@@ -594,6 +594,7 @@ sccomp_glm_data_frame_counts = function(.data,
 #' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
@@ -616,7 +617,8 @@ sccomp_glm_data_frame_counts = function(.data,
 test_contrasts <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
-                           test_composition_above_logit_fold_change = 0.2) {
+                           test_composition_above_logit_fold_change = 0.2,
+                           pass_fit = TRUE) {
   UseMethod("test_contrasts", .data)
 }
 
@@ -626,7 +628,8 @@ test_contrasts <- function(.data,
 test_contrasts.data.frame = function(.data,
                                      contrasts = NULL,
                                      percent_false_positive = 5,
-                                     test_composition_above_logit_fold_change = 0.2){
+                                     test_composition_above_logit_fold_change = 0.2,
+                                     pass_fit = TRUE){
 
 
   .sample = .data |>  attr(".sample")
@@ -640,7 +643,7 @@ test_contrasts.data.frame = function(.data,
   abundance_CI =
     get_abundance_contrast_draws(.data, contrasts) %>%
 
-    # If my constrasts do not match my model. I have to do something more elegant.
+    # If my contrasts do not match my model. I have to do something more elegant.
     when(
       "parameter" %in% colnames(.) ~  draws_to_statistics(
         .,
@@ -702,7 +705,21 @@ test_contrasts.data.frame = function(.data,
           nest(count_data = -!!.cell_group),
         by = quo_name(.cell_group)
       )
-    )
+    ) |>
+
+    # Add back attributes
+    add_attr(.data |> attr("fit") |> get_mean_precision_association(), "mean_concentration_association") %>%
+    when(pass_fit ~ add_attr(., .data |> attr("fit") , "fit"), ~ (.)) |>
+
+    # Attach association mean concentration
+    add_attr(.data |> attr("model_input") , "model_input") |>
+    add_attr(.data |> attr("truncation_df2"), "truncation_df2") |>
+    add_attr(.sample, ".sample") |>
+    add_attr(.cell_group, ".cell_group") |>
+    add_attr(.count, ".count") |>
+    add_attr(check_outliers, "check_outliers") |>
+    add_attr(.data |> attr("formula_composition"), "formula_composition") |>
+    add_attr(.data |> attr("formula_variability"), "formula_variability")
 }
 
 #' sccomp_replicate
