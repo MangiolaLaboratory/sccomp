@@ -2174,7 +2174,7 @@ replicate_data = function(.data,
   # New X
   model_input$X = new_X
   model_input$Xa = new_Xa
-  model_input$X_random_intercept = new_X_random_intercept
+  #model_input$X_random_intercept = new_X_random_intercept
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
 
