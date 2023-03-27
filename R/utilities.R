@@ -920,7 +920,7 @@ data_spread_to_model_input =
               # possible_factors
               possible_factors =
                 ..1 |>
-                unite("factor_name", c(factor___, factor___), sep = "") |>
+                unite("factor_name", c(factor___, factor___), sep = "") |> # I'm confused
                 distinct(factor_name) |>
 
                 # Make exception for (Intercept). In the future I have to make this a bit more elegant.
@@ -932,13 +932,20 @@ data_spread_to_model_input =
                 X[,colnames(X) %in% possible_factors, drop=FALSE] |>
                 rowSums()
 
-              ..1 |>
+              my_X =
+                ..1 |>
 
                 # Get matrix
-                get_design_matrix(~ 0 + group___label,  !!.sample) |>
+                get_design_matrix(~ 0 + group___label,  !!.sample)
+
+              if(..4)
+                my_X =
+                my_X|>
 
                 # If countinuous multiply the matrix by the factor
                 apply(2, function(x) x * weight_random_slopes)
+
+              return(my_X)
 
             }
           )) |>
