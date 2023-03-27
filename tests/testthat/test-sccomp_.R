@@ -427,3 +427,25 @@ test_that("plot test variability",{
 
 
 })
+
+test_that("test constrasts",{
+
+
+  estimate =
+    seurat_obj |>
+    sccomp_glm(
+      formula_composition = ~ type ,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = FALSE,
+      approximate_posterior_inference = FALSE,
+      cores = 1,
+      mcmc_seed = 42
+    )
+
+  new_test =
+    estimate |>
+    test_contrasts() |>
+    test_contrasts()
+
+})
