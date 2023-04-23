@@ -2123,7 +2123,7 @@ replicate_data = function(.data,
     new_X_random_intercept = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
 
     # Update N_groupings
-    model_input$N_grouping = 0
+   # model_input$N_grouping = 0
   }
   else {
 
