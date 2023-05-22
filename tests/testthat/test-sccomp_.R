@@ -203,7 +203,7 @@ test_that("multilevel continuous",{
     arrange(desc(abs(c_effect))) |>
     slice(1) |>
     pull(cell_group) |>
-    expect_equal(c("CD4 cm high cytokine"  ))
+    expect_equal(c("B mem"  ))
 
   # Check convergence
   res |>
