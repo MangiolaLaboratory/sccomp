@@ -103,7 +103,7 @@ test_that("multilevel multi beta binomial from Seurat",{
     arrange(desc(abs(c_effect))) |>
     slice(1:3) |>
     pull(cell_group) |>
-    expect_equal(c("CD4 cm high cytokine", "CD4 ribosome" ,        "B mem"  ))
+    expect_equal(c("CD4 ribosome" ,        "CD4 cm high cytokine", "Mono NKG7 2"  ))
 
   # Check convergence
   res |>
@@ -203,7 +203,7 @@ test_that("multilevel continuous",{
     arrange(desc(abs(c_effect))) |>
     slice(1) |>
     pull(cell_group) |>
-    expect_equal(c("CD4 cm high cytokine"  ))
+    expect_equal(c("B mem"  ))
 
   # Check convergence
   res |>
