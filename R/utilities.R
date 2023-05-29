@@ -446,6 +446,8 @@ fit_model = function(
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
 
+  if(cores > 1) Sys.setenv("STAN_NUM_THREADS" =  ceiling(cores/chains))
+
   # Fit
   if(!approximate_posterior_inference)
     sampling(
@@ -1010,7 +1012,10 @@ data_spread_to_model_input =
         idx_group_random_intercepts = idx_group_random_intercepts,
 
         ## LOO
-        enable_loo = FALSE
+        enable_loo = FALSE,
+
+        # For parallel chains
+        grainsize = 1
       )
 
     # Add censoring

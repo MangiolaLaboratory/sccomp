@@ -72,6 +72,23 @@ functions{
     return(lp);
   }
 
+  real partial_sum_lpmf(int[] slice_y,
+                        int start,
+                        int end,
+                        int[] exposure_array,
+                        vector mu_array,
+                        vector precision_array
+                        ) {
+
+  return beta_binomial_lupmf(
+      slice_y |
+      exposure_array[start:end],
+      (mu_array[start:end] .* precision_array[start:end]),
+      (1.0 - mu_array[start:end]) .* precision_array[start:end]
+    ) ;
+
+  }
+
 }
 data{
   int<lower=1> N;
@@ -117,6 +134,10 @@ data{
 
   // LOO
   int<lower=0, upper=1> enable_loo;
+
+  // Parallel chain
+  int<lower=1> grainsize;
+
 }
 transformed data{
   vector[2*M] Q_r = Q_sum_to_zero_QR(M);
@@ -125,7 +146,7 @@ transformed data{
   matrix[C, C] R_ast;
   matrix[C, C] R_ast_inverse;
   int y_array[N*M];
-  int truncation_down_array[N*M];
+  // int truncation_down_array[N*M];
   int exposure_array[N*M];
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   int N_grouping_WINDOWS_BUG_FIX = max(N_grouping, 1);
@@ -140,7 +161,7 @@ transformed data{
   }
   // Data vectorised
   y_array =  to_array_1d(y);
-  truncation_down_array = to_array_1d(truncation_down);
+  // truncation_down_array = to_array_1d(truncation_down);
   exposure_array = rep_each(exposure, M);
 }
 parameters{
@@ -225,12 +246,22 @@ model{
 
   // Fit main distribution
   if(use_data == 1){
-    target += beta_binomial_lpmf(
-      y_array[truncation_not_idx] |
+
+    target +=  reduce_sum(
+      partial_sum_lupmf,
+      y_array[truncation_not_idx],
+      grainsize,
       exposure_array[truncation_not_idx],
-      (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
-      ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
-      ) ;
+      mu_array[truncation_not_idx],
+      precision_array[truncation_not_idx]
+    );
+
+    // target += beta_binomial_lpmf(
+    //   y_array[truncation_not_idx] |
+    //   exposure_array[truncation_not_idx],
+    //   (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
+    //   ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
+    //   ) ;
   }
 
   // Priors
