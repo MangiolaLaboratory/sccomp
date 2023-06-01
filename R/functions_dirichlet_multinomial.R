@@ -16,7 +16,6 @@
 #' @importFrom tibble rowid_to_column
 #' @importFrom purrr map_lgl
 #' @importFrom rlang :=
-#' @importFrom rstan stan_model
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
@@ -222,8 +221,6 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
 
 #' @importFrom rlang :=
 #' @importFrom stats C
-#' @importFrom rstan sflist2stanfit
-#' @importFrom rstan Rhat
 fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration, seed, approximate_posterior_inference, false_positive_rate,
                                                 variance_association){
 

@@ -79,32 +79,47 @@
 #'
 "glm_dirichlet_multinomial_imputation"
 
-#' glm_multi_beta_generate_data
+#' glm_multi_beta_binomial
 #'
 #' @description
-#' This object is mostly for internal use and comparative purposes, if the multi_beta is chosen as noise model.
+#' This object is for cmdstanr
 #'
 #' @importFrom utils data
 #'
 #' @keywords internal
 #'
-#' @format  A text file containing stan code for the Beta only model.
-#' @usage data(glm_multi_beta_generate_data)
+#' @format  A text file containing stan code for the Dirichlet model.
+#' @usage data(glm_multi_beta_binomial)
 #'
 #'
-"glm_multi_beta_generate_data"
+"glm_multi_beta_binomial_generate"
 
-#' glm_multi_beta
+#' glm_multi_beta_binomial
 #'
 #' @description
-#' This object is mostly for internal use and comparative purposes, if the multi_beta is chosen as noise model.
+#' This object is for cmdstanr
 #'
 #' @importFrom utils data
 #'
 #' @keywords internal
 #'
 #' @format  A text file containing stan code for the Beta only model.
-#' @usage data(glm_multi_beta)
+#' @usage data(glm_multi_beta_binomial_generate)
 #'
 #'
-"glm_multi_beta"
+"glm_multi_beta_binomial_generate"
+
+#' glm_multi_beta_binomial_simulate
+#'
+#' @description
+#' This object is for cmdstanr
+#'
+#' @importFrom utils data
+#'
+#' @keywords internal
+#'
+#' @format  A text file containing stan code for the Beta only model.
+#' @usage data(glm_multi_beta_binomial_simulate)
+#'
+#'
+"glm_multi_beta_binomial_simulate"

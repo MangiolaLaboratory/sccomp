@@ -12,3 +12,9 @@ model_glm_dirichlet_multinomial_imputation.rds
 #inst/stan/glm_multi_beta_binomial_generate_date
 ^doc$
 ^Meta$
+.future
+^\.git$
+^dev$
+^\.future$
+^inst/figures$
+^inst/logo\.ai$

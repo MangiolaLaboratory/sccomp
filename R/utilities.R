@@ -180,7 +180,6 @@ as_matrix <- function(tbl, rownames = NULL) {
 #'
 #' @description Runs iteratively variational bayes until it suceeds
 #'
-#' @importFrom rstan vb
 #'
 #' @keywords internal
 #' @noRd
@@ -208,8 +207,7 @@ vb_iterative = function(model,
   i = 0
   while (res %>% is.null | i > 5) {
     res = tryCatch({
-      my_res = vb(
-        model,
+    	my_res = model$variational(
         data = data,
         output_samples = output_samples,
         iter = iter,
@@ -238,7 +236,6 @@ vb_iterative = function(model,
 #'
 #' @importFrom tidyr separate
 #' @importFrom tidyr nest
-#' @importFrom rstan summary
 #'
 #' @param fit A fit object
 #' @param adj_prob_theshold fit real
@@ -267,7 +264,6 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #' draws_to_tibble_x_y
 #'
 #' @importFrom tidyr pivot_longer
-#' @importFrom rstan extract
 #' @importFrom rlang :=
 #'
 #' @param fit A fit object
@@ -282,8 +278,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   par_names =
     names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
-  fit %>%
-    extract(par, permuted=FALSE) %>%
+  fit$draws(variables = par) %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = seq_len(n())) %>%
@@ -291,8 +286,8 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     #when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
 
     pivot_longer(
-      names_to = c("dummy", ".chain", ".variable", x, y),
-      cols = contains(par),
+    	names_to = c( ".chain", ".variable", x, y),
+    	cols = contains(par),
       names_sep = "\\.|\\[|,|\\]|:",
       names_ptypes = list(
         ".variable" = character()),
@@ -307,7 +302,6 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
     ) %>%
-    select(-dummy) %>%
     arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
     group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
     mutate(.draw = seq_len(n())) %>%
@@ -317,33 +311,8 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
 }
 
-draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
-
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
-
-  fit %>%
-    rstan::extract(par_names, permuted=FALSE) %>%
-    as.data.frame %>%
-    as_tibble() %>%
-    mutate(.iteration = seq_len(n())) %>%
-    pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", values_to = ".value") %>%
-
-    mutate(
-      !!as.symbol(x) := as.integer(!!as.symbol(x)),
-    ) %>%
-
-    select(-dummy) %>%
-    arrange(.variable, !!as.symbol(x), .chain) %>%
-    group_by(.variable, !!as.symbol(x)) %>%
-    mutate(.draw = seq_len(n())) %>%
-    ungroup() %>%
-    select(!!as.symbol(x), .chain, .iteration, .draw ,.variable ,     .value)
-
-}
-
 #' @importFrom tidyr separate
 #' @importFrom purrr when
-#' @importFrom rstan summary
 #'
 #' @param fit A fit object
 #' @param par A character vector. The parameters to extract.
@@ -356,23 +325,18 @@ draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
 summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
-
-  # Avoid bug
-  if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
-
-  fit %>%
-    rstan::summary(par_names, probs = probs) %$%
-    summary %>%
-    as_tibble(rownames = ".variable") %>%
+  
+  fit$summary(par, ~quantile(.x, probs = probs,  na.rm=TRUE), "rhat", "ess_bulk") %>%
+  	rename(.variable = variable, Rhat = rhat, n_eff =  ess_bulk) %>%
     when(
       is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
       ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
-    ) %>%
-    filter(.variable == par)
+    ) 
 
 }
 
 #' @importFrom rlang :=
+#' @importFrom readr write_file
 label_deleterious_outliers = function(.my_data){
 
   .my_data %>%
@@ -432,10 +396,21 @@ fit_model = function(
     chains =
       find_optimal_number_of_chains(
         how_many_posterior_draws = output_samples,
-        warmup = warmup_samples
+        warmup = warmup_samples, 
+        parallelisation_start_penalty = 100
       ) %>%
       min(cores)
 
+  # rstan_options(threads_per_chain = floor(cores/chains))
+  # Load model
+  if(file.exists("glm_multi_beta_binomial_cmdstanr.rds"))
+  	model = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
+  else {
+  	write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
+  	model = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan" )
+  	model  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
+  }
+  
   init_list=list(
     prec_coeff = c(5,0),
     prec_sd = 1,
@@ -448,21 +423,21 @@ fit_model = function(
 
   if(cores > 1) Sys.setenv("STAN_NUM_THREADS" =  ceiling(cores/chains))
 
+
   # Fit
   if(!approximate_posterior_inference)
-    sampling(
-      model,
-      data = data_for_model,
-      chains = chains,
-      cores = chains,
-      iter = as.integer(output_samples /chains) + warmup_samples,
-      warmup = warmup_samples,
-      refresh = ifelse(verbose, 1000, 0),
-      seed = seed,
-      pars = pars,
-      save_warmup = FALSE,
-      init = init
-    ) %>%
+  	
+  	model$sample(
+  		data = data_for_model ,
+  		chains = chains,
+  		parallel_chains = chains,
+  		threads_per_chain = ceiling(cores/chains),
+  		iter_warmup = warmup_samples,
+  		iter_sampling = as.integer(output_samples /chains),
+  		seed = seed,
+  		save_warmup = FALSE,
+  		init = init
+  	) %>%
       suppressWarnings()
 
   else
@@ -472,8 +447,7 @@ fit_model = function(
       iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
-      seed = seed,
-      pars = pars
+      seed = seed
     ) %>%
       suppressWarnings()
 
@@ -483,7 +457,6 @@ fit_model = function(
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
-#' @importFrom rstan extract
 #' @importFrom rlang :=
 #'
 #' @keywords internal
@@ -1994,6 +1967,7 @@ get_variability_contrast_draws = function(.data, contrasts){
 }
 
 #' @importFrom tibble deframe
+#' @importFrom readr write_file
 #'
 replicate_data = function(.data,
           formula_composition = NULL,
@@ -2002,18 +1976,9 @@ replicate_data = function(.data,
           number_of_draws = 1,
           mcmc_seed = sample(1e5, 1)){
 
-
-  # Select model based on noise model
-  my_model = attr(.data, "noise_model") %>% when(
-    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date,
-    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  )
-
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
-
-  fit_matrix = as.matrix(attr(.data, "fit") )
 
   # Composition
   if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
@@ -2190,10 +2155,22 @@ replicate_data = function(.data,
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
 
+  # Load model
+  if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
+  	mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+  else {
+  	write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
+  	mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
+  	mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+  }
+  
   # Generate quantities
-  rstan::gqs(
-    my_model,
-    draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
+  mod_rng$generate_quantities(
+  	
+  	# Fit
+  	attr(.data, "fit"),
+  	
+  	# Data
     data = model_input |> c(
 
       # Add subset of coefficients
@@ -2210,6 +2187,7 @@ replicate_data = function(.data,
       create_intercept = create_intercept
 
     ),
+  	parallel_chains = ifelse(model_input$is_vb, 1, fit$num_chains()),
     seed = mcmc_seed
   )
 

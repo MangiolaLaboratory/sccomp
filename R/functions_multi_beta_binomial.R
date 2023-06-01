@@ -19,6 +19,7 @@
 #' @importFrom dplyr case_when
 #' @importFrom rlang :=
 #' @importFrom rlang quo_is_symbolic
+#' @importFrom readr write_file
 #'
 #' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
@@ -191,10 +192,17 @@ estimate_multi_beta_binomial_glm = function(.data,
         pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept")
       )
 
-    rng =  rstan::gqs(
-      stanmodels$glm_multi_beta_binomial_generate_date,
-      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit),
+    # Load model
+    if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
+    	mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+    else {
+    	write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
+    	mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
+    	mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+    }
+    
+    rng = mod_rng$generate_quantities(
+    	fit,
 
       # This is for the new data generation with selected factors to do adjustment
       data = data_for_model |> c(list(
@@ -209,7 +217,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
         X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
         create_intercept = FALSE
-      ))
+      )),
+    	parallel_chains = ifelse(data_for_model$is_vb, 1, fit$num_chains())
     )
 
     # Detect outliers
@@ -293,10 +302,8 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
 
-    rng2 =  rstan::gqs(
-      stanmodels$glm_multi_beta_binomial_generate_date,
-      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit2),
+    rng2 = mod_rng$generate_quantities(
+      fit2,
       data = data_for_model |> c(list(
 
         # Add subset of coefficients
@@ -310,7 +317,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
         create_intercept = FALSE
 
-      ))
+      )),
+      parallel_chains = ifelse(data_for_model$is_vb, 1, fit$num_chains())
     )
 
     # Detect outliers
@@ -322,9 +330,9 @@ estimate_multi_beta_binomial_glm = function(.data,
           # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
           # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
           rename(
-            .lower := !!as.symbol(colnames(.)[7]) ,
+            .lower := !!as.symbol(colnames(.)[4]) ,
             .median = `50%`,
-            .upper := !!as.symbol(colnames(.)[9])
+            .upper := !!as.symbol(colnames(.)[6])
           ) %>%
           nest(data = -N) %>%
           mutate(!!.sample := rownames(data_for_model$y)) %>%
@@ -548,14 +556,7 @@ get_mean_precision = function(fit, data_for_model){
 
 get_mean_precision_association = function(fit){
   c(
-    fit %>%
-      summary("prec_coeff") %$%
-      summary %>%
-      .[,1] ,
-
-    fit %>%
-      summary("prec_sd") %$%
-      summary %>%
-      .[,1]
+  	fit$summary("prec_coeff")$mean ,
+  	fit$summary("prec_sd")$mean
   )
 }
