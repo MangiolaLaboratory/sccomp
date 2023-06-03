@@ -247,7 +247,7 @@ model{
   // Fit main distribution
   if(use_data == 1){
 
-    target +=  reduce_sum(
+    target += reduce_sum(
       partial_sum_lupmf,
       y_array[truncation_not_idx],
       grainsize,
@@ -323,8 +323,8 @@ model{
     random_intercept_sigma_raw ~ std_normal();
     random_intercept_sigma_mu ~ std_normal();
     random_intercept_sigma_sigma ~ std_normal();
-     // If I have just one group
-  zero_random_intercept ~ std_normal();
+    // If I have just one group
+  	zero_random_intercept ~ std_normal();
   }
 }
 generated quantities {
