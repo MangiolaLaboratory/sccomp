@@ -318,7 +318,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 #' @param par A character vector. The parameters to extract.
 #' @param x A character. The first index.
 #' @param y A character. The first index.
-#' @param probs A numrical vector. The quantiles to extract.
+#' @param probs A numerical vector. The quantiles to extract.
 #'
 #' @keywords internal
 #' @noRd
@@ -397,7 +397,7 @@ fit_model = function(
       find_optimal_number_of_chains(
         how_many_posterior_draws = output_samples,
         warmup = warmup_samples, 
-        parallelisation_start_penalty = 100
+        parallelisation_start_penalty = 200
       ) %>%
       min(cores)
 
@@ -407,7 +407,7 @@ fit_model = function(
   	model = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
   else {
   	write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
-  	model = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan" )
+  	model = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan", cpp_options = list(stan_threads = TRUE) )
   	model  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
   }
   
@@ -2160,7 +2160,7 @@ replicate_data = function(.data,
   	mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
   else {
   	write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
-  	mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
+  	mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan", cpp_options = list(stan_threads = TRUE) )
   	mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
   }
   
