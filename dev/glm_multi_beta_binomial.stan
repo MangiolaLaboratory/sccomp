@@ -89,6 +89,51 @@ functions{
 
   }
 
+  real partial_sum_N_lpmf(int[] slice_N,
+                        int start,
+                        int end,
+                        int M,
+                        int[,] y,
+                        matrix X,
+                        matrix Xa,
+                        int[] exposure,
+                        matrix beta,
+                        matrix alpha,
+                        
+                        // random effects
+                        int N_random_intercepts,
+                        matrix X_random_intercept,
+                        matrix beta_random_intercept_raw
+                        ) {
+
+	int N = num_elements(slice_N);
+	
+  // vectorisation
+  vector[N*M] mu_array;
+  vector[N*M] precision_array;
+  
+	// Calculate locations distribution
+  matrix[M, N] mu = (X[slice_N,] * beta)';
+  matrix[M, N] precision = (Xa[slice_N,] * alpha)';
+
+  if(N_random_intercepts>0 ) mu += append_row((X_random_intercept[slice_N,] * beta_random_intercept_raw)', rep_row_vector(0, N));
+
+  // Calculate proportions
+  for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+
+  // Convert the matrix m to a column vector in column-major order.
+  mu_array = to_vector(mu);
+  precision_array = to_vector(exp(precision));
+
+  return beta_binomial_lupmf(
+      to_array_1d(y[slice_N,]) |
+      rep_each(exposure[slice_N], M),
+      (mu_array .* precision_array),
+      (1.0 - mu_array) .* precision_array
+    ) ;
+
+  }
+  
 }
 data{
   int<lower=1> N;
@@ -202,9 +247,9 @@ transformed parameters{
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   beta = R_ast_inverse * beta_raw; // coefficients on x
 
-  // Calculate locations distribution
-  mu = (Q_ast * beta_raw)';
-
+  // // Calculate locations distribution
+  // mu = (Q_ast * beta_raw)';
+  // 
   // random intercept
   if(N_random_intercepts>0 ){
     random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
@@ -229,32 +274,54 @@ transformed parameters{
       else
         beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
     }
-
-    // Update with summing mu_random_intercept
-    mu = mu + append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
+  // 
+  //   // Update with summing mu_random_intercept
+  //   mu = mu + append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
   }
-
-  // Calculate proportions
-  for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-
-  // Convert the matrix m to a column vector in column-major order.
-  mu_array = to_vector(mu);
-  precision_array = to_vector(exp(precision));
+  // 
+  // // Calculate proportions
+  // for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+  // 
+  // // Convert the matrix m to a column vector in column-major order.
+  // mu_array = to_vector(mu);
+  // precision_array = to_vector(exp(precision));
 
 }
 model{
 
+
   // Fit main distribution
   if(use_data == 1){
 
+		int N_array[N];
+		for(n in 1:N) N_array[n] = n;
+		
     target += reduce_sum(
-      partial_sum_lupmf,
-      y_array[truncation_not_idx],
+      partial_sum_N_lupmf,
+      N_array,
       grainsize,
-      exposure_array[truncation_not_idx],
-      mu_array[truncation_not_idx],
-      precision_array[truncation_not_idx]
+      M,
+      y,
+      Q_ast,
+      Xa,
+      exposure,
+      beta_raw,
+      alpha,
+      
+      // Random effect
+      N_random_intercepts,
+      X_random_intercept,
+      beta_random_intercept_raw
     );
+    
+    // target += reduce_sum(
+    //   partial_sum_lupmf,
+    //   y_array[truncation_not_idx],
+    //   grainsize,
+    //   exposure_array[truncation_not_idx],
+    //   mu_array[truncation_not_idx],
+    //   precision_array[truncation_not_idx]
+    // );
 
     // target += beta_binomial_lpmf(
     //   y_array[truncation_not_idx] |
@@ -351,16 +418,16 @@ generated quantities {
   for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(beta_random_intercept_raw[n,]);
   }
 
-  // LOO
-  if(enable_loo==1)
-    for (n in 1:TNS) {
-      log_lik[n] = beta_binomial_lpmf(
-        y_array[truncation_not_idx[n]] |
-        exposure_array[truncation_not_idx[n]],
-        (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
-        ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
-        ) ;
-    }
+  // // LOO
+  // if(enable_loo==1)
+  //   for (n in 1:TNS) {
+  //     log_lik[n] = beta_binomial_lpmf(
+  //       y_array[truncation_not_idx[n]] |
+  //       exposure_array[truncation_not_idx[n]],
+  //       (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
+  //       ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
+  //       ) ;
+  //   }
 
 
 }
