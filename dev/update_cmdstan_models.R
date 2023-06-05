@@ -8,3 +8,5 @@ save(glm_multi_beta_binomial_generate, file = here("data/glm_multi_beta_binomial
 
 glm_multi_beta_binomial_simulate = read_file(here("dev/glm_multi_beta_binomial_simulate.stan"))
 save(glm_multi_beta_binomial_simulate, file = here("data/glm_multi_beta_binomial_simulate.rda"), compress = "xz")
+
+devtools::install()
