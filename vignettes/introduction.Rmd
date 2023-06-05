@@ -54,7 +54,6 @@ library(sccomp)
 library(ggplot2)
 library(forcats)
 library(tidyr)
-library(rstan)
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
@@ -223,7 +222,8 @@ It is possible to directly evaluate the posterior distribution. In this example,
 first cell type. We can see that it has converged and is negative with probability 1.
 
 ```{r}
-res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
+attr(res, "fit")$draws(variables = c("beta[2,1]")) |> 
+mcmc_trace()
 ```
 
 Plot 1D significance plot
