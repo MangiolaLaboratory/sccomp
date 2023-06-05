@@ -98,7 +98,12 @@ functions{
                         matrix Xa,
                         int[] exposure,
                         matrix beta,
-                        matrix alpha
+                        matrix alpha,
+                        
+                        // random effects
+                        int N_random_intercepts,
+                        matrix X_random_intercept,
+                        matrix beta_random_intercept_raw
                         ) {
 
 	int N = num_elements(slice_N);
@@ -110,6 +115,8 @@ functions{
 	// Calculate locations distribution
   matrix[M, N] mu = (X[slice_N,] * beta)';
   matrix[M, N] precision = (Xa[slice_N,] * alpha)';
+
+  if(N_random_intercepts>0 ) mu += append_row((X_random_intercept[slice_N,] * beta_random_intercept_raw)', rep_row_vector(0, N));
 
   // Calculate proportions
   for(n in 1:N)  mu[,n] = softmax(mu[,n]);
@@ -243,34 +250,34 @@ transformed parameters{
   // // Calculate locations distribution
   // mu = (Q_ast * beta_raw)';
   // 
-  // // random intercept
-  // if(N_random_intercepts>0 ){
-  //   random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
-  //   // Building the - sum, Loop across covariates
-  //   for(a in 1:N_minus_sum){
-  //     // Reset sum to zero
-  //     row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
-  //     // Loop across random intercept - 1
-  //     for(n in 1:N_random_intercepts){
-  //       if(paring_cov_random_intercept[n,1] == a)
-  //       temp_random_intercept += random_intercept_raw[n];
-  //     }
-  //     // The sum to zero for each covariate
-  //     random_intercept_minus_sum[a] = temp_random_intercept * -1;
-  //   }
-  //   // Build the beta_random_intercept_raw
-  //   for(n in 1:N_grouping){
-  //     if(idx_group_random_intercepts[n,2]>0)
-  //       beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
-  //     else if(idx_group_random_intercepts[n,2]<0)
-  //       beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]] .* exp(random_intercept_sigma / 3.0);
-  //     else
-  //       beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
-  //   }
+  // random intercept
+  if(N_random_intercepts>0 ){
+    random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
+    // Building the - sum, Loop across covariates
+    for(a in 1:N_minus_sum){
+      // Reset sum to zero
+      row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
+      // Loop across random intercept - 1
+      for(n in 1:N_random_intercepts){
+        if(paring_cov_random_intercept[n,1] == a)
+        temp_random_intercept += random_intercept_raw[n];
+      }
+      // The sum to zero for each covariate
+      random_intercept_minus_sum[a] = temp_random_intercept * -1;
+    }
+    // Build the beta_random_intercept_raw
+    for(n in 1:N_grouping){
+      if(idx_group_random_intercepts[n,2]>0)
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
+      else if(idx_group_random_intercepts[n,2]<0)
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]] .* exp(random_intercept_sigma / 3.0);
+      else
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
+    }
   // 
   //   // Update with summing mu_random_intercept
   //   mu = mu + append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
-  // }
+  }
   // 
   // // Calculate proportions
   // for(n in 1:N)  mu[,n] = softmax(mu[,n]);
@@ -299,7 +306,12 @@ model{
       Xa,
       exposure,
       beta_raw,
-      alpha
+      alpha,
+      
+      // Random effect
+      N_random_intercepts,
+      X_random_intercept,
+      beta_random_intercept_raw
     );
     
     // target += reduce_sum(
