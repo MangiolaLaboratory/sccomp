@@ -400,16 +400,6 @@ fit_model = function(
         parallelisation_start_penalty = 200
       ) %>%
       min(cores)
-
-  # rstan_options(threads_per_chain = floor(cores/chains))
-  # Load model
-  if(file.exists("glm_multi_beta_binomial_cmdstanr.rds"))
-  	model = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
-  else {
-  	write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
-  	model = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan", cpp_options = list(stan_threads = TRUE) )
-  	model  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
-  }
   
   init_list=list(
     prec_coeff = c(5,0),

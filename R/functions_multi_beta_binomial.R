@@ -89,6 +89,16 @@ estimate_multi_beta_binomial_glm = function(.data,
     .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
   }
 
+  # rstan_options(threads_per_chain = floor(cores/chains))
+  # Load model
+  if(file.exists("glm_multi_beta_binomial_cmdstanr.rds"))
+    model = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
+  else {
+    write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
+    model = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan", cpp_options = list(stan_threads = TRUE) )
+    model  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
+  }
+  
   # Original - old
   # prec_sd ~ normal(0,2);
   # prec_coeff ~ normal(0,5);
@@ -132,7 +142,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
       # Run the first discovery phase with permissive false discovery rate
       fit_model(
-        stanmodels$glm_multi_beta_binomial,
+        model,
         cores= cores,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference == "all",
@@ -182,7 +192,7 @@ estimate_multi_beta_binomial_glm = function(.data,
 
       # Run the first discovery phase with permissive false discovery rate
       fit_model(
-        stanmodels$glm_multi_beta_binomial,
+        model,
         cores= cores,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
@@ -277,6 +287,24 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_not_idx = (data_for_model$truncation_down >= 0) %>% t() %>% as.vector()  %>% which()
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
+    
+    # Introduced with cmdstanr
+    data_for_model$truncation_not_matrix = (data_for_model$truncation_down >= 0)
+    data_for_model$truncation_df = 
+      data_for_model$truncation_down |> 
+      st(0) |> 
+      as_tibble() |> 
+      rowid_to_column("N") |>
+      pivot_longer(-N, names_to = "M", values_to = "do_truncate") |> 
+      mutate(N = as.integer(N), M = as.integer(M)) |> 
+      arrange(N, M) |> 
+      filter(do_truncate) |> 
+      select(N, M) |>
+      as.matrix()
+    data_for_model$truncation_df_length = nrow(data_for_model$truncation_df)
+    data_for_model$truncation_matrix_idx_length = data_for_model$truncation_not_matrix |> apply(1, function(x) x %>% `!` |> which()  |> length())
+    data_for_model$truncation_not_matrix_idx_length = data_for_model$truncation_not_matrix |> apply(1, function(x) x |> which() |> length())
+    
 
     message("sccomp says: outlier identification second pass - step 2/3")
 
@@ -290,7 +318,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     fit2 =
       data_for_model %>%
       fit_model(
-        stanmodels$glm_multi_beta_binomial,
+        model,
         cores = cores,
         quantile = my_quantile_step_2,
         approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
@@ -373,7 +401,7 @@ estimate_multi_beta_binomial_glm = function(.data,
       data_for_model %>%
       # Run the first discovery phase with permissive false discovery rate
       fit_model(
-        stanmodels$glm_multi_beta_binomial,
+        model,
         cores = cores,
         quantile = CI,
         approximate_posterior_inference = approximate_posterior_inference %in% c("all"),

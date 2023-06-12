@@ -432,7 +432,7 @@ model{
     //   precision_array[truncation_not_idx]
     // );
 
-    // target += beta_binomial_lpmf(
+    // target += beta_binomial_lupmf(
     //   y_array[truncation_not_idx] |
     //   exposure_array[truncation_not_idx],
     //   (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
