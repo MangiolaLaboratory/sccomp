@@ -22,13 +22,15 @@ data {
 	int is_truncated;
 	real<lower=1> truncation_ajustment;
 
-
-
-	// Random intercept
-	int length_X_random_intercept_which;
+ // Random intercept
+ int length_X_random_intercept_which;
 	int X_random_intercept_which[length_X_random_intercept_which];
-	int N_grouping;
-	matrix[N, N_grouping] X_random_intercept;
+  int N_random_intercepts;
+  int N_minus_sum;
+  int paring_cov_random_intercept[N_random_intercepts, 2];
+  int N_grouping;
+  matrix[N, N_grouping] X_random_intercept;
+  int idx_group_random_intercepts[N_grouping, 2];
 
   // Should I create intercept for generate quantities
   int<lower=0, upper=1> create_intercept;
@@ -40,14 +42,55 @@ transformed data{
 
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   int N_grouping_WINDOWS_BUG_FIX = max(N_grouping, 1);
+  
+  matrix[N, C] Q_ast;
+  matrix[C, C] R_ast;
+  matrix[C, C] R_ast_inverse;
+
+  // thin and scale the QR decomposition
+  Q_ast = qr_thin_Q(X) * sqrt(N - 1);
+  R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
+  
+  // If I get crazy diagonal matrix omit it
+  if(max(R_ast_inverse)>1000 || N_random_intercepts>0){
+   // print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
+    Q_ast = X;
+    R_ast_inverse = diag_matrix(rep_vector(1.0, C));
+  }
 }
+
 parameters {
 
-	matrix[C,M] beta;
-	matrix[A,M] alpha;
+  matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
+  matrix[A, M] alpha; // Variability
+  // To exclude
+  real prec_coeff[2];
+  real<lower=0> prec_sd;
+  real<lower=0, upper=1> mix_p;
+  
+  // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
+  matrix[N_random_intercepts * (N_random_intercepts>0), M-1] random_intercept_raw;
+  
+  // sd of random intercept
+  real random_intercept_sigma_mu[N_random_intercepts>0];
+  real random_intercept_sigma_sigma[N_random_intercepts>0];
+  row_vector[(M-1) * (N_random_intercepts>0)] random_intercept_sigma_raw;
+  
+  // If I have just one group
+  real zero_random_intercept[N_random_intercepts>0];
+  
+  // Initialisation
+  matrix[C,M] beta_raw;
 
-	// Random intercept
+  // Random effects
+  matrix[N_minus_sum, M-1] random_intercept_minus_sum;
+  row_vector[M-1] random_intercept_sigma;
+  matrix[N_grouping, M-1] beta_random_intercept_raw;
+
+// Random intercept
 	matrix[N_grouping_WINDOWS_BUG_FIX, M-1] beta_random_intercept;
+	
+
 
 }
 transformed parameters{
@@ -59,6 +102,8 @@ transformed parameters{
 generated quantities{
 
   int counts_uncorrected[N, M];
+
+  matrix[C,M] beta = R_ast_inverse * beta_raw; // coefficients on x
 
 
   // Matrix for correcting for exposure
@@ -81,7 +126,7 @@ generated quantities{
     mu = (
       append_col(
         to_matrix(rep_vector(1, N)), // Intercept
-        X // Rest
+        Q_ast // Rest
         ) *
         append_row(
           average_by_col(beta[1:A_intercept_columns,]), // Intercept
@@ -104,7 +149,7 @@ generated quantities{
   }
   else {
     // Create mean and deviation
-    mu = (X * my_beta)';
+    mu = (Q_ast * my_beta)';
     precision = (Xa * my_alpha)' / (is_truncated ? truncation_ajustment : 1);
 
   }

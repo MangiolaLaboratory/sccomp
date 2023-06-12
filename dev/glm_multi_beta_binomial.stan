@@ -1,4 +1,32 @@
 functions{
+  
+  int is_present(int x, int[] y) {
+    int present = 0;
+    for (i in 1:num_elements(y)) {
+      if (y[i] == x) {
+        present = 1;
+        break;
+      }
+    }
+    return present;
+  }
+  
+  // int[] logical_matrix_to_index_vesctor(int[,] logical_matrix, int length_index_vector){
+  //   int index_vector[length_index_vector];
+  //   int i = 1;
+  //   int j = 1;
+  //   
+  //   for(n_col in 1:cols(logical_matrix)){
+  //     for(n_row in 1:num_elements(logical_matrix[,n_col])){
+  //       if(logical_matrix[n_row,n_col] == 1) {
+  //         index_vector[i] = j;
+  //         i += 1;
+  //       }
+  //       j += 1;
+  //     }
+  //   }
+  // }
+  
   vector Q_sum_to_zero_QR(int N) {
     vector [2*N] Q_r;
 
@@ -103,7 +131,11 @@ functions{
                         // random effects
                         int N_random_intercepts,
                         matrix X_random_intercept,
-                        matrix beta_random_intercept_raw
+                        matrix beta_random_intercept_raw,
+                        
+                        // censoring
+                        int[,] truncation_df,
+                        int[] truncation_matrix_idx_length
                         ) {
 
 	int N = num_elements(slice_N);
@@ -124,16 +156,76 @@ functions{
   // Convert the matrix m to a column vector in column-major order.
   mu_array = to_vector(mu);
   precision_array = to_vector(exp(precision));
-
+  
+  
+  int truncation_array_length = sum(truncation_matrix_idx_length[slice_N]);
+  int truncation_not_index_length = (num_elements(slice_N)*M) - truncation_array_length;
+  int truncation_not_index[truncation_not_index_length] =  truncation_df_to_idx(truncation_df, truncation_array_length, truncation_not_index_length, slice_N, M);
+  
   return beta_binomial_lupmf(
-      to_array_1d(y[slice_N,]) |
-      rep_each(exposure[slice_N], M),
-      (mu_array .* precision_array),
-      (1.0 - mu_array) .* precision_array
+      to_array_1d(y[slice_N,])[truncation_not_index] |
+      rep_each(exposure[slice_N], M)[truncation_not_index],
+      (mu_array .* precision_array)[truncation_not_index],
+      ((1.0 - mu_array) .* precision_array)[truncation_not_index]
     ) ;
 
   }
   
+int[] elements_not_in_array(int[] A, int[] B) {
+    int size_C = num_elements(A) - num_elements(B);
+    
+    //print(B, "--");
+    // Create array C
+    int C[size_C];
+    int index = 1;
+    
+    // Populate C with elements from A not in B
+    for (i in 1:size(A)) {
+      if (!is_present(A[i], B)) {
+        C[index] = A[i];
+        index += 1;
+      }
+    }
+    
+    return C;
+  }
+  
+  
+ int[] truncation_df_to_idx(int[,] truncation_df, int truncation_array_length, int truncation_not_index_length, int[] slice_N, int M) {
+    int i = 1;
+    int j = 1;
+    int truncation_array[truncation_array_length];
+    
+    
+    // loop rows
+    for (n_row in slice_N) {
+      
+      // loop columns
+      for (n_col in 1:M) {
+        
+        // loop truncation
+        for (z in 1:num_elements(truncation_df[,1])) {
+          if (truncation_df[z, 1] == n_row && truncation_df[z, 2] == n_col) {
+            truncation_array[i] = j;
+            i = i + 1;
+            break;
+          }
+        }
+        
+        j = j + 1;
+      }
+    }
+
+
+    int tot_length = num_elements(slice_N) * M;
+    int tot_array[tot_length];
+    for(n in 1:tot_length) tot_array[n] = n;
+    int truncation_not_array[truncation_not_index_length] = elements_not_in_array(tot_array, truncation_array);
+
+    return(truncation_not_array);
+  }
+  
+
 }
 data{
   int<lower=1> N;
@@ -154,6 +246,12 @@ data{
   int truncation_down[N,M];
   int<lower=1, upper=N*M> TNS; // truncation_not_size
   int<lower=1, upper=N*M> truncation_not_idx[TNS];
+  
+  int truncation_df_length;
+  int truncation_df[truncation_df_length, 2]; 
+  int truncation_not_matrix_idx_length[N];
+  int truncation_matrix_idx_length[N];
+  // Variational
   int<lower=0, upper=1> is_vb;
 
   // Prior info
@@ -229,23 +327,16 @@ transformed parameters{
 
   // Initialisation
   matrix[C,M] beta_raw;
-  matrix[M, N] precision = (Xa * alpha)';
-  matrix[C,M] beta;
+
 
   // Random effects
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
   row_vector[M-1] random_intercept_sigma;
   matrix[N_grouping, M-1] beta_random_intercept_raw;
 
-  // locations distribution
-  matrix[M, N] mu;
-
-  // vectorisation
-  vector[N*M] mu_array;
-  vector[N*M] precision_array;
-
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-  beta = R_ast_inverse * beta_raw; // coefficients on x
+  
+
 
   // // Calculate locations distribution
   // mu = (Q_ast * beta_raw)';
@@ -285,10 +376,24 @@ transformed parameters{
   // // Convert the matrix m to a column vector in column-major order.
   // mu_array = to_vector(mu);
   // precision_array = to_vector(exp(precision));
+  
+    // Rondom effect
+  matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
+
+  // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
+  if(N_grouping==0) beta_random_intercept[1] = rep_row_vector(0.0, M);
+
+  // Rondom effect
+  else{
+     beta_random_intercept[,1:(M-1)] = beta_random_intercept_raw;
+  for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(beta_random_intercept_raw[n,]);
+  }
 
 }
 model{
 
+    matrix[C,M] beta;
+  beta = R_ast_inverse * beta_raw; // coefficients on x
 
   // Fit main distribution
   if(use_data == 1){
@@ -311,7 +416,11 @@ model{
       // Random effect
       N_random_intercepts,
       X_random_intercept,
-      beta_random_intercept_raw
+      beta_random_intercept_raw,
+      
+      // censoring
+      truncation_df,
+      truncation_matrix_idx_length
     );
     
     // target += reduce_sum(
@@ -395,9 +504,11 @@ model{
   }
 }
 generated quantities {
+  
+  matrix[C,M] beta;
+  beta = R_ast_inverse * beta_raw; // coefficients on x
+
   matrix[A, M] alpha_normalised = alpha;
-  // Rondom effect
-  matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
 
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
@@ -409,14 +520,7 @@ generated quantities {
     for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
   }
 
-  // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-  if(N_grouping==0) beta_random_intercept[1] = rep_row_vector(0.0, M);
 
-  // Rondom effect
-  else{
-     beta_random_intercept[,1:(M-1)] = beta_random_intercept_raw;
-  for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(beta_random_intercept_raw[n,]);
-  }
 
   // // LOO
   // if(enable_loo==1)
