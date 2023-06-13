@@ -797,6 +797,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
 #' @importFrom tidyr expand_grid
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_remove_all
+#' @importFrom stringr str_remove
 #'
 #' @keywords internal
 #' @noRd
@@ -988,6 +989,24 @@ data_spread_to_model_input =
     data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
+    # Introduced with cmdstanr
+    data_for_model$truncation_not_matrix = (data_for_model$truncation_down >= 0 | 1)
+    data_for_model$truncation_df = 
+      data_for_model$truncation_down |> 
+      st(0) |> 
+      as_tibble() |> 
+      rowid_to_column("N") |>
+      pivot_longer(-N, names_to = "M", values_to = "do_truncate") |> 
+      mutate(M = M |> str_remove("V")) |> 
+      mutate(N = as.integer(N), M = as.integer(M)) |> 
+      arrange(N, M) |> 
+      filter(do_truncate) |> 
+      select(N, M) |>
+      as.matrix()
+    data_for_model$truncation_df_length = nrow(data_for_model$truncation_df)
+    data_for_model$truncation_matrix_idx_length = data_for_model$truncation_not_matrix |> apply(1, function(x) x %>% `!` |> which()  |> length())
+    data_for_model$truncation_not_matrix_idx_length = data_for_model$truncation_not_matrix |> apply(1, function(x) x |> which() |> length())
+    
     # Add parameter factor dictionary
     data_for_model$factor_parameter_dictionary = tibble()
 

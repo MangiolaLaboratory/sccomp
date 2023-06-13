@@ -134,6 +134,7 @@ functions{
                         matrix beta_random_intercept_raw,
                         
                         // censoring
+                        int is_truncated,
                         int[,] truncation_df,
                         int[] truncation_matrix_idx_length
                         ) {
@@ -157,11 +158,16 @@ functions{
   mu_array = to_vector(mu);
   precision_array = to_vector(exp(precision));
   
-  
+  // Truncation
   int truncation_array_length = sum(truncation_matrix_idx_length[slice_N]);
   int truncation_not_index_length = (num_elements(slice_N)*M) - truncation_array_length;
-  int truncation_not_index[truncation_not_index_length] =  truncation_df_to_idx(truncation_df, truncation_array_length, truncation_not_index_length, slice_N, M);
+  int truncation_not_index[truncation_not_index_length];
+  if(is_truncated) {
+    truncation_not_index = truncation_df_to_idx(truncation_df, truncation_array_length, truncation_not_index_length, slice_N, M);
+  }
+  else for(i in 1:truncation_not_index_length) truncation_not_index[i] = i;
   
+  // Return
   return beta_binomial_lupmf(
       to_array_1d(y[slice_N,])[truncation_not_index] |
       rep_each(exposure[slice_N], M)[truncation_not_index],
@@ -419,6 +425,7 @@ model{
       beta_random_intercept_raw,
       
       // censoring
+      is_truncated,
       truncation_df,
       truncation_matrix_idx_length
     );
