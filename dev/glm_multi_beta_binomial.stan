@@ -100,22 +100,78 @@ functions{
     return(lp);
   }
 
-  real partial_sum_lpmf(int[] slice_y,
-                        int start,
-                        int end,
-                        int[] exposure_array,
-                        vector mu_array,
-                        vector precision_array
-                        ) {
+  // real partial_sum_lpmf(int[] slice_y,
+  //                       int start,
+  //                       int end,
+  //                       int[] exposure_array,
+  //                       vector mu_array,
+  //                       vector precision_array
+  //                       ) {
+  // 
+  // return beta_binomial_lupmf(
+  //     slice_y |
+  //     exposure_array[start:end],
+  //     (mu_array[start:end] .* precision_array[start:end]),
+  //     (1.0 - mu_array[start:end]) .* precision_array[start:end]
+  //   ) ;
+  // 
+  // }
 
-  return beta_binomial_lupmf(
-      slice_y |
-      exposure_array[start:end],
-      (mu_array[start:end] .* precision_array[start:end]),
-      (1.0 - mu_array[start:end]) .* precision_array[start:end]
-    ) ;
-
+int[] elements_not_in_array(int[] A, int[] B) {
+    int size_C = num_elements(A) - num_elements(B);
+    
+    //print(B, "--");
+    // Create array C
+    int C[size_C];
+    int index = 1;
+    
+    // Populate C with elements from A not in B
+    for (i in 1:size(A)) {
+      if (!is_present(A[i], B)) {
+        C[index] = A[i];
+        index += 1;
+      }
+    }
+    
+    return C;
   }
+  
+  
+int[] truncation_df_to_idx(int[,] truncation_df, int truncation_array_length, int truncation_not_index_length, int[] slice_N, int M) {
+    int i = 1;
+    int j = 1;
+    int truncation_array[truncation_array_length];
+    
+    
+    // loop rows
+    for (n_row in slice_N) {
+      
+      // loop columns
+      for (n_col in 1:M) {
+        
+        // loop truncation
+        for (z in 1:num_elements(truncation_df[,1])) {
+          if (truncation_df[z, 1] == n_row && truncation_df[z, 2] == n_col) {
+            truncation_array[i] = j;
+            i = i + 1;
+            break;
+          }
+        }
+        
+        j = j + 1;
+      }
+    }
+
+
+    int tot_length = num_elements(slice_N) * M;
+    int tot_array[tot_length];
+    for(n in 1:tot_length) tot_array[n] = n;
+    int truncation_not_array[truncation_not_index_length] = elements_not_in_array(tot_array, truncation_array);
+
+    return(truncation_not_array);
+  }
+  
+
 
   real partial_sum_N_lpmf(int[] slice_N,
                         int start,
@@ -175,60 +231,6 @@ functions{
       ((1.0 - mu_array) .* precision_array)[truncation_not_index]
     ) ;
 
-  }
-  
-int[] elements_not_in_array(int[] A, int[] B) {
-    int size_C = num_elements(A) - num_elements(B);
-    
-    //print(B, "--");
-    // Create array C
-    int C[size_C];
-    int index = 1;
-    
-    // Populate C with elements from A not in B
-    for (i in 1:size(A)) {
-      if (!is_present(A[i], B)) {
-        C[index] = A[i];
-        index += 1;
-      }
-    }
-    
-    return C;
-  }
-  
-  
- int[] truncation_df_to_idx(int[,] truncation_df, int truncation_array_length, int truncation_not_index_length, int[] slice_N, int M) {
-    int i = 1;
-    int j = 1;
-    int truncation_array[truncation_array_length];
-    
-    
-    // loop rows
-    for (n_row in slice_N) {
-      
-      // loop columns
-      for (n_col in 1:M) {
-        
-        // loop truncation
-        for (z in 1:num_elements(truncation_df[,1])) {
-          if (truncation_df[z, 1] == n_row && truncation_df[z, 2] == n_col) {
-            truncation_array[i] = j;
-            i = i + 1;
-            break;
-          }
-        }
-        
-        j = j + 1;
-      }
-    }
-
-
-    int tot_length = num_elements(slice_N) * M;
-    int tot_array[tot_length];
-    for(n in 1:tot_length) tot_array[n] = n;
-    int truncation_not_array[truncation_not_index_length] = elements_not_in_array(tot_array, truncation_array);
-
-    return(truncation_not_array);
   }
   
 
