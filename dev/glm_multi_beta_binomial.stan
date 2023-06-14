@@ -233,6 +233,78 @@ int[] truncation_df_to_idx(int[,] truncation_df, int truncation_array_length, in
 
   }
   
+  
+      real partial_sum_optimised_lpmf(int[] slice_y,
+                        int start,
+                        int end,
+                        int M,
+                        matrix X,
+                        matrix Xa,
+                        int[] exposure,
+                        matrix beta,
+                        matrix alpha,
+                        
+                        // random effects
+                        int N_random_intercepts,
+                        matrix X_random_intercept,
+                        matrix beta_random_intercept_raw,
+                        
+                        // censoring
+                        int is_truncated,
+                        int[,] truncation_df,
+                        int[] truncation_matrix_idx_length
+                        ) {
+
+  // Calculate what to subsample to get consistency with slice_y
+  int sample_start = to_int(ceil(start*1.0/M));
+  int sample_end = to_int(ceil(end*1.0/M));
+  int N = sample_end-sample_start+1;
+  int slice_N[N] = createIntegerArray(sample_start, sample_end) ;
+  int what_to_subtract = (sample_start-1)*M;
+	int idx_slice_transposed[end-start+1] = createIntegerArray(start-what_to_subtract, end-what_to_subtract);
+
+  // vectorisation
+  vector[N*M] mu_array;
+  vector[N*M] precision_array;
+  
+	// Calculate locations distribution
+  matrix[M, N] mu = (X[slice_N,] * beta)';
+  matrix[M, N] precision = (Xa[slice_N,] * alpha)';
+
+  if(N_random_intercepts>0 ) mu += append_row((X_random_intercept[slice_N,] * beta_random_intercept_raw)', rep_row_vector(0, N));
+
+  // Calculate proportions
+  for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+
+  // Convert the matrix m to a column vector in column-major order.
+  mu_array = to_vector(mu);
+  precision_array = to_vector(exp(precision));
+  
+  // Truncation
+  int truncation_array_length = sum(truncation_matrix_idx_length[slice_N]);
+  int truncation_not_index_length = (num_elements(slice_N)*M) - truncation_array_length;
+  int truncation_not_index[truncation_not_index_length];
+  if(is_truncated) {
+    truncation_not_index = truncation_df_to_idx(truncation_df, truncation_array_length, truncation_not_index_length, slice_N, M);
+  }
+  else for(i in 1:truncation_not_index_length) truncation_not_index[i] = i;
+  
+  print(num_elements(idx_slice_transposed), " [[[[[");
+  print(num_elements(slice_y), " ]]]]]");
+  print(M*N, " ****");
+  
+  
+  // Return
+  return beta_binomial_lupmf(
+      slice_y |
+      rep_each(exposure[slice_N], M)[truncation_not_index][idx_slice_transposed],
+      (mu_array .* precision_array)[truncation_not_index][idx_slice_transposed],
+      ((1.0 - mu_array) .* precision_array)[truncation_not_index][idx_slice_transposed]
+    ) ;
+
+  }
+
+  
 
 }
 data{
@@ -437,6 +509,28 @@ model{
       truncation_df,
       truncation_matrix_idx_length
     ), "--- parallel");
+    
+       print(reduce_sum(
+      partial_sum_optimised_lpmf,
+      y_array,
+      grainsize,
+      M,
+      Q_ast,
+      Xa,
+      exposure,
+      beta_raw,
+      alpha,
+      
+      // Random effect
+      N_random_intercepts,
+      X_random_intercept,
+      beta_random_intercept_raw,
+      
+      // censoring
+      is_truncated,
+      truncation_df,
+      truncation_matrix_idx_length
+    ),  "---optimised");
     
     // target += reduce_sum(
     //   partial_sum_lupmf,
