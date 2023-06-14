@@ -201,6 +201,7 @@ vb_iterative = function(model,
                         tol_rel_obj,
                         additional_parameters_to_save = c(),
                         data,
+                        threads ,
                         seed,
                         ...) {
   res = NULL
@@ -212,6 +213,7 @@ vb_iterative = function(model,
         output_samples = output_samples,
         iter = iter,
         tol_rel_obj = tol_rel_obj,
+        threads = threads,
         seed = seed,
         #pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
         ...
@@ -277,8 +279,8 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
   par_names =
     names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
-
-  fit$draws(variables = par) %>%
+ 
+  fit$draws(variables = par, format = "draws_matrix") %>%
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = seq_len(n())) %>%
@@ -286,7 +288,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     #when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
 
     pivot_longer(
-    	names_to = c( ".chain", ".variable", x, y),
+    	names_to = c( ".variable", x, y),
     	cols = contains(par),
       names_sep = "\\.|\\[|,|\\]|:",
       names_ptypes = list(
@@ -298,6 +300,8 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     # Expected 5 pieces. Additional pieces discarded
     suppressWarnings() %>%
 
+    mutate(.chain = NA) |> 
+    
     mutate(
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
@@ -437,6 +441,7 @@ fit_model = function(
       iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
+      threads = cores,
       seed = seed
     ) %>%
       suppressWarnings()
@@ -2181,12 +2186,12 @@ replicate_data = function(.data,
   	
   	# Data
     data = model_input |> c(
-
+      list(
       # Add subset of coefficients
       length_X_which = length(X_which),
       length_XA_which = length(XA_which),
-      X_which,
-      XA_which,
+      X_which = X_which,
+      XA_which = XA_which,
 
       # Random intercept
       X_random_intercept_which = X_random_intercept_which,
@@ -2194,9 +2199,10 @@ replicate_data = function(.data,
 
       # Should I create intercept for generate quantities
       create_intercept = create_intercept
-
+      )
     ),
-  	parallel_chains = ifelse(model_input$is_vb, 1, fit$num_chains()),
+  	parallel_chains = 1,
+  	threads_per_chain = 1,
     seed = mcmc_seed
   )
 

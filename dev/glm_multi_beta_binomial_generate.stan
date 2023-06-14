@@ -23,14 +23,14 @@ data {
 	real<lower=1> truncation_ajustment;
 
  // Random intercept
- int length_X_random_intercept_which;
-	int X_random_intercept_which[length_X_random_intercept_which];
-  int N_random_intercepts;
-  int N_minus_sum;
-  int paring_cov_random_intercept[N_random_intercepts, 2];
-  int N_grouping;
-  matrix[N, N_grouping] X_random_intercept;
-  int idx_group_random_intercepts[N_grouping, 2];
+    int length_X_random_intercept_which;
+    int X_random_intercept_which[length_X_random_intercept_which];
+    int N_random_intercepts;
+    int N_minus_sum;
+    int paring_cov_random_intercept[N_random_intercepts, 2];
+    int N_grouping;
+    matrix[N, N_grouping] X_random_intercept;
+    int idx_group_random_intercepts[N_grouping, 2];
 
   // Should I create intercept for generate quantities
   int<lower=0, upper=1> create_intercept;
@@ -87,7 +87,7 @@ parameters {
   row_vector[M-1] random_intercept_sigma;
   matrix[N_grouping, M-1] beta_random_intercept_raw;
 
-// Random intercept
+  // Random intercept
 	matrix[N_grouping_WINDOWS_BUG_FIX, M-1] beta_random_intercept;
 	
 
