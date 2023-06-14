@@ -837,9 +837,8 @@ generated quantities {
   // LOO
   if(enable_loo==1){
     
-    int y_array[M*N] = to_array_1d(y);
     vector[N*M] mu_array =  to_vector((X * beta)');
-  vector[N*M] precision_array = to_vector(exp(precision));
+  vector[N*M] precision_array = to_vector(exp((Xa * alpha)'));
 
         for (n in 1:TNS) {
       log_lik[n] = beta_binomial_lpmf(
