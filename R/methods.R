@@ -641,76 +641,85 @@ test_contrasts.data.frame = function(.data,
 
   # Abundance
   abundance_CI =
-    get_abundance_contrast_draws(.data, contrasts) %>%
-
-    # If my contrasts do not match my model. I have to do something more elegant.
-    when(
-      "parameter" %in% colnames(.) ~  draws_to_statistics(
-        .,
+    get_abundance_contrast_draws(.data, contrasts) 
+  
+  # If my contrasts do not match my model. I have to do something more elegant.
+  if ("parameter" %in% colnames(abundance_CI)) 
+    abundance_CI = 
+      abundance_CI |> 
+      draws_to_statistics(
         percent_false_positive/100,
         test_composition_above_logit_fold_change,
         !!.cell_group,
         "c_"
-      ),
-    ~ (.)
-  )
-
-
+      )
+  
+  
   # Variability
   variability_CI =
     get_variability_contrast_draws(.data, contrasts) |>
     draws_to_statistics(
-      percent_false_positive/100,
-      test_composition_above_logit_fold_change,
-      !!.cell_group,
+      percent_false_positive / 100,
+      test_composition_above_logit_fold_change,!!.cell_group,
       "v_"
     )
-
+  
+  # If I don't have factors (~1)
+  if (!"factor" %in% colnames(model_input$factor_parameter_dictionary))
+    factor_parameter_dictionary = tibble(`factor` = character(), design_matrix_col = character())
+  else
+    factor_parameter_dictionary =
+    model_input$factor_parameter_dictionary |>
+    select(`factor`, design_matrix_col)
+  
   # Merge and parse
-  abundance_CI |>
-
+  result =
+    abundance_CI |>
+    
     # Add ALPHA
     left_join(variability_CI) |>
     suppressMessages() |>
-
+    
     # Add easy to understand factor labels
-    left_join(
-      model_input$factor_parameter_dictionary |>
-
-        # If I don't have factors (~1)
-        when(
-          !"factor" %in% colnames(.) ~ tibble(`factor`=character(), design_matrix_col = character()),
-          ~ (.)
-        ) |>
-
-        select(`factor`, design_matrix_col),
-      by = c("parameter" = "design_matrix_col" )
-    ) %>%
+    left_join(factor_parameter_dictionary,
+              by = c("parameter" = "design_matrix_col")) %>%
     select(parameter, `factor`, everything()) %>%
-
-    select(!!.cell_group, everything(), -M) %>%
-
-    # Add outlier
-    when(
-      check_outliers ~ (.) %>%
-        left_join(
-          truncation_df2 |>
-            select(-c(M, N, .variable, .median, n_eff, one_of("R_hat", "k_hat", "Rhat"))) |>
-            suppressWarnings() |>
-            nest(count_data = -!!.cell_group),
-          by = quo_name(.cell_group)
-        ),
-      ~ (.) %>% left_join(
-        truncation_df2  |>
-          nest(count_data = -!!.cell_group),
-        by = quo_name(.cell_group)
-      )
-    ) |>
-
+    
+    select(!!.cell_group, everything(),-M)
+  
+  # Add outlier
+  if (check_outliers)
+    result =
+    result |>
+    left_join(
+      truncation_df2 |>
+        select(-c(M, N, .variable, .median, n_eff, one_of("R_hat", "k_hat", "Rhat"))) |>
+        suppressWarnings() |>
+        nest(count_data = -!!.cell_group),
+      by = quo_name(.cell_group)
+    )
+  else
+    result =
+    result |>
+    left_join(truncation_df2  |>
+                nest(count_data = -!!.cell_group),
+              by = quo_name(.cell_group))
+  
+  result = 
+    result |>
+    
     # Add back attributes
-    add_attr(.data |> attr("fit") |> get_mean_precision_association(), "mean_concentration_association") %>%
-    when(pass_fit ~ add_attr(., .data |> attr("fit") , "fit"), ~ (.)) |>
+    add_attr(
+      .data |> attr("fit") |> get_mean_precision_association(),
+      "mean_concentration_association"
+    ) 
+  
+  if(pass_fit)
+    result = 
+  result |>
+    add_attr(.data |> attr("fit") , "fit")
 
+  result |> 
     # Attach association mean concentration
     add_attr(.data |> attr("model_input") , "model_input") |>
     add_attr(.data |> attr("truncation_df2"), "truncation_df2") |>
