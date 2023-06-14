@@ -43,24 +43,9 @@ transformed data{
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   int N_grouping_WINDOWS_BUG_FIX = max(N_grouping, 1);
   
-  matrix[N, C] Q_ast;
-  matrix[C, C] R_ast;
-  matrix[C, C] R_ast_inverse;
-
-  // thin and scale the QR decomposition
-  Q_ast = qr_thin_Q(X) * sqrt(N - 1);
-  R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
-  
-  // If I get crazy diagonal matrix omit it
-  if(max(R_ast_inverse)>1000 || N_random_intercepts>0){
-   // print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
-    Q_ast = X;
-    R_ast_inverse = diag_matrix(rep_vector(1.0, C));
-  }
 }
 
 parameters {
-
   matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
   matrix[A, M] alpha; // Variability
   // To exclude
@@ -81,6 +66,7 @@ parameters {
   
   // Initialisation
   matrix[C,M] beta_raw;
+  matrix[C,M] beta_param;
 
   // Random effects
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
@@ -103,9 +89,6 @@ generated quantities{
 
   int counts_uncorrected[N, M];
 
-  matrix[C,M] beta = R_ast_inverse * beta_raw; // coefficients on x
-
-
   // Matrix for correcting for exposure
   matrix[N, M] counts;
 
@@ -113,7 +96,7 @@ generated quantities{
   real generated_exposure[N];
 
   // Subset for mean and deviation
-  matrix[length_X_which,M] my_beta = beta[X_which,];
+  matrix[length_X_which,M] my_beta = beta_param[X_which,];
   matrix[length_XA_which,M] my_alpha = alpha[XA_which,];
 
   matrix[M,N] mu;
@@ -126,10 +109,10 @@ generated quantities{
     mu = (
       append_col(
         to_matrix(rep_vector(1, N)), // Intercept
-        Q_ast // Rest
+        X // Rest
         ) *
         append_row(
-          average_by_col(beta[1:A_intercept_columns,]), // Intercept
+          average_by_col(beta_param[1:A_intercept_columns,]), // Intercept
           my_beta // Rest
         )
     )';
@@ -149,7 +132,7 @@ generated quantities{
   }
   else {
     // Create mean and deviation
-    mu = (Q_ast * my_beta)';
+    mu = (X * my_beta)';
     precision = (Xa * my_alpha)' / (is_truncated ? truncation_ajustment : 1);
 
   }

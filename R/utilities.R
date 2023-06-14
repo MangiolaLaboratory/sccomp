@@ -330,7 +330,7 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
   
-  fit$summary(par, ~quantile(.x, probs = probs,  na.rm=TRUE), "rhat", "ess_bulk") %>%
+  fit$summary(par, "mean", ~quantile(.x, probs = probs,  na.rm=TRUE), "rhat", "ess_bulk") %>%
   	rename(.variable = variable, Rhat = rhat, n_eff =  ess_bulk) %>%
     when(
       is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
@@ -459,7 +459,7 @@ fit_model = function(
 parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
   fit %>%
-    draws_to_tibble_x_y("beta", "C", "M") %>%
+    draws_to_tibble_x_y("beta_param", "C", "M") %>%
     left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
     nest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration)) := -M)
 
@@ -1788,7 +1788,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   beta =
     .data |>
     attr("fit") %>%
-    draws_to_tibble_x_y("beta", "C", "M") |>
+    draws_to_tibble_x_y("beta_param", "C", "M") |>
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
 
@@ -1855,7 +1855,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   convergence_df =
     .data |>
       attr("fit") |>
-      summary_to_tibble("beta", "C", "M") |>
+      summary_to_tibble("beta_param", "C", "M") |>
 
       # Add cell name
       left_join(

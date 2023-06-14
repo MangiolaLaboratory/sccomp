@@ -607,7 +607,7 @@ transformed parameters{
 
   // Initialisation
   matrix[C,M] beta_raw;
-
+matrix[C,M] beta_param ;
 
   // Random effects
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
@@ -615,6 +615,8 @@ transformed parameters{
   matrix[N_grouping, M-1] beta_random_intercept_raw;
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
+  
+ beta_param = R_ast_inverse * beta_raw; // coefficients on x
   
   // // locations distribution
   // matrix[M, N] mu;
@@ -678,8 +680,7 @@ transformed parameters{
 }
 model{
 
-  matrix[C,M] beta; 
-  beta = R_ast_inverse * beta_raw; // coefficients on x
+  
 
   // Fit main distribution
   if(use_data == 1){
@@ -760,21 +761,21 @@ model{
       for(a in 1:A_intercept_columns)
       target += abundance_variability_regression(
         alpha[a],
-        beta[a],
+        beta_param[a],
         prec_coeff,
         prec_sd,
         bimodal_mean_variability_association,
         mix_p
         );
         // Variability effect
-        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
+        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta_param[a] * prec_coeff[2], 2 );
     }
     // If intercept-less model and A == 1 I have to average the whole beta baseline design columns
     // (that can be thought about intercept themself)
     else{
       target += abundance_variability_regression(
         alpha[1],
-        average_by_col(beta[1:A_intercept_columns,]),
+        average_by_col(beta_param[1:A_intercept_columns,]),
         prec_coeff,
         prec_sd,
         bimodal_mean_variability_association,
@@ -817,19 +818,16 @@ model{
 }
 generated quantities {
   
-  matrix[C,M] beta;
-  beta = R_ast_inverse * beta_raw; // coefficients on x
-
   matrix[A, M] alpha_normalised = alpha;
 
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
 
   if(intercept_in_design){
-    if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
+    if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta_param[a] * prec_coeff[2] );
   }
   else{
-    for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
+    for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta_param[a] * prec_coeff[2] );
   }
 
 
@@ -837,7 +835,7 @@ generated quantities {
   // LOO
   if(enable_loo==1){
     
-    vector[N*M] mu_array =  to_vector((X * beta)');
+    vector[N*M] mu_array =  to_vector((X * beta_param)');
   vector[N*M] precision_array = to_vector(exp((Xa * alpha)'));
 
         for (n in 1:TNS) {

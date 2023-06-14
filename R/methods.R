@@ -952,15 +952,16 @@ remove_unwanted_variation.data.frame = function(.data,
   .grouping_for_random_intercept = attr(.data, ".grouping_for_random_intercept")
   .count = attr(.data, ".count")
 
-  fit_matrix = as.matrix(attr(.data, "fit") )
 
   message("sccomp says: calculating residuals")
 
+  n_draws = attr(.data, "fit") %$% draws(format = "draws_matrix") |> nrow()
+  
   # Residuals
   residuals =
     .data |>
     sccomp_predict(
-      number_of_draws = min(dim(fit_matrix)[1], 500)
+      number_of_draws = n_draws |>  min(500)
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
     mutate( proportion_mean =
@@ -996,7 +997,7 @@ remove_unwanted_variation.data.frame = function(.data,
   .data |>
     sccomp_predict(
       formula_composition = formula_composition,
-      number_of_draws = min(dim(fit_matrix)[1], 500)
+      number_of_draws = n_draws |>  min(500)
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
     mutate(proportion_mean =
