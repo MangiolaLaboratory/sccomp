@@ -344,10 +344,16 @@ transformed parameters{
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   
+  // locations distribution
+  matrix[M, N] mu;
 
+  // vectorisation
+    matrix[M, N] precision = (Xa * alpha)';
+  vector[N*M] mu_array;
+  vector[N*M] precision_array;
 
-  // // Calculate locations distribution
-  // mu = (Q_ast * beta_raw)';
+  // Calculate locations distribution
+  mu = (Q_ast * beta_raw)';
   // 
   // random intercept
   if(N_random_intercepts>0 ){
@@ -374,16 +380,16 @@ transformed parameters{
         beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
     }
   // 
-  //   // Update with summing mu_random_intercept
-  //   mu = mu + append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
+    // Update with summing mu_random_intercept
+    mu = mu + append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
   }
   // 
-  // // Calculate proportions
-  // for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-  // 
-  // // Convert the matrix m to a column vector in column-major order.
-  // mu_array = to_vector(mu);
-  // precision_array = to_vector(exp(precision));
+  // Calculate proportions
+  for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+
+  // Convert the matrix m to a column vector in column-major order.
+  mu_array = to_vector(mu);
+  precision_array = to_vector(exp(precision));
   
     // Rondom effect
   matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
@@ -400,7 +406,7 @@ transformed parameters{
 }
 model{
 
-    matrix[C,M] beta;
+    matrix[C,M] beta; 
   beta = R_ast_inverse * beta_raw; // coefficients on x
 
   // Fit main distribution
@@ -409,7 +415,7 @@ model{
 		int N_array[N];
 		for(n in 1:N) N_array[n] = n;
 		
-    target += reduce_sum(
+    print( reduce_sum(
       partial_sum_N_lupmf,
       N_array,
       grainsize,
@@ -430,7 +436,7 @@ model{
       is_truncated,
       truncation_df,
       truncation_matrix_idx_length
-    );
+    ), "--- parallel");
     
     // target += reduce_sum(
     //   partial_sum_lupmf,
@@ -441,12 +447,12 @@ model{
     //   precision_array[truncation_not_idx]
     // );
 
-    // target += beta_binomial_lupmf(
-    //   y_array[truncation_not_idx] |
-    //   exposure_array[truncation_not_idx],
-    //   (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
-    //   ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
-    //   ) ;
+    print( beta_binomial_lupmf(
+      y_array[truncation_not_idx] |
+      exposure_array[truncation_not_idx],
+      (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
+      ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
+      ), "-- original") ;
   }
 
   // Priors
