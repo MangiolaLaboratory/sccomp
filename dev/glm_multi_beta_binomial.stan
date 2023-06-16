@@ -169,7 +169,62 @@ int[] set_diff(int[] A, int[] B) {
     
     return C;
   }
+
+ int elementNotInArray(int element, int[] array) {
+    int size = num_elements(array);
+    
+    // Check if the element is not in the array
+    for (i in 1:size) {
+      if (array[i] == element) {
+        return 0;  // Element found
+      }
+    }
+    
+    return 1;  // Element not found
+  }
   
+   int elementInArray(int element, int[] array) {
+    int size = num_elements(array);
+    
+    // Check if the element is in the array
+    for (i in 1:size) {
+      if (array[i] == element) {
+        return 1;  // Element found
+      }
+    }
+    
+    return 0;  // Element not found
+  }
+  
+  int[] int_array_to_boolean_inverse(int[] int_array, int boolean_size){
+      int boolean_array[boolean_size];
+
+    // loop rows
+    for (j in 1:boolean_size) {
+      
+        // If observation not in exclude 
+        boolean_array[j] = elementNotInArray(j, int_array);
+      
+    }
+    
+    return(boolean_array);
+  }
+
+  int[] int_array_to_boolean(int[] int_array, int boolean_size){
+      int boolean_array[boolean_size];
+
+    // loop rows
+    for (j in 1:boolean_size) {
+      
+        // If observation not in exclude 
+        boolean_array[j] = elementInArray(j, int_array);
+      
+    }
+    
+    return(boolean_array);
+  }
+  
+
   
 int[] truncation_df_to_idx(int[,] truncation_df, int truncation_array_length, int truncation_not_index_length, int[] slice_N, int M) {
     int i = 1;
@@ -232,60 +287,6 @@ int[] truncation_df_to_idx(int[,] truncation_df, int truncation_array_length, in
 
    return(int_array_to_boolean_inverse(truncation_array, M*num_elements(slice_N)));
 
-  }
-  
- int elementNotInArray(int element, int[] array) {
-    int size = num_elements(array);
-    
-    // Check if the element is not in the array
-    for (i in 1:size) {
-      if (array[i] == element) {
-        return 0;  // Element found
-      }
-    }
-    
-    return 1;  // Element not found
-  }
-  
-   int elementInArray(int element, int[] array) {
-    int size = num_elements(array);
-    
-    // Check if the element is in the array
-    for (i in 1:size) {
-      if (array[i] == element) {
-        return 1;  // Element found
-      }
-    }
-    
-    return 0;  // Element not found
-  }
-  
-  int[] int_array_to_boolean_inverse(int[] int_array, int boolean_size){
-      int boolean_array[boolean_size];
-
-    // loop rows
-    for (j in 1:boolean_size) {
-      
-        // If observation not in exclude 
-        boolean_array[j] = elementNotInArray(j, int_array);
-      
-    }
-    
-    return(boolean_array);
-  }
-
-  int[] int_array_to_boolean(int[] int_array, int boolean_size){
-      int boolean_array[boolean_size];
-
-    // loop rows
-    for (j in 1:boolean_size) {
-      
-        // If observation not in exclude 
-        boolean_array[j] = elementInArray(j, int_array);
-      
-    }
-    
-    return(boolean_array);
   }
   
 
