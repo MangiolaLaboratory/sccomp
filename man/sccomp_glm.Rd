@@ -27,7 +27,8 @@ sccomp_glm(
   use_data = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
-  pass_fit = TRUE
+  pass_fit = TRUE,
+  output_directory_fit_draws = NULL
 )
 }
 \arguments{

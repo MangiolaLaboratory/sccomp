@@ -108,7 +108,8 @@ sccomp_glm <- function(.data,
                        use_data = TRUE,
                        mcmc_seed = sample(1e5, 1),
                        max_sampling_iterations = 20000,
-                       pass_fit = TRUE) {
+                       pass_fit = TRUE,
+											 output_directory_fit_draws = NULL) {
   UseMethod("sccomp_glm", .data)
 }
 
@@ -138,7 +139,7 @@ sccomp_glm.Seurat = function(.data,
                              use_data = TRUE,
                              mcmc_seed = sample(1e5, 1),
                              max_sampling_iterations = 20000,
-                             pass_fit = TRUE) {
+                             pass_fit = TRUE, 											 output_directory_fit_draws = NULL) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -167,7 +168,7 @@ sccomp_glm.Seurat = function(.data,
       cores = cores,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, output_directory_fit_draws = output_directory_fit_draws
     )
 
 
@@ -199,7 +200,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            use_data = TRUE,
                                            mcmc_seed = sample(1e5, 1),
                                            max_sampling_iterations = 20000,
-                                           pass_fit = TRUE) {
+                                           pass_fit = TRUE, 											 output_directory_fit_draws = NULL) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -231,7 +232,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
       cores = cores,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, output_directory_fit_draws = output_directory_fit_draws
     )
 
 
@@ -263,7 +264,7 @@ sccomp_glm.DFrame = function(.data,
                              use_data = TRUE,
                              mcmc_seed = sample(1e5, 1),
                              max_sampling_iterations = 20000,
-                             pass_fit = TRUE) {
+                             pass_fit = TRUE, 											 output_directory_fit_draws = NULL) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -294,7 +295,7 @@ sccomp_glm.DFrame = function(.data,
       cores = cores,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, output_directory_fit_draws = output_directory_fit_draws
     )
 }
 
@@ -325,7 +326,7 @@ sccomp_glm.data.frame = function(.data,
                                  use_data = TRUE,
                                  mcmc_seed = sample(1e5, 1),
                                  max_sampling_iterations = 20000,
-                                 pass_fit = TRUE) {
+                                 pass_fit = TRUE, 											 output_directory_fit_draws = NULL) {
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -365,7 +366,7 @@ sccomp_glm.data.frame = function(.data,
         cores = cores,
         mcmc_seed = mcmc_seed,
         max_sampling_iterations = max_sampling_iterations,
-        pass_fit = pass_fit
+        pass_fit = pass_fit, output_directory_fit_draws = output_directory_fit_draws
       ),
 
       # If the dataframe does includes counts
@@ -392,7 +393,7 @@ sccomp_glm.data.frame = function(.data,
         cores = cores,
         mcmc_seed = mcmc_seed,
         max_sampling_iterations = max_sampling_iterations,
-        pass_fit = pass_fit
+        pass_fit = pass_fit, output_directory_fit_draws = output_directory_fit_draws
       )
     ) %>%
 
@@ -427,7 +428,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      cores = 4,
                                      mcmc_seed = sample(1e5, 1),
                                      max_sampling_iterations = 20000,
-                                     pass_fit = TRUE ) {
+                                     pass_fit = TRUE, 											 output_directory_fit_draws = NULL ) {
 
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
@@ -493,7 +494,7 @@ sccomp_glm_data_frame_raw = function(.data,
       verbose = verbose,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, output_directory_fit_draws = output_directory_fit_draws
     )
 }
 
@@ -521,7 +522,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         cores = 4,
                                         mcmc_seed = sample(1e5, 1),
                                         max_sampling_iterations = 20000,
-                                        pass_fit = TRUE) {
+                                        pass_fit = TRUE, 											 output_directory_fit_draws = NULL) {
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -576,7 +577,7 @@ sccomp_glm_data_frame_counts = function(.data,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, output_directory_fit_draws = output_directory_fit_draws
     ) %>%
     add_attr(.sample, ".sample") %>%
     add_attr(.cell_group, ".cell_group") %>%

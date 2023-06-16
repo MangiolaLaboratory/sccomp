@@ -64,7 +64,8 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             exclude_priors = FALSE,
                                             bimodal_mean_variability_association = bimodal_mean_variability_association,
                                             use_data = use_data,
-                                            max_sampling_iterations = 20000
+                                            max_sampling_iterations = 20000,
+																						output_directory_fit_draws = NULL
 ) {
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -149,7 +150,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         verbose = verbose,
         seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik"),
+        output_dir = output_directory_fit_draws
       )
 
     list(
@@ -199,7 +201,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         verbose = verbose,
         seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept")
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept"),
+        output_dir = output_directory_fit_draws
       )
 
     # Load model
@@ -325,7 +328,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         verbose = verbose,
         seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
+        pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept"),
+        output_dir = output_directory_fit_draws
       )
 
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
@@ -407,7 +411,8 @@ estimate_multi_beta_binomial_glm = function(.data,
         approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
         verbose = verbose, seed = seed,
         max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik"),
+        output_dir = output_directory_fit_draws
       )
 
     #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
@@ -488,7 +493,8 @@ multi_beta_binomial_glm = function(.data,
                                    use_data = TRUE,
                                    test_composition_above_logit_fold_change,
                                    max_sampling_iterations = 20000,
-                                   pass_fit = TRUE
+                                   pass_fit = TRUE,
+																	 output_directory_fit_draws = NULL
 ) {
 
   # Prepare column same enquo
@@ -519,7 +525,8 @@ multi_beta_binomial_glm = function(.data,
       exclude_priors = exclude_priors,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       use_data = use_data,
-      max_sampling_iterations = max_sampling_iterations
+      max_sampling_iterations = max_sampling_iterations,
+      output_directory_fit_draws = output_directory_fit_draws
     )
 
   # Create a dummy tibble
