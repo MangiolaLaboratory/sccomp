@@ -25,6 +25,44 @@ add_attr = function(var, attribute, name) {
   var
 }
 
+#' From rlang deprecated
+#'
+#' @keywords internal
+#' @noRd
+#'
+#' @param x An array
+#' @param values An array
+#' @param before A boolean
+#'
+#' @return An array
+#'
+prepend = function (x, values, before = 1)
+{
+	n <- length(x)
+	stopifnot(before > 0 && before <= n)
+	if (before == 1) {
+		c(values, x)
+	}
+	else {
+		c(x[1:(before - 1)], values, x[before:n])
+	}
+}
+
+#' Add class to abject
+#'
+#' @keywords internal
+#' @noRd
+#'
+#' @param var A tibble
+#' @param name A character name of the attribute
+#'
+#' @return A tibble with an additional attribute
+add_class = function(var, name) {
+	
+	if(!name %in% class(var)) class(var) <- prepend(class(var),name)
+	
+	var
+}
 
 #' Formula parser
 #'

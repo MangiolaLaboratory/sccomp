@@ -400,7 +400,10 @@ sccomp_glm.data.frame = function(.data,
     # Track input parameters
     add_attr(noise_model, "noise_model") %>%
     add_attr(.sample, ".sample") %>%
-    add_attr(.cell_group, ".cell_group")
+    add_attr(.cell_group, ".cell_group") |>
+  	
+  	# Add class
+  	add_class("tbl_sccomp")
 }
 
 #' @importFrom tidyr complete
@@ -1289,3 +1292,68 @@ plots
 
 }
 
+
+#  File src/library/base/R/serialize.R
+#  Part of the R package, https://www.R-project.org
+#
+#  Copyright (C) 1995-2016 The R Core Team
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  A copy of the GNU General Public License is available at
+#  https://www.R-project.org/Licenses/
+#' @export
+#'
+saveRDS <-
+	function(object, file = "", ascii = FALSE, version = NULL,
+					 compress = TRUE, refhook = NULL)
+	{
+		UseMethod("saveRDS", object)
+	}
+
+
+
+#' @import cmdstanr
+#' @importFrom tools file_path_sans_ext
+#' @importFrom magrittr %$%
+#' @importFrom glue glue
+#' 
+#' 
+#' @export
+#'
+saveRDS.tbl_sccomp = function(object, file = "", ascii = FALSE, version = NULL,
+													 compress = TRUE, refhook = NULL) {
+	
+	# Get file names and directory path
+	file_directory =  file |> dirname() 
+	file_name = file |> basename() |> file_path_sans_ext() 
+
+	# Move draws files
+	fit = attr(object, "fit")
+	
+	fit$save_output_files(
+		dir = file_directory, 
+		basename = glue("{file_name}_draws")
+	)
+	
+	object = object |> add_attr(fit, "fit")
+	
+	# Save everything
+	base::saveRDS(object, file = file, ascii = ascii, version = version,	compress = compress, refhook = refhook)
+}
+
+#' @export
+#'
+saveRDS.default = function(object, file = "", ascii = FALSE, version = NULL,
+													 compress = TRUE, refhook = NULL) {
+	base::saveRDS(object, file = file, ascii = ascii, version = version,
+								compress = compress, refhook = refhook)
+}
