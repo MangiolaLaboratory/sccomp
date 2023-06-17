@@ -82,6 +82,24 @@ test_that("Generate data",{
 
 })
 
+
+test_that("check outliers",{
+	
+	
+	seurat_obj |>
+		sccomp_glm(
+			formula_composition = ~ type ,
+			formula_variability = ~ 1,
+			sample, cell_group,
+			check_outliers = TRUE,
+			approximate_posterior_inference = "all",
+			cores = 1,
+			mcmc_seed = 42
+		) 
+
+	
+})
+
 test_that("multilevel multi beta binomial from Seurat",{
 
   res =

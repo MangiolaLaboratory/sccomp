@@ -362,9 +362,9 @@ estimate_multi_beta_binomial_glm = function(.data,
           # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
           # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
           rename(
-            .lower := !!as.symbol(colnames(.)[4]) ,
+            .lower := !!as.symbol(colnames(.)[5]) ,
             .median = `50%`,
-            .upper := !!as.symbol(colnames(.)[6])
+            .upper := !!as.symbol(colnames(.)[7])
           ) %>%
           nest(data = -N) %>%
           mutate(!!.sample := rownames(data_for_model$y)) %>%
