@@ -445,9 +445,9 @@ fit_model = function(
       min(cores)
   
   init_list=list(
-    prec_coeff = c(5,0),
-    prec_sd = 1,
-    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
+    prec_coeff = c(3,0),
+    prec_sd = 0.1,
+    alpha = matrix(c(rep(3, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
     beta_raw_raw = matrix(rep(0, data_for_model$C * (data_for_model$M-1)), nrow = data_for_model$C, byrow = TRUE)
   )
 
@@ -2218,11 +2218,13 @@ replicate_data = function(.data,
   	mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
   }
   
+  fit = attr(.data, "fit")
+  
   # Generate quantities
   mod_rng$generate_quantities(
   	
   	# Fit
-  	attr(.data, "fit"),
+  	fit,
   	
   	# Data
     data = model_input |> c(
@@ -2241,7 +2243,8 @@ replicate_data = function(.data,
       create_intercept = create_intercept
       )
     ),
-  	parallel_chains = 1,
+
+  	parallel_chains = ifelse(model_input$is_vb, 1, fit$num_chains()),
   	threads_per_chain = 1,
     seed = mcmc_seed
   )

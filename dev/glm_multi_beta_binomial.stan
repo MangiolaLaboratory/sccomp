@@ -494,6 +494,18 @@ int[] truncation_df_to_idx(int[,] truncation_df, int truncation_array_length, in
   // print(final_boolean, " >>>>>>>");
   // print(subset_integer_array_with_boolean(slice_y, truncation_not_boolean[idx_slice_transposed]), " ++++++++" );
   // print(slice_y, " +++++++");
+
+// 
+//     print(beta, " ..........");
+//   print(alpha, " //////////");
+// 
+//   print(mu_array[1:10], " - - - - - - ");
+//   print(precision_array[1:10], " + + + + +");
+//   print(subset_vector_with_boolean((mu_array .* precision_array),final_boolean)[1:10],  " --------");
+//   print( subset_vector_with_boolean(((1.0 - mu_array) .* precision_array), final_boolean)[1:10], " +++++++");
+//   print(".  ");
+//   print(".  ");
+
   
   // Return
   return beta_binomial_lupmf(
@@ -589,8 +601,8 @@ transformed data{
   exposure_array = rep_each(exposure, M);
 }
 parameters{
-  matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
-  matrix[A, M] alpha; // Variability
+  matrix<lower=-4, upper=4>[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
+  matrix<lower=-6, upper=6>[A, M] alpha; // Variability
   // To exclude
   real prec_coeff[2];
   real<lower=0> prec_sd;
@@ -608,7 +620,7 @@ transformed parameters{
 
   // Initialisation
   matrix[C,M] beta_raw;
-matrix[C,M] beta_param ;
+	matrix[C,M] beta_param ;
 
   // Random effects
   matrix[N_minus_sum, M-1] random_intercept_minus_sum;
@@ -617,7 +629,7 @@ matrix[C,M] beta_param ;
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   
- beta_param = R_ast_inverse * beta_raw; // coefficients on x
+ beta_param = beta_raw; //  R_ast_inverse * beta_raw; // coefficients on x
   
   // // locations distribution
   // matrix[M, N] mu;
@@ -736,7 +748,7 @@ model{
       y_array,
       grainsize,
       M,
-      Q_ast,
+      X,
       Xa,
       exposure,
       beta_raw,
@@ -756,6 +768,8 @@ model{
 
   // Priors
   if(exclude_priors == 0){
+
+  	
     // If interceopt in design or I have complex variability design
     if(intercept_in_design || A > 1){
       // Loop across the intercept columns in case of a intercept-less design (covariate are intercepts)
@@ -788,12 +802,12 @@ model{
   else{
      // Priors variability
      if(intercept_in_design || A > 1){
-       for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+       for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1]/prior_prec_sd[2] );
         if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
      }
      // if ~ 0 + covariuate
      else {
-       alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+       alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1]/prior_prec_sd[2] );
      }
   }
 
