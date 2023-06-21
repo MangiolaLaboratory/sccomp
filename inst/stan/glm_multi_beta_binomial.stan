@@ -267,12 +267,12 @@ model{
   else{
      // Priors variability
      if(intercept_in_design || A > 1){
-       for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+       for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1]/prior_prec_sd[2] );
         if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
      }
      // if ~ 0 + covariuate
      else {
-       alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1] );
+       alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1]/prior_prec_sd[2] );
      }
   }
 
