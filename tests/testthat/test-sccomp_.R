@@ -82,7 +82,7 @@ test_that("Generate data",{
 
 })
 
-test_that("multilevel multi beta binomial from Seurat",{
+test_that("outliers",{
   
   res =
     seurat_obj |>
@@ -94,7 +94,7 @@ test_that("multilevel multi beta binomial from Seurat",{
       check_outliers = TRUE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42, verbose = TRUE, max_sampling_iterations = 1000
     )
   
 })

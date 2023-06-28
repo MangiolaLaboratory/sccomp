@@ -21,6 +21,7 @@ sccomp_glm(
   percent_false_positive = 5,
   approximate_posterior_inference = "none",
   test_composition_above_logit_fold_change = 0.2,
+  .sample_cell_group_pairs_to_exclude = NULL,
   verbose = FALSE,
   noise_model = "multi_beta_binomial",
   exclude_priors = FALSE,

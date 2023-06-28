@@ -2221,3 +2221,26 @@ get_model_from_data = function(file_compiled_model, model_code){
 
   }
 }
+
+
+# Negation
+not = function(is){	!is }
+
+#' Convert array of quosure (e.g. c(col_a, col_b)) into character vector
+#'
+#' @keywords internal
+#' @noRd
+#'
+#' @importFrom rlang quo_name
+#' @importFrom rlang quo_squash
+#'
+#' @param v A array of quosures (e.g. c(col_a, col_b))
+#'
+#' @return A character vector
+quo_names <- function(v) {
+	
+	v = quo_name(quo_squash(v))
+	gsub('^c\\(|`|\\)$', '', v) |>
+		strsplit(', ') |>
+		unlist()
+}
