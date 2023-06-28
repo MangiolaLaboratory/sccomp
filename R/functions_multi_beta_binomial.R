@@ -332,8 +332,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     	t() %>% 
     	as.vector()  %>% 
     	which() |>
-    	c(user_forced_truncation_not_idx) |>
-    	unique() |>
+    	intersect(user_forced_truncation_not_idx) |>
     	sort()
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
@@ -426,8 +425,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     	t() %>% 
     	as.vector()  %>% 
     	which() |>
-    	c(user_forced_truncation_not_idx) |>
-    	unique() |>
+    	intersect(user_forced_truncation_not_idx) |>
     	sort()
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
     
