@@ -1,6 +1,6 @@
 
 
-#' sccomp_glm main
+#' sccomp_estimate main
 #'
 #' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
 #'
@@ -70,7 +70,7 @@
 #' data("counts_obj")
 #'
 #' estimate =
-#'   sccomp_glm(
+#'   sccomp_estimate(
 #'   counts_obj ,
 #'    ~ type,
 #'    ~1,
@@ -84,7 +84,7 @@
 #' @export
 #'
 #'
-sccomp_glm <- function(.data,
+sccomp_estimate <- function(.data,
                        formula_composition = ~ 1 ,
                        formula_variability = ~ 1,
                        .sample,
@@ -110,11 +110,11 @@ sccomp_glm <- function(.data,
                        mcmc_seed = sample(1e5, 1),
                        max_sampling_iterations = 20000,
                        pass_fit = TRUE) {
-  UseMethod("sccomp_glm", .data)
+  UseMethod("sccomp_estimate", .data)
 }
 
 #' @export
-sccomp_glm.Seurat = function(.data,
+sccomp_estimate.Seurat = function(.data,
                              formula_composition = ~ 1 ,
                              formula_variability = ~ 1,
                              .sample,
@@ -149,7 +149,7 @@ sccomp_glm.Seurat = function(.data,
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   
   .data[[]] %>%
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
 
@@ -176,7 +176,7 @@ sccomp_glm.Seurat = function(.data,
 }
 
 #' @export
-sccomp_glm.SingleCellExperiment = function(.data,
+sccomp_estimate.SingleCellExperiment = function(.data,
                                            formula_composition = ~ 1 ,
                                            formula_variability = ~ 1,
                                            .sample,
@@ -214,7 +214,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
 
   .data %>%
     colData() %>%
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
 
@@ -241,7 +241,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
 }
 
 #' @export
-sccomp_glm.DFrame = function(.data,
+sccomp_estimate.DFrame = function(.data,
                              formula_composition = ~ 1 ,
                              formula_variability = ~ 1,
                              .sample,
@@ -279,7 +279,7 @@ sccomp_glm.DFrame = function(.data,
   
   .data %>%
     as.data.frame %>%
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       !!.sample,!!.cell_group,
@@ -304,7 +304,7 @@ sccomp_glm.DFrame = function(.data,
 
 #' @importFrom purrr when
 #' @export
-sccomp_glm.data.frame = function(.data,
+sccomp_estimate.data.frame = function(.data,
                                  formula_composition = ~ 1 ,
                                  formula_variability = ~ 1,
                                  .sample,
@@ -585,28 +585,24 @@ sccomp_glm_data_frame_counts = function(.data,
 
   # Return
   .data %>%
-    my_glm_model(
+  	counts_to_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
       .count = !!.count,
-      contrasts = contrasts,
+      
       #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
       prior_mean_variable_association = prior_mean_variable_association,
-      percent_false_positive = percent_false_positive ,
-      check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
       exclude_priors = exclude_priors,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       enable_loo = enable_loo,
       use_data = use_data,
       cores = cores,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude, 
       verbose = verbose,
       seed = mcmc_seed,
-      max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      max_sampling_iterations = max_sampling_iterations
     ) %>%
     add_attr(.sample, ".sample") %>%
     add_attr(.cell_group, ".cell_group") %>%
@@ -617,10 +613,10 @@ sccomp_glm_data_frame_counts = function(.data,
 
 #' test_contrasts
 #'
-#' @description This function test ocntrasts from a sccomp result.
+#' @description This function test contrasts from a sccomp result.
 #'
 #'
-#' @param .data A tibble. The result of sccomp_glm.
+#' @param .data A tibble. The result of sccomp_estimate.
 #' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
@@ -635,7 +631,7 @@ sccomp_glm_data_frame_counts = function(.data,
 #' data("counts_obj")
 #'
 #'   estimates =
-#'   sccomp_glm(
+#'   sccomp_estimate(
 #'   counts_obj ,
 #'    ~ 0 + type, ~1,  sample, cell_group, count,
 #'     check_outliers = FALSE,
@@ -775,7 +771,7 @@ test_contrasts.data.frame = function(.data,
 #' @description This function replicates counts from a real-world dataset.
 #'
 #'
-#' @param fit The result of sccomp_glm.
+#' @param fit The result of sccomp_estimate.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
@@ -790,7 +786,7 @@ test_contrasts.data.frame = function(.data,
 #' data("counts_obj")
 #'
 #' if(.Platform$OS.type == "unix")
-#'   sccomp_glm(
+#'   sccomp_estimate(
 #'   counts_obj ,
 #'    ~ type, ~1,  sample, cell_group, count,
 #'     approximate_posterior_inference = "all",
@@ -857,7 +853,7 @@ sccomp_replicate.data.frame = function(fit,
 #' @description This function replicates counts from a real-world dataset.
 #'
 #'
-#' @param fit The result of sccomp_glm.
+#' @param fit The result of sccomp_estimate.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param new_data A sample-wise data frame including the column that represent the factors in your formula. If you want to predict proportions for 10 samples, there should be 10 rows. T
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
@@ -872,7 +868,7 @@ sccomp_replicate.data.frame = function(fit,
 #' data("counts_obj")
 #'
 #' if(.Platform$OS.type == "unix")
-#'   sccomp_glm(
+#'   sccomp_estimate(
 #'   counts_obj ,
 #'    ~ type, ~1,  sample, cell_group, count,
 #'     approximate_posterior_inference = "all",
@@ -949,7 +945,7 @@ sccomp_predict.data.frame = function(fit,
 #' @description This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula `~ factor_1 + factor_2` and use this formula to remove unwanted variation `~ factor_1`, the `factor_2` will be factored out.
 #'
 #'
-#' @param .data A tibble. The result of sccomp_glm.
+#' @param .data A tibble. The result of sccomp_estimate.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #'
@@ -961,7 +957,7 @@ sccomp_predict.data.frame = function(fit,
 #'
 #' data("counts_obj")
 #'
-#'   estimates = sccomp_glm(
+#'   estimates = sccomp_estimate(
 #'   counts_obj ,
 #'    ~ type, ~1,  sample, cell_group, count,
 #'     approximate_posterior_inference = "all",
@@ -1071,7 +1067,7 @@ remove_unwanted_variation.data.frame = function(.data,
 #' @importFrom parallel detectCores
 #'
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
-#' @param .estimate_object The result of sccomp_glm execution. This is used for sampling from real-data properties.
+#' @param .estimate_object The result of sccomp_estimate execution. This is used for sampling from real-data properties.
 #' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors.
 #' @param .sample A column name as symbol. The sample identifier
@@ -1091,7 +1087,7 @@ remove_unwanted_variation.data.frame = function(.data,
 #' library(dplyr)
 #'
 #' estimate =
-#'  sccomp_glm(
+#'  sccomp_estimate(
 #'  counts_obj ,
 #'   ~ type, ~1,  sample, cell_group, count,
 #'    approximate_posterior_inference = "all",
@@ -1227,7 +1223,7 @@ simulate_data.data.frame = function(.data,
 #' data("counts_obj")
 #'
 #' estimate =
-#'   sccomp_glm(
+#'   sccomp_estimate(
 #'   counts_obj ,
 #'    ~ type, ~1, sample, cell_group, count,
 #'     approximate_posterior_inference = "all",

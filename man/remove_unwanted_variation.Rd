@@ -11,7 +11,7 @@ remove_unwanted_variation(
 )
 }
 \arguments{
-\item{.data}{A tibble. The result of sccomp_glm.}
+\item{.data}{A tibble. The result of sccomp_estimate.}
 
 \item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 
@@ -27,7 +27,7 @@ This function uses the model to remove unwanted variation from a dataset using t
 
 data("counts_obj")
 
-  estimates = sccomp_glm(
+  estimates = sccomp_estimate(
   counts_obj ,
    ~ type, ~1,  sample, cell_group, count,
     approximate_posterior_inference = "all",

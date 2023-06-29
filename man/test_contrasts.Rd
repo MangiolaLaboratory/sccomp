@@ -13,7 +13,7 @@ test_contrasts(
 )
 }
 \arguments{
-\item{.data}{A tibble. The result of sccomp_glm.}
+\item{.data}{A tibble. The result of sccomp_estimate.}
 
 \item{contrasts}{A vector of character strings. For example if your formula is \code{~ 0 + treatment} and the factor treatment has values \code{yes} and \code{no}, your contrast could be "constrasts = c(treatmentyes - treatmentno)".}
 
@@ -27,14 +27,14 @@ test_contrasts(
 A nested tibble \code{tbl} with cell_group-wise statistics
 }
 \description{
-This function test ocntrasts from a sccomp result.
+This function test contrasts from a sccomp result.
 }
 \examples{
 
 data("counts_obj")
 
   estimates =
-  sccomp_glm(
+  sccomp_estimate(
   counts_obj ,
    ~ 0 + type, ~1,  sample, cell_group, count,
     check_outliers = FALSE,
