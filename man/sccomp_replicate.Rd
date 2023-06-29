@@ -13,7 +13,7 @@ sccomp_replicate(
 )
 }
 \arguments{
-\item{fit}{The result of sccomp_glm.}
+\item{fit}{The result of sccomp_estimate.}
 
 \item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 
@@ -34,7 +34,7 @@ This function replicates counts from a real-world dataset.
 data("counts_obj")
 
 if(.Platform$OS.type == "unix")
-  sccomp_glm(
+  sccomp_estimate(
   counts_obj ,
    ~ type, ~1,  sample, cell_group, count,
     approximate_posterior_inference = "all",
