@@ -90,7 +90,7 @@ estimate_multi_beta_binomial_glm = function(.data,
     .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
   }
   
-  # If no .sample_cell_group_pairs_to_exclude fake it
+  # If .sample_cell_group_pairs_to_exclude 
   if(quo_is_symbolic(.sample_cell_group_pairs_to_exclude)){
   	
   	# Error if not logical
@@ -101,9 +101,11 @@ estimate_multi_beta_binomial_glm = function(.data,
   	if(.data |> count(!!.sample, !!.cell_group, name = "n") |> filter(n>1) |> nrow() |> gt(0))
   		stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be unique with .sample/.cell_group pairs. You might have a .sample/.cell_group pair with both TRUE and FALSE {quo_name(.sample_cell_group_pairs_to_exclude)}."))
   	
-  } else{
-  	.sample_cell_group_pairs_to_exclude = list(quo(!! sym(".sample_cell_group_pairs_to_exclude")))
-  	.data = .data |> mutate(!!.sample_cell_group_pairs_to_exclude := TRUE)
+  } else {
+  	
+  	# If no .sample_cell_group_pairs_to_exclude fake it
+  	.sample_cell_group_pairs_to_exclude = quo(!! sym(".sample_cell_group_pairs_to_exclude"))
+  	.data = .data |> mutate(!!.sample_cell_group_pairs_to_exclude := FALSE)
   }
   
 
@@ -135,23 +137,17 @@ estimate_multi_beta_binomial_glm = function(.data,
     message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
 
     # Force outliers, Get the truncation index
-    if(quo_is_symbolic(.sample_cell_group_pairs_to_exclude)){
-  
-    	data_for_model$truncation_not_idx = 
-    		.data |> 
-    		select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
-    		left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)) ) |>  
-    		left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)) ) |> 
-    		select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
-    		arrange(N, M) |>
-    		pull(!!.sample_cell_group_pairs_to_exclude) |>
-    		not() |>
-    		which()
-    	
-    	data_for_model$TNS = length(data_for_model$truncation_not_idx)
-    	
-    }
-    
+  	data_for_model$truncation_not_idx = 
+  		.data |> 
+  		select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
+  		left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)) ) |>  
+  		left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)) ) |> 
+  		select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
+  		arrange(N, M) |>
+  		pull(!!.sample_cell_group_pairs_to_exclude) |>
+  		not() |>
+  		which()
+  	data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
     # Prior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
@@ -209,26 +205,20 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     
     # Force outliers
-    user_forced_truncation_not_idx = seq_len(nrow(data_for_model$y)*ncol(data_for_model$y))
-    
-    if(quo_is_symbolic(.sample_cell_group_pairs_to_exclude)){
-    
-    	# Get the truncation index
-    	user_forced_truncation_not_idx = 
-    		.data |> 
-    		select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
-    		left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)) ) |>  
-    		left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)) ) |> 
-    		select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
-    		arrange(N, M) |>
-    		pull(!!.sample_cell_group_pairs_to_exclude) |>
-    		not() |>
-    		which()
-    	
-    	data_for_model$truncation_not_idx = user_forced_truncation_not_idx
-    	data_for_model$TNS = length(data_for_model$truncation_not_idx)
-    	
-    }
+  	# Get the truncation index
+  	user_forced_truncation_not_idx = 
+  		.data |> 
+  		select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
+  		left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)) ) |>  
+  		left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)) ) |> 
+  		select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
+  		arrange(N, M) |>
+  		pull(!!.sample_cell_group_pairs_to_exclude) |>
+  		not() |>
+  		which()
+  	data_for_model$truncation_not_idx = user_forced_truncation_not_idx
+  	data_for_model$TNS = length(data_for_model$truncation_not_idx)
+ 
     
     # Pior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
