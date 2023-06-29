@@ -33,6 +33,7 @@
 #' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param .sample_cell_group_pairs_to_exclude A column name that includes a boolean variable for the sample/cell-group pairs to be ignored in the fit. This argument is for pro-users.
 #' @param verbose A boolean. Prints progression.
 #' @param noise_model A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.
 #' @param cores An integer. How many cored to be used with parallel calculations.
@@ -101,7 +102,7 @@ sccomp_glm <- function(.data,
                        cores = detectCores(),
                        percent_false_positive = 5,
                        approximate_posterior_inference = "none",
-                       test_composition_above_logit_fold_change = 0.2,
+                       test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
                        exclude_priors = FALSE,
@@ -131,7 +132,7 @@ sccomp_glm.Seurat = function(.data,
                              cores = detectCores(),
                              percent_false_positive = 5,
                              approximate_posterior_inference = "none",
-                             test_composition_above_logit_fold_change = 0.2,
+                             test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              exclude_priors = FALSE,
@@ -145,7 +146,8 @@ sccomp_glm.Seurat = function(.data,
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
-
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
   .data[[]] %>%
     sccomp_glm(
       formula_composition = formula_composition,
@@ -157,7 +159,7 @@ sccomp_glm.Seurat = function(.data,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
+      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
       noise_model = noise_model,
       exclude_priors = exclude_priors,
@@ -192,7 +194,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            cores = detectCores(),
                                            percent_false_positive = 5,
                                            approximate_posterior_inference = "none",
-                                           test_composition_above_logit_fold_change = 0.2,
+                                           test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
                                            exclude_priors = FALSE,
@@ -207,7 +209,8 @@ sccomp_glm.SingleCellExperiment = function(.data,
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
-
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
 
   .data %>%
     colData() %>%
@@ -221,7 +224,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive ,
       approximate_posterior_inference = approximate_posterior_inference,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
+      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
       noise_model = noise_model,
       exclude_priors = exclude_priors,
@@ -256,7 +259,7 @@ sccomp_glm.DFrame = function(.data,
                              cores = detectCores(),
                              percent_false_positive = 5,
                              approximate_posterior_inference = "none",
-                             test_composition_above_logit_fold_change = 0.2,
+                             test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              exclude_priors = FALSE,
@@ -272,7 +275,8 @@ sccomp_glm.DFrame = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
   .data %>%
     as.data.frame %>%
     sccomp_glm(
@@ -284,7 +288,7 @@ sccomp_glm.DFrame = function(.data,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
+      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
       noise_model = noise_model,
       exclude_priors = exclude_priors,
@@ -318,7 +322,7 @@ sccomp_glm.data.frame = function(.data,
                                  cores = detectCores(),
                                  percent_false_positive = 5,
                                  approximate_posterior_inference = "none",
-                                 test_composition_above_logit_fold_change = 0.2,
+                                 test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
                                  exclude_priors = FALSE,
@@ -331,7 +335,8 @@ sccomp_glm.data.frame = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
   # Choose linear model
   my_glm_model =
     noise_model %>%
@@ -355,7 +360,7 @@ sccomp_glm.data.frame = function(.data,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
-        test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
+        test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
         verbose = verbose,
         my_glm_model = my_glm_model,
         exclude_priors = exclude_priors,
@@ -382,7 +387,7 @@ sccomp_glm.data.frame = function(.data,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
-        test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
+        test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
         verbose = verbose,
         my_glm_model = my_glm_model,
         exclude_priors = exclude_priors,
@@ -404,6 +409,7 @@ sccomp_glm.data.frame = function(.data,
 
 #' @importFrom tidyr complete
 #' @importFrom tidyr nesting
+#' @importFrom tidyr replace_na
 sccomp_glm_data_frame_raw = function(.data,
                                      formula_composition = ~ 1 ,
                                      formula_variability = ~ 1,
@@ -417,7 +423,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = "none",
-                                     test_composition_above_logit_fold_change = 0.2,
+                                     test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                      verbose = FALSE,
                                      my_glm_model,
                                      exclude_priors = FALSE,
@@ -436,7 +442,8 @@ sccomp_glm_data_frame_raw = function(.data,
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
-
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
   # Check if columns exist
   check_columns_exist(.data, c(
     quo_name(.sample),
@@ -462,13 +469,31 @@ sccomp_glm_data_frame_raw = function(.data,
       length(parse_formula(formula_composition))>0 ~
         left_join(.,
                   .data %>%
-                    select(!!.sample, parse_formula(formula_composition), any_of(.grouping_for_random_intercept)) %>%
+        						as_tibble() |>
+                    select(
+                    	!!.sample,
+                    	parse_formula(formula_composition),
+                    	any_of(.grouping_for_random_intercept)
+                    ) %>%
                     distinct(),
                   by = quo_name(.sample)
         ),
       ~ (.)
-    ) %>%
+    ) |>
 
+  	# Attach possible exclusion of data points
+  	left_join(.data %>%
+  							as_tibble() |>
+  							select(
+  								!!.sample, !!.cell_group, any_of(quo_name(.sample_cell_group_pairs_to_exclude))
+  							) %>%
+  							distinct(),
+  						by = c(quo_name(.sample), quo_name(.cell_group))
+  	) |>
+  	mutate(
+  		across(!!.sample_cell_group_pairs_to_exclude, ~replace_na(.x, 0))
+  	) |>
+  
     # Return
     sccomp_glm_data_frame_counts(
       formula_composition = formula_composition,
@@ -489,7 +514,7 @@ sccomp_glm_data_frame_raw = function(.data,
       enable_loo = enable_loo,
       use_data = use_data,
       cores = cores,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
+      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -511,7 +536,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = "none",
-                                        test_composition_above_logit_fold_change = 0.2,
+                                        test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                         verbose = FALSE,
                                         my_glm_model ,
                                         exclude_priors = FALSE,
@@ -527,6 +552,7 @@ sccomp_glm_data_frame_counts = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
 
 
@@ -572,7 +598,7 @@ sccomp_glm_data_frame_counts = function(.data,
       enable_loo = enable_loo,
       use_data = use_data,
       cores = cores,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
+      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude, 
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,

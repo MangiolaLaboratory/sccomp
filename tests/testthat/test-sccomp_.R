@@ -53,7 +53,8 @@ test_that("Generate data",{
       check_outliers = FALSE,
       approximate_posterior_inference = FALSE,
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,
+      max_sampling_iterations = 1000
     ) |>
 
 
@@ -71,7 +72,7 @@ test_that("Generate data",{
       approximate_posterior_inference = FALSE,
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     ) |>
 
 
@@ -80,6 +81,25 @@ test_that("Generate data",{
     expect_equal(600)
 
 
+})
+
+test_that("outliers",{
+  
+  res =
+    seurat_obj |>
+    ## filter(cell_group %in% c("NK cycling", "B immature")) |>
+    sccomp_glm(
+      formula_composition = ~ type,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      check_outliers = TRUE,
+      approximate_posterior_inference = "all",
+      cores = 1,
+      mcmc_seed = 42, 
+      verbose = TRUE, 
+      max_sampling_iterations = 1000
+    )
+  
 })
 
 test_that("multilevel multi beta binomial from Seurat",{
@@ -94,7 +114,7 @@ test_that("multilevel multi beta binomial from Seurat",{
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
   # Check order
@@ -122,7 +142,7 @@ test_that("multilevel multi beta binomial from Seurat",{
       approximate_posterior_inference = "all",
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
   # res |>
@@ -153,7 +173,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
 
@@ -195,7 +215,7 @@ test_that("multilevel continuous",{
       approximate_posterior_inference = "all",
       contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
   res |>
@@ -234,7 +254,7 @@ test_that("multilevel continuous",{
 #           approximate_posterior_inference = "all",
 #           contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
 #           cores = 1,
-#           mcmc_seed = 42
+#           mcmc_seed = 42,       max_sampling_iterations = 1000
 #         ) ,
 #       regexp = "should not be shared"
 #     )
@@ -252,7 +272,7 @@ test_that("multi beta binomial from Seurat",{
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
   res |>
@@ -281,7 +301,7 @@ test_that("multi beta binomial contrasts from Seurat",{
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
     expect_equal(
@@ -302,7 +322,7 @@ test_that("multi beta binomial contrasts from Seurat",{
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
   expect_equal(
@@ -334,7 +354,7 @@ test_that("remove unwanted variation",{
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
   estimate |>
@@ -354,7 +374,7 @@ test_that("multi beta binomial from SCE",{
       check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
   res |>
@@ -381,7 +401,7 @@ res_composition =
     check_outliers = FALSE,
     approximate_posterior_inference = "all",
     cores = 1,
-    mcmc_seed = 42
+    mcmc_seed = 42,       max_sampling_iterations = 1000
   )
 
 res_composition_variability =
@@ -394,7 +414,7 @@ res_composition_variability =
     check_outliers = FALSE,
     approximate_posterior_inference = "all",
     cores = 1,
-    mcmc_seed = 42
+    mcmc_seed = 42,       max_sampling_iterations = 1000
   )
 
 test_that("multi beta binomial from metadata",{
@@ -440,7 +460,7 @@ test_that("test constrasts",{
       check_outliers = FALSE,
       approximate_posterior_inference = FALSE,
       cores = 1,
-      mcmc_seed = 42
+      mcmc_seed = 42,       max_sampling_iterations = 1000
     )
 
   new_test =

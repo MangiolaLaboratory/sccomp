@@ -30,6 +30,7 @@
 #' @param prior_mean_variable_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
+#' @param .sample_cell_group_pairs_to_exclude A column name that includes a boolean variable for the sample/cell-group pairs to be ignored in the fit. This argument is for pro-users.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
 #' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
 #' @param verbose A boolean. Prints progression.
@@ -55,6 +56,7 @@ estimate_multi_beta_binomial_glm = function(.data,
                                             prior_mean_variable_association,
                                             percent_false_positive = 5,
                                             check_outliers = FALSE,
+																						.sample_cell_group_pairs_to_exclude = NULL,
                                             approximate_posterior_inference = "all",
                                             enable_loo = FALSE,
                                             cores = detectCores(), # For development purpose,
@@ -69,7 +71,8 @@ estimate_multi_beta_binomial_glm = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
-
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
   # Credible interval
   CI = 1 - (percent_false_positive/100)
 
@@ -87,6 +90,25 @@ estimate_multi_beta_binomial_glm = function(.data,
     .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
     .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
   }
+  
+  # If .sample_cell_group_pairs_to_exclude 
+  if(quo_is_symbolic(.sample_cell_group_pairs_to_exclude)){
+  	
+  	# Error if not logical
+  	if(.data |> pull(!!.sample_cell_group_pairs_to_exclude) |> is("logical") |> not())
+  		stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be logical"))
+  	
+  	# Error if not consistent to sample/cell group
+  	if(.data |> count(!!.sample, !!.cell_group, name = "n") |> filter(n>1) |> nrow() |> gt(0))
+  		stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be unique with .sample/.cell_group pairs. You might have a .sample/.cell_group pair with both TRUE and FALSE {quo_name(.sample_cell_group_pairs_to_exclude)}."))
+  	
+  } else {
+  	
+  	# If no .sample_cell_group_pairs_to_exclude fake it
+  	.sample_cell_group_pairs_to_exclude = quo(!! sym(".sample_cell_group_pairs_to_exclude"))
+  	.data = .data |> mutate(!!.sample_cell_group_pairs_to_exclude := FALSE)
+  }
+  
 
   # Original - old
   # prec_sd ~ normal(0,2);
@@ -115,7 +137,20 @@ estimate_multi_beta_binomial_glm = function(.data,
     message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
     message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
 
-    # Pior
+    # Force outliers, Get the truncation index
+  	data_for_model$truncation_not_idx = 
+  		.data |> 
+  		select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
+  		left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)) ) |>  
+  		left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)) ) |> 
+  		select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
+  		arrange(N, M) |>
+  		pull(!!.sample_cell_group_pairs_to_exclude) |>
+  		not() |>
+  		which()
+  	data_for_model$TNS = length(data_for_model$truncation_not_idx)
+
+    # Prior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
     data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
@@ -169,6 +204,23 @@ estimate_multi_beta_binomial_glm = function(.data,
         random_intercept_elements
       )
 
+    
+    # Force outliers
+  	# Get the truncation index
+  	user_forced_truncation_not_idx = 
+  		.data |> 
+  		select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
+  		left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)) ) |>  
+  		left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)) ) |> 
+  		select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
+  		arrange(N, M) |>
+  		pull(!!.sample_cell_group_pairs_to_exclude) |>
+  		not() |>
+  		which()
+  	data_for_model$truncation_not_idx = user_forced_truncation_not_idx
+  	data_for_model$TNS = length(data_for_model$truncation_not_idx)
+ 
+    
     # Pior
     data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
     data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
@@ -266,7 +318,13 @@ estimate_multi_beta_binomial_glm = function(.data,
     data_for_model$is_truncated = 1
     data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-    data_for_model$truncation_not_idx = (data_for_model$truncation_down >= 0) %>% t() %>% as.vector()  %>% which()
+    data_for_model$truncation_not_idx = 
+    	(data_for_model$truncation_down >= 0) %>% 
+    	t() %>% 
+    	as.vector()  %>% 
+    	which() |>
+    	intersect(user_forced_truncation_not_idx) |>
+    	sort()
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
 
     message("sccomp says: outlier identification second pass - step 2/3")
@@ -353,6 +411,16 @@ estimate_multi_beta_binomial_glm = function(.data,
 
     data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
     data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+    data_for_model$truncation_not_idx = 
+    	(data_for_model$truncation_down >= 0) %>% 
+    	t() %>% 
+    	as.vector()  %>% 
+    	which() |>
+    	intersect(user_forced_truncation_not_idx) |>
+    	sort()
+    data_for_model$TNS = length(data_for_model$truncation_not_idx)
+    
+    # LOO
     data_for_model$enable_loo = TRUE & enable_loo
 
     message("sccomp says: outlier-free model fitting - step 3/3")
@@ -442,6 +510,7 @@ multi_beta_binomial_glm = function(.data,
                                    prior_mean_variable_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
+																	 .sample_cell_group_pairs_to_exclude = NULL,
                                    approximate_posterior_inference = TRUE,
                                    enable_loo = FALSE,
                                    cores = detectCores(), # For development purpose,
@@ -459,6 +528,8 @@ multi_beta_binomial_glm = function(.data,
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
   #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
   #contrasts = contrasts |> enquo() |> quo_names()
 
@@ -475,6 +546,7 @@ multi_beta_binomial_glm = function(.data,
       prior_mean_variable_association = prior_mean_variable_association,
       percent_false_positive = percent_false_positive,
       check_outliers = check_outliers,
+      .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       approximate_posterior_inference = approximate_posterior_inference,
       enable_loo = enable_loo,
       cores = cores, # For development purpose,
