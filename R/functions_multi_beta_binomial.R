@@ -269,7 +269,7 @@ sccomp_glm_data_frame_counts = function(.data,
       quantile = CI,
       approximate_posterior_inference = approximate_posterior_inference == "all",
       verbose = verbose,
-      seed = seed,
+      seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
     )
