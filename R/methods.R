@@ -407,119 +407,243 @@ sccomp_estimate.data.frame = function(.data,
     add_attr(.cell_group, ".cell_group")
 }
 
-#' @importFrom tidyr complete
-#' @importFrom tidyr nesting
-#' @importFrom tidyr replace_na
-sccomp_glm_data_frame_raw = function(.data,
-                                     formula_composition = ~ 1 ,
-                                     formula_variability = ~ 1,
-                                     .sample,
-                                     .cell_group,
-                                     .count = NULL,
-
-                                     # Secondary arguments
-                                     contrasts = NULL,
-                                     prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
-                                     percent_false_positive =  5,
-                                     check_outliers = TRUE,
-                                     approximate_posterior_inference = "none",
-                                     test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
-                                     verbose = FALSE,
-                                     my_glm_model,
-                                     exclude_priors = FALSE,
-                                     bimodal_mean_variability_association = FALSE,
-                                     enable_loo = FALSE,
-                                     use_data = TRUE,
-                                     cores = 4,
-                                     mcmc_seed = sample(1e5, 1),
-                                     max_sampling_iterations = 20000,
-                                     pass_fit = TRUE ) {
-
-  # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
-  # See https://github.com/tidyverse/tidyr/issues/506
 
 
+#' sccomp_remove_outliers main
+#'
+#' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
+#'
+#' @import dplyr
+#' @importFrom magrittr %$%
+#' @importFrom magrittr divide_by
+#' @importFrom magrittr multiply_by
+#' @importFrom magrittr equals
+#' @importFrom rlang quo_is_null
+#' @importFrom SingleCellExperiment colData
+#' @importFrom parallel detectCores
+#' @importFrom rlang quo_is_symbolic
+#'
+#' @param .estimate A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.
+#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
+#' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
+#' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
+#' @param max_sampling_iterations An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.
+#' @param verbose A boolean. Prints progression.
+#' @param cores An integer. How many cored to be used with parallel calculations.
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
+#'
+#' @return A nested tibble `tbl`, with the following columns
+#' \itemize{
+#'   \item cell_group - column including the cell groups being tested
+#'   \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
+#'   \item factor - The factor in the formula corresponding to the covariate, if exists (e.g. it does not exist in case og Intercept or contrasts, which usually are combination of parameters)
+#'
+#'   \item c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - upper (97.5%) quantile of the posterior distribution fo a composition (c)  parameter.
+#'   \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+#'
+#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter
+#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
+#'   \item v_n_eff - Effective sample size for a variability (v) parameter - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
+#'
+#'   \item count_data Nested input count data.
+#'
+#' }
+#'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#' estimate =
+#'   sccomp_estimate(
+#'   counts_obj ,
+#'    ~ type,
+#'    ~1,
+#'    sample,
+#'    cell_group,
+#'    count,
+#'     check_outliers = FALSE,
+#'     cores = 1
+#'   ) |> 
+#'   sccomp_remove_outliers()
+#'
+#' @export
+#'
+#'
+sccomp_remove_outliers <- function(.estimate,
+                                   percent_false_positive = 5,
+                                   cores = detectCores(),
+                                   approximate_posterior_inference = "none",
+                                   verbose = FALSE,
+                                   mcmc_seed = sample(1e5, 1),
+                                   max_sampling_iterations = 20000,
+                                   pass_fit = TRUE,
+                                   enable_loo = FALSE
+) {
+  UseMethod("sccomp_remove_outliers", .estimate)
+}
+
+#' @export
+sccomp_remove_outliers.sccomp_tbl = function(.estimate,
+                                             percent_false_positive = 5,
+                                             cores = detectCores(),
+                                             approximate_posterior_inference = "none",
+                                             verbose = FALSE,
+                                             mcmc_seed = sample(1e5, 1),
+                                             max_sampling_iterations = 20000,
+                                             pass_fit = TRUE,
+                                             enable_loo = FALSE
+) {
+  
+  browser()
   # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  .sample = .estimate |>  attr(".sample")
+  .cell_group = .estimate |>  attr(".cell_group")
+  .count = .estimate |>  attr(".count")
+  .sample_cell_group_pairs_to_exclude = .estimate |> attr(".sample_cell_group_pairs_to_exclude")
+
+  # Formulae
+  formula_composition = .estimate |> attr("formula_composition")
+  formula_variability = .estimate |> attr("formula_variability")
   
-  # Check if columns exist
-  check_columns_exist(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    parse_formula(formula_composition)
-  ))
-
-  # Check if any column is NA or null
-  check_if_any_NA(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    parse_formula(formula_composition)
-  ))
-
-  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
-
-  # Make counts
-  .data %>%
-    class_list_to_counts(!!.sample, !!.cell_group) %>%
-
-    # Add formula_composition information
-    when(
-      length(parse_formula(formula_composition))>0 ~
-        left_join(.,
-                  .data %>%
-        						as_tibble() |>
-                    select(
-                    	!!.sample,
-                    	parse_formula(formula_composition),
-                    	any_of(.grouping_for_random_intercept)
-                    ) %>%
-                    distinct(),
-                  by = quo_name(.sample)
-        ),
-      ~ (.)
-    ) |>
-
-  	# Attach possible exclusion of data points
-  	left_join(.data %>%
-  							as_tibble() |>
-  							select(
-  								!!.sample, !!.cell_group, any_of(quo_name(.sample_cell_group_pairs_to_exclude))
-  							) %>%
-  							distinct(),
-  						by = c(quo_name(.sample), quo_name(.cell_group))
-  	) |>
-  	mutate(
-  		across(!!.sample_cell_group_pairs_to_exclude, ~replace_na(.x, 0))
-  	) |>
+  # Get model input
+  data_for_model = .estimate |> attr("model_input")
   
-    # Return
-    sccomp_glm_data_frame_counts(
-      formula_composition = formula_composition,
-      formula_variability = formula_variability,
-
-      .sample = !!.sample,
-      .cell_group = !!.cell_group,
-      .count = count,
-      my_glm_model = my_glm_model,
-      contrasts = contrasts,
-      #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
-      prior_mean_variable_association = prior_mean_variable_association,
-      percent_false_positive =  percent_false_positive,
-      check_outliers = check_outliers,
-      approximate_posterior_inference = approximate_posterior_inference,
-      exclude_priors = exclude_priors,
-      bimodal_mean_variability_association = bimodal_mean_variability_association,
-      enable_loo = enable_loo,
-      use_data = use_data,
-      cores = cores,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
-      verbose = verbose,
-      mcmc_seed = mcmc_seed,
-      max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+  # Credible interval
+  CI = 1 - (percent_false_positive/100)
+  
+  # Count data
+  .data = 
+    .estimate |> 
+    select(!!.cell_group, count_data) |> 
+    unnest(count_data) |> 
+    distinct()
+  
+  # Random intercept
+  random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
+  
+  # # If no random intercept fake it
+  # if(nrow(random_intercept_elements)>0){
+  #   .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
+  #   
+  # } else{
+  #   .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
+  #   .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
+  # }
+  
+  # # If .sample_cell_group_pairs_to_exclude 
+  # if(quo_is_symbolic(.sample_cell_group_pairs_to_exclude)){
+  #   
+  #   # Error if not logical
+  #   if(.data |> pull(!!.sample_cell_group_pairs_to_exclude) |> is("logical") |> not())
+  #     stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be logical"))
+  #   
+  #   # Error if not consistent to sample/cell group
+  #   if(.data |> count(!!.sample, !!.cell_group, name = "n") |> filter(n>1) |> nrow() |> gt(0))
+  #     stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be unique with .sample/.cell_group pairs. You might have a .sample/.cell_group pair with both TRUE and FALSE {quo_name(.sample_cell_group_pairs_to_exclude)}."))
+  #   
+  # } else {
+  #   
+  #   # If no .sample_cell_group_pairs_to_exclude fake it
+  #   .sample_cell_group_pairs_to_exclude = quo(!! sym(".sample_cell_group_pairs_to_exclude"))
+  #   .data = .data |> mutate(!!.sample_cell_group_pairs_to_exclude := FALSE)
+  # }
+  
+  rng =  rstan::gqs(
+    stanmodels$glm_multi_beta_binomial_generate_date,
+    #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
+    draws = .estimate |> attr("fit") |>  as.matrix(),
+    
+    # This is for the new data generation with selected factors to do adjustment
+    data = 
+      .estimate |>
+      attr("model_input") |> 
+      c(list(
+        
+        # Add subset of coefficients
+        length_X_which = ncol(data_for_model$X),
+        length_XA_which = ncol(data_for_model$XA),
+        X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
+        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
+        
+        # Random intercept
+        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
+        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        create_intercept = FALSE
+      ))
+  )
+  
+  # Free memory
+  rm(.estimate)
+  
+  # Detect outliers
+  truncation_df =
+    .data %>%
+    left_join(
+      summary_to_tibble(rng, "counts", "N", "M", probs = c(0.05, 0.95)) %>%
+        nest(data = -N) %>%
+        mutate(!!.sample := rownames(data_for_model$y)) %>%
+        unnest(data) %>%
+        nest(data = -M) %>%
+        mutate(!!.cell_group := colnames(data_for_model$y)) %>%
+        unnest(data) ,
+      
+      by = c(quo_name(.sample), quo_name(.cell_group))
+    ) %>%
+    
+    # Add truncation
+    mutate(   truncation_down = `5%`,   truncation_up =  `95%`) %>%
+    
+    # Add outlier stats
+    mutate( outlier = !(!!.count >= `5%` & !!.count <= `95%`) ) %>%
+    nest(data = -M) %>%
+    mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
+    unnest(data) %>%
+    
+    mutate(
+      truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
+      truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up),
     )
+  
+  # Add censoring
+  data_for_model$is_truncated = 1
+  data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+  data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+  data_for_model$truncation_not_idx = 
+    (data_for_model$truncation_down >= 0) %>% 
+    t() %>% 
+    as.vector()  %>% 
+    which() |>
+    intersect(data_for_model$user_forced_truncation_not_idx) |>
+    sort()
+  data_for_model$TNS = length(data_for_model$truncation_not_idx)
+  
+  message("sccomp says: outlier identification - step 1/2")
+  
+  my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
+  
+  # This step gets the credible interval to control for within-category false positive rate
+  # We want a category-wise false positive rate of 0.1, and we have to correct for how many samples we have in each category
+  CI_step_2 = (1-my_quantile_step_2) / 2 * 2
+  
+  
+  fit2 =
+    data_for_model %>%
+    fit_model(
+      stanmodels$glm_multi_beta_binomial,
+      cores = cores,
+      quantile = my_quantile_step_2,
+      approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
+      verbose = verbose,
+      seed = mcmc_seed,
+      max_sampling_iterations = max_sampling_iterations,
+      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
+    )
+
 }
 
 sccomp_glm_data_frame_counts = function(.data,
@@ -592,24 +716,116 @@ sccomp_glm_data_frame_counts = function(.data,
       .cell_group = !!.cell_group,
       .count = !!.count,
       
-      #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
-      prior_mean_variable_association = prior_mean_variable_association,
-      approximate_posterior_inference = approximate_posterior_inference,
-      exclude_priors = exclude_priors,
-      bimodal_mean_variability_association = bimodal_mean_variability_association,
-      enable_loo = enable_loo,
-      use_data = use_data,
-      cores = cores,
-      verbose = verbose,
-      seed = mcmc_seed,
-      max_sampling_iterations = max_sampling_iterations
+      # Add subset of coefficients
+      length_X_which = ncol(data_for_model$X),
+      length_XA_which = ncol(data_for_model$XA),
+      X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
+      XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
+      
+      # Random intercept
+      length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
+      X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+      create_intercept = FALSE
+      
+    )
+  
+  # Detect outliers
+  truncation_df2 =
+    .data %>%
+    left_join(
+      summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 0.5, 1-CI_step_2)) %>%
+        
+        # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
+        # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
+        rename(
+          .lower := !!as.symbol(colnames(.)[7]) ,
+          .median = `50%`,
+          .upper := !!as.symbol(colnames(.)[9])
+        ) %>%
+        nest(data = -N) %>%
+        mutate(!!.sample := rownames(data_for_model$y)) %>%
+        unnest(data) %>%
+        nest(data = -M) %>%
+        mutate(!!.cell_group := colnames(data_for_model$y)) %>%
+        unnest(data) ,
+      
+      by = c(quo_name(.sample), quo_name(.cell_group))
     ) %>%
-    add_attr(.sample, ".sample") %>%
-    add_attr(.cell_group, ".cell_group") %>%
-    add_attr(.count, ".count") %>%
-    add_attr(parse_formula(formula_composition), "factors" )
+    
+    # Add truncation
+    mutate(   truncation_down = .lower,   truncation_up =  .upper) %>%
+    
+    # Add outlier stats
+    mutate( outlier = !(!!.count >= .lower & !!.count <= .upper) ) %>%
+    nest(data = -M) %>%
+    mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
+    unnest(data) %>%
+    
+    mutate(
+      truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
+      truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up)
+    )
+  
+  data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+  data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+  data_for_model$truncation_not_idx = 
+    (data_for_model$truncation_down >= 0) %>% 
+    t() %>% 
+    as.vector()  %>% 
+    which() |>
+    intersect(data_for_model$user_forced_truncation_not_idx) |>
+    sort()
+  data_for_model$TNS = length(data_for_model$truncation_not_idx)
+  
+  # LOO
+  data_for_model$enable_loo = TRUE & enable_loo
+  
+  message("sccomp says: outlier-free model fitting - step 2/2")
+  
+  # Print design matrix
+  message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
+  message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
+  
+  fit3 =
+    data_for_model %>%
+    # Run the first discovery phase with permissive false discovery rate
+    fit_model(
+      stanmodels$glm_multi_beta_binomial,
+      cores = cores,
+      quantile = CI,
+      approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
+      verbose = verbose, 
+      seed = mcmc_seed,
+      max_sampling_iterations = max_sampling_iterations,
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+    )
+  
+  # Create a dummy tibble
+  tibble() |>
+    # Attach association mean concentration
+    add_attr(fit3, "fit") %>%
+    add_attr(data_for_model, "model_input") |>
+    add_attr(truncation_df2, "truncation_df2") |>
+    add_attr(.sample, ".sample") |>
+    add_attr(.cell_group, ".cell_group") |>
+    add_attr(.count, ".count") |>
+    
+    add_attr(formula_composition, "formula_composition") |>
+    add_attr(formula_variability, "formula_variability") |>
+    add_attr(parse_formula(formula_composition), "factors" ) |> 
+    
+    # Print estimates
+    test_contrasts() |>
+    
+    # drop hypothesis testing as the estimation exists without probabilities.
+    # For hypothesis testing use sccomp_test
+    select(-contains("_FDR"), -contains("_pH0")) |> 
+    
+    # Add class to the tbl
+    add_class("sccomp_tbl")
+  
+  
 }
-
 
 #' test_contrasts
 #'
@@ -649,7 +865,11 @@ test_contrasts <- function(.data,
 }
 
 
+#' 
+#' @importFrom dplyr any_of
+#' 
 #' @export
+#' 
 #'
 test_contrasts.data.frame = function(.data,
                                      contrasts = NULL,
@@ -713,32 +933,25 @@ test_contrasts.data.frame = function(.data,
     
     select(!!.cell_group, everything(),-M)
   
-  # Add outlier
-  if (check_outliers)
-    result =
+
+  result =
     result |>
     left_join(
       truncation_df2 |>
-        select(-c(
-          M,
-          N,
-          .variable,
-          mean,
-          se_mean,
-          sd,
-          n_eff,
-          one_of("R_hat", "k_hat")
-        )) |>
-        suppressWarnings() |>
+        select(-any_of(c(
+          "M",
+          "N",
+          ".variable",
+          "mean",
+          "se_mean",
+          "sd",
+          "n_eff",
+          "R_hat", 
+          "k_hat"
+        ))) |>
         nest(count_data = -!!.cell_group),
       by = quo_name(.cell_group)
     )
-  else
-    result =
-    result |>
-    left_join(truncation_df2  |>
-                nest(count_data = -!!.cell_group),
-              by = quo_name(.cell_group))
   
   result = 
     result |>
@@ -751,8 +964,8 @@ test_contrasts.data.frame = function(.data,
   
   if(pass_fit)
     result = 
-  result |>
-    add_attr(.data |> attr("fit") , "fit")
+      result |>
+      add_attr(.data |> attr("fit") , "fit")
 
   result |> 
     # Attach association mean concentration
@@ -761,7 +974,7 @@ test_contrasts.data.frame = function(.data,
     add_attr(.sample, ".sample") |>
     add_attr(.cell_group, ".cell_group") |>
     add_attr(.count, ".count") |>
-    add_attr(check_outliers, "check_outliers") |>
+    
     add_attr(.data |> attr("formula_composition"), "formula_composition") |>
     add_attr(.data |> attr("formula_variability"), "formula_variability")
 }
@@ -1199,6 +1412,39 @@ simulate_data.data.frame = function(.data,
 
 }
 
+#' @export
+sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
+  
+  
+  .cell_group = attr(.data, ".cell_group")
+  .count = attr(.data, ".count")
+  .sample = attr(.data, ".sample")
+  
+  data_proportion =
+    .data %>%
+    
+    # Otherwise does not work
+    select(-`factor`) %>%
+    
+    pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
+    unnest(count_data) %>%
+    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
+    
+    # If I don't have outliers add them
+    when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
+plot_boxplot(
+        .data,
+        data_proportion,
+        factor,
+        !!.cell_group,
+        !!.sample,
+        significance_threshold = significance_threshold,
+        multipanel_theme
+      ) +
+        ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
+
+  
+}
 
 #' plot_summary
 #'
