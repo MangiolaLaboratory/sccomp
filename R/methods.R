@@ -499,7 +499,6 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              enable_loo = FALSE
 ) {
   
-  browser()
   # Prepare column same enquo
   .sample = .estimate |>  attr(".sample")
   .cell_group = .estimate |>  attr(".cell_group")
@@ -509,6 +508,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   # Formulae
   formula_composition = .estimate |> attr("formula_composition")
   formula_variability = .estimate |> attr("formula_variability")
+  
+  noise_model = .estimate |> attr("noise_model")
   
   # Get model input
   data_for_model = .estimate |> attr("model_input")
@@ -521,37 +522,16 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     .estimate |> 
     select(!!.cell_group, count_data) |> 
     unnest(count_data) |> 
-    distinct()
+    distinct() |> 
+    
+    # Drop previous outlier estimation for the new one
+    select(-any_of(c(
+      ".lower" ,  ".median" ,  ".upper" , "Rhat" ,  "truncation_down" , 
+      "truncation_up"   , "outlier"    ,   "contains_outliers"
+    )))
   
   # Random intercept
   random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
-  
-  # # If no random intercept fake it
-  # if(nrow(random_intercept_elements)>0){
-  #   .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
-  #   
-  # } else{
-  #   .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
-  #   .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
-  # }
-  
-  # # If .sample_cell_group_pairs_to_exclude 
-  # if(quo_is_symbolic(.sample_cell_group_pairs_to_exclude)){
-  #   
-  #   # Error if not logical
-  #   if(.data |> pull(!!.sample_cell_group_pairs_to_exclude) |> is("logical") |> not())
-  #     stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be logical"))
-  #   
-  #   # Error if not consistent to sample/cell group
-  #   if(.data |> count(!!.sample, !!.cell_group, name = "n") |> filter(n>1) |> nrow() |> gt(0))
-  #     stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be unique with .sample/.cell_group pairs. You might have a .sample/.cell_group pair with both TRUE and FALSE {quo_name(.sample_cell_group_pairs_to_exclude)}."))
-  #   
-  # } else {
-  #   
-  #   # If no .sample_cell_group_pairs_to_exclude fake it
-  #   .sample_cell_group_pairs_to_exclude = quo(!! sym(".sample_cell_group_pairs_to_exclude"))
-  #   .data = .data |> mutate(!!.sample_cell_group_pairs_to_exclude := FALSE)
-  # }
   
   rng =  rstan::gqs(
     stanmodels$glm_multi_beta_binomial_generate_date,
@@ -814,6 +794,8 @@ sccomp_glm_data_frame_counts = function(.data,
     add_attr(formula_variability, "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     
+    add_attr(noise_model, "noise_model") |> 
+    
     # Print estimates
     test_contrasts() |>
     
@@ -947,7 +929,8 @@ test_contrasts.data.frame = function(.data,
           "sd",
           "n_eff",
           "R_hat", 
-          "k_hat"
+          "k_hat",
+          "Rhat"
         ))) |>
         nest(count_data = -!!.cell_group),
       by = quo_name(.cell_group)
