@@ -187,6 +187,7 @@ transformed parameters{
   // random intercept
   if(N_random_intercepts>0 ){
     random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
+    
     // Building the - sum, Loop across covariates
     for(a in 1:N_minus_sum){
       // Reset sum to zero
@@ -201,10 +202,17 @@ transformed parameters{
     }
     // Build the beta_random_intercept_raw
     for(n in 1:N_grouping){
+      
+      // If primary parameter
       if(idx_group_random_intercepts[n,2]>0)
         beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
+      
+      // If sum to zero parameter
       else if(idx_group_random_intercepts[n,2]<0)
         beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]] .* exp(random_intercept_sigma / 3.0);
+      
+      
+      // If a covariate has only one group
       else
         beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
     }
