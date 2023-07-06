@@ -2134,8 +2134,8 @@ replicate_data = function(.data,
     select(count_data) |>
     unnest(count_data) |>
     select(-count) |>
-    distinct() |>
     select(one_of(colnames(new_data))) |>
+    distinct() |>
     
     # Change sample names to make unique
     mutate(dummy = "OLD") |> 
