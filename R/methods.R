@@ -731,8 +731,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     add_attr(formula_variability, "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     
-    add_attr(noise_model, "noise_model") |> 
-    
+
     # Print estimates
     test_contrasts() |>
     
@@ -741,7 +740,10 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     select(-contains("_FDR"), -contains("_pH0")) |> 
     
     # Add class to the tbl
-    add_class("sccomp_tbl")
+    add_class("sccomp_tbl") |> 
+    
+    add_attr(noise_model, "noise_model") 
+    
   
   
 }
@@ -867,7 +869,8 @@ test_contrasts.data.frame = function(.data,
           "n_eff",
           "R_hat", 
           "k_hat",
-          "Rhat"
+          "Rhat",
+          ".lower", ".median", ".upper"
         ))) |>
         nest(count_data = -!!.cell_group),
       by = quo_name(.cell_group)
