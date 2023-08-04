@@ -15,6 +15,10 @@ status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.sv
 
 <!-- badges: end -->
 
+<a href="https://www.youtube.com/watch?v=R_lt58We9nA&ab_channel=RConsortium" target="_blank">
+ <img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10" />
+</a>
+
 ```{r echo=FALSE}
 knitr::opts_chunk$set( fig.path = "inst/figures/")
 ```
