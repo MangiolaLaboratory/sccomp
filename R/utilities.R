@@ -32,6 +32,7 @@ add_attr = function(var, attribute, name) {
 #'
 #' @importFrom stringr str_subset
 #' @importFrom magrittr extract2
+#' @importFrom stats terms
 #'
 #' @return A character vector
 #'
