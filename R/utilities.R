@@ -796,27 +796,16 @@ get_design_matrix = function(.data_spread, formula, .sample){
 
   .sample = enquo(.sample)
 
-  .data_spread %>%
+  design_matrix = 
+  	.data_spread %>%
 
-    select(!!.sample, parse_formula(formula)) %>%
-    model.matrix(formula, data=.) %>%
-    apply(2, function(x)
-      x %>% when(
-        sd(.)==0 ~ (.),
+    select(!!.sample, parse_formula(formula)) |> 
+  	mutate(across(where(is.numeric),  scale)) |> 
+    model.matrix(formula, data=_)
+  
+  rownames(design_matrix) = .data_spread |> pull(!!.sample)
 
-        # If I only have 0 and 1 for a binomial factor
-        unique(.) %>% sort() %>% identical(c(0,1)) %>% all() ~ (.),
-
-        # If continuous
-        ~ scale(.)
-      )
-    ) %>%
-    
-    {
-      .x = (.)
-      rownames(.x) = .data_spread |> pull(!!.sample)
-      .x
-    } 
+  design_matrix
 }
 
 check_random_intercept_design = function(.data, factor_names, random_intercept_elements, formula, X){
