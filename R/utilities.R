@@ -2329,6 +2329,7 @@ quo_names <- function(v) {
 
 #' Add class to abject
 #'
+#' @importFrom purrr prepend
 #' @keywords internal
 #' @noRd
 #'
