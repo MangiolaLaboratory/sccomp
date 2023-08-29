@@ -949,6 +949,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
 #' @importFrom tidyr expand_grid
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_remove_all
+#' @importFrom purrr reduce
 #'
 #' @keywords internal
 #' @noRd
@@ -1043,7 +1044,7 @@ data_spread_to_model_input =
 
         # Merge
         pull(design_matrix) |>
-        bind_cols() |> 
+      	reduce(left_join, by = join_by(!!.sample)) |> 
         as_matrix(rownames = quo_name(.sample))
 
     idx_group_random_intercepts =
@@ -1829,6 +1830,8 @@ contrasts_to_enquos = function(contrasts){
 #' @importFrom tibble add_column
 #' @importFrom dplyr last_col
 #' @importFrom purrr map2_dfc
+#' @importFrom stringr str_subset
+#' 
 mutate_from_expr_list = function(x, formula_expr){
 
   if(formula_expr |> names() |> is.null())
@@ -1840,9 +1843,11 @@ mutate_from_expr_list = function(x, formula_expr){
     ~  x |>
         mutate_ignore_error(!!.y := eval(rlang::parse_expr(.x))) |>
         # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
-        select(-colnames(x))
+        select(all_of(.y))
   ) |>
-    add_column(x, .before = 1)
+  	
+  	# I could drop this to just result contrasts
+    add_column(x |> select(-any_of(names(formula_expr))), .before = 1)
 
 }
 
