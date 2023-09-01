@@ -6,10 +6,12 @@ variability analyses.
 
 ## Characteristics
 
+- Complex linear models with continuous and categorical covariates
+- Multilevel modelling, with population (i.e. fixed) and group (random) effects
 - Modelling counts 
 - Modelling proportionality 
 - Modelling cell-type specific variability 
-- Cell-type information share for variability shrinkage
+- Cell-type information share for variability adaptive shrinkage
 - Testing differential variability 
 - Probabilistic outlier identification 
 - Cross-dataset learning (hyperpriors).
@@ -54,13 +56,14 @@ factor of interest only. The variability model must be a subset of the model for
 ```{r eval=FALSE}
 
 single_cell_object |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+	sccomp_test()
 
 ```
 
