@@ -1111,7 +1111,8 @@ sccomp_predict.data.frame = function(fit,
   rng =
     replicate_data(
       fit,
-      formula_composition = formula_composition,
+      formula_composition = formula_composition, 
+      formula_variability = ~ 1,
       new_data = new_data,
       number_of_draws = number_of_draws,
       mcmc_seed = mcmc_seed

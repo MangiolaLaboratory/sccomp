@@ -22,13 +22,12 @@ data {
 	int is_truncated;
 	real<lower=1> truncation_ajustment;
 
-
-
 	// Random intercept
 	int length_X_random_intercept_which;
 	int X_random_intercept_which[length_X_random_intercept_which];
 	int N_grouping;
-	matrix[N, N_grouping] X_random_intercept;
+	int N_grouping_new;
+	matrix[N, N_grouping_new] X_random_intercept;
 
   // Should I create intercept for generate quantities
   int<lower=0, upper=1> create_intercept;
@@ -111,7 +110,7 @@ generated quantities{
 
   // Random intercept
   if(length_X_random_intercept_which>0){
-      matrix[M, N] mu_random_intercept = append_row((X_random_intercept[,X_random_intercept_which] * beta_random_intercept[X_random_intercept_which,])', rep_row_vector(0, N));
+      matrix[M, N] mu_random_intercept = append_row((X_random_intercept * beta_random_intercept[X_random_intercept_which,])', rep_row_vector(0, N));
       mu = mu + mu_random_intercept;
   }
 

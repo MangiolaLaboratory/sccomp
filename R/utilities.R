@@ -1832,7 +1832,7 @@ mutate_from_expr_list = function(x, formula_expr){
     ~  x |>
         mutate_ignore_error(!!.y := eval(rlang::parse_expr(.x))) |>
         # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
-        select(all_of(.y))
+        select(any_of(.y))
   ) |>
   	
   	# I could drop this to just result contrasts
@@ -2209,8 +2209,7 @@ replicate_data = function(.data,
     X_random_intercept_which = array()[0]
     new_X_random_intercept = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
 
-    # Update N_groupings
-   # model_input$N_grouping = 0
+    
   }
   else {
 
@@ -2239,6 +2238,11 @@ replicate_data = function(.data,
 
       tail(nrow_new_data)
 
+    # Check if I have column in the new design that are not in the old one
+    missing_columns = new_X_random_intercept |> colnames() |> setdiff(colnames(model_input$X_random_intercept)) 
+    if(missing_columns |> length() > 0)
+    	stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
+    
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_intercept_which =
       colnames(new_X_random_intercept) |>
@@ -2253,9 +2257,11 @@ replicate_data = function(.data,
   # New X
   model_input$X = new_X
   model_input$Xa = new_Xa
-  #model_input$X_random_intercept = new_X_random_intercept
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
+  
+  model_input$X_random_intercept = new_X_random_intercept
+  model_input$N_grouping_new = ncol(new_X_random_intercept)
 
   # Generate quantities
   rstan::gqs(
