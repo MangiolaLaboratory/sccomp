@@ -300,7 +300,7 @@ sccomp_glm_data_frame_counts = function(.data,
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     
     # Print estimates
-    test_contrasts() |>
+    sccomp_test() |>
     
     # drop hypothesis testing as the estimation exists without probabilities.
     # For hypothesis testing use sccomp_test
@@ -424,7 +424,7 @@ multi_beta_binomial_glm = function(.data,
     add_attr(formula_composition, "formula_composition") |>
     add_attr(formula_variability, "formula_variability") |>
 
-    test_contrasts(
+    sccomp_test(
       contrasts = contrasts,
       percent_false_positive = percent_false_positive,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change

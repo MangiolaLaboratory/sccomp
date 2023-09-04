@@ -796,7 +796,7 @@ sccomp_glm_data_frame_counts = function(.data,
     
 
     # Print estimates
-    test_contrasts() |>
+    sccomp_test() |>
     
     # drop hypothesis testing as the estimation exists without probabilities.
     # For hypothesis testing use sccomp_test
@@ -811,7 +811,7 @@ sccomp_glm_data_frame_counts = function(.data,
   
 }
 
-#' test_contrasts
+#' sccomp_test
 #'
 #' @description This function test contrasts from a sccomp result.
 #'
@@ -838,14 +838,14 @@ sccomp_glm_data_frame_counts = function(.data,
 #'     cores = 1
 #'   ) |>
 #'
-#'   test_contrasts("typecancer - typebenign")
+#'   sccomp_test("typecancer - typebenign")
 #'
-test_contrasts <- function(.data,
+sccomp_test <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
                            test_composition_above_logit_fold_change = 0.2,
                            pass_fit = TRUE) {
-  UseMethod("test_contrasts", .data)
+  UseMethod("sccomp_test", .data)
 }
 
 
@@ -855,7 +855,7 @@ test_contrasts <- function(.data,
 #' @export
 #' 
 #'
-test_contrasts.data.frame = function(.data,
+sccomp_test.data.frame = function(.data,
                                      contrasts = NULL,
                                      percent_false_positive = 5,
                                      test_composition_above_logit_fold_change = 0.2,

@@ -668,7 +668,7 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
             mutate_if(is.integer, ~1) |> 
             pivot_longer(-!!.sample, names_to = "factor"),
           
-          by = join_by(sample_, factor)
+          by = join_by(!!.sample, factor)
         ) |> 
          
          # Create unique name
