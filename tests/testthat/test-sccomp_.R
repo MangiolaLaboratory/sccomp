@@ -465,7 +465,7 @@ test_that("test constrasts",{
 
   new_test =
     estimate |>
-    test_contrasts() |>
-    test_contrasts()
+    sccomp_test() |>
+    sccomp_test()
 
 })

@@ -63,7 +63,7 @@ single_cell_object |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-	sccomp_test()
+	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 ```
 
@@ -72,14 +72,15 @@ single_cell_object |>
 ```{r, message=FALSE, warning=FALSE}
 
 counts_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 ```
 
@@ -90,14 +91,17 @@ Of the output table, the estimate columns start with the prefix `c_` indicate `c
 ```{r, message=FALSE, warning=FALSE}
 
 seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ 0 + type, 
-    contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+	sccomp_test(
+	  contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
+	  test_composition_above_logit_fold_change = 0.2
+	)
 
 ```
 
@@ -115,11 +119,10 @@ library(loo)
 # Fit first model
 model_with_factor_association = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
     cores = 1, 
     enable_loo = TRUE
@@ -128,11 +131,10 @@ model_with_factor_association =
 # Fit second model
 model_without_association = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ 1, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 , 
     enable_loo = TRUE
@@ -154,14 +156,17 @@ We can model the cell-group variability also dependent on the type, and so test 
 
 res = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     formula_variability = ~ type,
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+	sccomp_test(
+	  test_composition_above_logit_fold_change = 0.2
+	)
 
 res
 
@@ -226,4 +231,30 @@ This plot is provided only if differential variability has been tested. The diff
 
 ```{r}
 plots$credible_intervals_2D
+```
+
+# Multilevel modelling
+
+`sccomp` is cabable of estimating population (i.e. fixed) and group (i.e. random) effects. The formulation is analogous to the `lme4` package and `brms`.
+
+!! For now, only one grouping is allowed (e.g. group2__).
+
+```{r, message=FALSE, warning=FALSE}
+
+res = 
+  seurat_obj |>
+  sccomp_estimate( 
+    formula_composition = ~ type + (type | group2__), 
+    formula_variability = ~ type,
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1 
+  ) |> 
+	sccomp_test(
+	  test_composition_above_logit_fold_change = 0.2
+	)
+
+res
+
 ```
