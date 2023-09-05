@@ -17,13 +17,16 @@ variability analyses.
 
 ## Characteristics
 
--   Modelling counts
--   Modelling proportionality
--   Modelling cell-type specific variability
--   Cell-type information share for variability shrinkage
--   Testing differential variability
--   Probabilistic outlier identification
--   Cross-dataset learning (hyperpriors).
+- Complex linear models with continuous and categorical covariates
+- Multilevel modelling, with population (i.e. fixed) and group (random)
+  effects
+- Modelling counts
+- Modelling proportionality
+- Modelling cell-type specific variability
+- Cell-type information share for variability adaptive shrinkage
+- Testing differential variability
+- Probabilistic outlier identification
+- Cross-dataset learning (hyperpriors).
 
 # Installation
 
@@ -55,45 +58,48 @@ model for composition.
 
 ``` r
 single_cell_object |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+    sccomp_test(test_composition_above_logit_fold_change = 0.2)
 ```
 
 ### From counts
 
 ``` r
 counts_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+    sccomp_test(test_composition_above_logit_fold_change = 0.2)
 ```
 
     ## # A tibble: 72 × 18
-    ##    cell_group parameter   factor c_lower c_eff…¹ c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>      <chr>       <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercept) <NA>     0.873   1.06   1.23   0       0         4746.
-    ##  2 B1         typecancer  type    -1.23   -0.878 -0.527  2.50e-4 6.25e-5   2626.
-    ##  3 B2         (Intercept) <NA>     0.415   0.691  0.950  7.50e-4 6.25e-5   5154.
-    ##  4 B2         typecancer  type    -1.21   -0.772 -0.351  5.50e-3 8.33e-4   4362.
-    ##  5 B3         (Intercept) <NA>    -0.632  -0.387 -0.152  6.07e-2 3.38e-3   4135.
-    ##  6 B3         typecancer  type    -0.605  -0.225  0.142  4.47e-1 1.39e-1   3179.
-    ##  7 BM         (Intercept) <NA>    -1.29   -1.02  -0.750  0       0         4836.
-    ##  8 BM         typecancer  type    -0.756  -0.346  0.0353 2.35e-1 5.7 e-2   3588.
-    ##  9 CD4 1      (Intercept) <NA>     0.116   0.322  0.509  1.12e-1 1.15e-2   3516.
-    ## 10 CD4 1      typecancer  type    -0.103   0.164  0.435  6.04e-1 2.20e-1   2549.
-    ## # … with 62 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
-    ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
-    ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable name ¹​c_effect
+    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B1         (Intercep… <NA>    0.873     1.12   1.35   0       0         6210.
+    ##  2 B1         typecancer type   -1.06     -0.642 -0.262  1.18e-2 2.72e-3   4662.
+    ##  3 B2         (Intercep… <NA>    0.398     0.695  0.996  7.50e-4 6.58e-5   5458.
+    ##  4 B2         typecancer type   -1.21     -0.721 -0.233  1.80e-2 6.34e-3   3621.
+    ##  5 B3         (Intercep… <NA>   -0.680    -0.391 -0.121  7.90e-2 8.27e-3   5356.
+    ##  6 B3         typecancer type   -0.728    -0.310  0.0880 2.89e-1 8.44e-2   3963.
+    ##  7 BM         (Intercep… <NA>   -1.32     -1.04  -0.758  0       0         6759.
+    ##  8 BM         typecancer type   -0.737    -0.312  0.0969 2.94e-1 9.39e-2   4720.
+    ##  9 CD4 1      (Intercep… <NA>    0.0807    0.298  0.503  1.83e-1 2.86e-2   4736.
+    ## 10 CD4 1      typecancer type   -0.0988    0.188  0.483  5.30e-1 1.57e-1   4729.
+    ## # ℹ 62 more rows
+    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## #   count_data <list>
 
 Of the output table, the estimate columns start with the prefix `c_`
 indicate `composition`, or with `v_` indicate `variability` (when
@@ -103,33 +109,36 @@ formula_variability is set).
 
 ``` r
 seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ 0 + type, 
-    contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+    sccomp_test(
+      contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
+      test_composition_above_logit_fold_change = 0.2
+    )
 ```
 
     ## # A tibble: 60 × 18
-    ##    cell_group     param…¹ factor c_lower c_eff…² c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>          <chr>   <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature     typeca… type    -2.03   -1.58   -1.12  0       0            NA
-    ##  2 B immature     typehe… type     1.12    1.58    2.03  0       0            NA
-    ##  3 B mem          typeca… type    -2.51   -1.93   -1.34  0       0            NA
-    ##  4 B mem          typehe… type     1.34    1.93    2.51  0       0            NA
-    ##  5 CD4 cm high c… typeca… type     0.952   1.86    2.93  2.50e-4 5.00e-5      NA
-    ##  6 CD4 cm high c… typehe… type    -2.93   -1.86   -0.952 2.50e-4 5.00e-5      NA
-    ##  7 CD4 cm riboso… typeca… type     0.553   1.25    2.00  1.00e-3 2.81e-4      NA
-    ##  8 CD4 cm riboso… typehe… type    -2.00   -1.25   -0.553 1.00e-3 2.81e-4      NA
-    ##  9 CD4 cm S100A4  typeca… type    -1.27   -0.886  -0.540 0       0            NA
-    ## 10 CD4 cm S100A4  typehe… type     0.540   0.886   1.27  0       0            NA
-    ## # … with 50 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
-    ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
-    ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable names
-    ## #   ¹​parameter, ²​c_effect
+    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B immature  typecanc… <NA>    -1.89    -1.40   -0.901 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.901    1.40    1.89  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.33    -1.72   -1.07  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.07     1.72    2.33  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.47    -1.04   -0.617 2.50e-4 6.25e-5      NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.617    1.04    1.47  2.50e-4 6.25e-5      NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.837    1.77    2.91  5.00e-4 1.50e-4      NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.91    -1.77   -0.837 5.00e-4 1.50e-4      NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.290    0.997   1.71  1.30e-2 3.57e-3      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.71    -0.997  -0.290 1.30e-2 3.57e-3      NA
+    ## # ℹ 50 more rows
+    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## #   count_data <list>
 
 ## Categorical factor (e.g. Bayesian ANOVA)
 
@@ -152,11 +161,10 @@ library(loo)
 # Fit first model
 model_with_factor_association = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
     cores = 1, 
     enable_loo = TRUE
@@ -165,11 +173,10 @@ model_with_factor_association =
 # Fit second model
 model_without_association = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ 1, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 , 
     enable_loo = TRUE
@@ -184,7 +191,7 @@ loo_compare(
 
     ##        elpd_diff se_diff
     ## model1   0.0       0.0  
-    ## model2 -79.9      11.3
+    ## model2 -80.2      11.4
 
 ## Differential variability, binary factor
 
@@ -194,35 +201,38 @@ so test differences in variability
 ``` r
 res = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     formula_variability = ~ type,
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+    sccomp_test(
+      test_composition_above_logit_fold_change = 0.2
+    )
 
 res
 ```
 
     ## # A tibble: 60 × 18
-    ##    cell_group     param…¹ factor c_lower c_eff…² c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>          <chr>   <chr>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature     (Inter… <NA>     0.599   0.967   1.33  2.50e-4 1.92e-5   5475.
-    ##  2 B immature     typehe… type     0.972   1.48    2.01  0       0         3797.
-    ##  3 B mem          (Inter… <NA>    -1.65   -1.08   -0.485 3.00e-3 2.50e-4   3272.
-    ##  4 B mem          typehe… type     1.29    1.99    2.76  0       0         2681.
-    ##  5 CD4 cm high c… (Inter… <NA>    -0.829  -0.389   0.107 2.07e-1 2.40e-2   4299.
-    ##  6 CD4 cm high c… typehe… type    -3.24   -1.39    1.47  1.98e-1 4.96e-2   2844.
-    ##  7 CD4 cm riboso… (Inter… <NA>     0.158   0.499   0.857 4.00e-2 2.76e-3   3827.
-    ##  8 CD4 cm riboso… typehe… type    -2.47   -1.75   -0.825 1.75e-3 6.00e-4   2875.
-    ##  9 CD4 cm S100A4  (Inter… <NA>     1.76    2.01    2.26  0       0         6613.
-    ## 10 CD4 cm S100A4  typehe… type     0.364   0.739   1.15  2.50e-3 9.17e-4   4323.
-    ## # … with 50 more rows, 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>,
-    ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>,
-    ## #   v_R_k_hat <dbl>, count_data <list>, and abbreviated variable names
-    ## #   ¹​parameter, ²​c_effect
+    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B immature  (Interce… <NA>    0.371     0.769  1.20   0.00550 5.19e-4   5537.
+    ##  2 B immature  typeheal… type    0.851     1.43   2.00   0       0         5064.
+    ##  3 B mem       (Interce… <NA>   -1.50     -0.878 -0.188  0.0270  4.69e-3   3986.
+    ##  4 B mem       typeheal… type    1.07      1.87   2.65   0       0         3711.
+    ##  5 CD4 cm S10… (Interce… <NA>    1.32      1.66   2.00   0       0         7824.
+    ##  6 CD4 cm S10… typeheal… type    0.485     0.938  1.39   0.00225 5.62e-4   5599.
+    ##  7 CD4 cm hig… (Interce… <NA>   -1.04     -0.544 -0.0184 0.101   1.93e-2   4656.
+    ##  8 CD4 cm hig… typeheal… type   -3.08     -1.31   1.17   0.183   5.03e-2   3137.
+    ##  9 CD4 cm rib… (Interce… <NA>   -0.0416    0.312  0.691  0.265   3.32e-2   4634.
+    ## 10 CD4 cm rib… typeheal… type   -1.80     -0.970  0.0583 0.0695  2.08e-2   3588.
+    ## # ℹ 50 more rows
+    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## #   count_data <list>
 
 # Suggested settings
 
@@ -245,8 +255,8 @@ We recommend setting `bimodal_mean_variability_association  = FALSE`
 plots = plot_summary(res) 
 ```
 
-    ## Joining, by = c("cell_group", "sample")
-    ## Joining, by = c("cell_group", "type")
+    ## Joining with `by = join_by(cell_group, sample)`
+    ## Joining with `by = join_by(cell_group, type)`
 
     ## Warning: Expected 2 pieces. Additional pieces discarded in 4 rows [6, 7, 13,
     ## 14].
@@ -300,8 +310,8 @@ Plot 1D significance plot
 plots = plot_summary(res)
 ```
 
-    ## Joining, by = c("cell_group", "sample")
-    ## Joining, by = c("cell_group", "type")
+    ## Joining with `by = join_by(cell_group, sample)`
+    ## Joining with `by = join_by(cell_group, type)`
 
     ## Warning: Expected 2 pieces. Additional pieces discarded in 4 rows [6, 7, 13,
     ## 14].
@@ -331,3 +341,78 @@ plots$credible_intervals_2D
 ```
 
 ![](inst/figures/unnamed-chunk-16-1.png)<!-- -->
+
+# Multilevel modelling
+
+`sccomp` is cabable of estimating population (i.e. fixed) and group
+(i.e. random) effects. The formulation is analogous to the `lme4`
+package and `brms`.
+
+!! For now, only one grouping is allowed (e.g. group2\_\_).
+
+``` r
+res = 
+  seurat_obj |>
+  sccomp_estimate( 
+    formula_composition = ~ type + continuous_covariate + (type | group2__), 
+    formula_variability = ~ type,
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1 
+  ) |> 
+    sccomp_test(
+      test_composition_above_logit_fold_change = 0.2
+    )
+
+res
+```
+
+    ## # A tibble: 210 × 18
+    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B immature (Intercep… <NA>     0.327   0.868    1.45  0.00700 2.13e-3   2746.
+    ##  2 B immature typehealt… type     0.658   1.33     1.98  0.00150 7.50e-4   2898.
+    ##  3 B immature continuou… conti…  -0.222   0.0317   0.329 0.878   6.51e-1   7737.
+    ##  4 B immature (Intercep… <NA>    -0.574  -0.0432   0.434 0.736   6.40e-1     NA 
+    ##  5 B immature typehealt… <NA>    -0.434   0.0432   0.574 0.736   6.40e-1     NA 
+    ##  6 B immature (Intercep… <NA>    -0.595  -0.0413   0.469 0.745   6.83e-1     NA 
+    ##  7 B immature typehealt… <NA>    -0.469   0.0413   0.595 0.745   6.83e-1     NA 
+    ##  8 B mem      (Intercep… <NA>    -1.20   -0.487    0.352 0.235   4.75e-2   2960.
+    ##  9 B mem      typehealt… type     0.529   1.43     2.23  0.00700 3.00e-3   3028.
+    ## 10 B mem      continuou… conti…  -0.255   0.0520   0.402 0.803   6.16e-1   7688.
+    ## # ℹ 200 more rows
+    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## #   count_data <list>
+
+# Removal of unwanted variation
+
+After you model your dataset, you can remove the unwanted variation from
+your input data, **for visualisation purposes**
+
+We decide to just keep the type population (i.e. fixed) effect for
+abundance, and do not keep it for variability.
+
+``` r
+res |> sccomp_remove_unwanted_variation(~type)
+```
+
+    ## sccomp says: calculating residuals
+
+    ## sccomp says: regressing out unwanted factors
+
+    ## # A tibble: 600 × 5
+    ##    sample       cell_group adjusted_proportion adjusted_counts logit_residuals
+    ##    <chr>        <chr>                    <dbl>           <dbl>           <dbl>
+    ##  1 10x_6K       B immature              0.0558           262.          -0.673 
+    ##  2 10x_8K       B immature              0.144           1087.           0.403 
+    ##  3 GSE115189    B immature              0.115            269.           0.105 
+    ##  4 SCP345_580   B immature              0.0909           524.          -0.123 
+    ##  5 SCP345_860   B immature              0.152            976.           0.461 
+    ##  6 SCP424_pbmc1 B immature              0.113            300.           0.0707
+    ##  7 SCP424_pbmc2 B immature              0.202            603.           0.799 
+    ##  8 SCP591       B immature              0.0249            14.1         -1.49  
+    ##  9 SI-GA-E5     B immature              0.0257           107.          -0.734 
+    ## 10 SI-GA-E7     B immature              0.103            759.           0.759 
+    ## # ℹ 590 more rows
