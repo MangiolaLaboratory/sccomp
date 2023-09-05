@@ -957,6 +957,8 @@ sccomp_test.data.frame = function(.data,
     # Attach association mean concentration
     add_attr(.data |> attr("model_input") , "model_input") |>
     add_attr(.data |> attr("truncation_df2"), "truncation_df2") |>
+    add_attr(.data |> attr("noise_model") , "noise_model") |>
+    
     add_attr(.sample, ".sample") |>
     add_attr(.cell_group, ".cell_group") |>
     add_attr(.count, ".count") |>
@@ -1140,7 +1142,7 @@ sccomp_predict.data.frame = function(fit,
 }
 
 
-#' remove_unwanted_variation
+#' sccomp_remove_unwanted_variation
 #'
 #' @description This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula `~ factor_1 + factor_2` and use this formula to remove unwanted variation `~ factor_1`, the `factor_2` will be factored out.
 #'
@@ -1165,17 +1167,17 @@ sccomp_predict.data.frame = function(fit,
 #'     cores = 1
 #'   )
 #'
-#'   remove_unwanted_variation(estimates)
+#'   sccomp_remove_unwanted_variation(estimates)
 #'
-remove_unwanted_variation <- function(.data,
+sccomp_remove_unwanted_variation <- function(.data,
                                       formula_composition = ~1,
                                       formula_variability = NULL) {
-  UseMethod("remove_unwanted_variation", .data)
+  UseMethod("sccomp_remove_unwanted_variation", .data)
 }
 
 #' @export
 #'
-remove_unwanted_variation.data.frame = function(.data,
+sccomp_remove_unwanted_variation.data.frame = function(.data,
                                                 formula_composition = ~1,
                                                 formula_variability = NULL){
 

@@ -1666,7 +1666,8 @@ plot_boxplot = function(
   if("fit" %in% names(attributes(.data))){
 
     simulated_proportion =
-      sccomp_replicate(.data, number_of_draws = 100) %>%
+      .data |> 
+      sccomp_replicate(number_of_draws = 100) |> 
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
 
     my_boxplot = my_boxplot +
