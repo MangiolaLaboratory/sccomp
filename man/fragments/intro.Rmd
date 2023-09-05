@@ -244,7 +244,7 @@ plots$credible_intervals_2D
 res = 
   seurat_obj |>
   sccomp_estimate( 
-    formula_composition = ~ type + (type | group2__), 
+    formula_composition = ~ type + continuous_covariate + (type | group2__), 
     formula_variability = ~ type,
     .sample = sample,
     .cell_group = cell_group,
@@ -257,4 +257,14 @@ res =
 
 res
 
+```
+
+# Removal of unwanted variation
+
+After you model your dataset, you can remove the unwanted variation from your input data, **for visualisation purposes** 
+
+We decide to just keep the type population (i.e. fixed) effect for abundance, and do not keep it for variability.
+
+```{r}
+res |> sccomp_remove_unwanted_variation(~type)
 ```

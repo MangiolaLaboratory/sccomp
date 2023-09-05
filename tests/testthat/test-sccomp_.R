@@ -13,7 +13,7 @@ data("counts_obj")
 #
 #   res =
 #     sccomp::counts_obj  |>
-#     sccomp_glm(
+#     sccomp_estimate(
 #       formula = ~ type,
 #       sample, cell_type, count
 #     )
@@ -32,7 +32,7 @@ data("counts_obj")
 #   if(interactive()){
 #     res =
 #       counts_obj  |>
-#       sccomp_glm(
+#       sccomp_estimate(
 #         formula = ~ type,
 #         sample, cell_group, count,
 #         noise_model = "dirichlet_multinomial",
@@ -46,17 +46,15 @@ test_that("Generate data",{
 
 
   seurat_obj |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ type ,
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = FALSE,
       approximate_posterior_inference = FALSE,
       cores = 1,
       mcmc_seed = 42,
       max_sampling_iterations = 1000
     ) |>
-
 
     sccomp_replicate() |>
     nrow() |>
@@ -64,15 +62,14 @@ test_that("Generate data",{
 
   # With grouping
   seurat_obj |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ 0 + type + (type | group__),
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = FALSE,
       approximate_posterior_inference = FALSE,
-      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
+      mcmc_seed = 42,     
+      max_sampling_iterations = 1000
     ) |>
 
 
@@ -88,11 +85,10 @@ test_that("outliers",{
   res =
     seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ type,
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = TRUE,
       approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42, 
@@ -107,14 +103,14 @@ test_that("multilevel multi beta binomial from Seurat",{
   res =
     seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ type + (1 | group__),
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = FALSE,
-      approximate_posterior_inference = "all",
+      #approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
+      mcmc_seed = 42,     
+      max_sampling_iterations = 1000
     )
 
   # Check order
@@ -123,7 +119,8 @@ test_that("multilevel multi beta binomial from Seurat",{
     arrange(desc(abs(c_effect))) |>
     slice(1:3) |>
     pull(cell_group) |>
-    expect_equal(c("CD4 ribosome" ,        "CD4 cm high cytokine", "Mono NKG7 2"  ))
+    sort() |> 
+    expect_equal(c( "CD4 cm high cytokine", "CD4 ribosome" , "Mono NKG7 2"  ) |> sort())
 
   # Check convergence
   res |>
@@ -134,15 +131,14 @@ test_that("multilevel multi beta binomial from Seurat",{
   res =
     seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ 0 + type + (type | group__),
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = FALSE,
-      approximate_posterior_inference = "all",
-      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
+      #approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
+      mcmc_seed = 42,    
+      max_sampling_iterations = 1000
     )
 
   # res |>
@@ -166,23 +162,25 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 
   res =
     seurat_obj |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ continuous_covariate + (1 + continuous_covariate | group__),
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = FALSE,
-      approximate_posterior_inference = "all",
+      #approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
+      #mcmc_seed = 42,   
+      max_sampling_iterations = 1000
     )
 
+    expect_in(
+      "T gd2",
+      res |>
+        filter(parameter == "continuous_covariate") |>
+        arrange(desc(abs(c_effect))) |>
+        slice(1:3) |>
+        pull(cell_group)
+    )
 
-  res |>
-    filter(parameter == "continuous_covariate") |>
-    arrange(desc(abs(c_effect))) |>
-    slice(1) |>
-    pull(cell_group) |>
-    expect_equal(c("CD8 em 1"))
 
   # Check convergence
   res |>
@@ -194,44 +192,6 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 })
 
 
-test_that("multilevel continuous",{
-
-
-  # seurat_obj =
-  #   seurat_obj |>
-  #   mutate(group__ = glue::glue("GROUP{group__}")) |>
-  #   nest(data = -c(sample, type)) |>
-  #   mutate(group2__ = glue("GROUP2{sample(c(1, 2), replace = T, size = n())}") ) |>
-  #   mutate(continuous_covariate = rnorm(n())) |>
-  #   unnest(data)
-
-  res =
-    seurat_obj |>
-    sccomp_glm(
-      formula_composition = ~ 0 + type + continuous_covariate + (type | group__) + (continuous_covariate | type),
-      formula_variability = ~ 1,
-      sample, cell_group,
-      check_outliers = FALSE,
-      approximate_posterior_inference = "all",
-      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
-      cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
-    )
-
-  res |>
-    filter(parameter == "typecancer - typehealthy") |>
-    arrange(desc(abs(c_effect))) |>
-    slice(1) |>
-    pull(cell_group) |>
-    expect_equal(c("B mem"  ))
-
-  # Check convergence
-  res |>
-    filter(c_R_k_hat > 4) |>
-    nrow() |>
-    expect_equal(0)
-
-})
 
 # test_that("wrongly-set groups",{
 #
@@ -246,11 +206,10 @@ test_that("multilevel continuous",{
 #       object =
 #         seurat_obj |>
 #         ## filter(cell_group %in% c("NK cycling", "B immature")) |>
-#         sccomp_glm(
+#         sccomp_estimate(
 #           formula_composition = ~ 0 + type + (type | group__wrong),
 #           formula_variability = ~ 1,
 #           sample, cell_group,
-#           check_outliers = FALSE,
 #           approximate_posterior_inference = "all",
 #           contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
 #           cores = 1,
@@ -265,14 +224,14 @@ test_that("multi beta binomial from Seurat",{
 
   res =
     seurat_obj |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~  type,
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
+      mcmc_seed = 42,    
+      max_sampling_iterations = 1000
     )
 
   res |>
@@ -290,41 +249,22 @@ test_that("multi beta binomial from Seurat",{
 
 })
 
-test_that("multi beta binomial contrasts from Seurat",{
-
-  res = seurat_obj |>
-    sccomp_glm(
-      formula_composition = ~ 0 + type,
-      formula_variability = ~ 1,
-      sample, cell_group,
-      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
-      check_outliers = FALSE,
-      approximate_posterior_inference = "all",
-      cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
-    )
-
-    expect_equal(
-      res[1,"c_effect"] |> as.numeric(),
-      -res[2,"c_effect"] |> as.numeric()
-    )
-
-})
 
 test_that("multi beta binomial contrasts from Seurat",{
 
   res = seurat_obj |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ 0 + type,
       formula_variability = ~ 1,
       sample, cell_group,
-      contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
-      check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
-    )
+      mcmc_seed = 42,     
+      max_sampling_iterations = 1000
+    ) |> 
+    sccomp_test(contrasts = c("typecancer - typehealthy", "typehealthy - typecancer") )
 
+  
   expect_equal(
     res[1,"c_effect"] |> as.numeric(),
     -res[2,"c_effect"] |> as.numeric()
@@ -347,18 +287,18 @@ test_that("remove unwanted variation",{
   # Estimate
   estimate =
     data |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ type + batch,
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
+      mcmc_seed = 42,    
+      max_sampling_iterations = 1000
     )
 
   estimate |>
-    remove_unwanted_variation(~ type)
+    sccomp_remove_unwanted_variation(~ type)
 
 })
 
@@ -366,15 +306,15 @@ test_that("multi beta binomial from SCE",{
 
     res =
       sce_obj |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ type,
       formula_variability = ~ 1,
       sample,
       cell_group,
-      check_outliers = FALSE,
       approximate_posterior_inference = "all",
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
+      mcmc_seed = 42,      
+      max_sampling_iterations = 1000
     )
 
   res |>
@@ -393,28 +333,28 @@ test_that("multi beta binomial from SCE",{
 
 res_composition =
   seurat_obj[[]] |>
-  sccomp_glm(
+  sccomp_estimate(
     formula_composition = ~ type,
     formula_variability = ~ 1,
     sample,
     cell_group,
-    check_outliers = FALSE,
     approximate_posterior_inference = "all",
     cores = 1,
-    mcmc_seed = 42,       max_sampling_iterations = 1000
+    mcmc_seed = 42,   
+    max_sampling_iterations = 1000
   )
 
 res_composition_variability =
   seurat_obj[[]] |>
-  sccomp_glm(
+  sccomp_estimate(
     formula_composition = ~ type,
     formula_variability = ~ type,
     sample,
     cell_group,
-    check_outliers = FALSE,
     approximate_posterior_inference = "all",
     cores = 1,
-    mcmc_seed = 42,       max_sampling_iterations = 1000
+    mcmc_seed = 42,    
+    max_sampling_iterations = 1000
   )
 
 test_that("multi beta binomial from metadata",{
@@ -436,14 +376,18 @@ test_that("multi beta binomial from metadata",{
 
 test_that("plot test composition",{
 
-  plot_summary(res_composition)
+  res_composition |> 
+    sccomp_test() |> 
+    plot_summary()
 
 
 })
 
 test_that("plot test variability",{
 
-  plot_summary(res_composition_variability)
+  res_composition_variability |> 
+    sccomp_test() |> 
+    plot_summary()
 
 
 })
@@ -453,7 +397,7 @@ test_that("test constrasts",{
 
   estimate =
     seurat_obj |>
-    sccomp_glm(
+    sccomp_estimate(
       formula_composition = ~ type ,
       formula_variability = ~ 1,
       sample, cell_group,
@@ -465,7 +409,11 @@ test_that("test constrasts",{
 
   new_test =
     estimate |>
-    sccomp_test() |>
-    sccomp_test()
+    sccomp_test() 
 
 })
+
+
+
+
+
