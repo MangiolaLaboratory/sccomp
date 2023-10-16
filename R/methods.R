@@ -879,7 +879,7 @@ sccomp_replicate.data.frame = function(fit,
 #'   sccomp_predict()
 #'
 sccomp_predict <- function(fit,
-                           formula_composition = NULL,
+                           formula_composition,
                            new_data = NULL,
                            number_of_draws = 500,
                            mcmc_seed = sample(1e5, 1)) {
@@ -889,7 +889,7 @@ sccomp_predict <- function(fit,
 #' @export
 #'
 sccomp_predict.data.frame = function(fit,
-                                     formula_composition = NULL,
+                                     formula_composition,
                                      new_data = NULL,
                                      number_of_draws = 500,
                                      mcmc_seed = sample(1e5, 1)){

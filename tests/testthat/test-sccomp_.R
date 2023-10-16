@@ -448,24 +448,37 @@ test_that("plot test variability",{
 
 })
 
+estimate =
+  seurat_obj |>
+  sccomp_glm(
+    formula_composition = ~ type ,
+    formula_variability = ~ 1,
+    sample, cell_group,
+    check_outliers = FALSE,
+    approximate_posterior_inference = FALSE,
+    cores = 1,
+    mcmc_seed = 42,       max_sampling_iterations = 1000
+  )
+
 test_that("test constrasts",{
 
-
-  estimate =
-    seurat_obj |>
-    sccomp_glm(
-      formula_composition = ~ type ,
-      formula_variability = ~ 1,
-      sample, cell_group,
-      check_outliers = FALSE,
-      approximate_posterior_inference = FALSE,
-      cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
-    )
 
   new_test =
     estimate |>
     test_contrasts() |>
     test_contrasts()
 
+})
+
+test_that("test predict",{
+  
+  
+    estimate |>
+    sccomp_predict() |> 
+    expect_error("argument \"formula_composition\" is missing, with no default")
+  
+  estimate |>
+    sccomp_predict(formula_composition = ~ 1) |> 
+    expect_no_error()
+  
 })
