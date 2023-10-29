@@ -423,7 +423,8 @@ sccomp_glm_data_frame_raw = function(.data,
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = "none",
-                                     test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                     test_composition_above_logit_fold_change = 0.2, 
+                                     .sample_cell_group_pairs_to_exclude = NULL,
                                      verbose = FALSE,
                                      my_glm_model,
                                      exclude_priors = FALSE,
@@ -458,28 +459,12 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula_composition)
   ))
 
-  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
-
   # Make counts
   .data %>%
     class_list_to_counts(!!.sample, !!.cell_group) %>%
 
     # Add formula_composition information
-    when(
-      length(parse_formula(formula_composition))>0 ~
-        left_join(.,
-                  .data %>%
-        						as_tibble() |>
-                    select(
-                    	!!.sample,
-                    	parse_formula(formula_composition),
-                    	any_of(.grouping_for_random_intercept)
-                    ) %>%
-                    distinct(),
-                  by = quo_name(.sample)
-        ),
-      ~ (.)
-    ) |>
+    add_formula_columns(.data, !!.sample,formula_composition) |>
 
   	# Attach possible exclusion of data points
   	left_join(.data %>%
@@ -563,6 +548,26 @@ sccomp_glm_data_frame_counts = function(.data,
   if(.data %>% pull(!!.count) %>% is("integer") %>% not())
     stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
 
+  # Check that I have rectangular data frame
+  if(
+    .data |> count(!!.sample) |> distinct(n) |> nrow() > 1 || 
+    .data |> count(!!.cell_group) |> distinct(n) |> nrow() > 1 
+  ){
+    warning(sprintf("sccomp says: the input data frame does not have the same number of `%s`, for all `%s`. We have made it so, adding 0s for the missing sample/feature pairs.", quo_name(.cell_group), quo_name(.sample)))
+    .data = .data |> 
+      
+      # I need renaming trick because complete list(...) cannot accept quosures
+      select(!!.sample, !!.cell_group, count := !!.count) |> 
+      distinct() |> 
+      complete( !!.sample, !!.cell_group, fill = list(count = 0) ) %>%
+      rename(!!.count := count) |> 
+      mutate(!!.count := as.integer(!!.count)) |> 
+    
+      # Add formula_composition information
+      add_formula_columns(.data, !!.sample, formula_composition) 
+  }
+
+  
   # Check if columns exist
   check_columns_exist(.data, c(
     quo_name(.sample),
