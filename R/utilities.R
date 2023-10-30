@@ -1692,8 +1692,9 @@ plot_boxplot = function(
     ylab("Cell-group proportion") +
     guides(color="none", alpha="none", size="none") +
     labs(fill="Significant difference") +
+    ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
     my_theme +
-    theme(axis.text.x =  element_text(angle=20, hjust = 1))
+    theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
 
 
 
