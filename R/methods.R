@@ -563,6 +563,10 @@ sccomp_glm_data_frame_counts = function(.data,
   if(.data %>% pull(!!.count) %>% is("integer") %>% not())
     stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
 
+  # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
+  if(test_composition_above_logit_fold_change <= 0)
+    stop("sccomp says: test_composition_above_logit_fold_change should be > 0 for the FDR to be calculated in the Bayesian context (doi: 10.1093/biostatistics/kxw041). Also, testing for > 0 differences avoids significant but meaningless (because of the small magnitude) estimates.")
+  
   # Check if columns exist
   check_columns_exist(.data, c(
     quo_name(.sample),
