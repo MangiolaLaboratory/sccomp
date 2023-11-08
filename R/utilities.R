@@ -1390,8 +1390,6 @@ class_list_to_counts = function(.data, .sample, .cell_group){
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
 
-
-
   .data %>%
     count(!!.sample,
           !!.cell_group,
@@ -2221,6 +2219,29 @@ get_model_from_data = function(file_compiled_model, model_code){
     model_generate
 
   }
+}
+
+add_formula_columns = function(.data, .original_data, .sample,  formula_composition){
+  
+  .sample = enquo(.sample)
+  
+  formula_elements = parse_formula(formula_composition)
+  
+  # If no formula return the input
+  if(length(formula_elements) == 0) return(.data)
+  
+  # Get random intercept
+  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
+  
+  data_frame_formula = 
+    .original_data %>%
+    as_tibble() |>
+    select( !!.sample, formula_elements, any_of(.grouping_for_random_intercept) ) %>%
+    distinct()
+  
+  .data |> 
+    left_join(data_frame_formula, by = quo_name(.sample) )
+  
 }
 
 
