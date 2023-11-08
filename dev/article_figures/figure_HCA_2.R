@@ -238,7 +238,7 @@ age_absolute_organ_cell_type =
 differential_composition_age |>
 
   # Find stats of random effect with groups
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_age |>
       filter(parameter |> str_detect("___age_days")) |>
@@ -265,7 +265,7 @@ age_absolute_organ_cell_type |>
   scales::show_col()
 
 differential_composition_age_relative |>
-  test_contrasts(test_composition_above_logit_fold_change = 0.2) |>
+  sccomp_test(test_composition_above_logit_fold_change = 0.2) |>
   arrange(desc(abs(c_effect))) |> filter(covariate == "age_days") |> filter(c_FDR<0.05)
 
 line_age_relative_mean =
@@ -328,7 +328,7 @@ plot_age_relative =
       # Join statistics
       inner_join(
         differential_composition_age_relative |>
-          test_contrasts(test_composition_above_logit_fold_change = 0.4) |>
+          sccomp_test(test_composition_above_logit_fold_change = 0.4) |>
 
           filter(parameter == "age_days") |>
           mutate(significant = c_FDR < 0.05) |>
@@ -354,7 +354,7 @@ plot_age_relative =
 age_relative_organ_cell_type =
 
   differential_composition_age_relative |>
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_age_relative |>
       filter(parameter |> str_detect("___age_days")) |>
@@ -390,7 +390,7 @@ df_heatmap_age_relative_organ_cell_type =
   differential_composition_age_relative |>
 
   # Find stats of random effect with groups
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_age_relative |>
       filter(parameter |> str_detect("___age_days")) |>
@@ -518,7 +518,7 @@ df_heatmap_age_relative_organ_cell_type |>
 # Significance global statistics
 count_significance_age_immune_load =
   differential_composition_age |>
-  test_contrasts(test_composition_above_logit_fold_change = 0.1) |>
+  sccomp_test(test_composition_above_logit_fold_change = 0.1) |>
   filter(covariate=="age_days") |>
   filter(is_immune=="TRUE") |>
   count(c_FDR<0.05)
@@ -530,7 +530,7 @@ FDR|>
 
 count_significance_age_cell_type =
   differential_composition_age_relative |>
-  test_contrasts(test_composition_above_logit_fold_change = 0.4) |>
+  sccomp_test(test_composition_above_logit_fold_change = 0.4) |>
   filter(covariate=="age_days") |>
   filter(cell_type_harmonised != "immune_unclassified") |>
   count(c_FDR<0.05)
@@ -654,7 +654,7 @@ plot_sex_absolute_1D =
 #   differential_composition_sex_absolute |>
 #
 #   # Find stats of random effect with groups
-#   test_contrasts(
+#   sccomp_test(
 #     contrasts =
 #       differential_composition_sex_absolute |>
 #       filter(parameter |> str_detect("___sex")) |>
@@ -691,7 +691,7 @@ plot_sex_absolute_1D =
 
 
 # differential_composition_sex_relative |>
-#   remove_unwanted_variation(~ sex, ~ sex) |>
+#   sccomp_remove_unwanted_variation(~ sex, ~ sex) |>
 #   saveRDS("~/PostDoc/HCAquery/dev/proportions_sex_relative_adjusted.rds")
 
 
@@ -710,7 +710,7 @@ sex_relative_organ_cell_type =
   differential_composition_sex_relative |>
 
   # Find stats of random effect with groups
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_sex_relative |>
       filter(parameter |> str_detect("_male___sex")) |>
@@ -826,14 +826,14 @@ df_heatmap_sex_relative_organ_cell_type =
 # Significance global statistics
 count_significance_sex_immune_load =
   differential_composition_sex_absolute |>
-  test_contrasts(test_composition_above_logit_fold_change = 0.1) |>
+  sccomp_test(test_composition_above_logit_fold_change = 0.1) |>
   filter(covariate=="sex") |>
   filter(is_immune=="TRUE") |>
   count(c_FDR<0.05)
 
 count_significance_sex_immune_load_tissue =
   differential_composition_sex_absolute |>
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_sex_absolute |>
         filter(parameter |> str_detect("_male___sex")) |>
@@ -849,7 +849,7 @@ count_significance_sex_immune_load_tissue =
 
 count_significance_sex_cell_type =
   differential_composition_sex_relative |>
-  test_contrasts(test_composition_above_logit_fold_change = 0.4) |>
+  sccomp_test(test_composition_above_logit_fold_change = 0.4) |>
   filter(covariate=="sex") |>
   filter(cell_type_harmonised != "immune_unclassified") |>
   count(c_FDR<0.05)
@@ -1013,7 +1013,7 @@ ethnicity_absolute_organ =
   differential_composition_ethnicity_absolute |>
 
   # Find stats of random effect with groups
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_ethnicity_absolute |>
       filter(parameter |> str_detect("___ethnicity")) |>
@@ -1079,7 +1079,7 @@ differential_composition_ethnicity_absolute_one_vs_all =
   differential_composition_ethnicity_absolute |>
 
   # Find stats of random effect with groups
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_ethnicity_absolute |>
       filter(parameter |> str_detect("___ethnicity")) |>
@@ -1142,7 +1142,7 @@ differential_composition_ethnicity_relative = readRDS("~/PostDoc/HCAquery/dev/im
 #
 # significant_cell_types =
 #   differential_composition_ethnicity_relative |>
-#   test_contrasts(
+#   sccomp_test(
 #     c(
 #       African = "`(Intercept)`",
 #       #Pacific = "`ethnicityPacific Islander` + ((Intercept))",
@@ -1163,7 +1163,7 @@ differential_composition_ethnicity_relative = readRDS("~/PostDoc/HCAquery/dev/im
 # Significance global statistics
 count_significance_ethnicity_immune_load =
   differential_composition_ethnicity_absolute |>
-  test_contrasts(
+  sccomp_test(
     contrasts =
       c(
         European = "ethnicityEuropean - 1/3 * (ethnicityAfrican + ethnicityChinese + `ethnicityHispanic or Latin American`)",
@@ -1178,7 +1178,7 @@ count_significance_ethnicity_immune_load =
 
 count_significance_ethnicity_immune_load_tissue =
   differential_composition_ethnicity_absolute |>
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_ethnicity_absolute |>
       filter(parameter |> str_detect("___ethnicity")) |>
@@ -1214,7 +1214,7 @@ count_significance_ethnicity_immune_load_tissue =
 
 count_significance_ethnicity_cell_type =
   differential_composition_ethnicity_relative |>
-  test_contrasts(
+  sccomp_test(
     contrasts =
       c(
         European = "ethnicityEuropean - 1/3 * (ethnicityAfrican + ethnicityChinese + `ethnicityHispanic or Latin American`)",
@@ -1229,7 +1229,7 @@ count_significance_ethnicity_cell_type =
 
 count_significance_ethnicity_cell_type_tissue =
   differential_composition_ethnicity_relative |>
-  test_contrasts(
+  sccomp_test(
     contrasts =
       differential_composition_ethnicity_absolute |>
       filter(parameter |> str_detect("___ethnicity")) |>
@@ -1351,7 +1351,7 @@ plot_significance_overall =
 
 
 
-# job::job({ readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_4.rds") |> remove_unwanted_variation(~ age_days) })
+# job::job({ readRDS("~/PostDoc/HCAquery/dev/immune_non_immune_differential_composition_relative_4.rds") |> sccomp_remove_unwanted_variation(~ age_days) })
 
 
 plot_first_line =

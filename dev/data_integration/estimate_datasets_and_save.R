@@ -96,7 +96,7 @@ job({
 
   library(tidySingleCellExperiment)
 
-  readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
+  readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds") %>%
     filter(ptime %>% is.na() %>% `!`) %>%
 
     # Scale ptime

@@ -15,9 +15,9 @@ add_outliers = as.integer(args[3])
 
 # exposures = counts_obj %>% group_by(sample) %>% summarise(s=sum(count)) %>% pull(s) %>% sort %>% head(-1)
 # beta_0 = readRDS("dev/beta_0.rds")
-source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp_dev/dev/quasi_binomial/counts_to_quasi_binomial_estimate.R", echo=TRUE)
-source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp_dev/dev/rlm_robust/rlm_estimate.R", echo=TRUE)
-source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp_dev/dev/scCODA/counts_to_scCODA.R", echo=TRUE)
+source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/sccomp_dev/dev/quasi_binomial/counts_to_quasi_binomial_estimate.R", echo=TRUE)
+source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/sccomp_dev/dev/rlm_robust/rlm_estimate.R", echo=TRUE)
+source("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/sccomp_dev/dev/scCODA/counts_to_scCODA.R", echo=TRUE)
 
 # Iterate over runs
 readRDS(input_file) %>%

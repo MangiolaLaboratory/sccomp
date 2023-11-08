@@ -394,7 +394,7 @@ plot_assay_PCA =
 # Variability
 res_relative_for_variability_plot =
   res_relative |>
-  test_contrasts(
+  sccomp_test(
     contrasts = c(
       "assay10x_3_v2",
       "assay10x_3_v3" ,

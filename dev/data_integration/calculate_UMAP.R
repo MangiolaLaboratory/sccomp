@@ -19,7 +19,7 @@ options(future.globals.maxSize= 100000*1024^2)
 
 job({
 
-  oligo_adjusted_cell_type <- readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/oligo_breast/expanded_analyses_with_control/cancer_only_analyses/integrated_counts.rds")
+  oligo_adjusted_cell_type <- readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/oligo_breast/expanded_analyses_with_control/cancer_only_analyses/integrated_counts.rds")
 
 
   oligo_adjusted_cell_type %>%
@@ -30,7 +30,7 @@ job({
 
 job({
 
-  benign_adjusted_cell_type <- readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/oligo_breast/expanded_analyses_with_control/benign_adjusted_cell_type.rds")
+  benign_adjusted_cell_type <- readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/oligo_breast/expanded_analyses_with_control/benign_adjusted_cell_type.rds")
 
   DefaultAssay(benign_adjusted_cell_type) = "integrated"
 
@@ -141,11 +141,11 @@ job({
 
 job({
 
-  data = readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds")
+  data = readRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/sccomp/dev/data_integration/BRCA1_s41467-021-21783-3.rds")
   colData(data) = colData(data)[,!colnames(colData(data)) %in% c("UMAP1", "UMAP2")]
   data %>%
     mutate(cell_type = CellTypesFinal, sample=Sample, UMAP_1 = UMAP1, UMAP_2 = UMAP2 ) %>%
-  saveRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/data_integration/UMAP_BRCA1_s41467-021-21783-3.rds")
+  saveRDS("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/sccomp/dev/data_integration/UMAP_BRCA1_s41467-021-21783-3.rds")
 
 })
 

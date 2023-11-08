@@ -3,8 +3,8 @@
 library(tidyverse)
 library(glue)
 
-root_directory = "/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp_dev/dev/"
-code_directory = glue("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab/projects/mangiola.s/PostDoc/sccomp/dev/bench_pipeline_hyperprior/")
+root_directory = "/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/sccomp_dev/dev/"
+code_directory = glue("/stornext/Bioinf/data/bioinf-data/Papenfuss_lab_projects/people/mangiola.s/PostDoc/sccomp/dev/bench_pipeline_hyperprior/")
 results_directory = glue("{root_directory}benchmark_results_hyperprior/")
 
 tab="\t"
