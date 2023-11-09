@@ -73,7 +73,7 @@ estimate =
    count,
     check_outliers = FALSE,
     cores = 1
-  ) |> 
+  ) |>
   sccomp_remove_outliers()
 
 }

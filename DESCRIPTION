@@ -40,14 +40,14 @@ Imports:
     readr,
     scales,
     stringr,
-    glue
+    glue,
+    tidyseurat,
+    tidySingleCellExperiment
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
     markdown,
     knitr,
-    tidyseurat,
-    tidySingleCellExperiment,
     loo
 Enhances:
     furrr,

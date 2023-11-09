@@ -2105,6 +2105,13 @@ replicate_data = function(.data,
     unnest(count_data) |>
     distinct() |>
     .subset(!!.sample)
+  
+  else if(new_data |> is("Seurat")){
+    new_data = 
+      new_data |> 
+      as_tibble() |> 
+      .subset(!!.sample)
+  }
 
   # Match factors with old data
   nrow_new_data = nrow(new_data)
@@ -2130,7 +2137,7 @@ replicate_data = function(.data,
     select(count_data) |>
     unnest(count_data) |>
     select(-count) |>
-    select(any_of(colnames(new_data))) |>
+    select(new_data |> as_tibble() |> colnames() |>  any_of()) |>
     distinct() |>
     
     # Change sample names to make unique
@@ -2139,7 +2146,7 @@ replicate_data = function(.data,
 
     # New data
     bind_rows(
-      new_data
+      new_data |> as_tibble()
     )
 
   new_X =
