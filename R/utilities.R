@@ -307,7 +307,7 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
              sep = "[\\[,\\]]",
              extra = "drop") %>%
     mutate(S = S %>% as.integer, G = G %>% as.integer) %>%
-    select(-one_of(c("n_eff", "Rhat", "khat"))) %>%
+    select(-any_of(c("n_eff", "Rhat", "khat"))) %>%
     rename(`.lower` = (.) %>% ncol - 1,
            `.upper` = (.) %>% ncol)
 }
@@ -836,9 +836,9 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
         #   "sccomp says: the random intercept completely confounded with one or more discrete factors" =
         #     !(
         #       !.y |> equals("(Intercept)") &&
-        #         .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
+        #         .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
         #         .data_ |>
-        #         select(.x, one_of(.y)) |>
+        #         select(.x, any_of(.y)) |>
         #         select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
         #         distinct() %>%
         #
@@ -877,7 +877,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
                 .y |> equals("(Intercept)") |> any() &&
                   length(.y) > 1 &&
                 # If I have random slope and non-intercept-free model
-                .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
+                .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
 
             )
         )
@@ -1924,7 +1924,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 
           # ARITHMETICS
           mutate_from_expr_list(., contrasts) |>
-          select(- one_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) ,
+          select(- any_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) ,
         ~ (.)
       ) |>
 
@@ -2130,7 +2130,7 @@ replicate_data = function(.data,
     select(count_data) |>
     unnest(count_data) |>
     select(-count) |>
-    select(one_of(colnames(new_data))) |>
+    select(any_of(colnames(new_data))) |>
     distinct() |>
     
     # Change sample names to make unique
