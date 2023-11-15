@@ -42,35 +42,41 @@ data("counts_obj")
 #
 # })
 
+my_estimate = 
+  seurat_obj |>
+  sccomp_estimate(
+    formula_composition = ~ type + continuous_covariate,
+    formula_variability = ~ 1,
+    sample, cell_group,
+    approximate_posterior_inference = FALSE,
+    cores = 1,
+    mcmc_seed = 42,
+    max_sampling_iterations = 1000
+  )
+
+my_estimate_random = 
+  seurat_obj |>
+  sccomp_estimate(
+    formula_composition = ~ 0 + type + (type | group__),
+    formula_variability = ~ 1,
+    sample, cell_group,
+    approximate_posterior_inference = FALSE,
+    cores = 1,
+    mcmc_seed = 42,     
+    max_sampling_iterations = 1000
+  )
+
 test_that("Generate data",{
 
 
-  seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ type ,
-      formula_variability = ~ 1,
-      sample, cell_group,
-      approximate_posterior_inference = FALSE,
-      cores = 1,
-      mcmc_seed = 42,
-      max_sampling_iterations = 1000
-    ) |>
+  my_estimate |>
 
     sccomp_replicate() |>
     nrow() |>
     expect_equal(600)
 
   # With grouping
-  seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ 0 + type + (type | group__),
-      formula_variability = ~ 1,
-      sample, cell_group,
-      approximate_posterior_inference = FALSE,
-      cores = 1,
-      mcmc_seed = 42,     
-      max_sampling_iterations = 1000
-    ) |>
+  my_estimate_random |>
 
 
     sccomp_replicate(~ 0 + type) |>
@@ -79,6 +85,58 @@ test_that("Generate data",{
 
 
 })
+
+test_that("Predict data",{
+  
+  library(stringr)
+  
+  new_data_seurat = seurat_obj[, seurat_obj[[]]$sample %in% c("10x_8K", "SI-GA-E5")] 
+  
+  new_data_seurat[[]]$sample = new_data_seurat[[]]$sample |> str_replace("SI", "AB") |>  str_replace("10x", "9x") 
+   
+  new_data_tibble = new_data_seurat[[]] |> distinct(sample, type, continuous_covariate)
+  
+  # With new tibble data
+  my_estimate |>
+    
+    sccomp_predict(
+      formula_composition = ~ type,
+      new_data = new_data_tibble
+    ) |>
+    nrow() |>
+    expect_equal(60)
+
+  
+  # With new covariates
+  new_data_tibble$continuous_covariate  =  c(1, 2)
+  
+  my_estimate |>
+    
+    sccomp_predict(
+      formula_composition = ~ continuous_covariate,
+      new_data = new_data
+    ) |>
+    nrow() |>
+    expect_equal(60)
+  
+  # With random effects
+  my_estimate_random |>
+    sccomp_predict(~ 0 + type) |>
+    nrow() |>
+    expect_equal(600)
+  
+  # With new seurat data if you ever need this
+  my_estimate |>
+    
+    sccomp_predict(
+      formula_composition = ~ type,
+      new_data = new_data_seurat
+    ) |>
+    nrow() |>
+    expect_equal(60)
+  
+})
+
 
 test_that("outliers",{
   
@@ -298,7 +356,7 @@ test_that("remove unwanted variation",{
     )
 
   estimate |>
-    sccomp_remove_unwanted_variation(~ type)
+    sccomp_remove_unwanted_variation(formula_composition = ~ type)
 
 })
 
@@ -416,4 +474,4 @@ test_that("test constrasts",{
 
 
 
-
+res_composition

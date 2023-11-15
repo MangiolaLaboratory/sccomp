@@ -2103,16 +2103,20 @@ replicate_data = function(.data,
     .data |>
     select(count_data) |>
     unnest(count_data) |>
-    distinct() |>
-    .subset(!!.sample)
+    distinct() 
   
-  else if(new_data |> is("Seurat")){
-    new_data = 
-      new_data |> 
-      as_tibble() |> 
-      .subset(!!.sample)
-  }
-
+  # If seurat
+  else if(new_data |> is("Seurat")) new_data = new_data[[]]
+  
+  # Just subset
+  new_data = new_data |> .subset(!!.sample)
+  
+  
+  # Check if the input new data is not suitable
+  if(!parse_formula(formula_composition) %in% colnames(new_data) |> all())
+    stop("sccomp says: your `new_data` might be malformed. It might have the covariate columns with multiple values for some element of the \"%s\" column. As a generic example, a sample identifier (\"Sample_123\") might be associated with multiple treatment values, or age values.")
+  
+  
   # Match factors with old data
   nrow_new_data = nrow(new_data)
   new_exposure = new_data |>

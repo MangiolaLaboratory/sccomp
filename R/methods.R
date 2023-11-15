@@ -1177,17 +1177,7 @@ sccomp_predict.data.frame = function(fit,
   model_input = attr(fit, "model_input")
   .sample = attr(fit, ".sample")
   .cell_group = attr(fit, ".cell_group")
-
-  if(new_data |> is.null())
-    new_data =
-      fit |>
-      select(count_data) |>
-      unnest(count_data) |>
-      distinct() |>
-      .subset(!!.sample)
-
-  sample_names = new_data |> distinct(!!.sample) |> pull(!!.sample)
-
+  
   rng =
     replicate_data(
       fit,
@@ -1198,6 +1188,29 @@ sccomp_predict.data.frame = function(fit,
       mcmc_seed = mcmc_seed
     )
 
+  # New data
+  if(new_data |> is.null())
+    sample_names =
+      fit |>
+      select(count_data) |>
+      unnest(count_data) |>
+      distinct(!!.sample) |> 
+      pull(!!.sample)
+  
+  # If seurat
+  else if(new_data |> is("Seurat")) 
+    sample_names = 
+      new_data[[]] |> 
+      distinct(!!.sample) |> 
+      pull(!!.sample)
+  
+  # Just subset
+  else 
+    sample_names = 
+      new_data |> 
+      distinct(!!.sample) |> 
+      pull(!!.sample)
+  
   # mean generated
   rng |>
     summary_to_tibble("mu", "M", "N") |>
