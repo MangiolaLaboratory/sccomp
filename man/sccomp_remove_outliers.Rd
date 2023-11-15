@@ -70,7 +70,6 @@ estimate =
    sample,
    cell_group,
    count,
-    check_outliers = FALSE,
     cores = 1
   ) |>
   sccomp_remove_outliers()
