@@ -72,6 +72,6 @@ estimate =
    count,
     cores = 1
   ) |>
-  sccomp_remove_outliers()
+  sccomp_remove_outliers(cores = 1)
 
 }

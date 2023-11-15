@@ -141,7 +141,7 @@ test_that("outliers",{
   
 
   my_estimate |>
-    sccomp_remove_unwanted_variation(formula_composition = ~ type)
+    sccomp_remove_outliers(cores = 1)
   
 })
 
@@ -448,10 +448,10 @@ test_that("test constrasts",{
       formula_composition = ~ type ,
       formula_variability = ~ 1,
       sample, cell_group,
-      check_outliers = FALSE,
       approximate_posterior_inference = FALSE,
       cores = 1,
-      mcmc_seed = 42,       max_sampling_iterations = 1000
+      mcmc_seed = 42,      
+      max_sampling_iterations = 1000
     )
 
   new_test =
