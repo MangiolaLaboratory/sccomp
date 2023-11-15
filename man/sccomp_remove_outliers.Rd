@@ -12,7 +12,6 @@ sccomp_remove_outliers(
   verbose = FALSE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
-  pass_fit = TRUE,
   enable_loo = FALSE
 )
 }

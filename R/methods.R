@@ -423,13 +423,13 @@ sccomp_estimate.data.frame = function(.data,
 #' @importFrom rlang quo_is_symbolic
 #'
 #' @param .estimate A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.
-#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
-#' @param max_sampling_iterations An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.
-#' @param verbose A boolean. Prints progression.
 #' @param cores An integer. How many cored to be used with parallel calculations.
+#' @param verbose A boolean. Prints progression.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
+#' @param max_sampling_iterations An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.
+#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
 #'
 #' @return A nested tibble `tbl`, with the following columns
 #' \itemize{
@@ -480,12 +480,12 @@ sccomp_remove_outliers <- function(.estimate,
                                    verbose = FALSE,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
-                                   pass_fit = TRUE,
                                    enable_loo = FALSE
 ) {
   UseMethod("sccomp_remove_outliers", .estimate)
 }
 
+#' @export
 sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
@@ -493,7 +493,6 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              verbose = FALSE,
                                              mcmc_seed = sample(1e5, 1),
                                              max_sampling_iterations = 20000,
-                                             pass_fit = TRUE,
                                              enable_loo = FALSE
 ) {
   
@@ -1347,7 +1346,40 @@ simulate_data.data.frame = function(.data,
 
 }
 
+#' sccomp_boxplot
+#'
+#' @description This function plots a boxplot of the results of the model.
+#'
+#' @importFrom ggrepel geom_text_repel
+#' @importFrom tidyr pivot_longer
+#' @import ggplot2
+#' @importFrom tidyr unite
+#' @importFrom tidyr pivot_longer
+#' @importFrom dplyr with_groups
+#'
+#' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
+#' @param factor A character string for a factor of interest included in the model
+#' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#'
+#' @return A `ggplot`
+#'
 #' @export
+#'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#' estimate =
+#'   sccomp_estimate(
+#'   counts_obj ,
+#'    ~ type, ~1, sample, cell_group, count,
+#'     approximate_posterior_inference = "all",
+#'     check_outliers = FALSE,
+#'     cores = 1
+#'   ) |>
+#'   sccomp_test()
+#'
+#' # estimate |> sccomp_boxplot()
 sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 
 
