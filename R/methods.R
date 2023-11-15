@@ -408,7 +408,6 @@ sccomp_estimate.data.frame = function(.data,
 }
 
 
-
 #' sccomp_remove_outliers main
 #'
 #' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
@@ -621,7 +620,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       max_sampling_iterations = max_sampling_iterations,
       pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
     )
- 
+
   
   #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
   
