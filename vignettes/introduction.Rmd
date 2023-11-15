@@ -71,7 +71,7 @@ factor of interest only. The variability model must be a subset of the model for
 ```{r eval=FALSE}
 
 single_cell_object |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
@@ -86,7 +86,7 @@ single_cell_object |>
 ```{r, message=FALSE, warning=FALSE}
 
 counts_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample = sample,
     .cell_group = cell_group,
@@ -104,14 +104,15 @@ Of the output table, the estimate columns start with the prefix `c_` indicate `c
 ```{r, message=FALSE, warning=FALSE}
 
 seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ 0 + type, 
-    contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+  sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
+
 
 ```
 
@@ -129,7 +130,7 @@ library(loo)
 # Fit first model
 model_with_factor_association = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
@@ -142,7 +143,7 @@ model_with_factor_association =
 # Fit second model
 model_without_association = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ 1, 
     .sample =  sample, 
     .cell_group = cell_group, 
@@ -168,7 +169,7 @@ We can model the cell-group variability also dependent on the type, and so test 
 
 res = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     formula_variability = ~ type,
     .sample = sample,
@@ -197,7 +198,7 @@ We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 ## Summary plots
 
 ```{r, out.height="200%"}
-plots = plot_summary(res) 
+plots = res |> sccomp_test() |> plot_summary() 
 ```
 
 A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be
@@ -229,7 +230,7 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 Plot 1D significance plot
 
 ```{r}
-plots = plot_summary(res)
+plots = res |> sccomp_test() |> plot_summary()
 
 plots$credible_intervals_1D
 ```
