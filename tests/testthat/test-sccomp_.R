@@ -114,7 +114,7 @@ test_that("Predict data",{
     
     sccomp_predict(
       formula_composition = ~ continuous_covariate,
-      new_data = new_data
+      new_data = new_data_tibble
     ) |>
     nrow() |>
     expect_equal(60)
