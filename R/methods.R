@@ -465,7 +465,6 @@ sccomp_estimate.data.frame = function(.data,
 #'    sample,
 #'    cell_group,
 #'    count,
-#'     check_outliers = FALSE,
 #'     cores = 1
 #'   ) |>
 #'   sccomp_remove_outliers()
@@ -548,6 +547,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
         
         # Random intercept
+        N_grouping_new = ncol(data_for_model$X_random_intercept), # I could put this in the intial data
         length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
         X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
         create_intercept = FALSE
@@ -636,6 +636,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
       
       # Random intercept
+      N_grouping_new = ncol(data_for_model$X_random_intercept), # I could put this in the intial data
       length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
       X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
       create_intercept = FALSE
