@@ -487,7 +487,6 @@ sccomp_remove_outliers <- function(.estimate,
   UseMethod("sccomp_remove_outliers", .estimate)
 }
 
-#' @export
 sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
@@ -498,68 +497,68 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              pass_fit = TRUE,
                                              enable_loo = FALSE
 ) {
-
+  
   # Prepare column same enquo
   .sample = .estimate |>  attr(".sample")
   .cell_group = .estimate |>  attr(".cell_group")
   .count = .estimate |>  attr(".count")
   .sample_cell_group_pairs_to_exclude = .estimate |> attr(".sample_cell_group_pairs_to_exclude")
-
+  
   # Formulae
   formula_composition = .estimate |> attr("formula_composition")
   formula_variability = .estimate |> attr("formula_variability")
-
+  
   noise_model = .estimate |> attr("noise_model")
-
+  
   # Get model input
   data_for_model = .estimate |> attr("model_input")
-
+  
   # Credible interval
   CI = 1 - (percent_false_positive/100)
-
+  
   # Count data
-  .data =
-    .estimate |>
-    select(!!.cell_group, count_data) |>
-    unnest(count_data) |>
-    distinct() |>
-
+  .data = 
+    .estimate |> 
+    select(!!.cell_group, count_data) |> 
+    unnest(count_data) |> 
+    distinct() |> 
+    
     # Drop previous outlier estimation for the new one
     select(-any_of(c(
-      ".lower" ,  ".median" ,  ".upper" , "Rhat" ,  "truncation_down" ,
+      ".lower" ,  ".median" ,  ".upper" , "Rhat" ,  "truncation_down" , 
       "truncation_up"   , "outlier"    ,   "contains_outliers"
     )))
-
+  
   # Random intercept
   random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
-
+  
   rng =  rstan::gqs(
     stanmodels$glm_multi_beta_binomial_generate_date,
     #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
     draws = .estimate |> attr("fit") |>  as.matrix(),
-
+    
     # This is for the new data generation with selected factors to do adjustment
-    data =
+    data = 
       .estimate |>
-      attr("model_input") |>
+      attr("model_input") |> 
       c(list(
-
+        
         # Add subset of coefficients
         length_X_which = ncol(data_for_model$X),
         length_XA_which = ncol(data_for_model$XA),
         X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
         XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
-
+        
         # Random intercept
         length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
         X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
         create_intercept = FALSE
       ))
   )
-
+  
   # Free memory
   rm(.estimate)
-
+  
   # Detect outliers
   truncation_df =
     .data %>%
@@ -571,46 +570,45 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         nest(data = -M) %>%
         mutate(!!.cell_group := colnames(data_for_model$y)) %>%
         unnest(data) ,
-
+      
       by = c(quo_name(.sample), quo_name(.cell_group))
     ) %>%
-
+    
     # Add truncation
     mutate(   truncation_down = `5%`,   truncation_up =  `95%`) %>%
-
+    
     # Add outlier stats
     mutate( outlier = !(!!.count >= `5%` & !!.count <= `95%`) ) %>%
     nest(data = -M) %>%
     mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
     unnest(data) %>%
-
+    
     mutate(
       truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
       truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up),
     )
-
+  
   # Add censoring
   data_for_model$is_truncated = 1
   data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
   data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-  data_for_model$truncation_not_idx =
-    (data_for_model$truncation_down >= 0) %>%
-    t() %>%
-    as.vector()  %>%
+  data_for_model$truncation_not_idx = 
+    (data_for_model$truncation_down >= 0) %>% 
+    t() %>% 
+    as.vector()  %>% 
     which() |>
     intersect(data_for_model$user_forced_truncation_not_idx) |>
     sort()
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
+  
   message("sccomp says: outlier identification - step 1/2")
-
+  
   my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
-
+  
   # This step gets the credible interval to control for within-category false positive rate
   # We want a category-wise false positive rate of 0.1, and we have to correct for how many samples we have in each category
   CI_step_2 = (1-my_quantile_step_2) / 2 * 2
-
-
+  
   fit2 =
     data_for_model %>%
     fit_model(
@@ -623,176 +621,36 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       max_sampling_iterations = max_sampling_iterations,
       pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
     )
-
-}
-
-#' @export
-sccomp_remove_outliers.sccomp_tbl = function(.estimate,
-                                             percent_false_positive = 5,
-                                             cores = detectCores(),
-                                             approximate_posterior_inference = "none",
-                                             verbose = FALSE,
-                                             mcmc_seed = sample(1e5, 1),
-                                             max_sampling_iterations = 20000,
-                                             pass_fit = TRUE,
-                                             enable_loo = FALSE
-) {
-
-  # Prepare column same enquo
-  .sample = .estimate |>  attr(".sample")
-  .cell_group = .estimate |>  attr(".cell_group")
-  .count = .estimate |>  attr(".count")
-  .sample_cell_group_pairs_to_exclude = .estimate |> attr(".sample_cell_group_pairs_to_exclude")
-
-
-  #Check column class
-  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
-
-  # Check that count is integer
-  if(.data %>% pull(!!.count) %>% is("integer") %>% not())
-    stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
-
-  # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
-  if(test_composition_above_logit_fold_change <= 0)
-    stop("sccomp says: test_composition_above_logit_fold_change should be > 0 for the FDR to be calculated in the Bayesian context (doi: 10.1093/biostatistics/kxw041). Also, testing for > 0 differences avoids significant but meaningless (because of the small magnitude) estimates.")
-
-  # Check if columns exist
-  check_columns_exist(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    quo_name(.count),
-    parse_formula(formula_composition)
-  ))
-
-  # Check if any column is NA or null
-  check_if_any_NA(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    quo_name(.count),
-    parse_formula(formula_composition)
-  ))
-
-  # Return
-  .data %>%
-  	counts_to_estimate(
-      formula_composition = formula_composition,
-      formula_variability = formula_variability,
-      .sample = !!.sample,
-      .cell_group = !!.cell_group,
-      .count = !!.count,
-
-      # Add subset of coefficients
-      length_X_which = ncol(data_for_model$X),
-      length_XA_which = ncol(data_for_model$XA),
-      X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
-      XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
-
-      # Random intercept
-      length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-      X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
-      create_intercept = FALSE
-
-    )
-
-  # Detect outliers
-  truncation_df2 =
-    .data %>%
-    left_join(
-      summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 0.5, 1-CI_step_2)) %>%
-
-        # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
-        # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
-        rename(
-          .lower := !!as.symbol(colnames(.)[7]) ,
-          .median = `50%`,
-          .upper := !!as.symbol(colnames(.)[9])
-        ) %>%
-        nest(data = -N) %>%
-        mutate(!!.sample := rownames(data_for_model$y)) %>%
-        unnest(data) %>%
-        nest(data = -M) %>%
-        mutate(!!.cell_group := colnames(data_for_model$y)) %>%
-        unnest(data) ,
-
-      by = c(quo_name(.sample), quo_name(.cell_group))
-    ) %>%
-
-    # Add truncation
-    mutate(   truncation_down = .lower,   truncation_up =  .upper) %>%
-
-    # Add outlier stats
-    mutate( outlier = !(!!.count >= .lower & !!.count <= .upper) ) %>%
-    nest(data = -M) %>%
-    mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
-    unnest(data) %>%
-
-    mutate(
-      truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
-      truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up)
-    )
-
-  data_for_model$is_truncated = 1
-  data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-  data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-  data_for_model$truncation_not_idx =
-    (data_for_model$truncation_down >= 0) %>%
-    t() %>%
-    as.vector()  %>%
-    which() |>
-    intersect(data_for_model$user_forced_truncation_not_idx) |>
-    sort()
-  data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
-  message("sccomp says: outlier identification - step 1/2")
-
-  my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
-
-  # This step gets the credible interval to control for within-category false positive rate
-  # We want a category-wise false positive rate of 0.1, and we have to correct for how many samples we have in each category
-  CI_step_2 = (1-my_quantile_step_2) / 2 * 2
-
-
-  fit2 =
-    data_for_model %>%
-    fit_model(
-      stanmodels$glm_multi_beta_binomial,
-      cores = cores,
-      quantile = my_quantile_step_2,
-      approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-      verbose = verbose,
-      seed = mcmc_seed,
-      max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
-    )
-
+ 
+  
   #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
-
+  
   rng2 =  rstan::gqs(
     stanmodels$glm_multi_beta_binomial_generate_date,
     #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
     draws =  as.matrix(fit2),
     data = data_for_model |> c(list(
-
+      
       # Add subset of coefficients
       length_X_which = ncol(data_for_model$X),
       length_XA_which = ncol(data_for_model$XA),
       X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
       XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
-
+      
       # Random intercept
       length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
       X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
       create_intercept = FALSE
-
+      
     ))
   )
-
+  
   # Detect outliers
   truncation_df2 =
     .data %>%
     left_join(
       summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 0.5, 1-CI_step_2)) %>%
-
+        
         # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
         # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
         rename(
@@ -806,44 +664,44 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         nest(data = -M) %>%
         mutate(!!.cell_group := colnames(data_for_model$y)) %>%
         unnest(data) ,
-
+      
       by = c(quo_name(.sample), quo_name(.cell_group))
     ) %>%
-
+    
     # Add truncation
     mutate(   truncation_down = .lower,   truncation_up =  .upper) %>%
-
+    
     # Add outlier stats
     mutate( outlier = !(!!.count >= .lower & !!.count <= .upper) ) %>%
     nest(data = -M) %>%
     mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
     unnest(data) %>%
-
+    
     mutate(
       truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
       truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up)
     )
-
+  
   data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
   data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-  data_for_model$truncation_not_idx =
-    (data_for_model$truncation_down >= 0) %>%
-    t() %>%
-    as.vector()  %>%
+  data_for_model$truncation_not_idx = 
+    (data_for_model$truncation_down >= 0) %>% 
+    t() %>% 
+    as.vector()  %>% 
     which() |>
     intersect(data_for_model$user_forced_truncation_not_idx) |>
     sort()
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
+  
   # LOO
   data_for_model$enable_loo = TRUE & enable_loo
-
+  
   message("sccomp says: outlier-free model fitting - step 2/2")
-
+  
   # Print design matrix
   message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
   message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
-
+  
   fit3 =
     data_for_model %>%
     # Run the first discovery phase with permissive false discovery rate
@@ -852,12 +710,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       cores = cores,
       quantile = CI,
       approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
-      verbose = verbose,
+      verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
     )
-
+  
   # Create a dummy tibble
   tibble() |>
     # Attach association mean concentration
@@ -867,26 +725,24 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     add_attr(.sample, ".sample") |>
     add_attr(.cell_group, ".cell_group") |>
     add_attr(.count, ".count") |>
-
+    
     add_attr(formula_composition, "formula_composition") |>
     add_attr(formula_variability, "formula_variability") |>
-    add_attr(parse_formula(formula_composition), "factors" ) |>
-
-
+    add_attr(parse_formula(formula_composition), "factors" ) |> 
+    
     # Print estimates
     sccomp_test() |>
-
+    
     # drop hypothesis testing as the estimation exists without probabilities.
     # For hypothesis testing use sccomp_test
-    select(-contains("_FDR"), -contains("_pH0")) |>
-
+    select(-contains("_FDR"), -contains("_pH0")) |> 
+    
     # Add class to the tbl
-    add_class("sccomp_tbl") |>
-
-    add_attr(noise_model, "noise_model")
-
-
-
+    add_class("sccomp_tbl") |> 
+    
+    add_attr(noise_model, "noise_model") 
+  
+  
 }
 
 #' sccomp_test
