@@ -11,7 +11,7 @@ data("counts_obj")
 #   library(sccomp)
 #   library(digest)
 #
-#   res =
+#   res =add_formula_columns
 #     sccomp::counts_obj  |>
 #     sccomp_estimate(
 #       formula = ~ type,
@@ -137,22 +137,11 @@ test_that("Predict data",{
   
 })
 
-
 test_that("outliers",{
   
-  res =
-    seurat_obj |>
-    ## filter(cell_group %in% c("NK cycling", "B immature")) |>
-    sccomp_estimate(
-      formula_composition = ~ type,
-      formula_variability = ~ 1,
-      sample, cell_group,
-      approximate_posterior_inference = "all",
-      cores = 1,
-      mcmc_seed = 42, 
-      verbose = TRUE, 
-      max_sampling_iterations = 1000
-    )
+
+  my_estimate |>
+    sccomp_remove_unwanted_variation(formula_composition = ~ type)
   
 })
 
