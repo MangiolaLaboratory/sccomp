@@ -69,34 +69,34 @@ parse_formula <- function(fm) {
 #' @keywords internal
 #' @noRd
 formula_to_random_effect_formulae <- function(fm) {
-  
+
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
-  
+
   random_intercept_elements =
     as.character(attr(terms(fm), "variables")) |>
-    
+
     # Select random intercept part
     str_subset("\\|")
-  
+
   if(length(random_intercept_elements) > 0){
-    
+
     random_intercept_elements |>
-      
+
       # Divide grouping from factors
       str_split("\\|") |>
-      
+
       # Set name
       map_dfr(~ .x |> set_names(c("formula", "grouping"))) |>
-      
+
       # Create formula
-      mutate(formula = map(formula, ~ formula(glue("~ {.x}")))) |> 
+      mutate(formula = map(formula, ~ formula(glue("~ {.x}")))) |>
       mutate(grouping = grouping |> str_trim())
-    
+
   }
-  
+
   else
     tibble(`formula` = list(), grouping = character())
-  
+
 }
 
 #' Formula parser
@@ -132,26 +132,26 @@ parse_formula_random_intercept <- function(fm) {
       # Divide factors
       mutate(factor = map(
         formula,
-        ~ 
+        ~
           # Attach intercept
           .x |>
-          terms() |> 
+          terms() |>
           attr("intercept") |>
-          str_replace("^1$", "(Intercept)") |> 
-          str_subset("0", negate = TRUE) |> 
-          
+          str_replace("^1$", "(Intercept)") |>
+          str_subset("0", negate = TRUE) |>
+
           # Attach variables
           c(
             .x |>
-            terms() |> 
+            terms() |>
             attr("variables") |>
-            as.character() |> 
-            str_split("\\+") |> 
-            as.character() %>% 
+            as.character() |>
+            str_split("\\+") |>
+            as.character() %>%
             .[-1]
           )
-      )) |> 
-      unnest(factor) 
+      )) |>
+      unnest(factor)
 
   }
 
@@ -624,62 +624,62 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
 get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
-  
+
   .sample = enquo(.sample)
-  
- grouping_table =  
-   formula_composition |> 
+
+ grouping_table =
+   formula_composition |>
    formula_to_random_effect_formulae() |>
 
    mutate(design = map2(
      formula, grouping,
      ~ {
 
-       mydesign = .data_ |> get_design_matrix(.x, !!.sample) 
-       
+       mydesign = .data_ |> get_design_matrix(.x, !!.sample)
+
        mydesign_grouping = .data_ |> select(.y) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
        mydesign_grouping[mydesign==0L] = NA
        colnames(mydesign_grouping) = colnames(mydesign)
        rownames(mydesign_grouping) = rownames(mydesign)
-       
-       mydesign_grouping |> 
+
+       mydesign_grouping |>
          as_tibble(rownames = quo_name(.sample)) |>
-         pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |> 
+         pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
          filter(!is.na(grouping)) |>
-         
-          mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() )|> 
+
+          mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() )|>
           with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
          mutate(minus_sum = if_else(mean_idx==0, factor |> as.factor() |> as.integer(), 0L)) |>
-         
+
          # Make right rank
-         mutate(mean_idx = mean_idx |> as.factor() |> as.integer() |> subtract(1)) |> 
-         
+         mutate(mean_idx = mean_idx |> as.factor() |> as.integer() |> subtract(1)) |>
+
          # drop minus_sum if we just have one grouping per factor
-         with_groups(factor, ~ ..1 |> when(length(unique(..1$grouping)) == 1 ~ mutate(., minus_sum = 0), ~ (.))) |> 
-         
-         # Add value 
+         with_groups(factor, ~ ..1 |> when(length(unique(..1$grouping)) == 1 ~ mutate(., minus_sum = 0), ~ (.))) |>
+
+         # Add value
         left_join(
-          
-          mydesign |> 
-            as_tibble(rownames = quo_name(.sample)) |> 
-            mutate_all(as.character) |>  
+
+          mydesign |>
+            as_tibble(rownames = quo_name(.sample)) |>
+            mutate_all(as.character) |>
             readr::type_convert(guess_integer = TRUE ) |>
-            suppressMessages() |> 
-            mutate_if(is.integer, ~1) |> 
+            suppressMessages() |>
+            mutate_if(is.integer, ~1) |>
             pivot_longer(-!!.sample, names_to = "factor"),
-          
+
           by = join_by(!!.sample, factor)
-        ) |> 
-         
+        ) |>
+
          # Create unique name
          mutate(group___label = glue("{factor}___{grouping}")) |>
-         mutate(group___numeric = group___label |> as.factor() |> as.integer()) |> 
-         mutate(factor___numeric = `factor` |> as.factor() |> as.integer()) 
-         
-         
-     
-     })) 
-  
+         mutate(group___numeric = group___label |> as.factor() |> as.integer()) |>
+         mutate(factor___numeric = `factor` |> as.factor() |> as.integer())
+
+
+
+     }))
+
  }
 
 
@@ -796,13 +796,13 @@ get_design_matrix = function(.data_spread, formula, .sample){
 
   .sample = enquo(.sample)
 
-  design_matrix = 
+  design_matrix =
   	.data_spread %>%
 
-    select(!!.sample, parse_formula(formula)) |> 
-  	mutate(across(where(is.numeric),  scale)) |> 
+    select(!!.sample, parse_formula(formula)) |>
+  	mutate(across(where(is.numeric),  scale)) |>
     model.matrix(formula, data=_)
-  
+
   rownames(design_matrix) = .data_spread |> pull(!!.sample)
 
   design_matrix
@@ -1003,37 +1003,37 @@ data_spread_to_model_input =
 
     # Random intercept
     if(nrow(random_intercept_elements)>0 ) {
-      
+
       #check_random_intercept_design(.data_spread, any_of(factor_names), random_intercept_elements, formula, X)
       random_intercept_grouping = get_random_intercept_design2(.data_spread, !!.sample,  formula )
 
       # Actual parameters, excluding for the sum to one parameters
       N_random_intercepts = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow())) |> pull(n) |> sum()
-      
+
       # Number of sum to one
       N_minus_sum = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(minus_sum>0) |> distinct(minus_sum) |> nrow())) |> pull(n) |> sum()
-      
+
       paring_cov_random_intercept =
         random_intercept_grouping |>
         mutate(mat = map(design, ~ .x |> distinct(factor___numeric, mean_idx) |> filter(mean_idx>0) )) |>
         select(mat) |>
         unnest(mat) |>
-        arrange(factor___numeric, mean_idx) |> 
+        arrange(factor___numeric, mean_idx) |>
         as_matrix()
 
       X_random_intercept =
         random_intercept_grouping |>
         mutate(design_matrix = map(
-          design, 
+          design,
           ~ ..1 |>
             select(!!.sample, group___label, value) |>
-            pivot_wider(names_from = group___label, values_from = value) |> 
-            mutate(across(everything(), ~ .x |> replace_na(0))) 
+            pivot_wider(names_from = group___label, values_from = value) |>
+            mutate(across(everything(), ~ .x |> replace_na(0)))
         )) |>
 
         # Merge
         pull(design_matrix) |>
-      	reduce(left_join, by = join_by(!!.sample)) |> 
+      	reduce(left_join, by = join_by(!!.sample)) |>
         as_matrix(rownames = quo_name(.sample))
 
     idx_group_random_intercepts =
@@ -1469,8 +1469,6 @@ class_list_to_counts = function(.data, .sample, .cell_group){
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
 
-
-
   .data %>%
     count(!!.sample,
           !!.cell_group,
@@ -1666,8 +1664,8 @@ plot_boxplot = function(
   if("fit" %in% names(attributes(.data))){
 
     simulated_proportion =
-      .data |> 
-      sccomp_replicate(number_of_draws = 100) |> 
+      .data |>
+      sccomp_replicate(number_of_draws = 100) |>
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
 
     my_boxplot = my_boxplot +
@@ -1821,7 +1819,7 @@ contrasts_to_enquos = function(contrasts){
 #' @importFrom dplyr last_col
 #' @importFrom purrr map2_dfc
 #' @importFrom stringr str_subset
-#' 
+#'
 mutate_from_expr_list = function(x, formula_expr){
 
   if(formula_expr |> names() |> is.null())
@@ -1835,7 +1833,7 @@ mutate_from_expr_list = function(x, formula_expr){
         # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
         select(any_of(.y))
   ) |>
-  	
+
   	# I could drop this to just result contrasts
     add_column(x |> select(-any_of(names(formula_expr))), .before = 1)
 
@@ -2103,20 +2101,20 @@ replicate_data = function(.data,
     .data |>
     select(count_data) |>
     unnest(count_data) |>
-    distinct() 
-  
+    distinct()
+
   # If seurat
   else if(new_data |> is("Seurat")) new_data = new_data[[]]
-  
+
   # Just subset
   new_data = new_data |> .subset(!!.sample)
-  
-  
+
+
   # Check if the input new data is not suitable
   if(!parse_formula(formula_composition) %in% colnames(new_data) |> all())
     stop("sccomp says: your `new_data` might be malformed. It might have the covariate columns with multiple values for some element of the \"%s\" column. As a generic example, a sample identifier (\"Sample_123\") might be associated with multiple treatment values, or age values.")
-  
-  
+
+
   # Match factors with old data
   nrow_new_data = nrow(new_data)
   new_exposure = new_data |>
@@ -2143,10 +2141,10 @@ replicate_data = function(.data,
     select(-count) |>
     select(new_data |> as_tibble() |> colnames() |>  any_of()) |>
     distinct() |>
-    
+
     # Change sample names to make unique
-    mutate(dummy = "OLD") |> 
-    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___") |> 
+    mutate(dummy = "OLD") |>
+    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___") |>
 
     # New data
     bind_rows(
@@ -2221,13 +2219,13 @@ replicate_data = function(.data,
     X_random_intercept_which = array()[0]
     new_X_random_intercept = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
 
-    
+
   }
   else {
 
     random_intercept_grouping =
       new_data %>%
-      
+
         get_random_intercept_design2(
         !!.sample,
         formula_composition
@@ -2236,25 +2234,25 @@ replicate_data = function(.data,
     new_X_random_intercept =
       random_intercept_grouping |>
       mutate(design_matrix = map(
-        design, 
+        design,
         ~ ..1 |>
           select(!!.sample, group___label, value) |>
-          pivot_wider(names_from = group___label, values_from = value) |> 
-          mutate(across(everything(), ~ .x |> replace_na(0))) 
+          pivot_wider(names_from = group___label, values_from = value) |>
+          mutate(across(everything(), ~ .x |> replace_na(0)))
       )) |>
-      
+
       # Merge
       pull(design_matrix) |>
-      bind_cols() |> 
+      bind_cols() |>
       as_matrix(rownames = quo_name(.sample))  |>
 
       tail(nrow_new_data)
 
     # Check if I have column in the new design that are not in the old one
-    missing_columns = new_X_random_intercept |> colnames() |> setdiff(colnames(model_input$X_random_intercept)) 
+    missing_columns = new_X_random_intercept |> colnames() |> setdiff(colnames(model_input$X_random_intercept))
     if(missing_columns |> length() > 0)
     	stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
-    
+
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_intercept_which =
       colnames(new_X_random_intercept) |>
@@ -2271,7 +2269,7 @@ replicate_data = function(.data,
   model_input$Xa = new_Xa
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
-  
+
   model_input$X_random_intercept = new_X_random_intercept
   model_input$N_grouping_new = ncol(new_X_random_intercept)
 
@@ -2313,26 +2311,26 @@ get_model_from_data = function(file_compiled_model, model_code){
 }
 
 add_formula_columns = function(.data, .original_data, .sample,  formula_composition){
-  
+
   .sample = enquo(.sample)
-  
+
   formula_elements = parse_formula(formula_composition)
-  
+
   # If no formula return the input
   if(length(formula_elements) == 0) return(.data)
-  
+
   # Get random intercept
   .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
-  
-  data_frame_formula = 
+
+  data_frame_formula =
     .original_data %>%
     as_tibble() |>
     select( !!.sample, formula_elements, any_of(.grouping_for_random_intercept) ) %>%
     distinct()
-  
-  .data |> 
+
+  .data |>
     left_join(data_frame_formula, by = quo_name(.sample) )
-  
+
 }
 
 # Negation
@@ -2350,7 +2348,7 @@ not = function(is){	!is }
 #'
 #' @return A character vector
 quo_names <- function(v) {
-	
+
 	v = quo_name(quo_squash(v))
 	gsub('^c\\(|`|\\)$', '', v) |>
 		strsplit(', ') |>
@@ -2368,8 +2366,8 @@ quo_names <- function(v) {
 #'
 #' @return A tibble with an additional attribute
 add_class = function(var, name) {
-  
+
   if(!name %in% class(var)) class(var) <- prepend(class(var),name)
-  
+
   var
 }
