@@ -530,9 +530,9 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
   
   rng =  rstan::gqs(
-    stanmodels$glm_multi_beta_binomial_generate_date,
+    stanmodels$glm_multi_beta_binomial_generate_date, 
     #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-    draws = .estimate |> attr("fit") |>  as.matrix(),
+    draws = .estimate |> attr("fit") |>  as.matrix(), 
     
     # This is for the new data generation with selected factors to do adjustment
     data = 
