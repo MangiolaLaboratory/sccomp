@@ -5,7 +5,7 @@ library(job)
 library(patchwork)
 
 
-prior_mean_variable_association = list(intercept = c(5, 5), slope = c(0,  5), standard_deviation = c(5,5))
+prior_mean_overdispersion_association = list(intercept = c(5, 5), slope = c(0,  5), standard_deviation = c(5,5))
 
 job({
 
@@ -18,7 +18,7 @@ job({
       sample, cell_type, count,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association
     ) %>%
       saveRDS("dev/data_integration/estimate_GSE115189_SCP345_SCP424_SCP591_SRR11038995_SRR7244582_10x6K_10x8K.rds")
 })
@@ -31,7 +31,7 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association
     ) %>%
     saveRDS("dev/data_integration/estimate_GSE139829_uveal_melanoma.rds")
 
@@ -45,7 +45,7 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association
     ) %>%
     saveRDS("dev/data_integration/estimate_SCP1288_renal_cell_carcinoma.rds")
 })
@@ -61,7 +61,7 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association
     ) %>%
     saveRDS("dev/data_integration/estimate_SCP1039_bc_cells.rds")
 })
@@ -75,7 +75,7 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association
     ) %>%
     saveRDS("dev/data_integration/estimate_s41587-020-0602-4_COVID_19.rds")
 })
@@ -87,7 +87,7 @@ job({
       sample, cell_type,
       approximate_posterior_inference = FALSE,
       variance_association = TRUE,
-      prior_mean_variable_association = prior_mean_variable_association
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association
     ) %>%
     saveRDS("dev/data_integration/estimate_GSE120575_melanoma.rds")
 })
@@ -108,7 +108,7 @@ job({
       sample, cell_type ,
       approximate_posterior_inference = FALSE,
       variance_association = FALSE,
-      prior_mean_variable_association = prior_mean_variable_association
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association
     ) %>%
     saveRDS("dev/data_integration/estimate_BRCA1_s41467-021-21783-3.rds")
 })

@@ -32,7 +32,7 @@ readRDS(input_file) %>%
           approximate_posterior_inference = "none",
           percent_false_positive = 0.001 * 100,
           mcmc_seed = .y * 2,
-          prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
+          prior_mean_overdispersion_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5.06983, 8.549324))
         )
 
       time_arr = toc()

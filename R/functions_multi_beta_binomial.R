@@ -10,7 +10,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      
                                      # Secondary arguments
                                      contrasts = NULL,
-                                     prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                     prior_mean_overdispersion_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = "none",
@@ -83,7 +83,7 @@ sccomp_glm_data_frame_raw = function(.data,
       my_glm_model = my_glm_model,
       contrasts = contrasts,
       #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
-      prior_mean_variable_association = prior_mean_variable_association,
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -110,7 +110,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         # Secondary arguments
                                         contrasts = NULL,
                                         #.grouping_for_random_intercept = NULL,
-                                        prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                        prior_mean_overdispersion_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = "none",
@@ -261,9 +261,9 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
   
   # Prior
-  data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
-  data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
-  data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
+  data_for_model$prior_prec_intercept = prior_mean_overdispersion_association$intercept
+  data_for_model$prior_prec_slope  = prior_mean_overdispersion_association$slope
+  data_for_model$prior_prec_sd = prior_mean_overdispersion_association$standard_deviation
   data_for_model$exclude_priors = exclude_priors
   data_for_model$enable_loo = TRUE & enable_loo
   
@@ -372,7 +372,7 @@ multi_beta_binomial_glm = function(.data,
                                    # Secondary parameters
                                    contrasts = NULL,
                                    #.grouping_for_random_intercept = NULL,
-                                   prior_mean_variable_association,
+                                   prior_mean_overdispersion_association,
                                    percent_false_positive = 5,
                                    check_outliers = FALSE,
 																	 .sample_cell_group_pairs_to_exclude = NULL,
@@ -408,7 +408,7 @@ multi_beta_binomial_glm = function(.data,
       formula_variability = formula_variability,
       contrasts = contrasts,
       #.grouping_for_random_intercept = !!.grouping_for_random_intercept,
-      prior_mean_variable_association = prior_mean_variable_association,
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association,
       percent_false_positive = percent_false_positive,
       check_outliers = check_outliers,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,

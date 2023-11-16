@@ -21,7 +21,7 @@
 #' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
 #' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be constrasts = c("treatmentyes - treatmentno").
-#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
+#' @param prior_mean_overdispersion_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
 #' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
@@ -93,7 +93,7 @@ sccomp_estimate <- function(.data,
 
                        # Secondary arguments
                        contrasts = NULL,
-                       prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                       prior_mean_overdispersion_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                        check_outliers = TRUE,
                        bimodal_mean_variability_association = FALSE,
                        enable_loo = FALSE,
@@ -123,7 +123,7 @@ sccomp_estimate.Seurat = function(.data,
 
                              # Secondary arguments
                              contrasts = NULL,
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                             prior_mean_overdispersion_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
                              bimodal_mean_variability_association = FALSE,
                              enable_loo = FALSE,
@@ -155,7 +155,7 @@ sccomp_estimate.Seurat = function(.data,
 
       !!.sample,!!.cell_group,
       contrasts = contrasts,
-      prior_mean_variable_association = prior_mean_variable_association,
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -185,7 +185,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
 
                                            # Secondary arguments
                                            contrasts = NULL,
-                                           prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                           prior_mean_overdispersion_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                            check_outliers = TRUE,
                                            bimodal_mean_variability_association = FALSE,
                                            enable_loo = FALSE,
@@ -221,7 +221,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
       !!.sample,!!.cell_group,
       check_outliers = check_outliers,
       contrasts = contrasts,
-      prior_mean_variable_association = prior_mean_variable_association,
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association,
       percent_false_positive = percent_false_positive ,
       approximate_posterior_inference = approximate_posterior_inference,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
@@ -250,7 +250,7 @@ sccomp_estimate.DFrame = function(.data,
 
                              # Secondary arguments
                              contrasts = NULL,
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                             prior_mean_overdispersion_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                              check_outliers = TRUE,
                              bimodal_mean_variability_association = FALSE,
                              enable_loo = FALSE,
@@ -284,7 +284,7 @@ sccomp_estimate.DFrame = function(.data,
       formula_variability = formula_variability,
       !!.sample,!!.cell_group,
       contrasts = contrasts,
-      prior_mean_variable_association = prior_mean_variable_association,
+      prior_mean_overdispersion_association = prior_mean_overdispersion_association,
       percent_false_positive = percent_false_positive ,
       check_outliers = check_outliers,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -313,7 +313,7 @@ sccomp_estimate.data.frame = function(.data,
 
                                  # Secondary arguments
                                  contrasts = NULL,
-                                 prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                 prior_mean_overdispersion_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                  check_outliers = TRUE,
                                  bimodal_mean_variability_association = FALSE,
                                  enable_loo = FALSE,
@@ -356,7 +356,7 @@ sccomp_estimate.data.frame = function(.data,
         !!.sample,
         !!.cell_group,
         contrasts = contrasts,
-        prior_mean_variable_association = prior_mean_variable_association,
+        prior_mean_overdispersion_association = prior_mean_overdispersion_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
@@ -383,7 +383,7 @@ sccomp_estimate.data.frame = function(.data,
         !!.cell_group,
         !!.count,
         contrasts = contrasts,
-        prior_mean_variable_association = prior_mean_variable_association,
+        prior_mean_overdispersion_association = prior_mean_overdispersion_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
         approximate_posterior_inference = approximate_posterior_inference,
