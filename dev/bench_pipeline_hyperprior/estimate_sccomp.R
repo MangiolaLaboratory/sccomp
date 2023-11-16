@@ -20,24 +20,24 @@ beta_0 = readRDS("dev/beta_0.rds")
 if(add_hyperpriors==0){
 
   # uninformative
-  prior_mean_overdispersion_association = list(intercept = c(0, 2), slope = c(0,  1), standard_deviation = c(20, 40))
+  prior_overdispersion_mean_association = list(intercept = c(0, 2), slope = c(0,  1), standard_deviation = c(20, 40))
 
 } else if(add_hyperpriors==1) {
   # PREVIOUS
-  prior_mean_overdispersion_association = list(intercept = c(4.9205842, 0.11952838), slope = c(-0.7608308,  0.09501801), standard_deviation = c(37.45106,76.65637))
+  prior_overdispersion_mean_association = list(intercept = c(4.9205842, 0.11952838), slope = c(-0.7608308,  0.09501801), standard_deviation = c(37.45106,76.65637))
 
   # s41587-020-0602-4_COVID_19
-  # prior_mean_overdispersion_association = list(intercept = c(3.8357711, 1.05), slope = c(-0.9338016,  0.10), standard_deviation = c(5.390190,8.746909))
+  # prior_overdispersion_mean_association = list(intercept = c(3.8357711, 1.05), slope = c(-0.9338016,  0.10), standard_deviation = c(5.390190,8.746909))
 
 } else if(add_hyperpriors==2) {
   # BRCA1_s41467-021-21783-3
-  prior_mean_overdispersion_association = list(intercept = c(5.8281775, 0.5), slope = c(-0.8904407,  0.1061705), standard_deviation = c(53.71133,66.01899))
+  prior_overdispersion_mean_association = list(intercept = c(5.8281775, 0.5), slope = c(-0.8904407,  0.1061705), standard_deviation = c(53.71133,66.01899))
 } else if(add_hyperpriors==3) {
   # Wrong hyperprior
-  prior_mean_overdispersion_association = list(intercept = c(10, 0.15), slope = c(1,  0.10), standard_deviation = c(37.45106,76.65637))
+  prior_overdispersion_mean_association = list(intercept = c(10, 0.15), slope = c(1,  0.10), standard_deviation = c(37.45106,76.65637))
 }
 
-print(prior_mean_overdispersion_association)
+print(prior_overdispersion_mean_association)
 
 # Iterate over runs
 readRDS(input_file) %>%
@@ -51,7 +51,7 @@ readRDS(input_file) %>%
         approximate_posterior_inference = "none",
         percent_false_positive = 0.001 * 100,
         mcmc_seed = .y * 2,
-        prior_mean_overdispersion_association = prior_mean_overdispersion_association,
+        prior_overdispersion_mean_association = prior_overdispersion_mean_association,
         cores = 4
       )
   )) %>%
