@@ -31,6 +31,17 @@ BiocManager::install("sccomp")
 devtools::install_github("stemangiola/sccomp")
 ```
 
+Function | Description
+------------ | -------------
+`sccomp_estimate` | Fit the model onto the data, and estimate the coefficients
+`sccomp_remove_outliers` | Identify outliers probabilistically based on the model fit, and exclude them from the estimation
+`sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change)
+`sccomp_replicate` | Simulate data from the model, or part of the model
+`sccomp_predict` | Predicts proportions, based on the mode, or part of the model
+`sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors
+`sccomp_boxplot` | Plots the data across factors, overlaying model-generated data, for asses the goodness of fit
+`sccomp_plot_summary` | Plors summary plots to asses significance 
+
 # Analysis
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}

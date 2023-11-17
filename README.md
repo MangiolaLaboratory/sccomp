@@ -10,6 +10,10 @@ status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.sv
 
 <!-- badges: end -->
 
+<a href="https://www.youtube.com/watch?v=R_lt58We9nA&ab_channel=RConsortium" target="_blank">
+<img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10" />
+</a>
+
 # <img src="inst/logo-01.png" height="139px" width="120px"/>
 
 Sccomp is a generalised method for differential composition and
@@ -42,6 +46,17 @@ BiocManager::install("sccomp")
 ``` r
 devtools::install_github("stemangiola/sccomp")
 ```
+
+| Function                           | Description                                                                                                                 |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `sccomp_estimate`                  | Fit the model onto the data, and estimate the coefficients                                                                  |
+| `sccomp_remove_outliers`           | Identify outliers probabilistically based on the model fit, and exclude them from the estimation                            |
+| `sccomp_test`                      | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change) |
+| `sccomp_replicate`                 | Simulate data from the model, or part of the model                                                                          |
+| `sccomp_predict`                   | Predicts proportions, based on the mode, or part of the model                                                               |
+| `sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors                                                                                |
+| `sccomp_boxplot`                   | Plots the data across factors, overlaying model-generated data, for asses the goodness of fit                               |
+| `sccomp_plot_summary`              | Plors summary plots to asses significance                                                                                   |
 
 # Analysis
 
@@ -86,16 +101,16 @@ counts_obj |>
     ## # A tibble: 72 × 18
     ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercep… <NA>    0.873     1.12   1.35   0       0         6210.
-    ##  2 B1         typecancer type   -1.06     -0.642 -0.262  1.18e-2 2.72e-3   4662.
-    ##  3 B2         (Intercep… <NA>    0.398     0.695  0.996  7.50e-4 6.58e-5   5458.
-    ##  4 B2         typecancer type   -1.21     -0.721 -0.233  1.80e-2 6.34e-3   3621.
-    ##  5 B3         (Intercep… <NA>   -0.680    -0.391 -0.121  7.90e-2 8.27e-3   5356.
-    ##  6 B3         typecancer type   -0.728    -0.310  0.0880 2.89e-1 8.44e-2   3963.
-    ##  7 BM         (Intercep… <NA>   -1.32     -1.04  -0.758  0       0         6759.
-    ##  8 BM         typecancer type   -0.737    -0.312  0.0969 2.94e-1 9.39e-2   4720.
-    ##  9 CD4 1      (Intercep… <NA>    0.0807    0.298  0.503  1.83e-1 2.86e-2   4736.
-    ## 10 CD4 1      typecancer type   -0.0988    0.188  0.483  5.30e-1 1.57e-1   4729.
+    ##  1 B1         (Intercep… <NA>    0.868     1.12   1.35   0       0         4803.
+    ##  2 B1         typecancer type   -1.05     -0.643 -0.241  1.42e-2 4.90e-3   3590.
+    ##  3 B2         (Intercep… <NA>    0.408     0.701  0.972  7.50e-4 6.58e-5   4625.
+    ##  4 B2         typecancer type   -1.19     -0.724 -0.264  1.40e-2 3.86e-3   2444.
+    ##  5 B3         (Intercep… <NA>   -0.678    -0.389 -0.111  8.98e-2 8.9 e-3   4102.
+    ##  6 B3         typecancer type   -0.758    -0.319  0.0904 2.88e-1 7.64e-2   3031.
+    ##  7 BM         (Intercep… <NA>   -1.33     -1.04  -0.741  0       0         4696.
+    ##  8 BM         typecancer type   -0.770    -0.318  0.122  2.95e-1 9.60e-2   4254.
+    ##  9 CD4 1      (Intercep… <NA>    0.0791    0.297  0.517  1.70e-1 2.35e-2   3819.
+    ## 10 CD4 1      typecancer type   -0.119     0.182  0.480  5.50e-1 1.60e-1   3761.
     ## # ℹ 62 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -125,16 +140,16 @@ seurat_obj |>
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -1.89    -1.40   -0.901 0       0            NA
-    ##  2 B immature  typeheal… <NA>     0.901    1.40    1.89  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.33    -1.72   -1.07  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.07     1.72    2.33  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.47    -1.04   -0.617 2.50e-4 6.25e-5      NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.617    1.04    1.47  2.50e-4 6.25e-5      NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.837    1.77    2.91  5.00e-4 1.50e-4      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.91    -1.77   -0.837 5.00e-4 1.50e-4      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.290    0.997   1.71  1.30e-2 3.57e-3      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.71    -0.997  -0.290 1.30e-2 3.57e-3      NA
+    ##  1 B immature  typecanc… <NA>    -1.90    -1.39   -0.880 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.880    1.39    1.90  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.32    -1.71   -1.08  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.08     1.71    2.32  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.48    -1.04   -0.607 0       0            NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.607    1.04    1.48  0       0            NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.843    1.76    2.84  2.50e-4 5.00e-5      NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.84    -1.76   -0.843 2.50e-4 5.00e-5      NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.307    0.983   1.68  1.12e-2 3.35e-3      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.68    -0.983  -0.307 1.12e-2 3.35e-3      NA
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -191,7 +206,7 @@ loo_compare(
 
     ##        elpd_diff se_diff
     ## model1   0.0       0.0  
-    ## model2 -80.2      11.4
+    ## model2 -80.8      11.3
 
 ## Differential variability, binary factor
 
@@ -219,16 +234,16 @@ res
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  (Interce… <NA>    0.371     0.769  1.20   0.00550 5.19e-4   5537.
-    ##  2 B immature  typeheal… type    0.851     1.43   2.00   0       0         5064.
-    ##  3 B mem       (Interce… <NA>   -1.50     -0.878 -0.188  0.0270  4.69e-3   3986.
-    ##  4 B mem       typeheal… type    1.07      1.87   2.65   0       0         3711.
-    ##  5 CD4 cm S10… (Interce… <NA>    1.32      1.66   2.00   0       0         7824.
-    ##  6 CD4 cm S10… typeheal… type    0.485     0.938  1.39   0.00225 5.62e-4   5599.
-    ##  7 CD4 cm hig… (Interce… <NA>   -1.04     -0.544 -0.0184 0.101   1.93e-2   4656.
-    ##  8 CD4 cm hig… typeheal… type   -3.08     -1.31   1.17   0.183   5.03e-2   3137.
-    ##  9 CD4 cm rib… (Interce… <NA>   -0.0416    0.312  0.691  0.265   3.32e-2   4634.
-    ## 10 CD4 cm rib… typeheal… type   -1.80     -0.970  0.0583 0.0695  2.08e-2   3588.
+    ##  1 B immature  (Interce… <NA>    0.343     0.762  1.16   5.00e-3 5.19e-4   6144.
+    ##  2 B immature  typeheal… type    0.878     1.44   1.99   2.50e-4 8.33e-5   5459.
+    ##  3 B mem       (Interce… <NA>   -1.46     -0.871 -0.178  2.68e-2 4.76e-3   4473.
+    ##  4 B mem       typeheal… type    1.07      1.85   2.63   0       0         4004.
+    ##  5 CD4 cm S10… (Interce… <NA>    1.31      1.66   1.99   0       0         6321.
+    ##  6 CD4 cm S10… typeheal… type    0.472     0.941  1.41   1.00e-3 3.12e-4   4707.
+    ##  7 CD4 cm hig… (Interce… <NA>   -1.08     -0.541  0.0370 1.05e-1 1.92e-2   4181.
+    ##  8 CD4 cm hig… typeheal… type   -3.06     -1.26   1.01   2.01e-1 5.07e-2   3636.
+    ##  9 CD4 cm rib… (Interce… <NA>   -0.0630    0.311  0.695  2.76e-1 3.34e-2   4496.
+    ## 10 CD4 cm rib… typeheal… type   -1.80     -0.960  0.124  7.55e-2 2.43e-2   3299.
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -276,7 +291,7 @@ plots$boxplot
 
     ## [[1]]
 
-![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
 
 A plot of estimates of differential composition (c\_) on the x-axis and
 differential variability (v\_) on the y-axis. The error bars represent
@@ -289,7 +304,7 @@ credible interval. Facets represent the covariates in the model.
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
 
 ## Visualisation of the MCMC chains from the posterior distribution
 
@@ -302,7 +317,7 @@ probability 1.
 res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 ```
 
-![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-16-1.png)<!-- -->
 
 Plot 1D significance plot
 
@@ -320,7 +335,7 @@ plots = plot_summary(res)
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-17-1.png)<!-- -->
 
 Plot 2D significance plot. Data points are cell groups. Error bars are
 the 95% credible interval. The dashed lines represent the default
@@ -340,7 +355,7 @@ uncorrelated.
 plots$credible_intervals_2D
 ```
 
-![](inst/figures/unnamed-chunk-16-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-18-1.png)<!-- -->
 
 # Multilevel modelling
 
@@ -371,16 +386,16 @@ res
     ## # A tibble: 210 × 18
     ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature (Intercep… <NA>     0.327   0.868    1.45  0.00700 2.13e-3   2746.
-    ##  2 B immature typehealt… type     0.658   1.33     1.98  0.00150 7.50e-4   2898.
-    ##  3 B immature continuou… conti…  -0.222   0.0317   0.329 0.878   6.51e-1   7737.
-    ##  4 B immature (Intercep… <NA>    -0.574  -0.0432   0.434 0.736   6.40e-1     NA 
-    ##  5 B immature typehealt… <NA>    -0.434   0.0432   0.574 0.736   6.40e-1     NA 
-    ##  6 B immature (Intercep… <NA>    -0.595  -0.0413   0.469 0.745   6.83e-1     NA 
-    ##  7 B immature typehealt… <NA>    -0.469   0.0413   0.595 0.745   6.83e-1     NA 
-    ##  8 B mem      (Intercep… <NA>    -1.20   -0.487    0.352 0.235   4.75e-2   2960.
-    ##  9 B mem      typehealt… type     0.529   1.43     2.23  0.00700 3.00e-3   3028.
-    ## 10 B mem      continuou… conti…  -0.255   0.0520   0.402 0.803   6.16e-1   7688.
+    ##  1 B immature (Intercep… <NA>     0.338   0.871    1.49  1.10e-2 3.07e-3   2668.
+    ##  2 B immature typehealt… type     0.625   1.32     1.98  5.00e-4 2.50e-4   2930.
+    ##  3 B immature continuou… conti…  -0.241   0.0316   0.325 8.70e-1 6.43e-1   8525.
+    ##  4 B immature (Intercep… <NA>    -0.568  -0.0497   0.419 7.35e-1 6.35e-1     NA 
+    ##  5 B immature typehealt… <NA>    -0.419   0.0497   0.568 7.35e-1 6.35e-1     NA 
+    ##  6 B immature (Intercep… <NA>    -0.630  -0.0329   0.475 7.39e-1 6.72e-1     NA 
+    ##  7 B immature typehealt… <NA>    -0.475   0.0329   0.630 7.39e-1 6.72e-1     NA 
+    ##  8 B mem      (Intercep… <NA>    -1.16   -0.472    0.388 2.44e-1 4.93e-2   1904.
+    ##  9 B mem      typehealt… type     0.490   1.41     2.21  7.00e-3 2.56e-3   1984.
+    ## 10 B mem      continuou… conti…  -0.257   0.0542   0.401 8.13e-1 6.18e-1   8974.
     ## # ℹ 200 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -405,14 +420,14 @@ res |> sccomp_remove_unwanted_variation(~type)
     ## # A tibble: 600 × 5
     ##    sample       cell_group adjusted_proportion adjusted_counts logit_residuals
     ##    <chr>        <chr>                    <dbl>           <dbl>           <dbl>
-    ##  1 10x_6K       B immature              0.0558           262.          -0.673 
-    ##  2 10x_8K       B immature              0.144           1087.           0.403 
-    ##  3 GSE115189    B immature              0.115            269.           0.105 
-    ##  4 SCP345_580   B immature              0.0909           524.          -0.123 
-    ##  5 SCP345_860   B immature              0.152            976.           0.461 
-    ##  6 SCP424_pbmc1 B immature              0.113            300.           0.0707
-    ##  7 SCP424_pbmc2 B immature              0.202            603.           0.799 
-    ##  8 SCP591       B immature              0.0249            14.1         -1.49  
-    ##  9 SI-GA-E5     B immature              0.0257           107.          -0.734 
-    ## 10 SI-GA-E7     B immature              0.103            759.           0.759 
+    ##  1 10x_6K       B immature              0.0553           260.          -0.675 
+    ##  2 10x_8K       B immature              0.143           1079.           0.398 
+    ##  3 GSE115189    B immature              0.114            267.           0.102 
+    ##  4 SCP345_580   B immature              0.0902           520.          -0.128 
+    ##  5 SCP345_860   B immature              0.151            967.           0.455 
+    ##  6 SCP424_pbmc1 B immature              0.111            297.           0.0579
+    ##  7 SCP424_pbmc2 B immature              0.200            598.           0.791 
+    ##  8 SCP591       B immature              0.0248            14.1         -1.49  
+    ##  9 SI-GA-E5     B immature              0.0261           109.          -0.724 
+    ## 10 SI-GA-E7     B immature              0.104            763.           0.763 
     ## # ℹ 590 more rows
