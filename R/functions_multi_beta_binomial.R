@@ -10,13 +10,13 @@ sccomp_glm_data_frame_raw = function(.data,
                                      
                                      # Secondary arguments
                                      contrasts = NULL,
+                                     prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                      prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = "none",
                                      test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                      verbose = FALSE,
-                                     my_glm_model,
                                      exclude_priors = FALSE,
                                      bimodal_mean_variability_association = FALSE,
                                      enable_loo = FALSE,
@@ -80,9 +80,9 @@ sccomp_glm_data_frame_raw = function(.data,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
       .count = count,
-      my_glm_model = my_glm_model,
       contrasts = contrasts,
       #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
@@ -110,13 +110,13 @@ sccomp_glm_data_frame_counts = function(.data,
                                         # Secondary arguments
                                         contrasts = NULL,
                                         #.grouping_for_random_intercept = NULL,
+                                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                         prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = "none",
                                         test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                         verbose = FALSE,
-                                        my_glm_model ,
                                         exclude_priors = FALSE,
                                         bimodal_mean_variability_association = FALSE,
                                         enable_loo = FALSE,
@@ -264,6 +264,8 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$prior_prec_intercept = prior_overdispersion_mean_association$intercept
   data_for_model$prior_prec_slope  = prior_overdispersion_mean_association$slope
   data_for_model$prior_prec_sd = prior_overdispersion_mean_association$standard_deviation
+  data_for_model$prior_mean_intercept = prior_mean$intercept
+  data_for_model$prior_mean_coefficients = prior_mean$coefficients
   data_for_model$exclude_priors = exclude_priors
   data_for_model$enable_loo = TRUE & enable_loo
   
@@ -323,127 +325,7 @@ sccomp_glm_data_frame_counts = function(.data,
 }
 
 
-#' multi_beta_binomial main
-#'
-#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
-#'
-#' @importFrom tibble as_tibble
-#' @import dplyr
-#' @importFrom tidyr spread
-#' @importFrom magrittr %$%
-#' @importFrom magrittr divide_by
-#' @importFrom magrittr multiply_by
-#' @importFrom purrr map2
-#' @importFrom purrr map_int
-#' @importFrom magrittr multiply_by
-#' @importFrom magrittr equals
-#' @importFrom purrr map
-#' @importFrom tibble rowid_to_column
-#' @importFrom purrr map_lgl
-#' @importFrom dplyr case_when
-#' @importFrom rlang :=
-#'
-#' @keywords internal
-#' @noRd
-#'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
-#' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
-#' @param formula_variability A formula. The sample formula used to perform the differential cell_group variability analysis
-#' @param .sample A column name as symbol. The sample identifier
-#' @param .cell_group A column name as symbol. The cell_type identifier
-#' @param .count A column name as symbol. The cell_type abundance (read count)
-#' @param check_outliers A boolean. Whether to check for outliers before the fit.
-#' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
-#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
-#' @param verbose A boolean. Prints progression.
-#' @param cores An integer. How many cored to be used with parallel calculations.
-#' @param seed An integer. Used for development and testing purposes
-#'
-#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
-#'
-#'
-multi_beta_binomial_glm = function(.data,
-                                   formula_composition = ~ 1,
-                                   formula_variability = ~1,
-                                   .sample,
-                                   .cell_group,
-                                   .count,
 
-                                   # Secondary parameters
-                                   contrasts = NULL,
-                                   #.grouping_for_random_intercept = NULL,
-                                   prior_overdispersion_mean_association,
-                                   percent_false_positive = 5,
-                                   check_outliers = FALSE,
-																	 .sample_cell_group_pairs_to_exclude = NULL,
-                                   approximate_posterior_inference = TRUE,
-                                   enable_loo = FALSE,
-                                   cores = detectCores(), # For development purpose,
-                                   seed = sample(1e5, 1),
-                                   verbose = FALSE,
-                                   exclude_priors = FALSE,
-                                   bimodal_mean_variability_association = FALSE,
-                                   use_data = TRUE,
-                                   test_composition_above_logit_fold_change,
-                                   max_sampling_iterations = 20000,
-                                   pass_fit = TRUE
-) {
-
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .count = enquo(.count)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-  
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
-  #contrasts = contrasts |> enquo() |> quo_names()
-
-  estimates_list =
-    estimate_multi_beta_binomial_glm(
-      .data = .data,
-      formula_composition = formula_composition,
-      .sample = !!.sample,
-      .cell_group = !!.cell_group,
-      .count = !!.count,
-      formula_variability = formula_variability,
-      contrasts = contrasts,
-      #.grouping_for_random_intercept = !!.grouping_for_random_intercept,
-      prior_overdispersion_mean_association = prior_overdispersion_mean_association,
-      percent_false_positive = percent_false_positive,
-      check_outliers = check_outliers,
-      .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
-      approximate_posterior_inference = approximate_posterior_inference,
-      enable_loo = enable_loo,
-      cores = cores, # For development purpose,
-      seed = seed,
-      verbose = verbose,
-      exclude_priors = exclude_priors,
-      bimodal_mean_variability_association = bimodal_mean_variability_association,
-      use_data = use_data,
-      max_sampling_iterations = max_sampling_iterations
-    )
-
-  # Create a dummy tibble
-  tibble() |>
-    # Attach association mean concentration
-    add_attr(estimates_list$fit, "fit") %>%
-    add_attr(estimates_list$data_for_model, "model_input") |>
-    add_attr(estimates_list$truncation_df2, "truncation_df2") |>
-    add_attr(.sample, ".sample") |>
-    add_attr(.cell_group, ".cell_group") |>
-    add_attr(.count, ".count") |>
-    add_attr(check_outliers, "check_outliers") |>
-    add_attr(formula_composition, "formula_composition") |>
-    add_attr(formula_variability, "formula_variability") |>
-
-    sccomp_test(
-      contrasts = contrasts,
-      percent_false_positive = percent_false_positive,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change
-    )
-
-
-}
 
 #' @importFrom stats model.matrix
 get_mean_precision = function(fit, data_for_model){
