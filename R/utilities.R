@@ -1156,6 +1156,13 @@ data_spread_to_model_input =
         ~ .data_spread |> select(any_of(factor_names[1])) |> distinct() |> nrow()
       )
 
+    data_for_model$B_intercept_columns =
+      when(
+        data_for_model$intercept_in_design ,
+        (.) ~ 1,
+        ~ .data_spread |> select(any_of(factor_names[1])) |> distinct() |> nrow()
+      )
+    
     # Return
     data_for_model
   }
