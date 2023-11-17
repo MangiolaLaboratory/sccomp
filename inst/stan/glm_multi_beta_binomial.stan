@@ -48,9 +48,16 @@ functions{
     return y;
   }
 
-  row_vector average_by_col(matrix beta){
-    return
-    rep_row_vector(1.0, rows(beta)) * beta / rows(beta);
+  row_vector average_by_col(matrix X) {
+    int rows_X = rows(X);
+    int cols_X = cols(X);
+    row_vector[cols_X] means;
+    
+    for (j in 1:cols_X) {
+      means[j] = mean(X[, j]);
+    }
+    
+    return means;
   }
 
   real abundance_variability_regression(row_vector variability, row_vector abundance, real[] prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
@@ -79,6 +86,7 @@ data{
   int<lower=1> C;
   int<lower=1> A; // How many column in variability design\
   int<lower=1> A_intercept_columns; // How many intercept column in varibility design
+  int<lower=1> B_intercept_columns; // How many intercept column in varibility design
   int<lower=1> Ar; // Rows of unique variability design
   int exposure[N];
   int y[N,M];
@@ -98,6 +106,8 @@ data{
   real prior_prec_intercept[2] ;
   real prior_prec_slope[2] ;
   real prior_prec_sd[2] ;
+  real prior_mean_intercept[2];
+  real prior_mean_coefficients[2];
 
   // Exclude priors for testing purposes
   int<lower=0, upper=1> exclude_priors;
@@ -244,50 +254,55 @@ model{
 
   // Priors
   if(exclude_priors == 0){
+    
     // If interceopt in design or I have complex variability design
-    if(intercept_in_design || A > 1){
-      // Loop across the intercept columns in case of a intercept-less design (covariate are intercepts)
-      for(a in 1:A_intercept_columns)
-      target += abundance_variability_regression(
-        alpha[a],
-        beta[a],
-        prec_coeff,
-        prec_sd,
-        bimodal_mean_variability_association,
-        mix_p
-        );
-        // Variability effect
-        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
-    }
-    // If intercept-less model and A == 1 I have to average the whole beta baseline design columns
-    // (that can be thought about intercept themself)
-    else{
+    // This would include the models 
+    // composition ~ 1 + ...; composition ~ 0 + ...; 
+    // variability ~ 1
+    if(A == 1){
       target += abundance_variability_regression(
         alpha[1],
-        average_by_col(beta[1:A_intercept_columns,]),
+        beta[1], // average_by_col(beta[1:B_intercept_columns,]),
         prec_coeff,
         prec_sd,
         bimodal_mean_variability_association,
         mix_p
         );
-
     }
+    else {
+      // Loop across the intercept columns in case of a intercept-less design (covariate are intercepts)
+      for(a in 1:A_intercept_columns)
+        target += abundance_variability_regression(
+          alpha[a],
+          beta[a],
+          prec_coeff,
+          prec_sd,
+          bimodal_mean_variability_association,
+          mix_p
+          );
+          
+        // Variability effect if the formula is more complex
+        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
+    }
+
   }
+  
+  // If I don't have priors for overdispersion
   else{
      // Priors variability
      if(intercept_in_design || A > 1){
-       for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prior_prec_slope[1], prior_prec_sd[1]/prior_prec_sd[2] );
+       for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prec_coeff[1], prec_sd );
         if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
      }
      // if ~ 0 + covariuate
      else {
-       alpha[1]  ~ normal( prior_prec_slope[1], prior_prec_sd[1]/prior_prec_sd[2] );
+       alpha[1]  ~ normal( prec_coeff[1], prec_sd );
      }
   }
 
   // // Priors abundance
-  beta_raw_raw[1] ~ normal ( 0, x_raw_sigma );
-  if(C>1) for(c in 2:C) to_vector(beta_raw_raw[c]) ~ normal ( 0, x_raw_sigma );
+  for(c in 1:B_intercept_columns) beta_raw_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] );
+  if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) to_vector(beta_raw_raw[c]) ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2]);
 
   // Hyper priors
   mix_p ~ beta(1,5);
@@ -313,6 +328,8 @@ generated quantities {
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
 
+  // These instructions regress out the effect of mean proportion to the overdispersion
+  // This adjustment provide A overdispersion value that can be tested for a hypotheses for example differences between two conditions
   if(intercept_in_design){
     if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
   }

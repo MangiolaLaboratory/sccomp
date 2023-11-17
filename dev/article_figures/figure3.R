@@ -65,7 +65,7 @@ distro_plot_1 =
 #   sccomp_glm(
 #     ~1, sample, category, count,
 #     check_outliers = FALSE,
-#     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
+#     prior_overdispersion_mean_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
 #     verbose=TRUE
 #   )
 # # })
@@ -211,7 +211,7 @@ dirichlet_multinomial_counts_2 =
 #   sccomp_glm(
 #     ~1, sample, category, count,
 #     check_outliers = FALSE,
-#     prior_mean_variable_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
+#     prior_overdispersion_mean_association = list(intercept = c(0, 5), slope = c(0,  5), standard_deviation = c(5,5)),
 #     verbose=TRUE
 #   )
 # # })

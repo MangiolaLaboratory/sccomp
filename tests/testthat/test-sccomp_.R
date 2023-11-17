@@ -54,6 +54,21 @@ my_estimate =
     max_sampling_iterations = 1000
   )
 
+
+
+
+my_estimate_no_intercept = 
+  seurat_obj |>
+  sccomp_estimate(
+    formula_composition = ~ 0 + type + continuous_covariate,
+    formula_variability = ~ 1,
+    sample, cell_group,
+    approximate_posterior_inference = FALSE,
+    cores = 1,
+    mcmc_seed = 42,
+    max_sampling_iterations = 1000
+  )
+
 my_estimate_random = 
   seurat_obj |>
   sccomp_estimate(
@@ -65,6 +80,14 @@ my_estimate_random =
     mcmc_seed = 42,     
     max_sampling_iterations = 1000
   )
+
+
+my_estimate |> sccomp_test(contrasts = "typehealthy")
+my_estimate_no_intercept |> sccomp_test(contrasts = c("typehealthy - typecancer"))
+
+my_estimate_relaxed |> sccomp_test(contrasts = "typehealthy")
+my_estimate_no_intercept_relaxed |> sccomp_test(contrasts = c("typehealthy - typecancer"))
+
 
 test_that("Generate data",{
 

@@ -20,9 +20,7 @@
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param .count A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.
 #'
-#' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be constrasts = c("treatmentyes - treatmentno").
-#' @param prior_mean_variable_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
-#' @param check_outliers A boolean. Whether to check for outliers before the fit.
+#' @param prior_overdispersion_mean_association A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param bimodal_mean_variability_association A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.
 #' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
 #'
@@ -32,7 +30,6 @@
 #' @param max_sampling_iterations An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.
 #' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
-#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param .sample_cell_group_pairs_to_exclude A column name that includes a boolean variable for the sample/cell-group pairs to be ignored in the fit. This argument is for pro-users.
 #' @param verbose A boolean. Prints progression.
 #' @param noise_model A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.
@@ -92,18 +89,15 @@ sccomp_estimate <- function(.data,
                        .count = NULL,
 
                        # Secondary arguments
-                       contrasts = NULL,
-                       prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
-                       check_outliers = TRUE,
-                       bimodal_mean_variability_association = FALSE,
-                       enable_loo = FALSE,
-
-                       # Tertiary arguments
                        cores = detectCores(),
+                       bimodal_mean_variability_association = FALSE,
                        percent_false_positive = 5,
                        approximate_posterior_inference = "none",
-                       test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
+                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                       .sample_cell_group_pairs_to_exclude = NULL,
                        verbose = FALSE,
+                       enable_loo = FALSE,
                        noise_model = "multi_beta_binomial",
                        exclude_priors = FALSE,
                        use_data = TRUE,
@@ -115,31 +109,28 @@ sccomp_estimate <- function(.data,
 
 #' @export
 sccomp_estimate.Seurat = function(.data,
-                             formula_composition = ~ 1 ,
-                             formula_variability = ~ 1,
-                             .sample,
-                             .cell_group,
-                             .count = NULL,
-
-                             # Secondary arguments
-                             contrasts = NULL,
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
-                             check_outliers = TRUE,
-                             bimodal_mean_variability_association = FALSE,
-                             enable_loo = FALSE,
-
-                             # Tertiary arguments
-                             cores = detectCores(),
-                             percent_false_positive = 5,
-                             approximate_posterior_inference = "none",
-                             test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
-                             verbose = FALSE,
-                             noise_model = "multi_beta_binomial",
-                             exclude_priors = FALSE,
-                             use_data = TRUE,
-                             mcmc_seed = sample(1e5, 1),
-                             max_sampling_iterations = 20000,
-                             pass_fit = TRUE) {
+                                  formula_composition = ~ 1 ,
+                                  formula_variability = ~ 1,
+                                  .sample,
+                                  .cell_group,
+                                  .count = NULL,
+                                  
+                                  # Secondary arguments
+                                  cores = detectCores(),
+                                  bimodal_mean_variability_association = FALSE,
+                                  percent_false_positive = 5,
+                                  approximate_posterior_inference = "none",
+                                  prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                                  .sample_cell_group_pairs_to_exclude = NULL,
+                                  verbose = FALSE,
+                                  enable_loo = FALSE,
+                                  noise_model = "multi_beta_binomial",
+                                  exclude_priors = FALSE,
+                                  use_data = TRUE,
+                                  mcmc_seed = sample(1e5, 1),
+                                  max_sampling_iterations = 20000,
+                                  pass_fit = TRUE){
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -152,21 +143,22 @@ sccomp_estimate.Seurat = function(.data,
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-
-      !!.sample,!!.cell_group,
-      contrasts = contrasts,
-      prior_mean_variable_association = prior_mean_variable_association,
-      percent_false_positive = percent_false_positive ,
-      check_outliers = check_outliers,
+      !!.sample,
+      !!.cell_group,
+      
+      # Secondary arguments
+      cores = cores,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      percent_false_positive = percent_false_positive,
       approximate_posterior_inference = approximate_posterior_inference,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      prior_mean = prior_mean, 
+      prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+      .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
+      enable_loo = enable_loo,
       noise_model = noise_model,
       exclude_priors = exclude_priors,
-      bimodal_mean_variability_association = bimodal_mean_variability_association,
-      enable_loo = enable_loo,
       use_data = use_data,
-      cores = cores,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit
@@ -177,31 +169,28 @@ sccomp_estimate.Seurat = function(.data,
 
 #' @export
 sccomp_estimate.SingleCellExperiment = function(.data,
-                                           formula_composition = ~ 1 ,
-                                           formula_variability = ~ 1,
-                                           .sample,
-                                           .cell_group,
-                                           .count = NULL,
-
-                                           # Secondary arguments
-                                           contrasts = NULL,
-                                           prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
-                                           check_outliers = TRUE,
-                                           bimodal_mean_variability_association = FALSE,
-                                           enable_loo = FALSE,
-
-                                           # Tertiary arguments
-                                           cores = detectCores(),
-                                           percent_false_positive = 5,
-                                           approximate_posterior_inference = "none",
-                                           test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
-                                           verbose = FALSE,
-                                           noise_model = "multi_beta_binomial",
-                                           exclude_priors = FALSE,
-                                           use_data = TRUE,
-                                           mcmc_seed = sample(1e5, 1),
-                                           max_sampling_iterations = 20000,
-                                           pass_fit = TRUE) {
+                                                formula_composition = ~ 1 ,
+                                                formula_variability = ~ 1,
+                                                .sample,
+                                                .cell_group,
+                                                .count = NULL,
+                                                
+                                                # Secondary arguments
+                                                cores = detectCores(),
+                                                bimodal_mean_variability_association = FALSE,
+                                                percent_false_positive = 5,
+                                                approximate_posterior_inference = "none",
+                                                prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                                prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                                                .sample_cell_group_pairs_to_exclude = NULL,
+                                                verbose = FALSE,
+                                                enable_loo = FALSE,
+                                                noise_model = "multi_beta_binomial",
+                                                exclude_priors = FALSE,
+                                                use_data = TRUE,
+                                                mcmc_seed = sample(1e5, 1),
+                                                max_sampling_iterations = 20000,
+                                                pass_fit = TRUE) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -217,21 +206,22 @@ sccomp_estimate.SingleCellExperiment = function(.data,
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-
-      !!.sample,!!.cell_group,
-      check_outliers = check_outliers,
-      contrasts = contrasts,
-      prior_mean_variable_association = prior_mean_variable_association,
-      percent_false_positive = percent_false_positive ,
+      !!.sample,
+      !!.cell_group,
+      
+      # Secondary arguments
+      cores = cores,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      percent_false_positive = percent_false_positive,
       approximate_posterior_inference = approximate_posterior_inference,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      prior_mean = prior_mean, 
+      prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+      .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
+      enable_loo = enable_loo,
       noise_model = noise_model,
       exclude_priors = exclude_priors,
-      bimodal_mean_variability_association = bimodal_mean_variability_association,
-      enable_loo = enable_loo,
       use_data = use_data,
-      cores = cores,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit
@@ -242,31 +232,28 @@ sccomp_estimate.SingleCellExperiment = function(.data,
 
 #' @export
 sccomp_estimate.DFrame = function(.data,
-                             formula_composition = ~ 1 ,
-                             formula_variability = ~ 1,
-                             .sample,
-                             .cell_group,
-                             .count = NULL,
-
-                             # Secondary arguments
-                             contrasts = NULL,
-                             prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
-                             check_outliers = TRUE,
-                             bimodal_mean_variability_association = FALSE,
-                             enable_loo = FALSE,
-
-                             # Tertiary arguments
-                             cores = detectCores(),
-                             percent_false_positive = 5,
-                             approximate_posterior_inference = "none",
-                             test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
-                             verbose = FALSE,
-                             noise_model = "multi_beta_binomial",
-                             exclude_priors = FALSE,
-                             use_data = TRUE,
-                             mcmc_seed = sample(1e5, 1),
-                             max_sampling_iterations = 20000,
-                             pass_fit = TRUE) {
+                                  formula_composition = ~ 1 ,
+                                  formula_variability = ~ 1,
+                                  .sample,
+                                  .cell_group,
+                                  .count = NULL,
+                                  
+                                  # Secondary arguments
+                                  cores = detectCores(),
+                                  bimodal_mean_variability_association = FALSE,
+                                  percent_false_positive = 5,
+                                  approximate_posterior_inference = "none",
+                                  prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                                  .sample_cell_group_pairs_to_exclude = NULL,
+                                  verbose = FALSE,
+                                  enable_loo = FALSE,
+                                  noise_model = "multi_beta_binomial",
+                                  exclude_priors = FALSE,
+                                  use_data = TRUE,
+                                  mcmc_seed = sample(1e5, 1),
+                                  max_sampling_iterations = 20000,
+                                  pass_fit = TRUE) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -282,20 +269,22 @@ sccomp_estimate.DFrame = function(.data,
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-      !!.sample,!!.cell_group,
-      contrasts = contrasts,
-      prior_mean_variable_association = prior_mean_variable_association,
-      percent_false_positive = percent_false_positive ,
-      check_outliers = check_outliers,
+      !!.sample,
+      !!.cell_group,
+      
+      # Secondary arguments
+      cores = cores,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      percent_false_positive = percent_false_positive,
       approximate_posterior_inference = approximate_posterior_inference,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      prior_mean = prior_mean, 
+      prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+      .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
+      enable_loo = enable_loo,
       noise_model = noise_model,
       exclude_priors = exclude_priors,
-      bimodal_mean_variability_association = bimodal_mean_variability_association,
-      enable_loo = enable_loo,
       use_data = use_data,
-      cores = cores,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit
@@ -305,31 +294,28 @@ sccomp_estimate.DFrame = function(.data,
 #' @importFrom purrr when
 #' @export
 sccomp_estimate.data.frame = function(.data,
-                                 formula_composition = ~ 1 ,
-                                 formula_variability = ~ 1,
-                                 .sample,
-                                 .cell_group,
-                                 .count = NULL,
-
-                                 # Secondary arguments
-                                 contrasts = NULL,
-                                 prior_mean_variable_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
-                                 check_outliers = TRUE,
-                                 bimodal_mean_variability_association = FALSE,
-                                 enable_loo = FALSE,
-
-                                 # Tertiary arguments
-                                 cores = detectCores(),
-                                 percent_false_positive = 5,
-                                 approximate_posterior_inference = "none",
-                                 test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
-                                 verbose = FALSE,
-                                 noise_model = "multi_beta_binomial",
-                                 exclude_priors = FALSE,
-                                 use_data = TRUE,
-                                 mcmc_seed = sample(1e5, 1),
-                                 max_sampling_iterations = 20000,
-                                 pass_fit = TRUE) {
+                                      formula_composition = ~ 1 ,
+                                      formula_variability = ~ 1,
+                                      .sample,
+                                      .cell_group,
+                                      .count = NULL,
+                                      
+                                      # Secondary arguments
+                                      cores = detectCores(),
+                                      bimodal_mean_variability_association = FALSE,
+                                      percent_false_positive = 5,
+                                      approximate_posterior_inference = "none",
+                                      prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                      prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                                      .sample_cell_group_pairs_to_exclude = NULL,
+                                      verbose = FALSE,
+                                      enable_loo = FALSE,
+                                      noise_model = "multi_beta_binomial",
+                                      exclude_priors = FALSE,
+                                      use_data = TRUE,
+                                      mcmc_seed = sample(1e5, 1),
+                                      max_sampling_iterations = 20000,
+                                      pass_fit = TRUE) {
 
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -337,13 +323,13 @@ sccomp_estimate.data.frame = function(.data,
   .count = enquo(.count)
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
 
-  # Choose linear model
-  my_glm_model =
-    noise_model %>%
-    when(
-      equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm,
-      equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm
-    )
+  # # Choose linear model
+  # my_glm_model =
+  #   noise_model %>%
+  #   when(
+  #     equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm,
+  #     equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm
+  #   )
 
   .count %>%
     when(
@@ -352,22 +338,21 @@ sccomp_estimate.data.frame = function(.data,
         .data,
         formula_composition = formula_composition,
         formula_variability = formula_variability,
-
         !!.sample,
         !!.cell_group,
-        contrasts = contrasts,
-        prior_mean_variable_association = prior_mean_variable_association,
-        percent_false_positive = percent_false_positive ,
-        check_outliers = check_outliers,
-        approximate_posterior_inference = approximate_posterior_inference,
-        test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
-        verbose = verbose,
-        my_glm_model = my_glm_model,
-        exclude_priors = exclude_priors,
-        bimodal_mean_variability_association = bimodal_mean_variability_association,
-        enable_loo = enable_loo,
-        use_data = use_data,
+        
+        # Secondary arguments
         cores = cores,
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        percent_false_positive = percent_false_positive,
+        approximate_posterior_inference = approximate_posterior_inference,
+        prior_mean = prior_mean, 
+        prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+        .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+        verbose = verbose,
+        enable_loo = enable_loo,
+        exclude_priors = exclude_priors,
+        use_data = use_data,
         mcmc_seed = mcmc_seed,
         max_sampling_iterations = max_sampling_iterations,
         pass_fit = pass_fit
@@ -378,23 +363,22 @@ sccomp_estimate.data.frame = function(.data,
         .data,
         formula_composition = formula_composition,
         formula_variability = formula_variability,
-
         !!.sample,
         !!.cell_group,
         !!.count,
-        contrasts = contrasts,
-        prior_mean_variable_association = prior_mean_variable_association,
-        percent_false_positive = percent_false_positive ,
-        check_outliers = check_outliers,
-        approximate_posterior_inference = approximate_posterior_inference,
-        test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
-        verbose = verbose,
-        my_glm_model = my_glm_model,
-        exclude_priors = exclude_priors,
-        bimodal_mean_variability_association = bimodal_mean_variability_association,
-        enable_loo = enable_loo,
-        use_data = use_data,
+        
+        # Secondary arguments
         cores = cores,
+        bimodal_mean_variability_association = bimodal_mean_variability_association,
+        percent_false_positive = percent_false_positive,
+        approximate_posterior_inference = approximate_posterior_inference,
+        prior_mean = prior_mean, 
+        prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+        .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+        verbose = verbose,
+        enable_loo = enable_loo,
+        exclude_priors = exclude_priors,
+        use_data = use_data,
         mcmc_seed = mcmc_seed,
         max_sampling_iterations = max_sampling_iterations,
         pass_fit = pass_fit
