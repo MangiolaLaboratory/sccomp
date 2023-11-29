@@ -461,8 +461,6 @@ fit_and_generate_quantities = function(data_for_model, model, model_generate, ce
     # # Attach beta posterior
     # left_join(fitted,  by="M") %>%
 
-    # label_deleterious_outliers()
-
     # Add precision as attribute
     add_attr(
       fit %>% extract("precision") %$% precision,

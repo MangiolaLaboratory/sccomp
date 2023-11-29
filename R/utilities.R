@@ -282,36 +282,6 @@ vb_iterative = function(model,
 }
 
 
-#' fit_to_counts_rng
-#'
-#' @importFrom tidyr separate
-#' @importFrom tidyr nest
-#' @importFrom rstan summary
-#'
-#' @param fit A fit object
-#' @param adj_prob_theshold fit real
-#'
-#' @keywords internal
-#' @noRd
-fit_to_counts_rng = function(fit, adj_prob_theshold){
-
-  writeLines(sprintf("executing %s", "fit_to_counts_rng"))
-
-  fit %>%
-    rstan::summary("counts_rng",
-                   prob = c(adj_prob_theshold, 1 - adj_prob_theshold)) %$%
-    summary %>%
-    as_tibble(rownames = ".variable") %>%
-    separate(.variable,
-             c(".variable", "S", "G"),
-             sep = "[\\[,\\]]",
-             extra = "drop") %>%
-    mutate(S = S %>% as.integer, G = G %>% as.integer) %>%
-    select(-any_of(c("n_eff", "Rhat", "khat"))) %>%
-    rename(`.lower` = (.) %>% ncol - 1,
-           `.upper` = (.) %>% ncol)
-}
-
 #' draws_to_tibble_x_y
 #'
 #' @importFrom tidyr pivot_longer
@@ -420,30 +390,6 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 
 }
 
-#' @importFrom rlang :=
-label_deleterious_outliers = function(.my_data){
-
-  .my_data %>%
-
-    # join CI
-    mutate(outlier_above = !!.count > `95%`) %>%
-    mutate(outlier_below = !!.count < `5%`) %>%
-
-    # Mark if on the right of the factor scale
-    mutate(is_group_right = !!as.symbol(colnames(X)[2]) > mean( !!as.symbol(colnames(X)[2]) )) %>%
-
-    # Check if outlier might be deleterious for the statistics
-    mutate(
-      !!as.symbol(sprintf("deleterious_outlier_%s", iteration)) :=
-        (outlier_above & slope > 0 & is_group_right)  |
-        (outlier_below & slope > 0 & !is_group_right) |
-        (outlier_above & slope < 0 & !is_group_right) |
-        (outlier_below & slope < 0 & is_group_right)
-    ) %>%
-
-    select(-outlier_above, -outlier_below, -is_group_right)
-
-}
 
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
@@ -543,6 +489,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
 }
 
+#' USED FOR DIRICHLE TMODEL
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
 #' @importFrom stats C
@@ -585,6 +532,7 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fact
 
 }
 
+#' USED FOR DIRICHLE TMODEL
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
 #' @importFrom stats C
@@ -808,131 +756,6 @@ get_design_matrix = function(.data_spread, formula, .sample){
   design_matrix
 }
 
-check_random_intercept_design = function(.data, factor_names, random_intercept_elements, formula, X){
-
-  .data_ = .data
-
-  # Loop across groupings
-  random_intercept_elements |>
-    nest(factors = `factor` ) |>
-    mutate(checked = map2(
-      grouping, factors,
-      ~ {
-
-        .y = unlist(.y)
-
-        # Check that the group column is categorical
-        stopifnot("sccomp says: the grouping column should be categorical (not numeric)" =
-                    .data_ |>
-                    select(.x) |>
-                    pull(1) |>
-                    class() %in%
-                    c("factor", "logical", "character")
-        )
-
-
-        # # Check sanity of the grouping if only random intercept
-        # stopifnot(
-        #   "sccomp says: the random intercept completely confounded with one or more discrete factors" =
-        #     !(
-        #       !.y |> equals("(Intercept)") &&
-        #         .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
-        #         .data_ |>
-        #         select(.x, any_of(.y)) |>
-        #         select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
-        #         distinct() %>%
-        #
-        #         # TEMPORARY FIX
-        #         set_names(c(colnames(.)[1], 'factor___temp')) |>
-        #
-        #         count(factor___temp) |>
-        #         pull(n) |>
-        #         equals(1) |>
-        #         any()
-        #     )
-        # )
-
-        # # Check if random intercept with random continuous slope. At the moment is not possible
-        # # Because it would require I believe a multivariate prior
-        # stopifnot(
-        #   "sccomp says: continuous random slope is not supported yet" =
-        #     !(
-        #       .y |> str_subset("1", negate = TRUE) |> length() |> gt(0) &&
-        #         .data_ |>
-        #         select(
-        #           .y |> str_subset("1", negate = TRUE)
-        #         ) |>
-        #         map_chr(class) %in%
-        #         c("integer", "numeric")
-        #     )
-        # )
-
-        # Check if random intercept with random continuous slope. At the moment is not possible
-        # Because it would require I believe a multivariate prior
-        stopifnot(
-          "sccomp says: currently, discrete random slope is only supported in a intercept-free model. For example ~ 0 + treatment + (treatment | group)" =
-            !(
-              # If I have both random intercept and random discrete slope
-
-                .y |> equals("(Intercept)") |> any() &&
-                  length(.y) > 1 &&
-                # If I have random slope and non-intercept-free model
-                .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
-
-            )
-        )
-
-
-        # I HAVE TO REVESIT THIS
-        #  stopifnot(
-        #   "sccomp says: the groups in the formula (factor | group) should not be shared across factor groups" =
-        #     !(
-        #       # If I duplicated groups
-        #       .y  |> identical("(Intercept)") |> not() &&
-        #       .data_ |> select(.y |> setdiff("(Intercept)")) |> lapply(class) != "numeric" &&
-        #         .data_ |>
-        #         select(.x, .y |> setdiff("(Intercept)")) |>
-        #
-        #         # Drop the factor represented by the intercept if any
-        #         mutate(`parameter` = .y |> setdiff("(Intercept)")) |>
-        #         unite("factor_name", c(parameter, factor), sep = "", remove = FALSE) |>
-        #         filter(factor_name %in% colnames(X)) |>
-        #
-        #         # Count
-        #         distinct() %>%
-        #         set_names(as.character(1:ncol(.))) |>
-        #         count(`1`) |>
-        #         filter(n>1) |>
-        #         nrow() |>
-        #         gt(1)
-        #
-        #     )
-        # )
-
-      }
-    ))
-
-  random_intercept_elements |>
-    nest(groupings = grouping ) |>
-    mutate(checked = map2(`factor`, groupings, ~{
-      # Check the same group spans multiple factors
-      stopifnot(
-        "sccomp says: the groups in the formula (factor | group) should be present in only one factor, including the intercept" =
-          !(
-              # If I duplicated groups
-            .y |> unlist() |> length() |> gt(1)
-
-          )
-      )
-
-
-    }))
-
-
-
-
-}
-
 #' @importFrom purrr when
 #' @importFrom stats model.matrix
 #' @importFrom tidyr expand_grid
@@ -1004,7 +827,6 @@ data_spread_to_model_input =
     # Random intercept
     if(nrow(random_intercept_elements)>0 ) {
 
-      #check_random_intercept_design(.data_spread, any_of(factor_names), random_intercept_elements, formula, X)
       random_intercept_grouping = get_random_intercept_design2(.data_spread, !!.sample,  formula )
 
       # Actual parameters, excluding for the sum to one parameters
@@ -1198,6 +1020,10 @@ data_simulation_to_model_input =
     .exposure = enquo(.exposure)
     .coefficients = enquo(.coefficients)
 
+    # Check formula
+    if(!formula |> is("formula"))
+      stop("sccomp says: the formula argument must be of formula class, not character at class, for example")
+    
     factor_names = parse_formula(formula)
 
     sample_data =

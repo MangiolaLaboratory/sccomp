@@ -464,26 +464,21 @@ test_that("plot test variability",{
 
 test_that("test constrasts",{
 
-
-  estimate =
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ type ,
-      formula_variability = ~ 1,
-      sample, cell_group,
-      approximate_posterior_inference = FALSE,
-      cores = 1,
-      mcmc_seed = 42,      
-      max_sampling_iterations = 1000
-    )
-
   new_test =
-    estimate |>
+    my_estimate |>
     sccomp_test() 
 
 })
 
+test_that(" Simulate data",{
+  
+  data("counts_obj")
+
+    counts_obj |> 
+    mutate(b_0 = 0, b_1 = 0) |> 
+    simulate_data(my_estimate, ~type, ~1, sample, cell_group, c(b_0, b_1)) |> 
+      expect_s3_class("tbl")
+  
+})
 
 
-
-res_composition
