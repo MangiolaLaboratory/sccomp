@@ -1827,16 +1827,63 @@ contrasts_to_enquos = function(contrasts){
 #' @importFrom purrr map2_dfc
 #' @importFrom stringr str_subset
 #'
-mutate_from_expr_list = function(x, formula_expr){
+mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
 
   if(formula_expr |> names() |> is.null())
     names(formula_expr) = formula_expr
 
+  
+  
+  # Check if all elements of contrasts are in the parameter
+  parameter_names = x |> colnames()
+
+  # Creating a named vector where the names are the strings to be replaced
+  # and the values are empty strings
+  
+  # Using str_replace_all to replace each instance of the strings in A with an empty string in B
+  contrasts_elements <- 
+    formula_expr |> 
+    str_remove_all_ignoring_if_inside_backquotes("[0-9]/[0-9]+") |>  
+    str_remove_all_ignoring_if_inside_backquotes("[-+]?[0-9]+\\.[0-9]+") |> 
+    
+    #' This function removes the surrounding brackets from each element of a character vector, 
+    #' unless the content within the brackets includes any of the characters +, -, or *,
+    #' and the brackets are not within backticks.
+    str_remove_brackets_from_formula_intelligently() |> 
+    str_remove_all_ignoring_if_inside_backquotes(" ") |> 
+    str_split_ignoring_if_inside_backquotes("\\+|-|\\*") |> 
+    unlist() 
+  
+  
+  # Check is backquoted are not used
+  require_back_quotes = contrasts_elements |>  str_remove_all("`") |> contains_only_valid_chars_for_column() 
+  has_left_back_quotes = contrasts_elements |>  str_detect("^`") 
+  has_right_back_quotes = contrasts_elements |>  str_detect("`$") 
+  if_false_not_good = require_back_quotes | (has_left_back_quotes & has_right_back_quotes)
+  
+  if(!all(if_false_not_good))
+    stop(sprintf("sccomp says: for columns which have special characters e.g. %s, you need to use surrounding backquotes ``.", paste(contrasts_elements[!if_false_not_good], sep=", ")))
+  
+  # Check if columns exist
+  contrasts_not_in_the_model = 
+    contrasts_elements |> 
+    str_remove_all("`") |> 
+    setdiff(parameter_names)
+  
+  contrasts_not_in_the_model = contrasts_not_in_the_model[contrasts_not_in_the_model!=""]
+  
+  if(length(contrasts_not_in_the_model) > 0 & !ignore_errors)
+    stop(sprintf("sccomp says: These components of your contrasts are not present in the model as parameters: %s", paste(contrasts_not_in_the_model, sep = ", ")))
+  
+  # Calculate
+  if(ignore_errors) my_mutate = mutate_ignore_error
+  else my_mutate = mutate
+  
   map2_dfc(
     formula_expr,
     names(formula_expr),
     ~  x |>
-        mutate_ignore_error(!!.y := eval(rlang::parse_expr(.x))) |>
+      my_mutate(!!.y := eval(rlang::parse_expr(.x))) |>
         # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
         select(any_of(.y))
   ) |>
@@ -1911,38 +1958,33 @@ get_abundance_contrast_draws = function(.data, contrasts){
 
 
   # Abundance
-  draws =
-    select(beta, -.variable) |>
-
-    # Random intercept
-    when(
-      is_random_intercept ~ left_join(.,
-        select(beta_random_intercept, -.variable),
-        by = c("M", ".chain", ".iteration", ".draw")
-      ),
-      ~ (.)
-    ) |>
-
-      # If I have constrasts calculate
-      when(
-        !is.null(contrasts) ~
-
-          # ARITHMETICS
-          mutate_from_expr_list(., contrasts) |>
-          select(- any_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) ,
-        ~ (.)
-      ) |>
-
-      # Add cell name
-      left_join(
-        .data |>
-          attr("model_input") %$%
-          y %>%
-          colnames() |>
-          enframe(name = "M", value  = quo_name(.cell_group)),
-        by = "M"
-      ) %>%
-      select(!!.cell_group, everything())
+  draws = select(beta, -.variable)
+  
+  # Random intercept
+  if(is_random_intercept) 
+    draws = draws |> 
+    left_join(select(beta_random_intercept, -.variable),
+              by = c("M", ".chain", ".iteration", ".draw")
+    )
+  
+  # If I have constrasts calculate
+  if(!is.null(contrasts))
+    draws = 
+      draws |> 
+      mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
+      select(- any_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) 
+  
+  # Add cell name
+  draws = draws |> 
+    left_join(
+      .data |>
+        attr("model_input") %$%
+        y %>%
+        colnames() |>
+        enframe(name = "M", value  = quo_name(.cell_group)),
+      by = "M"
+    ) %>%
+    select(!!.cell_group, everything())
 
 
   # If no contrasts of interest just return an empty data frame
@@ -2015,7 +2057,7 @@ get_variability_contrast_draws = function(.data, contrasts){
     select( -.variable) |>
 
     # If I have constrasts calculate
-    when(!is.null(contrasts) ~ mutate_from_expr_list(., contrasts), ~ (.)) |>
+    when(!is.null(contrasts) ~ mutate_from_expr_list(., contrasts, ignore_errors = TRUE), ~ (.)) |>
 
     # Add cell name
     left_join(
@@ -2339,6 +2381,239 @@ add_formula_columns = function(.data, .original_data, .sample,  formula_composit
     left_join(data_frame_formula, by = quo_name(.sample) )
 
 }
+
+#' chatGPT - Remove Specified Regex Pattern from Each String in a Vector
+#'
+#' This function takes a vector of strings and a regular expression pattern.
+#' It removes occurrences of the pattern from each string, except where the pattern
+#' is found inside backticks. The function returns a vector of cleaned strings.
+#'
+#' @param text_vector A character vector with the strings to be processed.
+#' @param regex A character string containing a regular expression pattern to be removed
+#' from the text.
+#'
+#' @return A character vector with the regex pattern removed from each string.
+#' Occurrences of the pattern inside backticks are not removed.
+#'
+#' @examples
+#' texts <- c("A string with (some) parentheses and `a (parenthesis) inside` backticks",
+#'            "Another string with (extra) parentheses")
+#' cleaned_texts <- str_remove_all_ignoring_if_inside_backquotes(texts, "\\(")
+#' print(cleaned_texts)
+#' 
+str_remove_all_ignoring_if_inside_backquotes <- function(text_vector, regex) {
+  # Nested function to handle regex removal for a single string
+  remove_regex_chars <- function(text, regex) {
+    inside_backticks <- FALSE
+    result <- ""
+    skip <- 0
+    
+    chars <- strsplit(text, "")[[1]]
+    for (i in seq_along(chars)) {
+      if (skip > 0) {
+        skip <- skip - 1
+        next
+      }
+      
+      char <- chars[i]
+      if (char == "`") {
+        inside_backticks <- !inside_backticks
+        result <- paste0(result, char)
+      } else if (!inside_backticks) {
+        # Check the remaining text against the regex
+        remaining_text <- paste(chars[i:length(chars)], collapse = "")
+        match <- regexpr(regex, remaining_text)
+        
+        if (attr(match, "match.length") > 0 && match[1] == 1) {
+          # Skip the length of the matched text
+          skip <- attr(match, "match.length") - 1
+          next
+        } else {
+          result <- paste0(result, char)
+        }
+      } else {
+        result <- paste0(result, char)
+      }
+    }
+    
+    return(result)
+  }
+  
+  # Apply the function to each element in the vector
+  sapply(text_vector, remove_regex_chars, regex)
+}
+
+
+#' chatGPT - Split Each String in a Vector by a Specified Regex Pattern
+#'
+#' This function takes a vector of strings and a regular expression pattern. It splits
+#' each string based on the pattern, except where the pattern is found inside backticks.
+#' The function returns a list, with each element being a vector of the split segments
+#' of the corresponding input string.
+#'
+#' @param text_vector A character vector with the strings to be processed.
+#' @param regex A character string containing a regular expression pattern used for splitting
+#' the text.
+#'
+#' @return A list of character vectors. Each list element corresponds to an input string
+#' from `text_vector`, split according to `regex`, excluding occurrences inside backticks.
+#'
+#' @examples
+#' texts <- c("A string with, some, commas, and `a, comma, inside` backticks",
+#'            "Another string, with, commas")
+#' split_texts <- split_regex_chars_from_vector(texts, ",")
+#' print(split_texts)
+#' 
+str_split_ignoring_if_inside_backquotes <- function(text_vector, regex) {
+  # Nested function to handle regex split for a single string
+  split_regex_chars <- function(text, regex) {
+    inside_backticks <- FALSE
+    result <- c()
+    current_segment <- ""
+    
+    chars <- strsplit(text, "")[[1]]
+    for (i in seq_along(chars)) {
+      char <- chars[i]
+      if (char == "`") {
+        inside_backticks <- !inside_backticks
+        current_segment <- paste0(current_segment, char)
+      } else if (!inside_backticks) {
+        # Check the remaining text against the regex
+        remaining_text <- paste(chars[i:length(chars)], collapse = "")
+        match <- regexpr(regex, remaining_text)
+        
+        if (attr(match, "match.length") > 0 && match[1] == 1) {
+          # Add current segment to result and start a new segment
+          result <- c(result, current_segment)
+          current_segment <- ""
+          # Skip the length of the matched text
+          skip <- attr(match, "match.length") - 1
+          i <- i + skip
+        } else {
+          current_segment <- paste0(current_segment, char)
+        }
+      } else {
+        current_segment <- paste0(current_segment, char)
+      }
+    }
+    
+    # Add the last segment to the result
+    result <- c(result, current_segment)
+    return(result)
+  }
+  
+  # Apply the function to each element in the vector
+  lapply(text_vector, split_regex_chars, regex)
+}
+
+
+#' chatGPT - Check for Valid Column Names in Tidyverse Context
+#'
+#' This function checks if each given column name in a vector contains only valid characters 
+#' (letters, numbers, periods, and underscores) and does not start with a digit 
+#' or an underscore, which are the conditions for a valid column name in `tidyverse`.
+#'
+#' @param column_names A character vector representing the column names to be checked.
+#'
+#' @return A logical vector: `TRUE` for each column name that contains only valid characters 
+#' and does not start with a digit or an underscore; `FALSE` otherwise.
+#'
+#' @examples
+#' contains_only_valid_chars_for_column(c("valid_column", "invalid column", "valid123", 
+#' "123startWithNumber", "_startWithUnderscore"))
+#'
+#' @export
+contains_only_valid_chars_for_column <- function(column_names) {
+  # Function to check a single column name
+  check_validity <- function(column_name) {
+    # Regex pattern for valid characters (letters, numbers, periods, underscores)
+    valid_char_pattern <- "[A-Za-z0-9._]"
+    
+    # Check if all characters in the string match the valid pattern
+    all_chars_valid <- stringr::str_detect(column_name, paste0("^", valid_char_pattern, "+$"))
+    
+    # Check for leading digits or underscores
+    starts_with_digit_or_underscore <- stringr::str_detect(column_name, "^[0-9_]")
+    
+    return(all_chars_valid && !starts_with_digit_or_underscore)
+  }
+  
+  # Apply the check to each element of the vector
+  sapply(column_names, check_validity)
+}
+
+
+#' chatGPT - Intelligently Remove Surrounding Brackets from Each String in a Vector
+#'
+#' This function processes each string in a vector and removes surrounding brackets if the content
+#' within the brackets includes any of '+', '-', or '*', and if the brackets are not 
+#' within backticks. This is particularly useful for handling formula-like strings.
+#'
+#' @param text A character vector with strings from which the brackets will be removed based on
+#' specific conditions.
+#'
+#' @return A character vector with the specified brackets removed from each string.
+#'
+#' @examples
+#' str_remove_brackets_from_formula_intelligently(c("This is a test (with + brackets)", "`a (test) inside` backticks", "(another test)"))
+#'
+#' @export
+str_remove_brackets_from_formula_intelligently <- function(text) {
+  # Function to remove brackets from a single string
+  remove_brackets_single <- function(s) {
+    inside_backticks <- FALSE
+    bracket_depth <- 0
+    valid_bracket_content <- FALSE
+    result <- ""
+    bracket_content <- ""
+    
+    chars <- strsplit(s, "")[[1]]
+    
+    for (i in seq_along(chars)) {
+      char <- chars[i]
+      
+      if (char == "`") {
+        inside_backticks <- !inside_backticks
+      }
+      
+      if (!inside_backticks) {
+        if (char == "(") {
+          bracket_depth <- bracket_depth + 1
+          if (bracket_depth > 1) {
+            bracket_content <- paste0(bracket_content, char)
+          }
+          next
+        } else if (char == ")") {
+          bracket_depth <- bracket_depth - 1
+          if (bracket_depth == 0) {
+            if (grepl("[\\+\\-\\*]", bracket_content)) {
+              result <- paste0(result, bracket_content)
+            } else {
+              result <- paste0(result, "(", bracket_content, ")")
+            }
+            bracket_content <- ""
+            next
+          }
+        }
+        
+        if (bracket_depth >= 1) {
+          bracket_content <- paste0(bracket_content, char)
+        } else {
+          result <- paste0(result, char)
+        }
+      } else {
+        result <- paste0(result, char)
+      }
+    }
+    
+    return(result)
+  }
+  
+  # Apply the function to each element in the vector
+  sapply(text, remove_brackets_single)
+}
+
+
 
 # Negation
 not = function(is){	!is }

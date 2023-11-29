@@ -480,10 +480,19 @@ test_that("test constrasts",{
   new_test =
     estimate |>
     sccomp_test() 
+  
+  # Right and wrong contrasts
+  my_estimate |> 
+    sccomp_test(contrasts = c("a" = "`(Intercept)`", "b" = "typehealthy")) |> 
+    expect_s3_class("tbl")
+  
+  my_estimate |> 
+    sccomp_test(contrasts = "(Intercept)") |> 
+    expect_error("sccomp says: for columns which have special characters")
+  
+  my_estimate |> 
+    sccomp_test(contrasts = "typehealthy_") |> 
+    expect_error("sccomp says: These components of your contrasts are not present in the model as parameters")
 
 })
 
-
-
-
-res_composition
