@@ -82,13 +82,6 @@ my_estimate_random =
   )
 
 
-my_estimate |> sccomp_test(contrasts = "typehealthy")
-my_estimate_no_intercept |> sccomp_test(contrasts = c("typehealthy - typecancer"))
-
-my_estimate_relaxed |> sccomp_test(contrasts = "typehealthy")
-my_estimate_no_intercept_relaxed |> sccomp_test(contrasts = c("typehealthy - typecancer"))
-
-
 test_that("Generate data",{
 
 
