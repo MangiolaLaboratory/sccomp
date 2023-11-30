@@ -4,44 +4,6 @@ data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 
-
-# test_that("dirichlet multinomial outliers",{
-#
-#   library(dplyr)
-#   library(sccomp)
-#   library(digest)
-#
-#   res =add_formula_columns
-#     sccomp::counts_obj  |>
-#     sccomp_estimate(
-#       formula = ~ type,
-#       sample, cell_type, count
-#     )
-#
-#   expect_equal(
-#     res |>
-#       distinct(cell_type, significant) |>
-#       pull(significant) |>
-#       digest(algo="md5"),
-#     "f6cef772af43198f586e15c96b2f1239"
-#   )
-#
-# })
-# test_that("counts dirichlet multinomial outlier VB",{
-#
-#   if(interactive()){
-#     res =
-#       counts_obj  |>
-#       sccomp_estimate(
-#         formula = ~ type,
-#         sample, cell_group, count,
-#         noise_model = "dirichlet_multinomial",
-#         cores = 1
-#       )
-#   }
-#
-# })
-
 my_estimate = 
   seurat_obj |>
   sccomp_estimate(
@@ -446,11 +408,14 @@ test_that("multi beta binomial from metadata",{
 
 test_that("plot test composition",{
 
-  res_composition |> 
+  my_estimate |> 
     sccomp_test() |> 
     plot_summary()
 
-
+  my_estimate |> 
+    plot_summary() |> 
+    expect_error("sccomp says: to produce plots, you need to run the function sccomp_test")
+  
 })
 
 test_that("plot test variability",{

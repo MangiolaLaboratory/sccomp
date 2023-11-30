@@ -1399,6 +1399,7 @@ plot_boxplot(
 #' @importFrom tidyr unite
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr with_groups
+#' @importFrom magrittr equals
 #'
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
@@ -1424,60 +1425,29 @@ plot_boxplot(
 #'
 plot_summary <- function(.data, significance_threshold = 0.025) {
 
-    multipanel_theme =
-    theme_bw() +
-    theme(
-      panel.border = element_blank(),
-      axis.line = element_line(linewidth=0.5),
-      panel.grid.major = element_line(linewidth = 0.1),
-      panel.grid.minor = element_blank(),
-      legend.position = "bottom",
-      strip.background = element_blank(),
-      axis.title.y = element_text(margin = margin(t = 0, r = 0, b = 0, l = 0), size = 7),
-      axis.title.x = element_text(margin = margin(t = 0, r = 0, b = 0, l = 0), size = 7),
-      panel.spacing.x=unit(0.1, "lines"),
-      axis.text.x = element_text(size=6),
-      axis.text.y = element_text(size=6),
-      strip.text.x = element_text(size = 7),
-      strip.text.y = element_text(size = 7),
-
-      # legend
-      legend.key.size = unit(5, 'mm'),
-      legend.title = element_text(size=7),
-      legend.text = element_text(size=6),
-
-      # Avoid text clipping for facets. Currently not merged remotes::install_github("tidyverse/ggplot2#4223")
-      # strip.clip = "off",
-
-      # Title
-      plot.title = element_text(size=7),
-
-      axis.line.x = element_line(linewidth=0.2),
-      axis.line.y = element_line(linewidth=0.2),
-      axis.ticks.x = element_line(linewidth=0.2),
-      axis.ticks.y = element_line(linewidth=0.2)
-    )
-
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
   .sample = attr(.data, ".sample")
 
-plots = list()
+  plots = list()
 
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
 
-data_proportion =
-  .data %>%
-
-  # Otherwise does not work
-  select(-`factor`) %>%
-
-  pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
-  unnest(count_data) %>%
-  with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
-
-  # If I don't have outliers add them
-  when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
-
+  data_proportion =
+    .data %>%
+  
+    # Otherwise does not work
+    select(-`factor`) %>%
+  
+    pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
+    unnest(count_data) %>%
+    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
+  
+    # If I don't have outliers add them
+    when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
+  
 
 # Boxplot
 plots$boxplot =
@@ -1489,7 +1459,25 @@ plots$boxplot =
     pull(`factor`) |>
 
   map(
-    ~ plot_boxplot(
+    ~ {
+      
+      # If variable is continuous
+      if(data_proportion |> select(all_of(.x)) |> pull(1) |> is("numeric"))
+        my_plot = 
+          plot_scatterplot(
+            .data,
+            data_proportion,
+            .x,
+            !!.cell_group,
+            !!.sample,
+            significance_threshold = significance_threshold,
+            multipanel_theme
+          )
+      
+      # If discrete
+      else 
+        my_plot = 
+          plot_boxplot(
       .data,
       data_proportion,
       .x,
@@ -1497,9 +1485,12 @@ plots$boxplot =
       !!.sample,
       significance_threshold = significance_threshold,
       multipanel_theme
-    ) +
+    ) 
+      
+      # Return
+      my_plot +
       ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
-  )
+ } )
 
 # 1D intervals
 plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
