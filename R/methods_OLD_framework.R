@@ -472,5 +472,13 @@ test_contrasts <- function(.data,
                            percent_false_positive = 5,
                            test_composition_above_logit_fold_change = 0.2,
                            pass_fit = TRUE) {
-  UseMethod("test_contrasts", .data)
+  
+  # DEPRECATE
+  deprecate_warn(
+    when="1.7.1",
+    what="test_contrasts()",
+    details="sccomp says: test_contrasts() is soft-deprecated. Please use sccomp_test()."
+  )
+  
+  UseMethod("sccomp_test", .data)
 }
