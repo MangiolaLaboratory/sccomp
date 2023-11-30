@@ -1468,6 +1468,7 @@ design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, c
 }
 
 #' @importFrom rlang ensym
+#' @noRd
 class_list_to_counts = function(.data, .sample, .cell_group){
 
   .sample_for_tidyr = ensym(.sample)
@@ -1489,6 +1490,7 @@ class_list_to_counts = function(.data, .sample, .cell_group){
 }
 
 #' @importFrom dplyr cummean
+#' @noRd
 get_FDR = function(x){
   enframe(x) %>%
     arrange(value) %>%
@@ -1500,6 +1502,7 @@ get_FDR = function(x){
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
 #' @importFrom tidyr drop_na
+#' @noRd
 plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, my_theme){
 
   .cell_group = enquo(.cell_group)
@@ -1587,6 +1590,7 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025,
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
+#' @noRd
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
     .sample, significance_threshold = 0.025, my_theme
@@ -1618,8 +1622,7 @@ plot_boxplot = function(
   .sample = enquo(.sample)
 
 
-  if(.data |> attr("contrasts") |> is.null())
-    significance_colors =
+  significance_colors =
     .data %>%
     pivot_longer(
       c(contains("c_"), contains("v_")),
@@ -1630,41 +1633,39 @@ plot_boxplot = function(
     filter(stats_name == "FDR") %>%
     filter(parameter != "(Intercept)") %>%
     filter(stats_value < significance_threshold) %>%
-    filter(`factor` == factor_of_interest) %>%
-    unite("name", c(which, parameter), remove = FALSE) %>%
-    distinct() %>%
-    # Get clean parameter
-    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
-
-    with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-
-  else
-    significance_colors =
-    .data %>%
-    pivot_longer(
-      c(contains("c_"), contains("v_")),
-      names_pattern = "([cv])_([a-zA-Z0-9]+)",
-      names_to = c("which", "stats_name"),
-      values_to = "stats_value"
-    ) %>%
-    filter(stats_name == "FDR") %>%
-    filter(parameter != "(Intercept)") %>%
-    filter(stats_value < significance_threshold) %>%
-    filter(`factor` == factor_of_interest) |>
-    mutate(count_data = map(count_data, ~ .x |> select(factor_of_interest) |> distinct())) |>
-    unnest(count_data) |>
-
-    # Filter relevant parameters
-    mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
-    filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
-
-    # Rename
-    select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
-
-    # Merge contrasts
-    with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-
-
+    filter(`factor` == factor_of_interest) 
+  
+  if(nrow(significance_colors) > 0){
+    
+    
+    if(.data |> attr("contrasts") |> is.null())
+      significance_colors =
+        significance_colors %>%
+        unite("name", c(which, parameter), remove = FALSE) %>%
+        distinct() %>%
+        # Get clean parameter
+        mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
+        
+        with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    
+    else
+      significance_colors =
+        significance_colors |>
+        mutate(count_data = map(count_data, ~ .x |> select(all_of(factor_of_interest)) |> distinct())) |>
+        unnest(count_data) |>
+        
+        # Filter relevant parameters
+        mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
+        filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
+        
+        # Rename
+        select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
+        
+        # Merge contrasts
+        with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    
+    
+  }
 
   my_boxplot =  ggplot()
 
@@ -1784,6 +1785,200 @@ plot_boxplot = function(
 
 }
 
+#' @importFrom scales trans_new
+#' @importFrom stringr str_replace
+#' @importFrom stats quantile
+#' @importFrom magrittr equals
+#' @noRd
+plot_scatterplot = function(
+    .data, data_proportion, factor_of_interest, .cell_group,
+    .sample, significance_threshold = 0.025, my_theme
+){
+  
+  
+  dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
+  
+  S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+  IS_sqrt <- function(x){x^2*sign(x)}
+  S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
+  
+  
+  .cell_group = enquo(.cell_group)
+  .sample = enquo(.sample)
+  
+  significance_colors =
+    .data %>%
+    pivot_longer(
+      c(contains("c_"), contains("v_")),
+      names_pattern = "([cv])_([a-zA-Z0-9]+)",
+      names_to = c("which", "stats_name"),
+      values_to = "stats_value"
+    ) %>%
+    filter(stats_name == "FDR") %>%
+    filter(parameter != "(Intercept)") %>%
+    filter(stats_value < significance_threshold) %>%
+    filter(`factor` == factor_of_interest) 
+  
+  if(nrow(significance_colors) > 0){
+    
+    
+    if(.data |> attr("contrasts") |> is.null())
+      significance_colors =
+        significance_colors %>%
+        unite("name", c(which, parameter), remove = FALSE) %>%
+        distinct() %>%
+        # Get clean parameter
+        mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
+        
+        with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    
+    else
+      significance_colors =
+        significance_colors |>
+        mutate(count_data = map(count_data, ~ .x |> select(all_of(factor_of_interest)) |> distinct())) |>
+        unnest(count_data) |>
+        
+        # Filter relevant parameters
+        mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
+        filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
+        
+        # Rename
+        select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
+        
+        # Merge contrasts
+        with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    
+    
+  }
+
+  
+  
+  my_scatterplot =  ggplot()
+  
+  if("fit" %in% names(attributes(.data))){
+    
+    simulated_proportion =
+      .data |>
+      sccomp_replicate(number_of_draws = 1000) |>
+      left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
+    
+    my_scatterplot = 
+      my_scatterplot +
+      
+      geom_smooth(
+        aes(!!as.symbol(factor_of_interest), (generated_proportions)),
+        fatten = 0.5, lwd=0.2,
+        data =
+          simulated_proportion %>%
+          
+          # Filter uanitles because of limits
+          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group, !!.sample)) ,
+        color="blue", fill="blue",
+        span = 1
+      )
+    
+    # hideOutliers <- function(x) {
+    #   if (x$hoverinfo == 'y') {
+    #     x$marker = list(opacity = 0)
+    #     x$hoverinfo = NA
+    #   }
+    #   return(x)
+    # }
+    #
+    # my_scatterplot[["x"]][["data"]] <- map(my_scatterplot[["x"]][["data"]], ~ hideOutliers(.))
+    
+  }
+  
+  # Get the exception if no significant cell types. This is not elegant
+  if(
+    nrow(significance_colors)==0 ||
+     
+     # This is needed in case of contrasts
+     significance_colors |> 
+     pull(!!as.symbol(factor_of_interest)) |> 
+     intersect(
+       data_proportion |> 
+       pull(!!as.symbol(factor_of_interest))
+     ) |> 
+     length() |> 
+     equals(0)
+     ) {
+    
+    my_scatterplot=
+      my_scatterplot +
+      
+      geom_smooth(
+        aes(!!as.symbol(factor_of_interest), proportion, fill = NULL), # fill=Effect),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        data =
+          data_proportion ,
+        # |>
+        #   left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
+        fatten = 0.5,
+        lwd=0.5,
+        color = "black",
+        span = 1
+      )
+  }
+  
+  # If I have significance
+  else {
+    my_scatterplot=
+      my_scatterplot +
+      
+      geom_smooth(
+        aes(!!as.symbol(factor_of_interest), proportion, fill = name), # fill=Effect),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        data =  data_proportion ,
+        fatten = 0.5,
+        lwd=0.5,
+        color = "black",
+        span = 1
+      )
+  }
+  
+  
+  
+  my_scatterplot +
+    geom_point(
+      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier),
+      data = data_proportion,
+      position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
+      size = 0.5
+    ) +
+    
+    # geom_boxplot(
+    #   aes(Condition, generated_proportions),
+    #   outlier.shape = NA, alpha=0.2,
+    #   data = simulated_proportion, fatten = 0.5, size=0.5,
+    # ) +
+    # geom_point(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
+    
+    facet_wrap(
+      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      scales = "free_y",
+      nrow = 4
+    ) +
+    scale_color_manual(values = c("black", "#e11f28")) +
+    #scale_fill_manual(values = c("white", "#E2D379")) +
+    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
+    #scale_color_distiller(palette = "Spectral") +
+    
+    scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
+    scale_fill_discrete(na.value = "white") +
+    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
+    xlab("Biological condition") +
+    ylab("Cell-group proportion") +
+    guides(color="none", alpha="none", size="none") +
+    labs(fill="Significant difference") +
+    ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
+    my_theme +
+    theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
+  
+  
+  
+}
+
 draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
 
   .cell_group = enquo(.cell_group)
@@ -1827,6 +2022,7 @@ contrasts_to_enquos = function(contrasts){
 #' @importFrom purrr map2_dfc
 #' @importFrom stringr str_subset
 #'
+#' @noRd
 mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
 
   if(formula_expr |> names() |> is.null())
@@ -2036,6 +2232,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 }
 
 #' @importFrom forcats fct_relevel
+#' @noRd
 get_variability_contrast_draws = function(.data, contrasts){
 
   .cell_group = .data |>  attr(".cell_group")
@@ -2121,6 +2318,7 @@ get_variability_contrast_draws = function(.data, contrasts){
 
 #' @importFrom tibble deframe
 #'
+#' @noRd
 replicate_data = function(.data,
           formula_composition = NULL,
           formula_variability = NULL,
