@@ -323,14 +323,6 @@ sccomp_estimate.data.frame = function(.data,
   .count = enquo(.count)
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
 
-  # # Choose linear model
-  # my_glm_model =
-  #   noise_model %>%
-  #   when(
-  #     equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm,
-  #     equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm
-  #   )
-
   .count %>%
     when(
       # If the dataframe does not include counts, but is metadata

@@ -1468,6 +1468,7 @@ design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, c
 }
 
 #' @importFrom rlang ensym
+#' @noRd
 class_list_to_counts = function(.data, .sample, .cell_group){
 
   .sample_for_tidyr = ensym(.sample)
@@ -1489,6 +1490,7 @@ class_list_to_counts = function(.data, .sample, .cell_group){
 }
 
 #' @importFrom dplyr cummean
+#' @noRd
 get_FDR = function(x){
   enframe(x) %>%
     arrange(value) %>%
@@ -1500,6 +1502,7 @@ get_FDR = function(x){
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
 #' @importFrom tidyr drop_na
+#' @noRd
 plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, my_theme){
 
   .cell_group = enquo(.cell_group)
@@ -1587,6 +1590,7 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025,
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
+#' @noRd
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
     .sample, significance_threshold = 0.025, my_theme
@@ -1827,6 +1831,7 @@ contrasts_to_enquos = function(contrasts){
 #' @importFrom purrr map2_dfc
 #' @importFrom stringr str_subset
 #'
+#' @noRd
 mutate_from_expr_list = function(x, formula_expr){
 
   if(formula_expr |> names() |> is.null())
@@ -1994,6 +1999,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 }
 
 #' @importFrom forcats fct_relevel
+#' @noRd
 get_variability_contrast_draws = function(.data, contrasts){
 
   .cell_group = .data |>  attr(".cell_group")
@@ -2079,6 +2085,7 @@ get_variability_contrast_draws = function(.data, contrasts){
 
 #' @importFrom tibble deframe
 #'
+#' @noRd
 replicate_data = function(.data,
           formula_composition = NULL,
           formula_variability = NULL,

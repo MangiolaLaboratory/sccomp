@@ -74,6 +74,7 @@ single_cell_object |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
 	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 ```
@@ -91,6 +92,7 @@ counts_obj |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
 	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 ```
@@ -109,6 +111,7 @@ seurat_obj |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
 	sccomp_test(
 	  contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
 	  test_composition_above_logit_fold_change = 0.2
@@ -175,6 +178,7 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
 	sccomp_test(
 	  test_composition_above_logit_fold_change = 0.2
 	)
@@ -262,6 +266,7 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
 	sccomp_test(
 	  test_composition_above_logit_fold_change = 0.2
 	)
