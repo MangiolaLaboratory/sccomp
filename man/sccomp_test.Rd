@@ -37,7 +37,6 @@ data("counts_obj")
   sccomp_estimate(
   counts_obj ,
    ~ 0 + type, ~1,  sample, cell_group, count,
-    check_outliers = FALSE,
     cores = 1
   ) |>
 

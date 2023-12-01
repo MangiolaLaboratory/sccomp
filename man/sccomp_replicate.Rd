@@ -38,7 +38,6 @@ if(.Platform$OS.type == "unix")
   counts_obj ,
    ~ type, ~1,  sample, cell_group, count,
     approximate_posterior_inference = "all",
-    check_outliers = FALSE,
     cores = 1
   ) |>
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{sccomp_estimate}
 \alias{sccomp_estimate}
-\title{sccomp_estimate main}
+\title{Main Function for SCCOMP Estimate}
 \usage{
 sccomp_estimate(
   .data,
@@ -30,45 +30,48 @@ sccomp_estimate(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.}
+\item{.data}{A tibble including cell_group name column, sample name column,
+read counts column (optional depending on the input class), and factor columns.}
 
-\item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment.}
+\item{formula_composition}{A formula describing the model for differential abundance.}
 
-\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors.}
+\item{formula_variability}{A formula describing the model for differential variability.}
 
-\item{.sample}{A column name as symbol. The sample identifier}
+\item{.sample}{A column name as symbol for the sample identifier.}
 
-\item{.cell_group}{A column name as symbol. The cell_group identifier}
+\item{.cell_group}{A column name as symbol for the cell_group identifier.}
 
-\item{.count}{A column name as symbol. The cell_group abundance (read count). Used only for data frame count output. The variable in this column should be of class integer.}
+\item{.count}{A column name as symbol for the cell_group abundance (read count).}
 
-\item{cores}{An integer. How many cored to be used with parallel calculations.}
+\item{cores}{Number of cores to use for parallel calculations.}
 
-\item{bimodal_mean_variability_association}{A boolean. Whether to model the mean-variability as bimodal, as often needed in the case of single-cell RNA sequencing data, and not usually for CyTOF and microbiome data. The plot summary_plot()$credible_intervals_2D can be used to assess whether the bimodality should be modelled.}
+\item{bimodal_mean_variability_association}{Boolean for modeling mean-variability as bimodal.}
 
-\item{percent_false_positive}{A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.}
+\item{percent_false_positive}{Real number between 0 and 100 for outlier identification.}
 
-\item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
+\item{approximate_posterior_inference}{Boolean for using variational Bayes for posterior inference.}
 
-\item{prior_overdispersion_mean_association}{A list of the form list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)). Where for intercept and slope parameters, we specify mean and standard deviation, while for standard deviation, we specify shape and rate. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.}
+\item{prior_mean}{List with prior knowledge about mean distribution, they are the intercept and coefficient.}
 
-\item{.sample_cell_group_pairs_to_exclude}{A column name that includes a boolean variable for the sample/cell-group pairs to be ignored in the fit. This argument is for pro-users.}
+\item{prior_overdispersion_mean_association}{List with prior knowledge about mean/variability association.}
 
-\item{verbose}{A boolean. Prints progression.}
+\item{.sample_cell_group_pairs_to_exclude}{Column name with boolean for sample/cell-group pairs exclusion.}
 
-\item{enable_loo}{A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.}
+\item{verbose}{Boolean to print progression.}
 
-\item{noise_model}{A character string. The two noise models available are multi_beta_binomial (default) and dirichlet_multinomial.}
+\item{enable_loo}{Boolean to enable model comparison using the LOO package.}
 
-\item{exclude_priors}{A boolean. Whether to run a prior-free model, for benchmarking purposes.}
+\item{noise_model}{Character string for the noise model (e.g., 'multi_beta_binomial').}
 
-\item{use_data}{A booelan. Whether to sun the model data free. This can be used for prior predictive check.}
+\item{exclude_priors}{Boolean to run a prior-free model.}
 
-\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
+\item{use_data}{Boolean to run the model data-free.}
 
-\item{max_sampling_iterations}{An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.}
+\item{mcmc_seed}{Integer for MCMC reproducibility.}
 
-\item{pass_fit}{A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.}
+\item{max_sampling_iterations}{Integer to limit maximum iterations for large datasets.}
+
+\item{pass_fit}{Boolean to include the Stan fit as attribute in the output.}
 }
 \value{
 A nested tibble \code{tbl}, with the following columns
@@ -98,7 +101,12 @@ A nested tibble \code{tbl}, with the following columns
 }
 }
 \description{
-The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
+The \code{sccomp_estimate} function performs linear modeling on a table of cell counts,
+which includes a cell-group identifier, sample identifier, integer count, and factors
+(continuous or discrete). The user can define a linear model with an input R formula,
+where the first factor is the factor of interest. Alternatively, \code{sccomp} accepts
+single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or
+group-size) and derives the count data from cell metadata.
 }
 \examples{
 
@@ -112,7 +120,6 @@ estimate =
    sample,
    cell_group,
    count,
-    check_outliers = FALSE,
     cores = 1
   )
 

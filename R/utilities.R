@@ -623,6 +623,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
+#' @noRd
 get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 
   .sample = enquo(.sample)
@@ -685,6 +686,7 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
+#' @noRd
 get_random_intercept_design = function(.data_, .sample, random_intercept_elements ){
 
   .sample = enquo(.sample)
@@ -792,6 +794,7 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
 }
 
 #' @importFrom glue glue
+#' @noRd
 get_design_matrix = function(.data_spread, formula, .sample){
 
   .sample = enquo(.sample)
@@ -2016,13 +2019,33 @@ contrasts_to_enquos = function(contrasts){
   contrasts |> enquo() |> quo_names() |> syms() %>% do.call(enquos_from_list_of_symbols, .)
 }
 
-#' @importFrom purrr map_dfc
-#' @importFrom tibble add_column
-#' @importFrom dplyr last_col
-#' @importFrom purrr map2_dfc
-#' @importFrom stringr str_subset
+#' Mutate Data Frame Based on Expression List
 #'
+#' @description
+#' `mutate_from_expr_list` takes a data frame and a list of formula expressions, 
+#' and mutates the data frame based on these expressions. It allows for ignoring 
+#' errors during the mutation process.
+#'
+#' @param x A data frame to be mutated.
+#' @param formula_expr A named list of formula expressions used for mutation.
+#' @param ignore_errors Logical flag indicating whether to ignore errors during mutation.
+#'
+#' @return A mutated data frame with added or modified columns based on `formula_expr`.
+#'
+#' @details
+#' The function performs various checks and transformations on the formula expressions,
+#' ensuring that the specified transformations are valid and can be applied to the data frame.
+#' It supports advanced features like handling special characters in column names and intelligent
+#' parsing of formulas.
+#'
+#' @importFrom purrr map2_dfc
+#' @importFrom tibble add_column
+#' @importFrom tidyselect last_col
+#' @importFrom dplyr mutate
+#' @importFrom stringr str_subset
+#' 
 #' @noRd
+#' 
 mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
 
   if(formula_expr |> names() |> is.null())
@@ -2599,6 +2622,7 @@ add_formula_columns = function(.data, .original_data, .sample,  formula_composit
 #' cleaned_texts <- str_remove_all_ignoring_if_inside_backquotes(texts, "\\(")
 #' print(cleaned_texts)
 #' 
+#' @noRd
 str_remove_all_ignoring_if_inside_backquotes <- function(text_vector, regex) {
   # Nested function to handle regex removal for a single string
   remove_regex_chars <- function(text, regex) {
@@ -2662,6 +2686,7 @@ str_remove_all_ignoring_if_inside_backquotes <- function(text_vector, regex) {
 #' split_texts <- split_regex_chars_from_vector(texts, ",")
 #' print(split_texts)
 #' 
+#' @noRd
 str_split_ignoring_if_inside_backquotes <- function(text_vector, regex) {
   # Nested function to handle regex split for a single string
   split_regex_chars <- function(text, regex) {
@@ -2720,7 +2745,7 @@ str_split_ignoring_if_inside_backquotes <- function(text_vector, regex) {
 #' contains_only_valid_chars_for_column(c("valid_column", "invalid column", "valid123", 
 #' "123startWithNumber", "_startWithUnderscore"))
 #'
-#' @export
+#' @noRd
 contains_only_valid_chars_for_column <- function(column_names) {
   # Function to check a single column name
   check_validity <- function(column_name) {
@@ -2755,7 +2780,7 @@ contains_only_valid_chars_for_column <- function(column_names) {
 #' @examples
 #' str_remove_brackets_from_formula_intelligently(c("This is a test (with + brackets)", "`a (test) inside` backticks", "(another test)"))
 #'
-#' @export
+#' @noRd
 str_remove_brackets_from_formula_intelligently <- function(text) {
   # Function to remove brackets from a single string
   remove_brackets_single <- function(s) {

@@ -108,3 +108,18 @@
 #'
 #'
 "glm_multi_beta"
+
+#' multipanel_theme
+#'
+#' @description
+#' this object includes the ggplot, theme
+#'
+#' @importFrom utils data
+#'
+#' @keywords internal
+#'
+#' @format  A ggplot theme
+#' @usage data(multipanel_theme)
+#'
+#'
+"multipanel_theme"
