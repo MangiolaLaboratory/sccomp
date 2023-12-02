@@ -482,3 +482,50 @@ test_contrasts <- function(.data,
   
   UseMethod("sccomp_test", .data)
 }
+
+#' plot_summary
+#'
+#' @description This function plots a summary of the results of the model.
+#'
+#' @importFrom ggrepel geom_text_repel
+#' @importFrom tidyr pivot_longer
+#' @import ggplot2
+#' @importFrom tidyr unite
+#' @importFrom tidyr pivot_longer
+#' @importFrom dplyr with_groups
+#' @importFrom magrittr equals
+#'
+#' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
+#' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#'
+#' @return A `ggplot`
+#'
+#' @export
+#'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#' estimate =
+#'   sccomp_estimate(
+#'   counts_obj ,
+#'    ~ type, ~1, sample, cell_group, count,
+#'     approximate_posterior_inference = "all",
+#'     cores = 1
+#'   )
+#'
+#' # estimate |> plot_summary()
+#'
+plot_summary <- function(.data, significance_threshold = 0.025) {
+  
+  # DEPRECATE
+  deprecate_warn(
+    when="1.7.1",
+    what="plot_summary()",
+    details="sccomp says: plot_summary() is soft-deprecated. Please use sccomp_test()."
+  )
+  
+  UseMethod("print", .data)
+ 
+  
+}

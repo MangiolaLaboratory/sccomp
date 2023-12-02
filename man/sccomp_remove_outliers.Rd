@@ -9,7 +9,7 @@ sccomp_remove_outliers(
   percent_false_positive = 5,
   cores = detectCores(),
   approximate_posterior_inference = "none",
-  verbose = FALSE,
+  verbose = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   enable_loo = FALSE

@@ -102,7 +102,7 @@ sccomp_estimate <- function(.data,
                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                        .sample_cell_group_pairs_to_exclude = NULL,
-                       verbose = FALSE,
+                       verbose = TRUE,
                        enable_loo = FALSE,
                        noise_model = "multi_beta_binomial",
                        exclude_priors = FALSE,
@@ -129,7 +129,7 @@ sccomp_estimate.Seurat = function(.data,
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
-                                  verbose = FALSE,
+                                  verbose = TRUE,
                                   enable_loo = FALSE,
                                   noise_model = "multi_beta_binomial",
                                   exclude_priors = FALSE,
@@ -189,7 +189,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                                 prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                                 .sample_cell_group_pairs_to_exclude = NULL,
-                                                verbose = FALSE,
+                                                verbose = TRUE,
                                                 enable_loo = FALSE,
                                                 noise_model = "multi_beta_binomial",
                                                 exclude_priors = FALSE,
@@ -252,7 +252,7 @@ sccomp_estimate.DFrame = function(.data,
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
-                                  verbose = FALSE,
+                                  verbose = TRUE,
                                   enable_loo = FALSE,
                                   noise_model = "multi_beta_binomial",
                                   exclude_priors = FALSE,
@@ -314,7 +314,7 @@ sccomp_estimate.data.frame = function(.data,
                                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                       .sample_cell_group_pairs_to_exclude = NULL,
-                                      verbose = FALSE,
+                                      verbose = TRUE,
                                       enable_loo = FALSE,
                                       noise_model = "multi_beta_binomial",
                                       exclude_priors = FALSE,
@@ -458,7 +458,7 @@ sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
                                    approximate_posterior_inference = "none",
-                                   verbose = FALSE,
+                                   verbose = TRUE,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
                                    enable_loo = FALSE
@@ -471,7 +471,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
                                              approximate_posterior_inference = "none",
-                                             verbose = FALSE,
+                                             verbose = TRUE,
                                              mcmc_seed = sample(1e5, 1),
                                              max_sampling_iterations = 20000,
                                              enable_loo = FALSE
@@ -711,15 +711,15 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     add_attr(formula_variability, "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     
+    # Add class to the tbl
+    add_class("sccomp_tbl") |> 
+    
     # Print estimates
     sccomp_test() |>
     
     # drop hypothesis testing as the estimation exists without probabilities.
     # For hypothesis testing use sccomp_test
     select(-contains("_FDR"), -contains("_pH0")) |> 
-    
-    # Add class to the tbl
-    add_class("sccomp_tbl") |> 
     
     add_attr(noise_model, "noise_model") 
   
@@ -769,7 +769,7 @@ sccomp_test <- function(.data,
 #' @export
 #'
 #'
-sccomp_test.data.frame = function(.data,
+sccomp_test.sccomp_tbl = function(.data,
                                      contrasts = NULL,
                                      percent_false_positive = 5,
                                      test_composition_above_logit_fold_change = 0.2,
@@ -877,7 +877,10 @@ sccomp_test.data.frame = function(.data,
     add_attr(.count, ".count") |>
 
     add_attr(.data |> attr("formula_composition"), "formula_composition") |>
-    add_attr(.data |> attr("formula_variability"), "formula_variability")
+    add_attr(.data |> attr("formula_variability"), "formula_variability") |>
+    
+    # Add class to the tbl
+    add_class("sccomp_tbl") 
 }
 
 #' sccomp_replicate
@@ -919,7 +922,7 @@ sccomp_replicate <- function(fit,
 
 #' @export
 #'
-sccomp_replicate.data.frame = function(fit,
+sccomp_replicate.sccomp_tbl = function(fit,
                                        formula_composition = NULL,
                                        formula_variability = NULL,
                                        number_of_draws = 1,
@@ -1000,7 +1003,7 @@ sccomp_predict <- function(fit,
 
 #' @export
 #'
-sccomp_predict.data.frame = function(fit,
+sccomp_predict.sccomp_tbl = function(fit,
                                      formula_composition = NULL,
                                      new_data = NULL,
                                      number_of_draws = 500,
@@ -1100,7 +1103,7 @@ sccomp_remove_unwanted_variation <- function(.data,
 
 #' @export
 #'
-sccomp_remove_unwanted_variation.data.frame = function(.data,
+sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
                                                 formula_composition = ~1,
                                                 formula_variability = NULL){
 
@@ -1246,7 +1249,7 @@ simulate_data <- function(.data,
 #' @importFrom purrr pmap
 #' @importFrom readr read_file
 #'
-simulate_data.data.frame = function(.data,
+simulate_data.sccomp_tbl = function(.data,
                                     .estimate_object,
                                     formula_composition,
                                     formula_variability = NULL,
@@ -1388,7 +1391,7 @@ plot_boxplot(
 
 }
 
-#' plot_summary
+#' plot
 #'
 #' @description This function plots a summary of the results of the model.
 #'
@@ -1419,9 +1422,9 @@ plot_boxplot(
 #'     cores = 1
 #'   )
 #'
-#' # estimate |> plot_summary()
+#' # estimate |> plot()
 #'
-plot_summary <- function(.data, significance_threshold = 0.025) {
+plot.sccomp_tbl <- function(.data, significance_threshold = 0.025) {
 
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")

@@ -313,15 +313,15 @@ sccomp_glm_data_frame_counts = function(.data,
     add_attr(formula_variability, "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     
+    # Add class to the tbl
+    add_class("sccomp_tbl") |> 
+    
     # Print estimates
     sccomp_test() |>
     
     # drop hypothesis testing as the estimation exists without probabilities.
     # For hypothesis testing use sccomp_test
-    select(-contains("_FDR"), -contains("_pH0")) |> 
-    
-    # Add class to the tbl
-    add_class("sccomp_tbl")
+    select(-contains("_FDR"), -contains("_pH0")) 
 }
 
 

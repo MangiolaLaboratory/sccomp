@@ -19,7 +19,7 @@ sccomp_estimate(
   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0, 0.6),
     standard_deviation = c(10, 20)),
   .sample_cell_group_pairs_to_exclude = NULL,
-  verbose = FALSE,
+  verbose = TRUE,
   enable_loo = FALSE,
   noise_model = "multi_beta_binomial",
   exclude_priors = FALSE,
