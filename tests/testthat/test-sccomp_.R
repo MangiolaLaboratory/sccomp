@@ -197,13 +197,14 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       max_sampling_iterations = 1000
     )
 
-    expect_in(
-      "T gd2",
-      res |>
+    expect(
+      "T gd2" %in%
+      (res |>
         filter(parameter == "continuous_covariate") |>
         arrange(desc(abs(c_effect))) |>
         slice(1:3) |>
-        pull(cell_group)
+        pull(cell_group)),
+      TRUE
     )
 
 
