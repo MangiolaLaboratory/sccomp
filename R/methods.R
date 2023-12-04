@@ -329,63 +329,62 @@ sccomp_estimate.data.frame = function(.data,
   .count = enquo(.count)
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
 
-  .count %>%
-    when(
-      # If the dataframe does not include counts, but is metadata
-      quo_is_null(.) ~ sccomp_glm_data_frame_raw(
-        .data,
-        formula_composition = formula_composition,
-        formula_variability = formula_variability,
-        !!.sample,
-        !!.cell_group,
-        
-        # Secondary arguments
-        cores = cores,
-        bimodal_mean_variability_association = bimodal_mean_variability_association,
-        percent_false_positive = percent_false_positive,
-        approximate_posterior_inference = approximate_posterior_inference,
-        prior_mean = prior_mean, 
-        prior_overdispersion_mean_association = prior_overdispersion_mean_association,
-        .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
-        verbose = verbose,
-        enable_loo = enable_loo,
-        exclude_priors = exclude_priors,
-        use_data = use_data,
-        mcmc_seed = mcmc_seed,
-        max_sampling_iterations = max_sampling_iterations,
-        pass_fit = pass_fit
-      ),
-
-      # If the dataframe does includes counts
-      ~ sccomp_glm_data_frame_counts(
-        .data,
-        formula_composition = formula_composition,
-        formula_variability = formula_variability,
-        !!.sample,
-        !!.cell_group,
-        !!.count,
-        
-        # Secondary arguments
-        cores = cores,
-        bimodal_mean_variability_association = bimodal_mean_variability_association,
-        percent_false_positive = percent_false_positive,
-        approximate_posterior_inference = approximate_posterior_inference,
-        prior_mean = prior_mean, 
-        prior_overdispersion_mean_association = prior_overdispersion_mean_association,
-        .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
-        verbose = verbose,
-        enable_loo = enable_loo,
-        exclude_priors = exclude_priors,
-        use_data = use_data,
-        mcmc_seed = mcmc_seed,
-        max_sampling_iterations = max_sampling_iterations,
-        pass_fit = pass_fit
-      )
-    ) %>%
+  if( quo_is_null(.count))
+    res = sccomp_glm_data_frame_raw(
+      .data,
+      formula_composition = formula_composition,
+      formula_variability = formula_variability,
+      !!.sample,
+      !!.cell_group,
+      
+      # Secondary arguments
+      cores = cores,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      percent_false_positive = percent_false_positive,
+      approximate_posterior_inference = approximate_posterior_inference,
+      prior_mean = prior_mean, 
+      prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+      .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      verbose = verbose,
+      enable_loo = enable_loo,
+      exclude_priors = exclude_priors,
+      use_data = use_data,
+      mcmc_seed = mcmc_seed,
+      max_sampling_iterations = max_sampling_iterations,
+      pass_fit = pass_fit
+    )
+  
+  else 
+    res = sccomp_glm_data_frame_counts(
+      .data,
+      formula_composition = formula_composition,
+      formula_variability = formula_variability,
+      !!.sample,
+      !!.cell_group,
+      !!.count,
+      
+      # Secondary arguments
+      cores = cores,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      percent_false_positive = percent_false_positive,
+      approximate_posterior_inference = approximate_posterior_inference,
+      prior_mean = prior_mean, 
+      prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+      .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      verbose = verbose,
+      enable_loo = enable_loo,
+      exclude_priors = exclude_priors,
+      use_data = use_data,
+      mcmc_seed = mcmc_seed,
+      max_sampling_iterations = max_sampling_iterations,
+      pass_fit = pass_fit
+    )
+  
+  res  |> 
 
     # Track input parameters
-    add_attr(noise_model, "noise_model") %>%
-    add_attr(.sample, ".sample") %>%
+    add_attr(noise_model, "noise_model")  |> 
+    add_attr(.sample, ".sample")  |> 
     add_attr(.cell_group, ".cell_group")
 }
 
@@ -1271,12 +1270,10 @@ simulate_data.sccomp_tbl = function(.data,
   model_data = attr(.estimate_object, "model_input")
 
   # Select model based on noise model
-  my_model = attr(.estimate_object, "noise_model") %>% when(
-    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_simulate_data,
-    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities),
-    (.) == "logit_normal_multinomial" ~ get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
+  if(attr(.estimate_object, "noise_model") == "multi_beta_binomial") my_model = stanmodels$glm_multi_beta_binomial_simulate_data
+  else if(attr(.estimate_object, "noise_model") == "dirichlet_multinomial") my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  else if(attr(.estimate_object, "noise_model") == "logit_normal_multinomial") my_model = get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
 
-  )
 
   model_input =
     .data %>%
@@ -1373,11 +1370,12 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 
     pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
     unnest(count_data) %>%
-    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
+    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) 
+  
+  # If I don't have outliers add them
+  if(!"outlier" %in% colnames(.)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
 
-    # If I don't have outliers add them
-    when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
-plot_boxplot(
+  plot_boxplot(
         .data,
         data_proportion,
         factor,
@@ -1386,7 +1384,7 @@ plot_boxplot(
         significance_threshold = significance_threshold,
         multipanel_theme
       ) +
-        ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
+    ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
 
 
 }
@@ -1444,10 +1442,12 @@ plot.sccomp_tbl <- function(.data, significance_threshold = 0.025) {
   
     pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
     unnest(count_data) %>%
-    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |>
+    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) )
   
-    # If I don't have outliers add them
-    when(!"outlier" %in% colnames(.) ~ mutate(., outlier = FALSE), ~ (.))
+  
+  # If I don't have outliers add them
+  if(!"outlier" %in% colnames(.)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
+  
   
 
 # Boxplot

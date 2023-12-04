@@ -341,20 +341,9 @@ sccomp_glm.data.frame = function(.data,
     what="sccomp_glm()",
     details="sccomp says: sccomp_glm() is soft-deprecated. Please use the new modular framework instead, which includes sccomp_estimate(), sccomp_test(), sccomp_remove_outliers(), among other functions."
   )
-  
-  # # Choose linear model
-  # my_glm_model =
-  #   noise_model %>%
-  #   when(
-  #     equals(., "multi_beta_binomial") ~ multi_beta_binomial_glm,
-  #     equals(., "dirichlet_multinomial") ~ dirichlet_multinomial_glm
-  #   )
-  
-  result = 
-    .count %>%
-    when(
-      # If the dataframe does not include counts, but is metadata
-      quo_is_null(.) ~ sccomp_glm_data_frame_raw(
+
+  if(quo_is_null(.count) )
+  result =    sccomp_glm_data_frame_raw(
         .data,
         formula_composition = formula_composition,
         formula_variability = formula_variability,
@@ -377,10 +366,11 @@ sccomp_glm.data.frame = function(.data,
         mcmc_seed = mcmc_seed,
         max_sampling_iterations = max_sampling_iterations,
         pass_fit = pass_fit
-      ),
-      
-      # If the dataframe does includes counts
-      ~ sccomp_glm_data_frame_counts(
+      )
+  
+  # If the dataframe does includes counts
+  else
+    result =  sccomp_glm_data_frame_counts(
         .data,
         formula_composition = formula_composition,
         formula_variability = formula_variability,
@@ -405,11 +395,12 @@ sccomp_glm.data.frame = function(.data,
         max_sampling_iterations = max_sampling_iterations,
         pass_fit = pass_fit
       )
-    ) %>%
+    
+  result = result |> 
     
     # Track input parameters
-    add_attr(noise_model, "noise_model") %>%
-    add_attr(.sample, ".sample") %>%
+    add_attr(noise_model, "noise_model") |> 
+    add_attr(.sample, ".sample") |> 
     add_attr(.cell_group, ".cell_group") 
   
   

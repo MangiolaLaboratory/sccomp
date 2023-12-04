@@ -12,7 +12,7 @@
   .data %>%
 
     # Selecting the right columns
-    select(	!!.column,	get_specific_annotation_columns(.data, !!.column)	) %>%
+    select(	!!.column,	all_of(get_specific_annotation_columns(.data, !!.column)	)) %>%
     distinct()
 
 }

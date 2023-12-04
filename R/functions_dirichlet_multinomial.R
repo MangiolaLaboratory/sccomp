@@ -239,16 +239,6 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
     data_to_spread (formula, !!.sample, !!.cell_type, !!.count) %>%
     data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference = approximate_posterior_inference)
 
-  # .count = enquo(.count)
-  #
-  # .data_wide =
-  #   .my_data %>%
-  #   select(N, M, !!.count, parse_formula(formula)) %>%
-  #   distinct() %>%
-  #   spread(M, !!.count)
-
-  # .data_wide_no_factors = .data_wide %>% select(-parse_formula(formula))
-
   to_exclude =
     .data %>%
     filter(!!as.symbol(sprintf("outlier_%s", iteration - 1))  ) %>%
