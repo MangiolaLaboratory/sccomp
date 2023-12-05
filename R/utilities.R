@@ -2903,7 +2903,6 @@ quo_names <- function(v) {
 
 #' Add class to abject
 #'
-#' @importFrom purrr prepend
 #' @keywords internal
 #' @noRd
 #'
@@ -2913,7 +2912,7 @@ quo_names <- function(v) {
 #' @return A tibble with an additional attribute
 add_class = function(var, name) {
 
-  if(!name %in% class(var)) class(var) <- prepend(class(var),name)
+  if(!name %in% class(var)) class(var) <- append(class(var),name, after = 0)
 
   var
 }

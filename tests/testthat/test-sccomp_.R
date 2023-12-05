@@ -404,10 +404,10 @@ test_that("plot test composition",{
 
   my_estimate |> 
     sccomp_test() |> 
-    plot_summary()
+    plot()
 
   my_estimate |> 
-    plot_summary() |> 
+    plot() |> 
     expect_error("sccomp says: to produce plots, you need to run the function sccomp_test")
   
 })
@@ -416,7 +416,7 @@ test_that("plot test variability",{
 
   res_composition_variability |> 
     sccomp_test() |> 
-    plot_summary()
+    plot()
 
 
 })

@@ -39,8 +39,7 @@ Function | Description
 `sccomp_replicate` | Simulate data from the model, or part of the model
 `sccomp_predict` | Predicts proportions, based on the mode, or part of the model
 `sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors
-`sccomp_boxplot` | Plots the data across factors, overlaying model-generated data, for asses the goodness of fit
-`sccomp_plot_summary` | Plors summary plots to asses significance 
+`plot` | Plors summary plots to asses significance 
 
 # Analysis
 
@@ -203,7 +202,7 @@ We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 ## Summary plots
 
 ```{r, out.height="200%"}
-plots = plot_summary(res) 
+plots = plot(res) 
 ```
 
 A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be
@@ -235,7 +234,7 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 Plot 1D significance plot
 
 ```{r}
-plots = plot_summary(res)
+plots = plot(res)
 
 plots$credible_intervals_1D
 ```

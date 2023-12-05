@@ -4,7 +4,7 @@
 \alias{plot.sccomp_tbl}
 \title{plot}
 \usage{
-\method{plot}{sccomp_tbl}(.data, significance_threshold = 0.025)
+\method{plot}{sccomp_tbl}(.data, significance_threshold = 0.025, ...)
 }
 \arguments{
 \item{.data}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}

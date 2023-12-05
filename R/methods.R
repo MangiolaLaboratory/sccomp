@@ -1223,7 +1223,6 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #'
 #' # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
 #' counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-
 #' # Simulate data
 #' simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
 #'
@@ -1248,7 +1247,7 @@ simulate_data <- function(.data,
 #' @importFrom purrr pmap
 #' @importFrom readr read_file
 #'
-simulate_data.sccomp_tbl = function(.data,
+simulate_data.tbl = function(.data,
                                     .estimate_object,
                                     formula_composition,
                                     formula_variability = NULL,
@@ -1373,7 +1372,7 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
     with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) 
   
   # If I don't have outliers add them
-  if(!"outlier" %in% colnames(.)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
+  if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
 
   plot_boxplot(
         .data,
@@ -1422,7 +1421,7 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #'
 #' # estimate |> plot()
 #'
-plot.sccomp_tbl <- function(.data, significance_threshold = 0.025) {
+plot.sccomp_tbl <- function(.data, significance_threshold = 0.025, ...) {
 
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
@@ -1446,7 +1445,7 @@ plot.sccomp_tbl <- function(.data, significance_threshold = 0.025) {
   
   
   # If I don't have outliers add them
-  if(!"outlier" %in% colnames(.)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
+  if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
   
   
 

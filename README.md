@@ -55,8 +55,7 @@ devtools::install_github("stemangiola/sccomp")
 | `sccomp_replicate`                 | Simulate data from the model, or part of the model                                                                          |
 | `sccomp_predict`                   | Predicts proportions, based on the mode, or part of the model                                                               |
 | `sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors                                                                                |
-| `sccomp_boxplot`                   | Plots the data across factors, overlaying model-generated data, for asses the goodness of fit                               |
-| `sccomp_plot_summary`              | Plors summary plots to asses significance                                                                                   |
+| `plot`                             | Plors summary plots to asses significance                                                                                   |
 
 # Analysis
 
@@ -80,6 +79,7 @@ single_cell_object |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
     sccomp_test(test_composition_above_logit_fold_change = 0.2)
 ```
 
@@ -95,22 +95,43 @@ counts_obj |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
     sccomp_test(test_composition_above_logit_fold_change = 0.2)
 ```
+
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000394 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.94 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 2.839 seconds (Warm-up)
+    ## Chain 1:                21.137 seconds (Sampling)
+    ## Chain 1:                23.976 seconds (Total)
+    ## Chain 1:
 
     ## # A tibble: 72 × 18
     ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercep… <NA>    0.868     1.12   1.35   0       0         4803.
-    ##  2 B1         typecancer type   -1.05     -0.643 -0.241  1.42e-2 4.90e-3   3590.
-    ##  3 B2         (Intercep… <NA>    0.408     0.701  0.972  7.50e-4 6.58e-5   4625.
-    ##  4 B2         typecancer type   -1.19     -0.724 -0.264  1.40e-2 3.86e-3   2444.
-    ##  5 B3         (Intercep… <NA>   -0.678    -0.389 -0.111  8.98e-2 8.9 e-3   4102.
-    ##  6 B3         typecancer type   -0.758    -0.319  0.0904 2.88e-1 7.64e-2   3031.
-    ##  7 BM         (Intercep… <NA>   -1.33     -1.04  -0.741  0       0         4696.
-    ##  8 BM         typecancer type   -0.770    -0.318  0.122  2.95e-1 9.60e-2   4254.
-    ##  9 CD4 1      (Intercep… <NA>    0.0791    0.297  0.517  1.70e-1 2.35e-2   3819.
-    ## 10 CD4 1      typecancer type   -0.119     0.182  0.480  5.50e-1 1.60e-1   3761.
+    ##  1 B1         (Intercep… <NA>    0.884     1.12   1.32   0       0         4441.
+    ##  2 B1         typecancer type   -1.17     -0.760 -0.381  1.75e-3 6.51e-4   2922.
+    ##  3 B2         (Intercep… <NA>    0.423     0.703  0.974  2.50e-4 1.32e-5   6265.
+    ##  4 B2         typecancer type   -1.23     -0.730 -0.263  1.25e-2 3.53e-3   3965.
+    ##  5 B3         (Intercep… <NA>   -0.657    -0.389 -0.114  8.51e-2 6.86e-3   4537.
+    ##  6 B3         typecancer type   -0.719    -0.317  0.0704 2.76e-1 6.71e-2   3631.
+    ##  7 BM         (Intercep… <NA>   -1.32     -1.03  -0.767  0       0         3997.
+    ##  8 BM         typecancer type   -0.736    -0.312  0.0916 2.94e-1 8.78e-2   3760.
+    ##  9 CD4 1      (Intercep… <NA>    0.0853    0.298  0.499  1.79e-1 3.16e-2   4733.
+    ## 10 CD4 1      typecancer type   -0.0963    0.186  0.467  5.41e-1 1.52e-1   3783.
     ## # ℹ 62 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -131,25 +152,46 @@ seurat_obj |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
     sccomp_test(
       contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
       test_composition_above_logit_fold_change = 0.2
     )
 ```
 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000371 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.71 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 2.127 seconds (Warm-up)
+    ## Chain 1:                17.85 seconds (Sampling)
+    ## Chain 1:                19.977 seconds (Total)
+    ## Chain 1:
+
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -1.90    -1.39   -0.880 0       0            NA
-    ##  2 B immature  typeheal… <NA>     0.880    1.39    1.90  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.32    -1.71   -1.08  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.08     1.71    2.32  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.48    -1.04   -0.607 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.607    1.04    1.48  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.843    1.76    2.84  2.50e-4 5.00e-5      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.84    -1.76   -0.843 2.50e-4 5.00e-5      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.307    0.983   1.68  1.12e-2 3.35e-3      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.68    -0.983  -0.307 1.12e-2 3.35e-3      NA
+    ##  1 B immature  typecanc… <NA>    -1.91    -1.42   -0.937 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.937    1.42    1.91  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.37    -1.74   -1.11  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.11     1.74    2.37  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.25    -0.858  -0.514 0       0            NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.514    0.858   1.25  0       0            NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.829    1.83    2.96  2.50e-4 4.17e-5      NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.96    -1.83   -0.829 2.50e-4 4.17e-5      NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.346    1.01    1.74  6.51e-3 1.25e-3      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.74    -1.01   -0.346 6.51e-3 1.25e-3      NA
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -184,7 +226,29 @@ model_with_factor_association =
     cores = 1, 
     enable_loo = TRUE
   )
+```
 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000394 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.94 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 2.234 seconds (Warm-up)
+    ## Chain 1:                20.698 seconds (Sampling)
+    ## Chain 1:                22.932 seconds (Total)
+    ## Chain 1:
+
+``` r
 # Fit second model
 model_without_association = 
   seurat_obj |>
@@ -196,7 +260,29 @@ model_without_association =
     cores = 1 , 
     enable_loo = TRUE
   )
+```
 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000286 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.86 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 2.229 seconds (Warm-up)
+    ## Chain 1:                23.82 seconds (Sampling)
+    ## Chain 1:                26.049 seconds (Total)
+    ## Chain 1:
+
+``` r
 # Compare models
 loo_compare(
   model_with_factor_association |> attr("fit") |> loo(),
@@ -206,7 +292,7 @@ loo_compare(
 
     ##        elpd_diff se_diff
     ## model1   0.0       0.0  
-    ## model2 -80.8      11.3
+    ## model2 -81.1      11.3
 
 ## Differential variability, binary factor
 
@@ -224,26 +310,49 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
     sccomp_test(
       test_composition_above_logit_fold_change = 0.2
     )
+```
 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.001618 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 16.18 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 4.185 seconds (Warm-up)
+    ## Chain 1:                33.902 seconds (Sampling)
+    ## Chain 1:                38.087 seconds (Total)
+    ## Chain 1:
+
+``` r
 res
 ```
 
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  (Interce… <NA>    0.343     0.762  1.16   5.00e-3 5.19e-4   6144.
-    ##  2 B immature  typeheal… type    0.878     1.44   1.99   2.50e-4 8.33e-5   5459.
-    ##  3 B mem       (Interce… <NA>   -1.46     -0.871 -0.178  2.68e-2 4.76e-3   4473.
-    ##  4 B mem       typeheal… type    1.07      1.85   2.63   0       0         4004.
-    ##  5 CD4 cm S10… (Interce… <NA>    1.31      1.66   1.99   0       0         6321.
-    ##  6 CD4 cm S10… typeheal… type    0.472     0.941  1.41   1.00e-3 3.12e-4   4707.
-    ##  7 CD4 cm hig… (Interce… <NA>   -1.08     -0.541  0.0370 1.05e-1 1.92e-2   4181.
-    ##  8 CD4 cm hig… typeheal… type   -3.06     -1.26   1.01   2.01e-1 5.07e-2   3636.
-    ##  9 CD4 cm rib… (Interce… <NA>   -0.0630    0.311  0.695  2.76e-1 3.34e-2   4496.
-    ## 10 CD4 cm rib… typeheal… type   -1.80     -0.960  0.124  7.55e-2 2.43e-2   3299.
+    ##  1 B immature  (Interce… <NA>     0.548    0.934  1.30   2.50e-4 2.28e-5   5948.
+    ##  2 B immature  typeheal… type     0.809    1.33   1.89   0       0         4471.
+    ##  3 B mem       (Interce… <NA>    -1.30    -0.759 -0.159  3.08e-2 2.21e-3   5687.
+    ##  4 B mem       typeheal… type     1.06     1.81   2.52   2.50e-4 8.34e-5   4832.
+    ##  5 CD4 cm S10… (Interce… <NA>     1.73     1.98   2.23   0       0         5733.
+    ##  6 CD4 cm S10… typeheal… type     0.301    0.689  1.07   8.26e-3 3.42e-3   4382.
+    ##  7 CD4 cm hig… (Interce… <NA>    -0.881   -0.413  0.113  1.92e-1 2.72e-2   4595.
+    ##  8 CD4 cm hig… typeheal… type    -3.22    -1.49   1.03   1.52e-1 5.59e-2   2946.
+    ##  9 CD4 cm rib… (Interce… <NA>     0.144    0.471  0.809  5.13e-2 4.67e-3   3843.
+    ## 10 CD4 cm rib… typeheal… type    -1.90    -1.09  -0.0711 4.25e-2 9.48e-3   3818.
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -267,7 +376,7 @@ We recommend setting `bimodal_mean_variability_association  = FALSE`
 ## Summary plots
 
 ``` r
-plots = plot_summary(res) 
+plots = plot(res) 
 ```
 
     ## Joining with `by = join_by(cell_group, sample)`
@@ -322,7 +431,7 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 Plot 1D significance plot
 
 ``` r
-plots = plot_summary(res)
+plots = plot(res)
 ```
 
     ## Joining with `by = join_by(cell_group, sample)`
@@ -376,26 +485,49 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
+  sccomp_remove_outliers() |> 
     sccomp_test(
       test_composition_above_logit_fold_change = 0.2
     )
+```
 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000458 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 4.58 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 5.428 seconds (Warm-up)
+    ## Chain 1:                39.833 seconds (Sampling)
+    ## Chain 1:                45.261 seconds (Total)
+    ## Chain 1:
+
+``` r
 res
 ```
 
     ## # A tibble: 210 × 18
     ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature (Intercep… <NA>     0.338   0.871    1.49  1.10e-2 3.07e-3   2668.
-    ##  2 B immature typehealt… type     0.625   1.32     1.98  5.00e-4 2.50e-4   2930.
-    ##  3 B immature continuou… conti…  -0.241   0.0316   0.325 8.70e-1 6.43e-1   8525.
-    ##  4 B immature (Intercep… <NA>    -0.568  -0.0497   0.419 7.35e-1 6.35e-1     NA 
-    ##  5 B immature typehealt… <NA>    -0.419   0.0497   0.568 7.35e-1 6.35e-1     NA 
-    ##  6 B immature (Intercep… <NA>    -0.630  -0.0329   0.475 7.39e-1 6.72e-1     NA 
-    ##  7 B immature typehealt… <NA>    -0.475   0.0329   0.630 7.39e-1 6.72e-1     NA 
-    ##  8 B mem      (Intercep… <NA>    -1.16   -0.472    0.388 2.44e-1 4.93e-2   1904.
-    ##  9 B mem      typehealt… type     0.490   1.41     2.21  7.00e-3 2.56e-3   1984.
-    ## 10 B mem      continuou… conti…  -0.257   0.0542   0.401 8.13e-1 6.18e-1   8974.
+    ##  1 B immature (Intercep… <NA>     0.543   1.05     1.61  0       0         2521.
+    ##  2 B immature typehealt… type     0.611   1.26     1.88  0.00175 8.76e-4   2604.
+    ##  3 B immature continuou… conti…  -0.207   0.0390   0.334 0.873   6.26e-1   6341.
+    ##  4 B immature (Intercep… <NA>    -0.607  -0.0870   0.392 0.681   5.86e-1     NA 
+    ##  5 B immature typehealt… <NA>    -0.392   0.0870   0.607 0.681   5.86e-1     NA 
+    ##  6 B immature (Intercep… <NA>    -0.576  -0.0465   0.435 0.733   6.50e-1     NA 
+    ##  7 B immature typehealt… <NA>    -0.435   0.0465   0.576 0.733   6.50e-1     NA 
+    ##  8 B mem      (Intercep… <NA>    -1.04   -0.379    0.459 0.305   5.49e-2   2005.
+    ##  9 B mem      typehealt… type     0.506   1.41     2.22  0.00475 2.70e-3   2206.
+    ## 10 B mem      continuou… conti…  -0.234   0.0635   0.399 0.805   5.97e-1   7345.
     ## # ℹ 200 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -420,14 +552,14 @@ res |> sccomp_remove_unwanted_variation(~type)
     ## # A tibble: 600 × 5
     ##    sample       cell_group adjusted_proportion adjusted_counts logit_residuals
     ##    <chr>        <chr>                    <dbl>           <dbl>           <dbl>
-    ##  1 10x_6K       B immature              0.0553           260.          -0.675 
-    ##  2 10x_8K       B immature              0.143           1079.           0.398 
-    ##  3 GSE115189    B immature              0.114            267.           0.102 
-    ##  4 SCP345_580   B immature              0.0902           520.          -0.128 
-    ##  5 SCP345_860   B immature              0.151            967.           0.455 
-    ##  6 SCP424_pbmc1 B immature              0.111            297.           0.0579
-    ##  7 SCP424_pbmc2 B immature              0.200            598.           0.791 
-    ##  8 SCP591       B immature              0.0248            14.1         -1.49  
-    ##  9 SI-GA-E5     B immature              0.0261           109.          -0.724 
-    ## 10 SI-GA-E7     B immature              0.104            763.           0.763 
+    ##  1 10x_6K       B immature              0.0554           260.          -0.702 
+    ##  2 10x_8K       B immature              0.144           1080.           0.366 
+    ##  3 GSE115189    B immature              0.114            268.           0.0767
+    ##  4 SCP345_580   B immature              0.0903           520.          -0.161 
+    ##  5 SCP345_860   B immature              0.151            969.           0.421 
+    ##  6 SCP424_pbmc1 B immature              0.110            295.           0.0129
+    ##  7 SCP424_pbmc2 B immature              0.200            596.           0.755 
+    ##  8 SCP591       B immature              0.0251            14.3         -1.52  
+    ##  9 SI-GA-E5     B immature              0.0272           114.          -0.692 
+    ## 10 SI-GA-E7     B immature              0.105            772.           0.747 
     ## # ℹ 590 more rows
