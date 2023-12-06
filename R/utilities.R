@@ -1570,7 +1570,7 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
 
 }
 
-plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025, my_theme){
+plot_2d_intervals = function(.data, .cell_group, my_theme, significance_threshold = 0.025){
 
   .cell_group = enquo(.cell_group)
 

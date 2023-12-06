@@ -4,12 +4,12 @@
 \alias{plot.sccomp_tbl}
 \title{plot}
 \usage{
-\method{plot}{sccomp_tbl}(.data, significance_threshold = 0.025, ...)
+\method{plot}{sccomp_tbl}(x, ...)
 }
 \arguments{
-\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
+\item{x}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
 
-\item{significance_threshold}{A real. FDR threshold for labelling significant cell-groups.}
+\item{...}{parameters like significance_threshold A real. FDR threshold for labelling significant cell-groups.}
 }
 \value{
 A \code{ggplot}

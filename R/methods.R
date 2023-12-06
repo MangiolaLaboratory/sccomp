@@ -1400,8 +1400,8 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #' @importFrom dplyr with_groups
 #' @importFrom magrittr equals
 #'
-#' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
-#' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#' @param x A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
+#' @param ... parameters like significance_threshold A real. FDR threshold for labelling significant cell-groups.
 #'
 #' @return A `ggplot`
 #'
@@ -1421,20 +1421,20 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #'
 #' # estimate |> plot()
 #'
-plot.sccomp_tbl <- function(.data, significance_threshold = 0.025, ...) {
+plot.sccomp_tbl <- function(x,  ...) {
 
-  .cell_group = attr(.data, ".cell_group")
-  .count = attr(.data, ".count")
-  .sample = attr(.data, ".sample")
+  .cell_group = attr(x, ".cell_group")
+  .count = attr(x, ".count")
+  .sample = attr(x, ".sample")
 
   plots = list()
 
   # Check if test have been done
-  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+  if(x |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
 
   data_proportion =
-    .data %>%
+    x %>%
   
     # Otherwise does not work
     select(-`factor`) %>%
@@ -1453,7 +1453,7 @@ plot.sccomp_tbl <- function(.data, significance_threshold = 0.025, ...) {
 plots$boxplot =
 
   # Select non numerical types
-  .data %>%
+  x %>%
   filter(!is.na(`factor`)) |>
    distinct(`factor`) %>%
     pull(`factor`) |>
@@ -1465,26 +1465,26 @@ plots$boxplot =
       if(data_proportion |> select(all_of(.x)) |> pull(1) |> is("numeric"))
         my_plot = 
           plot_scatterplot(
-            .data,
-            data_proportion,
-            .x,
-            !!.cell_group,
-            !!.sample,
-            significance_threshold = significance_threshold,
-            multipanel_theme
+            .data = x,
+            data_proportion = data_proportion,
+            factor_of_interest = .x,
+            .cell_group = !!.cell_group,
+            .sample =  !!.sample,
+            my_theme = multipanel_theme,
+            ...
           )
       
       # If discrete
       else 
         my_plot = 
           plot_boxplot(
-      .data,
-      data_proportion,
-      .x,
-      !!.cell_group,
-      !!.sample,
-      significance_threshold = significance_threshold,
-      multipanel_theme
+            .data = x,
+      data_proportion = data_proportion,
+      factor_of_interest = .x,
+      .cell_group = !!.cell_group,
+      .sample =  !!.sample,
+      my_theme = multipanel_theme,
+      ...
     ) 
       
       # Return
@@ -1493,10 +1493,10 @@ plots$boxplot =
  } )
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
+plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
 
 # 2D intervals
-if("v_effect" %in% colnames(.data) && (.data |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data, !!.cell_group, significance_threshold = significance_threshold, multipanel_theme)
+if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
 
 plots
 

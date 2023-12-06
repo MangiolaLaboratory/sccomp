@@ -1,0 +1,139 @@
+---
+title: "New sccomp framework"
+author: "Stefano Mangiola"
+date: "`r Sys.Date()`"
+package: sccomp
+output:
+  BiocStyle::html_document:
+    toc_float: true
+vignette: >
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteIndexEntry{New sccomp framework}
+  %\usepackage[UTF-8]{inputenc}
+---
+
+<!-- badges: start -->
+
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/tidyseurat/actions/)
+
+<!-- badges: end -->
+
+<img src="inst/logo-01.png" height="139px" width="120px"/>
+
+We announce the new tidy and modular interface for a `sccomp`, which improves modularity, and clarity. The main change is the modularisation of `sccomp` in functions which can be linked with the pipe operator `|>`.
+
+| Function                                                            | Description                                                                                                                                                            |
+|-----------------------------------|-------------------------------------|
+| Estimation: `sccomp_stimate()`                                   | which is usually run once in the analysis (per model).                                                                                                                 |
+| Testing: `sccomp_test()`                                         | which candy run multiple times, depending on how many contrasts you want to test (e.g. age, untreated vs treated).                                                     |
+| Outlier removal: `sccomp_remove_outliers()`                      | which is usually run once after `sccomp_estimate()` in case you want to produce estimates not influenced by outlier data points.                                       |
+| Unwanted variation removal: `sccomp_remove_unwanted_variation()` | which is run after `sccomp_estimate()` and produces a dataset that just preserve the variability of your factor of interest.                                           |
+| Data replication: `sccomp_replicate()`                           | which is run after `sccomp_estimate()` and produces a dataset representing the theoretical data distribution according to the model (from the posterior distribution). |
+| Plotting: `plot()`                                               | which is run after `sccomp_test` and outputs a series of summary plots.                                                                                                |
+
+# A reminder: what is `sccomp`
+
+`sccomp` is a statistical model developed for differential variability analysis in compositional data, primarily used in cellular omics fields like single-cell genomics, proteomics, and microbiomics (Mangiola et al. 2023). It addresses limitations of existing methods in differential abundance analysis by incorporating several advanced features. `sccomp` effectively models compositional count data properties, which were previously not adequately addressed, and tackles cell-group-specific differential variability. This model uses a constrained Beta-binomial distribution to enable more precise analyses. Key capabilities of `sccomp` include improved differential abundance analyses through cross-sample information borrowing, outlier identification and exclusion, realistic data simulation, and facilitating cross-study knowledge transfer. By incorporating these features, `sccomp` provides a more comprehensive and accurate framework for analyzing cellular omics data, identifying crucial biological drivers such as disease progression markers in cancer and pathogen infection.
+
+# Installation
+
+**Bioconductor**
+
+```{r eval=FALSE}
+if (!requireNamespace("BiocManager")) install.packages("BiocManager")
+BiocManager::install("sccomp")
+```
+
+**Github**
+
+```{r eval=FALSE}
+devtools::install_github("stemangiola/sccomp")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(sccomp)
+data("seurat_obj")
+```
+
+# Deprecation of the function `sccomp_glm()`
+
+The new framework
+
+```{r fit, warning=FALSE, message=FALSE, cache=TRUE}
+
+outlier_free_estimate = 
+  seurat_obj |>
+  
+  # Estimate
+  sccomp_estimate( 
+    formula_composition = ~ type + continuous_covariate, 
+    .sample =  sample, 
+    .cell_group = cell_group, 
+    cores = 1
+  ) |>
+  
+  # Remove outliers
+  sccomp_remove_outliers(cores = 1) 
+
+  
+# Test
+outlier_free_estimate |>
+  sccomp_test(contrasts = "typehealthy") 
+
+```
+
+Replaces the old framework (that now will receive a deprecation warning)
+
+```{r, eval=FALSE}
+
+  seurat_obj |>
+  
+  # Estimate
+  sccomp_glm( 
+    formula_composition = ~ type + continuous_covariate, 
+    .sample =  sample, 
+    .cell_group = cell_group, 
+    check_outliers = TRUE,
+    contrasts = "typehealthy", 
+    cores = 1
+  ) 
+
+```
+
+# New functionalities
+
+## Removal of unwanted variation.
+
+For **visualisation** purposes, we can select factor of interest we would like to preserve the effect for, end exclude all the rest. For example, if we want to produce a dataset with just the `type` effect, we can execute
+
+```{r}
+outlier_free_estimate |>
+  sccomp_remove_unwanted_variation(~ type)
+```
+
+# Plotting
+
+The bloating functionalities have been improved. Now, both discrete and continuous variables can be visualised overlaying the to reticle data distribution from the model. This helps the user understanding whether the model is descriptively adequate to the data.
+
+For example, if the theoretical data distribution from the `sccomp` does not overlap with the observed data distribution, this is an indication that the probability distribution used by `sccomp` is not suitable for the data or a different model (design matrix) should be used.
+
+```{r, warning=FALSE, message=FALSE}
+outlier_free_estimate |>
+  sccomp_test(contrasts = "typehealthy") |> 
+  plot()
+
+```
+
+Now plotting the test against the continuous covariate
+
+
+```{r, warning=FALSE, message=FALSE}
+outlier_free_estimate |>
+  sccomp_test(contrasts = "continuous_covariate") |> 
+  plot()
+
+```
+
+```{r}
+sessionInfo()
+```
