@@ -126,8 +126,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000314 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.14 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000332 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.32 seconds.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Adjust your expectations accordingly!</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
@@ -141,39 +141,27 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Begin stochastic gradient ascent.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    100        -4223.189             1.000            1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    200        -3922.728             0.538            1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    300        -4302.840             0.388            0.088</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    400        -3888.712             0.318            0.106</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    500        -4066.046             0.263            0.088</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    600        -3795.707             0.231            0.088</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    700        -3888.362             0.201            0.077</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    800        -3920.009             0.177            0.077</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    900        -4156.705             0.164            0.071</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1000        -3906.921             0.154            0.071</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1100        -3883.397             0.055            0.064</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1200        -3889.602             0.047            0.057</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1300        -3862.139             0.039            0.044</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1400        -3831.691             0.029            0.024</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1500        -3756.839             0.027            0.020</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1600        -3863.265             0.022            0.020</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1700        -3861.530             0.020            0.008   MEDIAN ELBO CONVERGED</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    100        -3774.422             1.000            1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    200        -3707.134             0.509            1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    300        -3704.941             0.340            0.018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    400        -3698.557             0.255            0.018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    500        -3697.400             0.204            0.002   MEDIAN ELBO CONVERGED</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Drawing a sample of size 4000 from the approximate posterior... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: COMPLETED.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    cell_group sample       generated_proportions generated_counts replicate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> B1         10x_6K                      0.057<span style="text-decoration: underline;">9</span>              289         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> B1         10x_8K                      0.032<span style="text-decoration: underline;">4</span>              162         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> B1         GSE115189                   0.027<span style="text-decoration: underline;">1</span>              135         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> B1         SCP345_580                  0.065<span style="text-decoration: underline;">3</span>              326         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> B1         SCP345_860                  0.023<span style="text-decoration: underline;">3</span>              116         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> B1         SCP424_pbmc1                0.095<span style="text-decoration: underline;">1</span>              475         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> B1         SCP424_pbmc2                0.054<span style="text-decoration: underline;">7</span>              273         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> B1         SCP591                      0.097<span style="text-decoration: underline;">2</span>              486         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> B1         SI-GA-E5                    0.032<span style="text-decoration: underline;">3</span>              161         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> B1         SI-GA-E7                    0.043<span style="text-decoration: underline;">4</span>              217         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> B1         10x_6K                      0.054<span style="text-decoration: underline;">6</span>              272         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> B1         10x_8K                      0.068<span style="text-decoration: underline;">4</span>              341         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> B1         GSE115189                   0.055<span style="text-decoration: underline;">6</span>              278         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> B1         SCP345_580                  0.037<span style="text-decoration: underline;">2</span>              186         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> B1         SCP345_860                  0.070<span style="text-decoration: underline;">0</span>              349         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> B1         SCP424_pbmc1                0.041<span style="text-decoration: underline;">8</span>              208         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> B1         SCP424_pbmc2                0.044<span style="text-decoration: underline;">5</span>              222         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> B1         SCP591                      0.047<span style="text-decoration: underline;">0</span>              235         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> B1         SI-GA-E5                    0.029<span style="text-decoration: underline;">6</span>              148         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> B1         SI-GA-E7                    0.053<span style="text-decoration: underline;">7</span>              268         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 710 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
