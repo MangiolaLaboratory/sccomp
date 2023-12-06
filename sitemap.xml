@@ -10,6 +10,9 @@
     <loc>/articles/introduction.html</loc>
   </url>
   <url>
+    <loc>/articles/new_framework.html</loc>
+  </url>
+  <url>
     <loc>/authors.html</loc>
   </url>
   <url>
@@ -40,13 +43,25 @@
     <loc>/reference/multi_beta_glm.html</loc>
   </url>
   <url>
+    <loc>/reference/multipanel_theme.html</loc>
+  </url>
+  <url>
+    <loc>/reference/mutate_from_expr_list.html</loc>
+  </url>
+  <url>
+    <loc>/reference/plot.sccomp_tbl.html</loc>
+  </url>
+  <url>
     <loc>/reference/plot_summary.html</loc>
   </url>
   <url>
-    <loc>/reference/remove_unwanted_variation.html</loc>
+    <loc>/reference/sccomp-package.html</loc>
   </url>
   <url>
-    <loc>/reference/sccomp-package.html</loc>
+    <loc>/reference/sccomp_boxplot.html</loc>
+  </url>
+  <url>
+    <loc>/reference/sccomp_estimate.html</loc>
   </url>
   <url>
     <loc>/reference/sccomp_glm.html</loc>
@@ -55,7 +70,16 @@
     <loc>/reference/sccomp_predict.html</loc>
   </url>
   <url>
+    <loc>/reference/sccomp_remove_outliers.html</loc>
+  </url>
+  <url>
+    <loc>/reference/sccomp_remove_unwanted_variation.html</loc>
+  </url>
+  <url>
     <loc>/reference/sccomp_replicate.html</loc>
+  </url>
+  <url>
+    <loc>/reference/sccomp_test.html</loc>
   </url>
   <url>
     <loc>/reference/sce_obj.html</loc>

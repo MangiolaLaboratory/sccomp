@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.2</span>
       </span>
     </div>
 
@@ -33,6 +33,9 @@
   </a>
   <ul class="dropdown-menu" role="menu"><li>
       <a href="../articles/introduction.html">Overview of the sccomp package</a>
+    </li>
+    <li>
+      <a href="../articles/new_framework.html">New sccomp framework</a>
     </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"><li>
@@ -72,7 +75,7 @@
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>fit</dt>
-<dd><p>The result of sccomp_glm.</p></dd>
+<dd><p>The result of sccomp_estimate.</p></dd>
 
 
 <dt>formula_composition</dt>
@@ -104,11 +107,10 @@
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="va">.Platform</span><span class="op">$</span><span class="va">OS.type</span> <span class="op">==</span> <span class="st">"unix"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="sccomp_glm.html">sccomp_glm</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">counts_obj</span> ,</span></span>
 <span class="r-in"><span>   <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>,  <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span></span>
 <span class="r-in"><span>    approximate_posterior_inference <span class="op">=</span> <span class="st">"all"</span>,</span></span>
-<span class="r-in"><span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>    cores <span class="op">=</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span></span></span>
@@ -116,21 +118,62 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(sample)`</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(cell_group)`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: ------------------------------------------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: EXPERIMENTAL ALGORITHM:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   This procedure has not been thoroughly tested and may be unstable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   or buggy. The interface is subject to change.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: ------------------------------------------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000314 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.14 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Adjust your expectations accordingly!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Begin eta adaptation.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Success! Found best value [eta = 1] earlier than expected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Begin stochastic gradient ascent.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    100        -4223.189             1.000            1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    200        -3922.728             0.538            1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    300        -4302.840             0.388            0.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    400        -3888.712             0.318            0.106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    500        -4066.046             0.263            0.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    600        -3795.707             0.231            0.088</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    700        -3888.362             0.201            0.077</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    800        -3920.009             0.177            0.077</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    900        -4156.705             0.164            0.071</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1000        -3906.921             0.154            0.071</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1100        -3883.397             0.055            0.064</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1200        -3889.602             0.047            0.057</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1300        -3862.139             0.039            0.044</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1400        -3831.691             0.029            0.024</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1500        -3756.839             0.027            0.020</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1600        -3863.265             0.022            0.020</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   1700        -3861.530             0.020            0.008   MEDIAN ELBO CONVERGED</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Drawing a sample of size 4000 from the approximate posterior... </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: COMPLETED.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    cell_group sample       generated_proportions generated_counts replicate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> B1         10x_6K                      0.053<span style="text-decoration: underline;">3</span>              266         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> B1         10x_8K                      0.055<span style="text-decoration: underline;">6</span>              277         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> B1         GSE115189                   0.080<span style="text-decoration: underline;">4</span>              401         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> B1         SCP345_580                  0.051<span style="text-decoration: underline;">7</span>              258         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> B1         SCP345_860                  0.063<span style="text-decoration: underline;">9</span>              319         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> B1         SCP424_pbmc1                0.056<span style="text-decoration: underline;">1</span>              280         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> B1         SCP424_pbmc2                0.072<span style="text-decoration: underline;">9</span>              364         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> B1         SCP591                      0.075<span style="text-decoration: underline;">1</span>              375         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> B1         SI-GA-E5                    0.045<span style="text-decoration: underline;">3</span>              226         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> B1         SI-GA-E7                    0.035<span style="text-decoration: underline;">5</span>              177         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> B1         10x_6K                      0.057<span style="text-decoration: underline;">9</span>              289         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> B1         10x_8K                      0.032<span style="text-decoration: underline;">4</span>              162         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> B1         GSE115189                   0.027<span style="text-decoration: underline;">1</span>              135         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> B1         SCP345_580                  0.065<span style="text-decoration: underline;">3</span>              326         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> B1         SCP345_860                  0.023<span style="text-decoration: underline;">3</span>              116         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> B1         SCP424_pbmc1                0.095<span style="text-decoration: underline;">1</span>              475         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> B1         SCP424_pbmc2                0.054<span style="text-decoration: underline;">7</span>              273         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> B1         SCP591                      0.097<span style="text-decoration: underline;">2</span>              486         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> B1         SI-GA-E5                    0.032<span style="text-decoration: underline;">3</span>              161         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> B1         SI-GA-E7                    0.043<span style="text-decoration: underline;">4</span>              217         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 710 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
