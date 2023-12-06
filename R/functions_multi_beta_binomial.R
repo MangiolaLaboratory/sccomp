@@ -1,91 +1,202 @@
-#' multi_beta_binomial main
-#'
-#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
-#'
-#' @importFrom tibble as_tibble
-#' @import dplyr
-#' @importFrom tidyr spread
-#' @importFrom magrittr %$%
-#' @importFrom magrittr divide_by
-#' @importFrom magrittr multiply_by
-#' @importFrom purrr map2
-#' @importFrom purrr map_int
-#' @importFrom purrr map_chr
-#' @importFrom magrittr multiply_by
-#' @importFrom magrittr equals
-#' @importFrom purrr map
-#' @importFrom tibble rowid_to_column
-#' @importFrom purrr map_lgl
-#' @importFrom dplyr case_when
-#' @importFrom rlang :=
-#' @importFrom rlang quo_is_symbolic
-#'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
-#' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
-#' @param formula_variability A formula. The sample formula used to perform the differential cell_group variability analysis
-#' @param .sample A column name as symbol. The sample identifier
-#' @param .cell_group A column name as symbol. The cell_type identifier
-#' @param .count A column name as symbol. The cell_type abundance (read count)
-#'
-#' @param prior_mean_variable_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
-#' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
-#' @param check_outliers A boolean. Whether to check for outliers before the fit.
-#' @param .sample_cell_group_pairs_to_exclude A column name that includes a boolean variable for the sample/cell-group pairs to be ignored in the fit. This argument is for pro-users.
-#' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
-#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
-#' @param verbose A boolean. Prints progression.
-#' @param cores An integer. How many cored to be used with parallel calculations.
-#' @param seed An integer. Used for development and testing purposes
-#'
-#'
-#' @noRd
-#'
-#' @return A List object
-#'
-#'
-estimate_multi_beta_binomial_glm = function(.data,
-                                            formula_composition = ~ 1,
-                                            formula_variability = ~ 1,
-                                            .sample,
-                                            .cell_group,
-                                            .count,
+#' @importFrom tidyr complete
+#' @importFrom tidyr nesting
+#' @importFrom tidyr replace_na
+sccomp_glm_data_frame_raw = function(.data,
+                                     formula_composition = ~ 1 ,
+                                     formula_variability = ~ 1,
+                                     .sample,
+                                     .cell_group,
+                                     .count = NULL,
+                                     
+                                     # Secondary arguments
+                                     contrasts = NULL,
+                                     prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                     prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                     percent_false_positive =  5,
+                                     check_outliers = TRUE,
+                                     approximate_posterior_inference = "none",
+                                     test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                     verbose = FALSE,
+                                     exclude_priors = FALSE,
+                                     bimodal_mean_variability_association = FALSE,
+                                     enable_loo = FALSE,
+                                     use_data = TRUE,
+                                     cores = 4,
+                                     mcmc_seed = sample(1e5, 1),
+                                     max_sampling_iterations = 20000,
+                                     pass_fit = TRUE ) {
+  
+  # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
+  # See https://github.com/tidyverse/tidyr/issues/506
+  
+  
+  # Prepare column same enquo
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
+  # Check if columns exist
+  check_columns_exist(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    parse_formula(formula_composition)
+  ))
+  
+  # Check if any column is NA or null
+  check_if_any_NA(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    parse_formula(formula_composition)
+  ))
+  
+  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
+  
+  # Make counts
+  .data %>%
 
-                                            # Secondary parameters
-                                            contrasts = NULL,
-                                            #.grouping_for_random_intercept = NULL,
-                                            prior_mean_variable_association,
-                                            percent_false_positive = 5,
-                                            check_outliers = FALSE,
-																						.sample_cell_group_pairs_to_exclude = NULL,
-                                            approximate_posterior_inference = "all",
-                                            enable_loo = FALSE,
-                                            cores = detectCores(), # For development purpose,
-                                            seed = sample(1e5, 1),
-                                            verbose = FALSE,
-                                            exclude_priors = FALSE,
-                                            bimodal_mean_variability_association = bimodal_mean_variability_association,
-                                            use_data = use_data,
-                                            max_sampling_iterations = 20000
-) {
+    class_list_to_counts(!!.sample, !!.cell_group) %>%
+    
+    # Add formula_composition information
+    add_formula_columns(.data, !!.sample,formula_composition) |>
+    
+    # Attach possible exclusion of data points
+    left_join(.data %>%
+                as_tibble() |>
+                select(
+                  !!.sample, !!.cell_group, any_of(quo_name(.sample_cell_group_pairs_to_exclude))
+                ) %>%
+                distinct(),
+              by = c(quo_name(.sample), quo_name(.cell_group))
+    ) |>
+    mutate(
+      across(!!.sample_cell_group_pairs_to_exclude, ~replace_na(.x, 0))
+    ) |>
+    
+    # Return
+    sccomp_glm_data_frame_counts(
+      formula_composition = formula_composition,
+      formula_variability = formula_variability,
+      
+      .sample = !!.sample,
+      .cell_group = !!.cell_group,
+      .count = count,
+      contrasts = contrasts,
+      #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
+      prior_mean = prior_mean,
+      prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+      percent_false_positive =  percent_false_positive,
+      check_outliers = check_outliers,
+      approximate_posterior_inference = approximate_posterior_inference,
+      exclude_priors = exclude_priors,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      enable_loo = enable_loo,
+      use_data = use_data,
+      cores = cores,
+      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      verbose = verbose,
+      mcmc_seed = mcmc_seed,
+      max_sampling_iterations = max_sampling_iterations,
+      pass_fit = pass_fit
+    )
+}
+
+sccomp_glm_data_frame_counts = function(.data,
+                                        formula_composition = ~ 1 ,
+                                        formula_variability = ~ 1,
+                                        .sample,
+                                        .cell_group,
+                                        .count = NULL,
+                                        
+                                        # Secondary arguments
+                                        contrasts = NULL,
+                                        #.grouping_for_random_intercept = NULL,
+                                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                        percent_false_positive = 5,
+                                        check_outliers = TRUE,
+                                        approximate_posterior_inference = "none",
+                                        test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                        verbose = FALSE,
+                                        exclude_priors = FALSE,
+                                        bimodal_mean_variability_association = FALSE,
+                                        enable_loo = FALSE,
+                                        use_data = TRUE,
+                                        cores = 4,
+                                        mcmc_seed = sample(1e5, 1),
+                                        max_sampling_iterations = 20000,
+                                        pass_fit = TRUE) {
+  
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
+  
+  
+  #Check column class
+  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
+  
+  # Check that count is integer
+  if(.data %>% pull(!!.count) %>% is("integer") %>% not())
+    stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
+  
+  # Check if columns exist
+  check_columns_exist(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    quo_name(.count),
+    parse_formula(formula_composition)
+  ))
+  
+  # Check that I have rectangular data frame
+  if(
+    .data |> count(!!.sample) |> distinct(n) |> nrow() > 1 || 
+    .data |> count(!!.cell_group) |> distinct(n) |> nrow() > 1 
+  ){
+    warning(sprintf("sccomp says: the input data frame does not have the same number of `%s`, for all `%s`. We have made it so, adding 0s for the missing sample/feature pairs.", quo_name(.cell_group), quo_name(.sample)))
+    .data = .data |> 
+      
+      # I need renaming trick because complete list(...) cannot accept quosures
+      select(!!.sample, !!.cell_group, count := !!.count) |> 
+      distinct() |> 
+      complete( !!.sample, !!.cell_group, fill = list(count = 0) ) %>%
+      rename(!!.count := count) |> 
+      mutate(!!.count := as.integer(!!.count)) |> 
+      
+      # Add formula_composition information
+      add_formula_columns(.data, !!.sample, formula_composition) 
+  }
+  
+  
+  # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
+  if(test_composition_above_logit_fold_change <= 0)
+    stop("sccomp says: test_composition_above_logit_fold_change should be > 0 for the FDR to be calculated in the Bayesian context (doi: 10.1093/biostatistics/kxw041). Also, testing for > 0 differences avoids significant but meaningless (because of the small magnitude) estimates.")
+  
+  
+  # Check if any column is NA or null
+  check_if_any_NA(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    quo_name(.count),
+    parse_formula(formula_composition)
+  ))
+  
+  # Return
   
   # Credible interval
   CI = 1 - (percent_false_positive/100)
-
+  
   # Produce data list
   factor_names = parse_formula(formula_composition)
-
+  
   # Random intercept
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
-
+  
   # If no random intercept fake it
   if(nrow(random_intercept_elements)>0){
     .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
-
+    
   } else{
     .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
     .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
@@ -93,492 +204,128 @@ estimate_multi_beta_binomial_glm = function(.data,
   
   # If .sample_cell_group_pairs_to_exclude 
   if(quo_is_symbolic(.sample_cell_group_pairs_to_exclude)){
-  	
-  	# Error if not logical
-  	if(.data |> pull(!!.sample_cell_group_pairs_to_exclude) |> is("logical") |> not())
-  		stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be logical"))
-  	
-  	# Error if not consistent to sample/cell group
-  	if(.data |> count(!!.sample, !!.cell_group, name = "n") |> filter(n>1) |> nrow() |> gt(0))
-  		stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be unique with .sample/.cell_group pairs. You might have a .sample/.cell_group pair with both TRUE and FALSE {quo_name(.sample_cell_group_pairs_to_exclude)}."))
-  	
+    
+    # Error if not logical
+    if(.data |> pull(!!.sample_cell_group_pairs_to_exclude) |> is("logical") |> not())
+      stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be logical"))
+    
+    # Error if not consistent to sample/cell group
+    if(.data |> count(!!.sample, !!.cell_group, name = "n") |> filter(n>1) |> nrow() |> gt(0))
+      stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be unique with .sample/.cell_group pairs. You might have a .sample/.cell_group pair with both TRUE and FALSE {quo_name(.sample_cell_group_pairs_to_exclude)}."))
+    
   } else {
-  	
-  	# If no .sample_cell_group_pairs_to_exclude fake it
-  	.sample_cell_group_pairs_to_exclude = quo(!! sym(".sample_cell_group_pairs_to_exclude"))
-  	.data = .data |> mutate(!!.sample_cell_group_pairs_to_exclude := FALSE)
+    
+    # If no .sample_cell_group_pairs_to_exclude fake it
+    .sample_cell_group_pairs_to_exclude = quo(!! sym(".sample_cell_group_pairs_to_exclude"))
+    .data = .data |> mutate(!!.sample_cell_group_pairs_to_exclude := FALSE)
   }
   
-
+  
   # Original - old
   # prec_sd ~ normal(0,2);
   # prec_coeff ~ normal(0,5);
-
-  # If we are NOT checking outliers
-  if(!check_outliers){
-
-    message("sccomp says: estimation")
-
-    data_for_model =
-      .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
-      data_spread_to_model_input(
-        formula_composition, !!.sample, !!.cell_group, !!.count,
-        truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference == "all",
-        formula_variability = formula_variability,
-        contrasts = contrasts,
-        bimodal_mean_variability_association = bimodal_mean_variability_association,
-        use_data = use_data,
-        random_intercept_elements
-      )
-
-    # Print design matrix
-    message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
-    message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
-
-    # Force outliers, Get the truncation index
-  	data_for_model$truncation_not_idx = 
-  		.data |> 
-  		select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
-  		left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)) ) |>  
-  		left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)) ) |> 
-  		select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
-  		arrange(N, M) |>
-  		pull(!!.sample_cell_group_pairs_to_exclude) |>
-  		not() |>
-  		which()
-  	data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
-    # Prior
-    data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
-    data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
-    data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
-    data_for_model$exclude_priors = exclude_priors
-    data_for_model$enable_loo = TRUE & enable_loo
-
-    # # Check that design matrix is not too big
-    # if(ncol(data_for_model$X)>20)
-    #   message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical factors are erroneously of type character/factor.")
-
-    fit =
-      data_for_model %>%
-
-      # Run the first discovery phase with permissive false discovery rate
-      fit_model(
-        stanmodels$glm_multi_beta_binomial,
-        cores= cores,
-        quantile = CI,
-        approximate_posterior_inference = approximate_posterior_inference == "all",
-        verbose = verbose,
-        seed = seed,
-        max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
-      )
-
-    list(
-      fit = fit,
-      data_for_model = data_for_model,
-      truncation_df2 =  .data
-    )
-
-  }
-
-  # If we are checking outliers
-  else{
-
-    message("sccomp says: outlier identification first pass - step 1/3")
-
-    # Force variance NOT associated with mean for stringency of outlier detection
-    data_for_model =
-      .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
-      data_spread_to_model_input(
-        formula_composition, !!.sample, !!.cell_group, !!.count,
-        truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-        formula_variability = ~1,
-        contrasts = contrasts,
-        bimodal_mean_variability_association = bimodal_mean_variability_association,
-        use_data = use_data,
-        random_intercept_elements
-      )
-
-    
-    # Force outliers
-  	# Get the truncation index
-  	user_forced_truncation_not_idx = 
-  		.data |> 
-  		select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
-  		left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)) ) |>  
-  		left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)) ) |> 
-  		select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
-  		arrange(N, M) |>
-  		pull(!!.sample_cell_group_pairs_to_exclude) |>
-  		not() |>
-  		which()
-  	data_for_model$truncation_not_idx = user_forced_truncation_not_idx
-  	data_for_model$TNS = length(data_for_model$truncation_not_idx)
- 
-    
-    # Pior
-    data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
-    data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
-    data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
-    data_for_model$exclude_priors = exclude_priors
-
-
-    fit =
-      data_for_model %>%
-
-      # Run the first discovery phase with permissive false discovery rate
-      fit_model(
-        stanmodels$glm_multi_beta_binomial,
-        cores= cores,
-        quantile = CI,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-        verbose = verbose,
-        seed = seed,
-        max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept")
-      )
-
-    rng =  rstan::gqs(
-      stanmodels$glm_multi_beta_binomial_generate_date,
-      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit),
-
-      # This is for the new data generation with selected factors to do adjustment
-      data = data_for_model |> c(list(
-
-        # Add subset of coefficients
-        length_X_which = ncol(data_for_model$X),
-        length_XA_which = ncol(data_for_model$XA),
-        X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
-        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
-
-        # Random intercept
-        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
-        create_intercept = FALSE
-      ))
-    )
-
-    # Detect outliers
-    truncation_df =
-      .data %>%
-      left_join(
-        summary_to_tibble(rng, "counts", "N", "M", probs = c(0.05, 0.95)) %>%
-          nest(data = -N) %>%
-          mutate(!!.sample := rownames(data_for_model$y)) %>%
-          unnest(data) %>%
-          nest(data = -M) %>%
-          mutate(!!.cell_group := colnames(data_for_model$y)) %>%
-          unnest(data) ,
-
-        by = c(quo_name(.sample), quo_name(.cell_group))
-      ) %>%
-
-      # Add truncation
-      mutate(   truncation_down = `5%`,   truncation_up =  `95%`) %>%
-
-      # Add outlier stats
-      mutate( outlier = !(!!.count >= `5%` & !!.count <= `95%`) ) %>%
-      nest(data = -M) %>%
-      mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
-      unnest(data) %>%
-
-      mutate(
-        truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
-        truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up),
-      )
-
-    # Allow variance association
-    data_for_model =
-      .data %>%
-      data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
-      data_spread_to_model_input(
-        formula_composition, !!.sample, !!.cell_group, !!.count,
-        truncation_ajustment = 1.1,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-        formula_variability = formula_variability,
-        contrasts = contrasts,
-        bimodal_mean_variability_association = bimodal_mean_variability_association,
-        use_data = use_data,
-        random_intercept_elements
-      )
-
-    # Pior
-    data_for_model$prior_prec_intercept = prior_mean_variable_association$intercept
-    data_for_model$prior_prec_slope  = prior_mean_variable_association$slope
-    data_for_model$prior_prec_sd = prior_mean_variable_association$standard_deviation
-    data_for_model$exclude_priors = exclude_priors
-
-    # Add censoring
-    data_for_model$is_truncated = 1
-    data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-    data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-    data_for_model$truncation_not_idx = 
-    	(data_for_model$truncation_down >= 0) %>% 
-    	t() %>% 
-    	as.vector()  %>% 
-    	which() |>
-    	intersect(user_forced_truncation_not_idx) |>
-    	sort()
-    data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
-    message("sccomp says: outlier identification second pass - step 2/3")
-
-    my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
-
-    # This step gets the credible interval to control for within-category false positive rate
-    # We want a category-wise false positive rate of 0.1, and we have to correct for how many samples we have in each category
-    CI_step_2 = (1-my_quantile_step_2) / 2 * 2
-
-
-    fit2 =
-      data_for_model %>%
-      fit_model(
-        stanmodels$glm_multi_beta_binomial,
-        cores = cores,
-        quantile = my_quantile_step_2,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("outlier_detection", "all"),
-        verbose = verbose,
-        seed = seed,
-        max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
-      )
-
-    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
-
-    rng2 =  rstan::gqs(
-      stanmodels$glm_multi_beta_binomial_generate_date,
-      #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-      draws =  as.matrix(fit2),
-      data = data_for_model |> c(list(
-
-        # Add subset of coefficients
-        length_X_which = ncol(data_for_model$X),
-        length_XA_which = ncol(data_for_model$XA),
-        X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
-        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
-
-        # Random intercept
-        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
-        create_intercept = FALSE
-
-      ))
-    )
-
-    # Detect outliers
-    truncation_df2 =
-      .data %>%
-      left_join(
-        summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 0.5, 1-CI_step_2)) %>%
-
-          # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
-          # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
-          rename(
-            .lower := !!as.symbol(colnames(.)[7]) ,
-            .median = `50%`,
-            .upper := !!as.symbol(colnames(.)[9])
-          ) %>%
-          nest(data = -N) %>%
-          mutate(!!.sample := rownames(data_for_model$y)) %>%
-          unnest(data) %>%
-          nest(data = -M) %>%
-          mutate(!!.cell_group := colnames(data_for_model$y)) %>%
-          unnest(data) ,
-
-        by = c(quo_name(.sample), quo_name(.cell_group))
-      ) %>%
-
-      # Add truncation
-      mutate(   truncation_down = .lower,   truncation_up =  .upper) %>%
-
-      # Add outlier stats
-      mutate( outlier = !(!!.count >= .lower & !!.count <= .upper) ) %>%
-      nest(data = -M) %>%
-      mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
-      unnest(data) %>%
-
-      mutate(
-        truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
-        truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up)
-      )
-
-
-    data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-    data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-    data_for_model$truncation_not_idx = 
-    	(data_for_model$truncation_down >= 0) %>% 
-    	t() %>% 
-    	as.vector()  %>% 
-    	which() |>
-    	intersect(user_forced_truncation_not_idx) |>
-    	sort()
-    data_for_model$TNS = length(data_for_model$truncation_not_idx)
-    
-    # LOO
-    data_for_model$enable_loo = TRUE & enable_loo
-
-    message("sccomp says: outlier-free model fitting - step 3/3")
-
-    # Print design matrix
-    message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
-    message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
-
-    fit3 =
-      data_for_model %>%
-      # Run the first discovery phase with permissive false discovery rate
-      fit_model(
-        stanmodels$glm_multi_beta_binomial,
-        cores = cores,
-        quantile = CI,
-        approximate_posterior_inference = approximate_posterior_inference %in% c("all"),
-        verbose = verbose, seed = seed,
-        max_sampling_iterations = max_sampling_iterations,
-        pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
-      )
-
-    #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500)
-
-    list(
-      fit = fit3,
-      data_for_model = data_for_model,
-      truncation_df2 =
-        truncation_df2
-    )
-
-
-  }
-
-
-}
-
-
-#' multi_beta_binomial main
-#'
-#' @description This function runs the data modelling and statistical test for the hypothesis that a cell_type includes outlier biological replicate.
-#'
-#' @importFrom tibble as_tibble
-#' @import dplyr
-#' @importFrom tidyr spread
-#' @importFrom magrittr %$%
-#' @importFrom magrittr divide_by
-#' @importFrom magrittr multiply_by
-#' @importFrom purrr map2
-#' @importFrom purrr map_int
-#' @importFrom magrittr multiply_by
-#' @importFrom magrittr equals
-#' @importFrom purrr map
-#' @importFrom tibble rowid_to_column
-#' @importFrom purrr map_lgl
-#' @importFrom dplyr case_when
-#' @importFrom rlang :=
-#'
-#' @keywords internal
-#' @noRd
-#'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
-#' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
-#' @param formula_variability A formula. The sample formula used to perform the differential cell_group variability analysis
-#' @param .sample A column name as symbol. The sample identifier
-#' @param .cell_group A column name as symbol. The cell_type identifier
-#' @param .count A column name as symbol. The cell_type abundance (read count)
-#' @param check_outliers A boolean. Whether to check for outliers before the fit.
-#' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
-#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
-#' @param verbose A boolean. Prints progression.
-#' @param cores An integer. How many cored to be used with parallel calculations.
-#' @param seed An integer. Used for development and testing purposes
-#'
-#' @return A nested tibble `tbl` with cell_type-wise information: `sample wise data` | plot | `ppc samples failed` | `exposure deleterious outliers`
-#'
-#'
-multi_beta_binomial_glm = function(.data,
-                                   formula_composition = ~ 1,
-                                   formula_variability = ~1,
-                                   .sample,
-                                   .cell_group,
-                                   .count,
-
-                                   # Secondary parameters
-                                   contrasts = NULL,
-                                   #.grouping_for_random_intercept = NULL,
-                                   prior_mean_variable_association,
-                                   percent_false_positive = 5,
-                                   check_outliers = FALSE,
-																	 .sample_cell_group_pairs_to_exclude = NULL,
-                                   approximate_posterior_inference = TRUE,
-                                   enable_loo = FALSE,
-                                   cores = detectCores(), # For development purpose,
-                                   seed = sample(1e5, 1),
-                                   verbose = FALSE,
-                                   exclude_priors = FALSE,
-                                   bimodal_mean_variability_association = FALSE,
-                                   use_data = TRUE,
-                                   test_composition_above_logit_fold_change,
-                                   max_sampling_iterations = 20000,
-                                   pass_fit = TRUE
-) {
-
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .count = enquo(.count)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
-  #contrasts = contrasts |> enquo() |> quo_names()
-
-  estimates_list =
-    estimate_multi_beta_binomial_glm(
-      .data = .data,
-      formula_composition = formula_composition,
-      .sample = !!.sample,
-      .cell_group = !!.cell_group,
-      .count = !!.count,
+  message("sccomp says: estimation")
+  
+  data_for_model =
+    .data %>%
+    data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
+    data_spread_to_model_input(
+      formula_composition, !!.sample, !!.cell_group, !!.count,
+      truncation_ajustment = 1.1,
+      approximate_posterior_inference = approximate_posterior_inference == "all",
       formula_variability = formula_variability,
       contrasts = contrasts,
-      #.grouping_for_random_intercept = !!.grouping_for_random_intercept,
-      prior_mean_variable_association = prior_mean_variable_association,
-      percent_false_positive = percent_false_positive,
-      check_outliers = check_outliers,
-      .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
-      approximate_posterior_inference = approximate_posterior_inference,
-      enable_loo = enable_loo,
-      cores = cores, # For development purpose,
-      seed = seed,
-      verbose = verbose,
-      exclude_priors = exclude_priors,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       use_data = use_data,
-      max_sampling_iterations = max_sampling_iterations
+      random_intercept_elements
     )
-
+  
+  # Print design matrix
+  message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
+  message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
+  
+  # Force outliers, Get the truncation index
+  data_for_model$user_forced_truncation_not_idx = 
+    .data |> 
+    select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
+    left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)), by = join_by(!!.sample) ) |>  
+    left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)), by = join_by(!!.cell_group) ) |> 
+    select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
+    arrange(N, M) |>
+    pull(!!.sample_cell_group_pairs_to_exclude) |>
+    not() |>
+    which()
+  
+  data_for_model$truncation_not_idx = data_for_model$user_forced_truncation_not_idx
+  data_for_model$TNS = length(data_for_model$truncation_not_idx)
+  
+  # Prior
+  data_for_model$prior_prec_intercept = prior_overdispersion_mean_association$intercept
+  data_for_model$prior_prec_slope  = prior_overdispersion_mean_association$slope
+  data_for_model$prior_prec_sd = prior_overdispersion_mean_association$standard_deviation
+  data_for_model$prior_mean_intercept = prior_mean$intercept
+  data_for_model$prior_mean_coefficients = prior_mean$coefficients
+  data_for_model$exclude_priors = exclude_priors
+  data_for_model$enable_loo = TRUE & enable_loo
+  
+  # # Check that design matrix is not too big
+  # if(ncol(data_for_model$X)>20)
+  #   message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical factors are erroneously of type character/factor.")
+  
+  fit =
+    data_for_model %>%
+    
+    # Run the first discovery phase with permissive false discovery rate
+    fit_model(
+      stanmodels$glm_multi_beta_binomial,
+      cores= cores,
+      quantile = CI,
+      approximate_posterior_inference = approximate_posterior_inference == "all",
+      verbose = verbose,
+      seed = mcmc_seed,
+      max_sampling_iterations = max_sampling_iterations,
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+    )
+  
+  
+  
+  
+  # argg <- c(as.list(environment()), list(...))
+  # 
+  # list(
+  # 	fit = fit,
+  # 	data_for_model = data_for_model,
+  # 	truncation_df2 =  .data
+  # )
+  
   # Create a dummy tibble
   tibble() |>
     # Attach association mean concentration
-    add_attr(estimates_list$fit, "fit") %>%
-    add_attr(estimates_list$data_for_model, "model_input") |>
-    add_attr(estimates_list$truncation_df2, "truncation_df2") |>
+    add_attr(fit, "fit") %>%
+    add_attr(data_for_model, "model_input") |>
+    add_attr(.data, "truncation_df2") |>
     add_attr(.sample, ".sample") |>
     add_attr(.cell_group, ".cell_group") |>
     add_attr(.count, ".count") |>
     add_attr(check_outliers, "check_outliers") |>
     add_attr(formula_composition, "formula_composition") |>
     add_attr(formula_variability, "formula_variability") |>
-
-    test_contrasts(
-      contrasts = contrasts,
-      percent_false_positive = percent_false_positive,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change
-    )
-
-
+    add_attr(parse_formula(formula_composition), "factors" ) |> 
+    
+    # Add class to the tbl
+    add_class("sccomp_tbl") |> 
+    
+    # Print estimates
+    sccomp_test() |>
+    
+    # drop hypothesis testing as the estimation exists without probabilities.
+    # For hypothesis testing use sccomp_test
+    select(-contains("_FDR"), -contains("_pH0")) 
 }
+
+
+
 
 #' @importFrom stats model.matrix
 get_mean_precision = function(fit, data_for_model){

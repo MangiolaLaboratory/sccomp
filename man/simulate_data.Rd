@@ -20,7 +20,7 @@ simulate_data(
 \arguments{
 \item{.data}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
 
-\item{.estimate_object}{The result of sccomp_glm execution. This is used for sampling from real-data properties.}
+\item{.estimate_object}{The result of sccomp_estimate execution. This is used for sampling from real-data properties.}
 
 \item{formula_composition}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
 
@@ -50,11 +50,10 @@ data("counts_obj")
 library(dplyr)
 
 estimate =
- sccomp_glm(
+ sccomp_estimate(
  counts_obj ,
   ~ type, ~1,  sample, cell_group, count,
    approximate_posterior_inference = "all",
-   check_outliers = FALSE,
    cores = 1
  )
 

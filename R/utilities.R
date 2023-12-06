@@ -32,6 +32,7 @@ add_attr = function(var, attribute, name) {
 #'
 #' @importFrom stringr str_subset
 #' @importFrom magrittr extract2
+#' @importFrom stats terms
 #'
 #' @return A character vector
 #'
@@ -49,6 +50,54 @@ parse_formula <- function(fm) {
       .[-1]
 }
 
+
+#' Formula parser
+#'
+#' @param fm A formula
+#'
+#' @importFrom stringr str_subset
+#' @importFrom stringr str_split
+#' @importFrom stringr str_remove_all
+#' @importFrom rlang set_names
+#' @importFrom purrr map_dfr
+#' @importFrom stringr str_trim
+#'
+#' @importFrom magrittr extract2
+#'
+#' @return A character vector
+#'
+#' @keywords internal
+#' @noRd
+formula_to_random_effect_formulae <- function(fm) {
+
+  stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
+
+  random_intercept_elements =
+    as.character(attr(terms(fm), "variables")) |>
+
+    # Select random intercept part
+    str_subset("\\|")
+
+  if(length(random_intercept_elements) > 0){
+
+    random_intercept_elements |>
+
+      # Divide grouping from factors
+      str_split("\\|") |>
+
+      # Set name
+      map_dfr(~ .x |> set_names(c("formula", "grouping"))) |>
+
+      # Create formula
+      mutate(formula = map(formula, ~ formula(glue("~ {.x}")))) |>
+      mutate(grouping = grouping |> str_trim())
+
+  }
+
+  else
+    tibble(`formula` = list(), grouping = character())
+
+}
 
 #' Formula parser
 #'
@@ -78,37 +127,36 @@ parse_formula_random_intercept <- function(fm) {
 
   if(length(random_intercept_elements) > 0){
 
-    random_intercept_elements |>
-
-      # Divide grouping from factors
-      str_split("\\|") |>
-
-      # Set name
-      map(~ .x |> set_names(c("factor", "grouping"))) |>
-
-      # Convert to tibble
-      map_dfr(~ .x) |>
+    formula_to_random_effect_formulae(fm) |>
 
       # Divide factors
-      mutate(`factor` = map(`factor`, ~ .x |> str_split("\\+"))) |>
-      unnest(`factor`) |>
+      mutate(factor = map(
+        formula,
+        ~
+          # Attach intercept
+          .x |>
+          terms() |>
+          attr("intercept") |>
+          str_replace("^1$", "(Intercept)") |>
+          str_subset("0", negate = TRUE) |>
 
-      # Clean
-      mutate(`factor` = map(`factor`, ~ .x |> str_remove_all(" ")), grouping = grouping |> str_remove_all(" ")) |>
-
-      # Nest
-      unnest(`factor`) |>
-
-      # Rename intercept
-      mutate(`factor` = if_else(`factor`=="1", "(Intercept)", `factor`))
-
-    #|>
-    #  distinct()
+          # Attach variables
+          c(
+            .x |>
+            terms() |>
+            attr("variables") |>
+            as.character() |>
+            str_split("\\+") |>
+            as.character() %>%
+            .[-1]
+          )
+      )) |>
+      unnest(factor)
 
   }
 
   else
-    tibble(`factor` = character(), grouping = character())
+    tibble(factor = character(), grouping = character())
 
 }
 
@@ -259,7 +307,7 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
              sep = "[\\[,\\]]",
              extra = "drop") %>%
     mutate(S = S %>% as.integer, G = G %>% as.integer) %>%
-    select(-one_of(c("n_eff", "Rhat", "khat"))) %>%
+    select(-any_of(c("n_eff", "Rhat", "khat"))) %>%
     rename(`.lower` = (.) %>% ncol - 1,
            `.upper` = (.) %>% ncol)
 }
@@ -287,8 +335,6 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     as.data.frame %>%
     as_tibble() %>%
     mutate(.iteration = seq_len(n())) %>%
-
-    #when(!is.null(number_of_draws) ~ sample_n(., number_of_draws), ~ (.)) %>%
 
     pivot_longer(
       names_to = c("dummy", ".chain", ".variable", x, y),
@@ -341,36 +387,49 @@ draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
 
 }
 
+# Import necessary functions from other packages
 #' @importFrom tidyr separate
 #' @importFrom purrr when
 #' @importFrom rstan summary
-#'
-#' @param fit A fit object
-#' @param par A character vector. The parameters to extract.
-#' @param x A character. The first index.
-#' @param y A character. The first index.
-#' @param probs A numrical vector. The quantiles to extract.
-#'
+#' 
+#' @param fit A fit object from a statistical model, from the 'rstan' package.
+#' @param par A character vector specifying the parameters to extract from the fit object.
+#' @param x A character string specifying the first index in the parameter names.
+#' @param y A character string specifying the second index in the parameter names (optional).
+#' @param probs A numerical vector specifying the quantiles to extract.
+#' 
 #' @keywords internal
 #' @noRd
 summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
-
+  
+  # Extract parameter names from the fit object that match the 'par' argument
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
-
-  # Avoid bug
+  
+  # Handling potential null value in the fit object's method attribute
+  # Avoiding a bug by setting a default method if none is specified
   if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
-
-  fit %>%
+  
+  # Extracting the summary of the specified parameters with the given probabilities
+  summary = 
+    fit %>%
     rstan::summary(par_names, probs = probs) %$%
     summary %>%
-    as_tibble(rownames = ".variable") %>%
-    when(
-      is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
-      ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
-    ) %>%
-    filter(.variable == par)
-
+    as_tibble(rownames = ".variable") # Convert the summary to a tibble for easier handling
+  
+  # Separate the variable names in the summary based on the presence of 'y'
+  # This process involves splitting the variable names into different columns
+  if(is.null(y)) {
+    summary = summary |> 
+      tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
+  } else {
+    summary = summary |> 
+      tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
+  }
+  
+  # Filter the summary to only include rows where the variable matches 'par'
+  summary |> filter(.variable == par)
 }
+
 
 #' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
@@ -413,19 +472,18 @@ fit_model = function(
 
   # Find number of draws
   draws_supporting_quantile = 50
-  if(is.null(output_samples))
+  if(is.null(output_samples)){
+    
     output_samples =
       (draws_supporting_quantile/((1-quantile)/2)) %>% # /2 because I have two tails
-      max(4000) %>%
-
-      # If it's bigger than 20K CAP because it would get too extreme
-      when(
-        (.) > max_sampling_iterations ~ {
-          # warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
-          max_sampling_iterations
-        },
-        (.)
-      )
+      max(4000) 
+    
+    if(output_samples > max_sampling_iterations) {
+      warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+      output_samples = max_sampling_iterations
+    
+  }}
+    
 
   # Find optimal number of chains
   if(is.null(chains))
@@ -507,7 +565,7 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fact
 
   effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
 
-  fitted %>%
+  CI = fitted %>%
     unnest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration))) %>%
     nest(data = -c(M, C, C_name)) %>%
     # Attach beta
@@ -523,17 +581,16 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fact
     )) %>%
     unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
     select(-data, -C) %>%
-    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
-
-    # Create main effect if exists
-    when(
-      !is.na(factor_of_interest) ~ mutate(., !!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
-        nest(composition_CI = -c(M, !!effect_column_name)),
-      ~ nest(., composition_CI = -c(M))
-    )
-
-
-
+    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) 
+  
+  # Create main effect if exists
+  if(!is.na(factor_of_interest) )
+    CI |>
+    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
+    nest(composition_CI = -c(M, !!effect_column_name))
+  
+  else 
+    CI |> nest(composition_CI = -c(M))
 
 }
 
@@ -572,8 +629,76 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 
 }
 
+
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
+#' @noRd
+get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
+
+  .sample = enquo(.sample)
+
+ grouping_table =
+   formula_composition |>
+   formula_to_random_effect_formulae() |>
+
+   mutate(design = map2(
+     formula, grouping,
+     ~ {
+
+       mydesign = .data_ |> get_design_matrix(.x, !!.sample)
+
+       mydesign_grouping = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
+       mydesign_grouping[mydesign==0L] = NA
+       colnames(mydesign_grouping) = colnames(mydesign)
+       rownames(mydesign_grouping) = rownames(mydesign)
+
+       mydesign_grouping |>
+         as_tibble(rownames = quo_name(.sample)) |>
+         pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
+         filter(!is.na(grouping)) |>
+
+          mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() )|>
+          with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
+         mutate(minus_sum = if_else(mean_idx==0, factor |> as.factor() |> as.integer(), 0L)) |>
+
+         # Make right rank
+         mutate(mean_idx = mean_idx |> as.factor() |> as.integer() |> subtract(1)) |>
+
+         # drop minus_sum if we just have one grouping per factor
+         with_groups(factor, ~ {
+           if(length(unique(..1$grouping)) == 1) ..1 |> mutate(., minus_sum = 0)
+             else ..1
+         }) |>
+
+         # Add value
+        left_join(
+
+          mydesign |>
+            as_tibble(rownames = quo_name(.sample)) |>
+            mutate_all(as.character) |>
+            readr::type_convert(guess_integer = TRUE ) |>
+            suppressMessages() |>
+            mutate_if(is.integer, ~1) |>
+            pivot_longer(-!!.sample, names_to = "factor"),
+
+          by = join_by(!!.sample, factor)
+        ) |>
+
+         # Create unique name
+         mutate(group___label = glue("{factor}___{grouping}")) |>
+         mutate(group___numeric = group___label |> as.factor() |> as.integer()) |>
+         mutate(factor___numeric = `factor` |> as.factor() |> as.integer())
+
+
+
+     }))
+
+ }
+
+
+#' @importFrom glue glue
+#' @importFrom magrittr subtract
+#' @noRd
 get_random_intercept_design = function(.data_, .sample, random_intercept_elements ){
 
   .sample = enquo(.sample)
@@ -592,7 +717,7 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
   random_intercept_elements |>
     mutate(is_factor_continuous = map_lgl(
       `factor`,
-      ~ .x != "(Intercept)" && .data_ |> select(.x) |> pull(1) |> is("numeric")
+      ~ .x != "(Intercept)" && .data_ |> select(all_of(.x)) |> pull(1) |> is("numeric")
     )) |>
     mutate(design = pmap(
       list(grouping, `factor`, is_factor_continuous),
@@ -645,7 +770,10 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
           mutate(minus_sum = if_else(mean_idx==0, as.factor(factor___numeric) |> as.integer(), 0L)) |>
 
           # drop minus_sum if we just have one group___numeric per factor
-          with_groups(factor___numeric, ~ ..1 |> when(length(unique(..1$group___numeric)) == 1 ~ mutate(., minus_sum = 0), ~ (.)))  |>
+          with_groups(factor___numeric, ~ {
+            if(length(unique(..1$group___numeric)) == 1) ..1 |> mutate(., minus_sum = 0)
+            else ..1
+          }) |>
           mutate(factor___numeric = as.factor(factor___numeric) |> as.integer())
 
         #|>
@@ -681,25 +809,21 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
 }
 
 #' @importFrom glue glue
+#' @noRd
 get_design_matrix = function(.data_spread, formula, .sample){
 
   .sample = enquo(.sample)
 
-  .data_spread %>%
+  design_matrix =
+  	.data_spread %>%
 
-    select(!!.sample, parse_formula(formula)) %>%
-    model.matrix(formula, data=.) %>%
-    apply(2, function(x)
-      x %>% when(
-        sd(.)==0 ~ (.),
+    select(!!.sample, parse_formula(formula)) |>
+  	mutate(across(where(is.numeric),  scale)) |>
+    model.matrix(formula, data=_)
 
-        # If I only have 0 and 1 for a binomial factor
-        unique(.) %>% sort() %>% identical(c(0,1)) %>% all() ~ (.),
+  rownames(design_matrix) = .data_spread |> pull(!!.sample)
 
-        # If continuous
-        ~ scale(.)
-      )
-    )
+  design_matrix
 }
 
 check_random_intercept_design = function(.data, factor_names, random_intercept_elements, formula, X){
@@ -718,7 +842,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
         # Check that the group column is categorical
         stopifnot("sccomp says: the grouping column should be categorical (not numeric)" =
                     .data_ |>
-                    select(.x) |>
+                    select(all_of(.x)) |>
                     pull(1) |>
                     class() %in%
                     c("factor", "logical", "character")
@@ -730,9 +854,9 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
         #   "sccomp says: the random intercept completely confounded with one or more discrete factors" =
         #     !(
         #       !.y |> equals("(Intercept)") &&
-        #         .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
+        #         .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
         #         .data_ |>
-        #         select(.x, one_of(.y)) |>
+        #         select(.x, any_of(.y)) |>
         #         select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
         #         distinct() %>%
         #
@@ -771,7 +895,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
                 .y |> equals("(Intercept)") |> any() &&
                   length(.y) > 1 &&
                 # If I have random slope and non-intercept-free model
-                .data_ |> select(one_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
+                .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
 
             )
         )
@@ -832,6 +956,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
 #' @importFrom tidyr expand_grid
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_remove_all
+#' @importFrom purrr reduce
 #'
 #' @keywords internal
 #' @noRd
@@ -853,9 +978,9 @@ data_spread_to_model_input =
     .grouping_for_random_intercept =
       random_intercept_elements |>
       pull(grouping) |>
-      unique() |>
-
-      when(length(.)==0 ~ "random_intercept", ~ (.))
+      unique() 
+    
+    if (length(.grouping_for_random_intercept)==0 ) .grouping_for_random_intercept = "random_intercept"
 
 
     X  =
@@ -896,83 +1021,55 @@ data_spread_to_model_input =
 
     # Random intercept
     if(nrow(random_intercept_elements)>0 ) {
-      check_random_intercept_design(.data_spread, any_of(factor_names), random_intercept_elements, formula, X)
-      random_intercept_grouping = get_random_intercept_design(.data_spread, !!.sample,  random_intercept_elements )
 
+      #check_random_intercept_design(.data_spread, any_of(factor_names), random_intercept_elements, formula, X)
+      random_intercept_grouping = get_random_intercept_design2(.data_spread, !!.sample,  formula )
+
+      # Actual parameters, excluding for the sum to one parameters
       N_random_intercepts = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow())) |> pull(n) |> sum()
+
+      # Number of sum to one
       N_minus_sum = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(minus_sum>0) |> distinct(minus_sum) |> nrow())) |> pull(n) |> sum()
+
       paring_cov_random_intercept =
         random_intercept_grouping |>
         mutate(mat = map(design, ~ .x |> distinct(factor___numeric, mean_idx) |> filter(mean_idx>0) )) |>
         select(mat) |>
         unnest(mat) |>
+        arrange(factor___numeric, mean_idx) |>
         as_matrix()
 
-        X_random_intercept =
-          random_intercept_grouping |>
-          mutate(design_matrix = pmap(
-            list(design, grouping, `factor`, is_factor_continuous),
-            ~ {
+      X_random_intercept =
+        random_intercept_grouping |>
+        mutate(design_matrix = map(
+          design,
+          ~ ..1 |>
+            select(!!.sample, group___label, value) |>
+            pivot_wider(names_from = group___label, values_from = value) |>
+            mutate(across(everything(), ~ .x |> replace_na(0)))
+        )) |>
 
-              # This code make sures I don't get random effects for factors that are not in the design matrix,
-              # for example if there is an intercept term
+        # Merge
+        pull(design_matrix) |>
+      	reduce(left_join, by = join_by(!!.sample)) |>
+        as_matrix(rownames = quo_name(.sample))
 
-              # possible_factors
-              possible_factors =
-                ..1 |>
-                unite("factor_name", c(factor___, factor___), sep = "") |> # I'm confused
-                distinct(factor_name) |>
+    idx_group_random_intercepts =
+      random_intercept_grouping |>
+      mutate(design = map(design, ~ .x |> select(mean_idx, minus_sum, group___numeric, group___label))) |>
+      select(design) |>
+      unnest(design) |>
 
-                # Make exception for (Intercept). In the future I have to make this a bit more elegant.
-                mutate(factor_name = factor_name |> str_replace("\\(Intercept\\)1", "\\(Intercept\\)")) |>
-                pull(factor_name)
-
-              # Which possible factor I have (for example do I have intercept free model or not?)
-              weight_random_slopes =
-                X[,colnames(X) %in% possible_factors, drop=FALSE] |>
-                rowSums()
-
-              my_X =
-                ..1 |>
-
-                # Get matrix
-                get_design_matrix(~ 0 + group___label,  !!.sample)
-
-              if(..4)
-                my_X =
-                my_X|>
-
-                # If countinuous multiply the matrix by the factor
-                apply(2, function(x) x * weight_random_slopes)
-
-              return(my_X)
-
-            }
-          )) |>
-
-          # Merge
-          pull(design_matrix) |>
-          bind_cols() %>%
-
-          # Clean matrix names
-          set_names(str_remove_all(colnames(.), "group___label"))
-
-        idx_group_random_intercepts =
-          random_intercept_grouping |>
-          mutate(design = map(design, ~ .x |> select(mean_idx, minus_sum, group___numeric, group___label))) |>
-          select(design) |>
-          unnest(design) |>
-
-          mutate(minus_sum = -minus_sum) |>
-          mutate(idx = mean_idx + minus_sum) |>
-          distinct(group___numeric, idx, group___label) |>
-          as_matrix(rownames = "group___label")
+      mutate(minus_sum = -minus_sum) |>
+      mutate(idx = mean_idx + minus_sum) |>
+      distinct(group___numeric, idx, group___label) |>
+      as_matrix(rownames = "group___label")
 
 
-        N_grouping =
-          random_intercept_grouping |>
-          mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
-          pull(n) |> sum()
+    N_grouping =
+      random_intercept_grouping |>
+      mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
+      pull(n) |> sum()
 
     } else {
       X_random_intercept = matrix(rep(1, nrow(.data_spread)))[,0]
@@ -1023,12 +1120,12 @@ data_spread_to_model_input =
     # Add parameter factor dictionary
     data_for_model$factor_parameter_dictionary = tibble()
 
-    if(.data_spread  |> select(parse_formula(formula)) |> lapply(class) %in% c("factor", "character") |> any())
+    if(.data_spread  |> select(any_of(parse_formula(formula))) |> lapply(class) %in% c("factor", "character") |> any())
       data_for_model$factor_parameter_dictionary =
       data_for_model$factor_parameter_dictionary |> bind_rows(
         # For discrete
         .data_spread  |>
-          select(parse_formula(formula))  |>
+          select(any_of(parse_formula(formula)))  |>
           distinct()  |>
 
           # Drop numerical
@@ -1042,13 +1139,13 @@ data_spread_to_model_input =
       )
 
  # For continuous
-    if(.data_spread  |> select(parse_formula(formula)) |> lapply(class) |> equals("numeric") |> any())
+    if(.data_spread  |> select(all_of(parse_formula(formula))) |> lapply(class) |> equals("numeric") |> any())
       data_for_model$factor_parameter_dictionary =
       data_for_model$factor_parameter_dictionary |>
           bind_rows(
             tibble(
               design_matrix_col =  .data_spread  |>
-                select(parse_formula(formula))  |>
+                select(all_of(parse_formula(formula)))  |>
                 distinct()  |>
 
                 # Drop numerical
@@ -1071,12 +1168,28 @@ data_spread_to_model_input =
 
     data_for_model$intercept_in_design = X[,1] |> unique() |> identical(1)
 
-    data_for_model$A_intercept_columns =
-      when(
-        data_for_model$intercept_in_design | length(factor_names_variability)==0, (.) ~ 1,
-        ~ .data_spread |> select(any_of(factor_names[1])) |> distinct() |> nrow()
-      )
-
+    
+    if (data_for_model$intercept_in_design | length(factor_names_variability) == 0) {
+      data_for_model$A_intercept_columns = 1
+    } else {
+      data_for_model$A_intercept_columns = 
+        .data_spread |> 
+        select(any_of(factor_names[1])) |> 
+        distinct() |> 
+        nrow()
+    }
+    
+    
+    if (data_for_model$intercept_in_design ) {
+      data_for_model$B_intercept_columns = 1
+    } else {
+      data_for_model$B_intercept_columns = 
+        .data_spread |> 
+        select(any_of(factor_names[1])) |> 
+        distinct() |> 
+        nrow()
+    }
+    
     # Return
     data_for_model
   }
@@ -1122,16 +1235,23 @@ data_simulation_to_model_input =
     X =
       sample_data %>%
       model.matrix(formula, data=.) %>%
-      apply(2, function(x) x %>% when(sd(.)==0 ~ (.), ~ scale(., scale=FALSE))) %>%
+      apply(2, function(x) {
+        
+        if(sd(x)==0 ) x
+        else x |> scale(scale=FALSE)
+        
+      } ) %>%
       {
         .x = (.)
         rownames(.x) = sample_data %>% pull(!!.sample)
         .x
       }
 
-    XA = factor_names %>%
-      when((.) == "1" ~ X[,1, drop=FALSE], ~ X[,c(1,2), drop=FALSE]) %>%
-      as_tibble() %>%
+    if(factor_names == "1") XA = X[,1, drop=FALSE]
+    else XA = X[,c(1,2), drop=FALSE]
+    
+    XA = XA |> 
+      as_tibble()  |> 
       distinct()
 
     cell_cluster_names =
@@ -1382,6 +1502,7 @@ design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, c
 }
 
 #' @importFrom rlang ensym
+#' @noRd
 class_list_to_counts = function(.data, .sample, .cell_group){
 
   .sample_for_tidyr = ensym(.sample)
@@ -1403,6 +1524,7 @@ class_list_to_counts = function(.data, .sample, .cell_group){
 }
 
 #' @importFrom dplyr cummean
+#' @noRd
 get_FDR = function(x){
   enframe(x) %>%
     arrange(value) %>%
@@ -1414,6 +1536,7 @@ get_FDR = function(x){
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
 #' @importFrom tidyr drop_na
+#' @noRd
 plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, my_theme){
 
   .cell_group = enquo(.cell_group)
@@ -1447,7 +1570,7 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
 
 }
 
-plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025, my_theme){
+plot_2d_intervals = function(.data, .cell_group, my_theme, significance_threshold = 0.025){
 
   .cell_group = enquo(.cell_group)
 
@@ -1501,6 +1624,7 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025,
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
+#' @noRd
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
     .sample, significance_threshold = 0.025, my_theme
@@ -1532,8 +1656,7 @@ plot_boxplot = function(
   .sample = enquo(.sample)
 
 
-  if(.data |> attr("contrasts") |> is.null())
-    significance_colors =
+  significance_colors =
     .data %>%
     pivot_longer(
       c(contains("c_"), contains("v_")),
@@ -1544,48 +1667,47 @@ plot_boxplot = function(
     filter(stats_name == "FDR") %>%
     filter(parameter != "(Intercept)") %>%
     filter(stats_value < significance_threshold) %>%
-    filter(`factor` == factor_of_interest) %>%
-    unite("name", c(which, parameter), remove = FALSE) %>%
-    distinct() %>%
-    # Get clean parameter
-    mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
-
-    with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-
-  else
-    significance_colors =
-    .data %>%
-    pivot_longer(
-      c(contains("c_"), contains("v_")),
-      names_pattern = "([cv])_([a-zA-Z0-9]+)",
-      names_to = c("which", "stats_name"),
-      values_to = "stats_value"
-    ) %>%
-    filter(stats_name == "FDR") %>%
-    filter(parameter != "(Intercept)") %>%
-    filter(stats_value < significance_threshold) %>%
-    filter(`factor` == factor_of_interest) |>
-    mutate(count_data = map(count_data, ~ .x |> select(factor_of_interest) |> distinct())) |>
-    unnest(count_data) |>
-
-    # Filter relevant parameters
-    mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
-    filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
-
-    # Rename
-    select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
-
-    # Merge contrasts
-    with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-
-
+    filter(`factor` == factor_of_interest) 
+  
+  if(nrow(significance_colors) > 0){
+    
+    
+    if(.data |> attr("contrasts") |> is.null())
+      significance_colors =
+        significance_colors %>%
+        unite("name", c(which, parameter), remove = FALSE) %>%
+        distinct() %>%
+        # Get clean parameter
+        mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
+        
+        with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    
+    else
+      significance_colors =
+        significance_colors |>
+        mutate(count_data = map(count_data, ~ .x |> select(all_of(factor_of_interest)) |> distinct())) |>
+        unnest(count_data) |>
+        
+        # Filter relevant parameters
+        mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
+        filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
+        
+        # Rename
+        select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
+        
+        # Merge contrasts
+        with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    
+    
+  }
 
   my_boxplot =  ggplot()
 
   if("fit" %in% names(attributes(.data))){
 
     simulated_proportion =
-      sccomp_replicate(.data, number_of_draws = 100) %>%
+      .data |>
+      sccomp_replicate(number_of_draws = 100) |>
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
 
     my_boxplot = my_boxplot +
@@ -1601,7 +1723,6 @@ plot_boxplot = function(
           # Filter uanitles because of limits
           inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)) ,
         color="blue"
-
       )
 
     # hideOutliers <- function(x) {
@@ -1698,6 +1819,200 @@ plot_boxplot = function(
 
 }
 
+#' @importFrom scales trans_new
+#' @importFrom stringr str_replace
+#' @importFrom stats quantile
+#' @importFrom magrittr equals
+#' @noRd
+plot_scatterplot = function(
+    .data, data_proportion, factor_of_interest, .cell_group,
+    .sample, significance_threshold = 0.025, my_theme
+){
+  
+  
+  dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
+  
+  S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
+  IS_sqrt <- function(x){x^2*sign(x)}
+  S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
+  
+  
+  .cell_group = enquo(.cell_group)
+  .sample = enquo(.sample)
+  
+  significance_colors =
+    .data %>%
+    pivot_longer(
+      c(contains("c_"), contains("v_")),
+      names_pattern = "([cv])_([a-zA-Z0-9]+)",
+      names_to = c("which", "stats_name"),
+      values_to = "stats_value"
+    ) %>%
+    filter(stats_name == "FDR") %>%
+    filter(parameter != "(Intercept)") %>%
+    filter(stats_value < significance_threshold) %>%
+    filter(`factor` == factor_of_interest) 
+  
+  if(nrow(significance_colors) > 0){
+    
+    
+    if(.data |> attr("contrasts") |> is.null())
+      significance_colors =
+        significance_colors %>%
+        unite("name", c(which, parameter), remove = FALSE) %>%
+        distinct() %>%
+        # Get clean parameter
+        mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
+        
+        with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    
+    else
+      significance_colors =
+        significance_colors |>
+        mutate(count_data = map(count_data, ~ .x |> select(all_of(factor_of_interest)) |> distinct())) |>
+        unnest(count_data) |>
+        
+        # Filter relevant parameters
+        mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
+        filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
+        
+        # Rename
+        select(!!.cell_group, !!as.symbol(factor_of_interest), name = parameter) |>
+        
+        # Merge contrasts
+        with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
+    
+    
+  }
+
+  
+  
+  my_scatterplot =  ggplot()
+  
+  if("fit" %in% names(attributes(.data))){
+    
+    simulated_proportion =
+      .data |>
+      sccomp_replicate(number_of_draws = 1000) |>
+      left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
+    
+    my_scatterplot = 
+      my_scatterplot +
+      
+      geom_smooth(
+        aes(!!as.symbol(factor_of_interest), (generated_proportions)),
+        fatten = 0.5, lwd=0.2,
+        data =
+          simulated_proportion %>%
+          
+          # Filter uanitles because of limits
+          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group, !!.sample)) ,
+        color="blue", fill="blue",
+        span = 1
+      )
+    
+    # hideOutliers <- function(x) {
+    #   if (x$hoverinfo == 'y') {
+    #     x$marker = list(opacity = 0)
+    #     x$hoverinfo = NA
+    #   }
+    #   return(x)
+    # }
+    #
+    # my_scatterplot[["x"]][["data"]] <- map(my_scatterplot[["x"]][["data"]], ~ hideOutliers(.))
+    
+  }
+  
+  # Get the exception if no significant cell types. This is not elegant
+  if(
+    nrow(significance_colors)==0 ||
+     
+     # This is needed in case of contrasts
+     significance_colors |> 
+     pull(!!as.symbol(factor_of_interest)) |> 
+     intersect(
+       data_proportion |> 
+       pull(!!as.symbol(factor_of_interest))
+     ) |> 
+     length() |> 
+     equals(0)
+     ) {
+    
+    my_scatterplot=
+      my_scatterplot +
+      
+      geom_smooth(
+        aes(!!as.symbol(factor_of_interest), proportion, fill = NULL), # fill=Effect),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        data =
+          data_proportion ,
+        # |>
+        #   left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
+        fatten = 0.5,
+        lwd=0.5,
+        color = "black",
+        span = 1
+      )
+  }
+  
+  # If I have significance
+  else {
+    my_scatterplot=
+      my_scatterplot +
+      
+      geom_smooth(
+        aes(!!as.symbol(factor_of_interest), proportion, fill = name), # fill=Effect),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        data =  data_proportion ,
+        fatten = 0.5,
+        lwd=0.5,
+        color = "black",
+        span = 1
+      )
+  }
+  
+  
+  
+  my_scatterplot +
+    geom_point(
+      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier),
+      data = data_proportion,
+      position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
+      size = 0.5
+    ) +
+    
+    # geom_boxplot(
+    #   aes(Condition, generated_proportions),
+    #   outlier.shape = NA, alpha=0.2,
+    #   data = simulated_proportion, fatten = 0.5, size=0.5,
+    # ) +
+    # geom_point(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
+    
+    facet_wrap(
+      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      scales = "free_y",
+      nrow = 4
+    ) +
+    scale_color_manual(values = c("black", "#e11f28")) +
+    #scale_fill_manual(values = c("white", "#E2D379")) +
+    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
+    #scale_color_distiller(palette = "Spectral") +
+    
+    scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
+    scale_fill_discrete(na.value = "white") +
+    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
+    xlab("Biological condition") +
+    ylab("Cell-group proportion") +
+    guides(color="none", alpha="none", size="none") +
+    labs(fill="Significant difference") +
+    ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
+    my_theme +
+    theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
+  
+  
+  
+}
+
 draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
 
   .cell_group = enquo(.cell_group)
@@ -1735,24 +2050,96 @@ contrasts_to_enquos = function(contrasts){
   contrasts |> enquo() |> quo_names() |> syms() %>% do.call(enquos_from_list_of_symbols, .)
 }
 
-#' @importFrom purrr map_dfc
-#' @importFrom tibble add_column
-#' @importFrom dplyr last_col
+#' Mutate Data Frame Based on Expression List
+#'
+#' @description
+#' `mutate_from_expr_list` takes a data frame and a list of formula expressions, 
+#' and mutates the data frame based on these expressions. It allows for ignoring 
+#' errors during the mutation process.
+#'
+#' @param x A data frame to be mutated.
+#' @param formula_expr A named list of formula expressions used for mutation.
+#' @param ignore_errors Logical flag indicating whether to ignore errors during mutation.
+#'
+#' @return A mutated data frame with added or modified columns based on `formula_expr`.
+#'
+#' @details
+#' The function performs various checks and transformations on the formula expressions,
+#' ensuring that the specified transformations are valid and can be applied to the data frame.
+#' It supports advanced features like handling special characters in column names and intelligent
+#' parsing of formulas.
+#'
 #' @importFrom purrr map2_dfc
-mutate_from_expr_list = function(x, formula_expr){
+#' @importFrom tibble add_column
+#' @importFrom tidyselect last_col
+#' @importFrom dplyr mutate
+#' @importFrom stringr str_subset
+#' 
+#' @noRd
+#' 
+mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
 
   if(formula_expr |> names() |> is.null())
     names(formula_expr) = formula_expr
 
+  
+  
+  # Check if all elements of contrasts are in the parameter
+  parameter_names = x |> colnames()
+
+  # Creating a named vector where the names are the strings to be replaced
+  # and the values are empty strings
+  
+  # Using str_replace_all to replace each instance of the strings in A with an empty string in B
+  contrasts_elements <- 
+    formula_expr |> 
+    str_remove_all_ignoring_if_inside_backquotes("[0-9]/[0-9]+") |>  
+    str_remove_all_ignoring_if_inside_backquotes("[-+]?[0-9]+\\.[0-9]+") |> 
+    
+    #' This function removes the surrounding brackets from each element of a character vector, 
+    #' unless the content within the brackets includes any of the characters +, -, or *,
+    #' and the brackets are not within backticks.
+    str_remove_brackets_from_formula_intelligently() |> 
+    str_remove_all_ignoring_if_inside_backquotes(" ") |> 
+    str_split_ignoring_if_inside_backquotes("\\+|-|\\*") |> 
+    unlist() 
+  
+  
+  # Check is backquoted are not used
+  require_back_quotes = contrasts_elements |>  str_remove_all("`") |> contains_only_valid_chars_for_column() 
+  has_left_back_quotes = contrasts_elements |>  str_detect("^`") 
+  has_right_back_quotes = contrasts_elements |>  str_detect("`$") 
+  if_false_not_good = require_back_quotes | (has_left_back_quotes & has_right_back_quotes)
+  
+  if(!all(if_false_not_good))
+    stop(sprintf("sccomp says: for columns which have special characters e.g. %s, you need to use surrounding backquotes ``.", paste(contrasts_elements[!if_false_not_good], sep=", ")))
+  
+  # Check if columns exist
+  contrasts_not_in_the_model = 
+    contrasts_elements |> 
+    str_remove_all("`") |> 
+    setdiff(parameter_names)
+  
+  contrasts_not_in_the_model = contrasts_not_in_the_model[contrasts_not_in_the_model!=""]
+  
+  if(length(contrasts_not_in_the_model) > 0 & !ignore_errors)
+    stop(sprintf("sccomp says: These components of your contrasts are not present in the model as parameters: %s", paste(contrasts_not_in_the_model, sep = ", ")))
+  
+  # Calculate
+  if(ignore_errors) my_mutate = mutate_ignore_error
+  else my_mutate = mutate
+  
   map2_dfc(
     formula_expr,
     names(formula_expr),
     ~  x |>
-        mutate_ignore_error(!!.y := eval(rlang::parse_expr(.x))) |>
+      my_mutate(!!.y := eval(rlang::parse_expr(.x))) |>
         # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
-        select(-colnames(x))
+        select(any_of(.y))
   ) |>
-    add_column(x, .before = 1)
+
+  	# I could drop this to just result contrasts
+    add_column(x |> select(-any_of(names(formula_expr))), .before = 1)
 
 }
 
@@ -1821,38 +2208,33 @@ get_abundance_contrast_draws = function(.data, contrasts){
 
 
   # Abundance
-  draws =
-    select(beta, -.variable) |>
-
-    # Random intercept
-    when(
-      is_random_intercept ~ left_join(.,
-        select(beta_random_intercept, -.variable),
-        by = c("M", ".chain", ".iteration", ".draw")
-      ),
-      ~ (.)
-    ) |>
-
-      # If I have constrasts calculate
-      when(
-        !is.null(contrasts) ~
-
-          # ARITHMETICS
-          mutate_from_expr_list(., contrasts) |>
-          select(- one_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) ,
-        ~ (.)
-      ) |>
-
-      # Add cell name
-      left_join(
-        .data |>
-          attr("model_input") %$%
-          y %>%
-          colnames() |>
-          enframe(name = "M", value  = quo_name(.cell_group)),
-        by = "M"
-      ) %>%
-      select(!!.cell_group, everything())
+  draws = select(beta, -.variable)
+  
+  # Random intercept
+  if(is_random_intercept) 
+    draws = draws |> 
+    left_join(select(beta_random_intercept, -.variable),
+              by = c("M", ".chain", ".iteration", ".draw")
+    )
+  
+  # If I have constrasts calculate
+  if(!is.null(contrasts))
+    draws = 
+      draws |> 
+      mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
+      select(- any_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) 
+  
+  # Add cell name
+  draws = draws |> 
+    left_join(
+      .data |>
+        attr("model_input") %$%
+        y %>%
+        colnames() |>
+        enframe(name = "M", value  = quo_name(.cell_group)),
+      by = "M"
+    ) %>%
+    select(!!.cell_group, everything())
 
 
   # If no contrasts of interest just return an empty data frame
@@ -1881,15 +2263,17 @@ get_abundance_contrast_draws = function(.data, contrasts){
         by = "C"
       )
 
-  convergence_df =
-    convergence_df |>
-    when(
-      "Rhat" %in% colnames(.) ~ rename(., R_k_hat = Rhat),
-      "khat" %in% colnames(.) ~ rename(., R_k_hat = khat)
-    ) |>
+  if ("Rhat" %in% colnames(convergence_df)) {
+    convergence_df <- rename(convergence_df, R_k_hat = Rhat)
+  } else if ("khat" %in% colnames(convergence_df)) {
+    convergence_df <- rename(convergence_df, R_k_hat = khat)
+  }
+  
 
-    select(!!.cell_group, parameter, n_eff, R_k_hat) |>
-    suppressWarnings()
+    convergence_df =
+      convergence_df |> 
+      select(!!.cell_group, parameter, n_eff, R_k_hat) |>
+      suppressWarnings()
 
   draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
@@ -1904,6 +2288,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 }
 
 #' @importFrom forcats fct_relevel
+#' @noRd
 get_variability_contrast_draws = function(.data, contrasts){
 
   .cell_group = .data |>  attr(".cell_group")
@@ -1922,10 +2307,13 @@ get_variability_contrast_draws = function(.data, contrasts){
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
 
-    select( -.variable) |>
-
-    # If I have constrasts calculate
-    when(!is.null(contrasts) ~ mutate_from_expr_list(., contrasts), ~ (.)) |>
+    select( -.variable) 
+  
+  # If I have constrasts calculate
+  if (!is.null(contrasts)) 
+    draws <- mutate_from_expr_list(draws, contrasts, ignore_errors = TRUE)
+    
+  draws =  draws |>
 
     # Add cell name
     left_join(
@@ -1964,15 +2352,17 @@ get_variability_contrast_draws = function(.data, contrasts){
     )
 
 
-  convergence_df =
-    convergence_df |>
-    when(
-      "Rhat" %in% colnames(.) ~ rename(., R_k_hat = Rhat),
-      "khat" %in% colnames(.) ~ rename(., R_k_hat = khat)
-    ) |>
+  if ("Rhat" %in% colnames(convergence_df)) {
+    convergence_df <- rename(convergence_df, R_k_hat = Rhat)
+  } else if ("khat" %in% colnames(convergence_df)) {
+    convergence_df <- rename(convergence_df, R_k_hat = khat)
+  }
+  
 
-    select(!!.cell_group, parameter, n_eff, R_k_hat) |>
-    suppressWarnings()
+    convergence_df =
+    convergence_df |> 
+      select(!!.cell_group, parameter, n_eff, R_k_hat) |>
+      suppressWarnings()
 
 
   draws |>
@@ -1989,6 +2379,7 @@ get_variability_contrast_draws = function(.data, contrasts){
 
 #' @importFrom tibble deframe
 #'
+#' @noRd
 replicate_data = function(.data,
           formula_composition = NULL,
           formula_variability = NULL,
@@ -1998,10 +2389,14 @@ replicate_data = function(.data,
 
 
   # Select model based on noise model
-  my_model = attr(.data, "noise_model") %>% when(
-    (.) == "multi_beta_binomial" ~ stanmodels$glm_multi_beta_binomial_generate_date,
-    (.) == "dirichlet_multinomial" ~ get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  )
+  noise_model = attr(.data, "noise_model")
+  
+  if (noise_model == "multi_beta_binomial") {
+    my_model = stanmodels$glm_multi_beta_binomial_generate_date
+  } else if (noise_model == "dirichlet_multinomial") {
+    my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  }
+
 
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
@@ -2018,8 +2413,19 @@ replicate_data = function(.data,
     .data |>
     select(count_data) |>
     unnest(count_data) |>
-    distinct() |>
-    .subset(!!.sample)
+    distinct()
+
+  # If seurat
+  else if(new_data |> is("Seurat")) new_data = new_data[[]]
+
+  # Just subset
+  new_data = new_data |> .subset(!!.sample)
+
+
+  # Check if the input new data is not suitable
+  if(!parse_formula(formula_composition) %in% colnames(new_data) |> all())
+    stop("sccomp says: your `new_data` might be malformed. It might have the covariate columns with multiple values for some element of the \"%s\" column. As a generic example, a sample identifier (\"Sample_123\") might be associated with multiple treatment values, or age values.")
+
 
   # Match factors with old data
   nrow_new_data = nrow(new_data)
@@ -2027,11 +2433,10 @@ replicate_data = function(.data,
     nest(data = -!!.sample) |>
     mutate(exposure = map_dbl(
       data,
-      ~ when(
-        .x,
-        "count" %in% colnames(.) ~ sum(.x$count),
-        ~ 5000
-  ))) |>
+      ~{
+        if ("count" %in% colnames(.x))  sum(.x$count)
+        else 5000
+      })) |>
     select(!!.sample, exposure) |>
     deframe() |>
     as.array()
@@ -2045,12 +2450,16 @@ replicate_data = function(.data,
     select(count_data) |>
     unnest(count_data) |>
     select(-count) |>
+    select(new_data |> as_tibble() |> colnames() |>  any_of()) |>
     distinct() |>
-    select(one_of(colnames(new_data))) |>
+
+    # Change sample names to make unique
+    mutate(dummy = "OLD") |>
+    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___") |>
 
     # New data
     bind_rows(
-      new_data
+      new_data |> as_tibble()
     )
 
   new_X =
@@ -2121,50 +2530,39 @@ replicate_data = function(.data,
     X_random_intercept_which = array()[0]
     new_X_random_intercept = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
 
-    # Update N_groupings
-   # model_input$N_grouping = 0
+
   }
   else {
 
     random_intercept_grouping =
       new_data %>%
-      get_random_intercept_design(
+
+        get_random_intercept_design2(
         !!.sample,
-        parse_formula_random_intercept(formula_composition)
+        formula_composition
       )
 
     new_X_random_intercept =
       random_intercept_grouping |>
-      mutate(design_matrix = pmap(
-        list(design, grouping, `factor`, is_factor_continuous),
+      mutate(design_matrix = map(
+        design,
         ~ ..1 |>
-
-          # Get matrix
-          get_design_matrix(~ 0 + group___label,  !!.sample) |>
-
-          # If countinuous multiply the matrix by the factor
-          when(
-            ..4 ~ apply(., 2, function(x) x * as.numeric(get_design_matrix(
-              new_data ,
-              # |>
-              #
-              #   # I think this is needed if I don't have a new data
-              #   tail(nrow_new_data) ,
-              as.formula(glue("~ 0 + {..3}")),
-              !!.sample
-            ))) ,
-            ~ (.)
-          )
+          select(!!.sample, group___label, value) |>
+          pivot_wider(names_from = group___label, values_from = value) |>
+          mutate(across(everything(), ~ .x |> replace_na(0)))
       )) |>
 
       # Merge
       pull(design_matrix) |>
-      bind_cols() %>%
-
-      # Clean matrix names
-      set_names(str_remove_all(colnames(.), "group___label")) |>
+      bind_cols() |>
+      as_matrix(rownames = quo_name(.sample))  |>
 
       tail(nrow_new_data)
+
+    # Check if I have column in the new design that are not in the old one
+    missing_columns = new_X_random_intercept |> colnames() |> setdiff(colnames(model_input$X_random_intercept))
+    if(missing_columns |> length() > 0)
+    	stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
 
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_intercept_which =
@@ -2180,9 +2578,11 @@ replicate_data = function(.data,
   # New X
   model_input$X = new_X
   model_input$Xa = new_Xa
-  #model_input$X_random_intercept = new_X_random_intercept
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
+
+  model_input$X_random_intercept = new_X_random_intercept
+  model_input$N_grouping_new = ncol(new_X_random_intercept)
 
   # Generate quantities
   rstan::gqs(
@@ -2222,27 +2622,261 @@ get_model_from_data = function(file_compiled_model, model_code){
 }
 
 add_formula_columns = function(.data, .original_data, .sample,  formula_composition){
-  
+
   .sample = enquo(.sample)
-  
+
   formula_elements = parse_formula(formula_composition)
-  
+
   # If no formula return the input
   if(length(formula_elements) == 0) return(.data)
-  
+
   # Get random intercept
   .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
-  
-  data_frame_formula = 
+
+  data_frame_formula =
     .original_data %>%
     as_tibble() |>
     select( !!.sample, formula_elements, any_of(.grouping_for_random_intercept) ) %>%
     distinct()
-  
-  .data |> 
+
+  .data |>
     left_join(data_frame_formula, by = quo_name(.sample) )
-  
+
 }
+
+#' chatGPT - Remove Specified Regex Pattern from Each String in a Vector
+#'
+#' This function takes a vector of strings and a regular expression pattern.
+#' It removes occurrences of the pattern from each string, except where the pattern
+#' is found inside backticks. The function returns a vector of cleaned strings.
+#'
+#' @param text_vector A character vector with the strings to be processed.
+#' @param regex A character string containing a regular expression pattern to be removed
+#' from the text.
+#'
+#' @return A character vector with the regex pattern removed from each string.
+#' Occurrences of the pattern inside backticks are not removed.
+#'
+#' @examples
+#' texts <- c("A string with (some) parentheses and `a (parenthesis) inside` backticks",
+#'            "Another string with (extra) parentheses")
+#' cleaned_texts <- str_remove_all_ignoring_if_inside_backquotes(texts, "\\(")
+#' print(cleaned_texts)
+#' 
+#' @noRd
+str_remove_all_ignoring_if_inside_backquotes <- function(text_vector, regex) {
+  # Nested function to handle regex removal for a single string
+  remove_regex_chars <- function(text, regex) {
+    inside_backticks <- FALSE
+    result <- ""
+    skip <- 0
+    
+    chars <- strsplit(text, "")[[1]]
+    for (i in seq_along(chars)) {
+      if (skip > 0) {
+        skip <- skip - 1
+        next
+      }
+      
+      char <- chars[i]
+      if (char == "`") {
+        inside_backticks <- !inside_backticks
+        result <- paste0(result, char)
+      } else if (!inside_backticks) {
+        # Check the remaining text against the regex
+        remaining_text <- paste(chars[i:length(chars)], collapse = "")
+        match <- regexpr(regex, remaining_text)
+        
+        if (attr(match, "match.length") > 0 && match[1] == 1) {
+          # Skip the length of the matched text
+          skip <- attr(match, "match.length") - 1
+          next
+        } else {
+          result <- paste0(result, char)
+        }
+      } else {
+        result <- paste0(result, char)
+      }
+    }
+    
+    return(result)
+  }
+  
+  # Apply the function to each element in the vector
+  sapply(text_vector, remove_regex_chars, regex)
+}
+
+
+#' chatGPT - Split Each String in a Vector by a Specified Regex Pattern
+#'
+#' This function takes a vector of strings and a regular expression pattern. It splits
+#' each string based on the pattern, except where the pattern is found inside backticks.
+#' The function returns a list, with each element being a vector of the split segments
+#' of the corresponding input string.
+#'
+#' @param text_vector A character vector with the strings to be processed.
+#' @param regex A character string containing a regular expression pattern used for splitting
+#' the text.
+#'
+#' @return A list of character vectors. Each list element corresponds to an input string
+#' from `text_vector`, split according to `regex`, excluding occurrences inside backticks.
+#'
+#' @examples
+#' texts <- c("A string with, some, commas, and `a, comma, inside` backticks",
+#'            "Another string, with, commas")
+#' split_texts <- split_regex_chars_from_vector(texts, ",")
+#' print(split_texts)
+#' 
+#' @noRd
+str_split_ignoring_if_inside_backquotes <- function(text_vector, regex) {
+  # Nested function to handle regex split for a single string
+  split_regex_chars <- function(text, regex) {
+    inside_backticks <- FALSE
+    result <- c()
+    current_segment <- ""
+    
+    chars <- strsplit(text, "")[[1]]
+    for (i in seq_along(chars)) {
+      char <- chars[i]
+      if (char == "`") {
+        inside_backticks <- !inside_backticks
+        current_segment <- paste0(current_segment, char)
+      } else if (!inside_backticks) {
+        # Check the remaining text against the regex
+        remaining_text <- paste(chars[i:length(chars)], collapse = "")
+        match <- regexpr(regex, remaining_text)
+        
+        if (attr(match, "match.length") > 0 && match[1] == 1) {
+          # Add current segment to result and start a new segment
+          result <- c(result, current_segment)
+          current_segment <- ""
+          # Skip the length of the matched text
+          skip <- attr(match, "match.length") - 1
+          i <- i + skip
+        } else {
+          current_segment <- paste0(current_segment, char)
+        }
+      } else {
+        current_segment <- paste0(current_segment, char)
+      }
+    }
+    
+    # Add the last segment to the result
+    result <- c(result, current_segment)
+    return(result)
+  }
+  
+  # Apply the function to each element in the vector
+  lapply(text_vector, split_regex_chars, regex)
+}
+
+
+#' chatGPT - Check for Valid Column Names in Tidyverse Context
+#'
+#' This function checks if each given column name in a vector contains only valid characters 
+#' (letters, numbers, periods, and underscores) and does not start with a digit 
+#' or an underscore, which are the conditions for a valid column name in `tidyverse`.
+#'
+#' @param column_names A character vector representing the column names to be checked.
+#'
+#' @return A logical vector: `TRUE` for each column name that contains only valid characters 
+#' and does not start with a digit or an underscore; `FALSE` otherwise.
+#'
+#' @examples
+#' contains_only_valid_chars_for_column(c("valid_column", "invalid column", "valid123", 
+#' "123startWithNumber", "_startWithUnderscore"))
+#'
+#' @noRd
+contains_only_valid_chars_for_column <- function(column_names) {
+  # Function to check a single column name
+  check_validity <- function(column_name) {
+    # Regex pattern for valid characters (letters, numbers, periods, underscores)
+    valid_char_pattern <- "[A-Za-z0-9._]"
+    
+    # Check if all characters in the string match the valid pattern
+    all_chars_valid <- stringr::str_detect(column_name, paste0("^", valid_char_pattern, "+$"))
+    
+    # Check for leading digits or underscores
+    starts_with_digit_or_underscore <- stringr::str_detect(column_name, "^[0-9_]")
+    
+    return(all_chars_valid && !starts_with_digit_or_underscore)
+  }
+  
+  # Apply the check to each element of the vector
+  sapply(column_names, check_validity)
+}
+
+
+#' chatGPT - Intelligently Remove Surrounding Brackets from Each String in a Vector
+#'
+#' This function processes each string in a vector and removes surrounding brackets if the content
+#' within the brackets includes any of '+', '-', or '*', and if the brackets are not 
+#' within backticks. This is particularly useful for handling formula-like strings.
+#'
+#' @param text A character vector with strings from which the brackets will be removed based on
+#' specific conditions.
+#'
+#' @return A character vector with the specified brackets removed from each string.
+#'
+#' @examples
+#' str_remove_brackets_from_formula_intelligently(c("This is a test (with + brackets)", "`a (test) inside` backticks", "(another test)"))
+#'
+#' @noRd
+str_remove_brackets_from_formula_intelligently <- function(text) {
+  # Function to remove brackets from a single string
+  remove_brackets_single <- function(s) {
+    inside_backticks <- FALSE
+    bracket_depth <- 0
+    valid_bracket_content <- FALSE
+    result <- ""
+    bracket_content <- ""
+    
+    chars <- strsplit(s, "")[[1]]
+    
+    for (i in seq_along(chars)) {
+      char <- chars[i]
+      
+      if (char == "`") {
+        inside_backticks <- !inside_backticks
+      }
+      
+      if (!inside_backticks) {
+        if (char == "(") {
+          bracket_depth <- bracket_depth + 1
+          if (bracket_depth > 1) {
+            bracket_content <- paste0(bracket_content, char)
+          }
+          next
+        } else if (char == ")") {
+          bracket_depth <- bracket_depth - 1
+          if (bracket_depth == 0) {
+            if (grepl("[\\+\\-\\*]", bracket_content)) {
+              result <- paste0(result, bracket_content)
+            } else {
+              result <- paste0(result, "(", bracket_content, ")")
+            }
+            bracket_content <- ""
+            next
+          }
+        }
+        
+        if (bracket_depth >= 1) {
+          bracket_content <- paste0(bracket_content, char)
+        } else {
+          result <- paste0(result, char)
+        }
+      } else {
+        result <- paste0(result, char)
+      }
+    }
+    
+    return(result)
+  }
+  
+  # Apply the function to each element in the vector
+  sapply(text, remove_brackets_single)
+}
+
 
 
 # Negation
@@ -2260,9 +2894,25 @@ not = function(is){	!is }
 #'
 #' @return A character vector
 quo_names <- function(v) {
-	
+
 	v = quo_name(quo_squash(v))
 	gsub('^c\\(|`|\\)$', '', v) |>
 		strsplit(', ') |>
 		unlist()
+}
+
+#' Add class to abject
+#'
+#' @keywords internal
+#' @noRd
+#'
+#' @param var A tibble
+#' @param name A character name of the attribute
+#'
+#' @return A tibble with an additional attribute
+add_class = function(var, name) {
+
+  if(!name %in% class(var)) class(var) <- append(class(var),name, after = 0)
+
+  var
 }

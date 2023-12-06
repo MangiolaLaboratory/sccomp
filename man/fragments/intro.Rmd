@@ -6,10 +6,12 @@ variability analyses.
 
 ## Characteristics
 
+- Complex linear models with continuous and categorical covariates
+- Multilevel modelling, with population (i.e. fixed) and group (random) effects
 - Modelling counts 
 - Modelling proportionality 
 - Modelling cell-type specific variability 
-- Cell-type information share for variability shrinkage
+- Cell-type information share for variability adaptive shrinkage
 - Testing differential variability 
 - Probabilistic outlier identification 
 - Cross-dataset learning (hyperpriors).
@@ -28,6 +30,16 @@ BiocManager::install("sccomp")
 ```{r eval=FALSE}
 devtools::install_github("stemangiola/sccomp")
 ```
+
+Function | Description
+------------ | -------------
+`sccomp_estimate` | Fit the model onto the data, and estimate the coefficients
+`sccomp_remove_outliers` | Identify outliers probabilistically based on the model fit, and exclude them from the estimation
+`sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change)
+`sccomp_replicate` | Simulate data from the model, or part of the model
+`sccomp_predict` | Predicts proportions, based on the mode, or part of the model
+`sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors
+`plot` | Plors summary plots to asses significance 
 
 # Analysis
 
@@ -54,13 +66,15 @@ factor of interest only. The variability model must be a subset of the model for
 ```{r eval=FALSE}
 
 single_cell_object |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+  sccomp_remove_outliers() |> 
+	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 ```
 
@@ -69,14 +83,16 @@ single_cell_object |>
 ```{r, message=FALSE, warning=FALSE}
 
 counts_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+  sccomp_remove_outliers() |> 
+	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 ```
 
@@ -87,14 +103,18 @@ Of the output table, the estimate columns start with the prefix `c_` indicate `c
 ```{r, message=FALSE, warning=FALSE}
 
 seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ 0 + type, 
-    contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+  sccomp_remove_outliers() |> 
+	sccomp_test(
+	  contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
+	  test_composition_above_logit_fold_change = 0.2
+	)
 
 ```
 
@@ -112,11 +132,10 @@ library(loo)
 # Fit first model
 model_with_factor_association = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
     cores = 1, 
     enable_loo = TRUE
@@ -125,11 +144,10 @@ model_with_factor_association =
 # Fit second model
 model_without_association = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ 1, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 , 
     enable_loo = TRUE
@@ -151,14 +169,18 @@ We can model the cell-group variability also dependent on the type, and so test 
 
 res = 
   seurat_obj |>
-  sccomp_glm( 
+  sccomp_estimate( 
     formula_composition = ~ type, 
     formula_variability = ~ type,
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+  sccomp_remove_outliers() |> 
+	sccomp_test(
+	  test_composition_above_logit_fold_change = 0.2
+	)
 
 res
 
@@ -180,7 +202,7 @@ We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 ## Summary plots
 
 ```{r, out.height="200%"}
-plots = plot_summary(res) 
+plots = plot(res) 
 ```
 
 A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be
@@ -212,7 +234,7 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 Plot 1D significance plot
 
 ```{r}
-plots = plot_summary(res)
+plots = plot(res)
 
 plots$credible_intervals_1D
 ```
@@ -223,4 +245,41 @@ This plot is provided only if differential variability has been tested. The diff
 
 ```{r}
 plots$credible_intervals_2D
+```
+
+# Multilevel modelling
+
+`sccomp` is cabable of estimating population (i.e. fixed) and group (i.e. random) effects. The formulation is analogous to the `lme4` package and `brms`.
+
+!! For now, only one grouping is allowed (e.g. group2__).
+
+```{r, message=FALSE, warning=FALSE}
+
+res = 
+  seurat_obj |>
+  sccomp_estimate( 
+    formula_composition = ~ type + continuous_covariate + (type | group2__), 
+    formula_variability = ~ type,
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1 
+  ) |> 
+  sccomp_remove_outliers() |> 
+	sccomp_test(
+	  test_composition_above_logit_fold_change = 0.2
+	)
+
+res
+
+```
+
+# Removal of unwanted variation
+
+After you model your dataset, you can remove the unwanted variation from your input data, **for visualisation purposes** 
+
+We decide to just keep the type population (i.e. fixed) effect for abundance, and do not keep it for variability.
+
+```{r}
+res |> sccomp_remove_unwanted_variation(~type)
 ```
