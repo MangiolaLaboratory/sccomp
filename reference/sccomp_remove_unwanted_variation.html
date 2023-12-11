@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.3</span>
       </span>
     </div>
 
@@ -113,8 +113,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000324 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.24 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000317 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.17 seconds.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Adjust your expectations accordingly!</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
@@ -128,11 +128,13 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Begin stochastic gradient ascent.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    100        -3761.764             1.000            1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    200        -3703.372             0.508            1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    300        -3696.596             0.339            0.016</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    400        -3698.154             0.255            0.016</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    500        -3695.792             0.204            0.002   MEDIAN ELBO CONVERGED</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    100        -5658.800             1.000            1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    200        -3783.750             0.748            1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    300        -3703.875             0.506            0.496</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    400        -3695.623             0.380            0.496</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    500        -3695.440             0.304            0.022</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    600        -3696.225             0.253            0.022</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    700        -3693.262             0.217            0.002   MEDIAN ELBO CONVERGED</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Drawing a sample of size 4000 from the approximate posterior... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: COMPLETED.</span>
@@ -143,16 +145,16 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    sample       cell_group adjusted_proportion adjusted_counts logit_residuals</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K       B1                      0.070<span style="text-decoration: underline;">7</span>           356.           0.162 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_8K       B1                      0.065<span style="text-decoration: underline;">4</span>           529.           0.079<span style="text-decoration: underline;">7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> GSE115189    B1                      0.053<span style="text-decoration: underline;">5</span>           134.          -<span style="color: #BB0000;">0.135</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> SCP345_580   B1                      0.042<span style="text-decoration: underline;">8</span>           264.          -<span style="color: #BB0000;">0.370</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> SCP345_860   B1                      0.053<span style="text-decoration: underline;">8</span>           370.          -<span style="color: #BB0000;">0.128</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> SCP424_pbmc1 B1                      0.056<span style="text-decoration: underline;">2</span>           161.          -<span style="color: #BB0000;">0.083</span><span style="color: #BB0000; text-decoration: underline;">6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> SCP424_pbmc2 B1                      0.099<span style="text-decoration: underline;">7</span>           319.           0.539 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> SCP591       B1                      0.028<span style="text-decoration: underline;">3</span>            17.0         -<span style="color: #BB0000;">0.800</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> SI-GA-E5     B1                      0.034<span style="text-decoration: underline;">7</span>           166.          -<span style="color: #BB0000;">0.655</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> SI-GA-E7     B1                      0.130            991.           0.947 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K       B1                      0.070<span style="text-decoration: underline;">0</span>           352.           0.196 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_8K       B1                      0.064<span style="text-decoration: underline;">8</span>           524.           0.114 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> GSE115189    B1                      0.053<span style="text-decoration: underline;">0</span>           133.          -<span style="color: #BB0000;">0.101</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> SCP345_580   B1                      0.042<span style="text-decoration: underline;">3</span>           261.          -<span style="color: #BB0000;">0.336</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> SCP345_860   B1                      0.053<span style="text-decoration: underline;">2</span>           366.          -<span style="color: #BB0000;">0.093</span><span style="color: #BB0000; text-decoration: underline;">9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> SCP424_pbmc1 B1                      0.055<span style="text-decoration: underline;">6</span>           159.          -<span style="color: #BB0000;">0.049</span><span style="color: #BB0000; text-decoration: underline;">1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> SCP424_pbmc2 B1                      0.098<span style="text-decoration: underline;">6</span>           315.           0.574 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> SCP591       B1                      0.027<span style="text-decoration: underline;">9</span>            16.8         -<span style="color: #BB0000;">0.766</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> SI-GA-E5     B1                      0.033<span style="text-decoration: underline;">0</span>           158.          -<span style="color: #BB0000;">0.666</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> SI-GA-E7     B1                      0.123            941.           0.935 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 710 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

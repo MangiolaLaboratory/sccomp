@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.3</span>
       </span>
     </div>
 
@@ -158,8 +158,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.00034 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.4 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000317 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.17 seconds.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Adjust your expectations accordingly!</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
@@ -173,11 +173,11 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Begin stochastic gradient ascent.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    100        -3798.672             1.000            1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    200        -3704.116             0.513            1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    300        -3702.746             0.342            0.026</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    400        -3695.182             0.257            0.026</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    500        -3697.530             0.206            0.002   MEDIAN ELBO CONVERGED</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    100        -4037.698             1.000            1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    200        -3738.381             0.540            1.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    300        -3702.332             0.363            0.080</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    400        -3699.073             0.273            0.080</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:    500        -3696.153             0.218            0.010   MEDIAN ELBO CONVERGED</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Drawing a sample of size 4000 from the approximate posterior... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: COMPLETED.</span>
@@ -189,16 +189,16 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    sample type   phenotype    count cell_group   b_0   b_1 generated_proportions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K benign b_cell_macr…    42 BM             0     0               0      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K benign B_cell:imma…   361 B1             0     0               0      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K benign B_cell:imma…    57 B2             0     0               0      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K benign B_cell:Memo…    40 B3             0     0               0      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K benign Dendritic_C…    75 Dm             0     0               0.001<span style="text-decoration: underline;">89</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K benign HSC_-G-CSF_…   187 H1             0     0               0      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K benign HSC_-G-CSF_…   269 H2             0     0               0      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K benign HSC_Bcell_m…   190 H3             0     0               0.018<span style="text-decoration: underline;">5</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K benign Mixed_CD3_c…   123 TM1            0     0               0      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K benign Mixed_CD3_c…    19 TM2            0     0               0      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K benign b_cell_macr…    42 BM             0     0              0.001<span style="text-decoration: underline;">65</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K benign B_cell:imma…   361 B1             0     0              0.009<span style="text-decoration: underline;">47</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K benign B_cell:imma…    57 B2             0     0              0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K benign B_cell:Memo…    40 B3             0     0              0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K benign Dendritic_C…    75 Dm             0     0              0.032<span style="text-decoration: underline;">5</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K benign HSC_-G-CSF_…   187 H1             0     0              0.624   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K benign HSC_-G-CSF_…   269 H2             0     0              0.000<span style="text-decoration: underline;">206</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K benign HSC_Bcell_m…   190 H3             0     0              0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K benign Mixed_CD3_c…   123 TM1            0     0              0       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K benign Mixed_CD3_c…    19 TM2            0     0              0       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 710 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: generated_counts &lt;int&gt;, replicate &lt;int&gt;</span></span>
 <span class="r-in"><span></span></span>
