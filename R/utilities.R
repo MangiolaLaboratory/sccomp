@@ -2093,8 +2093,12 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   # Using str_replace_all to replace each instance of the strings in A with an empty string in B
   contrasts_elements <- 
     formula_expr |> 
-    str_remove_all_ignoring_if_inside_backquotes("[0-9]/[0-9]+") |>  
-    str_remove_all_ignoring_if_inside_backquotes("[-+]?[0-9]+\\.[0-9]+") |> 
+    
+    # Remove fractions
+    str_remove_all_ignoring_if_inside_backquotes("[0-9]+/[0-9]+ ?\\*") |>  
+    
+    # Remove decimals
+    str_remove_all_ignoring_if_inside_backquotes("[-+]?[0-9]+\\.[0-9]+ ?\\*") |> 
     
     #' This function removes the surrounding brackets from each element of a character vector, 
     #' unless the content within the brackets includes any of the characters +, -, or *,

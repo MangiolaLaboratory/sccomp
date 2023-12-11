@@ -248,19 +248,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 
 test_that("multi beta binomial from Seurat",{
 
-  res =
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~  type,
-      formula_variability = ~ 1,
-      sample, cell_group,
-      approximate_posterior_inference = "all",
-      cores = 1,
-      mcmc_seed = 42,    
-      max_sampling_iterations = 1000
-    )
-
-  res |>
+  my_estimate |>
     filter(parameter == "typehealthy") |>
     arrange(desc(abs(c_effect))) |>
     slice(1) |>
@@ -268,33 +256,10 @@ test_that("multi beta binomial from Seurat",{
     expect_equal(c("B mem"  ))
 
   # Check convergence
-  res |>
+  my_estimate |>
     filter(c_R_k_hat > 4) |>
     nrow() |>
     expect_equal(0)
-
-})
-
-
-test_that("multi beta binomial contrasts from Seurat",{
-
-  res = seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ 0 + type,
-      formula_variability = ~ 1,
-      sample, cell_group,
-      approximate_posterior_inference = "all",
-      cores = 1,
-      mcmc_seed = 42,     
-      max_sampling_iterations = 1000
-    ) |> 
-    sccomp_test(contrasts = c("typecancer - typehealthy", "typehealthy - typecancer") )
-
-  
-  expect_equal(
-    res[1,"c_effect"] |> as.numeric(),
-    -res[2,"c_effect"] |> as.numeric()
-  )
 
 })
 
@@ -424,20 +389,8 @@ test_that("plot test variability",{
 test_that("test constrasts",{
 
 
-  estimate =
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ type ,
-      formula_variability = ~ 1,
-      sample, cell_group,
-      approximate_posterior_inference = FALSE,
-      cores = 1,
-      mcmc_seed = 42,      
-      max_sampling_iterations = 1000
-    )
-
   new_test =
-    estimate |>
+    my_estimate |>
     sccomp_test() 
   
   # Right and wrong contrasts
@@ -452,6 +405,15 @@ test_that("test constrasts",{
   my_estimate |> 
     sccomp_test(contrasts = "typehealthy_") |> 
     expect_error("sccomp says: These components of your contrasts are not present in the model as parameters")
+  
+  res = my_estimate_random |> 
+    sccomp_test(contrasts = c("1/2*typecancer - 1/2*typehealthy", "1/2*typehealthy - 1/2*typecancer") )
+  
+  
+  expect_equal(
+    res[1,"c_effect"] |> as.numeric(),
+    -res[2,"c_effect"] |> as.numeric()
+  )
 
 })
 
