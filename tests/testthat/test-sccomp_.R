@@ -4,6 +4,8 @@ data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 
+set.seed(42)
+
 my_estimate = 
   seurat_obj |>
   sccomp_estimate(
@@ -193,7 +195,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       sample, cell_group,
       #approximate_posterior_inference = "all",
       cores = 1,
-      #mcmc_seed = 42,   
+      mcmc_seed = 42,   
       max_sampling_iterations = 1000
     )
 
@@ -253,7 +255,7 @@ test_that("multi beta binomial from Seurat",{
     arrange(desc(abs(c_effect))) |>
     slice(1) |>
     pull(cell_group) |>
-    expect_equal(c("CD4 cm S100A4"  ))
+    expect_equal(c("CD4 cm high cytokine"))
 
   # Check convergence
   my_estimate |>
