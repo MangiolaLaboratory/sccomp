@@ -2100,13 +2100,9 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
     # Remove decimals
     str_remove_all_ignoring_if_inside_backquotes("[-+]?[0-9]+\\.[0-9]+ ?\\*") |> 
     
-    #' This function removes the surrounding brackets from each element of a character vector, 
-    #' unless the content within the brackets includes any of the characters +, -, or *,
-    #' and the brackets are not within backticks.
-    str_remove_brackets_from_formula_intelligently() |> 
-    str_remove_all_ignoring_if_inside_backquotes(" ") |> 
     str_split_ignoring_if_inside_backquotes("\\+|-|\\*") |> 
-    unlist() 
+    unlist() |> 
+    str_remove_all_ignoring_if_inside_backquotes("[\\(\\) ]") 
   
   
   # Check is backquoted are not used
@@ -2116,7 +2112,7 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   if_false_not_good = require_back_quotes | (has_left_back_quotes & has_right_back_quotes)
   
   if(!all(if_false_not_good))
-    stop(sprintf("sccomp says: for columns which have special characters e.g. %s, you need to use surrounding backquotes ``.", paste(contrasts_elements[!if_false_not_good], sep=", ")))
+    warning(sprintf("sccomp says: for columns which have special characters e.g. %s, you need to use surrounding backquotes ``.", paste(contrasts_elements[!if_false_not_good], sep=", ")))
   
   # Check if columns exist
   contrasts_not_in_the_model = 
@@ -2127,7 +2123,7 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   contrasts_not_in_the_model = contrasts_not_in_the_model[contrasts_not_in_the_model!=""]
   
   if(length(contrasts_not_in_the_model) > 0 & !ignore_errors)
-    stop(sprintf("sccomp says: These components of your contrasts are not present in the model as parameters: %s", paste(contrasts_not_in_the_model, sep = ", ")))
+    warning(sprintf("sccomp says: These components of your contrasts are not present in the model as parameters: %s", paste(contrasts_not_in_the_model, sep = ", ")))
   
   # Calculate
   if(ignore_errors) my_mutate = mutate_ignore_error

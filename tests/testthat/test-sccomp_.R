@@ -9,7 +9,7 @@ set.seed(42)
 my_estimate = 
   seurat_obj |>
   sccomp_estimate(
-    formula_composition = ~ type + continuous_covariate,
+    formula_composition = ~ continuous_covariate * type ,
     formula_variability = ~ 1,
     sample, cell_group,
     approximate_posterior_inference = FALSE,
@@ -416,6 +416,13 @@ test_that("test constrasts",{
     res[1,"c_effect"] |> as.numeric(),
     -res[2,"c_effect"] |> as.numeric()
   )
+  
+  res = 
+    my_estimate |> 
+    sccomp_test(contrasts = c("(1/2*`continuous_covariate:typehealthy` + 1/2*`continuous_covariate:typehealthy`) -  `continuous_covariate:typehealthy`") )
+  
 
 })
+
+
 
