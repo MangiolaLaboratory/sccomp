@@ -2106,13 +2106,13 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   
   
   # Check is backquoted are not used
-  require_back_quotes = contrasts_elements |>  str_remove_all("`") |> contains_only_valid_chars_for_column() 
+  require_back_quotes = !contrasts_elements |>  str_remove_all("`") |> contains_only_valid_chars_for_column() 
   has_left_back_quotes = contrasts_elements |>  str_detect("^`") 
   has_right_back_quotes = contrasts_elements |>  str_detect("`$") 
   if_true_not_good = require_back_quotes & !(has_left_back_quotes & has_right_back_quotes)
   
   if(any(if_true_not_good))
-    warning(sprintf("sccomp says: for columns which have special characters e.g. %s, you need to use surrounding backquotes ``.", paste(contrasts_elements[!if_false_not_good], sep=", ")))
+    warning(sprintf("sccomp says: for columns which have special characters e.g. %s, you need to use surrounding backquotes ``.", paste(contrasts_elements[!if_true_not_good], sep=", ")))
   
   # Check if columns exist
   contrasts_not_in_the_model = 

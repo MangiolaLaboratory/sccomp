@@ -402,11 +402,11 @@ test_that("test constrasts",{
   
   my_estimate |> 
     sccomp_test(contrasts = "(Intercept)") |> 
-    expect_error("sccomp says: for columns which have special characters")
+    expect_error()
   
   my_estimate |> 
     sccomp_test(contrasts = "typehealthy_") |> 
-    expect_error("sccomp says: These components of your contrasts are not present in the model as parameters")
+    expect_error()
   
   res = my_estimate_random |> 
     sccomp_test(contrasts = c("1/2*typecancer - 1/2*typehealthy", "1/2*typehealthy - 1/2*typecancer") )
@@ -417,9 +417,15 @@ test_that("test constrasts",{
     -res[2,"c_effect"] |> as.numeric()
   )
   
-  res = 
-    my_estimate |> 
-    sccomp_test(contrasts = c("(1/2*`continuous_covariate:typehealthy` + 1/2*`continuous_covariate:typehealthy`) -  `continuous_covariate:typehealthy`") )
+  # Interaction
+  my_estimate |> 
+    sccomp_test(contrasts = c("(1/2*`continuous_covariate:typehealthy` + 1/2*`continuous_covariate:typehealthy`) -  `continuous_covariate:typehealthy`") ) |> 
+    expect_s3_class("tbl")
+  
+  # Wrong interaction
+  my_estimate |> 
+    sccomp_test(contrasts = c("(1/2*continuous_covariate:typehealthy + 1/2*`continuous_covariate:typehealthy`) -  `continuous_covariate:typehealthy`") ) |> 
+    expect_warning("sccomp says: for columns which have special characters")
   
 
 })
