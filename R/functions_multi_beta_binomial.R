@@ -10,8 +10,8 @@ sccomp_glm_data_frame_raw = function(.data,
                                      
                                      # Secondary arguments
                                      contrasts = NULL,
-                                     prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                     prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                     prior_mean = list(intercept_normal = c(0,1), coefficients_normal = c(0,1)),                        
+                                     prior_overdispersion_mean_association = list(intercept_normal = c(5, 2), slope_normal = c(0,  0.6), sd_gamma = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      approximate_posterior_inference = "none",
@@ -110,8 +110,8 @@ sccomp_glm_data_frame_counts = function(.data,
                                         # Secondary arguments
                                         contrasts = NULL,
                                         #.grouping_for_random_intercept = NULL,
-                                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                        prior_mean = list(intercept_normal = c(0,1), coefficients_normal = c(0,1)),                        
+                                        prior_overdispersion_mean_association = list(intercept_normal = c(5, 2), slope_normal = c(0,  0.6), sd_gamma = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         approximate_posterior_inference = "none",
@@ -261,11 +261,11 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
   
   # Prior
-  data_for_model$prior_prec_intercept = prior_overdispersion_mean_association$intercept
-  data_for_model$prior_prec_slope  = prior_overdispersion_mean_association$slope
-  data_for_model$prior_prec_sd = prior_overdispersion_mean_association$standard_deviation
-  data_for_model$prior_mean_intercept = prior_mean$intercept
-  data_for_model$prior_mean_coefficients = prior_mean$coefficients
+  data_for_model$prior_prec_intercept = prior_overdispersion_mean_association$intercept_normal
+  data_for_model$prior_prec_slope  = prior_overdispersion_mean_association$slope_normal
+  data_for_model$prior_overdispersion_mean_association = prior_overdispersion_mean_association$sd_gamma
+  data_for_model$prior_mean_intercept = prior_mean$intercept_normal
+  data_for_model$prior_mean_coefficients = prior_mean$coefficients_normal
   data_for_model$exclude_priors = exclude_priors
   data_for_model$enable_loo = TRUE & enable_loo
   
@@ -285,7 +285,12 @@ sccomp_glm_data_frame_counts = function(.data,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik",
+               
+               # For getting the priors
+               "beta_raw_raw"
+               
+               )
     )
   
   
@@ -365,16 +370,93 @@ get_mean_precision = function(fit, data_for_model){
   #   select(-data, -X)
 }
 
-get_mean_precision_association = function(fit){
-  c(
-    fit %>%
-      summary("prec_coeff") %$%
-      summary %>%
-      .[,1] ,
 
-    fit %>%
-      summary("prec_sd") %$%
-      summary %>%
-      .[,1]
+#' Get Mean Precision Association from Fit
+#'
+#' This function extracts and processes precision-related parameters from a fitted 
+#' model object (assumed to be from `rstan`). It retrieves the mean and confidence 
+#' intervals for the intercept and slope priors, as well as the maximum likelihood 
+#' estimate for the standard deviation of a gamma prior.
+#'
+#' @param fit A model object, typically from an rstan fit.
+#'
+#' @return A list containing three elements:
+#'   - `intercept_normal`: Mean and confidence intervals of the intercept.
+#'   - `slope_normal`: Mean and confidence intervals of the slope.
+#'   - `sd_gamma`: Maximum likelihood estimate of the standard deviation 
+#'     of the gamma prior.
+#'
+#' @importFrom rstan summary
+#' @importFrom fitdistrplus fitdist
+#' @noRd
+get_prior_overdispersion_mean_association <- function(fit){
+  list(
+    # Extracting intercept normal prior mean and confidence intervals
+    intercept_normal =  
+      fit |> 
+      rstan::summary("prec_coeff") %$%
+      summary |> 
+      _[1, c(1, 3)],
+    
+    # Extracting slope normal prior mean and confidence intervals
+    slope_normal =  
+      fit |> 
+      rstan::summary("prec_coeff") %$%
+      summary |> 
+      _[2, c(1, 3)],
+    
+    # Fitting a gamma distribution to the extracted standard deviation and obtaining MLE estimates
+    sd_gamma = 
+      fit |> 
+      rstan::extract("prec_sd") |> 
+      _[[1]] |> 
+      as.numeric() |> 
+      fitdistrplus::fitdist(distr = "gamma", method = "mle") %$%
+      estimate
+  )
+}
+
+#' Get Mean Precision Association from Fit
+#'
+#' This function extracts and processes precision-related parameters from a fitted 
+#' model object (assumed to be from `rstan`). It retrieves the mean and confidence 
+#' intervals for the intercept and slope priors, as well as the maximum likelihood 
+#' estimate for the standard deviation of a gamma prior.
+#'
+#' @param fit A model object, typically from an rstan fit.
+#'
+#' @return A list containing three elements:
+#'   - `intercept_normal`: Mean and confidence intervals of the intercept.
+#'   - `slope_normal`: Mean and confidence intervals of the slope.
+#'   - `sd_gamma`: Maximum likelihood estimate of the standard deviation 
+#'     of the gamma prior.
+#'
+#' @importFrom rstan summary
+#' @importFrom fitdistrplus fitdist
+#' @noRd
+get_prior_mean <- function(fit){
+  list(
+    
+    # Fitting a gamma distribution to the extracted standard deviation and obtaining MLE estimates
+    intercept_normal = c(
+      0,
+      fit |> 
+        rstan::summary("beta_raw_raw") %$% 
+        summary |> 
+        as_tibble(rownames="parameter") |> 
+        filter(parameter |> str_detect("\\[1")) |>
+        pull(sd) |> 
+        mean()
+    ),
+    coefficients_normal = c(
+      0,
+      fit |> 
+        rstan::summary("beta_raw_raw") %$% 
+        summary |> 
+        as_tibble(rownames="parameter") |> 
+        filter(parameter |> str_detect("\\[1", negate = TRUE)) |>
+        pull(sd) |> 
+        mean()
+    )
   )
 }

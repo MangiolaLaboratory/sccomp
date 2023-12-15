@@ -40,7 +40,8 @@ Imports:
     readr,
     scales,
     stringr,
-    glue
+    glue,
+    fitdistrplus
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),

@@ -459,7 +459,9 @@ label_deleterious_outliers = function(.my_data){
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
-  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
+  seed , pars = c(
+    "beta",  "alpha", "prec_coeff","prec_sd"
+  ), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
 )
 {
 
@@ -2123,7 +2125,7 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   contrasts_not_in_the_model = contrasts_not_in_the_model[contrasts_not_in_the_model!=""]
   
   if(length(contrasts_not_in_the_model) > 0 & !ignore_errors)
-    warning(sprintf("sccomp says: These components of your contrasts are not present in the model as parameters: %s", paste(contrasts_not_in_the_model, sep = ", ")))
+    warning(sprintf("sccomp says: These components of your contrasts are not present in the model as parameters: %s. Factors including special characters, e.g. \"(Intercept)\" require backquotes e.g. \"`(Intercept)`\" ", paste(contrasts_not_in_the_model, sep = ", ")))
   
   # Calculate
   if(ignore_errors) my_mutate = mutate_ignore_error
