@@ -45,7 +45,7 @@ data{
   // Prior info
   real prior_prec_intercept[2] ;
   real prior_prec_slope[2] ;
-  real prior_prec_sd[2] ;
+  real prior_overdispersion_mean_association[2] ;
 
   // Exclude priors for testing purposes
   int<lower=0, upper=1> exclude_priors;
@@ -132,7 +132,7 @@ model{
 
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
   prec_coeff[2] ~ normal(prior_prec_slope[1], prior_prec_slope[2]);
-  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
+  prec_sd ~ gamma(prior_overdispersion_mean_association[1],prior_overdispersion_mean_association[2]);
 
 }
 

@@ -99,8 +99,8 @@ sccomp_estimate <- function(.data,
                        bimodal_mean_variability_association = FALSE,
                        percent_false_positive = 5,
                        approximate_posterior_inference = "none",
-                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
-                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                       prior_mean = list(intercept_normal = c(0,1), coefficients_normal = c(0,1)),
+                       prior_overdispersion_mean_association = list(intercept_normal = c(5, 2), slope_normal = c(0,  0.6), sd_gamma = c(20, 40)),
                        .sample_cell_group_pairs_to_exclude = NULL,
                        verbose = TRUE,
                        enable_loo = FALSE,
@@ -126,8 +126,8 @@ sccomp_estimate.Seurat = function(.data,
                                   bimodal_mean_variability_association = FALSE,
                                   percent_false_positive = 5,
                                   approximate_posterior_inference = "none",
-                                  prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                                  prior_mean = list(intercept_normal = c(0,1), coefficients_normal = c(0,1)),                        
+                                  prior_overdispersion_mean_association = list(intercept_normal = c(5, 2), slope_normal = c(0,  0.6), sd_gamma = c(20, 40)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
                                   verbose = TRUE,
                                   enable_loo = FALSE,
@@ -186,8 +186,8 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 bimodal_mean_variability_association = FALSE,
                                                 percent_false_positive = 5,
                                                 approximate_posterior_inference = "none",
-                                                prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                                prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                                                prior_mean = list(intercept_normal = c(0,1), coefficients_normal = c(0,1)),                        
+                                                prior_overdispersion_mean_association = list(intercept_normal = c(5, 2), slope_normal = c(0,  0.6), sd_gamma = c(20, 40)),
                                                 .sample_cell_group_pairs_to_exclude = NULL,
                                                 verbose = TRUE,
                                                 enable_loo = FALSE,
@@ -249,8 +249,8 @@ sccomp_estimate.DFrame = function(.data,
                                   bimodal_mean_variability_association = FALSE,
                                   percent_false_positive = 5,
                                   approximate_posterior_inference = "none",
-                                  prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                                  prior_mean = list(intercept_normal = c(0,1), coefficients_normal = c(0,1)),                        
+                                  prior_overdispersion_mean_association = list(intercept_normal = c(5, 2), slope_normal = c(0,  0.6), sd_gamma = c(20, 40)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
                                   verbose = TRUE,
                                   enable_loo = FALSE,
@@ -311,8 +311,8 @@ sccomp_estimate.data.frame = function(.data,
                                       bimodal_mean_variability_association = FALSE,
                                       percent_false_positive = 5,
                                       approximate_posterior_inference = "none",
-                                      prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                      prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                                      prior_mean = list(intercept_normal = c(0,1), coefficients_normal = c(0,1)),                        
+                                      prior_overdispersion_mean_association = list(intercept_normal = c(5, 2), slope_normal = c(0,  0.6), sd_gamma = c(20, 40)),
                                       .sample_cell_group_pairs_to_exclude = NULL,
                                       verbose = TRUE,
                                       enable_loo = FALSE,
@@ -602,8 +602,6 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     )
 
   
-  #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
-  
   rng2 =  rstan::gqs(
     stanmodels$glm_multi_beta_binomial_generate_date,
     #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
@@ -693,7 +691,10 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik",
+    
+      # For getting the priors
+      "beta_raw_raw")
     )
   
   # Create a dummy tibble
@@ -856,8 +857,12 @@ sccomp_test.sccomp_tbl = function(.data,
 
     # Add back attributes
     add_attr(
-      .data |> attr("fit") |> get_mean_precision_association(),
-      "mean_concentration_association"
+      .data |> attr("fit") |> get_prior_overdispersion_mean_association(),
+      "prior_overdispersion_mean_association"
+    ) |> 
+    add_attr(
+      .data |> attr("fit") |> get_prior_mean(),
+      "prior_mean"
     )
 
   if(pass_fit)

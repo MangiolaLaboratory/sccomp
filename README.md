@@ -79,7 +79,7 @@ single_cell_object |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
     sccomp_test(test_composition_above_logit_fold_change = 0.2)
 ```
 
@@ -95,15 +95,15 @@ counts_obj |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
     sccomp_test(test_composition_above_logit_fold_change = 0.2)
 ```
 
     ## 
     ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000394 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.94 seconds.
+    ## Chain 1: Gradient evaluation took 0.000378 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.78 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -114,24 +114,78 @@ counts_obj |>
     ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
     ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.839 seconds (Warm-up)
-    ## Chain 1:                21.137 seconds (Sampling)
-    ## Chain 1:                23.976 seconds (Total)
+    ## Chain 1:  Elapsed Time: 2.806 seconds (Warm-up)
+    ## Chain 1:                19.451 seconds (Sampling)
+    ## Chain 1:                22.257 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.00041 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 4.1 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:     1 / 20299 [  0%]  (Warmup)
+    ## Chain 1: Iteration:   301 / 20299 [  1%]  (Sampling)
+    ## Chain 1: Iteration:  1300 / 20299 [  6%]  (Sampling)
+    ## Chain 1: Iteration:  2300 / 20299 [ 11%]  (Sampling)
+    ## Chain 1: Iteration:  3300 / 20299 [ 16%]  (Sampling)
+    ## Chain 1: Iteration:  4300 / 20299 [ 21%]  (Sampling)
+    ## Chain 1: Iteration:  5300 / 20299 [ 26%]  (Sampling)
+    ## Chain 1: Iteration:  6300 / 20299 [ 31%]  (Sampling)
+    ## Chain 1: Iteration:  7300 / 20299 [ 35%]  (Sampling)
+    ## Chain 1: Iteration:  8300 / 20299 [ 40%]  (Sampling)
+    ## Chain 1: Iteration:  9300 / 20299 [ 45%]  (Sampling)
+    ## Chain 1: Iteration: 10300 / 20299 [ 50%]  (Sampling)
+    ## Chain 1: Iteration: 11300 / 20299 [ 55%]  (Sampling)
+    ## Chain 1: Iteration: 12300 / 20299 [ 60%]  (Sampling)
+    ## Chain 1: Iteration: 13300 / 20299 [ 65%]  (Sampling)
+    ## Chain 1: Iteration: 14300 / 20299 [ 70%]  (Sampling)
+    ## Chain 1: Iteration: 15300 / 20299 [ 75%]  (Sampling)
+    ## Chain 1: Iteration: 16300 / 20299 [ 80%]  (Sampling)
+    ## Chain 1: Iteration: 17300 / 20299 [ 85%]  (Sampling)
+    ## Chain 1: Iteration: 18300 / 20299 [ 90%]  (Sampling)
+    ## Chain 1: Iteration: 19300 / 20299 [ 95%]  (Sampling)
+    ## Chain 1: Iteration: 20299 / 20299 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 2.976 seconds (Warm-up)
+    ## Chain 1:                111.381 seconds (Sampling)
+    ## Chain 1:                114.357 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000317 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.17 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 2.74 seconds (Warm-up)
+    ## Chain 1:                20.706 seconds (Sampling)
+    ## Chain 1:                23.446 seconds (Total)
     ## Chain 1:
 
     ## # A tibble: 72 × 18
     ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercep… <NA>    0.884     1.12   1.32   0       0         4441.
-    ##  2 B1         typecancer type   -1.17     -0.760 -0.381  1.75e-3 6.51e-4   2922.
-    ##  3 B2         (Intercep… <NA>    0.423     0.703  0.974  2.50e-4 1.32e-5   6265.
-    ##  4 B2         typecancer type   -1.23     -0.730 -0.263  1.25e-2 3.53e-3   3965.
-    ##  5 B3         (Intercep… <NA>   -0.657    -0.389 -0.114  8.51e-2 6.86e-3   4537.
-    ##  6 B3         typecancer type   -0.719    -0.317  0.0704 2.76e-1 6.71e-2   3631.
-    ##  7 BM         (Intercep… <NA>   -1.32     -1.03  -0.767  0       0         3997.
-    ##  8 BM         typecancer type   -0.736    -0.312  0.0916 2.94e-1 8.78e-2   3760.
-    ##  9 CD4 1      (Intercep… <NA>    0.0853    0.298  0.499  1.79e-1 3.16e-2   4733.
-    ## 10 CD4 1      typecancer type   -0.0963    0.186  0.467  5.41e-1 1.52e-1   3783.
+    ##  1 B1         (Intercep… <NA>    0.892     1.11   1.33   0       0         5144.
+    ##  2 B1         typecancer type   -1.18     -0.765 -0.381  1.50e-3 5.50e-4   3943.
+    ##  3 B2         (Intercep… <NA>    0.418     0.705  0.990  5.00e-4 5.00e-5   4184.
+    ##  4 B2         typecancer type   -1.24     -0.719 -0.260  1.25e-2 2.31e-3   3464.
+    ##  5 B3         (Intercep… <NA>   -0.664    -0.381 -0.109  9.45e-2 8.25e-3   4104.
+    ##  6 B3         typecancer type   -0.757    -0.317  0.0932 2.86e-1 6.84e-2   5025.
+    ##  7 BM         (Intercep… <NA>   -1.32     -1.03  -0.750  0       0         4626.
+    ##  8 BM         typecancer type   -0.742    -0.318  0.0838 2.90e-1 7.94e-2   4885.
+    ##  9 CD4 1      (Intercep… <NA>    0.0846    0.307  0.511  1.63e-1 2.29e-2   3322.
+    ## 10 CD4 1      typecancer type   -0.101     0.181  0.470  5.5 e-1 1.53e-1   3695.
     ## # ℹ 62 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -152,7 +206,7 @@ seurat_obj |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
     sccomp_test(
       contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
       test_composition_above_logit_fold_change = 0.2
@@ -162,8 +216,8 @@ seurat_obj |>
     ## 
     ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000371 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.71 seconds.
+    ## Chain 1: Gradient evaluation took 0.000273 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.73 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -174,24 +228,78 @@ seurat_obj |>
     ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
     ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.127 seconds (Warm-up)
-    ## Chain 1:                17.85 seconds (Sampling)
-    ## Chain 1:                19.977 seconds (Total)
+    ## Chain 1:  Elapsed Time: 2.042 seconds (Warm-up)
+    ## Chain 1:                17.496 seconds (Sampling)
+    ## Chain 1:                19.538 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000267 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.67 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:     1 / 20299 [  0%]  (Warmup)
+    ## Chain 1: Iteration:   301 / 20299 [  1%]  (Sampling)
+    ## Chain 1: Iteration:  1300 / 20299 [  6%]  (Sampling)
+    ## Chain 1: Iteration:  2300 / 20299 [ 11%]  (Sampling)
+    ## Chain 1: Iteration:  3300 / 20299 [ 16%]  (Sampling)
+    ## Chain 1: Iteration:  4300 / 20299 [ 21%]  (Sampling)
+    ## Chain 1: Iteration:  5300 / 20299 [ 26%]  (Sampling)
+    ## Chain 1: Iteration:  6300 / 20299 [ 31%]  (Sampling)
+    ## Chain 1: Iteration:  7300 / 20299 [ 35%]  (Sampling)
+    ## Chain 1: Iteration:  8300 / 20299 [ 40%]  (Sampling)
+    ## Chain 1: Iteration:  9300 / 20299 [ 45%]  (Sampling)
+    ## Chain 1: Iteration: 10300 / 20299 [ 50%]  (Sampling)
+    ## Chain 1: Iteration: 11300 / 20299 [ 55%]  (Sampling)
+    ## Chain 1: Iteration: 12300 / 20299 [ 60%]  (Sampling)
+    ## Chain 1: Iteration: 13300 / 20299 [ 65%]  (Sampling)
+    ## Chain 1: Iteration: 14300 / 20299 [ 70%]  (Sampling)
+    ## Chain 1: Iteration: 15300 / 20299 [ 75%]  (Sampling)
+    ## Chain 1: Iteration: 16300 / 20299 [ 80%]  (Sampling)
+    ## Chain 1: Iteration: 17300 / 20299 [ 85%]  (Sampling)
+    ## Chain 1: Iteration: 18300 / 20299 [ 90%]  (Sampling)
+    ## Chain 1: Iteration: 19300 / 20299 [ 95%]  (Sampling)
+    ## Chain 1: Iteration: 20299 / 20299 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 1.764 seconds (Warm-up)
+    ## Chain 1:                82.542 seconds (Sampling)
+    ## Chain 1:                84.306 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.00027 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.7 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 1.893 seconds (Warm-up)
+    ## Chain 1:                16.955 seconds (Sampling)
+    ## Chain 1:                18.848 seconds (Total)
     ## Chain 1:
 
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -1.91    -1.42   -0.937 0       0            NA
-    ##  2 B immature  typeheal… <NA>     0.937    1.42    1.91  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.37    -1.74   -1.11  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.11     1.74    2.37  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.25    -0.858  -0.514 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.514    0.858   1.25  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.829    1.83    2.96  2.50e-4 4.17e-5      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.96    -1.83   -0.829 2.50e-4 4.17e-5      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.346    1.01    1.74  6.51e-3 1.25e-3      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.74    -1.01   -0.346 6.51e-3 1.25e-3      NA
+    ##  1 B immature  typecanc… <NA>    -1.90    -1.42   -0.931 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.931    1.42    1.90  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.33    -1.73   -1.12  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.12     1.73    2.33  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.28    -0.873  -0.519 2.50e-4 5.00e-5      NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.519    0.873   1.28  2.50e-4 5.00e-5      NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.915    1.84    3.00  7.50e-4 1.79e-4      NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -3.00    -1.84   -0.915 7.50e-4 1.79e-4      NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.346    1.01    1.72  1.10e-2 3.48e-3      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.72    -1.01   -0.346 1.10e-2 3.48e-3      NA
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -231,8 +339,8 @@ model_with_factor_association =
     ## 
     ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000394 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.94 seconds.
+    ## Chain 1: Gradient evaluation took 0.000274 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.74 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -243,9 +351,9 @@ model_with_factor_association =
     ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
     ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.234 seconds (Warm-up)
-    ## Chain 1:                20.698 seconds (Sampling)
-    ## Chain 1:                22.932 seconds (Total)
+    ## Chain 1:  Elapsed Time: 2.27 seconds (Warm-up)
+    ## Chain 1:                19.686 seconds (Sampling)
+    ## Chain 1:                21.956 seconds (Total)
     ## Chain 1:
 
 ``` r
@@ -265,8 +373,8 @@ model_without_association =
     ## 
     ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000286 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.86 seconds.
+    ## Chain 1: Gradient evaluation took 0.00028 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.8 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -277,9 +385,9 @@ model_without_association =
     ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
     ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.229 seconds (Warm-up)
-    ## Chain 1:                23.82 seconds (Sampling)
-    ## Chain 1:                26.049 seconds (Total)
+    ## Chain 1:  Elapsed Time: 2.128 seconds (Warm-up)
+    ## Chain 1:                24.919 seconds (Sampling)
+    ## Chain 1:                27.047 seconds (Total)
     ## Chain 1:
 
 ``` r
@@ -292,7 +400,7 @@ loo_compare(
 
     ##        elpd_diff se_diff
     ## model1   0.0       0.0  
-    ## model2 -81.1      11.3
+    ## model2 -80.7      11.4
 
 ## Differential variability, binary factor
 
@@ -310,7 +418,7 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
     sccomp_test(
       test_composition_above_logit_fold_change = 0.2
     )
@@ -319,8 +427,8 @@ res =
     ## 
     ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.001618 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 16.18 seconds.
+    ## Chain 1: Gradient evaluation took 0.000328 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.28 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -331,9 +439,63 @@ res =
     ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
     ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 4.185 seconds (Warm-up)
-    ## Chain 1:                33.902 seconds (Sampling)
-    ## Chain 1:                38.087 seconds (Total)
+    ## Chain 1:  Elapsed Time: 4.223 seconds (Warm-up)
+    ## Chain 1:                34.263 seconds (Sampling)
+    ## Chain 1:                38.486 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000272 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.72 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:     1 / 20299 [  0%]  (Warmup)
+    ## Chain 1: Iteration:   301 / 20299 [  1%]  (Sampling)
+    ## Chain 1: Iteration:  1300 / 20299 [  6%]  (Sampling)
+    ## Chain 1: Iteration:  2300 / 20299 [ 11%]  (Sampling)
+    ## Chain 1: Iteration:  3300 / 20299 [ 16%]  (Sampling)
+    ## Chain 1: Iteration:  4300 / 20299 [ 21%]  (Sampling)
+    ## Chain 1: Iteration:  5300 / 20299 [ 26%]  (Sampling)
+    ## Chain 1: Iteration:  6300 / 20299 [ 31%]  (Sampling)
+    ## Chain 1: Iteration:  7300 / 20299 [ 35%]  (Sampling)
+    ## Chain 1: Iteration:  8300 / 20299 [ 40%]  (Sampling)
+    ## Chain 1: Iteration:  9300 / 20299 [ 45%]  (Sampling)
+    ## Chain 1: Iteration: 10300 / 20299 [ 50%]  (Sampling)
+    ## Chain 1: Iteration: 11300 / 20299 [ 55%]  (Sampling)
+    ## Chain 1: Iteration: 12300 / 20299 [ 60%]  (Sampling)
+    ## Chain 1: Iteration: 13300 / 20299 [ 65%]  (Sampling)
+    ## Chain 1: Iteration: 14300 / 20299 [ 70%]  (Sampling)
+    ## Chain 1: Iteration: 15300 / 20299 [ 75%]  (Sampling)
+    ## Chain 1: Iteration: 16300 / 20299 [ 80%]  (Sampling)
+    ## Chain 1: Iteration: 17300 / 20299 [ 85%]  (Sampling)
+    ## Chain 1: Iteration: 18300 / 20299 [ 90%]  (Sampling)
+    ## Chain 1: Iteration: 19300 / 20299 [ 95%]  (Sampling)
+    ## Chain 1: Iteration: 20299 / 20299 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 4.5 seconds (Warm-up)
+    ## Chain 1:                161.717 seconds (Sampling)
+    ## Chain 1:                166.217 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000274 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.74 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 4.221 seconds (Warm-up)
+    ## Chain 1:                33.257 seconds (Sampling)
+    ## Chain 1:                37.478 seconds (Total)
     ## Chain 1:
 
 ``` r
@@ -341,18 +503,18 @@ res
 ```
 
     ## # A tibble: 60 × 18
-    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  (Interce… <NA>     0.548    0.934  1.30   2.50e-4 2.28e-5   5948.
-    ##  2 B immature  typeheal… type     0.809    1.33   1.89   0       0         4471.
-    ##  3 B mem       (Interce… <NA>    -1.30    -0.759 -0.159  3.08e-2 2.21e-3   5687.
-    ##  4 B mem       typeheal… type     1.06     1.81   2.52   2.50e-4 8.34e-5   4832.
-    ##  5 CD4 cm S10… (Interce… <NA>     1.73     1.98   2.23   0       0         5733.
-    ##  6 CD4 cm S10… typeheal… type     0.301    0.689  1.07   8.26e-3 3.42e-3   4382.
-    ##  7 CD4 cm hig… (Interce… <NA>    -0.881   -0.413  0.113  1.92e-1 2.72e-2   4595.
-    ##  8 CD4 cm hig… typeheal… type    -3.22    -1.49   1.03   1.52e-1 5.59e-2   2946.
-    ##  9 CD4 cm rib… (Interce… <NA>     0.144    0.471  0.809  5.13e-2 4.67e-3   3843.
-    ## 10 CD4 cm rib… typeheal… type    -1.90    -1.09  -0.0711 4.25e-2 9.48e-3   3818.
+    ##    cell_group parameter factor c_lower c_effect  c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>      <chr>     <chr>    <dbl>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B immature (Interce… <NA>     0.572    0.940  1.32    2.50e-4 2.08e-5   6761.
+    ##  2 B immature typeheal… type     0.803    1.34   1.85    2.50e-4 8.33e-5   4614.
+    ##  3 B mem      (Interce… <NA>    -1.31    -0.756 -0.139   3.65e-2 2.61e-3   6068.
+    ##  4 B mem      typeheal… type     1.04     1.80   2.53    0       0         5288.
+    ##  5 CD4 cm S1… (Interce… <NA>     1.73     1.98   2.22    0       0         7429.
+    ##  6 CD4 cm S1… typeheal… type     0.300    0.685  1.07    6.25e-3 2.00e-3   4611.
+    ##  7 CD4 cm hi… (Interce… <NA>    -0.868   -0.401  0.0916  2.01e-1 2.77e-2   4554.
+    ##  8 CD4 cm hi… typeheal… type    -3.25    -1.45   0.985   1.55e-1 5.69e-2   3161.
+    ##  9 CD4 cm ri… (Interce… <NA>     0.119    0.474  0.820   5.70e-2 7.33e-3   4625.
+    ## 10 CD4 cm ri… typeheal… type    -1.90    -1.08   0.00448 4.60e-2 1.31e-2   4191.
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -485,7 +647,7 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
     sccomp_test(
       test_composition_above_logit_fold_change = 0.2
     )
@@ -494,8 +656,8 @@ res =
     ## 
     ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000458 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 4.58 seconds.
+    ## Chain 1: Gradient evaluation took 0.00036 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.6 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -506,9 +668,63 @@ res =
     ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
     ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 5.428 seconds (Warm-up)
-    ## Chain 1:                39.833 seconds (Sampling)
-    ## Chain 1:                45.261 seconds (Total)
+    ## Chain 1:  Elapsed Time: 5.574 seconds (Warm-up)
+    ## Chain 1:                40.312 seconds (Sampling)
+    ## Chain 1:                45.886 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000331 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.31 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:     1 / 20299 [  0%]  (Warmup)
+    ## Chain 1: Iteration:   301 / 20299 [  1%]  (Sampling)
+    ## Chain 1: Iteration:  1300 / 20299 [  6%]  (Sampling)
+    ## Chain 1: Iteration:  2300 / 20299 [ 11%]  (Sampling)
+    ## Chain 1: Iteration:  3300 / 20299 [ 16%]  (Sampling)
+    ## Chain 1: Iteration:  4300 / 20299 [ 21%]  (Sampling)
+    ## Chain 1: Iteration:  5300 / 20299 [ 26%]  (Sampling)
+    ## Chain 1: Iteration:  6300 / 20299 [ 31%]  (Sampling)
+    ## Chain 1: Iteration:  7300 / 20299 [ 35%]  (Sampling)
+    ## Chain 1: Iteration:  8300 / 20299 [ 40%]  (Sampling)
+    ## Chain 1: Iteration:  9300 / 20299 [ 45%]  (Sampling)
+    ## Chain 1: Iteration: 10300 / 20299 [ 50%]  (Sampling)
+    ## Chain 1: Iteration: 11300 / 20299 [ 55%]  (Sampling)
+    ## Chain 1: Iteration: 12300 / 20299 [ 60%]  (Sampling)
+    ## Chain 1: Iteration: 13300 / 20299 [ 65%]  (Sampling)
+    ## Chain 1: Iteration: 14300 / 20299 [ 70%]  (Sampling)
+    ## Chain 1: Iteration: 15300 / 20299 [ 75%]  (Sampling)
+    ## Chain 1: Iteration: 16300 / 20299 [ 80%]  (Sampling)
+    ## Chain 1: Iteration: 17300 / 20299 [ 85%]  (Sampling)
+    ## Chain 1: Iteration: 18300 / 20299 [ 90%]  (Sampling)
+    ## Chain 1: Iteration: 19300 / 20299 [ 95%]  (Sampling)
+    ## Chain 1: Iteration: 20299 / 20299 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 5.802 seconds (Warm-up)
+    ## Chain 1:                194.745 seconds (Sampling)
+    ## Chain 1:                200.547 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000328 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.28 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 5.498 seconds (Warm-up)
+    ## Chain 1:                38.42 seconds (Sampling)
+    ## Chain 1:                43.918 seconds (Total)
     ## Chain 1:
 
 ``` r
@@ -518,16 +734,16 @@ res
     ## # A tibble: 210 × 18
     ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature (Intercep… <NA>     0.543   1.05     1.61  0       0         2521.
-    ##  2 B immature typehealt… type     0.611   1.26     1.88  0.00175 8.76e-4   2604.
-    ##  3 B immature continuou… conti…  -0.207   0.0390   0.334 0.873   6.26e-1   6341.
-    ##  4 B immature (Intercep… <NA>    -0.607  -0.0870   0.392 0.681   5.86e-1     NA 
-    ##  5 B immature typehealt… <NA>    -0.392   0.0870   0.607 0.681   5.86e-1     NA 
-    ##  6 B immature (Intercep… <NA>    -0.576  -0.0465   0.435 0.733   6.50e-1     NA 
-    ##  7 B immature typehealt… <NA>    -0.435   0.0465   0.576 0.733   6.50e-1     NA 
-    ##  8 B mem      (Intercep… <NA>    -1.04   -0.379    0.459 0.305   5.49e-2   2005.
-    ##  9 B mem      typehealt… type     0.506   1.41     2.22  0.00475 2.70e-3   2206.
-    ## 10 B mem      continuou… conti…  -0.234   0.0635   0.399 0.805   5.97e-1   7345.
+    ##  1 B immature (Intercep… <NA>     0.544   1.05     1.61  0.00100 1.25e-4   3767.
+    ##  2 B immature typehealt… type     0.591   1.25     1.90  0.00150 7.50e-4   3693.
+    ##  3 B immature continuou… conti…  -0.212   0.0438   0.324 0.872   6.35e-1   7309.
+    ##  4 B immature (Intercep… <NA>    -0.607  -0.0772   0.375 0.700   5.95e-1     NA 
+    ##  5 B immature typehealt… <NA>    -0.375   0.0772   0.607 0.700   5.95e-1     NA 
+    ##  6 B immature (Intercep… <NA>    -0.592  -0.0422   0.445 0.750   6.63e-1     NA 
+    ##  7 B immature typehealt… <NA>    -0.445   0.0422   0.592 0.750   6.63e-1     NA 
+    ##  8 B mem      (Intercep… <NA>    -1.02   -0.360    0.495 0.327   5.66e-2   2659.
+    ##  9 B mem      typehealt… type     0.500   1.40     2.21  0.00625 3.60e-3   2927.
+    ## 10 B mem      continuou… conti…  -0.234   0.0651   0.388 0.792   5.86e-1   8030.
     ## # ℹ 200 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -552,14 +768,321 @@ res |> sccomp_remove_unwanted_variation(~type)
     ## # A tibble: 600 × 5
     ##    sample       cell_group adjusted_proportion adjusted_counts logit_residuals
     ##    <chr>        <chr>                    <dbl>           <dbl>           <dbl>
-    ##  1 10x_6K       B immature              0.0554           260.          -0.702 
-    ##  2 10x_8K       B immature              0.144           1080.           0.366 
-    ##  3 GSE115189    B immature              0.114            268.           0.0767
-    ##  4 SCP345_580   B immature              0.0903           520.          -0.161 
-    ##  5 SCP345_860   B immature              0.151            969.           0.421 
-    ##  6 SCP424_pbmc1 B immature              0.110            295.           0.0129
-    ##  7 SCP424_pbmc2 B immature              0.200            596.           0.755 
-    ##  8 SCP591       B immature              0.0251            14.3         -1.52  
-    ##  9 SI-GA-E5     B immature              0.0272           114.          -0.692 
-    ## 10 SI-GA-E7     B immature              0.105            772.           0.747 
+    ##  1 10x_6K       B immature              0.0551           258.          -0.703 
+    ##  2 10x_8K       B immature              0.143           1079.           0.374 
+    ##  3 GSE115189    B immature              0.113            266.           0.0741
+    ##  4 SCP345_580   B immature              0.0903           520.          -0.152 
+    ##  5 SCP345_860   B immature              0.151            970.           0.431 
+    ##  6 SCP424_pbmc1 B immature              0.112            300.           0.0356
+    ##  7 SCP424_pbmc2 B immature              0.201            599.           0.769 
+    ##  8 SCP591       B immature              0.0248            14.1         -1.52  
+    ##  9 SI-GA-E5     B immature              0.0270           113.          -0.679 
+    ## 10 SI-GA-E7     B immature              0.104            762.           0.755 
     ## # ℹ 590 more rows
+
+# Analyses with no replication, N = 1
+
+As a premise, you should try to avoid no-replication analyses at all
+costs, as they carry no proof or experimental reproducibility. An
+example is a datasets with 2 samples, one treated and another one
+untreated (while testing for treatment).
+
+However, if you are in the situation of having to extract the most of
+your no-replication experiment, `sccomp` can transfer information about
+the noise structure from a compatible, reference high-replication
+dataset (with the same properties as yours, including technology,
+tissue) to your no-replication dataset.
+
+The first step is to collect your reference high-replication, and model
+it including all factor of interest (could be different from the ones
+from your experiment), and all counfounders (could be different from the
+ones from your experiment).
+
+``` r
+res = 
+  seurat_obj_with_high_replication |>
+  sccomp_estimate( 
+    formula_composition = ~ type + continuous_covariate + (1 | group2__), 
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1 
+  ) |> 
+  sccomp_remove_outliers(cores = 1) 
+```
+
+    ## sccomp says: estimation
+
+    ## sccomp says: the composition design matrix has columns: (Intercept), typehealthy, continuous_covariate
+
+    ## sccomp says: the variability design matrix has columns: (Intercept)
+
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.00032 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.2 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 3.859 seconds (Warm-up)
+    ## Chain 1:                37.57 seconds (Sampling)
+    ## Chain 1:                41.429 seconds (Total)
+    ## Chain 1:
+
+    ## sccomp says: outlier identification - step 1/2
+
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000336 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.36 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:     1 / 20299 [  0%]  (Warmup)
+    ## Chain 1: Iteration:   301 / 20299 [  1%]  (Sampling)
+    ## Chain 1: Iteration:  1300 / 20299 [  6%]  (Sampling)
+    ## Chain 1: Iteration:  2300 / 20299 [ 11%]  (Sampling)
+    ## Chain 1: Iteration:  3300 / 20299 [ 16%]  (Sampling)
+    ## Chain 1: Iteration:  4300 / 20299 [ 21%]  (Sampling)
+    ## Chain 1: Iteration:  5300 / 20299 [ 26%]  (Sampling)
+    ## Chain 1: Iteration:  6300 / 20299 [ 31%]  (Sampling)
+    ## Chain 1: Iteration:  7300 / 20299 [ 35%]  (Sampling)
+    ## Chain 1: Iteration:  8300 / 20299 [ 40%]  (Sampling)
+    ## Chain 1: Iteration:  9300 / 20299 [ 45%]  (Sampling)
+    ## Chain 1: Iteration: 10300 / 20299 [ 50%]  (Sampling)
+    ## Chain 1: Iteration: 11300 / 20299 [ 55%]  (Sampling)
+    ## Chain 1: Iteration: 12300 / 20299 [ 60%]  (Sampling)
+    ## Chain 1: Iteration: 13300 / 20299 [ 65%]  (Sampling)
+    ## Chain 1: Iteration: 14300 / 20299 [ 70%]  (Sampling)
+    ## Chain 1: Iteration: 15300 / 20299 [ 75%]  (Sampling)
+    ## Chain 1: Iteration: 16300 / 20299 [ 80%]  (Sampling)
+    ## Chain 1: Iteration: 17300 / 20299 [ 85%]  (Sampling)
+    ## Chain 1: Iteration: 18300 / 20299 [ 90%]  (Sampling)
+    ## Chain 1: Iteration: 19300 / 20299 [ 95%]  (Sampling)
+    ## Chain 1: Iteration: 20299 / 20299 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 3.981 seconds (Warm-up)
+    ## Chain 1:                180.286 seconds (Sampling)
+    ## Chain 1:                184.267 seconds (Total)
+    ## Chain 1:
+
+    ## sccomp says: outlier-free model fitting - step 2/2
+
+    ## sccomp says: the composition design matrix has columns: (Intercept), typehealthy, continuous_covariate
+
+    ## sccomp says: the variability design matrix has columns: (Intercept)
+
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000329 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.29 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 4.028 seconds (Warm-up)
+    ## Chain 1:                28.584 seconds (Sampling)
+    ## Chain 1:                32.612 seconds (Total)
+    ## Chain 1:
+
+Now you can get the priors learned by this data-rich dataset
+
+``` r
+prior_overdispersion_mean_association = res |> attr("prior_overdispersion_mean_association")
+```
+
+These priors are encoded as lists, that can be readily applied to your
+next data-poor estimate
+
+``` r
+prior_overdispersion_mean_association
+```
+
+    ## $intercept_normal
+    ##      mean        sd 
+    ## 4.7409433 0.1119308 
+    ## 
+    ## $slope_normal
+    ##        mean          sd 
+    ## -0.85179579  0.09768222 
+    ## 
+    ## $sd_gamma
+    ##    shape     rate 
+    ## 35.71227 76.97253
+
+You can now attempt your informed no-replication analysis
+
+``` r
+seurat_obj_NO_replicates = seurat_obj[,seurat_obj[[]]$sample %in% c("SI-GA-E8", "GSE115189")] 
+```
+
+``` r
+res_NO_replicates_UNinformed = 
+  seurat_obj_NO_replicates |>
+  sccomp_estimate( 
+    formula_composition = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1
+  ) |> 
+  sccomp_test()
+```
+
+    ## sccomp says: estimation
+
+    ## sccomp says: the composition design matrix has columns: (Intercept), typehealthy
+
+    ## sccomp says: the variability design matrix has columns: (Intercept)
+
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 7.7e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.77 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 0.641 seconds (Warm-up)
+    ## Chain 1:                6.948 seconds (Sampling)
+    ## Chain 1:                7.589 seconds (Total)
+    ## Chain 1:
+
+``` r
+res_NO_replicates_UNinformed
+```
+
+    ## # A tibble: 60 × 18
+    ##    cell_group     parameter factor c_lower c_effect c_upper c_pH0  c_FDR c_n_eff
+    ##    <chr>          <chr>     <chr>    <dbl>    <dbl>   <dbl> <dbl>  <dbl>   <dbl>
+    ##  1 B immature     (Interce… <NA>    -0.470   1.06     1.86  0.116 0.0993   1141.
+    ##  2 B immature     typeheal… type    -1.40    0.389    2.10  0.392 0.256    3018.
+    ##  3 B mem          (Interce… <NA>    -1.38   -0.0503   0.998 0.609 0.368    3908.
+    ##  4 B mem          typeheal… type    -1.60    0.0908   1.73  0.548 0.337    3388.
+    ##  5 CD4 cm S100A4  (Interce… <NA>    -0.703   1.08     2.04  0.142 0.110     431.
+    ##  6 CD4 cm S100A4  typeheal… type    -0.908   1.14     2.82  0.125 0.108    2643.
+    ##  7 CD4 cm high c… (Interce… <NA>    -1.48   -0.0433   1.37  0.596 0.360    1109.
+    ##  8 CD4 cm high c… typeheal… type    -2.76   -0.837    1.25  0.262 0.175    2126.
+    ##  9 CD4 cm riboso… (Interce… <NA>    -1.22    0.133    1.12  0.552 0.323    3934.
+    ## 10 CD4 cm riboso… typeheal… type    -2.20   -0.557    1.34  0.337 0.213    2246.
+    ## # ℹ 50 more rows
+    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## #   count_data <list>
+
+``` r
+res_NO_replicates_UNinformed |> plot() %$% boxplot
+```
+
+    ## Joining with `by = join_by(cell_group, sample)`
+
+    ## Joining with `by = join_by(cell_group, type)`
+
+    ## Warning: Expected 2 pieces. Additional pieces discarded in 4 rows [6, 7, 13,
+    ## 14].
+
+    ## [[1]]
+
+![](inst/figures/unnamed-chunk-26-1.png)<!-- -->
+
+``` r
+res_NO_replicates_informed = 
+  seurat_obj_NO_replicates |>
+  sccomp_estimate( 
+    formula_composition = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1 , 
+    
+    # These are the priors
+    prior_overdispersion_mean_association = prior_overdispersion_mean_association
+  ) |> 
+  sccomp_test()
+```
+
+    ## sccomp says: estimation
+
+    ## sccomp says: the composition design matrix has columns: (Intercept), typehealthy
+
+    ## sccomp says: the variability design matrix has columns: (Intercept)
+
+    ## 
+    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 7.5e-05 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.75 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
+    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
+    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
+    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
+    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 0.794 seconds (Warm-up)
+    ## Chain 1:                7.315 seconds (Sampling)
+    ## Chain 1:                8.109 seconds (Total)
+    ## Chain 1:
+
+``` r
+res_NO_replicates_informed
+```
+
+    ## # A tibble: 60 × 18
+    ##    cell_group    parameter factor c_lower c_effect c_upper  c_pH0  c_FDR c_n_eff
+    ##    <chr>         <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>  <dbl>   <dbl>
+    ##  1 B immature    (Interce… <NA>    -0.172  1.21      2.03  0.0437 0.0437    86.2
+    ##  2 B immature    typeheal… type    -1.47   0.446     1.90  0.377  0.242    357. 
+    ##  3 B mem         (Interce… <NA>    -0.995 -0.0515    0.992 0.617  0.309   5073. 
+    ##  4 B mem         typeheal… type    -1.56   0.105     1.38  0.551  0.320   5044. 
+    ##  5 CD4 cm S100A4 (Interce… <NA>    -0.314  1.31      2.16  0.0495 0.0459   103. 
+    ##  6 CD4 cm S100A4 typeheal… type    -0.289  1.36      2.69  0.0647 0.0635  1312. 
+    ##  7 CD4 cm high … (Interce… <NA>    -1.29   0.00553   1.41  0.613  0.298   3356. 
+    ##  8 CD4 cm high … typeheal… type    -2.86  -1.07      1.28  0.193  0.117    144. 
+    ##  9 CD4 cm ribos… (Interce… <NA>    -0.835  0.178     1.22  0.520  0.225   4527. 
+    ## 10 CD4 cm ribos… typeheal… type    -2.15  -0.681     0.668 0.25   0.156   1933. 
+    ## # ℹ 50 more rows
+    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## #   count_data <list>
+
+``` r
+res_NO_replicates_informed |> plot() %$% boxplot
+```
+
+    ## Joining with `by = join_by(cell_group, sample)`
+
+    ## Joining with `by = join_by(cell_group, type)`
+
+    ## Warning: Expected 2 pieces. Additional pieces discarded in 4 rows [6, 7, 13,
+    ## 14].
+
+    ## [[1]]
+
+![](inst/figures/unnamed-chunk-27-1.png)<!-- -->

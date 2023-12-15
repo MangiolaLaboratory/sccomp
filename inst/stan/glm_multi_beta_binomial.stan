@@ -105,7 +105,7 @@ data{
   // Prior info
   real prior_prec_intercept[2] ;
   real prior_prec_slope[2] ;
-  real prior_prec_sd[2] ;
+  real prior_overdispersion_mean_association[2] ;
   real prior_mean_intercept[2];
   real prior_mean_coefficients[2];
 
@@ -308,7 +308,7 @@ model{
   mix_p ~ beta(1,5);
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
   prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
-  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
+  prec_sd ~ gamma(prior_overdispersion_mean_association[1],prior_overdispersion_mean_association[2]);
 
   // Random intercept
   if(N_random_intercepts>0){

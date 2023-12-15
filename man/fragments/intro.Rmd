@@ -47,9 +47,9 @@ Function | Description
 library(dplyr)
 library(sccomp)
 library(ggplot2)
-library(forcats)
 library(tidyr)
 library(rstan)
+library(magrittr)
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
@@ -73,7 +73,7 @@ single_cell_object |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
 	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 ```
@@ -91,7 +91,7 @@ counts_obj |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
 	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 ```
@@ -110,7 +110,7 @@ seurat_obj |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
 	sccomp_test(
 	  contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
 	  test_composition_above_logit_fold_change = 0.2
@@ -177,7 +177,7 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
 	sccomp_test(
 	  test_composition_above_logit_fold_change = 0.2
 	)
@@ -265,7 +265,7 @@ res =
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(cores = 1) |> 
 	sccomp_test(
 	  test_composition_above_logit_fold_change = 0.2
 	)
@@ -282,4 +282,87 @@ We decide to just keep the type population (i.e. fixed) effect for abundance, an
 
 ```{r}
 res |> sccomp_remove_unwanted_variation(~type)
+```
+
+# Analyses with no replication, N = 1 
+
+As a premise, you should try to avoid no-replication analyses at all costs, as they carry no proof or experimental reproducibility. An example is a datasets with 2 samples, one treated and another one untreated (while testing for treatment). 
+
+However, if you are in the situation of having to extract the most of your no-replication experiment, `sccomp` can transfer information about the noise structure from a compatible, reference high-replication dataset (with the same properties as yours, including technology, tissue) to your no-replication dataset.
+
+```{r, echo = FALSE}
+seurat_obj_with_high_replication = seurat_obj
+```
+
+The first step is to collect your reference high-replication, and model it including all factor of interest (could be different from the ones from your experiment), and all counfounders (could be different from the ones from your experiment).
+
+```{r}
+
+res = 
+  seurat_obj_with_high_replication |>
+  sccomp_estimate( 
+    formula_composition = ~ type + continuous_covariate + (1 | group2__), 
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1 
+  ) |> 
+  sccomp_remove_outliers(cores = 1) 
+
+```
+
+Now you can get the priors learned by this data-rich dataset
+
+```{r}
+prior_overdispersion_mean_association = res |> attr("prior_overdispersion_mean_association")
+```
+These priors are encoded as lists, that can be readily applied to your next data-poor estimate
+
+```{r}
+prior_overdispersion_mean_association
+```
+
+You can now attempt your informed no-replication analysis
+
+```{r}
+seurat_obj_NO_replicates = seurat_obj[,seurat_obj[[]]$sample %in% c("SI-GA-E8", "GSE115189")] 
+```
+
+```{r}
+
+res_NO_replicates_UNinformed = 
+  seurat_obj_NO_replicates |>
+  sccomp_estimate( 
+    formula_composition = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1
+  ) |> 
+  sccomp_test()
+
+res_NO_replicates_UNinformed
+
+res_NO_replicates_UNinformed |> plot() %$% boxplot
+```
+
+```{r}
+
+res_NO_replicates_informed = 
+  seurat_obj_NO_replicates |>
+  sccomp_estimate( 
+    formula_composition = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1 , 
+    
+    # These are the priors
+    prior_overdispersion_mean_association = prior_overdispersion_mean_association
+  ) |> 
+  sccomp_test()
+
+res_NO_replicates_informed
+
+res_NO_replicates_informed |> plot() %$% boxplot
 ```
