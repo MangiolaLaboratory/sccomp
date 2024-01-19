@@ -138,8 +138,9 @@ sccomp_glm_data_frame_counts = function(.data,
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)
   
   # Check that count is integer
-  if(.data %>% pull(!!.count) %>% is("integer") %>% not())
-    stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
+  if(.data %>% pull(!!.count) %>% is("integer")) message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))
+  else if(.data %>% pull(!!.count) %>% is("integer") |> not() & .data %>% pull(!!.count) |> dplyr::between(0, 1) |> all()) message(sprintf("sccomp says: %s column is a proportion. The sum-constrained beta model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).", quo_name(.count)))
+  else stop(sprintf("sccomp: %s column must be an integer or a proportion", quo_name(.count)))
   
   # Check if columns exist
   check_columns_exist(.data, c(

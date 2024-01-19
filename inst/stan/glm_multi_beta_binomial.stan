@@ -89,7 +89,7 @@ data{
   int<lower=1> B_intercept_columns; // How many intercept column in varibility design
   int<lower=1> Ar; // Rows of unique variability design
   int exposure[N];
-  int y[N,M];
+  real y[N,M];
   matrix[N, C] X;
   matrix[Ar, A] XA; // The unique variability design
   matrix[N, A] Xa; // The variability design
@@ -134,7 +134,7 @@ transformed data{
   matrix[N, C] Q_ast;
   matrix[C, C] R_ast;
   matrix[C, C] R_ast_inverse;
-  int y_array[N*M];
+  real y_array[N*M];
   int truncation_down_array[N*M];
   int exposure_array[N*M];
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
@@ -244,9 +244,8 @@ model{
 
   // Fit main distribution
   if(use_data == 1){
-    target += beta_binomial_lpmf(
+    target += beta_lpdf(
       y_array[truncation_not_idx] |
-      exposure_array[truncation_not_idx],
       (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
       ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
       ) ;
@@ -349,9 +348,8 @@ generated quantities {
   // LOO
   if(enable_loo==1)
     for (n in 1:TNS) {
-      log_lik[n] = beta_binomial_lpmf(
+      log_lik[n] = beta_lpdf(
         y_array[truncation_not_idx[n]] |
-        exposure_array[truncation_not_idx[n]],
         (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
         ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
         ) ;
