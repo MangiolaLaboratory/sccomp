@@ -1,10 +1,10 @@
 functions{
 
-	int[] dirichlet_multinomial_rng(vector alpha, int exposure) {
+	array[] int dirichlet_multinomial2_rng(vector alpha, int exposure) {
 	    return multinomial_rng(dirichlet_rng(alpha), exposure);
 	}
 
-matrix vector_array_to_matrix(vector[] x) {
+matrix vector_array_to_matrix(array[] vector x) {
 		matrix[size(x), rows(x[1])] y;
 		for (m in 1:size(x))
 		  y[m] = x[m]';
@@ -19,17 +19,17 @@ data{
 	int M;
 	int C;
 	int A;
-	vector[M] y[N];
+	array[N] vector[M] y;
 	matrix[N,C] X;
 
 	// To exclude
 	int<lower=0> how_namy_to_include;
-	int to_include[how_namy_to_include, 2]; // Table with column N and M
+	array[how_namy_to_include, 2] int to_include; // Table with column N and M
 
   // RNG
 	int I; // iterations
-	vector[A] precision[I];
-	int exposure[N];
+	array[I] vector[A] precision;
+	array[N] int exposure;
 
 }
 parameters{
@@ -56,9 +56,9 @@ model{
 	 for(i in 1:C) beta[i] ~ normal(0, 5);
 }
 generated quantities{
-  vector[M] y_rng[N];
-  vector[M] y_simplex[N];
-  int counts[N, M];
+  array[N] vector[M] y_rng;
+  array[N] vector[M] y_simplex;
+  array[N, M] int counts;
 
   // Random precision
   int my_n;
@@ -76,7 +76,7 @@ generated quantities{
 
 
 	for(n in 1:N)
-	  counts[n] = dirichlet_multinomial_rng((X[n,1:A] * precision[my_n] * 100) * y_simplex[n], exposure[n]) ;
+	  counts[n] = dirichlet_multinomial2_rng((X[n,1:A] * precision[my_n] * 100) * y_simplex[n], exposure[n]) ;
 
 
 

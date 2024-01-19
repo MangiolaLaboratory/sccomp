@@ -1,13 +1,13 @@
 functions{
 
-  real dirichlet_multinomial_lpmf(int[] y, vector alpha) {
+  real dirichlet_multinomial2_lpmf(array[] int y, vector alpha) {
     	 real alpha_plus = sum(alpha);
 
     return lgamma(alpha_plus) + sum(lgamma(alpha + to_vector(y)))
                 - lgamma(alpha_plus+sum(y)) - sum(lgamma(alpha));
   }
 
-matrix vector_array_to_matrix(vector[] x) {
+matrix vector_array_to_matrix(array[] vector x) {
 		matrix[size(x), rows(x[1])] y;
 		for (m in 1:size(x))
 		  y[m] = x[m]';
@@ -37,7 +37,7 @@ vector Q_sum_to_zero_QR(int N) {
     return x;
   }
 
-  real beta_regression_lpdf(vector[] p, matrix X, matrix beta, vector phi){
+  real beta_regression_lpdf(array[] vector p, matrix X, matrix beta, vector phi){
 
 		real lp = 0;
     matrix[num_elements(p[1]), num_elements(p[,1])] mu = (X * beta)';
@@ -54,7 +54,7 @@ vector Q_sum_to_zero_QR(int N) {
 data{
 	int N;
 	int M;
-	simplex[M] y[N];
+	array[N] simplex[M] y;
 	matrix[N, 2] X;
 
 }
@@ -64,15 +64,15 @@ transformed data{
   real x_raw_sigma = inv_sqrt(1 - inv(M));
 }
 parameters{
-	vector[M-1] beta_raw[C];
+	array[C] vector[M-1] beta_raw;
 	vector[M] precision;
 
 	// To exclude
-  real prec_coeff[2];
+  array[2] real prec_coeff;
   real<lower=0> prec_sd;
 }
 transformed parameters{
-		vector[M] beta[C];
+		array[C] vector[M] beta;
 	  for(c in 1:C)	beta[c] =  sum_to_zero_QR(beta_raw[c], Q_r);
 
 

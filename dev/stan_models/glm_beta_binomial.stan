@@ -30,22 +30,22 @@ data{
 	int M;
 	int C;
 	int A;
-	int exposure[N];
-	int y[N,M];
+	array[N] int exposure;
+	array[N,M] int y;
 	matrix[N, C] X;
 	matrix[A, A] XA;
 
 	// Truncation
 	int is_truncated;
-	int truncation_up[N,M];
-	int truncation_down[N,M];
+	array[N,M] int truncation_up;
+	array[N,M] int truncation_down;
 
 	int<lower=0, upper=1> is_vb;
 
   // Prior info
-  real prior_prec_intercept[2] ;
-  real prior_prec_slope[2] ;
-  real prior_prec_sd[2] ;
+  array[2] real prior_prec_intercept;
+  array[2] real prior_prec_slope;
+  array[2] real prior_prec_sd;
 
   // Exclude priors for testing purposes
   int<lower=0, upper=1> exclude_priors;
@@ -68,7 +68,7 @@ parameters{
 	matrix[A, M] alpha;
 
 	// To exclude
-  real prec_coeff[2];
+  array[2] real prec_coeff;
   real<lower=0> prec_sd;
 
   real<lower=0, upper=1> mix_p;

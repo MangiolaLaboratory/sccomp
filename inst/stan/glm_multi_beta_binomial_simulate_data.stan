@@ -3,7 +3,7 @@ data{
   int M; // Number of categories
   int C;
   int A;
-  int exposure[N];
+  array[N] int exposure;
   matrix[N, C] X;
   matrix[A, A] XA;
 
@@ -15,12 +15,12 @@ data{
 
 parameters{
 
-  real prec_coeff[2];
+  array[2] real prec_coeff;
   real<lower=0> prec_sd;
 }
 
 generated quantities{
-  int counts_uncorrected[N, M];
+  array[N, M] int counts_uncorrected;
   matrix[N, M] counts;
   matrix[A,M] alpha;
   matrix[M,N] mu = (X * beta)';
@@ -28,7 +28,7 @@ generated quantities{
 
   matrix[A,M] beta_intercept_slope;
   // Vector of the generated exposure
-  real generated_exposure[N];
+  array[N] real generated_exposure;
 
   // matrix[A,M] alpha_intercept_slope;
 
