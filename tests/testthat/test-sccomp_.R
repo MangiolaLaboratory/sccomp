@@ -402,11 +402,14 @@ test_that("test constrasts",{
   
   my_estimate |> 
     sccomp_test(contrasts = "(Intercept)") |> 
-    expect_error()
+    expect_error() |> 
+    expect_warning("sccomp says: These components of your contrasts")
   
   my_estimate |> 
     sccomp_test(contrasts = "typehealthy_") |> 
-    expect_error()
+    expect_error() |> 
+    expect_warning("These components of your contrasts are not present")
+  
   
   res = my_estimate_random |> 
     sccomp_test(contrasts = c("1/2*typecancer - 1/2*typehealthy", "1/2*typehealthy - 1/2*typecancer") )
@@ -425,7 +428,8 @@ test_that("test constrasts",{
   # Wrong interaction
   my_estimate |> 
     sccomp_test(contrasts = c("(1/2*continuous_covariate:typehealthy + 1/2*`continuous_covariate:typehealthy`) -  `continuous_covariate:typehealthy`") ) |> 
-    expect_warning("sccomp says: for columns which have special characters")
+    expect_warning("sccomp says: for columns which have special characters") |> 
+    expect_warning("numerical expression has") 
   
 
 })
