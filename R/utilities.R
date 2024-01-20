@@ -1902,7 +1902,7 @@ plot_scatterplot = function(
       
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
-        fatten = 0.5, lwd=0.2,
+        lwd=0.2,
         data =
           simulated_proportion %>%
           
@@ -1944,12 +1944,8 @@ plot_scatterplot = function(
       
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), proportion, fill = NULL), # fill=Effect),
-        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion ,
-        # |>
-        #   left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
-        fatten = 0.5,
         lwd=0.5,
         color = "black",
         span = 1

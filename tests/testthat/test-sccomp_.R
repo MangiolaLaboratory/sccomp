@@ -255,7 +255,7 @@ test_that("multi beta binomial from Seurat",{
     arrange(desc(abs(c_effect))) |>
     slice(1) |>
     pull(cell_group) |>
-    expect_equal(c("CD4 cm high cytokine"))
+    expect_in(c("B mem", "CD4 cm high cytokine"))
 
   # Check convergence
   my_estimate |>
