@@ -1,13 +1,13 @@
 functions{
 
-  real dirichlet_multinomial_lpmf(int[] y, vector alpha) {
+  real dirichlet_multinomial2_lpmf(array[] int y, vector alpha) {
     	 real alpha_plus = sum(alpha);
 
     return lgamma(alpha_plus) + sum(lgamma(alpha + to_vector(y)))
                 - lgamma(alpha_plus+sum(y)) - sum(lgamma(alpha));
   }
 
-  matrix vector_array_to_matrix(vector[] x) {
+  matrix vector_array_to_matrix(array[] vector x) {
 		matrix[size(x), rows(x[1])] y;
 		for (m in 1:size(x))
 		  y[m] = x[m]';
@@ -37,9 +37,9 @@ functions{
     return x;
   }
 
-	vector[] beta_regression_rng( matrix X, matrix beta, vector phi){
+	array[] vector beta_regression_rng( matrix X, matrix beta, vector phi){
 
-		vector[cols(beta)] p[rows(X)];
+		array[rows(X)] vector[cols(beta)] p;
 
 
     matrix[num_elements(p[1]), num_elements(p[,1])] mu = (X * beta)';
@@ -63,7 +63,7 @@ data{
 	int M;
 	int C;
 	matrix[N, 2] X;
-	vector[M] beta[C];
+	array[C] vector[M] beta;
 	vector<lower=0>[M] precision;
 
 }
@@ -74,7 +74,7 @@ transformed data{
 }
 generated quantities{
 
-  vector[M] y[N];
+  array[N] vector[M] y;
 
   y = beta_regression_rng(  X, vector_array_to_matrix(beta),  precision);
 }

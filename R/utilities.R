@@ -479,7 +479,7 @@ fit_model = function(
       max(4000) 
     
     if(output_samples > max_sampling_iterations) {
-      warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+      message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
       output_samples = max_sampling_iterations
     
   }}
@@ -1545,6 +1545,7 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
     filter(parameter != "(Intercept)") |>
 
     # Reshape
+    select(-contains("n_eff"), -contains("R_k_hat")) |> 
     pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
     drop_na() |>
     pivot_wider(names_from = estimate, values_from = value) |>
@@ -1901,7 +1902,7 @@ plot_scatterplot = function(
       
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
-        fatten = 0.5, lwd=0.2,
+        lwd=0.2,
         data =
           simulated_proportion %>%
           
@@ -1943,12 +1944,8 @@ plot_scatterplot = function(
       
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), proportion, fill = NULL), # fill=Effect),
-        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion ,
-        # |>
-        #   left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
-        fatten = 0.5,
         lwd=0.5,
         color = "black",
         span = 1
@@ -2584,6 +2581,8 @@ replicate_data = function(.data,
   model_input$X_random_intercept = new_X_random_intercept
   model_input$N_grouping_new = ncol(new_X_random_intercept)
 
+  # To avoid error in case of a NULL posterior sample
+  number_of_draws = min(number_of_draws, nrow(fit_matrix))
   # Generate quantities
   rstan::gqs(
     my_model,

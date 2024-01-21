@@ -35,9 +35,9 @@ functions{
     return x;
   }
 
-  int[] rep_each(int[] x, int K) {
+  array[] int rep_each(array[] int x, int K) {
     int N = size(x);
-    int y[N * K];
+    array[N * K] int y;
     int pos = 1;
     for (n in 1:N) {
       for (k in 1:K) {
@@ -60,7 +60,7 @@ functions{
     return means;
   }
 
-  real abundance_variability_regression(row_vector variability, row_vector abundance, real[] prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
+  real abundance_variability_regression(row_vector variability, row_vector abundance, array[] real prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
 
     real lp = 0;
     // If mean-variability association is bimodal such as for single-cell RNA use mixed model
@@ -88,26 +88,26 @@ data{
   int<lower=1> A_intercept_columns; // How many intercept column in varibility design
   int<lower=1> B_intercept_columns; // How many intercept column in varibility design
   int<lower=1> Ar; // Rows of unique variability design
-  int exposure[N];
-  int y[N,M];
+  array[N] int exposure;
+  array[N,M] int y;
   matrix[N, C] X;
   matrix[Ar, A] XA; // The unique variability design
   matrix[N, A] Xa; // The variability design
 
   // Truncation
   int is_truncated;
-  int truncation_up[N,M];
-  int truncation_down[N,M];
+  array[N,M] int truncation_up;
+  array[N,M] int truncation_down;
   int<lower=1, upper=N*M> TNS; // truncation_not_size
-  int<lower=1, upper=N*M> truncation_not_idx[TNS];
+  array[TNS] int<lower=1, upper=N*M> truncation_not_idx;
   int<lower=0, upper=1> is_vb;
 
   // Prior info
-  real prior_prec_intercept[2] ;
-  real prior_prec_slope[2] ;
-  real prior_prec_sd[2] ;
-  real prior_mean_intercept[2];
-  real prior_mean_coefficients[2];
+  array[2] real prior_prec_intercept;
+  array[2] real prior_prec_slope;
+  array[2] real prior_prec_sd;
+  array[2] real prior_mean_intercept;
+  array[2] real prior_mean_coefficients;
 
   // Exclude priors for testing purposes
   int<lower=0, upper=1> exclude_priors;
@@ -120,10 +120,10 @@ data{
   // Random intercept
   int N_random_intercepts;
   int N_minus_sum;
-  int paring_cov_random_intercept[N_random_intercepts, 2];
+  array[N_random_intercepts, 2] int paring_cov_random_intercept;
   int N_grouping;
   matrix[N, N_grouping] X_random_intercept;
-  int idx_group_random_intercepts[N_grouping, 2];
+  array[N_grouping, 2] int idx_group_random_intercepts;
 
   // LOO
   int<lower=0, upper=1> enable_loo;
@@ -134,9 +134,9 @@ transformed data{
   matrix[N, C] Q_ast;
   matrix[C, C] R_ast;
   matrix[C, C] R_ast_inverse;
-  int y_array[N*M];
-  int truncation_down_array[N*M];
-  int exposure_array[N*M];
+  array[N*M] int y_array;
+  array[N*M] int truncation_down_array;
+  array[N*M] int exposure_array;
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   int N_grouping_WINDOWS_BUG_FIX = max(N_grouping, 1);
   // thin and scale the QR decomposition
@@ -158,17 +158,17 @@ parameters{
   matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
   matrix[A, M] alpha; // Variability
   // To exclude
-  real prec_coeff[2];
+  array[2] real prec_coeff;
   real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
   matrix[N_random_intercepts * (N_random_intercepts>0), M-1] random_intercept_raw;
   // sd of random intercept
-  real random_intercept_sigma_mu[N_random_intercepts>0];
-  real random_intercept_sigma_sigma[N_random_intercepts>0];
+  array[N_random_intercepts>0] real random_intercept_sigma_mu;
+  array[N_random_intercepts>0] real random_intercept_sigma_sigma;
   row_vector[(M-1) * (N_random_intercepts>0)] random_intercept_sigma_raw;
   // If I have just one group
-  real zero_random_intercept[N_random_intercepts>0];
+  array[N_random_intercepts>0] real zero_random_intercept;
 }
 transformed parameters{
 
