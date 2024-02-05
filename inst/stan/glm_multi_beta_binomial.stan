@@ -78,6 +78,54 @@ functions{
 
     return(lp);
   }
+  
+  matrix get_random_effect_matrix_sum_to_zero(
+  	int M, int N_grouping, int N_minus_sum, int N_random_intercepts, array[,] int idx_group_random_intercepts, array[,] int paring_cov_random_intercept,
+  	array[] real random_intercept_sigma_mu, 
+  	array[] real random_intercept_sigma_sigma, 
+  	row_vector random_intercept_sigma_raw,
+  	matrix random_intercept_raw,
+  	
+  	array[] real zero_random_intercept
+  ){
+	
+	  matrix[N_minus_sum, M-1] random_intercept_minus_sum;
+	   matrix[N_grouping, M-1] beta_random_intercept_raw;
+	    
+	  	// Non centered parameterisation
+      row_vector[M-1] random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
+    
+    // Building the - sum, Loop across covariates
+    for(a in 1:N_minus_sum){
+      // Reset sum to zero
+      row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
+      // Loop across random intercept - 1
+      for(n in 1:N_random_intercepts){
+        if(paring_cov_random_intercept[n,1] == a)
+        temp_random_intercept += random_intercept_raw[n];
+      }
+      // The sum to zero for each covariate
+      random_intercept_minus_sum[a] = temp_random_intercept * -1;
+    }
+    // Build the beta_random_intercept_raw
+    for(n in 1:N_grouping){
+      
+      // If primary parameter
+      if(idx_group_random_intercepts[n,2]>0)
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
+      
+      // If sum to zero parameter
+      else if(idx_group_random_intercepts[n,2]<0)
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]] .* exp(random_intercept_sigma / 3.0);
+      
+      
+      // If a covariate has only one group
+      else
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
+    }
+    
+    return(beta_random_intercept_raw);
+	}
 
 }
 data{
@@ -118,9 +166,13 @@ data{
   int <lower=0, upper=1> intercept_in_design;
 
   // Random intercept
+  
+  // Is the parameters in random effect matrix, minus ther sub to zero parameters, for example if I have four groups, this will be 3
   int N_random_intercepts;
   int N_minus_sum;
   array[N_random_intercepts, 2] int paring_cov_random_intercept;
+  
+  // Is the parameters in random effect matrix
   int N_grouping;
   matrix[N, N_grouping] X_random_intercept;
   array[N_grouping, 2] int idx_group_random_intercepts;
@@ -178,9 +230,9 @@ transformed parameters{
   matrix[C,M] beta;
 
   // Random effects
-  matrix[N_minus_sum, M-1] random_intercept_minus_sum;
-  row_vector[M-1] random_intercept_sigma;
-  matrix[N_grouping, M-1] beta_random_intercept_raw;
+matrix[N_grouping, M-1] beta_random_intercept_raw;
+
+
 
   // locations distribution
   matrix[M, N] mu;
@@ -197,36 +249,20 @@ transformed parameters{
 
   // random intercept
   if(N_random_intercepts>0 ){
-    random_intercept_sigma = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw;
-    
-    // Building the - sum, Loop across covariates
-    for(a in 1:N_minus_sum){
-      // Reset sum to zero
-      row_vector[M-1] temp_random_intercept = rep_row_vector(0, M-1);
-      // Loop across random intercept - 1
-      for(n in 1:N_random_intercepts){
-        if(paring_cov_random_intercept[n,1] == a)
-        temp_random_intercept += random_intercept_raw[n];
-      }
-      // The sum to zero for each covariate
-      random_intercept_minus_sum[a] = temp_random_intercept * -1;
-    }
-    // Build the beta_random_intercept_raw
-    for(n in 1:N_grouping){
-      
-      // If primary parameter
-      if(idx_group_random_intercepts[n,2]>0)
-        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
-      
-      // If sum to zero parameter
-      else if(idx_group_random_intercepts[n,2]<0)
-        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = random_intercept_minus_sum[-idx_group_random_intercepts[n, 2]] .* exp(random_intercept_sigma / 3.0);
-      
-      
-      // If a covariate has only one group
-      else
-        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] = rep_row_vector(zero_random_intercept[N_random_intercepts>0] * exp(random_intercept_sigma_mu[1] / 3.0), M-1) ;
-    }
+  	
+		beta_random_intercept_raw = get_random_effect_matrix_sum_to_zero(
+			M,
+			N_grouping,
+			N_minus_sum, 
+			N_random_intercepts, 
+			idx_group_random_intercepts, 
+			paring_cov_random_intercept,
+			random_intercept_sigma_mu, 
+			random_intercept_sigma_sigma, 
+			random_intercept_sigma_raw,
+  		random_intercept_raw,
+			zero_random_intercept
+		);
 
     // Update with summing mu_random_intercept
     mu = mu + append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
