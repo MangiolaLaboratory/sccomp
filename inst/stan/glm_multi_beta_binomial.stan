@@ -126,6 +126,7 @@ functions{
     
     return(beta_random_intercept_raw);
 	}
+	
 
 }
 data{
@@ -214,7 +215,7 @@ parameters{
   real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
-  matrix[N_random_intercepts * (N_random_intercepts>0), M-1] random_intercept_raw;
+  matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept_raw;
   // sd of random intercept
   array[N_random_intercepts>0] real random_intercept_sigma_mu;
   array[N_random_intercepts>0] real random_intercept_sigma_sigma;
@@ -228,11 +229,6 @@ transformed parameters{
   matrix[C,M] beta_raw;
   matrix[M, N] precision = (Xa * alpha)';
   matrix[C,M] beta;
-
-  // Random effects
-matrix[N_grouping, M-1] beta_random_intercept_raw;
-
-
 
   // locations distribution
   matrix[M, N] mu;
@@ -250,22 +246,10 @@ matrix[N_grouping, M-1] beta_random_intercept_raw;
   // random intercept
   if(N_random_intercepts>0 ){
   	
-		beta_random_intercept_raw = get_random_effect_matrix_sum_to_zero(
-			M,
-			N_grouping,
-			N_minus_sum, 
-			N_random_intercepts, 
-			idx_group_random_intercepts, 
-			paring_cov_random_intercept,
-			random_intercept_sigma_mu, 
-			random_intercept_sigma_sigma, 
-			random_intercept_sigma_raw,
-  		random_intercept_raw,
-			zero_random_intercept
-		);
+
 
     // Update with summing mu_random_intercept
-    mu = mu + append_row((X_random_intercept * beta_random_intercept_raw)', rep_row_vector(0, N));
+    mu = mu + append_row((X_random_intercept * random_intercept_raw)', rep_row_vector(0, N));
   }
 
   // Calculate proportions
@@ -378,8 +362,8 @@ generated quantities {
 
   // Rondom effect
   else{
-     beta_random_intercept[,1:(M-1)] = beta_random_intercept_raw;
-  for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(beta_random_intercept_raw[n,]);
+     beta_random_intercept[,1:(M-1)] = random_intercept_raw;
+  for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(random_intercept_raw[n,]);
   }
 
   // LOO
