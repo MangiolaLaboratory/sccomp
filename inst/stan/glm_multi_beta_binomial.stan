@@ -127,6 +127,61 @@ functions{
     return(beta_random_intercept_raw);
 	}
 	
+	matrix get_random_effect_matrix(
+		int M, 
+		int how_many_groups, 
+		int how_many_factors_in_random_design, 
+		int N_random_intercepts,
+		int N_grouping,
+		array[,] int group_factor_indexes_for_covariance,
+	
+		matrix random_intercept_raw,
+		
+		array[] vector random_intercept_sigma_raw,
+		array[] real random_intercept_sigma_mu,
+		array[] real random_intercept_sigma_sigma,
+		matrix sigma_correlation_factor
+	){
+		
+		matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept; 
+		
+		
+		// PIVOT WIDER
+		// increase of one dimension array[cell_type] matrix[group, factor]
+		array[M-1] matrix[ how_many_factors_in_random_design, how_many_groups] matrix_of_random_effects_raw;
+		
+		for(w in 1:(M-1)) for(i in 1:how_many_groups) for(j in 1:how_many_factors_in_random_design)  {
+			
+			// If I don't have the factor for one group 
+			if(group_factor_indexes_for_covariance[j,i] == 0)
+			matrix_of_random_effects_raw[w, j,i] = 0;
+			else 
+			matrix_of_random_effects_raw[w, j,i] = random_intercept_raw[group_factor_indexes_for_covariance[j,i], w];
+		}
+		
+		// Design L
+		array[M-1] matrix[how_many_factors_in_random_design, how_many_factors_in_random_design] L;
+		array[M-1] matrix[how_many_factors_in_random_design, how_many_groups] matrix_of_random_effects;
+		
+		// Non centered parameterisation
+		array[M-1 * (N_random_intercepts>0)] vector[how_many_factors_in_random_design] random_intercept_sigma;
+		for(w in 1:(M-1)) random_intercept_sigma[w] = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw[w];
+		for(w in 1:(M-1)) random_intercept_sigma[w] = exp(random_intercept_sigma[w]/3.0);
+		
+		
+		for(w in 1:(M-1)) L[w] = diag_pre_multiply(random_intercept_sigma[w], sigma_correlation_factor) ;
+		for(w in 1:(M-1)) matrix_of_random_effects[w] = L[w] * matrix_of_random_effects_raw[w];
+		
+		// Pivot longer
+		for(w in 1:(M-1)) for(i in 1:how_many_groups) for(j in 1:how_many_factors_in_random_design)  {
+			
+			// If I don't have the factor for one group 
+			if(group_factor_indexes_for_covariance[j,i] > 0)
+			random_intercept[group_factor_indexes_for_covariance[j,i], w] = matrix_of_random_effects[w,j,i];
+		}
+		
+		return(random_intercept);
+}
 
 }
 data{
@@ -177,6 +232,11 @@ data{
   int N_grouping;
   matrix[N, N_grouping] X_random_intercept;
   array[N_grouping, 2] int idx_group_random_intercepts;
+  
+  // Covariance setup
+  int how_many_groups;
+  int how_many_factors_in_random_design;
+  array[how_many_factors_in_random_design, how_many_groups] int group_factor_indexes_for_covariance;
 
   // LOO
   int<lower=0, upper=1> enable_loo;
@@ -214,14 +274,21 @@ parameters{
   array[2] real prec_coeff;
   real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
+  
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
   matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept_raw;
   // sd of random intercept
   array[N_random_intercepts>0] real random_intercept_sigma_mu;
   array[N_random_intercepts>0] real random_intercept_sigma_sigma;
-  row_vector[(M-1) * (N_random_intercepts>0)] random_intercept_sigma_raw;
+
+	// Covariance
+  array[M-1 * (N_random_intercepts>0)] vector[how_many_factors_in_random_design]  random_intercept_sigma_raw;
+	cholesky_factor_corr[how_many_factors_in_random_design * (N_random_intercepts>0)] sigma_correlation_factor;
+
   // If I have just one group
   array[N_random_intercepts>0] real zero_random_intercept;
+  
+  
 }
 transformed parameters{
 
@@ -243,13 +310,31 @@ transformed parameters{
   // Calculate locations distribution
   mu = (Q_ast * beta_raw)';
 
+  matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept; 
+
   // random intercept
   if(N_random_intercepts>0 ){
   	
-
+  // Covariate setup 
+  random_intercept = 
+  	get_random_effect_matrix(
+			M, 
+			how_many_groups, 
+			how_many_factors_in_random_design, 
+			N_random_intercepts,
+			N_grouping,
+			group_factor_indexes_for_covariance,
+		
+			random_intercept_raw,
+			
+			random_intercept_sigma_raw,
+			random_intercept_sigma_mu,
+			random_intercept_sigma_sigma,
+			sigma_correlation_factor
+		);
 
     // Update with summing mu_random_intercept
-    mu = mu + append_row((X_random_intercept * random_intercept_raw)', rep_row_vector(0, N));
+    mu = mu + append_row((X_random_intercept * random_intercept)', rep_row_vector(0, N));
   }
 
   // Calculate proportions
@@ -258,7 +343,9 @@ transformed parameters{
   // Convert the matrix m to a column vector in column-major order.
   mu_array = to_vector(mu);
   precision_array = to_vector(exp(precision));
+  
 
+  
 }
 model{
 
@@ -271,6 +358,8 @@ model{
       ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
       ) ;
   }
+
+
 
   // Priors
   if(exclude_priors == 0){
@@ -332,12 +421,14 @@ model{
 
   // Random intercept
   if(N_random_intercepts>0){
-    for(m in 1:(M-1))   random_intercept_raw[,m] ~ std_normal();
-    random_intercept_sigma_raw ~ std_normal();
+    for(m in 1:(M-1)) random_intercept_raw[,m] ~ std_normal();
+    for(m in 1:(M-1)) random_intercept_sigma_raw[m] ~ std_normal();
+    sigma_correlation_factor ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     random_intercept_sigma_mu ~ std_normal();
     random_intercept_sigma_sigma ~ std_normal();
-     // If I have just one group
-  zero_random_intercept ~ std_normal();
+    
+    // If I have just one group
+  	zero_random_intercept ~ std_normal();
   }
 }
 generated quantities {
@@ -360,10 +451,10 @@ generated quantities {
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   if(N_grouping==0) beta_random_intercept[1] = rep_row_vector(0.0, M);
 
-  // Rondom effect
+  // Random effect
   else{
-     beta_random_intercept[,1:(M-1)] = random_intercept_raw;
-  for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(random_intercept_raw[n,]);
+     beta_random_intercept[,1:(M-1)] = random_intercept;
+  for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(random_intercept[n,]);
   }
 
   // LOO

@@ -504,6 +504,22 @@ fit_model = function(
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
 
+  # TEMPORARY
+  data_for_model$group_factor_indexes_for_covariance = 
+  	data_for_model$X_random_intercept |> 
+  	colnames() |> 
+  	enframe(value = "parameter", name = "order")  |> 
+  	separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
+  	complete(factor, group, fill = list(order=0)) |> 
+  	select(-parameter) |> 
+  	pivot_wider(names_from = factor, values_from = order)  |> 
+  	as_matrix(rownames = "group")
+  
+  data_for_model$how_many_groups = ncol(data_for_model$group_factor_indexes_for_covariance )
+  data_for_model$how_many_factors_in_random_design = nrow(data_for_model$group_factor_indexes_for_covariance )
+  
+  
+  
   # Fit
   if(!approximate_posterior_inference)
     sampling(
