@@ -110,7 +110,7 @@ generated quantities{
 
   // Random intercept
   if(length_X_random_intercept_which>0){
-      matrix[M, N] mu_random_intercept = (X_random_intercept * beta_random_intercept[X_random_intercept_which,])'
+      matrix[M, N] mu_random_intercept = (X_random_intercept * beta_random_intercept[X_random_intercept_which,])';
       mu = mu + mu_random_intercept;
   }
 
