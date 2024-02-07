@@ -167,7 +167,7 @@ test_that("multilevel multi beta binomial from Seurat",{
     slice(1:3) |>
     pull(cell_group) |>
     sort() |> 
-    expect_equal(c( "CD4 cm high cytokine", "CD4 ribosome" , "Mono NKG7 2"  ) |> sort())
+    expect_equal(c("B mem", "CD4 cm high cytokine", "CD4 ribosome"  ) |> sort())
 
   # Check convergence
   res |>
@@ -220,7 +220,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
     )
 
     expect(
-      "T gd2" %in%
+      "CD8 em 1" %in%
       (res |>
         filter(parameter == "continuous_covariate") |>
         arrange(desc(abs(c_effect))) |>
