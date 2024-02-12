@@ -1067,6 +1067,86 @@ sccomp_predict.sccomp_tbl = function(fit,
 
 }
 
+#' sccomp_calculate_residuals
+#'
+#' @description This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula `~ factor_1 + factor_2` and use this formula to remove unwanted variation `~ factor_1`, the `factor_2` will be factored out.
+#'
+#'
+#' @param .data A tibble. The result of sccomp_estimate.
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
+#'
+#' @return A nested tibble `tbl` with cell_group-wise statistics
+#'
+#' @export
+#'
+#' @examples
+#'
+#' data("counts_obj")
+#'
+#'   estimates = sccomp_estimate(
+#'   counts_obj ,
+#'    ~ type, ~1,  sample, cell_group, count,
+#'     approximate_posterior_inference = "all",
+#'     cores = 1
+#'   )
+#'
+#'   sccomp_calculate_residuals(estimates)
+#'
+sccomp_calculate_residuals <- function(.data) {
+  UseMethod("sccomp_calculate_residuals", .data)
+}
+
+#' @export
+#'
+sccomp_calculate_residuals.sccomp_tbl = function(.data){
+  
+  
+  
+  model_input = attr(.data, "model_input")
+  .sample = attr(.data, ".sample")
+  .cell_group = attr(.data, ".cell_group")
+  .grouping_for_random_intercept = attr(.data, ".grouping_for_random_intercept")
+  .count = attr(.data, ".count")
+  
+  # Residuals
+  .data |>
+    sccomp_predict( 
+      number_of_draws = 
+        .data |>
+        attr("fit") |>
+        dim() |>
+        _[1] |> 
+        min(500) 
+    ) |>
+    distinct(!!.sample, !!.cell_group, proportion_mean) |>
+    # mutate( proportion_mean =
+    #           proportion_mean |>
+    #           boot::logit()
+    # )|>
+    # Join counts
+    left_join(
+      .data |>
+        attr("model_input") %$%
+        y |>
+        as_tibble(rownames = quo_name(.sample)) |>
+        pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
+        with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
+        
+        with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  ),
+      # |>
+      #   
+      #   mutate(observed_proportion =
+      #            observed_proportion |>
+      #            compress_zero_one() |>
+      #            boot::logit()
+      #   ),
+      by = c(quo_name(.sample), quo_name(.cell_group))
+    ) |>
+    mutate(logit_residuals = observed_proportion - proportion_mean) |>
+    select(!!.sample, !!.cell_group, logit_residuals, exposure)
+  
+}
 
 #' sccomp_remove_unwanted_variation
 #'
@@ -1114,43 +1194,9 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   .grouping_for_random_intercept = attr(.data, ".grouping_for_random_intercept")
   .count = attr(.data, ".count")
 
-  fit_matrix = as.matrix(attr(.data, "fit") )
-
-  message("sccomp says: calculating residuals")
-
   # Residuals
-  residuals =
-    .data |>
-    sccomp_predict(
-      number_of_draws = min(dim(fit_matrix)[1], 500)
-    ) |>
-    distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    mutate( proportion_mean =
-              proportion_mean |>
-             #compress_zero_one() |>
-             boot::logit()
-    )|>
-  # Join counts
-  left_join(
-    .data |>
-      attr("model_input") %$%
-      y |>
-      as_tibble(rownames = quo_name(.sample)) |>
-      pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
-      with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
-
-      with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  ) |>
-
-      mutate(observed_proportion =
-               observed_proportion |>
-               compress_zero_one() |>
-               boot::logit()
-      ),
-    by = c(quo_name(.sample), quo_name(.cell_group))
-  ) |>
-  mutate(logit_residuals = observed_proportion - proportion_mean) |>
-  select(!!.sample, !!.cell_group, logit_residuals, exposure)
-
+  message("sccomp says: calculating residuals")
+  residuals = .data |> sccomp_calculate_residuals()
 
   message("sccomp says: regressing out unwanted factors")
 
@@ -1158,7 +1204,12 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   .data |>
     sccomp_predict(
       formula_composition = formula_composition,
-      number_of_draws = min(dim(fit_matrix)[1], 500)
+      number_of_draws = 
+        .data |>
+        attr("fit") |>
+        dim() |>
+        _[1] |> 
+        min(500) 
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
     mutate(proportion_mean =
