@@ -315,7 +315,7 @@ transformed parameters{
   // Calculate locations distribution
   mu = (Q_ast * beta_raw)';
 
-  matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept; 
+  matrix[N_grouping * (N_random_intercepts>0), M] random_intercept; 
 
   // random intercept
   if(N_random_intercepts>0 ){
@@ -339,7 +339,7 @@ transformed parameters{
 		);
 
     // Update with summing mu_random_intercept
-    mu = mu + (X_random_intercept * random_intercept_raw)';
+    mu = mu + (X_random_intercept * random_intercept)';
   }
 
   // Calculate proportions
