@@ -60,7 +60,7 @@ sccomp_glm_data_frame_raw = function(.data,
     add_formula_columns(.data, !!.sample,formula_composition) |>
     
     # Attach possible exclusion of data points
-    left_join(.data %>%``
+    left_join(.data %>%
                 as_tibble() |>
                 select(
                   !!.sample, !!.cell_group, any_of(quo_name(.sample_cell_group_pairs_to_exclude))
