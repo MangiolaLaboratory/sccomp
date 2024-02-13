@@ -1143,8 +1143,8 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
       #   ),
       by = c(quo_name(.sample), quo_name(.cell_group))
     ) |>
-    mutate(logit_residuals = observed_proportion - proportion_mean) |>
-    select(!!.sample, !!.cell_group, logit_residuals, exposure)
+    mutate(residuals = observed_proportion - proportion_mean) |>
+    select(!!.sample, !!.cell_group, residuals, exposure)
   
 }
 
@@ -1212,20 +1212,21 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
         min(500) 
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    mutate(proportion_mean =
-             proportion_mean |>
-             # compress_zero_one() |>
-             boot::logit()
-    ) |>
+    # mutate(proportion_mean =
+    #          proportion_mean |>
+    #          # compress_zero_one() |>
+    #          boot::logit()
+    # ) |>
     left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
-    mutate(adjusted_proportion = proportion_mean + logit_residuals) |>
-    mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
-    with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
+    mutate(adjusted_proportion = proportion_mean + residuals) |>
+  	mutate(adjusted_proportion = adjusted_proportion |> pmax(0)) |> 
+    # mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
+    # with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
 
     # Recostituite counts
     mutate(adjusted_counts = adjusted_proportion * exposure) |>
 
-    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, logit_residuals)
+    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, residuals)
 
 
 

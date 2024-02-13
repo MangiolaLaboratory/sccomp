@@ -84,7 +84,7 @@ functions{
   	array[] real random_intercept_sigma_mu, 
   	array[] real random_intercept_sigma_sigma, 
   	row_vector random_intercept_sigma_raw,
-  	matrix random_intercept_raw,
+  	matrix random_intercept_raw_raw,
   	
   	array[] real zero_random_intercept
   ){
@@ -102,7 +102,7 @@ functions{
       // Loop across random intercept - 1
       for(n in 1:N_random_intercepts){
         if(paring_cov_random_intercept[n,1] == a)
-        temp_random_intercept += random_intercept_raw[n];
+        temp_random_intercept += random_intercept_raw_raw[n];
       }
       // The sum to zero for each covariate
       random_intercept_minus_sum[a] = temp_random_intercept * -1;
@@ -112,7 +112,7 @@ functions{
       
       // If primary parameter
       if(idx_group_random_intercepts[n,2]>0)
-        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] =  random_intercept_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
+        beta_random_intercept_raw[idx_group_random_intercepts[n, 1]] =  random_intercept_raw_raw[idx_group_random_intercepts[n, 2]]   .* exp(random_intercept_sigma / 3.0);
       
       // If sum to zero parameter
       else if(idx_group_random_intercepts[n,2]<0)
@@ -135,7 +135,7 @@ functions{
 		int N_grouping,
 		array[,] int group_factor_indexes_for_covariance,
 	
-		matrix random_intercept_raw,
+		matrix random_intercept_raw_raw,
 		
 		array[] vector random_intercept_sigma_raw,
 		array[] real random_intercept_sigma_mu,
@@ -143,7 +143,8 @@ functions{
 		matrix sigma_correlation_factor
 	){
 		
-		matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept; 
+		matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept_raw; 
+		matrix[N_grouping * (N_random_intercepts>0), M] random_intercept; 
 		
 		
 		// PIVOT WIDER
@@ -156,7 +157,7 @@ functions{
 			if(group_factor_indexes_for_covariance[j,i] == 0)
 			matrix_of_random_effects_raw[w, j,i] = 0;
 			else 
-			matrix_of_random_effects_raw[w, j,i] = random_intercept_raw[group_factor_indexes_for_covariance[j,i], w];
+			matrix_of_random_effects_raw[w, j,i] = random_intercept_raw_raw[group_factor_indexes_for_covariance[j,i], w];
 		}
 		
 		// Design L
@@ -177,9 +178,13 @@ functions{
 			
 			// If I don't have the factor for one group 
 			if(group_factor_indexes_for_covariance[j,i] > 0)
-			random_intercept[group_factor_indexes_for_covariance[j,i], w] = matrix_of_random_effects[w,j,i];
+			random_intercept_raw[group_factor_indexes_for_covariance[j,i], w] = matrix_of_random_effects[w,j,i];
 		}
 		
+		   random_intercept[,1:(M-1)] = random_intercept_raw;
+  		for(n in 1:(N_grouping * (N_random_intercepts>0))) 
+  			random_intercept[n, M] = -sum(random_intercept_raw[n,]);
+  
 		return(random_intercept);
 }
 
@@ -276,7 +281,7 @@ parameters{
   real<lower=0, upper=1> mix_p;
   
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
-  matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept_raw;
+  matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept_raw_raw;
   // sd of random intercept
   array[N_random_intercepts>0] real random_intercept_sigma_mu;
   array[N_random_intercepts>0] real random_intercept_sigma_sigma;
@@ -325,7 +330,7 @@ transformed parameters{
 			N_grouping,
 			group_factor_indexes_for_covariance,
 		
-			random_intercept_raw,
+			random_intercept_raw_raw,
 			
 			random_intercept_sigma_raw,
 			random_intercept_sigma_mu,
@@ -334,7 +339,7 @@ transformed parameters{
 		);
 
     // Update with summing mu_random_intercept
-    mu = mu + append_row((X_random_intercept * random_intercept)', rep_row_vector(0, N));
+    mu = mu + (X_random_intercept * random_intercept_raw)';
   }
 
   // Calculate proportions
@@ -358,8 +363,6 @@ model{
       ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
       ) ;
   }
-
-
 
   // Priors
   if(exclude_priors == 0){
@@ -421,7 +424,7 @@ model{
 
   // Random intercept
   if(N_random_intercepts>0){
-    for(m in 1:(M-1)) random_intercept_raw[,m] ~ std_normal();
+    for(m in 1:(M-1)) random_intercept_raw_raw[,m] ~ std_normal();
     for(m in 1:(M-1)) random_intercept_sigma_raw[m] ~ std_normal();
     sigma_correlation_factor ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     random_intercept_sigma_mu ~ std_normal();
@@ -434,7 +437,7 @@ model{
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
   // Rondom effect
-  matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
+  matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept = random_intercept;
 
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
@@ -448,14 +451,14 @@ generated quantities {
     for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
   }
 
-  // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-  if(N_grouping==0) beta_random_intercept[1] = rep_row_vector(0.0, M);
-
-  // Random effect
-  else{
-     beta_random_intercept[,1:(M-1)] = random_intercept;
-  for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(random_intercept[n,]);
-  }
+  // // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
+  // if(N_grouping==0) beta_random_intercept[1] = rep_row_vector(0.0, M);
+  // 
+  // // Random effect
+  // else{
+  //    beta_random_intercept[,1:(M-1)] = random_intercept_raw;
+  // for(n in 1:N_grouping) beta_random_intercept[n, M] = -sum(random_intercept_raw[n,]);
+  // }
 
   // LOO
   if(enable_loo==1)
