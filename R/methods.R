@@ -1383,7 +1383,7 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
         significance_threshold = significance_threshold,
         multipanel_theme
       ) +
-    ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
+    ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", factor))
 
 
 }
