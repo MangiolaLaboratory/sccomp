@@ -127,7 +127,7 @@ generated quantities{
 	}
 
 	// Calculate the generated exposure
-  for(n in 1:N) generated_exposure[n] = sum(counts_uncorrected[n]);
+  for(n in 1:N) generated_exposure[n] = max( sum(counts_uncorrected[n]), 1); // avoid dividing by zero
   for(n in 1:N) counts[n] = to_row_vector(counts_uncorrected[n]) / generated_exposure[n] * exposure[n];
 }
 
