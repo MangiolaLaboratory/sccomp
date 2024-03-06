@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.6</span>
       </span>
     </div>
 
@@ -165,8 +165,8 @@ a subset of the model for composition.</p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Gradient evaluation took 0.000528 seconds</span></span>
-<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 5.28 seconds.</span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.00048 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 4.8 seconds.</span></span>
 <span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
 <span><span class="co">## Chain 1: </span></span>
 <span><span class="co">## Chain 1: </span></span>
@@ -177,23 +177,23 @@ a subset of the model for composition.</p>
 <span><span class="co">## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span></span>
 <span><span class="co">## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1:  Elapsed Time: 3.067 seconds (Warm-up)</span></span>
-<span><span class="co">## Chain 1:                21.298 seconds (Sampling)</span></span>
-<span><span class="co">## Chain 1:                24.365 seconds (Total)</span></span>
+<span><span class="co">## Chain 1:  Elapsed Time: 3.398 seconds (Warm-up)</span></span>
+<span><span class="co">## Chain 1:                27.112 seconds (Sampling)</span></span>
+<span><span class="co">## Chain 1:                30.51 seconds (Total)</span></span>
 <span><span class="co">## Chain 1:</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 72 × 14</span></span></span>
 <span><span class="co">##    cell_group parameter   factor c_lower c_effect c_upper c_n_eff c_R_k_hat</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercept) <span style="color: #BB0000;">NA</span>      0.869     1.12   1.35     <span style="text-decoration: underline;">6</span>280.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer  type   -<span style="color: #BB0000;">1.05</span>     -<span style="color: #BB0000;">0.645</span> -<span style="color: #BB0000;">0.254</span>    <span style="text-decoration: underline;">5</span>164.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercept) <span style="color: #BB0000;">NA</span>      0.403     0.700  0.979    <span style="text-decoration: underline;">5</span>567.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer  type   -<span style="color: #BB0000;">1.22</span>     -<span style="color: #BB0000;">0.728</span> -<span style="color: #BB0000;">0.253</span>    <span style="text-decoration: underline;">4</span>913.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercept) <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.666</span>    -<span style="color: #BB0000;">0.394</span> -<span style="color: #BB0000;">0.130</span>    <span style="text-decoration: underline;">5</span>758.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer  type   -<span style="color: #BB0000;">0.747</span>    -<span style="color: #BB0000;">0.309</span>  0.079<span style="text-decoration: underline;">7</span>   <span style="text-decoration: underline;">5</span>210.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercept) <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.33</span>     -<span style="color: #BB0000;">1.04</span>  -<span style="color: #BB0000;">0.746</span>    <span style="text-decoration: underline;">5</span>766.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer  type   -<span style="color: #BB0000;">0.756</span>    -<span style="color: #BB0000;">0.307</span>  0.128    <span style="text-decoration: underline;">4</span>954.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercept) <span style="color: #BB0000;">NA</span>      0.075<span style="text-decoration: underline;">8</span>    0.297  0.503    <span style="text-decoration: underline;">5</span>502.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer  type   -<span style="color: #BB0000;">0.102</span>     0.186  0.480    <span style="text-decoration: underline;">4</span>399.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercept) <span style="color: #BB0000;">NA</span>      0.862     1.12   1.35     <span style="text-decoration: underline;">3</span>750.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer  type   -<span style="color: #BB0000;">1.05</span>     -<span style="color: #BB0000;">0.642</span> -<span style="color: #BB0000;">0.254</span>    <span style="text-decoration: underline;">2</span>370.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercept) <span style="color: #BB0000;">NA</span>      0.406     0.698  0.975    <span style="text-decoration: underline;">5</span>352.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer  type   -<span style="color: #BB0000;">1.21</span>     -<span style="color: #BB0000;">0.720</span> -<span style="color: #BB0000;">0.244</span>    <span style="text-decoration: underline;">4</span>271.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercept) <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.664</span>    -<span style="color: #BB0000;">0.390</span> -<span style="color: #BB0000;">0.126</span>    <span style="text-decoration: underline;">4</span>217.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer  type   -<span style="color: #BB0000;">0.714</span>    -<span style="color: #BB0000;">0.311</span>  0.069<span style="text-decoration: underline;">4</span>   <span style="text-decoration: underline;">3</span>546.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercept) <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.33</span>     -<span style="color: #BB0000;">1.04</span>  -<span style="color: #BB0000;">0.746</span>    <span style="text-decoration: underline;">5</span>292.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer  type   -<span style="color: #BB0000;">0.737</span>    -<span style="color: #BB0000;">0.306</span>  0.092<span style="text-decoration: underline;">4</span>   <span style="text-decoration: underline;">5</span>048.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercept) <span style="color: #BB0000;">NA</span>      0.081<span style="text-decoration: underline;">4</span>    0.298  0.505    <span style="text-decoration: underline;">5</span>143.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer  type   -<span style="color: #BB0000;">0.097</span><span style="color: #BB0000; text-decoration: underline;">6</span>    0.187  0.463    <span style="text-decoration: underline;">4</span>597.      1.00</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 62 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 6 more variables: v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_n_eff &lt;dbl&gt;, v_R_k_hat &lt;dbl&gt;, count_data &lt;list&gt;</span></span></span></code></pre>
@@ -219,8 +219,8 @@ formula_variability is set).</p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Gradient evaluation took 0.000314 seconds</span></span>
-<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.14 seconds.</span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.000309 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.09 seconds.</span></span>
 <span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
 <span><span class="co">## Chain 1: </span></span>
 <span><span class="co">## Chain 1: </span></span>
@@ -231,23 +231,23 @@ formula_variability is set).</p>
 <span><span class="co">## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span></span>
 <span><span class="co">## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1:  Elapsed Time: 1.924 seconds (Warm-up)</span></span>
-<span><span class="co">## Chain 1:                17.982 seconds (Sampling)</span></span>
-<span><span class="co">## Chain 1:                19.906 seconds (Total)</span></span>
+<span><span class="co">## Chain 1:  Elapsed Time: 2.062 seconds (Warm-up)</span></span>
+<span><span class="co">## Chain 1:                17.661 seconds (Sampling)</span></span>
+<span><span class="co">## Chain 1:                19.723 seconds (Total)</span></span>
 <span><span class="co">## Chain 1:</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 60 × 18</span></span></span>
 <span><span class="co">##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature  typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.91</span>    -<span style="color: #BB0000;">1.40</span>   -<span style="color: #BB0000;">0.893</span> 0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature  typeheal… <span style="color: #BB0000;">NA</span>       0.893    1.40    1.91  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem       typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.36</span>    -<span style="color: #BB0000;">1.72</span>   -<span style="color: #BB0000;">1.06</span>  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem       typeheal… <span style="color: #BB0000;">NA</span>       1.06     1.72    2.36  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S10… typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.45</span>    -<span style="color: #BB0000;">1.03</span>   -<span style="color: #BB0000;">0.619</span> 2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 6.25<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>      <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S10… typeheal… <span style="color: #BB0000;">NA</span>       0.619    1.03    1.45  2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 6.25<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>      <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm hig… typecanc… <span style="color: #BB0000;">NA</span>       0.839    1.76    2.85  2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 1.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>      <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm hig… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.85</span>    -<span style="color: #BB0000;">1.76</span>   -<span style="color: #BB0000;">0.839</span> 2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 1.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>      <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm rib… typecanc… <span style="color: #BB0000;">NA</span>       0.331    0.992   1.69  1.10<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 2.75<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>      <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm rib… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.69</span>    -<span style="color: #BB0000;">0.992</span>  -<span style="color: #BB0000;">0.331</span> 1.10<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 2.75<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature  typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.89</span>    -<span style="color: #BB0000;">1.39</span>   -<span style="color: #BB0000;">0.895</span> 0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature  typeheal… <span style="color: #BB0000;">NA</span>       0.895    1.39    1.89  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem       typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.37</span>    -<span style="color: #BB0000;">1.71</span>   -<span style="color: #BB0000;">1.06</span>  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem       typeheal… <span style="color: #BB0000;">NA</span>       1.06     1.71    2.37  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S10… typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.49</span>    -<span style="color: #BB0000;">1.03</span>   -<span style="color: #BB0000;">0.601</span> 2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S10… typeheal… <span style="color: #BB0000;">NA</span>       0.601    1.03    1.49  2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm hig… typecanc… <span style="color: #BB0000;">NA</span>       0.809    1.77    2.85  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm hig… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.85</span>    -<span style="color: #BB0000;">1.77</span>   -<span style="color: #BB0000;">0.809</span> 0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm rib… typecanc… <span style="color: #BB0000;">NA</span>       0.319    0.988   1.70  1.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 1.56<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm rib… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.70</span>    -<span style="color: #BB0000;">0.988</span>  -<span style="color: #BB0000;">0.319</span> 1.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 1.56<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>      <span style="color: #BB0000;">NA</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 50 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 9 more variables: c_R_k_hat &lt;dbl&gt;, v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, v_n_eff &lt;dbl&gt;, v_R_k_hat &lt;dbl&gt;,</span></span></span>
@@ -321,8 +321,8 @@ and so test differences in variability</p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Gradient evaluation took 0.000294 seconds</span></span>
-<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.94 seconds.</span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.000301 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.01 seconds.</span></span>
 <span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
 <span><span class="co">## Chain 1: </span></span>
 <span><span class="co">## Chain 1: </span></span>
@@ -333,25 +333,25 @@ and so test differences in variability</p>
 <span><span class="co">## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span></span>
 <span><span class="co">## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1:  Elapsed Time: 4.192 seconds (Warm-up)</span></span>
-<span><span class="co">## Chain 1:                35.356 seconds (Sampling)</span></span>
-<span><span class="co">## Chain 1:                39.548 seconds (Total)</span></span>
+<span><span class="co">## Chain 1:  Elapsed Time: 4.327 seconds (Warm-up)</span></span>
+<span><span class="co">## Chain 1:                34.758 seconds (Sampling)</span></span>
+<span><span class="co">## Chain 1:                39.085 seconds (Total)</span></span>
 <span><span class="co">## Chain 1:</span></span></code></pre>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 60 × 14</span></span></span>
-<span><span class="co">##    cell_group        parameter factor c_lower c_effect c_upper c_n_eff c_R_k_hat</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>      0.354     0.763  1.17     <span style="text-decoration: underline;">6</span>740.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type    0.875     1.44   1.98     <span style="text-decoration: underline;">6</span>026.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.50</span>     -<span style="color: #BB0000;">0.870</span> -<span style="color: #BB0000;">0.158</span>    <span style="text-decoration: underline;">2</span>932.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type    1.02      1.86   2.65     <span style="text-decoration: underline;">2</span>982.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>      1.31      1.66   1.99     <span style="text-decoration: underline;">6</span>527.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S100A4     typeheal… type    0.476     0.942  1.41     <span style="text-decoration: underline;">5</span>250.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.03</span>     -<span style="color: #BB0000;">0.537</span>  0.038<span style="text-decoration: underline;">7</span>   <span style="text-decoration: underline;">4</span>246.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm high cyto… typeheal… type   -<span style="color: #BB0000;">3.14</span>     -<span style="color: #BB0000;">1.27</span>   1.11     <span style="text-decoration: underline;">2</span>888.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.043</span><span style="color: #BB0000; text-decoration: underline;">1</span>    0.311  0.687    <span style="text-decoration: underline;">4</span>685.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm ribosome   typeheal… type   -<span style="color: #BB0000;">1.79</span>     -<span style="color: #BB0000;">0.958</span>  0.082<span style="text-decoration: underline;">6</span>   <span style="text-decoration: underline;">4</span>916.      1.00</span></span>
+<span><span class="co">##    cell_group       parameter factor c_lower c_effect  c_upper c_n_eff c_R_k_hat</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature       (Interce… <span style="color: #BB0000;">NA</span>      0.337     0.763  1.20      <span style="text-decoration: underline;">6</span>138.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature       typeheal… type    0.875     1.44   2.00      <span style="text-decoration: underline;">5</span>163.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem            (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.50</span>     -<span style="color: #BB0000;">0.865</span> -<span style="color: #BB0000;">0.125</span>     <span style="text-decoration: underline;">5</span>660.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem            typeheal… type    0.984     1.85   2.65      <span style="text-decoration: underline;">5</span>356.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S100A4    (Interce… <span style="color: #BB0000;">NA</span>      1.33      1.66   1.99      <span style="text-decoration: underline;">6</span>289.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S100A4    typeheal… type    0.489     0.938  1.38      <span style="text-decoration: underline;">5</span>005.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm high cyt… (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.04</span>     -<span style="color: #BB0000;">0.538</span>  0.008<span style="text-decoration: underline;">09</span>   <span style="text-decoration: underline;">4</span>582.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm high cyt… typeheal… type   -<span style="color: #BB0000;">3.03</span>     -<span style="color: #BB0000;">1.24</span>   1.11      <span style="text-decoration: underline;">4</span>151.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm ribosome  (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.074</span><span style="color: #BB0000; text-decoration: underline;">1</span>    0.310  0.704     <span style="text-decoration: underline;">4</span>303.      1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm ribosome  typeheal… type   -<span style="color: #BB0000;">1.81</span>     -<span style="color: #BB0000;">0.972</span>  0.084<span style="text-decoration: underline;">7</span>    <span style="text-decoration: underline;">4</span>445.      1.00</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 50 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 6 more variables: v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_n_eff &lt;dbl&gt;, v_R_k_hat &lt;dbl&gt;, count_data &lt;list&gt;</span></span></span></code></pre>
@@ -389,189 +389,189 @@ plots$credible_intervals_2D (see below).</p>
 <span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
 <span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
 <span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
-<pre><code><span><span class="co">##              cell_group   parameter factor     c_lower     c_effect     c_upper</span></span>
-<span><span class="co">## 1            B immature (Intercept)   &lt;NA&gt;  0.35370464  0.763460004  1.17186545</span></span>
-<span><span class="co">## 2            B immature typehealthy   type  0.87471347  1.436481537  1.97965640</span></span>
-<span><span class="co">## 3                 B mem (Intercept)   &lt;NA&gt; -1.49689897 -0.870120083 -0.15809899</span></span>
-<span><span class="co">## 4                 B mem typehealthy   type  1.02161966  1.856789106  2.65028296</span></span>
-<span><span class="co">## 5         CD4 cm S100A4 (Intercept)   &lt;NA&gt;  1.31251209  1.662232017  1.99479405</span></span>
-<span><span class="co">## 6         CD4 cm S100A4 typehealthy   type  0.47619411  0.941879028  1.40546311</span></span>
-<span><span class="co">## 7  CD4 cm high cytokine (Intercept)   &lt;NA&gt; -1.02845800 -0.536755609  0.03874644</span></span>
-<span><span class="co">## 8  CD4 cm high cytokine typehealthy   type -3.13856305 -1.271302375  1.10949548</span></span>
-<span><span class="co">## 9       CD4 cm ribosome (Intercept)   &lt;NA&gt; -0.04310344  0.310725932  0.68716171</span></span>
-<span><span class="co">## 10      CD4 cm ribosome typehealthy   type -1.79422701 -0.958335042  0.08263731</span></span>
-<span><span class="co">## 11 CD4 em high cytokine (Intercept)   &lt;NA&gt; -1.15651075 -0.706930916 -0.19644824</span></span>
-<span><span class="co">## 12 CD4 em high cytokine typehealthy   type -2.35636936 -1.285745532  0.16071045</span></span>
-<span><span class="co">## 13            CD4 naive (Intercept)   &lt;NA&gt;  0.75529844  1.211376123  1.65408389</span></span>
-<span><span class="co">## 14            CD4 naive typehealthy   type  0.45933282  1.143645449  1.78415566</span></span>
-<span><span class="co">## 15         CD4 ribosome (Intercept)   &lt;NA&gt; -0.31176958  0.047336219  0.43208717</span></span>
-<span><span class="co">## 16         CD4 ribosome typehealthy   type  1.48344593  2.070191207  2.65906631</span></span>
-<span><span class="co">## 17             CD8 em 1 (Intercept)   &lt;NA&gt;  0.30024844  0.682136094  1.08770406</span></span>
-<span><span class="co">## 18             CD8 em 1 typehealthy   type -0.02437547  0.784856341  1.63454144</span></span>
-<span><span class="co">## 19             CD8 em 2 (Intercept)   &lt;NA&gt; -0.89990276  0.144527244  1.22823002</span></span>
-<span><span class="co">## 20             CD8 em 2 typehealthy   type -3.51094148 -1.148993053  1.24398058</span></span>
-<span><span class="co">## 21             CD8 em 3 (Intercept)   &lt;NA&gt; -1.37069760 -0.662495137  0.20344579</span></span>
-<span><span class="co">## 22             CD8 em 3 typehealthy   type -1.76505842 -0.811748532  0.02664435</span></span>
-<span><span class="co">## 23            CD8 naive (Intercept)   &lt;NA&gt;  0.60739607  1.019526673  1.41511499</span></span>
-<span><span class="co">## 24            CD8 naive typehealthy   type -0.70392706  0.020223201  0.76762159</span></span>
-<span><span class="co">## 25     CD8 transitional (Intercept)   &lt;NA&gt;  0.89903078  1.212375696  1.53631895</span></span>
-<span><span class="co">## 26     CD8 transitional typehealthy   type  0.18421812  0.681983483  1.16360066</span></span>
-<span><span class="co">## 27                 MAIT (Intercept)   &lt;NA&gt; -1.04645873 -0.606085542 -0.10647821</span></span>
-<span><span class="co">## 28                 MAIT typehealthy   type  0.49565517  1.217759988  2.02081751</span></span>
-<span><span class="co">## 29               Mac M1 (Intercept)   &lt;NA&gt;  0.61370088  0.948985055  1.27302046</span></span>
-<span><span class="co">## 30               Mac M1 typehealthy   type  0.03163929  0.598097539  1.17285295</span></span>
-<span><span class="co">## 31        Mac M1 FCER1A (Intercept)   &lt;NA&gt; -1.36048342 -0.992363625 -0.57794866</span></span>
-<span><span class="co">## 32        Mac M1 FCER1A typehealthy   type -1.76285354 -1.070050465 -0.21694255</span></span>
-<span><span class="co">## 33                 Mono (Intercept)   &lt;NA&gt; -1.82485288 -1.340744871 -0.79016795</span></span>
-<span><span class="co">## 34                 Mono typehealthy   type -0.85852486 -0.093166875  0.68664477</span></span>
-<span><span class="co">## 35          Mono NKG7 1 (Intercept)   &lt;NA&gt; -1.48107322 -0.863135308 -0.16403691</span></span>
-<span><span class="co">## 36          Mono NKG7 1 typehealthy   type -3.95151897 -2.884097439 -0.98297814</span></span>
-<span><span class="co">## 37          Mono NKG7 2 (Intercept)   &lt;NA&gt; -0.41931881 -0.004530066  0.43861279</span></span>
-<span><span class="co">## 38          Mono NKG7 2 typehealthy   type -2.48720508 -1.269915134  0.41119531</span></span>
-<span><span class="co">## 39  Mono classic inflam (Intercept)   &lt;NA&gt;  1.48563241  1.784144153  2.04832967</span></span>
-<span><span class="co">## 40  Mono classic inflam typehealthy   type -1.23898878 -0.452326728  0.32961922</span></span>
-<span><span class="co">## 41     Mono non-classic (Intercept)   &lt;NA&gt;  0.62088511  0.963029534  1.30700736</span></span>
-<span><span class="co">## 42     Mono non-classic typehealthy   type -0.64601183  0.016473656  0.70562317</span></span>
-<span><span class="co">## 43    Myeloid migratory (Intercept)   &lt;NA&gt; -0.35188909  0.024639936  0.43784827</span></span>
-<span><span class="co">## 44    Myeloid migratory typehealthy   type -1.34083073 -0.550983250  0.33135401</span></span>
-<span><span class="co">## 45                   NK (Intercept)   &lt;NA&gt;  1.13375102  1.428726193  1.71708301</span></span>
-<span><span class="co">## 46                   NK typehealthy   type -0.07192826  0.549754085  1.13794273</span></span>
-<span><span class="co">## 47           NK cycling (Intercept)   &lt;NA&gt; -1.63500014 -1.221809650 -0.71436037</span></span>
-<span><span class="co">## 48           NK cycling typehealthy   type -0.80155599 -0.176357768  0.39709486</span></span>
-<span><span class="co">## 49     NK high cytokine (Intercept)   &lt;NA&gt; -2.20962730 -1.639497335 -0.95127533</span></span>
-<span><span class="co">## 50     NK high cytokine typehealthy   type -1.25162286  0.024999490  1.64294018</span></span>
-<span><span class="co">## 51                 Stem (Intercept)   &lt;NA&gt; -1.06794032 -0.578945977 -0.01420014</span></span>
-<span><span class="co">## 52                 Stem typehealthy   type -3.21370758 -2.241852458 -0.69132232</span></span>
-<span><span class="co">## 53                T gd1 (Intercept)   &lt;NA&gt; -1.06224854 -0.690788908 -0.26139615</span></span>
-<span><span class="co">## 54                T gd1 typehealthy   type  0.05625073  0.925656779  1.79900531</span></span>
-<span><span class="co">## 55                T gd2 (Intercept)   &lt;NA&gt; -1.23888856 -0.677417700 -0.05538540</span></span>
-<span><span class="co">## 56                T gd2 typehealthy   type -0.39121212  0.520268976  1.51386391</span></span>
-<span><span class="co">## 57                 cDC2 (Intercept)   &lt;NA&gt; -0.76255964 -0.296009895  0.21563787</span></span>
-<span><span class="co">## 58                 cDC2 typehealthy   type -0.41657521  0.319441566  1.04301172</span></span>
-<span><span class="co">## 59                  pDC (Intercept)   &lt;NA&gt; -1.12216091 -0.661625044 -0.14212998</span></span>
-<span><span class="co">## 60                  pDC typehealthy   type -0.10110179  0.668069783  1.48572595</span></span>
-<span><span class="co">##      c_pH0        c_FDR  c_n_eff c_R_k_hat      v_lower    v_effect     v_upper</span></span>
-<span><span class="co">## 1  0.00275 3.653846e-04 6739.770 0.9997627 -4.504917301 -3.83155765 -3.04564855</span></span>
-<span><span class="co">## 2  0.00000 0.000000e+00 6026.144 0.9997625 -1.706327492 -0.50547712  0.68968015</span></span>
-<span><span class="co">## 3  0.03175 6.263889e-03 2931.797 1.0017854 -5.312989282 -4.55535232 -3.57629943</span></span>
-<span><span class="co">## 4  0.00000 0.000000e+00 2982.340 1.0015682 -2.116555657 -0.96592940  0.31263316</span></span>
-<span><span class="co">## 5  0.00000 0.000000e+00 6527.459 0.9997589 -3.835558140 -3.20606118 -2.41887431</span></span>
-<span><span class="co">## 6  0.00075 1.875000e-04 5249.814 1.0001890 -2.080239046 -0.93852342  0.33978478</span></span>
-<span><span class="co">## 7  0.11650 2.011957e-02 4246.302 1.0002336 -5.450828922 -4.69955402 -3.76632689</span></span>
-<span><span class="co">## 8  0.18600 4.947500e-02 2887.578 0.9999061 -0.453788466  1.51151528  3.45637003</span></span>
-<span><span class="co">## 9  0.26125 3.403000e-02 4685.211 1.0006961 -5.335452753 -4.59523513 -3.77786092</span></span>
-<span><span class="co">## 10 0.06925 2.025000e-02 4915.514 1.0000046 -0.500268059  0.65035206  1.90319502</span></span>
-<span><span class="co">## 11 0.02550 3.140625e-03 4753.413 0.9998728 -5.928468385 -5.14747247 -4.21360282</span></span>
-<span><span class="co">## 12 0.06400 1.616667e-02 2206.154 0.9997629 -1.032338043  0.36222505  1.82452748</span></span>
-<span><span class="co">## 13 0.00000 0.000000e+00 5099.100 0.9997508 -3.689858349 -3.06377636 -2.29020572</span></span>
-<span><span class="co">## 14 0.00375 1.333333e-03 4948.716 0.9997704 -0.841263621  0.20582122  1.29806749</span></span>
-<span><span class="co">## 15 0.81025 9.114286e-02 4977.660 0.9997937 -5.665267507 -4.90554639 -4.00571725</span></span>
-<span><span class="co">## 16 0.00000 0.000000e+00 4664.292 0.9997535 -0.636270374  0.56638825  1.76876271</span></span>
-<span><span class="co">## 17 0.00675 8.214286e-04 4042.689 0.9997914 -4.774640102 -4.05008361 -3.22501104</span></span>
-<span><span class="co">## 18 0.07850 2.776667e-02 4931.866 0.9998127  0.009542413  1.07331054  2.17092858</span></span>
-<span><span class="co">## 19 0.54100 6.450926e-02 3713.751 0.9999371 -3.690424447 -1.99276971 -0.64140139</span></span>
-<span><span class="co">## 20 0.22775 6.446591e-02 3908.697 0.9998081 -1.576815484  0.49756055  2.67596303</span></span>
-<span><span class="co">## 21 0.12675 2.456250e-02 2378.026 1.0003387 -4.718151511 -3.94774755 -2.72908886</span></span>
-<span><span class="co">## 22 0.07475 2.414286e-02 2244.674 1.0007542 -4.137095634 -2.71548045 -1.31976452</span></span>
-<span><span class="co">## 23 0.00025 3.125000e-05 6417.407 1.0000153 -4.193332595 -3.51171383 -2.74177218</span></span>
-<span><span class="co">## 24 0.69775 1.626724e-01 4571.535 0.9999438 -0.978141420  0.03873741  1.13354697</span></span>
-<span><span class="co">## 25 0.00000 0.000000e+00 6311.111 0.9997868 -4.804348419 -4.07968695 -3.25079840</span></span>
-<span><span class="co">## 26 0.03050 7.975000e-03 5257.652 0.9998086 -1.126364971  0.05701316  1.35704220</span></span>
-<span><span class="co">## 27 0.05550 1.036250e-02 4450.025 0.9999079 -5.840476305 -5.06462478 -4.16972983</span></span>
-<span><span class="co">## 28 0.00350 8.500000e-04 4018.422 0.9997891 -0.701659291  0.35087122  1.50589249</span></span>
-<span><span class="co">## 29 0.00025 5.555556e-05 6341.931 0.9998259 -4.995358836 -4.23156022 -3.41011068</span></span>
-<span><span class="co">## 30 0.07875 3.095312e-02 5538.084 0.9999294 -0.790404748  0.30770126  1.45700654</span></span>
-<span><span class="co">## 31 0.00100 1.666667e-04 4569.936 0.9997733 -7.013710036 -5.97949166 -4.95658873</span></span>
-<span><span class="co">## 32 0.02475 5.472222e-03 3706.687 0.9999744 -1.480698225 -0.05339736  1.46104233</span></span>
-<span><span class="co">## 33 0.00025 7.500000e-05 4276.760 0.9997806 -6.609328046 -5.73266773 -4.68120570</span></span>
-<span><span class="co">## 34 0.60400 1.435625e-01 4064.975 0.9999800 -2.179414270 -0.76696692  0.64964284</span></span>
-<span><span class="co">## 35 0.03075 4.764706e-03 4938.013 0.9997614 -5.221956580 -4.50209531 -3.46362933</span></span>
-<span><span class="co">## 36 0.00825 2.321429e-03 1127.803 1.0010691 -5.213645286 -2.35732890  0.65141246</span></span>
-<span><span class="co">## 37 0.82625 1.399167e-01 4285.495 0.9997504 -5.432757935 -4.67120111 -3.79612912</span></span>
-<span><span class="co">## 38 0.08525 3.414706e-02 2890.659 0.9998978 -0.179925351  1.21652184  2.75657883</span></span>
-<span><span class="co">## 39 0.00000 0.000000e+00 4160.241 0.9999151 -4.337597730 -3.58508359 -2.75915407</span></span>
-<span><span class="co">## 40 0.25450 7.967708e-02 4224.403 1.0007683  0.379638790  1.43840955  2.54588302</span></span>
-<span><span class="co">## 41 0.00000 0.000000e+00 4506.984 0.9998522 -4.707988925 -4.01170754 -3.19374492</span></span>
-<span><span class="co">## 42 0.71825 1.811917e-01 5017.671 0.9997626 -0.942382482  0.25716378  1.53956577</span></span>
-<span><span class="co">## 43 0.81925 1.162500e-01 4646.834 1.0002190 -5.630249797 -4.82870300 -3.94013199</span></span>
-<span><span class="co">## 44 0.20100 5.669048e-02 4805.558 1.0000049 -0.800504878  0.37623298  1.63066184</span></span>
-<span><span class="co">## 45 0.00000 0.000000e+00 4906.606 1.0000952 -4.519842391 -3.82206623 -3.02587092</span></span>
-<span><span class="co">## 46 0.11300 4.228947e-02 5552.671 1.0002931 -0.460342193  0.64842955  1.81354399</span></span>
-<span><span class="co">## 47 0.00025 9.090909e-05 6451.161 1.0003714 -6.625151334 -5.78897903 -4.82954141</span></span>
-<span><span class="co">## 48 0.53425 1.084712e-01 5062.524 0.9999376 -3.284804187 -1.61337708 -0.01019548</span></span>
-<span><span class="co">## 49 0.00000 0.000000e+00 4808.097 0.9998384 -6.405496664 -5.57063186 -4.50341496</span></span>
-<span><span class="co">## 50 0.59550 1.265093e-01 3086.533 0.9998048 -0.668248859  0.68674938  2.20290726</span></span>
-<span><span class="co">## 51 0.07875 1.573864e-02 4815.317 0.9998607 -5.480245330 -4.76639787 -3.84671885</span></span>
-<span><span class="co">## 52 0.00825 3.062500e-03 1514.775 0.9997602 -2.806209188 -0.89312533  1.00135807</span></span>
-<span><span class="co">## 53 0.01325 1.650000e-03 4017.456 0.9998941 -6.543161502 -5.57728466 -4.58219143</span></span>
-<span><span class="co">## 54 0.05025 1.181818e-02 4345.841 0.9997513  0.123993442  1.32710321  2.64890955</span></span>
-<span><span class="co">## 55 0.06025 1.273810e-02 4515.636 0.9997586 -5.308134117 -4.57678417 -3.65960666</span></span>
-<span><span class="co">## 56 0.23950 7.207609e-02 4247.771 0.9997781 -1.163450219 -0.09178041  1.05795361</span></span>
-<span><span class="co">## 57 0.35000 4.618269e-02 5513.182 0.9997522 -5.402349498 -4.61245343 -3.67471276</span></span>
-<span><span class="co">## 58 0.37375 9.144000e-02 4137.917 0.9997693 -1.816351082 -0.64296512  0.56537276</span></span>
-<span><span class="co">## 59 0.03900 7.986842e-03 4468.502 0.9998052 -5.805435111 -5.03729862 -4.12743625</span></span>
-<span><span class="co">## 60 0.11000 3.836111e-02 4405.850 0.9998114 -1.133857837 -0.01268979  1.18554188</span></span>
-<span><span class="co">##      v_pH0        v_FDR  v_n_eff v_R_k_hat   count_data</span></span>
-<span><span class="co">## 1  0.00000 0.000000e+00 5624.746 0.9997588 c("10x_6....</span></span>
-<span><span class="co">## 2  0.30675 1.428889e-01 5081.125 1.0002312 c("10x_6....</span></span>
-<span><span class="co">## 3  0.00000 0.000000e+00 2560.733 1.0025398 c("10x_6....</span></span>
-<span><span class="co">## 4  0.12875 6.475000e-02 4047.763 1.0026331 c("10x_6....</span></span>
-<span><span class="co">## 5  0.00000 0.000000e+00 4924.585 0.9998506 c("10x_6....</span></span>
-<span><span class="co">## 6  0.12250 5.763889e-02 5247.231 0.9998402 c("10x_6....</span></span>
-<span><span class="co">## 7  0.00000 0.000000e+00 5076.901 0.9997514 c("10x_6....</span></span>
-<span><span class="co">## 8  0.08825 4.953125e-02 3209.491 1.0003624 c("10x_6....</span></span>
-<span><span class="co">## 9  0.00000 0.000000e+00 7310.915 0.9997545 c("10x_6....</span></span>
-<span><span class="co">## 10 0.22300 1.082143e-01 4498.728 0.9999962 c("10x_6....</span></span>
-<span><span class="co">## 11 0.00000 0.000000e+00 7399.105 1.0000018 c("10x_6....</span></span>
-<span><span class="co">## 12 0.40825 1.887045e-01 3435.956 0.9997546 c("10x_6....</span></span>
-<span><span class="co">## 13 0.00000 0.000000e+00 3493.326 1.0001291 c("10x_6....</span></span>
-<span><span class="co">## 14 0.49575 2.211900e-01 4541.731 0.9997572 c("10x_6....</span></span>
-<span><span class="co">## 15 0.00000 0.000000e+00 4569.049 0.9997771 c("10x_6....</span></span>
-<span><span class="co">## 16 0.26575 1.332500e-01 5222.426 0.9999239 c("10x_6....</span></span>
-<span><span class="co">## 17 0.00000 0.000000e+00 5200.442 0.9997650 c("10x_6....</span></span>
-<span><span class="co">## 18 0.05625 2.875000e-02 4397.033 0.9997958 c("10x_6....</span></span>
-<span><span class="co">## 19 0.00250 8.333333e-05 2665.840 0.9997897 c("10x_6....</span></span>
-<span><span class="co">## 20 0.39000 1.673750e-01 3602.841 0.9997732 c("10x_6....</span></span>
-<span><span class="co">## 21 0.00000 0.000000e+00 1699.168 1.0002559 c("10x_6....</span></span>
-<span><span class="co">## 22 0.00000 0.000000e+00 4023.696 0.9999078 c("10x_6....</span></span>
-<span><span class="co">## 23 0.00000 0.000000e+00 5334.250 0.9998258 c("10x_6....</span></span>
-<span><span class="co">## 24 0.61400 2.720000e-01 5458.571 0.9997817 c("10x_6....</span></span>
-<span><span class="co">## 25 0.00000 0.000000e+00 4207.494 0.9997545 c("10x_6....</span></span>
-<span><span class="co">## 26 0.58850 2.597857e-01 4421.046 0.9997917 c("10x_6....</span></span>
-<span><span class="co">## 27 0.00000 0.000000e+00 3889.708 1.0007656 c("10x_6....</span></span>
-<span><span class="co">## 28 0.39575 1.782500e-01 4670.695 0.9997519 c("10x_6....</span></span>
-<span><span class="co">## 29 0.00000 0.000000e+00 5050.774 1.0002137 c("10x_6....</span></span>
-<span><span class="co">## 30 0.42525 1.989891e-01 4786.491 0.9999003 c("10x_6....</span></span>
-<span><span class="co">## 31 0.00000 0.000000e+00 3585.571 1.0000161 c("10x_6....</span></span>
-<span><span class="co">## 32 0.57975 2.476111e-01 3328.567 0.9997911 c("10x_6....</span></span>
-<span><span class="co">## 33 0.00000 0.000000e+00 4012.109 0.9997500 c("10x_6....</span></span>
-<span><span class="co">## 34 0.20825 7.779545e-02 3862.369 1.0000701 c("10x_6....</span></span>
-<span><span class="co">## 35 0.00000 0.000000e+00 4170.364 0.9997854 c("10x_6....</span></span>
-<span><span class="co">## 36 0.07625 3.666667e-02 1742.585 1.0009049 c("10x_6....</span></span>
-<span><span class="co">## 37 0.00000 0.000000e+00 6854.748 0.9997506 c("10x_6....</span></span>
-<span><span class="co">## 38 0.08800 4.400000e-02 3368.115 0.9997500 c("10x_6....</span></span>
-<span><span class="co">## 39 0.00000 0.000000e+00 4866.114 0.9998549 c("10x_6....</span></span>
-<span><span class="co">## 40 0.01250 6.250000e-03 4291.732 0.9997773 c("10x_6....</span></span>
-<span><span class="co">## 41 0.00000 0.000000e+00 4667.434 0.9997565 c("10x_6....</span></span>
-<span><span class="co">## 42 0.45725 2.097500e-01 5022.936 1.0001110 c("10x_6....</span></span>
-<span><span class="co">## 43 0.00000 0.000000e+00 6129.014 1.0002251 c("10x_6....</span></span>
-<span><span class="co">## 44 0.38550 1.556579e-01 3621.652 1.0004129 c("10x_6....</span></span>
-<span><span class="co">## 45 0.00000 0.000000e+00 5142.735 0.9997562 c("10x_6....</span></span>
-<span><span class="co">## 46 0.21425 8.916667e-02 4613.079 0.9998559 c("10x_6....</span></span>
-<span><span class="co">## 47 0.00000 0.000000e+00 4643.736 0.9999873 c("10x_6....</span></span>
-<span><span class="co">## 48 0.04150 2.187500e-02 4619.455 0.9997577 c("10x_6....</span></span>
-<span><span class="co">## 49 0.00000 0.000000e+00 5152.448 0.9997614 c("10x_6....</span></span>
-<span><span class="co">## 50 0.24975 1.249688e-01 3435.986 1.0000098 c("10x_6....</span></span>
-<span><span class="co">## 51 0.00000 0.000000e+00 6160.038 0.9997580 c("10x_6....</span></span>
-<span><span class="co">## 52 0.22200 9.938462e-02 2012.329 0.9998203 c("10x_6....</span></span>
-<span><span class="co">## 53 0.00000 0.000000e+00 5653.878 0.9997645 c("10x_6....</span></span>
-<span><span class="co">## 54 0.03350 1.533333e-02 4412.663 0.9998412 c("10x_6....</span></span>
-<span><span class="co">## 55 0.00000 0.000000e+00 4144.817 0.9997500 c("10x_6....</span></span>
-<span><span class="co">## 56 0.57600 2.348365e-01 3278.052 0.9997549 c("10x_6....</span></span>
-<span><span class="co">## 57 0.00000 0.000000e+00 4502.813 0.9997740 c("10x_6....</span></span>
-<span><span class="co">## 58 0.23475 1.166500e-01 4668.850 0.9999940 c("10x_6....</span></span>
-<span><span class="co">## 59 0.00000 0.000000e+00 4014.868 0.9997535 c("10x_6....</span></span>
-<span><span class="co">## 60 0.62500 2.837667e-01 4288.710 0.9997561 c("10x_6....</span></span></code></pre>
+<pre><code><span><span class="co">##              cell_group   parameter factor     c_lower     c_effect</span></span>
+<span><span class="co">## 1            B immature (Intercept)   &lt;NA&gt;  0.33696384  0.762986527</span></span>
+<span><span class="co">## 2            B immature typehealthy   type  0.87494081  1.437474722</span></span>
+<span><span class="co">## 3                 B mem (Intercept)   &lt;NA&gt; -1.50342643 -0.864802827</span></span>
+<span><span class="co">## 4                 B mem typehealthy   type  0.98419537  1.852989061</span></span>
+<span><span class="co">## 5         CD4 cm S100A4 (Intercept)   &lt;NA&gt;  1.32952450  1.659060365</span></span>
+<span><span class="co">## 6         CD4 cm S100A4 typehealthy   type  0.48927412  0.938054826</span></span>
+<span><span class="co">## 7  CD4 cm high cytokine (Intercept)   &lt;NA&gt; -1.03713614 -0.538330036</span></span>
+<span><span class="co">## 8  CD4 cm high cytokine typehealthy   type -3.02996036 -1.240883818</span></span>
+<span><span class="co">## 9       CD4 cm ribosome (Intercept)   &lt;NA&gt; -0.07412897  0.310385496</span></span>
+<span><span class="co">## 10      CD4 cm ribosome typehealthy   type -1.80762275 -0.971902121</span></span>
+<span><span class="co">## 11 CD4 em high cytokine (Intercept)   &lt;NA&gt; -1.18452385 -0.714947147</span></span>
+<span><span class="co">## 12 CD4 em high cytokine typehealthy   type -2.35269881 -1.269121955</span></span>
+<span><span class="co">## 13            CD4 naive (Intercept)   &lt;NA&gt;  0.76815602  1.210603156</span></span>
+<span><span class="co">## 14            CD4 naive typehealthy   type  0.46226975  1.141430509</span></span>
+<span><span class="co">## 15         CD4 ribosome (Intercept)   &lt;NA&gt; -0.31684624  0.046030534</span></span>
+<span><span class="co">## 16         CD4 ribosome typehealthy   type  1.47089804  2.061759340</span></span>
+<span><span class="co">## 17             CD8 em 1 (Intercept)   &lt;NA&gt;  0.28057644  0.678383007</span></span>
+<span><span class="co">## 18             CD8 em 1 typehealthy   type -0.05129746  0.787818734</span></span>
+<span><span class="co">## 19             CD8 em 2 (Intercept)   &lt;NA&gt; -0.91535524  0.138018022</span></span>
+<span><span class="co">## 20             CD8 em 2 typehealthy   type -3.59153684 -1.203006134</span></span>
+<span><span class="co">## 21             CD8 em 3 (Intercept)   &lt;NA&gt; -1.33490194 -0.662920097</span></span>
+<span><span class="co">## 22             CD8 em 3 typehealthy   type -1.77432815 -0.836140719</span></span>
+<span><span class="co">## 23            CD8 naive (Intercept)   &lt;NA&gt;  0.58791193  1.018066580</span></span>
+<span><span class="co">## 24            CD8 naive typehealthy   type -0.70535902  0.013705425</span></span>
+<span><span class="co">## 25     CD8 transitional (Intercept)   &lt;NA&gt;  0.90134353  1.211250190</span></span>
+<span><span class="co">## 26     CD8 transitional typehealthy   type  0.17864283  0.690089340</span></span>
+<span><span class="co">## 27                 MAIT (Intercept)   &lt;NA&gt; -1.05485874 -0.599145302</span></span>
+<span><span class="co">## 28                 MAIT typehealthy   type  0.43768981  1.216097784</span></span>
+<span><span class="co">## 29               Mac M1 (Intercept)   &lt;NA&gt;  0.62776705  0.951918483</span></span>
+<span><span class="co">## 30               Mac M1 typehealthy   type  0.04360521  0.598153744</span></span>
+<span><span class="co">## 31        Mac M1 FCER1A (Intercept)   &lt;NA&gt; -1.34257414 -0.987711669</span></span>
+<span><span class="co">## 32        Mac M1 FCER1A typehealthy   type -1.81062700 -1.066506933</span></span>
+<span><span class="co">## 33                 Mono (Intercept)   &lt;NA&gt; -1.83595954 -1.352590228</span></span>
+<span><span class="co">## 34                 Mono typehealthy   type -0.83060005 -0.103184073</span></span>
+<span><span class="co">## 35          Mono NKG7 1 (Intercept)   &lt;NA&gt; -1.46099272 -0.855053468</span></span>
+<span><span class="co">## 36          Mono NKG7 1 typehealthy   type -4.00625000 -2.895241063</span></span>
+<span><span class="co">## 37          Mono NKG7 2 (Intercept)   &lt;NA&gt; -0.41918305 -0.006471581</span></span>
+<span><span class="co">## 38          Mono NKG7 2 typehealthy   type -2.44509523 -1.267994344</span></span>
+<span><span class="co">## 39  Mono classic inflam (Intercept)   &lt;NA&gt;  1.49147917  1.782247044</span></span>
+<span><span class="co">## 40  Mono classic inflam typehealthy   type -1.24629981 -0.460701162</span></span>
+<span><span class="co">## 41     Mono non-classic (Intercept)   &lt;NA&gt;  0.58958650  0.958916153</span></span>
+<span><span class="co">## 42     Mono non-classic typehealthy   type -0.62035882  0.019735605</span></span>
+<span><span class="co">## 43    Myeloid migratory (Intercept)   &lt;NA&gt; -0.36458931  0.019072070</span></span>
+<span><span class="co">## 44    Myeloid migratory typehealthy   type -1.33521338 -0.546813497</span></span>
+<span><span class="co">## 45                   NK (Intercept)   &lt;NA&gt;  1.11408103  1.428866928</span></span>
+<span><span class="co">## 46                   NK typehealthy   type -0.04501325  0.544433568</span></span>
+<span><span class="co">## 47           NK cycling (Intercept)   &lt;NA&gt; -1.66494775 -1.221346786</span></span>
+<span><span class="co">## 48           NK cycling typehealthy   type -0.78424129 -0.181786954</span></span>
+<span><span class="co">## 49     NK high cytokine (Intercept)   &lt;NA&gt; -2.22558119 -1.631653627</span></span>
+<span><span class="co">## 50     NK high cytokine typehealthy   type -1.22332016  0.044762991</span></span>
+<span><span class="co">## 51                 Stem (Intercept)   &lt;NA&gt; -1.08641905 -0.574183063</span></span>
+<span><span class="co">## 52                 Stem typehealthy   type -3.20282438 -2.246175478</span></span>
+<span><span class="co">## 53                T gd1 (Intercept)   &lt;NA&gt; -1.08078278 -0.687505187</span></span>
+<span><span class="co">## 54                T gd1 typehealthy   type  0.04899087  0.922976652</span></span>
+<span><span class="co">## 55                T gd2 (Intercept)   &lt;NA&gt; -1.23828996 -0.675287313</span></span>
+<span><span class="co">## 56                T gd2 typehealthy   type -0.38596451  0.537321450</span></span>
+<span><span class="co">## 57                 cDC2 (Intercept)   &lt;NA&gt; -0.74747832 -0.285813916</span></span>
+<span><span class="co">## 58                 cDC2 typehealthy   type -0.40421176  0.313515232</span></span>
+<span><span class="co">## 59                  pDC (Intercept)   &lt;NA&gt; -1.14969877 -0.667328445</span></span>
+<span><span class="co">## 60                  pDC typehealthy   type -0.09221065  0.665596582</span></span>
+<span><span class="co">##         c_upper   c_pH0        c_FDR  c_n_eff c_R_k_hat    v_lower    v_effect</span></span>
+<span><span class="co">## 1   1.201485630 0.00525 5.384615e-04 6137.876 0.9997507 -4.4613985 -3.83171236</span></span>
+<span><span class="co">## 2   1.998561025 0.00000 0.000000e+00 5163.261 0.9997638 -1.6806452 -0.50744043</span></span>
+<span><span class="co">## 3  -0.125148592 0.03450 6.902778e-03 5660.404 0.9997523 -5.2960821 -4.55578986</span></span>
+<span><span class="co">## 4   2.646289402 0.00025 8.333333e-05 5356.010 0.9999098 -2.1176428 -0.94523075</span></span>
+<span><span class="co">## 5   1.986204901 0.00000 0.000000e+00 6289.438 0.9997552 -3.8485490 -3.20004457</span></span>
+<span><span class="co">## 6   1.380564403 0.00075 2.500000e-04 5004.949 0.9998893 -2.0516884 -0.91696835</span></span>
+<span><span class="co">## 7   0.008087746 0.10950 1.995652e-02 4581.621 0.9997696 -5.4682278 -4.70583557</span></span>
+<span><span class="co">## 8   1.108969048 0.20125 5.866667e-02 4150.590 0.9997509 -0.4725566  1.50322069</span></span>
+<span><span class="co">## 9   0.703545223 0.27125 3.419000e-02 4302.716 0.9999674 -5.3460603 -4.60435559</span></span>
+<span><span class="co">## 10  0.084711294 0.07025 2.055769e-02 4445.058 0.9999596 -0.5425334  0.65111714</span></span>
+<span><span class="co">## 11 -0.179534523 0.03000 3.671875e-03 4438.782 0.9997850 -5.9443019 -5.14786626</span></span>
+<span><span class="co">## 12  0.182661336 0.06425 1.641667e-02 4423.338 0.9997519 -1.0908355  0.38044355</span></span>
+<span><span class="co">## 13  1.659341379 0.00000 0.000000e+00 6950.150 1.0003422 -3.6814607 -3.05907110</span></span>
+<span><span class="co">## 14  1.782169318 0.00450 1.100000e-03 6235.141 1.0001450 -0.8291501  0.20779583</span></span>
+<span><span class="co">## 15  0.429194779 0.79975 9.116071e-02 5807.433 0.9997675 -5.6817101 -4.90023764</span></span>
+<span><span class="co">## 16  2.629437573 0.00000 0.000000e+00 5157.964 0.9997677 -0.6308049  0.57338972</span></span>
+<span><span class="co">## 17  1.076485963 0.00850 1.107143e-03 3972.423 1.0011635 -4.7599198 -4.06586603</span></span>
+<span><span class="co">## 18  1.602502872 0.08500 3.151562e-02 5814.569 1.0001386  0.0386454  1.09505926</span></span>
+<span><span class="co">## 19  1.247508399 0.53950 6.491667e-02 3884.908 1.0000256 -3.6749605 -2.04188126</span></span>
+<span><span class="co">## 20  1.309167302 0.22225 6.610227e-02 4497.895 0.9998291 -1.5192467  0.51080760</span></span>
+<span><span class="co">## 21  0.196107242 0.12450 2.431250e-02 3122.086 0.9997535 -4.6866174 -3.94670652</span></span>
+<span><span class="co">## 22  0.022469775 0.07300 2.430357e-02 3156.458 0.9997509 -4.1415151 -2.72048785</span></span>
+<span><span class="co">## 23  1.437107585 0.00025 2.777778e-05 6144.773 0.9998902 -4.1556781 -3.53155765</span></span>
+<span><span class="co">## 24  0.768192377 0.69550 1.632500e-01 4952.167 0.9997627 -0.9988398  0.02600727</span></span>
+<span><span class="co">## 25  1.514003835 0.00000 0.000000e+00 5868.434 0.9998083 -4.8121637 -4.09636819</span></span>
+<span><span class="co">## 26  1.176966081 0.02975 8.250000e-03 5183.487 0.9997713 -1.0899614  0.09015518</span></span>
+<span><span class="co">## 27 -0.105992354 0.04950 1.048750e-02 5285.251 0.9998502 -5.8085761 -5.05316673</span></span>
+<span><span class="co">## 28  2.005347362 0.00575 1.875000e-03 5969.697 0.9997741 -0.7449918  0.35972656</span></span>
+<span><span class="co">## 29  1.263694749 0.00000 0.000000e+00 4880.687 1.0004621 -4.9807757 -4.23620112</span></span>
+<span><span class="co">## 30  1.171634393 0.07900 2.795000e-02 6089.297 1.0002226 -0.8289388  0.31817396</span></span>
+<span><span class="co">## 31 -0.555233161 0.00100 1.458333e-04 5201.128 1.0007540 -6.9998737 -5.99726745</span></span>
+<span><span class="co">## 32 -0.214104114 0.02475 5.861111e-03 4821.858 1.0000987 -1.5072310 -0.05315117</span></span>
+<span><span class="co">## 33 -0.801777262 0.00025 5.000000e-05 5180.739 1.0000514 -6.6115003 -5.74915654</span></span>
+<span><span class="co">## 34  0.660068180 0.60575 1.442411e-01 4736.741 0.9997784 -2.1773261 -0.76472162</span></span>
+<span><span class="co">## 35 -0.137213214 0.03600 8.434211e-03 5716.684 0.9997502 -5.2184630 -4.49704628</span></span>
+<span><span class="co">## 36 -0.906113082 0.00925 3.500000e-03 1384.493 0.9997505 -5.3059851 -2.30695108</span></span>
+<span><span class="co">## 37  0.432187056 0.83325 1.402750e-01 4554.582 1.0000910 -5.4313049 -4.68897371</span></span>
+<span><span class="co">## 38  0.430865052 0.09600 3.530882e-02 2963.244 1.0005540 -0.2090818  1.24515871</span></span>
+<span><span class="co">## 39  2.069329842 0.00000 0.000000e+00 4048.007 0.9998549 -4.3368143 -3.60226521</span></span>
+<span><span class="co">## 40  0.345148737 0.26250 8.123958e-02 4938.331 0.9997766  0.4014581  1.44174140</span></span>
+<span><span class="co">## 41  1.309017468 0.00000 0.000000e+00 4132.086 0.9999300 -4.6857458 -3.99460115</span></span>
+<span><span class="co">## 42  0.713865027 0.71650 1.816917e-01 5751.174 0.9997508 -0.8642572  0.23443387</span></span>
+<span><span class="co">## 43  0.444241740 0.82250 1.163793e-01 4573.197 0.9999790 -5.6205031 -4.82750664</span></span>
+<span><span class="co">## 44  0.331890957 0.20025 5.153750e-02 5172.832 0.9997618 -0.8072026  0.38472761</span></span>
+<span><span class="co">## 45  1.730698974 0.00000 0.000000e+00 4746.709 0.9998122 -4.5151181 -3.81885976</span></span>
+<span><span class="co">## 46  1.110625371 0.11650 4.371053e-02 5714.610 0.9997634 -0.5097405  0.64712618</span></span>
+<span><span class="co">## 47 -0.716122441 0.00000 0.000000e+00 5149.906 0.9998559 -6.6180268 -5.79934976</span></span>
+<span><span class="co">## 48  0.414158258 0.52500 1.094423e-01 4429.979 1.0001707 -3.2881690 -1.61301954</span></span>
+<span><span class="co">## 49 -0.989176484 0.00025 6.818182e-05 5010.314 0.9997721 -6.3834907 -5.55961619</span></span>
+<span><span class="co">## 50  1.732782165 0.58750 1.271481e-01 3161.303 0.9998433 -0.7404259  0.67084928</span></span>
+<span><span class="co">## 51 -0.027886495 0.07725 1.588636e-02 5951.650 0.9998771 -5.4642207 -4.78368339</span></span>
+<span><span class="co">## 52 -0.839088333 0.00750 2.678571e-03 2959.595 0.9997722 -2.7481525 -0.85274461</span></span>
+<span><span class="co">## 53 -0.266752626 0.01325 1.916667e-03 4385.516 0.9999012 -6.4805835 -5.57982757</span></span>
+<span><span class="co">## 54  1.876825541 0.05025 1.206818e-02 5441.997 0.9997558  0.1138983  1.33467141</span></span>
+<span><span class="co">## 55 -0.061690044 0.06250 1.296429e-02 5181.888 1.0007529 -5.3156490 -4.56630310</span></span>
+<span><span class="co">## 56  1.493507317 0.23300 7.335870e-02 4946.183 0.9997501 -1.2038788 -0.10420577</span></span>
+<span><span class="co">## 57  0.208181702 0.35850 4.666346e-02 6450.965 1.0001209 -5.3773828 -4.63211412</span></span>
+<span><span class="co">## 58  1.037696490 0.37075 9.282000e-02 6121.231 0.9997547 -1.7876819 -0.62686614</span></span>
+<span><span class="co">## 59 -0.174576021 0.03100 5.279412e-03 5971.429 0.9999214 -5.7839560 -5.04217520</span></span>
+<span><span class="co">## 60  1.510571157 0.11375 3.966667e-02 5364.769 0.9998656 -1.0900883 -0.02243816</span></span>
+<span><span class="co">##        v_upper   v_pH0        v_FDR  v_n_eff v_R_k_hat   count_data</span></span>
+<span><span class="co">## 1  -3.01048733 0.00000 0.000000e+00 5405.970 0.9997827 c("10x_6....</span></span>
+<span><span class="co">## 2   0.70332454 0.30725 1.454028e-01 5280.271 1.0008271 c("10x_6....</span></span>
+<span><span class="co">## 3  -3.50735756 0.00000 0.000000e+00 4706.265 0.9999309 c("10x_6....</span></span>
+<span><span class="co">## 4   0.23350312 0.11600 6.342500e-02 4135.689 1.0016358 c("10x_6....</span></span>
+<span><span class="co">## 5  -2.48746601 0.00000 0.000000e+00 6511.342 1.0000284 c("10x_6....</span></span>
+<span><span class="co">## 6   0.28475120 0.11425 5.758333e-02 5846.306 0.9998179 c("10x_6....</span></span>
+<span><span class="co">## 7  -3.78510950 0.00000 0.000000e+00 8230.550 0.9998557 c("10x_6....</span></span>
+<span><span class="co">## 8   3.41386558 0.10200 5.050000e-02 4678.054 0.9997592 c("10x_6....</span></span>
+<span><span class="co">## 9  -3.71165457 0.00000 0.000000e+00 5811.382 0.9999276 c("10x_6....</span></span>
+<span><span class="co">## 10  1.88779877 0.22400 9.978846e-02 5056.731 0.9999661 c("10x_6....</span></span>
+<span><span class="co">## 11 -4.22159806 0.00000 0.000000e+00 7499.542 0.9997553 c("10x_6....</span></span>
+<span><span class="co">## 12  1.86961255 0.40400 1.901250e-01 4293.683 1.0003468 c("10x_6....</span></span>
+<span><span class="co">## 13 -2.29197600 0.00000 0.000000e+00 5614.741 0.9997569 c("10x_6....</span></span>
+<span><span class="co">## 14  1.28570087 0.49375 2.227100e-01 5494.149 0.9999247 c("10x_6....</span></span>
+<span><span class="co">## 15 -4.00703622 0.00000 0.000000e+00 6680.029 0.9999418 c("10x_6....</span></span>
+<span><span class="co">## 16  1.76576014 0.28275 1.358824e-01 6098.240 0.9998828 c("10x_6....</span></span>
+<span><span class="co">## 17 -3.25062612 0.00000 0.000000e+00 6256.338 0.9999396 c("10x_6....</span></span>
+<span><span class="co">## 18  2.17677056 0.05150 2.725000e-02 4489.098 0.9997919 c("10x_6....</span></span>
+<span><span class="co">## 19 -0.55969364 0.00250 8.333333e-05 2888.486 1.0002796 c("10x_6....</span></span>
+<span><span class="co">## 20  2.71731831 0.38775 1.691625e-01 3670.630 0.9998255 c("10x_6....</span></span>
+<span><span class="co">## 21 -2.47566273 0.00000 0.000000e+00 1946.400 0.9999235 c("10x_6....</span></span>
+<span><span class="co">## 22 -1.39483849 0.00000 0.000000e+00 4120.017 0.9999409 c("10x_6....</span></span>
+<span><span class="co">## 23 -2.69211564 0.00000 0.000000e+00 5222.061 1.0001659 c("10x_6....</span></span>
+<span><span class="co">## 24  1.08519885 0.63200 2.850500e-01 4570.170 0.9997504 c("10x_6....</span></span>
+<span><span class="co">## 25 -3.23885233 0.00000 0.000000e+00 5386.724 0.9998602 c("10x_6....</span></span>
+<span><span class="co">## 26  1.35482378 0.57075 2.484537e-01 4408.620 1.0002001 c("10x_6....</span></span>
+<span><span class="co">## 27 -4.14099660 0.00000 0.000000e+00 5955.045 0.9997505 c("10x_6....</span></span>
+<span><span class="co">## 28  1.54608070 0.39550 1.799405e-01 5362.298 0.9997708 c("10x_6....</span></span>
+<span><span class="co">## 29 -3.39436670 0.00000 0.000000e+00 6340.854 0.9997655 c("10x_6....</span></span>
+<span><span class="co">## 30  1.51562883 0.41825 2.000435e-01 5790.636 0.9998216 c("10x_6....</span></span>
+<span><span class="co">## 31 -4.91705627 0.00000 0.000000e+00 5936.219 0.9997500 c("10x_6....</span></span>
+<span><span class="co">## 32  1.48471842 0.58425 2.604464e-01 4186.554 0.9997641 c("10x_6....</span></span>
+<span><span class="co">## 33 -4.71824503 0.00000 0.000000e+00 5496.560 0.9998029 c("10x_6....</span></span>
+<span><span class="co">## 34  0.67419138 0.21800 7.747727e-02 5678.165 0.9997966 c("10x_6....</span></span>
+<span><span class="co">## 35 -3.47530260 0.00000 0.000000e+00 4961.928 0.9998352 c("10x_6....</span></span>
+<span><span class="co">## 36  0.74851355 0.08100 3.620833e-02 2023.560 0.9997804 c("10x_6....</span></span>
+<span><span class="co">## 37 -3.76855412 0.00000 0.000000e+00 8275.180 0.9997572 c("10x_6....</span></span>
+<span><span class="co">## 38  2.77951443 0.08475 4.314286e-02 3251.531 0.9999561 c("10x_6....</span></span>
+<span><span class="co">## 39 -2.79058496 0.00000 0.000000e+00 6192.602 1.0000637 c("10x_6....</span></span>
+<span><span class="co">## 40  2.51157345 0.01100 5.500000e-03 4966.233 1.0003515 c("10x_6....</span></span>
+<span><span class="co">## 41 -3.20525198 0.00000 0.000000e+00 5644.163 0.9997506 c("10x_6....</span></span>
+<span><span class="co">## 42  1.41541638 0.47300 2.114167e-01 5103.358 0.9998318 c("10x_6....</span></span>
+<span><span class="co">## 43 -3.93216151 0.00000 0.000000e+00 7780.832 0.9998342 c("10x_6....</span></span>
+<span><span class="co">## 44  1.60594565 0.37825 1.576579e-01 4917.173 0.9997801 c("10x_6....</span></span>
+<span><span class="co">## 45 -3.05069950 0.00000 0.000000e+00 6441.518 0.9998068 c("10x_6....</span></span>
+<span><span class="co">## 46  1.74148272 0.22100 8.943750e-02 5093.766 0.9999016 c("10x_6....</span></span>
+<span><span class="co">## 47 -4.81445502 0.00000 0.000000e+00 5890.193 1.0001407 c("10x_6....</span></span>
+<span><span class="co">## 48 -0.02813604 0.04050 2.118750e-02 4787.327 0.9998790 c("10x_6....</span></span>
+<span><span class="co">## 49 -4.51697623 0.00000 0.000000e+00 6062.944 0.9999007 c("10x_6....</span></span>
+<span><span class="co">## 50  2.15289448 0.25025 1.267031e-01 3661.250 1.0002279 c("10x_6....</span></span>
+<span><span class="co">## 51 -3.89405217 0.00000 0.000000e+00 7194.935 0.9997502 c("10x_6....</span></span>
+<span><span class="co">## 52  1.05323194 0.23950 1.097679e-01 3299.054 0.9997674 c("10x_6....</span></span>
+<span><span class="co">## 53 -4.63511240 0.00000 0.000000e+00 5517.320 0.9997739 c("10x_6....</span></span>
+<span><span class="co">## 54  2.60861487 0.03325 1.475000e-02 4460.341 1.0003290 c("10x_6....</span></span>
+<span><span class="co">## 55 -3.68723823 0.00000 0.000000e+00 5460.132 0.9997709 c("10x_6....</span></span>
+<span><span class="co">## 56  1.04686690 0.56975 2.360577e-01 4417.057 0.9997529 c("10x_6....</span></span>
+<span><span class="co">## 57 -3.69057250 0.00000 0.000000e+00 6332.250 1.0000826 c("10x_6....</span></span>
+<span><span class="co">## 58  0.63739978 0.24025 1.184667e-01 5502.429 0.9997902 c("10x_6....</span></span>
+<span><span class="co">## 59 -4.11948753 0.00000 0.000000e+00 6009.870 0.9999123 c("10x_6....</span></span>
+<span><span class="co">## 60  1.14513568 0.62700 2.730862e-01 4748.726 1.0000599 c("10x_6....</span></span></code></pre>
 <p>A plot of group proportion, faceted by groups. The blue boxplots
 represent the posterior predictive check. If the model is likely to be
 descriptively adequate to the data, the blue box plot should roughly
@@ -609,189 +609,189 @@ with probability 1.</p>
 <p>Plot 1D significance plot</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##              cell_group   parameter factor     c_lower     c_effect     c_upper</span></span>
-<span><span class="co">## 1            B immature (Intercept)   &lt;NA&gt;  0.35370464  0.763460004  1.17186545</span></span>
-<span><span class="co">## 2            B immature typehealthy   type  0.87471347  1.436481537  1.97965640</span></span>
-<span><span class="co">## 3                 B mem (Intercept)   &lt;NA&gt; -1.49689897 -0.870120083 -0.15809899</span></span>
-<span><span class="co">## 4                 B mem typehealthy   type  1.02161966  1.856789106  2.65028296</span></span>
-<span><span class="co">## 5         CD4 cm S100A4 (Intercept)   &lt;NA&gt;  1.31251209  1.662232017  1.99479405</span></span>
-<span><span class="co">## 6         CD4 cm S100A4 typehealthy   type  0.47619411  0.941879028  1.40546311</span></span>
-<span><span class="co">## 7  CD4 cm high cytokine (Intercept)   &lt;NA&gt; -1.02845800 -0.536755609  0.03874644</span></span>
-<span><span class="co">## 8  CD4 cm high cytokine typehealthy   type -3.13856305 -1.271302375  1.10949548</span></span>
-<span><span class="co">## 9       CD4 cm ribosome (Intercept)   &lt;NA&gt; -0.04310344  0.310725932  0.68716171</span></span>
-<span><span class="co">## 10      CD4 cm ribosome typehealthy   type -1.79422701 -0.958335042  0.08263731</span></span>
-<span><span class="co">## 11 CD4 em high cytokine (Intercept)   &lt;NA&gt; -1.15651075 -0.706930916 -0.19644824</span></span>
-<span><span class="co">## 12 CD4 em high cytokine typehealthy   type -2.35636936 -1.285745532  0.16071045</span></span>
-<span><span class="co">## 13            CD4 naive (Intercept)   &lt;NA&gt;  0.75529844  1.211376123  1.65408389</span></span>
-<span><span class="co">## 14            CD4 naive typehealthy   type  0.45933282  1.143645449  1.78415566</span></span>
-<span><span class="co">## 15         CD4 ribosome (Intercept)   &lt;NA&gt; -0.31176958  0.047336219  0.43208717</span></span>
-<span><span class="co">## 16         CD4 ribosome typehealthy   type  1.48344593  2.070191207  2.65906631</span></span>
-<span><span class="co">## 17             CD8 em 1 (Intercept)   &lt;NA&gt;  0.30024844  0.682136094  1.08770406</span></span>
-<span><span class="co">## 18             CD8 em 1 typehealthy   type -0.02437547  0.784856341  1.63454144</span></span>
-<span><span class="co">## 19             CD8 em 2 (Intercept)   &lt;NA&gt; -0.89990276  0.144527244  1.22823002</span></span>
-<span><span class="co">## 20             CD8 em 2 typehealthy   type -3.51094148 -1.148993053  1.24398058</span></span>
-<span><span class="co">## 21             CD8 em 3 (Intercept)   &lt;NA&gt; -1.37069760 -0.662495137  0.20344579</span></span>
-<span><span class="co">## 22             CD8 em 3 typehealthy   type -1.76505842 -0.811748532  0.02664435</span></span>
-<span><span class="co">## 23            CD8 naive (Intercept)   &lt;NA&gt;  0.60739607  1.019526673  1.41511499</span></span>
-<span><span class="co">## 24            CD8 naive typehealthy   type -0.70392706  0.020223201  0.76762159</span></span>
-<span><span class="co">## 25     CD8 transitional (Intercept)   &lt;NA&gt;  0.89903078  1.212375696  1.53631895</span></span>
-<span><span class="co">## 26     CD8 transitional typehealthy   type  0.18421812  0.681983483  1.16360066</span></span>
-<span><span class="co">## 27                 MAIT (Intercept)   &lt;NA&gt; -1.04645873 -0.606085542 -0.10647821</span></span>
-<span><span class="co">## 28                 MAIT typehealthy   type  0.49565517  1.217759988  2.02081751</span></span>
-<span><span class="co">## 29               Mac M1 (Intercept)   &lt;NA&gt;  0.61370088  0.948985055  1.27302046</span></span>
-<span><span class="co">## 30               Mac M1 typehealthy   type  0.03163929  0.598097539  1.17285295</span></span>
-<span><span class="co">## 31        Mac M1 FCER1A (Intercept)   &lt;NA&gt; -1.36048342 -0.992363625 -0.57794866</span></span>
-<span><span class="co">## 32        Mac M1 FCER1A typehealthy   type -1.76285354 -1.070050465 -0.21694255</span></span>
-<span><span class="co">## 33                 Mono (Intercept)   &lt;NA&gt; -1.82485288 -1.340744871 -0.79016795</span></span>
-<span><span class="co">## 34                 Mono typehealthy   type -0.85852486 -0.093166875  0.68664477</span></span>
-<span><span class="co">## 35          Mono NKG7 1 (Intercept)   &lt;NA&gt; -1.48107322 -0.863135308 -0.16403691</span></span>
-<span><span class="co">## 36          Mono NKG7 1 typehealthy   type -3.95151897 -2.884097439 -0.98297814</span></span>
-<span><span class="co">## 37          Mono NKG7 2 (Intercept)   &lt;NA&gt; -0.41931881 -0.004530066  0.43861279</span></span>
-<span><span class="co">## 38          Mono NKG7 2 typehealthy   type -2.48720508 -1.269915134  0.41119531</span></span>
-<span><span class="co">## 39  Mono classic inflam (Intercept)   &lt;NA&gt;  1.48563241  1.784144153  2.04832967</span></span>
-<span><span class="co">## 40  Mono classic inflam typehealthy   type -1.23898878 -0.452326728  0.32961922</span></span>
-<span><span class="co">## 41     Mono non-classic (Intercept)   &lt;NA&gt;  0.62088511  0.963029534  1.30700736</span></span>
-<span><span class="co">## 42     Mono non-classic typehealthy   type -0.64601183  0.016473656  0.70562317</span></span>
-<span><span class="co">## 43    Myeloid migratory (Intercept)   &lt;NA&gt; -0.35188909  0.024639936  0.43784827</span></span>
-<span><span class="co">## 44    Myeloid migratory typehealthy   type -1.34083073 -0.550983250  0.33135401</span></span>
-<span><span class="co">## 45                   NK (Intercept)   &lt;NA&gt;  1.13375102  1.428726193  1.71708301</span></span>
-<span><span class="co">## 46                   NK typehealthy   type -0.07192826  0.549754085  1.13794273</span></span>
-<span><span class="co">## 47           NK cycling (Intercept)   &lt;NA&gt; -1.63500014 -1.221809650 -0.71436037</span></span>
-<span><span class="co">## 48           NK cycling typehealthy   type -0.80155599 -0.176357768  0.39709486</span></span>
-<span><span class="co">## 49     NK high cytokine (Intercept)   &lt;NA&gt; -2.20962730 -1.639497335 -0.95127533</span></span>
-<span><span class="co">## 50     NK high cytokine typehealthy   type -1.25162286  0.024999490  1.64294018</span></span>
-<span><span class="co">## 51                 Stem (Intercept)   &lt;NA&gt; -1.06794032 -0.578945977 -0.01420014</span></span>
-<span><span class="co">## 52                 Stem typehealthy   type -3.21370758 -2.241852458 -0.69132232</span></span>
-<span><span class="co">## 53                T gd1 (Intercept)   &lt;NA&gt; -1.06224854 -0.690788908 -0.26139615</span></span>
-<span><span class="co">## 54                T gd1 typehealthy   type  0.05625073  0.925656779  1.79900531</span></span>
-<span><span class="co">## 55                T gd2 (Intercept)   &lt;NA&gt; -1.23888856 -0.677417700 -0.05538540</span></span>
-<span><span class="co">## 56                T gd2 typehealthy   type -0.39121212  0.520268976  1.51386391</span></span>
-<span><span class="co">## 57                 cDC2 (Intercept)   &lt;NA&gt; -0.76255964 -0.296009895  0.21563787</span></span>
-<span><span class="co">## 58                 cDC2 typehealthy   type -0.41657521  0.319441566  1.04301172</span></span>
-<span><span class="co">## 59                  pDC (Intercept)   &lt;NA&gt; -1.12216091 -0.661625044 -0.14212998</span></span>
-<span><span class="co">## 60                  pDC typehealthy   type -0.10110179  0.668069783  1.48572595</span></span>
-<span><span class="co">##      c_pH0        c_FDR  c_n_eff c_R_k_hat      v_lower    v_effect     v_upper</span></span>
-<span><span class="co">## 1  0.00275 3.653846e-04 6739.770 0.9997627 -4.504917301 -3.83155765 -3.04564855</span></span>
-<span><span class="co">## 2  0.00000 0.000000e+00 6026.144 0.9997625 -1.706327492 -0.50547712  0.68968015</span></span>
-<span><span class="co">## 3  0.03175 6.263889e-03 2931.797 1.0017854 -5.312989282 -4.55535232 -3.57629943</span></span>
-<span><span class="co">## 4  0.00000 0.000000e+00 2982.340 1.0015682 -2.116555657 -0.96592940  0.31263316</span></span>
-<span><span class="co">## 5  0.00000 0.000000e+00 6527.459 0.9997589 -3.835558140 -3.20606118 -2.41887431</span></span>
-<span><span class="co">## 6  0.00075 1.875000e-04 5249.814 1.0001890 -2.080239046 -0.93852342  0.33978478</span></span>
-<span><span class="co">## 7  0.11650 2.011957e-02 4246.302 1.0002336 -5.450828922 -4.69955402 -3.76632689</span></span>
-<span><span class="co">## 8  0.18600 4.947500e-02 2887.578 0.9999061 -0.453788466  1.51151528  3.45637003</span></span>
-<span><span class="co">## 9  0.26125 3.403000e-02 4685.211 1.0006961 -5.335452753 -4.59523513 -3.77786092</span></span>
-<span><span class="co">## 10 0.06925 2.025000e-02 4915.514 1.0000046 -0.500268059  0.65035206  1.90319502</span></span>
-<span><span class="co">## 11 0.02550 3.140625e-03 4753.413 0.9998728 -5.928468385 -5.14747247 -4.21360282</span></span>
-<span><span class="co">## 12 0.06400 1.616667e-02 2206.154 0.9997629 -1.032338043  0.36222505  1.82452748</span></span>
-<span><span class="co">## 13 0.00000 0.000000e+00 5099.100 0.9997508 -3.689858349 -3.06377636 -2.29020572</span></span>
-<span><span class="co">## 14 0.00375 1.333333e-03 4948.716 0.9997704 -0.841263621  0.20582122  1.29806749</span></span>
-<span><span class="co">## 15 0.81025 9.114286e-02 4977.660 0.9997937 -5.665267507 -4.90554639 -4.00571725</span></span>
-<span><span class="co">## 16 0.00000 0.000000e+00 4664.292 0.9997535 -0.636270374  0.56638825  1.76876271</span></span>
-<span><span class="co">## 17 0.00675 8.214286e-04 4042.689 0.9997914 -4.774640102 -4.05008361 -3.22501104</span></span>
-<span><span class="co">## 18 0.07850 2.776667e-02 4931.866 0.9998127  0.009542413  1.07331054  2.17092858</span></span>
-<span><span class="co">## 19 0.54100 6.450926e-02 3713.751 0.9999371 -3.690424447 -1.99276971 -0.64140139</span></span>
-<span><span class="co">## 20 0.22775 6.446591e-02 3908.697 0.9998081 -1.576815484  0.49756055  2.67596303</span></span>
-<span><span class="co">## 21 0.12675 2.456250e-02 2378.026 1.0003387 -4.718151511 -3.94774755 -2.72908886</span></span>
-<span><span class="co">## 22 0.07475 2.414286e-02 2244.674 1.0007542 -4.137095634 -2.71548045 -1.31976452</span></span>
-<span><span class="co">## 23 0.00025 3.125000e-05 6417.407 1.0000153 -4.193332595 -3.51171383 -2.74177218</span></span>
-<span><span class="co">## 24 0.69775 1.626724e-01 4571.535 0.9999438 -0.978141420  0.03873741  1.13354697</span></span>
-<span><span class="co">## 25 0.00000 0.000000e+00 6311.111 0.9997868 -4.804348419 -4.07968695 -3.25079840</span></span>
-<span><span class="co">## 26 0.03050 7.975000e-03 5257.652 0.9998086 -1.126364971  0.05701316  1.35704220</span></span>
-<span><span class="co">## 27 0.05550 1.036250e-02 4450.025 0.9999079 -5.840476305 -5.06462478 -4.16972983</span></span>
-<span><span class="co">## 28 0.00350 8.500000e-04 4018.422 0.9997891 -0.701659291  0.35087122  1.50589249</span></span>
-<span><span class="co">## 29 0.00025 5.555556e-05 6341.931 0.9998259 -4.995358836 -4.23156022 -3.41011068</span></span>
-<span><span class="co">## 30 0.07875 3.095312e-02 5538.084 0.9999294 -0.790404748  0.30770126  1.45700654</span></span>
-<span><span class="co">## 31 0.00100 1.666667e-04 4569.936 0.9997733 -7.013710036 -5.97949166 -4.95658873</span></span>
-<span><span class="co">## 32 0.02475 5.472222e-03 3706.687 0.9999744 -1.480698225 -0.05339736  1.46104233</span></span>
-<span><span class="co">## 33 0.00025 7.500000e-05 4276.760 0.9997806 -6.609328046 -5.73266773 -4.68120570</span></span>
-<span><span class="co">## 34 0.60400 1.435625e-01 4064.975 0.9999800 -2.179414270 -0.76696692  0.64964284</span></span>
-<span><span class="co">## 35 0.03075 4.764706e-03 4938.013 0.9997614 -5.221956580 -4.50209531 -3.46362933</span></span>
-<span><span class="co">## 36 0.00825 2.321429e-03 1127.803 1.0010691 -5.213645286 -2.35732890  0.65141246</span></span>
-<span><span class="co">## 37 0.82625 1.399167e-01 4285.495 0.9997504 -5.432757935 -4.67120111 -3.79612912</span></span>
-<span><span class="co">## 38 0.08525 3.414706e-02 2890.659 0.9998978 -0.179925351  1.21652184  2.75657883</span></span>
-<span><span class="co">## 39 0.00000 0.000000e+00 4160.241 0.9999151 -4.337597730 -3.58508359 -2.75915407</span></span>
-<span><span class="co">## 40 0.25450 7.967708e-02 4224.403 1.0007683  0.379638790  1.43840955  2.54588302</span></span>
-<span><span class="co">## 41 0.00000 0.000000e+00 4506.984 0.9998522 -4.707988925 -4.01170754 -3.19374492</span></span>
-<span><span class="co">## 42 0.71825 1.811917e-01 5017.671 0.9997626 -0.942382482  0.25716378  1.53956577</span></span>
-<span><span class="co">## 43 0.81925 1.162500e-01 4646.834 1.0002190 -5.630249797 -4.82870300 -3.94013199</span></span>
-<span><span class="co">## 44 0.20100 5.669048e-02 4805.558 1.0000049 -0.800504878  0.37623298  1.63066184</span></span>
-<span><span class="co">## 45 0.00000 0.000000e+00 4906.606 1.0000952 -4.519842391 -3.82206623 -3.02587092</span></span>
-<span><span class="co">## 46 0.11300 4.228947e-02 5552.671 1.0002931 -0.460342193  0.64842955  1.81354399</span></span>
-<span><span class="co">## 47 0.00025 9.090909e-05 6451.161 1.0003714 -6.625151334 -5.78897903 -4.82954141</span></span>
-<span><span class="co">## 48 0.53425 1.084712e-01 5062.524 0.9999376 -3.284804187 -1.61337708 -0.01019548</span></span>
-<span><span class="co">## 49 0.00000 0.000000e+00 4808.097 0.9998384 -6.405496664 -5.57063186 -4.50341496</span></span>
-<span><span class="co">## 50 0.59550 1.265093e-01 3086.533 0.9998048 -0.668248859  0.68674938  2.20290726</span></span>
-<span><span class="co">## 51 0.07875 1.573864e-02 4815.317 0.9998607 -5.480245330 -4.76639787 -3.84671885</span></span>
-<span><span class="co">## 52 0.00825 3.062500e-03 1514.775 0.9997602 -2.806209188 -0.89312533  1.00135807</span></span>
-<span><span class="co">## 53 0.01325 1.650000e-03 4017.456 0.9998941 -6.543161502 -5.57728466 -4.58219143</span></span>
-<span><span class="co">## 54 0.05025 1.181818e-02 4345.841 0.9997513  0.123993442  1.32710321  2.64890955</span></span>
-<span><span class="co">## 55 0.06025 1.273810e-02 4515.636 0.9997586 -5.308134117 -4.57678417 -3.65960666</span></span>
-<span><span class="co">## 56 0.23950 7.207609e-02 4247.771 0.9997781 -1.163450219 -0.09178041  1.05795361</span></span>
-<span><span class="co">## 57 0.35000 4.618269e-02 5513.182 0.9997522 -5.402349498 -4.61245343 -3.67471276</span></span>
-<span><span class="co">## 58 0.37375 9.144000e-02 4137.917 0.9997693 -1.816351082 -0.64296512  0.56537276</span></span>
-<span><span class="co">## 59 0.03900 7.986842e-03 4468.502 0.9998052 -5.805435111 -5.03729862 -4.12743625</span></span>
-<span><span class="co">## 60 0.11000 3.836111e-02 4405.850 0.9998114 -1.133857837 -0.01268979  1.18554188</span></span>
-<span><span class="co">##      v_pH0        v_FDR  v_n_eff v_R_k_hat   count_data</span></span>
-<span><span class="co">## 1  0.00000 0.000000e+00 5624.746 0.9997588 c("10x_6....</span></span>
-<span><span class="co">## 2  0.30675 1.428889e-01 5081.125 1.0002312 c("10x_6....</span></span>
-<span><span class="co">## 3  0.00000 0.000000e+00 2560.733 1.0025398 c("10x_6....</span></span>
-<span><span class="co">## 4  0.12875 6.475000e-02 4047.763 1.0026331 c("10x_6....</span></span>
-<span><span class="co">## 5  0.00000 0.000000e+00 4924.585 0.9998506 c("10x_6....</span></span>
-<span><span class="co">## 6  0.12250 5.763889e-02 5247.231 0.9998402 c("10x_6....</span></span>
-<span><span class="co">## 7  0.00000 0.000000e+00 5076.901 0.9997514 c("10x_6....</span></span>
-<span><span class="co">## 8  0.08825 4.953125e-02 3209.491 1.0003624 c("10x_6....</span></span>
-<span><span class="co">## 9  0.00000 0.000000e+00 7310.915 0.9997545 c("10x_6....</span></span>
-<span><span class="co">## 10 0.22300 1.082143e-01 4498.728 0.9999962 c("10x_6....</span></span>
-<span><span class="co">## 11 0.00000 0.000000e+00 7399.105 1.0000018 c("10x_6....</span></span>
-<span><span class="co">## 12 0.40825 1.887045e-01 3435.956 0.9997546 c("10x_6....</span></span>
-<span><span class="co">## 13 0.00000 0.000000e+00 3493.326 1.0001291 c("10x_6....</span></span>
-<span><span class="co">## 14 0.49575 2.211900e-01 4541.731 0.9997572 c("10x_6....</span></span>
-<span><span class="co">## 15 0.00000 0.000000e+00 4569.049 0.9997771 c("10x_6....</span></span>
-<span><span class="co">## 16 0.26575 1.332500e-01 5222.426 0.9999239 c("10x_6....</span></span>
-<span><span class="co">## 17 0.00000 0.000000e+00 5200.442 0.9997650 c("10x_6....</span></span>
-<span><span class="co">## 18 0.05625 2.875000e-02 4397.033 0.9997958 c("10x_6....</span></span>
-<span><span class="co">## 19 0.00250 8.333333e-05 2665.840 0.9997897 c("10x_6....</span></span>
-<span><span class="co">## 20 0.39000 1.673750e-01 3602.841 0.9997732 c("10x_6....</span></span>
-<span><span class="co">## 21 0.00000 0.000000e+00 1699.168 1.0002559 c("10x_6....</span></span>
-<span><span class="co">## 22 0.00000 0.000000e+00 4023.696 0.9999078 c("10x_6....</span></span>
-<span><span class="co">## 23 0.00000 0.000000e+00 5334.250 0.9998258 c("10x_6....</span></span>
-<span><span class="co">## 24 0.61400 2.720000e-01 5458.571 0.9997817 c("10x_6....</span></span>
-<span><span class="co">## 25 0.00000 0.000000e+00 4207.494 0.9997545 c("10x_6....</span></span>
-<span><span class="co">## 26 0.58850 2.597857e-01 4421.046 0.9997917 c("10x_6....</span></span>
-<span><span class="co">## 27 0.00000 0.000000e+00 3889.708 1.0007656 c("10x_6....</span></span>
-<span><span class="co">## 28 0.39575 1.782500e-01 4670.695 0.9997519 c("10x_6....</span></span>
-<span><span class="co">## 29 0.00000 0.000000e+00 5050.774 1.0002137 c("10x_6....</span></span>
-<span><span class="co">## 30 0.42525 1.989891e-01 4786.491 0.9999003 c("10x_6....</span></span>
-<span><span class="co">## 31 0.00000 0.000000e+00 3585.571 1.0000161 c("10x_6....</span></span>
-<span><span class="co">## 32 0.57975 2.476111e-01 3328.567 0.9997911 c("10x_6....</span></span>
-<span><span class="co">## 33 0.00000 0.000000e+00 4012.109 0.9997500 c("10x_6....</span></span>
-<span><span class="co">## 34 0.20825 7.779545e-02 3862.369 1.0000701 c("10x_6....</span></span>
-<span><span class="co">## 35 0.00000 0.000000e+00 4170.364 0.9997854 c("10x_6....</span></span>
-<span><span class="co">## 36 0.07625 3.666667e-02 1742.585 1.0009049 c("10x_6....</span></span>
-<span><span class="co">## 37 0.00000 0.000000e+00 6854.748 0.9997506 c("10x_6....</span></span>
-<span><span class="co">## 38 0.08800 4.400000e-02 3368.115 0.9997500 c("10x_6....</span></span>
-<span><span class="co">## 39 0.00000 0.000000e+00 4866.114 0.9998549 c("10x_6....</span></span>
-<span><span class="co">## 40 0.01250 6.250000e-03 4291.732 0.9997773 c("10x_6....</span></span>
-<span><span class="co">## 41 0.00000 0.000000e+00 4667.434 0.9997565 c("10x_6....</span></span>
-<span><span class="co">## 42 0.45725 2.097500e-01 5022.936 1.0001110 c("10x_6....</span></span>
-<span><span class="co">## 43 0.00000 0.000000e+00 6129.014 1.0002251 c("10x_6....</span></span>
-<span><span class="co">## 44 0.38550 1.556579e-01 3621.652 1.0004129 c("10x_6....</span></span>
-<span><span class="co">## 45 0.00000 0.000000e+00 5142.735 0.9997562 c("10x_6....</span></span>
-<span><span class="co">## 46 0.21425 8.916667e-02 4613.079 0.9998559 c("10x_6....</span></span>
-<span><span class="co">## 47 0.00000 0.000000e+00 4643.736 0.9999873 c("10x_6....</span></span>
-<span><span class="co">## 48 0.04150 2.187500e-02 4619.455 0.9997577 c("10x_6....</span></span>
-<span><span class="co">## 49 0.00000 0.000000e+00 5152.448 0.9997614 c("10x_6....</span></span>
-<span><span class="co">## 50 0.24975 1.249688e-01 3435.986 1.0000098 c("10x_6....</span></span>
-<span><span class="co">## 51 0.00000 0.000000e+00 6160.038 0.9997580 c("10x_6....</span></span>
-<span><span class="co">## 52 0.22200 9.938462e-02 2012.329 0.9998203 c("10x_6....</span></span>
-<span><span class="co">## 53 0.00000 0.000000e+00 5653.878 0.9997645 c("10x_6....</span></span>
-<span><span class="co">## 54 0.03350 1.533333e-02 4412.663 0.9998412 c("10x_6....</span></span>
-<span><span class="co">## 55 0.00000 0.000000e+00 4144.817 0.9997500 c("10x_6....</span></span>
-<span><span class="co">## 56 0.57600 2.348365e-01 3278.052 0.9997549 c("10x_6....</span></span>
-<span><span class="co">## 57 0.00000 0.000000e+00 4502.813 0.9997740 c("10x_6....</span></span>
-<span><span class="co">## 58 0.23475 1.166500e-01 4668.850 0.9999940 c("10x_6....</span></span>
-<span><span class="co">## 59 0.00000 0.000000e+00 4014.868 0.9997535 c("10x_6....</span></span>
-<span><span class="co">## 60 0.62500 2.837667e-01 4288.710 0.9997561 c("10x_6....</span></span></code></pre>
+<pre><code><span><span class="co">##              cell_group   parameter factor     c_lower     c_effect</span></span>
+<span><span class="co">## 1            B immature (Intercept)   &lt;NA&gt;  0.33696384  0.762986527</span></span>
+<span><span class="co">## 2            B immature typehealthy   type  0.87494081  1.437474722</span></span>
+<span><span class="co">## 3                 B mem (Intercept)   &lt;NA&gt; -1.50342643 -0.864802827</span></span>
+<span><span class="co">## 4                 B mem typehealthy   type  0.98419537  1.852989061</span></span>
+<span><span class="co">## 5         CD4 cm S100A4 (Intercept)   &lt;NA&gt;  1.32952450  1.659060365</span></span>
+<span><span class="co">## 6         CD4 cm S100A4 typehealthy   type  0.48927412  0.938054826</span></span>
+<span><span class="co">## 7  CD4 cm high cytokine (Intercept)   &lt;NA&gt; -1.03713614 -0.538330036</span></span>
+<span><span class="co">## 8  CD4 cm high cytokine typehealthy   type -3.02996036 -1.240883818</span></span>
+<span><span class="co">## 9       CD4 cm ribosome (Intercept)   &lt;NA&gt; -0.07412897  0.310385496</span></span>
+<span><span class="co">## 10      CD4 cm ribosome typehealthy   type -1.80762275 -0.971902121</span></span>
+<span><span class="co">## 11 CD4 em high cytokine (Intercept)   &lt;NA&gt; -1.18452385 -0.714947147</span></span>
+<span><span class="co">## 12 CD4 em high cytokine typehealthy   type -2.35269881 -1.269121955</span></span>
+<span><span class="co">## 13            CD4 naive (Intercept)   &lt;NA&gt;  0.76815602  1.210603156</span></span>
+<span><span class="co">## 14            CD4 naive typehealthy   type  0.46226975  1.141430509</span></span>
+<span><span class="co">## 15         CD4 ribosome (Intercept)   &lt;NA&gt; -0.31684624  0.046030534</span></span>
+<span><span class="co">## 16         CD4 ribosome typehealthy   type  1.47089804  2.061759340</span></span>
+<span><span class="co">## 17             CD8 em 1 (Intercept)   &lt;NA&gt;  0.28057644  0.678383007</span></span>
+<span><span class="co">## 18             CD8 em 1 typehealthy   type -0.05129746  0.787818734</span></span>
+<span><span class="co">## 19             CD8 em 2 (Intercept)   &lt;NA&gt; -0.91535524  0.138018022</span></span>
+<span><span class="co">## 20             CD8 em 2 typehealthy   type -3.59153684 -1.203006134</span></span>
+<span><span class="co">## 21             CD8 em 3 (Intercept)   &lt;NA&gt; -1.33490194 -0.662920097</span></span>
+<span><span class="co">## 22             CD8 em 3 typehealthy   type -1.77432815 -0.836140719</span></span>
+<span><span class="co">## 23            CD8 naive (Intercept)   &lt;NA&gt;  0.58791193  1.018066580</span></span>
+<span><span class="co">## 24            CD8 naive typehealthy   type -0.70535902  0.013705425</span></span>
+<span><span class="co">## 25     CD8 transitional (Intercept)   &lt;NA&gt;  0.90134353  1.211250190</span></span>
+<span><span class="co">## 26     CD8 transitional typehealthy   type  0.17864283  0.690089340</span></span>
+<span><span class="co">## 27                 MAIT (Intercept)   &lt;NA&gt; -1.05485874 -0.599145302</span></span>
+<span><span class="co">## 28                 MAIT typehealthy   type  0.43768981  1.216097784</span></span>
+<span><span class="co">## 29               Mac M1 (Intercept)   &lt;NA&gt;  0.62776705  0.951918483</span></span>
+<span><span class="co">## 30               Mac M1 typehealthy   type  0.04360521  0.598153744</span></span>
+<span><span class="co">## 31        Mac M1 FCER1A (Intercept)   &lt;NA&gt; -1.34257414 -0.987711669</span></span>
+<span><span class="co">## 32        Mac M1 FCER1A typehealthy   type -1.81062700 -1.066506933</span></span>
+<span><span class="co">## 33                 Mono (Intercept)   &lt;NA&gt; -1.83595954 -1.352590228</span></span>
+<span><span class="co">## 34                 Mono typehealthy   type -0.83060005 -0.103184073</span></span>
+<span><span class="co">## 35          Mono NKG7 1 (Intercept)   &lt;NA&gt; -1.46099272 -0.855053468</span></span>
+<span><span class="co">## 36          Mono NKG7 1 typehealthy   type -4.00625000 -2.895241063</span></span>
+<span><span class="co">## 37          Mono NKG7 2 (Intercept)   &lt;NA&gt; -0.41918305 -0.006471581</span></span>
+<span><span class="co">## 38          Mono NKG7 2 typehealthy   type -2.44509523 -1.267994344</span></span>
+<span><span class="co">## 39  Mono classic inflam (Intercept)   &lt;NA&gt;  1.49147917  1.782247044</span></span>
+<span><span class="co">## 40  Mono classic inflam typehealthy   type -1.24629981 -0.460701162</span></span>
+<span><span class="co">## 41     Mono non-classic (Intercept)   &lt;NA&gt;  0.58958650  0.958916153</span></span>
+<span><span class="co">## 42     Mono non-classic typehealthy   type -0.62035882  0.019735605</span></span>
+<span><span class="co">## 43    Myeloid migratory (Intercept)   &lt;NA&gt; -0.36458931  0.019072070</span></span>
+<span><span class="co">## 44    Myeloid migratory typehealthy   type -1.33521338 -0.546813497</span></span>
+<span><span class="co">## 45                   NK (Intercept)   &lt;NA&gt;  1.11408103  1.428866928</span></span>
+<span><span class="co">## 46                   NK typehealthy   type -0.04501325  0.544433568</span></span>
+<span><span class="co">## 47           NK cycling (Intercept)   &lt;NA&gt; -1.66494775 -1.221346786</span></span>
+<span><span class="co">## 48           NK cycling typehealthy   type -0.78424129 -0.181786954</span></span>
+<span><span class="co">## 49     NK high cytokine (Intercept)   &lt;NA&gt; -2.22558119 -1.631653627</span></span>
+<span><span class="co">## 50     NK high cytokine typehealthy   type -1.22332016  0.044762991</span></span>
+<span><span class="co">## 51                 Stem (Intercept)   &lt;NA&gt; -1.08641905 -0.574183063</span></span>
+<span><span class="co">## 52                 Stem typehealthy   type -3.20282438 -2.246175478</span></span>
+<span><span class="co">## 53                T gd1 (Intercept)   &lt;NA&gt; -1.08078278 -0.687505187</span></span>
+<span><span class="co">## 54                T gd1 typehealthy   type  0.04899087  0.922976652</span></span>
+<span><span class="co">## 55                T gd2 (Intercept)   &lt;NA&gt; -1.23828996 -0.675287313</span></span>
+<span><span class="co">## 56                T gd2 typehealthy   type -0.38596451  0.537321450</span></span>
+<span><span class="co">## 57                 cDC2 (Intercept)   &lt;NA&gt; -0.74747832 -0.285813916</span></span>
+<span><span class="co">## 58                 cDC2 typehealthy   type -0.40421176  0.313515232</span></span>
+<span><span class="co">## 59                  pDC (Intercept)   &lt;NA&gt; -1.14969877 -0.667328445</span></span>
+<span><span class="co">## 60                  pDC typehealthy   type -0.09221065  0.665596582</span></span>
+<span><span class="co">##         c_upper   c_pH0        c_FDR  c_n_eff c_R_k_hat    v_lower    v_effect</span></span>
+<span><span class="co">## 1   1.201485630 0.00525 5.384615e-04 6137.876 0.9997507 -4.4613985 -3.83171236</span></span>
+<span><span class="co">## 2   1.998561025 0.00000 0.000000e+00 5163.261 0.9997638 -1.6806452 -0.50744043</span></span>
+<span><span class="co">## 3  -0.125148592 0.03450 6.902778e-03 5660.404 0.9997523 -5.2960821 -4.55578986</span></span>
+<span><span class="co">## 4   2.646289402 0.00025 8.333333e-05 5356.010 0.9999098 -2.1176428 -0.94523075</span></span>
+<span><span class="co">## 5   1.986204901 0.00000 0.000000e+00 6289.438 0.9997552 -3.8485490 -3.20004457</span></span>
+<span><span class="co">## 6   1.380564403 0.00075 2.500000e-04 5004.949 0.9998893 -2.0516884 -0.91696835</span></span>
+<span><span class="co">## 7   0.008087746 0.10950 1.995652e-02 4581.621 0.9997696 -5.4682278 -4.70583557</span></span>
+<span><span class="co">## 8   1.108969048 0.20125 5.866667e-02 4150.590 0.9997509 -0.4725566  1.50322069</span></span>
+<span><span class="co">## 9   0.703545223 0.27125 3.419000e-02 4302.716 0.9999674 -5.3460603 -4.60435559</span></span>
+<span><span class="co">## 10  0.084711294 0.07025 2.055769e-02 4445.058 0.9999596 -0.5425334  0.65111714</span></span>
+<span><span class="co">## 11 -0.179534523 0.03000 3.671875e-03 4438.782 0.9997850 -5.9443019 -5.14786626</span></span>
+<span><span class="co">## 12  0.182661336 0.06425 1.641667e-02 4423.338 0.9997519 -1.0908355  0.38044355</span></span>
+<span><span class="co">## 13  1.659341379 0.00000 0.000000e+00 6950.150 1.0003422 -3.6814607 -3.05907110</span></span>
+<span><span class="co">## 14  1.782169318 0.00450 1.100000e-03 6235.141 1.0001450 -0.8291501  0.20779583</span></span>
+<span><span class="co">## 15  0.429194779 0.79975 9.116071e-02 5807.433 0.9997675 -5.6817101 -4.90023764</span></span>
+<span><span class="co">## 16  2.629437573 0.00000 0.000000e+00 5157.964 0.9997677 -0.6308049  0.57338972</span></span>
+<span><span class="co">## 17  1.076485963 0.00850 1.107143e-03 3972.423 1.0011635 -4.7599198 -4.06586603</span></span>
+<span><span class="co">## 18  1.602502872 0.08500 3.151562e-02 5814.569 1.0001386  0.0386454  1.09505926</span></span>
+<span><span class="co">## 19  1.247508399 0.53950 6.491667e-02 3884.908 1.0000256 -3.6749605 -2.04188126</span></span>
+<span><span class="co">## 20  1.309167302 0.22225 6.610227e-02 4497.895 0.9998291 -1.5192467  0.51080760</span></span>
+<span><span class="co">## 21  0.196107242 0.12450 2.431250e-02 3122.086 0.9997535 -4.6866174 -3.94670652</span></span>
+<span><span class="co">## 22  0.022469775 0.07300 2.430357e-02 3156.458 0.9997509 -4.1415151 -2.72048785</span></span>
+<span><span class="co">## 23  1.437107585 0.00025 2.777778e-05 6144.773 0.9998902 -4.1556781 -3.53155765</span></span>
+<span><span class="co">## 24  0.768192377 0.69550 1.632500e-01 4952.167 0.9997627 -0.9988398  0.02600727</span></span>
+<span><span class="co">## 25  1.514003835 0.00000 0.000000e+00 5868.434 0.9998083 -4.8121637 -4.09636819</span></span>
+<span><span class="co">## 26  1.176966081 0.02975 8.250000e-03 5183.487 0.9997713 -1.0899614  0.09015518</span></span>
+<span><span class="co">## 27 -0.105992354 0.04950 1.048750e-02 5285.251 0.9998502 -5.8085761 -5.05316673</span></span>
+<span><span class="co">## 28  2.005347362 0.00575 1.875000e-03 5969.697 0.9997741 -0.7449918  0.35972656</span></span>
+<span><span class="co">## 29  1.263694749 0.00000 0.000000e+00 4880.687 1.0004621 -4.9807757 -4.23620112</span></span>
+<span><span class="co">## 30  1.171634393 0.07900 2.795000e-02 6089.297 1.0002226 -0.8289388  0.31817396</span></span>
+<span><span class="co">## 31 -0.555233161 0.00100 1.458333e-04 5201.128 1.0007540 -6.9998737 -5.99726745</span></span>
+<span><span class="co">## 32 -0.214104114 0.02475 5.861111e-03 4821.858 1.0000987 -1.5072310 -0.05315117</span></span>
+<span><span class="co">## 33 -0.801777262 0.00025 5.000000e-05 5180.739 1.0000514 -6.6115003 -5.74915654</span></span>
+<span><span class="co">## 34  0.660068180 0.60575 1.442411e-01 4736.741 0.9997784 -2.1773261 -0.76472162</span></span>
+<span><span class="co">## 35 -0.137213214 0.03600 8.434211e-03 5716.684 0.9997502 -5.2184630 -4.49704628</span></span>
+<span><span class="co">## 36 -0.906113082 0.00925 3.500000e-03 1384.493 0.9997505 -5.3059851 -2.30695108</span></span>
+<span><span class="co">## 37  0.432187056 0.83325 1.402750e-01 4554.582 1.0000910 -5.4313049 -4.68897371</span></span>
+<span><span class="co">## 38  0.430865052 0.09600 3.530882e-02 2963.244 1.0005540 -0.2090818  1.24515871</span></span>
+<span><span class="co">## 39  2.069329842 0.00000 0.000000e+00 4048.007 0.9998549 -4.3368143 -3.60226521</span></span>
+<span><span class="co">## 40  0.345148737 0.26250 8.123958e-02 4938.331 0.9997766  0.4014581  1.44174140</span></span>
+<span><span class="co">## 41  1.309017468 0.00000 0.000000e+00 4132.086 0.9999300 -4.6857458 -3.99460115</span></span>
+<span><span class="co">## 42  0.713865027 0.71650 1.816917e-01 5751.174 0.9997508 -0.8642572  0.23443387</span></span>
+<span><span class="co">## 43  0.444241740 0.82250 1.163793e-01 4573.197 0.9999790 -5.6205031 -4.82750664</span></span>
+<span><span class="co">## 44  0.331890957 0.20025 5.153750e-02 5172.832 0.9997618 -0.8072026  0.38472761</span></span>
+<span><span class="co">## 45  1.730698974 0.00000 0.000000e+00 4746.709 0.9998122 -4.5151181 -3.81885976</span></span>
+<span><span class="co">## 46  1.110625371 0.11650 4.371053e-02 5714.610 0.9997634 -0.5097405  0.64712618</span></span>
+<span><span class="co">## 47 -0.716122441 0.00000 0.000000e+00 5149.906 0.9998559 -6.6180268 -5.79934976</span></span>
+<span><span class="co">## 48  0.414158258 0.52500 1.094423e-01 4429.979 1.0001707 -3.2881690 -1.61301954</span></span>
+<span><span class="co">## 49 -0.989176484 0.00025 6.818182e-05 5010.314 0.9997721 -6.3834907 -5.55961619</span></span>
+<span><span class="co">## 50  1.732782165 0.58750 1.271481e-01 3161.303 0.9998433 -0.7404259  0.67084928</span></span>
+<span><span class="co">## 51 -0.027886495 0.07725 1.588636e-02 5951.650 0.9998771 -5.4642207 -4.78368339</span></span>
+<span><span class="co">## 52 -0.839088333 0.00750 2.678571e-03 2959.595 0.9997722 -2.7481525 -0.85274461</span></span>
+<span><span class="co">## 53 -0.266752626 0.01325 1.916667e-03 4385.516 0.9999012 -6.4805835 -5.57982757</span></span>
+<span><span class="co">## 54  1.876825541 0.05025 1.206818e-02 5441.997 0.9997558  0.1138983  1.33467141</span></span>
+<span><span class="co">## 55 -0.061690044 0.06250 1.296429e-02 5181.888 1.0007529 -5.3156490 -4.56630310</span></span>
+<span><span class="co">## 56  1.493507317 0.23300 7.335870e-02 4946.183 0.9997501 -1.2038788 -0.10420577</span></span>
+<span><span class="co">## 57  0.208181702 0.35850 4.666346e-02 6450.965 1.0001209 -5.3773828 -4.63211412</span></span>
+<span><span class="co">## 58  1.037696490 0.37075 9.282000e-02 6121.231 0.9997547 -1.7876819 -0.62686614</span></span>
+<span><span class="co">## 59 -0.174576021 0.03100 5.279412e-03 5971.429 0.9999214 -5.7839560 -5.04217520</span></span>
+<span><span class="co">## 60  1.510571157 0.11375 3.966667e-02 5364.769 0.9998656 -1.0900883 -0.02243816</span></span>
+<span><span class="co">##        v_upper   v_pH0        v_FDR  v_n_eff v_R_k_hat   count_data</span></span>
+<span><span class="co">## 1  -3.01048733 0.00000 0.000000e+00 5405.970 0.9997827 c("10x_6....</span></span>
+<span><span class="co">## 2   0.70332454 0.30725 1.454028e-01 5280.271 1.0008271 c("10x_6....</span></span>
+<span><span class="co">## 3  -3.50735756 0.00000 0.000000e+00 4706.265 0.9999309 c("10x_6....</span></span>
+<span><span class="co">## 4   0.23350312 0.11600 6.342500e-02 4135.689 1.0016358 c("10x_6....</span></span>
+<span><span class="co">## 5  -2.48746601 0.00000 0.000000e+00 6511.342 1.0000284 c("10x_6....</span></span>
+<span><span class="co">## 6   0.28475120 0.11425 5.758333e-02 5846.306 0.9998179 c("10x_6....</span></span>
+<span><span class="co">## 7  -3.78510950 0.00000 0.000000e+00 8230.550 0.9998557 c("10x_6....</span></span>
+<span><span class="co">## 8   3.41386558 0.10200 5.050000e-02 4678.054 0.9997592 c("10x_6....</span></span>
+<span><span class="co">## 9  -3.71165457 0.00000 0.000000e+00 5811.382 0.9999276 c("10x_6....</span></span>
+<span><span class="co">## 10  1.88779877 0.22400 9.978846e-02 5056.731 0.9999661 c("10x_6....</span></span>
+<span><span class="co">## 11 -4.22159806 0.00000 0.000000e+00 7499.542 0.9997553 c("10x_6....</span></span>
+<span><span class="co">## 12  1.86961255 0.40400 1.901250e-01 4293.683 1.0003468 c("10x_6....</span></span>
+<span><span class="co">## 13 -2.29197600 0.00000 0.000000e+00 5614.741 0.9997569 c("10x_6....</span></span>
+<span><span class="co">## 14  1.28570087 0.49375 2.227100e-01 5494.149 0.9999247 c("10x_6....</span></span>
+<span><span class="co">## 15 -4.00703622 0.00000 0.000000e+00 6680.029 0.9999418 c("10x_6....</span></span>
+<span><span class="co">## 16  1.76576014 0.28275 1.358824e-01 6098.240 0.9998828 c("10x_6....</span></span>
+<span><span class="co">## 17 -3.25062612 0.00000 0.000000e+00 6256.338 0.9999396 c("10x_6....</span></span>
+<span><span class="co">## 18  2.17677056 0.05150 2.725000e-02 4489.098 0.9997919 c("10x_6....</span></span>
+<span><span class="co">## 19 -0.55969364 0.00250 8.333333e-05 2888.486 1.0002796 c("10x_6....</span></span>
+<span><span class="co">## 20  2.71731831 0.38775 1.691625e-01 3670.630 0.9998255 c("10x_6....</span></span>
+<span><span class="co">## 21 -2.47566273 0.00000 0.000000e+00 1946.400 0.9999235 c("10x_6....</span></span>
+<span><span class="co">## 22 -1.39483849 0.00000 0.000000e+00 4120.017 0.9999409 c("10x_6....</span></span>
+<span><span class="co">## 23 -2.69211564 0.00000 0.000000e+00 5222.061 1.0001659 c("10x_6....</span></span>
+<span><span class="co">## 24  1.08519885 0.63200 2.850500e-01 4570.170 0.9997504 c("10x_6....</span></span>
+<span><span class="co">## 25 -3.23885233 0.00000 0.000000e+00 5386.724 0.9998602 c("10x_6....</span></span>
+<span><span class="co">## 26  1.35482378 0.57075 2.484537e-01 4408.620 1.0002001 c("10x_6....</span></span>
+<span><span class="co">## 27 -4.14099660 0.00000 0.000000e+00 5955.045 0.9997505 c("10x_6....</span></span>
+<span><span class="co">## 28  1.54608070 0.39550 1.799405e-01 5362.298 0.9997708 c("10x_6....</span></span>
+<span><span class="co">## 29 -3.39436670 0.00000 0.000000e+00 6340.854 0.9997655 c("10x_6....</span></span>
+<span><span class="co">## 30  1.51562883 0.41825 2.000435e-01 5790.636 0.9998216 c("10x_6....</span></span>
+<span><span class="co">## 31 -4.91705627 0.00000 0.000000e+00 5936.219 0.9997500 c("10x_6....</span></span>
+<span><span class="co">## 32  1.48471842 0.58425 2.604464e-01 4186.554 0.9997641 c("10x_6....</span></span>
+<span><span class="co">## 33 -4.71824503 0.00000 0.000000e+00 5496.560 0.9998029 c("10x_6....</span></span>
+<span><span class="co">## 34  0.67419138 0.21800 7.747727e-02 5678.165 0.9997966 c("10x_6....</span></span>
+<span><span class="co">## 35 -3.47530260 0.00000 0.000000e+00 4961.928 0.9998352 c("10x_6....</span></span>
+<span><span class="co">## 36  0.74851355 0.08100 3.620833e-02 2023.560 0.9997804 c("10x_6....</span></span>
+<span><span class="co">## 37 -3.76855412 0.00000 0.000000e+00 8275.180 0.9997572 c("10x_6....</span></span>
+<span><span class="co">## 38  2.77951443 0.08475 4.314286e-02 3251.531 0.9999561 c("10x_6....</span></span>
+<span><span class="co">## 39 -2.79058496 0.00000 0.000000e+00 6192.602 1.0000637 c("10x_6....</span></span>
+<span><span class="co">## 40  2.51157345 0.01100 5.500000e-03 4966.233 1.0003515 c("10x_6....</span></span>
+<span><span class="co">## 41 -3.20525198 0.00000 0.000000e+00 5644.163 0.9997506 c("10x_6....</span></span>
+<span><span class="co">## 42  1.41541638 0.47300 2.114167e-01 5103.358 0.9998318 c("10x_6....</span></span>
+<span><span class="co">## 43 -3.93216151 0.00000 0.000000e+00 7780.832 0.9998342 c("10x_6....</span></span>
+<span><span class="co">## 44  1.60594565 0.37825 1.576579e-01 4917.173 0.9997801 c("10x_6....</span></span>
+<span><span class="co">## 45 -3.05069950 0.00000 0.000000e+00 6441.518 0.9998068 c("10x_6....</span></span>
+<span><span class="co">## 46  1.74148272 0.22100 8.943750e-02 5093.766 0.9999016 c("10x_6....</span></span>
+<span><span class="co">## 47 -4.81445502 0.00000 0.000000e+00 5890.193 1.0001407 c("10x_6....</span></span>
+<span><span class="co">## 48 -0.02813604 0.04050 2.118750e-02 4787.327 0.9998790 c("10x_6....</span></span>
+<span><span class="co">## 49 -4.51697623 0.00000 0.000000e+00 6062.944 0.9999007 c("10x_6....</span></span>
+<span><span class="co">## 50  2.15289448 0.25025 1.267031e-01 3661.250 1.0002279 c("10x_6....</span></span>
+<span><span class="co">## 51 -3.89405217 0.00000 0.000000e+00 7194.935 0.9997502 c("10x_6....</span></span>
+<span><span class="co">## 52  1.05323194 0.23950 1.097679e-01 3299.054 0.9997674 c("10x_6....</span></span>
+<span><span class="co">## 53 -4.63511240 0.00000 0.000000e+00 5517.320 0.9997739 c("10x_6....</span></span>
+<span><span class="co">## 54  2.60861487 0.03325 1.475000e-02 4460.341 1.0003290 c("10x_6....</span></span>
+<span><span class="co">## 55 -3.68723823 0.00000 0.000000e+00 5460.132 0.9997709 c("10x_6....</span></span>
+<span><span class="co">## 56  1.04686690 0.56975 2.360577e-01 4417.057 0.9997529 c("10x_6....</span></span>
+<span><span class="co">## 57 -3.69057250 0.00000 0.000000e+00 6332.250 1.0000826 c("10x_6....</span></span>
+<span><span class="co">## 58  0.63739978 0.24025 1.184667e-01 5502.429 0.9997902 c("10x_6....</span></span>
+<span><span class="co">## 59 -4.11948753 0.00000 0.000000e+00 6009.870 0.9999123 c("10x_6....</span></span>
+<span><span class="co">## 60  1.14513568 0.62700 2.730862e-01 4748.726 1.0000599 c("10x_6....</span></span></code></pre>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Unknown or uninitialised column: `credible_intervals_1D`.</span></span></code></pre>
@@ -838,7 +838,7 @@ variability effects should be generally uncorrelated.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
 <span><span class="co">## [1] rstan_2.32.6       StanHeaders_2.32.6 tidyr_1.3.1        forcats_1.0.0     </span></span>
-<span><span class="co">## [5] ggplot2_3.5.0      sccomp_1.7.5       dplyr_1.1.4        BiocStyle_2.31.0  </span></span>
+<span><span class="co">## [5] ggplot2_3.5.0      sccomp_1.7.6       dplyr_1.1.4        BiocStyle_2.31.0  </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] gridExtra_2.3               inline_0.3.19              </span></span>
