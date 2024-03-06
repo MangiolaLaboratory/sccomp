@@ -1410,7 +1410,7 @@ get_probability_non_zero = function(draws, test_above_logit_fold_change = 0, pro
 parse_generated_quantities = function(rng, number_of_draws = 1){
 
   draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) %>%
-    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/sum(.value))) %>%
+    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/max(1, sum(.value)))) %>%
     filter(.draw<= number_of_draws) %>%
     rename(generated_counts = .value, replicate = .draw) %>%
 
