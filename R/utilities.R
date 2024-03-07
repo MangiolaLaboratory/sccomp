@@ -1547,23 +1547,43 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
     # Reshape
     select(-contains("n_eff"), -contains("R_k_hat")) |> 
     pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
-    drop_na() |>
     pivot_wider(names_from = estimate, values_from = value) |>
 
     nest(data = -c(parameter, which)) |>
     mutate(plot = pmap(
       list(data, which, parameter),
-      ~  ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
-        geom_vline(xintercept = 0.2, colour="grey") +
-        geom_vline(xintercept = -0.2, colour="grey") +
-        geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
-        geom_point() +
-        scale_color_brewer(palette = "Set1") +
-        xlab("Credible interval of the slope") +
-        ylab("Cell group") +
-        ggtitle(sprintf("%s %s", ..2, ..3)) +
-        theme(legend.position = "bottom") +
-        my_theme
+      ~  {
+        # if I don't have any statistics, for example, for variability, where has not been modelled
+        if(..1 |> filter(!effect |> is.na()) |> nrow() |> equals(0))
+          return(
+            ggplot() +
+              annotate("text", x = 0, y = 1, label = "Variability was not estimated for this contrast", angle = 90) +
+              ggtitle(sprintf("%s %s", ..2, ..3)) +
+              my_theme +
+              theme(
+                axis.title.x = element_blank(), 
+                axis.title.y = element_blank(), 
+                axis.ticks.x = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.text.x = element_blank(),
+                axis.text.y = element_blank(),
+                axis.line.x = element_blank(),
+                axis.line.y = element_blank()
+              ) 
+          )
+        
+          ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
+          geom_vline(xintercept = 0.2, colour="grey") +
+          geom_vline(xintercept = -0.2, colour="grey") +
+          geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
+          geom_point() +
+          scale_color_brewer(palette = "Set1") +
+          xlab("Credible interval of the slope") +
+          ylab("Cell group") +
+          ggtitle(sprintf("%s %s", ..2, ..3)) +
+          my_theme +
+          theme(legend.position = "bottom") 
+      }
     )) %>%
     pull(plot) |>
     wrap_plots(ncol=2)
