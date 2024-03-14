@@ -2,7 +2,7 @@ data {
 	int<lower=0> N;
 	int<lower=0> M;
 	int<lower=0> C;
-	int exposure[N];
+	array[N] int exposure;
 	matrix[N,C] X;
 }
 parameters {
@@ -13,7 +13,7 @@ parameters {
 }
 generated quantities{
 
-  int counts[N, M];
+  array[N, M] int counts;
 
   matrix[N, M] alpha = (X * beta);
 

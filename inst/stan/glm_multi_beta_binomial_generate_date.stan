@@ -9,13 +9,13 @@ data {
 	int M;
 	int C;
 	int A;
-	int exposure[N];
+	array[N] int exposure;
 
 	// Which column of design, coefficient matrices should be used to generate the data
 	int length_X_which;
 	int length_XA_which;
-	int X_which[length_X_which];
-	int XA_which[length_XA_which];
+	array[length_X_which] int X_which;
+	array[length_XA_which] int XA_which;
 	matrix[N, length_X_which] X;
   matrix[N, length_XA_which] Xa; // The variability design
 
@@ -24,7 +24,7 @@ data {
 
 	// Random intercept
 	int length_X_random_intercept_which;
-	int X_random_intercept_which[length_X_random_intercept_which];
+	array[length_X_random_intercept_which] int X_random_intercept_which;
 	int N_grouping;
 	int N_grouping_new;
 	matrix[N, N_grouping_new] X_random_intercept;
@@ -46,7 +46,7 @@ parameters {
 	matrix[A,M] alpha;
 
 	// Random intercept
-	matrix[N_grouping_WINDOWS_BUG_FIX, M-1] beta_random_intercept;
+	matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
 
 }
 transformed parameters{
@@ -57,14 +57,14 @@ transformed parameters{
 }
 generated quantities{
 
-  int counts_uncorrected[N, M];
+  array[N, M] int counts_uncorrected;
 
 
   // Matrix for correcting for exposure
   matrix[N, M] counts;
 
   // Vector of the generated exposure
-  real generated_exposure[N];
+  array[N] real generated_exposure;
 
   // Subset for mean and deviation
   matrix[length_X_which,M] my_beta = beta[X_which,];
@@ -110,7 +110,7 @@ generated quantities{
 
   // Random intercept
   if(length_X_random_intercept_which>0){
-      matrix[M, N] mu_random_intercept = append_row((X_random_intercept * beta_random_intercept[X_random_intercept_which,])', rep_row_vector(0, N));
+      matrix[M, N] mu_random_intercept = (X_random_intercept * beta_random_intercept[X_random_intercept_which,])';
       mu = mu + mu_random_intercept;
   }
 
@@ -127,7 +127,7 @@ generated quantities{
 	}
 
 	// Calculate the generated exposure
-  for(n in 1:N) generated_exposure[n] = sum(counts_uncorrected[n]);
+  for(n in 1:N) generated_exposure[n] = max( sum(counts_uncorrected[n]), 1); // avoid dividing by zero
   for(n in 1:N) counts[n] = to_row_vector(counts_uncorrected[n]) / generated_exposure[n] * exposure[n];
 }
 

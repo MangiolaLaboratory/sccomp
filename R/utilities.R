@@ -479,7 +479,7 @@ fit_model = function(
       max(4000) 
     
     if(output_samples > max_sampling_iterations) {
-      warning("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K. This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+      message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
       output_samples = max_sampling_iterations
     
   }}
@@ -503,7 +503,7 @@ fit_model = function(
 
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
-
+  
   # Fit
   if(!approximate_posterior_inference)
     sampling(
@@ -1071,6 +1071,22 @@ data_spread_to_model_input =
       mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
       pull(n) |> sum()
 
+    
+    # TEMPORARY
+    group_factor_indexes_for_covariance = 
+    	X_random_intercept |> 
+    	colnames() |> 
+    	enframe(value = "parameter", name = "order")  |> 
+    	separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
+    	complete(factor, group, fill = list(order=0)) |> 
+    	select(-parameter) |> 
+    	pivot_wider(names_from = group, values_from = order)  |> 
+    	as_matrix(rownames = "factor")
+    
+    how_many_groups = ncol(group_factor_indexes_for_covariance )
+    how_many_factors_in_random_design = nrow(group_factor_indexes_for_covariance )
+    
+    
     } else {
       X_random_intercept = matrix(rep(1, nrow(.data_spread)))[,0]
       N_random_intercepts = 0
@@ -1078,9 +1094,12 @@ data_spread_to_model_input =
       N_grouping =0
       paring_cov_random_intercept = matrix(c(1, 1), ncol = 2)[0,]
       idx_group_random_intercepts = matrix(c(1, 1), ncol = 2)[0,]
+      how_many_groups = 0
+      how_many_factors_in_random_design = 0
+      group_factor_indexes_for_covariance = matrix()[0,0]
     }
-
-
+    
+    
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
@@ -1105,7 +1124,10 @@ data_spread_to_model_input =
         N_grouping = N_grouping,
         X_random_intercept = X_random_intercept,
         idx_group_random_intercepts = idx_group_random_intercepts,
-
+        group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
+        how_many_groups = how_many_groups,
+        how_many_factors_in_random_design = how_many_factors_in_random_design,
+        
         ## LOO
         enable_loo = FALSE
       )
@@ -1410,7 +1432,7 @@ get_probability_non_zero = function(draws, test_above_logit_fold_change = 0, pro
 parse_generated_quantities = function(rng, number_of_draws = 1){
 
   draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) %>%
-    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/sum(.value))) %>%
+    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/max(1, sum(.value)))) %>%
     filter(.draw<= number_of_draws) %>%
     rename(generated_counts = .value, replicate = .draw) %>%
 
@@ -1545,6 +1567,7 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
     filter(parameter != "(Intercept)") |>
 
     # Reshape
+    select(-contains("n_eff"), -contains("R_k_hat")) |> 
     pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
     drop_na() |>
     pivot_wider(names_from = estimate, values_from = value) |>
@@ -1901,7 +1924,7 @@ plot_scatterplot = function(
       
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
-        fatten = 0.5, lwd=0.2,
+        lwd=0.2,
         data =
           simulated_proportion %>%
           
@@ -1943,12 +1966,8 @@ plot_scatterplot = function(
       
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), proportion, fill = NULL), # fill=Effect),
-        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion ,
-        # |>
-        #   left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
-        fatten = 0.5,
         lwd=0.5,
         color = "black",
         span = 1
@@ -2584,6 +2603,8 @@ replicate_data = function(.data,
   model_input$X_random_intercept = new_X_random_intercept
   model_input$N_grouping_new = ncol(new_X_random_intercept)
 
+  # To avoid error in case of a NULL posterior sample
+  number_of_draws = min(number_of_draws, nrow(fit_matrix))
   # Generate quantities
   rstan::gqs(
     my_model,

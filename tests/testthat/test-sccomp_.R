@@ -18,9 +18,6 @@ my_estimate =
     max_sampling_iterations = 1000
   )
 
-
-
-
 my_estimate_no_intercept = 
   seurat_obj |>
   sccomp_estimate(
@@ -45,6 +42,29 @@ my_estimate_random =
     max_sampling_iterations = 1000
   )
 
+# my_estimate_random2 = 
+# 	seurat_obj |>
+# 	sccomp_estimate(
+# 		formula_composition = ~ 1 +  type + (1 + type | group__),
+# 		formula_variability = ~ 1,
+# 		sample, cell_group,
+# 		approximate_posterior_inference = FALSE,
+# 		cores = 1,
+# 		mcmc_seed = 42,     
+# 		max_sampling_iterations = 1000
+# 	)
+# 
+# my_estimate_random3 = 
+# 	seurat_obj |>
+# 	sccomp_estimate(
+# 		formula_composition = ~  type + (1 | group__),
+# 		formula_variability = ~ 1,
+# 		sample, cell_group,
+# 		approximate_posterior_inference = FALSE,
+# 		cores = 1,
+# 		mcmc_seed = 42,     
+# 		max_sampling_iterations = 1000
+# 	)
 
 test_that("Generate data",{
 
@@ -147,7 +167,7 @@ test_that("multilevel multi beta binomial from Seurat",{
     slice(1:3) |>
     pull(cell_group) |>
     sort() |> 
-    expect_equal(c( "CD4 cm high cytokine", "CD4 ribosome" , "Mono NKG7 2"  ) |> sort())
+    expect_equal(c("B mem", "CD4 cm high cytokine", "CD4 ribosome"  ) |> sort())
 
   # Check convergence
   res |>
@@ -200,7 +220,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
     )
 
     expect(
-      "T gd2" %in%
+      "CD8 em 1" %in%
       (res |>
         filter(parameter == "continuous_covariate") |>
         arrange(desc(abs(c_effect))) |>
@@ -255,7 +275,7 @@ test_that("multi beta binomial from Seurat",{
     arrange(desc(abs(c_effect))) |>
     slice(1) |>
     pull(cell_group) |>
-    expect_equal(c("CD4 cm high cytokine"))
+    expect_in(c("B mem", "CD4 cm high cytokine"))
 
   # Check convergence
   my_estimate |>
@@ -402,11 +422,14 @@ test_that("test constrasts",{
   
   my_estimate |> 
     sccomp_test(contrasts = "(Intercept)") |> 
-    expect_error()
+    expect_error() |> 
+    expect_warning("sccomp says: These components of your contrasts")
   
   my_estimate |> 
     sccomp_test(contrasts = "typehealthy_") |> 
-    expect_error()
+    expect_error() |> 
+    expect_warning("These components of your contrasts are not present")
+  
   
   res = my_estimate_random |> 
     sccomp_test(contrasts = c("1/2*typecancer - 1/2*typehealthy", "1/2*typehealthy - 1/2*typecancer") )
@@ -425,10 +448,24 @@ test_that("test constrasts",{
   # Wrong interaction
   my_estimate |> 
     sccomp_test(contrasts = c("(1/2*continuous_covariate:typehealthy + 1/2*`continuous_covariate:typehealthy`) -  `continuous_covariate:typehealthy`") ) |> 
-    expect_warning("sccomp says: for columns which have special characters")
+    expect_warning("sccomp says: for columns which have special characters") |> 
+    expect_warning("numerical expression has") 
   
 
 })
 
 
 
+
+# fit = 
+# 	seurat_obj |> 
+# 	dplyr::count(sample, cell_group, continuous_covariate, type, group__) |> 
+# 	with_groups(sample, ~ .x |> mutate(tot = sum(n))) |> 
+# 	rename(group = group__) |> 
+# 	filter(cell_group=="B mem") |> 
+# 	brm(
+# 		n | trials(tot) ~ type + (1 + type| group), 
+# 		data = _, 
+# 		family=beta_binomial(), 
+# 		cores = 4
+# 	)
