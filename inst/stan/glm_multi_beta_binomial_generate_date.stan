@@ -46,7 +46,7 @@ parameters {
 	matrix[A,M] alpha;
 
 	// Random intercept
-	matrix[N_grouping_WINDOWS_BUG_FIX, M-1] beta_random_intercept;
+	matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
 
 }
 transformed parameters{
@@ -110,7 +110,7 @@ generated quantities{
 
   // Random intercept
   if(length_X_random_intercept_which>0){
-      matrix[M, N] mu_random_intercept = append_row((X_random_intercept * beta_random_intercept[X_random_intercept_which,])', rep_row_vector(0, N));
+      matrix[M, N] mu_random_intercept = (X_random_intercept * beta_random_intercept[X_random_intercept_which,])';
       mu = mu + mu_random_intercept;
   }
 

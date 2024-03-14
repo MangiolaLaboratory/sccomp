@@ -503,7 +503,7 @@ fit_model = function(
 
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
-
+  
   # Fit
   if(!approximate_posterior_inference)
     sampling(
@@ -1071,6 +1071,22 @@ data_spread_to_model_input =
       mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
       pull(n) |> sum()
 
+    
+    # TEMPORARY
+    group_factor_indexes_for_covariance = 
+    	X_random_intercept |> 
+    	colnames() |> 
+    	enframe(value = "parameter", name = "order")  |> 
+    	separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
+    	complete(factor, group, fill = list(order=0)) |> 
+    	select(-parameter) |> 
+    	pivot_wider(names_from = group, values_from = order)  |> 
+    	as_matrix(rownames = "factor")
+    
+    how_many_groups = ncol(group_factor_indexes_for_covariance )
+    how_many_factors_in_random_design = nrow(group_factor_indexes_for_covariance )
+    
+    
     } else {
       X_random_intercept = matrix(rep(1, nrow(.data_spread)))[,0]
       N_random_intercepts = 0
@@ -1078,9 +1094,12 @@ data_spread_to_model_input =
       N_grouping =0
       paring_cov_random_intercept = matrix(c(1, 1), ncol = 2)[0,]
       idx_group_random_intercepts = matrix(c(1, 1), ncol = 2)[0,]
+      how_many_groups = 0
+      how_many_factors_in_random_design = 0
+      group_factor_indexes_for_covariance = matrix()[0,0]
     }
-
-
+    
+    
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
@@ -1105,7 +1124,10 @@ data_spread_to_model_input =
         N_grouping = N_grouping,
         X_random_intercept = X_random_intercept,
         idx_group_random_intercepts = idx_group_random_intercepts,
-
+        group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
+        how_many_groups = how_many_groups,
+        how_many_factors_in_random_design = how_many_factors_in_random_design,
+        
         ## LOO
         enable_loo = FALSE
       )
