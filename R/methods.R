@@ -973,7 +973,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' @param new_data A sample-wise data frame including the column that represent the factors in your formula. If you want to predict proportions for 10 samples, there should be 10 rows. T
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
-#'
+#' @param summary_instead_of_draws Return the summary values (i.e. mean and quantiles) of the predicted proportions, or return single draws. Single draws can be helful to better analyse the uncertainty of the prediction.
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
 #' @export
@@ -996,7 +996,8 @@ sccomp_predict <- function(fit,
                            formula_composition = NULL,
                            new_data = NULL,
                            number_of_draws = 500,
-                           mcmc_seed = sample(1e5, 1)) {
+                           mcmc_seed = sample(1e5, 1),
+													 summary_instead_of_draws = TRUE) {
   UseMethod("sccomp_predict", fit)
 }
 
@@ -1006,7 +1007,8 @@ sccomp_predict.sccomp_tbl = function(fit,
                                      formula_composition = NULL,
                                      new_data = NULL,
                                      number_of_draws = 500,
-                                     mcmc_seed = sample(1e5, 1)){
+                                     mcmc_seed = sample(1e5, 1),
+																		 summary_instead_of_draws = TRUE){
 
 
   model_input = attr(fit, "model_input")
@@ -1025,31 +1027,35 @@ sccomp_predict.sccomp_tbl = function(fit,
 
   # New data
   if(new_data |> is.null())
-    sample_names =
-      fit |>
-      select(count_data) |>
-      unnest(count_data) |>
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  	new_data =
+	  	fit |>
+	  	select(count_data) |>
+	  	unnest(count_data) |> 
+	  	distinct()
   
   # If seurat
   else if(new_data |> is("Seurat")) 
-    sample_names = 
-      new_data[[]] |> 
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  	new_data = new_data[[]] 
   
-  # Just subset
-  else 
-    sample_names = 
-      new_data |> 
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  sample_names =
+  	new_data |>
+  	distinct(!!.sample) |> 
+  	pull(!!.sample)
   
   # mean generated
-  rng |>
-    summary_to_tibble("mu", "M", "N") |>
-    select(M, N, proportion_mean = mean, proportion_lower = `2.5%`, proportion_upper = `97.5%`) |>
+  if(summary_instead_of_draws)
+  	prediction_df = 
+	  	rng |>
+	    summary_to_tibble("mu", "M", "N") |>
+	    select(M, N, proportion_mean = mean, proportion_lower = `2.5%`, proportion_upper = `97.5%`) 
+  else
+  	prediction_df = 
+  	rng |>
+  	draws_to_tibble_x_y("mu", "M", "N") |> 
+  	select(M, N, proportion = .value, .draw) 
+  
+  prediction_df = 
+  	prediction_df |>
 
     # Get sample name
     nest(data = -N) %>%
@@ -1065,6 +1071,8 @@ sccomp_predict.sccomp_tbl = function(fit,
     select(-N, -M) |>
     select(!!.cell_group, !!.sample, everything())
 
+  new_data |> 
+  	left_join(prediction_df, by = join_by(!!.sample))
 }
 
 #' sccomp_calculate_residuals
