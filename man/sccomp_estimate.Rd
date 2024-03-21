@@ -14,7 +14,7 @@ sccomp_estimate(
   cores = detectCores(),
   bimodal_mean_variability_association = FALSE,
   percent_false_positive = 5,
-  approximate_posterior_inference = "none",
+  variational_inference = TRUE,
   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0, 0.6),
     standard_deviation = c(10, 20)),
@@ -26,7 +26,8 @@ sccomp_estimate(
   use_data = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
-  pass_fit = TRUE
+  pass_fit = TRUE,
+  approximate_posterior_inference = NULL
 )
 }
 \arguments{
@@ -49,7 +50,7 @@ read counts column (optional depending on the input class), and factor columns.}
 
 \item{percent_false_positive}{Real number between 0 and 100 for outlier identification.}
 
-\item{approximate_posterior_inference}{Boolean for using variational Bayes for posterior inference.}
+\item{variational_inference}{Boolean for using variational Bayes for posterior inference. It is faster and convenient. Setting this argument to FALSE runs the full Bayesian (Hamiltonian Monte Carlo) inference, slower but it is the gold standard.}
 
 \item{prior_mean}{List with prior knowledge about mean distribution, they are the intercept and coefficient.}
 
@@ -72,6 +73,8 @@ read counts column (optional depending on the input class), and factor columns.}
 \item{max_sampling_iterations}{Integer to limit maximum iterations for large datasets.}
 
 \item{pass_fit}{Boolean to include the Stan fit as attribute in the output.}
+
+\item{approximate_posterior_inference}{DEPRECATED please use the \code{variational_inference} argument.}
 }
 \value{
 A nested tibble \code{tbl}, with the following columns
