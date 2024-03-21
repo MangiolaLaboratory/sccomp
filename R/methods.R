@@ -1446,51 +1446,56 @@ plot.sccomp_tbl <- function(x,  ...) {
   
   # If I don't have outliers add them
   if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
-  
-  
 
-# Boxplot
-plots$boxplot =
-
-  # Select non numerical types
+# Select the factors to plot  
+my_factors =
   x %>%
   filter(!is.na(`factor`)) |>
-   distinct(`factor`) %>%
-    pull(`factor`) |>
+  distinct(`factor`) %>%
+  pull(`factor`) 
 
-  map(
-    ~ {
-      
-      # If variable is continuous
-      if(data_proportion |> select(all_of(.x)) |> pull(1) |> is("numeric"))
-        my_plot = 
-          plot_scatterplot(
-            .data = x,
-            data_proportion = data_proportion,
-            factor_of_interest = .x,
-            .cell_group = !!.cell_group,
-            .sample =  !!.sample,
-            my_theme = multipanel_theme,
-            ...
-          )
-      
-      # If discrete
-      else 
-        my_plot = 
-          plot_boxplot(
-            .data = x,
-      data_proportion = data_proportion,
-      factor_of_interest = .x,
-      .cell_group = !!.cell_group,
-      .sample =  !!.sample,
-      my_theme = multipanel_theme,
-      ...
-    ) 
-      
-      # Return
-      my_plot +
-      ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
- } )
+if(length(my_factors)==0)
+  message("sccomp says: the contrasts you have tested do not represent factors. Therefore, plot of the the posterior predictive check will be omitted.")
+else {
+  # Boxplot
+  plots$boxplot =
+    
+    my_factors |>
+    map(
+      ~ {
+        
+        # If variable is continuous
+        if(data_proportion |> select(all_of(.x)) |> pull(1) |> is("numeric"))
+          my_plot = 
+            plot_scatterplot(
+              .data = x,
+              data_proportion = data_proportion,
+              factor_of_interest = .x,
+              .cell_group = !!.cell_group,
+              .sample =  !!.sample,
+              my_theme = multipanel_theme,
+              ...
+            )
+        
+        # If discrete
+        else 
+          my_plot = 
+            plot_boxplot(
+              .data = x,
+              data_proportion = data_proportion,
+              factor_of_interest = .x,
+              .cell_group = !!.cell_group,
+              .sample =  !!.sample,
+              my_theme = multipanel_theme,
+              ...
+            ) 
+        
+        # Return
+        my_plot +
+          ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
+      } )
+  
+}
 
 # 1D intervals
 plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
