@@ -17,6 +17,18 @@ my_estimate =
     max_sampling_iterations = 1000
   )
 
+my_estimate_full_bayes = 
+  seurat_obj |>
+  sccomp_estimate(
+    formula_composition = ~ continuous_covariate * type ,
+    formula_variability = ~ 1,
+    sample, cell_group,
+    cores = 1, 
+    variational_inference = F,
+    mcmc_seed = 42,
+    max_sampling_iterations = 1000
+  )
+
 my_estimate_no_intercept = 
   seurat_obj |>
   sccomp_estimate(
@@ -267,7 +279,14 @@ test_that("multi beta binomial from Seurat",{
     slice(1) |>
     pull(cell_group) |>
     expect_in(c("B mem", "CD4 cm high cytokine"))
-
+  
+  my_estimate_full_bayes |>
+    filter(parameter == "typehealthy") |>
+    arrange(desc(abs(c_effect))) |>
+    slice(1) |>
+    pull(cell_group) |>
+    expect_in(c("B mem", "CD4 cm high cytokine"))
+  
   # Check convergence
   my_estimate |>
     filter(c_R_k_hat > 4) |>
