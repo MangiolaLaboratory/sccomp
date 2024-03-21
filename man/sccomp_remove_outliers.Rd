@@ -8,11 +8,12 @@ sccomp_remove_outliers(
   .estimate,
   percent_false_positive = 5,
   cores = detectCores(),
-  approximate_posterior_inference = "none",
+  variational_inference = TRUE,
   verbose = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
-  enable_loo = FALSE
+  enable_loo = FALSE,
+  approximate_posterior_inference = NULL
 )
 }
 \arguments{
@@ -22,7 +23,7 @@ sccomp_remove_outliers(
 
 \item{cores}{An integer. How many cored to be used with parallel calculations.}
 
-\item{approximate_posterior_inference}{A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.}
+\item{variational_inference}{Boolean for using variational Bayes for posterior inference. It is faster and convenient. Setting this argument to FALSE runs the full Bayesian (Hamiltonian Monte Carlo) inference, slower but it is the gold standard.}
 
 \item{verbose}{A boolean. Prints progression.}
 
@@ -31,6 +32,8 @@ sccomp_remove_outliers(
 \item{max_sampling_iterations}{An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.}
 
 \item{enable_loo}{A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.}
+
+\item{approximate_posterior_inference}{DEPRECATED please use the \code{variational_inference} argument.}
 }
 \value{
 A nested tibble \code{tbl}, with the following columns

@@ -30,7 +30,6 @@ data("counts_obj")
   estimates = sccomp_estimate(
   counts_obj ,
    ~ type, ~1,  sample, cell_group, count,
-    approximate_posterior_inference = "all",
     cores = 1
   )
 

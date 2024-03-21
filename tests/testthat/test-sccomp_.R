@@ -12,8 +12,19 @@ my_estimate =
     formula_composition = ~ continuous_covariate * type ,
     formula_variability = ~ 1,
     sample, cell_group,
-    approximate_posterior_inference = FALSE,
     cores = 1,
+    mcmc_seed = 42,
+    max_sampling_iterations = 1000
+  )
+
+my_estimate_full_bayes = 
+  seurat_obj |>
+  sccomp_estimate(
+    formula_composition = ~ continuous_covariate * type ,
+    formula_variability = ~ 1,
+    sample, cell_group,
+    cores = 1, 
+    variational_inference = F,
     mcmc_seed = 42,
     max_sampling_iterations = 1000
   )
@@ -24,7 +35,6 @@ my_estimate_no_intercept =
     formula_composition = ~ 0 + type + continuous_covariate,
     formula_variability = ~ 1,
     sample, cell_group,
-    approximate_posterior_inference = FALSE,
     cores = 1,
     mcmc_seed = 42,
     max_sampling_iterations = 1000
@@ -36,7 +46,6 @@ my_estimate_random =
     formula_composition = ~ 0 + type + (type | group__),
     formula_variability = ~ 1,
     sample, cell_group,
-    approximate_posterior_inference = FALSE,
     cores = 1,
     mcmc_seed = 42,     
     max_sampling_iterations = 1000
@@ -48,7 +57,6 @@ my_estimate_random =
 # 		formula_composition = ~ 1 +  type + (1 + type | group__),
 # 		formula_variability = ~ 1,
 # 		sample, cell_group,
-# 		approximate_posterior_inference = FALSE,
 # 		cores = 1,
 # 		mcmc_seed = 42,     
 # 		max_sampling_iterations = 1000
@@ -60,7 +68,6 @@ my_estimate_random =
 # 		formula_composition = ~  type + (1 | group__),
 # 		formula_variability = ~ 1,
 # 		sample, cell_group,
-# 		approximate_posterior_inference = FALSE,
 # 		cores = 1,
 # 		mcmc_seed = 42,     
 # 		max_sampling_iterations = 1000
@@ -154,7 +161,6 @@ test_that("multilevel multi beta binomial from Seurat",{
       formula_composition = ~ type + (1 | group__),
       formula_variability = ~ 1,
       sample, cell_group,
-      #approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42,     
       max_sampling_iterations = 1000
@@ -182,7 +188,6 @@ test_that("multilevel multi beta binomial from Seurat",{
       formula_composition = ~ 0 + type + (type | group__),
       formula_variability = ~ 1,
       sample, cell_group,
-      #approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42,    
       max_sampling_iterations = 1000
@@ -213,7 +218,6 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       formula_composition = ~ continuous_covariate + (1 + continuous_covariate | group__),
       formula_variability = ~ 1,
       sample, cell_group,
-      #approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42,   
       max_sampling_iterations = 1000
@@ -258,7 +262,6 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 #           formula_composition = ~ 0 + type + (type | group__wrong),
 #           formula_variability = ~ 1,
 #           sample, cell_group,
-#           approximate_posterior_inference = "all",
 #           contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
 #           cores = 1,
 #           mcmc_seed = 42,       max_sampling_iterations = 1000
@@ -276,7 +279,14 @@ test_that("multi beta binomial from Seurat",{
     slice(1) |>
     pull(cell_group) |>
     expect_in(c("B mem", "CD4 cm high cytokine"))
-
+  
+  my_estimate_full_bayes |>
+    filter(parameter == "typehealthy") |>
+    arrange(desc(abs(c_effect))) |>
+    slice(1) |>
+    pull(cell_group) |>
+    expect_in(c("B mem", "CD4 cm high cytokine"))
+  
   # Check convergence
   my_estimate |>
     filter(c_R_k_hat > 4) |>
@@ -304,7 +314,6 @@ test_that("remove unwanted variation",{
       formula_composition = ~ type + batch,
       formula_variability = ~ 1,
       sample, cell_group,
-      approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42,    
       max_sampling_iterations = 1000
@@ -324,7 +333,6 @@ test_that("multi beta binomial from SCE",{
       formula_variability = ~ 1,
       sample,
       cell_group,
-      approximate_posterior_inference = "all",
       cores = 1,
       mcmc_seed = 42,      
       max_sampling_iterations = 1000
@@ -351,7 +359,6 @@ res_composition =
     formula_variability = ~ 1,
     sample,
     cell_group,
-    approximate_posterior_inference = "all",
     cores = 1,
     mcmc_seed = 42,   
     max_sampling_iterations = 1000
@@ -364,7 +371,6 @@ res_composition_variability =
     formula_variability = ~ type,
     sample,
     cell_group,
-    approximate_posterior_inference = "all",
     cores = 1,
     mcmc_seed = 42,    
     max_sampling_iterations = 1000

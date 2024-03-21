@@ -14,7 +14,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
-                                     approximate_posterior_inference = "none",
+                                     variational_inference = TRUE,
                                      test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                      verbose = FALSE,
                                      exclude_priors = FALSE,
@@ -86,7 +86,7 @@ sccomp_glm_data_frame_raw = function(.data,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
-      approximate_posterior_inference = approximate_posterior_inference,
+      variational_inference = variational_inference,
       exclude_priors = exclude_priors,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       enable_loo = enable_loo,
@@ -114,7 +114,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
-                                        approximate_posterior_inference = "none",
+                                        variational_inference = TRUE,
                                         test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                         verbose = FALSE,
                                         exclude_priors = FALSE,
@@ -138,8 +138,9 @@ sccomp_glm_data_frame_counts = function(.data,
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)
   
   # Check that count is integer
-  if(.data %>% pull(!!.count) %>% is("integer") %>% not())
-    stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
+  if(.data %>% pull(!!.count) %>% is("integer")) message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))
+  else if(.data %>% pull(!!.count) %>% is("integer") |> not() & .data %>% pull(!!.count) |> dplyr::between(0, 1) |> all()) message(sprintf("sccomp says: %s column is a proportion. The sum-constrained beta model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).", quo_name(.count)))
+  else stop(sprintf("sccomp: %s column must be an integer or a proportion", quo_name(.count)))
   
   # Check if columns exist
   check_columns_exist(.data, c(
@@ -233,7 +234,7 @@ sccomp_glm_data_frame_counts = function(.data,
     data_spread_to_model_input(
       formula_composition, !!.sample, !!.cell_group, !!.count,
       truncation_ajustment = 1.1,
-      approximate_posterior_inference = approximate_posterior_inference == "all",
+      approximate_posterior_inference = variational_inference,
       formula_variability = formula_variability,
       contrasts = contrasts,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
@@ -281,7 +282,7 @@ sccomp_glm_data_frame_counts = function(.data,
       stanmodels$glm_multi_beta_binomial,
       cores= cores,
       quantile = CI,
-      approximate_posterior_inference = approximate_posterior_inference == "all",
+      approximate_posterior_inference = variational_inference,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
