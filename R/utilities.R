@@ -1541,7 +1541,8 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
 
   .cell_group = enquo(.cell_group)
 
-  .data |>
+  plot_list = 
+    .data |>
     filter(parameter != "(Intercept)") |>
 
     # Reshape
@@ -1555,21 +1556,21 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
       ~  {
         # if I don't have any statistics, for example, for variability, where has not been modelled
         if(..1 |> filter(!effect |> is.na()) |> nrow() |> equals(0))
-          return(
-            ggplot() +
-              annotate("text", x = 0, y = 1, label = "Variability was not estimated for this contrast", angle = 90) +
-              ggtitle(sprintf("%s %s", ..2, ..3)) +
-              my_theme +
-              theme(
-                axis.title.x = element_blank(), 
-                axis.title.y = element_blank(), 
-                axis.ticks.x = element_blank(),
-                axis.ticks.y = element_blank(),
-                axis.text.x = element_blank(),
-                axis.text.y = element_blank(),
-                axis.line.x = element_blank(),
-                axis.line.y = element_blank()
-              ) 
+          return(NA
+            # ggplot() +
+            #   annotate("text", x = 0, y = 1, label = "Variability was not estimated for this contrast", angle = 90) +
+            #   ggtitle(sprintf("%s %s", ..2, ..3)) +
+            #   my_theme +
+            #   theme(
+            #     axis.title.x = element_blank(), 
+            #     axis.title.y = element_blank(), 
+            #     axis.ticks.x = element_blank(),
+            #     axis.ticks.y = element_blank(),
+            #     axis.text.x = element_blank(),
+            #     axis.text.y = element_blank(),
+            #     axis.line.x = element_blank(),
+            #     axis.line.y = element_blank()
+            #   ) 
           )
         
           ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
@@ -1585,8 +1586,11 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
           theme(legend.position = "bottom") 
       }
     )) %>%
-    pull(plot) |>
-    wrap_plots(ncol=2)
+    filter(!plot |> is.na()) |> 
+    pull(plot) 
+  
+  plot_list  |>
+    wrap_plots(ncol= plot_list |> length() |> sqrt() |> ceiling())
 
 
 }
