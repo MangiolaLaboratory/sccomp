@@ -16,7 +16,8 @@ result =
     cores = 1,
     mcmc_seed = 42,       
     max_sampling_iterations = 1000
-  )
+  ) |> 
+  suppressWarnings()
 
 test_that("Generate data",{
   
@@ -26,7 +27,7 @@ test_that("Generate data",{
     
     sccomp_replicate() |>
     nrow() |>
-    expect_equal(600)
+    expect_equal(600) 
   
   
 })
@@ -35,13 +36,13 @@ test_that("Generate data",{
 test_that("remove unwanted variation",{
   
   result |>
-    sccomp_remove_unwanted_variation(~ type)
+    sccomp_remove_unwanted_variation(~ type) 
   
 })
 
 test_that("plot test composition",{
   
-  plot_summary(result)
+  plot_summary(result) 
   
   
 })
@@ -50,7 +51,7 @@ test_that("plot test composition",{
   
   result |> 
     test_contrasts() |> 
-    lifecycle::expect_deprecated()
+    lifecycle::expect_deprecated()  
   
   
 })

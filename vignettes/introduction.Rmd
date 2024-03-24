@@ -134,7 +134,6 @@ model_with_factor_association =
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
     cores = 1, 
     enable_loo = TRUE
@@ -147,7 +146,6 @@ model_without_association =
     formula_composition = ~ 1, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    check_outliers = FALSE, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 , 
     enable_loo = TRUE
@@ -198,7 +196,7 @@ We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 ## Summary plots
 
 ```{r, out.height="200%"}
-plots = res |> sccomp_test() |> plot_summary() 
+plots = res |> sccomp_test() |> plot() 
 ```
 
 A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be
@@ -230,7 +228,7 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 Plot 1D significance plot
 
 ```{r}
-plots = res |> sccomp_test() |> plot_summary()
+plots = res |> sccomp_test() |> plot()
 
 plots$credible_intervals_1D
 ```

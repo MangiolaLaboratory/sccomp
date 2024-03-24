@@ -517,7 +517,7 @@ plot_summary <- function(.data, significance_threshold = 0.025) {
     details="sccomp says: plot_summary() is soft-deprecated. Please use sccomp_test()."
   )
   
-  UseMethod("print", .data)
+  UseMethod("plot", .data)
  
   
 }
