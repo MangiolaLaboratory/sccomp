@@ -26,3 +26,6 @@ knitr::opts_chunk$set( fig.path = "inst/figures/")
 ```{r child="man/fragments/intro.Rmd"}
 ```
 
+## The old framework
+
+The new tidy framework was introduced in 2024, two, understand the differences and improvements. Compared to the old framework, please read this [blog post](https://tidyomics.github.io/tidyomicsBlog/post/2023-12-07-tidy-sccomp/).

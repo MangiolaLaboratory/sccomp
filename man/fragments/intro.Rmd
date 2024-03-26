@@ -1,16 +1,17 @@
 
 # <img src="inst/logo-01.png" height="139px" width="120px"/>
 
-Sccomp is a generalised method for differential composition and
-variability analyses.
+`sccomp` tests differences in cell type proportions from single-cell data. It is robust against outliers, it models continuous and discrete factors, and capable of random-effect/intercept modelling.
+
+Please cite [PNAS - sccomp: Robust differential composition and variability analysis for single-cell data](https://www.pnas.org/doi/full/10.1073/pnas.2203828120)
 
 # Characteristics
 
 - Complex linear models with continuous and categorical covariates
-- Multilevel modelling, with population (i.e. fixed) and group (random) effects
-- Modelling counts 
-- Modelling proportionality 
-- Modelling cell-type specific variability 
+- Multilevel modelling, with population fixed and random effects/intercept
+- Modelling data from counts 
+- Testing differences in cell-type proportionality 
+- Testing differences in cell-type specific variability 
 - Cell-type information share for variability adaptive shrinkage
 - Testing differential variability 
 - Probabilistic outlier identification 
@@ -77,9 +78,10 @@ res =
     .cell_group = cell_group,
     .count = proportion, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1,
+    verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(cores = 1) |> 
+  sccomp_remove_outliers(verbose = FALSE) |> 
 	sccomp_test(test_composition_above_logit_fold_change = 0.2)
 
 res
@@ -148,9 +150,10 @@ counts_obj |>
     .cell_group = cell_group, 
     .count = proportion,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1 ,
+    verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(cores = 1) |> 
+  sccomp_remove_outliers(verbose = FALSE) |> 
 	sccomp_test(
 	  contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
 	  test_composition_above_logit_fold_change = 0.2
@@ -179,7 +182,8 @@ model_with_factor_association =
     .count = proportion,
     bimodal_mean_variability_association = TRUE,
     cores = 1, 
-    enable_loo = TRUE
+    enable_loo = TRUE, # Needed for model comparison and ANOVA
+    verbose = FALSE
   )
 
 # Fit second model
@@ -192,7 +196,8 @@ model_without_association =
     .count = proportion,
     bimodal_mean_variability_association = TRUE,
     cores = 1 , 
-    enable_loo = TRUE
+    enable_loo = TRUE, # Needed for model comparison and ANOVA
+    verbose = FALSE
   )
 
 # Compare models
@@ -217,13 +222,17 @@ We can model the cell-group variability also dependent on the type, and so test 
     .cell_group = cell_group,
     .count = proportion,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1 ,
+    verbose = FALSE
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(verbose = FALSE) |> 
 	sccomp_test(
 	  test_composition_above_logit_fold_change = 0.2
 	)
+```
 
+```{r}
+res
 
 ```
 
@@ -255,9 +264,11 @@ res =
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1,
+    verbose = FALSE,
+    variational_inference = FALSE # For this more complex model use full HMC inference
   ) |> 
-  sccomp_remove_outliers() |> 
+  sccomp_remove_outliers(variational_inference = FALSE, verbose = FALSE) |> 
 	sccomp_test(
 	  test_composition_above_logit_fold_change = 0.2
 	)

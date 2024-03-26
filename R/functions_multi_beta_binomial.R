@@ -14,7 +14,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
-                                     approximate_posterior_inference = "none",
+                                     variational_inference = TRUE,
                                      test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                      verbose = FALSE,
                                      exclude_priors = FALSE,
@@ -86,7 +86,7 @@ sccomp_glm_data_frame_raw = function(.data,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
-      approximate_posterior_inference = approximate_posterior_inference,
+      variational_inference = variational_inference,
       exclude_priors = exclude_priors,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       enable_loo = enable_loo,
@@ -114,7 +114,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
-                                        approximate_posterior_inference = "none",
+                                        variational_inference = TRUE,
                                         test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
                                         verbose = FALSE,
                                         exclude_priors = FALSE,
@@ -194,6 +194,10 @@ sccomp_glm_data_frame_counts = function(.data,
   # Random intercept
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
   
+  # Variational only if no random intercept
+  if(variational_inference & random_intercept_elements |> filter(factor != "(Intercept)") |> nrow() > 0)
+    stop("sccomp says: for random effect modelling plese use `variational_inference` = FALSE, for the full Bayes HMC inference.")
+  
   # If no random intercept fake it
   if(nrow(random_intercept_elements)>0){
     .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
@@ -234,7 +238,7 @@ sccomp_glm_data_frame_counts = function(.data,
     data_spread_to_model_input(
       formula_composition, !!.sample, !!.cell_group, !!.count,
       truncation_ajustment = 1.1,
-      approximate_posterior_inference = approximate_posterior_inference == "all",
+      approximate_posterior_inference = variational_inference,
       formula_variability = formula_variability,
       contrasts = contrasts,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
@@ -282,7 +286,7 @@ sccomp_glm_data_frame_counts = function(.data,
       stanmodels$glm_multi_beta_binomial,
       cores= cores,
       quantile = CI,
-      approximate_posterior_inference = approximate_posterior_inference == "all",
+      approximate_posterior_inference = variational_inference,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,

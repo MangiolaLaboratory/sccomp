@@ -250,11 +250,13 @@ vb_iterative = function(model,
                         tol_rel_obj,
                         additional_parameters_to_save = c(),
                         data,
-                        seed,
+                        seed, 
+                        init = "random",
+                        pars = NA,
                         ...) {
   res = NULL
   i = 0
-  while (res %>% is.null | i > 5) {
+  while  (is.null(res) & i < 5) {
     res = tryCatch({
       my_res = vb(
         model,
@@ -262,8 +264,9 @@ vb_iterative = function(model,
         output_samples = output_samples,
         iter = iter,
         tol_rel_obj = tol_rel_obj,
-        seed = seed,
-        #pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
+        seed = seed+i,
+        init = init,
+        pars=pars,
         ...
       )
       boolFalse <- TRUE
@@ -278,6 +281,8 @@ vb_iterative = function(model,
     })
   }
 
+  if(is.null(res)) stop(sprintf("sccomp says: variational Bayes did not converge after %s attempts. Please use variational_bayes = FALSE for a HMC fitting.", i))
+  
   return(res)
 }
 
@@ -517,18 +522,20 @@ fit_model = function(
       seed = seed,
       pars = pars,
       save_warmup = FALSE,
-      init = init
+      init = map(1:chains, ~ init_list)  |> 
+        setNames(as.character(1:chains))
     ) %>%
       suppressWarnings()
 
   else
     vb_iterative(
       model,
-      output_samples = output_samples ,
+      output_samples = 1000 ,
       iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
+      init = init_list,
       pars = pars
     ) %>%
       suppressWarnings()
@@ -1586,32 +1593,56 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
 
   .cell_group = enquo(.cell_group)
 
-  .data |>
+  plot_list = 
+    .data |>
     filter(parameter != "(Intercept)") |>
 
     # Reshape
     select(-contains("n_eff"), -contains("R_k_hat")) |> 
     pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
-    drop_na() |>
     pivot_wider(names_from = estimate, values_from = value) |>
 
     nest(data = -c(parameter, which)) |>
     mutate(plot = pmap(
       list(data, which, parameter),
-      ~  ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
-        geom_vline(xintercept = 0.2, colour="grey") +
-        geom_vline(xintercept = -0.2, colour="grey") +
-        geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
-        geom_point() +
-        scale_color_brewer(palette = "Set1") +
-        xlab("Credible interval of the slope") +
-        ylab("Cell group") +
-        ggtitle(sprintf("%s %s", ..2, ..3)) +
-        theme(legend.position = "bottom") +
-        my_theme
+      ~  {
+        # if I don't have any statistics, for example, for variability, where has not been modelled
+        if(..1 |> filter(!effect |> is.na()) |> nrow() |> equals(0))
+          return(NA
+            # ggplot() +
+            #   annotate("text", x = 0, y = 1, label = "Variability was not estimated for this contrast", angle = 90) +
+            #   ggtitle(sprintf("%s %s", ..2, ..3)) +
+            #   my_theme +
+            #   theme(
+            #     axis.title.x = element_blank(), 
+            #     axis.title.y = element_blank(), 
+            #     axis.ticks.x = element_blank(),
+            #     axis.ticks.y = element_blank(),
+            #     axis.text.x = element_blank(),
+            #     axis.text.y = element_blank(),
+            #     axis.line.x = element_blank(),
+            #     axis.line.y = element_blank()
+            #   ) 
+          )
+        
+          ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
+          geom_vline(xintercept = 0.2, colour="grey") +
+          geom_vline(xintercept = -0.2, colour="grey") +
+          geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
+          geom_point() +
+          scale_color_brewer(palette = "Set1") +
+          xlab("Credible interval of the slope") +
+          ylab("Cell group") +
+          ggtitle(sprintf("%s %s", ..2, ..3)) +
+          my_theme +
+          theme(legend.position = "bottom") 
+      }
     )) %>%
-    pull(plot) |>
-    wrap_plots(ncol=2)
+    filter(!plot |> is.na()) |> 
+    pull(plot) 
+  
+  plot_list  |>
+    wrap_plots(ncol= plot_list |> length() |> sqrt() |> ceiling())
 
 
 }
