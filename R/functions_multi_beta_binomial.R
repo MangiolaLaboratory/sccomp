@@ -194,6 +194,10 @@ sccomp_glm_data_frame_counts = function(.data,
   # Random intercept
   random_intercept_elements = parse_formula_random_intercept(formula_composition)
   
+  # Variational only if no random intercept
+  if(variational_inference & random_intercept_elements |> filter(factor != "(Intercept)") |> nrow() > 0)
+    stop("sccomp says: for random effect modelling plese use `variational_inference` = FALSE, for the full Bayes HMC inference.")
+  
   # If no random intercept fake it
   if(nrow(random_intercept_elements)>0){
     .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))

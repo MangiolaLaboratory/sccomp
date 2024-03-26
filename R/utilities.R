@@ -250,11 +250,13 @@ vb_iterative = function(model,
                         tol_rel_obj,
                         additional_parameters_to_save = c(),
                         data,
-                        seed,
+                        seed, 
+                        init = "random",
+                        pars = NA,
                         ...) {
   res = NULL
   i = 0
-  while (res %>% is.null | i > 5) {
+  while  (is.null(res) & i < 5) {
     res = tryCatch({
       my_res = vb(
         model,
@@ -262,8 +264,9 @@ vb_iterative = function(model,
         output_samples = output_samples,
         iter = iter,
         tol_rel_obj = tol_rel_obj,
-        seed = seed,
-        #pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
+        seed = seed+i,
+        init = init,
+        pars=pars,
         ...
       )
       boolFalse <- TRUE
@@ -278,6 +281,8 @@ vb_iterative = function(model,
     })
   }
 
+  if(is.null(res)) stop(sprintf("sccomp says: variational Bayes did not converge after %s attempts. Please use variational_bayes = FALSE for a HMC fitting.", i))
+  
   return(res)
 }
 
@@ -517,18 +522,20 @@ fit_model = function(
       seed = seed,
       pars = pars,
       save_warmup = FALSE,
-      init = init
+      init = map(1:chains, ~ init_list)  |> 
+        setNames(as.character(1:chains))
     ) %>%
       suppressWarnings()
 
   else
     vb_iterative(
       model,
-      output_samples = output_samples ,
+      output_samples = 1000 ,
       iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
+      init = init_list,
       pars = pars
     ) %>%
       suppressWarnings()
