@@ -4,6 +4,11 @@ data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 
+counts_obj = 
+  counts_obj |>
+  mutate(count = count+1) |> 
+  with_groups(sample, ~ .x |> mutate(proportion = count/sum(count))) 
+
 set.seed(42)
 
 my_estimate = 
@@ -463,8 +468,9 @@ test_that("test constrasts",{
 
 test_that("proportions",{
   
+  
       counts_obj |>
-    sccomp_estimate(
+      sccomp_estimate(
       formula_composition = ~ type , 
       .sample = sample,  
       .cell_group = cell_group, 
@@ -480,15 +486,15 @@ test_that("proportions",{
 
 
 
-# fit = 
-# 	seurat_obj |> 
-# 	dplyr::count(sample, cell_group, continuous_covariate, type, group__) |> 
-# 	with_groups(sample, ~ .x |> mutate(tot = sum(n))) |> 
-# 	rename(group = group__) |> 
-# 	filter(cell_group=="B mem") |> 
+# fit =
+# 	seurat_obj |>
+# 	dplyr::count(sample, cell_group, continuous_covariate, type, group__) |>
+# 	with_groups(sample, ~ .x |> mutate(tot = sum(n))) |>
+# 	rename(group = group__) |>
+# 	filter(cell_group=="B mem") |>
 # 	brm(
-# 		n | trials(tot) ~ type + (1 + type| group), 
-# 		data = _, 
-# 		family=beta_binomial(), 
+# 		n | trials(tot) ~ type + (1 + type| group),
+# 		data = _,
+# 		family=beta_binomial(),
 # 		cores = 4
 # 	)
