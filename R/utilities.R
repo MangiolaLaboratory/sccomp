@@ -484,7 +484,7 @@ fit_model = function(
       max(4000) 
     
     if(output_samples > max_sampling_iterations) {
-      message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+      # message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
       output_samples = max_sampling_iterations
     
   }}
