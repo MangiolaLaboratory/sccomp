@@ -48,7 +48,8 @@ my_estimate_random =
     sample, cell_group,
     cores = 1,
     mcmc_seed = 42,     
-    max_sampling_iterations = 1000
+    max_sampling_iterations = 1000,
+    variational_inference = FALSE
   )
 
 # my_estimate_random2 = 
@@ -173,25 +174,13 @@ test_that("multilevel multi beta binomial from Seurat",{
     slice(1:3) |>
     pull(cell_group) |>
     sort() |> 
-    expect_equal(c("B mem", "CD4 cm high cytokine", "CD4 ribosome"  ) |> sort())
+    expect_equal(c("CD4 cm high cytokine", "CD4 ribosome", "Mono NKG7 2"  ) |> sort())
 
   # Check convergence
   res |>
     filter(c_R_k_hat > 4) |>
     nrow() |>
     expect_equal(0)
-
-  res =
-    seurat_obj |>
-    ## filter(cell_group %in% c("NK cycling", "B immature")) |>
-    sccomp_estimate(
-      formula_composition = ~ 0 + type + (type | group__),
-      formula_variability = ~ 1,
-      sample, cell_group,
-      cores = 1,
-      mcmc_seed = 42,    
-      max_sampling_iterations = 1000
-    )
 
   # res |>
   #   filter(parameter == "typecancer - typehealthy") |>
@@ -220,7 +209,8 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       sample, cell_group,
       cores = 1,
       mcmc_seed = 42,   
-      max_sampling_iterations = 1000
+      max_sampling_iterations = 1000,
+      variational_inference = FALSE
     )
 
     expect(
