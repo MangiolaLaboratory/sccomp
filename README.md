@@ -73,10 +73,15 @@ model for composition.
 
 ## Binary factor
 
+Of the output table, the estimate columns start with the prefix `c_`
+indicate `composition`, or with `v_` indicate `variability` (when
+formula_variability is set).
+
 ### From Seurat, SingleCellExperiment, metadata objects
 
 ``` r
-single_cell_object |>
+sccomp_result = 
+  single_cell_object |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
@@ -84,48 +89,192 @@ single_cell_object |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
-    sccomp_test(test_composition_above_logit_fold_change = 0.2)
+  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_test()
 ```
 
 ### From counts
 
 ``` r
-counts_obj |>
+sccomp_result = 
+  counts_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1,
-    verbose = FALSE
+    cores = 1 
   ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-    sccomp_test(test_composition_above_logit_fold_change = 0.2)
+  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_test()
 ```
 
-    ## # A tibble: 72 × 18
-    ##    cell_group parameter   factor c_lower c_effect c_upper  c_pH0   c_FDR c_n_eff
-    ##    <chr>      <chr>       <chr>    <dbl>    <dbl>   <dbl>  <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercept) <NA>    0.811     1.07   1.32   0      0           NaN
-    ##  2 B1         typecancer  type   -0.810    -0.466 -0.117  0.0650 0.0105      NaN
-    ##  3 B2         (Intercept) <NA>    0.228     0.535  0.828  0.0170 0.00127     NaN
-    ##  4 B2         typecancer  type   -0.907    -0.475 -0.0285 0.114  0.0293      NaN
-    ##  5 B3         (Intercept) <NA>   -0.685    -0.419 -0.153  0.0500 0.00339     NaN
-    ##  6 B3         typecancer  type   -0.676    -0.314  0.0565 0.29   0.0887      NaN
-    ##  7 BM         (Intercept) <NA>   -1.39     -1.13  -0.864  0      0           NaN
-    ##  8 BM         typecancer  type   -0.548    -0.203  0.160  0.49   0.138       NaN
-    ##  9 CD4 1      (Intercept) <NA>    0.126     0.310  0.509  0.128  0.0206      NaN
-    ## 10 CD4 1      typecancer  type   -0.0734    0.176  0.453  0.571  0.169       NaN
-    ## # ℹ 62 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
-    ## #   count_data <list>
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: EXPERIMENTAL ALGORITHM:
+    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
+    ## Chain 1:   or buggy. The interface is subject to change.
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.006252 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 62.52 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Begin eta adaptation.
+    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+    ## Chain 1: Success! Found best value [eta = 1] earlier than expected.
+    ## Chain 1: 
+    ## Chain 1: Begin stochastic gradient ascent.
+    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+    ## Chain 1:    100        -4003.375             1.000            1.000
+    ## Chain 1:    200        -3725.256             0.537            1.000
+    ## Chain 1:    300        -3709.548             0.360            0.075
+    ## Chain 1:    400        -3702.257             0.270            0.075
+    ## Chain 1:    500        -3703.945             0.216            0.004   MEDIAN ELBO CONVERGED
+    ## Chain 1: 
+    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+    ## Chain 1: COMPLETED.
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: EXPERIMENTAL ALGORITHM:
+    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
+    ## Chain 1:   or buggy. The interface is subject to change.
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.005503 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 55.03 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Begin eta adaptation.
+    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+    ## Chain 1: Iteration: 250 / 250 [100%]  (Adaptation)
+    ## Chain 1: Success! Found best value [eta = 0.1].
+    ## Chain 1: 
+    ## Chain 1: Begin stochastic gradient ascent.
+    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+    ## Chain 1:    100        -4409.857             1.000            1.000
+    ## Chain 1:    200        -3998.205             0.551            1.000
+    ## Chain 1:    300        -3799.150             0.385            0.103
+    ## Chain 1:    400        -3688.101             0.296            0.103
+    ## Chain 1:    500        -3624.214             0.241            0.052
+    ## Chain 1:    600        -3570.193             0.203            0.052
+    ## Chain 1:    700        -3520.858             0.176            0.030
+    ## Chain 1:    800        -3480.524             0.155            0.030
+    ## Chain 1:    900        -3456.364             0.139            0.018
+    ## Chain 1:   1000        -3429.880             0.126            0.018
+    ## Chain 1:   1100        -3411.811             0.026            0.015
+    ## Chain 1:   1200        -3393.713             0.017            0.014
+    ## Chain 1:   1300        -3386.192             0.012            0.012
+    ## Chain 1:   1400        -3371.879             0.009            0.008   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
+    ## Chain 1: 
+    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+    ## Chain 1: COMPLETED.
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: EXPERIMENTAL ALGORITHM:
+    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
+    ## Chain 1:   or buggy. The interface is subject to change.
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.005745 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 57.45 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Begin eta adaptation.
+    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+    ## Chain 1: Iteration: 250 / 250 [100%]  (Adaptation)
+    ## Chain 1: Success! Found best value [eta = 0.1].
+    ## Chain 1: 
+    ## Chain 1: Begin stochastic gradient ascent.
+    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+    ## Chain 1:    100        -4733.528             1.000            1.000
+    ## Chain 1:    200        -4296.589             0.551            1.000
+    ## Chain 1:    300        -4091.552             0.384            0.102
+    ## Chain 1:    400        -3983.170             0.295            0.102
+    ## Chain 1:    500        -3922.063             0.239            0.050
+    ## Chain 1:    600        -3871.097             0.201            0.050
+    ## Chain 1:    700        -3826.858             0.174            0.027
+    ## Chain 1:    800        -3791.614             0.154            0.027
+    ## Chain 1:    900        -3771.938             0.137            0.016
+    ## Chain 1:   1000        -3750.617             0.124            0.016
+    ## Chain 1:   1100        -3737.067             0.024            0.013
+    ## Chain 1:   1200        -3722.730             0.015            0.012
+    ## Chain 1:   1300        -3718.192             0.010            0.009   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
+    ## Chain 1: 
+    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+    ## Chain 1: COMPLETED.
 
-Of the output table, the estimate columns start with the prefix `c_`
-indicate `composition`, or with `v_` indicate `variability` (when
-formula_variability is set).
+## Summary plots
+
+``` r
+plots = sccomp_result |> plot() 
+```
+
+    ## Joining with `by = join_by(cell_group, sample)`
+    ## Joining with `by = join_by(cell_group, type)`
+
+A plot of group proportion, faceted by groups. The blue boxplots
+represent the posterior predictive check. If the model is likely to be
+descriptively adequate to the data, the blue box plot should roughly
+overlay with the black box plot, which represents the observed data. The
+outliers are coloured in red. A box plot will be returned for every
+(discrete) covariate present in `formula_composition`. The colour coding
+represents the significant associations for composition and/or
+variability.
+
+``` r
+plots$boxplot
+```
+
+    ## [[1]]
+
+![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
+
+A plot of estimates of differential composition (c\_) on the x-axis and
+differential variability (v\_) on the y-axis. The error bars represent
+95% credible intervals. The dashed lines represent the minimal effect
+that the hypothesis test is based on. An effect is labelled as
+significant if bigger than the minimal effect according to the 95%
+credible interval. Facets represent the covariates in the model.
+
+``` r
+plots$credible_intervals_1D
+```
+
+![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
+
+We can plot the relationship between abundance and variability. As we
+can see below, they are positively correlated, you also appreciate that
+this relationship is by model for single cell RNA sequencing data.
+
+`sccomp` models, these relationship to obtain a shrinkage effect on the
+estimates of both the abundance and the variability. This shrinkage is
+adaptive as it is modelled jointly, thanks for Bayesian inference.
+
+``` r
+plots$credible_intervals_2D
+```
+
+![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
 
 ## Contrasts
 
@@ -136,29 +285,56 @@ seurat_obj |>
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 ,
-    verbose = FALSE
+    cores = 1 
   ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-    sccomp_test(
-      contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
-      test_composition_above_logit_fold_change = 0.2
-    )
+  sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
 ```
+
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: EXPERIMENTAL ALGORITHM:
+    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
+    ## Chain 1:   or buggy. The interface is subject to change.
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.004847 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 48.47 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Begin eta adaptation.
+    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+    ## Chain 1: Success! Found best value [eta = 1] earlier than expected.
+    ## Chain 1: 
+    ## Chain 1: Begin stochastic gradient ascent.
+    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+    ## Chain 1:    100        -3213.050             1.000            1.000
+    ## Chain 1:    200        -3161.439             0.508            1.000
+    ## Chain 1:    300        -3163.485             0.339            0.016
+    ## Chain 1:    400        -3156.074             0.255            0.016
+    ## Chain 1:    500        -3158.478             0.204            0.002   MEDIAN ELBO CONVERGED
+    ## Chain 1: 
+    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+    ## Chain 1: COMPLETED.
 
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -2.07    -1.66   -1.24  0       0            NA
-    ##  2 B immature  typeheal… <NA>     1.24     1.66    2.07  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.39    -1.78   -1.06  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.06     1.78    2.39  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.25    -0.948  -0.642 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.642    0.948   1.25  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.514    1.62    2.64  0.00400 1.27e-3      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.64    -1.62   -0.514 0.00400 1.27e-3      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.553    1.21    1.85  0.00200 6.25e-4      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.85    -1.21   -0.553 0.00200 6.25e-4      NA
+    ##  1 B immature  typecanc… <NA>    -1.87    -1.41   -0.953 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.953    1.41    1.87  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.31    -1.77   -1.22  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.22     1.77    2.31  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.40    -0.950  -0.493 0       0            NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.493    0.950   1.40  0       0            NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.803    1.80    2.75  0.00100 1.43e-4      NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.75    -1.80   -0.803 0.00100 1.43e-4      NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.398    0.999   1.62  0.00200 4.44e-4      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.62    -0.999  -0.398 0.00200 4.44e-4      NA
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -191,8 +367,7 @@ model_with_factor_association =
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1, 
-    enable_loo = TRUE, # Needed for model comparison and ANOVA
-    verbose = FALSE
+    enable_loo = TRUE
   )
 
 # Fit second model
@@ -204,8 +379,7 @@ model_without_association =
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 , 
-    enable_loo = TRUE, # Needed for model comparison and ANOVA
-    verbose = FALSE
+    enable_loo = TRUE
   )
 
 # Compare models
@@ -214,10 +388,6 @@ loo_compare(
   model_without_association |> attr("fit") |> loo()
 )
 ```
-
-    ##        elpd_diff se_diff
-    ## model1   0.0       0.0  
-    ## model2 -83.2      15.2
 
 ## Differential variability, binary factor
 
@@ -233,36 +403,62 @@ res =
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 ,
-    verbose = FALSE
-  ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-    sccomp_test(
-      test_composition_above_logit_fold_change = 0.2
-    )
+    cores = 1 
+  )
 ```
+
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: EXPERIMENTAL ALGORITHM:
+    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
+    ## Chain 1:   or buggy. The interface is subject to change.
+    ## Chain 1: ------------------------------------------------------------
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.005985 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 59.85 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Begin eta adaptation.
+    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+    ## Chain 1: Success! Found best value [eta = 1] earlier than expected.
+    ## Chain 1: 
+    ## Chain 1: Begin stochastic gradient ascent.
+    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+    ## Chain 1:    100        -3415.586             1.000            1.000
+    ## Chain 1:    200        -3180.228             0.537            1.000
+    ## Chain 1:    300        -3171.852             0.359            0.074
+    ## Chain 1:    400        -3175.715             0.269            0.074
+    ## Chain 1:    500        -3167.118             0.216            0.003   MEDIAN ELBO CONVERGED
+    ## Chain 1: 
+    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+    ## Chain 1: COMPLETED.
 
 ``` r
 res
 ```
 
-    ## # A tibble: 60 × 18
-    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  (Interce… <NA>     0.605    0.942  1.30   0       0           NaN
-    ##  2 B immature  typeheal… type     1.09     1.58   2.06   0       0           NaN
-    ##  3 B mem       (Interce… <NA>    -1.36    -1.03  -0.697  0       0           NaN
-    ##  4 B mem       typeheal… type     1.68     2.15   2.68   0       0           NaN
-    ##  5 CD4 cm S10… (Interce… <NA>     1.80     2.06   2.32   0       0           NaN
-    ##  6 CD4 cm S10… typeheal… type     0.501    0.823  1.14   0.00100 1.00e-4     NaN
-    ##  7 CD4 cm hig… (Interce… <NA>    -1.05    -0.509  0.0229 0.123   1.39e-2     NaN
-    ##  8 CD4 cm hig… typeheal… type    -2.37    -1.61  -0.849  0       0           NaN
-    ##  9 CD4 cm rib… (Interce… <NA>     0.198    0.566  0.950  0.0260  3.05e-3     NaN
-    ## 10 CD4 cm rib… typeheal… type    -2.35    -1.87  -1.36   0       0           NaN
+    ## # A tibble: 60 × 14
+    ##    cell_group        parameter factor c_lower c_effect c_upper c_n_eff c_R_k_hat
+    ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>     <dbl>
+    ##  1 B immature        (Interce… <NA>     0.500    0.824   1.15      NaN      3.17
+    ##  2 B immature        typeheal… type     0.949    1.43    1.92      NaN      3.09
+    ##  3 B mem             (Interce… <NA>    -1.14    -0.725  -0.321     NaN      3.15
+    ##  4 B mem             typeheal… type     1.08     1.65    2.19      NaN      3.21
+    ##  5 CD4 cm S100A4     (Interce… <NA>     1.42     1.69    1.95      NaN      3.22
+    ##  6 CD4 cm S100A4     typeheal… type     0.692    1.07    1.48      NaN      3.17
+    ##  7 CD4 cm high cyto… (Interce… <NA>    -1.54    -0.938  -0.297     NaN      3.10
+    ##  8 CD4 cm high cyto… typeheal… type    -1.88    -1.03   -0.128     NaN      3.16
+    ##  9 CD4 cm ribosome   (Interce… <NA>    -0.159    0.240   0.656     NaN      3.17
+    ## 10 CD4 cm ribosome   typeheal… type    -1.48    -0.893  -0.308     NaN      3.09
     ## # ℹ 50 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
-    ## #   count_data <list>
+    ## # ℹ 6 more variables: v_lower <dbl>, v_effect <dbl>, v_upper <dbl>,
+    ## #   v_n_eff <dbl>, v_R_k_hat <dbl>, count_data <list>
 
 # Suggested settings
 
@@ -276,47 +472,6 @@ plots\$credible_intervals_2D (see below).
 
 We recommend setting `bimodal_mean_variability_association  = FALSE`
 (Default).
-
-# Visualisation
-
-## Summary plots
-
-``` r
-plots = plot(res) 
-```
-
-    ## Joining with `by = join_by(cell_group, sample)`
-    ## Joining with `by = join_by(cell_group, type)`
-
-A plot of group proportion, faceted by groups. The blue boxplots
-represent the posterior predictive check. If the model is likely to be
-descriptively adequate to the data, the blue box plot should roughly
-overlay with the black box plot, which represents the observed data. The
-outliers are coloured in red. A box plot will be returned for every
-(discrete) covariate present in `formula_composition`. The colour coding
-represents the significant associations for composition and/or
-variability.
-
-``` r
-plots$boxplot
-```
-
-    ## [[1]]
-
-![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
-
-A plot of estimates of differential composition (c\_) on the x-axis and
-differential variability (v\_) on the y-axis. The error bars represent
-95% credible intervals. The dashed lines represent the minimal effect
-that the hypothesis test is based on. An effect is labelled as
-significant if bigger than the minimal effect according to the 95%
-credible interval. Facets represent the covariates in the model.
-
-``` r
-plots$credible_intervals_1D
-```
-
-![](inst/figures/unnamed-chunk-16-1.png)<!-- -->
 
 ## Visualisation of the MCMC chains from the posterior distribution
 
@@ -334,7 +489,7 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 Plot 1D significance plot
 
 ``` r
-plots = plot(res)
+plots = res |> sccomp_test() |> plot()
 ```
 
     ## Joining with `by = join_by(cell_group, sample)`
@@ -365,84 +520,6 @@ plots$credible_intervals_2D
 ```
 
 ![](inst/figures/unnamed-chunk-19-1.png)<!-- -->
-
-# Multilevel modelling
-
-`sccomp` is cabable of estimating population (i.e. fixed) and group
-(i.e. random) effects. The formulation is analogous to the `lme4`
-package and `brms`.
-
-!! For now, only one grouping is allowed (e.g. group2\_\_).
-
-``` r
-res = 
-  seurat_obj |>
-  sccomp_estimate( 
-    formula_composition = ~ type + continuous_covariate + (type | group2__), 
-    formula_variability = ~ type,
-    .sample = sample,
-    .cell_group = cell_group,
-    bimodal_mean_variability_association = TRUE,
-    cores = 1,
-    verbose = FALSE,
-    variational_inference = FALSE # For this more complex model use full HMC inference
-  ) |> 
-  sccomp_remove_outliers(variational_inference = FALSE, verbose = FALSE) |> 
-    sccomp_test(
-      test_composition_above_logit_fold_change = 0.2
-    )
-
-res
-```
-
-    ## # A tibble: 210 × 18
-    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature (Intercep… <NA>     0.461  1.00      1.58  0.00425 1.08e-3   1336.
-    ##  2 B immature typehealt… type     0.614  1.31      1.94  0.00100 5.01e-4   1527.
-    ##  3 B immature continuou… conti…  -0.187  0.0599    0.340 0.847   6.12e-1   4872.
-    ##  4 B immature (Intercep… <NA>    -0.606 -0.0682    0.399 0.723   6.31e-1     NA 
-    ##  5 B immature typehealt… <NA>    -0.552 -0.00762   0.570 0.771   6.59e-1     NA 
-    ##  6 B immature (Intercep… <NA>    -0.491  0.00427   0.466 0.803   7.05e-1     NA 
-    ##  7 B immature typehealt… <NA>    -0.358  0.146     0.742 0.590   5.32e-1     NA 
-    ##  8 B mem      (Intercep… <NA>    -1.07  -0.427     0.395 0.270   5.61e-2   2104.
-    ##  9 B mem      typehealt… type     0.656  1.52      2.30  0.00325 1.42e-3   2344.
-    ## 10 B mem      continuou… conti…  -0.225  0.0734    0.388 0.792   5.93e-1   4059.
-    ## # ℹ 200 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
-    ## #   count_data <list>
-
-# Removal of unwanted variation
-
-After you model your dataset, you can remove the unwanted variation from
-your input data, **for visualisation purposes**
-
-We decide to just keep the type population (i.e. fixed) effect for
-abundance, and do not keep it for variability.
-
-``` r
-res |> sccomp_remove_unwanted_variation(~type)
-```
-
-    ## sccomp says: calculating residuals
-
-    ## sccomp says: regressing out unwanted factors
-
-    ## # A tibble: 600 × 5
-    ##    sample       cell_group adjusted_proportion adjusted_counts logit_residuals
-    ##    <chr>        <chr>                    <dbl>           <dbl>           <dbl>
-    ##  1 10x_6K       B immature              0.0674           316.          -0.545 
-    ##  2 10x_8K       B immature              0.170           1278.           0.548 
-    ##  3 GSE115189    B immature              0.134            315.           0.229 
-    ##  4 SCP345_580   B immature              0.0827           476.          -0.299 
-    ##  5 SCP345_860   B immature              0.141            905.           0.288 
-    ##  6 SCP424_pbmc1 B immature              0.102            273.          -0.0679
-    ##  7 SCP424_pbmc2 B immature              0.182            544.           0.635 
-    ##  8 SCP591       B immature              0.0311            17.7         -1.35  
-    ##  9 SI-GA-E5     B immature              0.0278           116.          -0.620 
-    ## 10 SI-GA-E7     B immature              0.0989           726.           0.729 
-    ## # ℹ 590 more rows
 
 ## The old framework
 

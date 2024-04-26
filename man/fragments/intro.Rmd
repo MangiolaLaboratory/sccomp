@@ -56,17 +56,21 @@ data("sce_obj")
 data("counts_obj")
 ```
 
+
 `sccomp` can model changes in composition and variability. By default, the formula for variability is either `~1`, which assumes that the
 cell-group variability is independent of any covariate or `~ factor_of_interest`, which assumes that the model is dependent on the
 factor of interest only. The variability model must be a subset of the model for composition.
 
 ## Binary factor 
 
+Of the output table, the estimate columns start with the prefix `c_` indicate `composition`, or with `v_` indicate `variability` (when formula_variability is set).
+
 ### From Seurat, SingleCellExperiment, metadata objects
 
 ```{r eval=FALSE}
 
-single_cell_object |>
+sccomp_result = 
+  single_cell_object |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
@@ -74,8 +78,8 @@ single_cell_object |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
-	sccomp_test(test_composition_above_logit_fold_change = 0.2)
+  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_test()
 
 ```
 
@@ -83,22 +87,49 @@ single_cell_object |>
 
 ```{r, message=FALSE, warning=FALSE}
 
-counts_obj |>
+sccomp_result = 
+  counts_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1,
-    verbose = FALSE
+    cores = 1 
   ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-	sccomp_test(test_composition_above_logit_fold_change = 0.2)
+  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_test()
 
 ```
 
-Of the output table, the estimate columns start with the prefix `c_` indicate `composition`, or with `v_` indicate `variability` (when formula_variability is set).
+## Summary plots
+
+```{r, out.height="200%"}
+plots = sccomp_result |> plot() 
+```
+
+A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be descriptively adequate to the data, the blue box plot should roughly overlay with the black box plot, which represents the observed data. The outliers are coloured in red. A box plot will be returned for every (discrete) covariate present in `formula_composition`. The colour coding represents the significant associations for composition and/or variability.
+
+```{r}
+plots$boxplot
+```
+
+A plot of estimates of differential composition (c\_) on the x-axis and differential variability (v\_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
+
+```{r}
+plots$credible_intervals_1D
+```
+
+
+We can plot the relationship between abundance and variability. As we can see below, they are positively correlated, you also appreciate that this relationship is by model for single cell RNA sequencing data.
+
+`sccomp` models, these relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks for Bayesian inference.
+
+
+```{r}
+plots$credible_intervals_2D
+```
+
 
 ## Contrasts
 
@@ -110,14 +141,10 @@ seurat_obj |>
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 ,
-    verbose = FALSE
+    cores = 1 
   ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-	sccomp_test(
-	  contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
-	  test_composition_above_logit_fold_change = 0.2
-	)
+  sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
+
 
 ```
 
@@ -129,7 +156,7 @@ This is achieved through model comparison with `loo`. In the following example, 
 If `elpd_diff` is away from zero of \> 5 `se_diff` difference of 5, we are confident that a model is better than the other [reference](https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola).
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model one, the one with factor association, is better than model two.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
 library(loo)
 
 # Fit first model
@@ -141,8 +168,7 @@ model_with_factor_association =
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1, 
-    enable_loo = TRUE, # Needed for model comparison and ANOVA
-    verbose = FALSE
+    enable_loo = TRUE
   )
 
 # Fit second model
@@ -154,8 +180,7 @@ model_without_association =
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 , 
-    enable_loo = TRUE, # Needed for model comparison and ANOVA
-    verbose = FALSE
+    enable_loo = TRUE
   )
 
 # Compare models
@@ -180,16 +205,9 @@ res =
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 ,
-    verbose = FALSE
-  ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-	sccomp_test(
-	  test_composition_above_logit_fold_change = 0.2
-	)
-```
+    cores = 1 
+  )
 
-```{r}
 res
 
 ```
@@ -205,30 +223,6 @@ We recommend setting `bimodal_mean_variability_association  = TRUE`. The bimodal
 
 We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 
-# Visualisation
-
-## Summary plots
-
-```{r, out.height="200%"}
-plots = plot(res) 
-```
-
-A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be
-descriptively adequate to the data, the blue box plot should roughly overlay with the black box plot, which represents the observed data. The
-outliers are coloured in red. A box plot will be returned for every (discrete) covariate present in `formula_composition`. The colour coding
-represents the significant associations for composition and/or variability.
-
-```{r}
-plots$boxplot
-```
-
-A plot of estimates of differential composition (c\_) on the x-axis and differential variability (v\_) on the y-axis. The error bars represent
-95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as
-significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
-
-```{r}
-plots$credible_intervals_1D
-```
 
 ## Visualisation of the MCMC chains from the posterior distribution
 
@@ -242,7 +236,7 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 Plot 1D significance plot
 
 ```{r}
-plots = plot(res)
+plots = res |> sccomp_test() |> plot()
 
 plots$credible_intervals_1D
 ```
@@ -253,43 +247,4 @@ This plot is provided only if differential variability has been tested. The diff
 
 ```{r}
 plots$credible_intervals_2D
-```
-
-# Multilevel modelling
-
-`sccomp` is cabable of estimating population (i.e. fixed) and group (i.e. random) effects. The formulation is analogous to the `lme4` package and `brms`.
-
-!! For now, only one grouping is allowed (e.g. group2__).
-
-```{r, message=FALSE, warning=FALSE}
-
-res = 
-  seurat_obj |>
-  sccomp_estimate( 
-    formula_composition = ~ type + continuous_covariate + (type | group2__), 
-    formula_variability = ~ type,
-    .sample = sample,
-    .cell_group = cell_group,
-    bimodal_mean_variability_association = TRUE,
-    cores = 1,
-    verbose = FALSE,
-    variational_inference = FALSE # For this more complex model use full HMC inference
-  ) |> 
-  sccomp_remove_outliers(variational_inference = FALSE, verbose = FALSE) |> 
-	sccomp_test(
-	  test_composition_above_logit_fold_change = 0.2
-	)
-
-res
-
-```
-
-# Removal of unwanted variation
-
-After you model your dataset, you can remove the unwanted variation from your input data, **for visualisation purposes** 
-
-We decide to just keep the type population (i.e. fixed) effect for abundance, and do not keep it for variability.
-
-```{r}
-res |> sccomp_remove_unwanted_variation(~type)
 ```
