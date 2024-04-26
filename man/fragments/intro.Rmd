@@ -95,9 +95,9 @@ sccomp_result =
     .cell_group = cell_group,
     .count = count, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
   sccomp_test()
 
 ```
@@ -141,7 +141,7 @@ seurat_obj |>
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   ) |> 
   sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
 
@@ -205,7 +205,7 @@ res =
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   )
 
 res

@@ -104,124 +104,11 @@ sccomp_result =
     .cell_group = cell_group,
     .count = count, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
   sccomp_test()
 ```
-
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: EXPERIMENTAL ALGORITHM:
-    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
-    ## Chain 1:   or buggy. The interface is subject to change.
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.006252 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 62.52 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Begin eta adaptation.
-    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-    ## Chain 1: Success! Found best value [eta = 1] earlier than expected.
-    ## Chain 1: 
-    ## Chain 1: Begin stochastic gradient ascent.
-    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-    ## Chain 1:    100        -4003.375             1.000            1.000
-    ## Chain 1:    200        -3725.256             0.537            1.000
-    ## Chain 1:    300        -3709.548             0.360            0.075
-    ## Chain 1:    400        -3702.257             0.270            0.075
-    ## Chain 1:    500        -3703.945             0.216            0.004   MEDIAN ELBO CONVERGED
-    ## Chain 1: 
-    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-    ## Chain 1: COMPLETED.
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: EXPERIMENTAL ALGORITHM:
-    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
-    ## Chain 1:   or buggy. The interface is subject to change.
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.005503 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 55.03 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Begin eta adaptation.
-    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-    ## Chain 1: Iteration: 250 / 250 [100%]  (Adaptation)
-    ## Chain 1: Success! Found best value [eta = 0.1].
-    ## Chain 1: 
-    ## Chain 1: Begin stochastic gradient ascent.
-    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-    ## Chain 1:    100        -4409.857             1.000            1.000
-    ## Chain 1:    200        -3998.205             0.551            1.000
-    ## Chain 1:    300        -3799.150             0.385            0.103
-    ## Chain 1:    400        -3688.101             0.296            0.103
-    ## Chain 1:    500        -3624.214             0.241            0.052
-    ## Chain 1:    600        -3570.193             0.203            0.052
-    ## Chain 1:    700        -3520.858             0.176            0.030
-    ## Chain 1:    800        -3480.524             0.155            0.030
-    ## Chain 1:    900        -3456.364             0.139            0.018
-    ## Chain 1:   1000        -3429.880             0.126            0.018
-    ## Chain 1:   1100        -3411.811             0.026            0.015
-    ## Chain 1:   1200        -3393.713             0.017            0.014
-    ## Chain 1:   1300        -3386.192             0.012            0.012
-    ## Chain 1:   1400        -3371.879             0.009            0.008   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
-    ## Chain 1: 
-    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-    ## Chain 1: COMPLETED.
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: EXPERIMENTAL ALGORITHM:
-    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
-    ## Chain 1:   or buggy. The interface is subject to change.
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.005745 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 57.45 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Begin eta adaptation.
-    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-    ## Chain 1: Iteration: 250 / 250 [100%]  (Adaptation)
-    ## Chain 1: Success! Found best value [eta = 0.1].
-    ## Chain 1: 
-    ## Chain 1: Begin stochastic gradient ascent.
-    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-    ## Chain 1:    100        -4733.528             1.000            1.000
-    ## Chain 1:    200        -4296.589             0.551            1.000
-    ## Chain 1:    300        -4091.552             0.384            0.102
-    ## Chain 1:    400        -3983.170             0.295            0.102
-    ## Chain 1:    500        -3922.063             0.239            0.050
-    ## Chain 1:    600        -3871.097             0.201            0.050
-    ## Chain 1:    700        -3826.858             0.174            0.027
-    ## Chain 1:    800        -3791.614             0.154            0.027
-    ## Chain 1:    900        -3771.938             0.137            0.016
-    ## Chain 1:   1000        -3750.617             0.124            0.016
-    ## Chain 1:   1100        -3737.067             0.024            0.013
-    ## Chain 1:   1200        -3722.730             0.015            0.012
-    ## Chain 1:   1300        -3718.192             0.010            0.009   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
-    ## Chain 1: 
-    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-    ## Chain 1: COMPLETED.
 
 ## Summary plots
 
@@ -285,56 +172,24 @@ seurat_obj |>
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   ) |> 
   sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
 ```
 
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: EXPERIMENTAL ALGORITHM:
-    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
-    ## Chain 1:   or buggy. The interface is subject to change.
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.004847 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 48.47 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Begin eta adaptation.
-    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-    ## Chain 1: Success! Found best value [eta = 1] earlier than expected.
-    ## Chain 1: 
-    ## Chain 1: Begin stochastic gradient ascent.
-    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-    ## Chain 1:    100        -3213.050             1.000            1.000
-    ## Chain 1:    200        -3161.439             0.508            1.000
-    ## Chain 1:    300        -3163.485             0.339            0.016
-    ## Chain 1:    400        -3156.074             0.255            0.016
-    ## Chain 1:    500        -3158.478             0.204            0.002   MEDIAN ELBO CONVERGED
-    ## Chain 1: 
-    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-    ## Chain 1: COMPLETED.
-
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -1.87    -1.41   -0.953 0       0            NA
-    ##  2 B immature  typeheal… <NA>     0.953    1.41    1.87  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.31    -1.77   -1.22  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.22     1.77    2.31  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.40    -0.950  -0.493 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.493    0.950   1.40  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.803    1.80    2.75  0.00100 1.43e-4      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.75    -1.80   -0.803 0.00100 1.43e-4      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.398    0.999   1.62  0.00200 4.44e-4      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.62    -0.999  -0.398 0.00200 4.44e-4      NA
+    ##  1 B immature  typecanc… <NA>    -1.79    -1.24   -0.676 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.676    1.24    1.79  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.44    -1.78   -1.16  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.16     1.78    2.44  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.32    -0.927  -0.535 0       0            NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.535    0.927   1.32  0       0            NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.780    1.73    2.71  0.00100 1.67e-4      NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.71    -1.73   -0.780 0.00100 1.67e-4      NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.398    1.05    1.66  0.00200 5.00e-4      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.66    -1.05   -0.398 0.00200 5.00e-4      NA
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -403,59 +258,25 @@ res =
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   )
-```
 
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: EXPERIMENTAL ALGORITHM:
-    ## Chain 1:   This procedure has not been thoroughly tested and may be unstable
-    ## Chain 1:   or buggy. The interface is subject to change.
-    ## Chain 1: ------------------------------------------------------------
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.005985 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 59.85 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Begin eta adaptation.
-    ## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-    ## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-    ## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-    ## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-    ## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-    ## Chain 1: Success! Found best value [eta = 1] earlier than expected.
-    ## Chain 1: 
-    ## Chain 1: Begin stochastic gradient ascent.
-    ## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-    ## Chain 1:    100        -3415.586             1.000            1.000
-    ## Chain 1:    200        -3180.228             0.537            1.000
-    ## Chain 1:    300        -3171.852             0.359            0.074
-    ## Chain 1:    400        -3175.715             0.269            0.074
-    ## Chain 1:    500        -3167.118             0.216            0.003   MEDIAN ELBO CONVERGED
-    ## Chain 1: 
-    ## Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-    ## Chain 1: COMPLETED.
-
-``` r
 res
 ```
 
     ## # A tibble: 60 × 14
     ##    cell_group        parameter factor c_lower c_effect c_upper c_n_eff c_R_k_hat
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>     <dbl>
-    ##  1 B immature        (Interce… <NA>     0.500    0.824   1.15      NaN      3.17
-    ##  2 B immature        typeheal… type     0.949    1.43    1.92      NaN      3.09
-    ##  3 B mem             (Interce… <NA>    -1.14    -0.725  -0.321     NaN      3.15
-    ##  4 B mem             typeheal… type     1.08     1.65    2.19      NaN      3.21
-    ##  5 CD4 cm S100A4     (Interce… <NA>     1.42     1.69    1.95      NaN      3.22
-    ##  6 CD4 cm S100A4     typeheal… type     0.692    1.07    1.48      NaN      3.17
-    ##  7 CD4 cm high cyto… (Interce… <NA>    -1.54    -0.938  -0.297     NaN      3.10
-    ##  8 CD4 cm high cyto… typeheal… type    -1.88    -1.03   -0.128     NaN      3.16
-    ##  9 CD4 cm ribosome   (Interce… <NA>    -0.159    0.240   0.656     NaN      3.17
-    ## 10 CD4 cm ribosome   typeheal… type    -1.48    -0.893  -0.308     NaN      3.09
+    ##  1 B immature        (Interce… <NA>    0.225     0.634   1.03      NaN      3.17
+    ##  2 B immature        typeheal… type    1.20      1.80    2.36      NaN      3.15
+    ##  3 B mem             (Interce… <NA>   -1.26     -0.864  -0.466     NaN      3.14
+    ##  4 B mem             typeheal… type    1.26      1.81    2.46      NaN      3.14
+    ##  5 CD4 cm S100A4     (Interce… <NA>    1.48      1.74    2.02      NaN      3.09
+    ##  6 CD4 cm S100A4     typeheal… type    0.575     0.967   1.38      NaN      3.12
+    ##  7 CD4 cm high cyto… (Interce… <NA>   -1.17     -0.655  -0.182     NaN      3.03
+    ##  8 CD4 cm high cyto… typeheal… type   -1.97     -1.27   -0.610     NaN      3.20
+    ##  9 CD4 cm ribosome   (Interce… <NA>   -0.0221    0.411   0.848     NaN      3.17
+    ## 10 CD4 cm ribosome   typeheal… type   -1.60     -0.974  -0.420     NaN      3.20
     ## # ℹ 50 more rows
     ## # ℹ 6 more variables: v_lower <dbl>, v_effect <dbl>, v_upper <dbl>,
     ## #   v_n_eff <dbl>, v_R_k_hat <dbl>, count_data <list>
