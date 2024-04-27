@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Overview of the sccomp package • sccomp</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.10</span>
       </span>
     </div>
 
@@ -51,9 +51,6 @@
   <ul class="dropdown-menu" role="menu">
 <li>
       <a href="../articles/introduction.html">Overview of the sccomp package</a>
-    </li>
-    <li>
-      <a href="../articles/new_framework.html">New sccomp framework</a>
     </li>
   </ul>
 </li>
@@ -82,7 +79,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2024-03-21</h4>
+            <h4 data-toc-skip class="date">2024-04-27</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/HEAD/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="hidden name"><code>introduction.Rmd</code></div>
@@ -90,13 +87,17 @@ Mangiola</h4>
     </div>
 
     
+        <div class="abstract">
+      <p class="abstract">Abstract</p>
+      <p>Sccomp is a generalised method for differential composition and
+      variability analyses. It tests differences in cell type
+      proportion, for count data. It is able of flexible
+      continuous/discrete models, removal of unwanted variation, removal
+      of outliers, multilevel random/effect modelling.</p>
+    </div>
     
 <!-- badges: start -->
 <p><a href="https://www.tidyverse.org/lifecycle/#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a> <a href="https://github.com/stemangiola/tidyseurat/actions/" class="external-link"><img src="https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg" alt="R build status"></a> <!-- badges: end --></p>
-<div class="section level2">
-<h2 id="section">
-<img src="inst/logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
-</h2>
 <p>Sccomp is a generalised method for differential composition and
 variability analyses.</p>
 <div class="section level3">
@@ -111,7 +112,6 @@ variability analyses.</p>
 <li>Probabilistic outlier identification</li>
 <li>Cross-dataset learning (hyperpriors).</li>
 </ul>
-</div>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -136,24 +136,32 @@ a subset of the model for composition.</p>
 <div class="section level3">
 <h3 id="binary-factor">Binary factor<a class="anchor" aria-label="anchor" href="#binary-factor"></a>
 </h3>
+<p>Of the output table, the estimate columns start with the prefix
+<code>c_</code> indicate <code>composition</code>, or with
+<code>v_</code> indicate <code>variability</code> (when
+formula_variability is set).</p>
 <div class="section level4">
 <h4 id="from-seurat-singlecellexperiment-metadata-objects">From Seurat, SingleCellExperiment, metadata objects<a class="anchor" aria-label="anchor" href="#from-seurat-singlecellexperiment-metadata-objects"></a>
 </h4>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">single_cell_object</span> <span class="op">|&gt;</span></span>
+<code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">=</span> </span>
+<span>  <span class="va">single_cell_object</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
 <span>    .sample <span class="op">=</span>  <span class="va">sample</span>, </span>
 <span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>, </span>
 <span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    cores <span class="op">=</span> <span class="fl">1</span> </span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="../reference/sccomp_remove_outliers.html">sccomp_remove_outliers</a></span><span class="op">(</span>cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Optional</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="from-counts">From counts<a class="anchor" aria-label="anchor" href="#from-counts"></a>
 </h4>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
+<code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">=</span> </span>
+<span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
 <span>    .sample <span class="op">=</span> <span class="va">sample</span>,</span>
@@ -161,52 +169,253 @@ a subset of the model for composition.</p>
 <span>    .count <span class="op">=</span> <span class="va">count</span>, </span>
 <span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    cores <span class="op">=</span> <span class="fl">1</span> </span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="../reference/sccomp_remove_outliers.html">sccomp_remove_outliers</a></span><span class="op">(</span>cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Optional</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
+<span><span class="co">## Chain 1: EXPERIMENTAL ALGORITHM:</span></span>
+<span><span class="co">## Chain 1:   This procedure has not been thoroughly tested and may be unstable</span></span>
+<span><span class="co">## Chain 1:   or buggy. The interface is subject to change.</span></span>
+<span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Gradient evaluation took 0.000463 seconds</span></span>
-<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 4.63 seconds.</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.000511 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 5.11 seconds.</span></span>
 <span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
 <span><span class="co">## Chain 1: </span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)</span></span>
-<span><span class="co">## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: Begin eta adaptation.</span></span>
+<span><span class="co">## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 250 / 250 [100%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Success! Found best value [eta = 0.1].</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1:  Elapsed Time: 3.119 seconds (Warm-up)</span></span>
-<span><span class="co">## Chain 1:                21.286 seconds (Sampling)</span></span>
-<span><span class="co">## Chain 1:                24.405 seconds (Total)</span></span>
-<span><span class="co">## Chain 1:</span></span></code></pre>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 72 × 14</span></span></span>
-<span><span class="co">##    cell_group parameter   factor c_lower c_effect c_upper c_n_eff c_R_k_hat</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B1         (Intercept) <span style="color: #BB0000;">NA</span>      0.873     1.11   1.35     <span style="text-decoration: underline;">5</span>622.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B1         typecancer  type   -<span style="color: #BB0000;">1.04</span>     -<span style="color: #BB0000;">0.638</span> -<span style="color: #BB0000;">0.257</span>    <span style="text-decoration: underline;">3</span>389.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B2         (Intercept) <span style="color: #BB0000;">NA</span>      0.405     0.702  0.979    <span style="text-decoration: underline;">5</span>253.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B2         typecancer  type   -<span style="color: #BB0000;">1.21</span>     -<span style="color: #BB0000;">0.729</span> -<span style="color: #BB0000;">0.266</span>    <span style="text-decoration: underline;">4</span>258.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> B3         (Intercept) <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.670</span>    -<span style="color: #BB0000;">0.389</span> -<span style="color: #BB0000;">0.115</span>    <span style="text-decoration: underline;">5</span>453.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B3         typecancer  type   -<span style="color: #BB0000;">0.741</span>    -<span style="color: #BB0000;">0.316</span>  0.086<span style="text-decoration: underline;">0</span>   <span style="text-decoration: underline;">5</span>450.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> BM         (Intercept) <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.32</span>     -<span style="color: #BB0000;">1.03</span>  -<span style="color: #BB0000;">0.749</span>    <span style="text-decoration: underline;">4</span>132.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> BM         typecancer  type   -<span style="color: #BB0000;">0.733</span>    -<span style="color: #BB0000;">0.309</span>  0.105    <span style="text-decoration: underline;">5</span>402.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 1      (Intercept) <span style="color: #BB0000;">NA</span>      0.073<span style="text-decoration: underline;">1</span>    0.298  0.505    <span style="text-decoration: underline;">4</span>239.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 1      typecancer  type   -<span style="color: #BB0000;">0.112</span>     0.194  0.482    <span style="text-decoration: underline;">3</span>435.      1.00</span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 62 more rows</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 6 more variables: v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   v_n_eff &lt;dbl&gt;, v_R_k_hat &lt;dbl&gt;, count_data &lt;list&gt;</span></span></span></code></pre>
-<p>Of the output table, the estimate columns start with the prefix
-<code>c_</code> indicate <code>composition</code>, or with
-<code>v_</code> indicate <code>variability</code> (when
-formula_variability is set).</p>
+<span><span class="co">## Chain 1: Begin stochastic gradient ascent.</span></span>
+<span><span class="co">## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span></span>
+<span><span class="co">## Chain 1:    100        -4891.421             1.000            1.000</span></span>
+<span><span class="co">## Chain 1:    200        -4373.450             0.559            1.000</span></span>
+<span><span class="co">## Chain 1:    300        -4167.787             0.389            0.118</span></span>
+<span><span class="co">## Chain 1:    400        -4027.529             0.301            0.118</span></span>
+<span><span class="co">## Chain 1:    500        -3953.345             0.244            0.049</span></span>
+<span><span class="co">## Chain 1:    600        -3885.684             0.206            0.049</span></span>
+<span><span class="co">## Chain 1:    700        -3839.685             0.179            0.035</span></span>
+<span><span class="co">## Chain 1:    800        -3814.016             0.157            0.035</span></span>
+<span><span class="co">## Chain 1:    900        -3784.410             0.141            0.019</span></span>
+<span><span class="co">## Chain 1:   1000        -3766.615             0.127            0.019</span></span>
+<span><span class="co">## Chain 1:   1100        -3748.480             0.027            0.017</span></span>
+<span><span class="co">## Chain 1:   1200        -3738.424             0.016            0.012</span></span>
+<span><span class="co">## Chain 1:   1300        -3727.991             0.011            0.008   MEDIAN ELBO CONVERGED</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Drawing a sample of size 1000 from the approximate posterior... </span></span>
+<span><span class="co">## Chain 1: COMPLETED.</span></span>
+<span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
+<span><span class="co">## Chain 1: EXPERIMENTAL ALGORITHM:</span></span>
+<span><span class="co">## Chain 1:   This procedure has not been thoroughly tested and may be unstable</span></span>
+<span><span class="co">## Chain 1:   or buggy. The interface is subject to change.</span></span>
+<span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.000346 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.46 seconds.</span></span>
+<span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Begin eta adaptation.</span></span>
+<span><span class="co">## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Success! Found best value [eta = 1] earlier than expected.</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Begin stochastic gradient ascent.</span></span>
+<span><span class="co">## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span></span>
+<span><span class="co">## Chain 1:    100        -3811.443             1.000            1.000</span></span>
+<span><span class="co">## Chain 1:    200        -3534.541             0.539            1.000</span></span>
+<span><span class="co">## Chain 1:    300        -3526.073             0.360            0.078</span></span>
+<span><span class="co">## Chain 1:    400        -3522.602             0.270            0.078</span></span>
+<span><span class="co">## Chain 1:    500        -3515.808             0.217            0.002   MEDIAN ELBO CONVERGED</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Drawing a sample of size 1000 from the approximate posterior... </span></span>
+<span><span class="co">## Chain 1: COMPLETED.</span></span>
+<span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
+<span><span class="co">## Chain 1: EXPERIMENTAL ALGORITHM:</span></span>
+<span><span class="co">## Chain 1:   This procedure has not been thoroughly tested and may be unstable</span></span>
+<span><span class="co">## Chain 1:   or buggy. The interface is subject to change.</span></span>
+<span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.000339 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.39 seconds.</span></span>
+<span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Begin eta adaptation.</span></span>
+<span><span class="co">## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Success! Found best value [eta = 1] earlier than expected.</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Begin stochastic gradient ascent.</span></span>
+<span><span class="co">## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span></span>
+<span><span class="co">## Chain 1:    100        -9466.188             1.000            1.000</span></span>
+<span><span class="co">## Chain 1:    200        -2905.502             1.629            2.258</span></span>
+<span><span class="co">## Chain 1:    300         2339.702             1.833            2.242</span></span>
+<span><span class="co">## Chain 1:    400         2718.365             1.410            2.242</span></span>
+<span><span class="co">## Chain 1:    500         2516.492             1.144            1.000</span></span>
+<span><span class="co">## Chain 1:    600          235.495             2.568            2.242</span></span>
+<span><span class="co">## Chain 1:    700         1180.584             2.315            1.000</span></span>
+<span><span class="co">## Chain 1:    800         -947.354             2.307            2.242</span></span>
+<span><span class="co">## Chain 1:    900         1069.079             2.260            1.886</span></span>
+<span><span class="co">## Chain 1:   1000         1316.863             2.053            1.886</span></span>
+<span><span class="co">## Chain 1:   1100          697.300             2.041            1.886   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   1200          317.202             1.936            1.198   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   1300         1411.313             1.789            0.889   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   1400         -762.576             2.060            1.198   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   1500         2494.403             2.183            1.306   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   1600         2663.433             1.220            1.198   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   1700          725.182             1.408            1.306   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   1800         1360.345             1.230            1.198   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   1900         2253.368             1.081            0.889   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2000          744.798             1.264            1.198   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2100         2310.417             1.243            1.198   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2200          621.376             1.395            1.306   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2300          655.624             1.323            1.306   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2400          885.798             1.064            0.678   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2500         1225.384             0.961            0.467   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2600         -809.764             1.206            0.678   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2700          -16.980             5.608            0.678   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2800          935.586             5.663            1.018   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   2900         1277.672             5.650            1.018   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3000         1681.268             5.471            0.678   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3100          307.709             5.850            1.018   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3200         3224.238             5.669            0.905   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3300         2403.629             5.698            0.905   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3400          347.114             6.264            1.018   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3500         2109.195             6.320            1.018   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3600         1060.996             6.167            0.988   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3700         2522.941             1.556            0.905   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3800         2208.428             1.469            0.835   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   3900         1120.818             1.539            0.905   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4000         2248.750             1.565            0.905   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4100         3723.472             1.158            0.835   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4200          910.170             1.377            0.835   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4300          339.658             1.511            0.970   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4400         1067.184             0.987            0.835   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4500         4118.226             0.977            0.741   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4600         3465.167             0.897            0.682   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4700         1721.560             0.940            0.741   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4800         1291.834             0.960            0.741   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   4900         -741.074             1.137            0.741   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5000         -550.348             1.121            0.741   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5100        -1926.296             1.153            0.741   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5200         -879.097             0.963            0.741   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5300         -701.095             0.821            0.714   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5400          221.474             1.169            0.741   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5500         -568.733             1.234            1.013   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5600         1264.823             1.360            1.191   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5700          264.024             1.638            1.389   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5800          726.554             1.668            1.389   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   5900         1807.750             1.454            1.191   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6000         1238.488             1.465            1.191   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6100         2011.635             1.432            1.191   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6200         2137.621             1.319            0.637   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6300         1441.622             1.342            0.637   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6400         3438.823             0.983            0.598   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6500         1255.307             1.018            0.598   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6600         -131.083             1.931            0.598   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6700          -58.489             1.676            0.598   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6800         2316.926             1.715            0.598   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   6900         1163.554             1.754            0.991   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7000         2498.845             1.761            0.991   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7100          572.743             2.059            1.025   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7200         1927.987             2.124            1.025   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7300         2231.369             2.089            1.025   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7400         1673.812             2.064            1.025   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7500          518.999             2.113            1.025   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7600         2436.283             1.134            0.991   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7700         2197.541             1.021            0.787   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7800         2252.730             0.921            0.703   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   7900          486.562             1.184            0.703   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8000         1386.729             1.196            0.703   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8100          846.500             0.923            0.649   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8200         1366.006             0.891            0.638   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8300         2299.396             0.918            0.638   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8400         2330.357             0.886            0.638   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8500           41.563             6.170            0.638   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8600         -318.317             6.205            0.638   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8700         1275.856             6.319            0.649   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8800         1644.528             6.339            0.649   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   8900         1100.184             6.025            0.638   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9000          241.909             6.315            0.638   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9100         1810.424             6.338            0.866   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9200         1728.613             6.305            0.866   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9300         2176.903             6.285            0.866   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9400         1728.294             6.309            0.866   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9500         1942.485             0.814            0.495   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9600         2134.864             0.710            0.260   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9700         1972.166             0.593            0.224   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9800          676.539             0.762            0.260   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   9900         3170.102             0.791            0.260   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1:   10000         1263.247             0.587            0.260   MAY BE DIVERGING... INSPECT ELBO</span></span>
+<span><span class="co">## Chain 1: Informational Message: The maximum number of iterations is reached! The algorithm may not have converged.</span></span>
+<span><span class="co">## Chain 1: This variational approximation is not guaranteed to be meaningful.</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Drawing a sample of size 1000 from the approximate posterior... </span></span>
+<span><span class="co">## Chain 1: COMPLETED.</span></span></code></pre>
 </div>
+</div>
+<div class="section level3">
+<h3 id="summary-plots">Summary plots<a class="anchor" aria-label="anchor" href="#summary-plots"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">sccomp_result</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
+<pre><code><span><span class="co">## Joining with `by = join_by(cell_group, sample)`</span></span>
+<span><span class="co">## Joining with `by = join_by(cell_group, type)`</span></span></code></pre>
+<p>A plot of group proportion, faceted by groups. The blue boxplots
+represent the posterior predictive check. If the model is likely to be
+descriptively adequate to the data, the blue box plot should roughly
+overlay with the black box plot, which represents the observed data. The
+outliers are coloured in red. A box plot will be returned for every
+(discrete) covariate present in <code>formula_composition</code>. The
+colour coding represents the significant associations for composition
+and/or variability.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">boxplot</span></span></code></pre></div>
+<pre><code><span><span class="co">## [[1]]</span></span></code></pre>
+<p><img src="introduction_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p>A plot of estimates of differential composition (c_) on the x-axis
+and differential variability (v_) on the y-axis. The error bars
+represent 95% credible intervals. The dashed lines represent the minimal
+effect that the hypothesis test is based on. An effect is labelled as
+significant if bigger than the minimal effect according to the 95%
+credible interval. Facets represent the covariates in the model.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
+<p><img src="introduction_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+<p>We can plot the relationship between abundance and variability. As we
+can see below, they are positively correlated, you also appreciate that
+this relationship is by model for single cell RNA sequencing data.</p>
+<p><code>sccomp</code> models, these relationship to obtain a shrinkage
+effect on the estimates of both the abundance and the variability. This
+shrinkage is adaptive as it is modelled jointly, thanks for Bayesian
+inference.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
+<p><img src="introduction_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="contrasts">Contrasts<a class="anchor" aria-label="anchor" href="#contrasts"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">type</span>, </span>
@@ -216,38 +425,50 @@ formula_variability is set).</p>
 <span>    cores <span class="op">=</span> <span class="fl">1</span> </span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span> contrasts <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"typecancer - typehealthy"</span>, <span class="st">"typehealthy - typecancer"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span></span>
+<pre><code><span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
+<span><span class="co">## Chain 1: EXPERIMENTAL ALGORITHM:</span></span>
+<span><span class="co">## Chain 1:   This procedure has not been thoroughly tested and may be unstable</span></span>
+<span><span class="co">## Chain 1:   or buggy. The interface is subject to change.</span></span>
+<span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Gradient evaluation took 0.000296 seconds</span></span>
-<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.96 seconds.</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.000294 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.94 seconds.</span></span>
 <span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
 <span><span class="co">## Chain 1: </span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)</span></span>
-<span><span class="co">## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: Begin eta adaptation.</span></span>
+<span><span class="co">## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Success! Found best value [eta = 1] earlier than expected.</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1:  Elapsed Time: 2.228 seconds (Warm-up)</span></span>
-<span><span class="co">## Chain 1:                17.033 seconds (Sampling)</span></span>
-<span><span class="co">## Chain 1:                19.261 seconds (Total)</span></span>
-<span><span class="co">## Chain 1:</span></span></code></pre>
+<span><span class="co">## Chain 1: Begin stochastic gradient ascent.</span></span>
+<span><span class="co">## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span></span>
+<span><span class="co">## Chain 1:    100        -3463.463             1.000            1.000</span></span>
+<span><span class="co">## Chain 1:    200        -3163.286             0.547            1.000</span></span>
+<span><span class="co">## Chain 1:    300        -3164.252             0.365            0.095</span></span>
+<span><span class="co">## Chain 1:    400        -3157.519             0.274            0.095</span></span>
+<span><span class="co">## Chain 1:    500        -3158.173             0.220            0.002   MEDIAN ELBO CONVERGED</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Drawing a sample of size 1000 from the approximate posterior... </span></span>
+<span><span class="co">## Chain 1: COMPLETED.</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 60 × 18</span></span></span>
 <span><span class="co">##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature  typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.90</span>    -<span style="color: #BB0000;">1.40</span>   -<span style="color: #BB0000;">0.885</span> 0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature  typeheal… <span style="color: #BB0000;">NA</span>       0.885    1.40    1.90  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem       typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.34</span>    -<span style="color: #BB0000;">1.73</span>   -<span style="color: #BB0000;">1.09</span>  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem       typeheal… <span style="color: #BB0000;">NA</span>       1.09     1.73    2.34  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S10… typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.48</span>    -<span style="color: #BB0000;">1.04</span>   -<span style="color: #BB0000;">0.616</span> 0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S10… typeheal… <span style="color: #BB0000;">NA</span>       0.616    1.04    1.48  0   <span style="color: #949494;"> </span>   0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm hig… typecanc… <span style="color: #BB0000;">NA</span>       0.806    1.76    2.86  2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>      <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm hig… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.86</span>    -<span style="color: #BB0000;">1.76</span>   -<span style="color: #BB0000;">0.806</span> 2.50<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span> 5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-5</span>      <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm rib… typecanc… <span style="color: #BB0000;">NA</span>       0.284    0.990   1.72  1.35<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 4.15<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>      <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm rib… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.72</span>    -<span style="color: #BB0000;">0.990</span>  -<span style="color: #BB0000;">0.284</span> 1.35<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span> 4.15<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature  typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.94</span>    -<span style="color: #BB0000;">1.36</span>   -<span style="color: #BB0000;">0.745</span> 0       0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature  typeheal… <span style="color: #BB0000;">NA</span>       0.745    1.36    1.94  0       0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem       typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.28</span>    -<span style="color: #BB0000;">1.64</span>   -<span style="color: #BB0000;">1.04</span>  0       0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem       typeheal… <span style="color: #BB0000;">NA</span>       1.04     1.64    2.28  0       0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S10… typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.58</span>    -<span style="color: #BB0000;">1.15</span>   -<span style="color: #BB0000;">0.769</span> 0       0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S10… typeheal… <span style="color: #BB0000;">NA</span>       0.769    1.15    1.58  0       0   <span style="color: #949494;"> </span>        <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm hig… typecanc… <span style="color: #BB0000;">NA</span>       0.595    1.57    2.55  0.003<span style="text-decoration: underline;">00</span> 8.75<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm hig… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.55</span>    -<span style="color: #BB0000;">1.57</span>   -<span style="color: #BB0000;">0.595</span> 0.003<span style="text-decoration: underline;">00</span> 8.75<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm rib… typecanc… <span style="color: #BB0000;">NA</span>       0.347    0.939   1.52  0.004<span style="text-decoration: underline;">00</span> 1.22<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>      <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm rib… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.52</span>    -<span style="color: #BB0000;">0.939</span>  -<span style="color: #BB0000;">0.347</span> 0.004<span style="text-decoration: underline;">00</span> 1.22<span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>      <span style="color: #BB0000;">NA</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 50 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 9 more variables: c_R_k_hat &lt;dbl&gt;, v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, v_n_eff &lt;dbl&gt;, v_R_k_hat &lt;dbl&gt;,</span></span></span>
@@ -267,7 +488,7 @@ elimination does not guarantee it.</p>
 better than the other <a href="https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola" class="external-link">reference</a>.
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model
 one, the one with factor association, is better than model two.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/loo/" class="external-link">loo</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fit first model</span></span>
@@ -277,7 +498,6 @@ one, the one with factor association, is better than model two.</p>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
 <span>    .sample <span class="op">=</span>  <span class="va">sample</span>, </span>
 <span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>, </span>
-<span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>, </span>
 <span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    cores <span class="op">=</span> <span class="fl">1</span>, </span>
 <span>    enable_loo <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -290,7 +510,6 @@ one, the one with factor association, is better than model two.</p>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">1</span>, </span>
 <span>    .sample <span class="op">=</span>  <span class="va">sample</span>, </span>
 <span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>, </span>
-<span>    check_outliers <span class="op">=</span> <span class="cn">FALSE</span>, </span>
 <span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    cores <span class="op">=</span> <span class="fl">1</span> , </span>
 <span>    enable_loo <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -307,7 +526,7 @@ one, the one with factor association, is better than model two.</p>
 </h3>
 <p>We can model the cell-group variability also dependent on the type,
 and so test differences in variability</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -318,40 +537,60 @@ and so test differences in variability</p>
 <span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    cores <span class="op">=</span> <span class="fl">1</span> </span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span></span>
+<pre><code><span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
+<span><span class="co">## Chain 1: EXPERIMENTAL ALGORITHM:</span></span>
+<span><span class="co">## Chain 1:   This procedure has not been thoroughly tested and may be unstable</span></span>
+<span><span class="co">## Chain 1:   or buggy. The interface is subject to change.</span></span>
+<span><span class="co">## Chain 1: ------------------------------------------------------------</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Gradient evaluation took 0.000299 seconds</span></span>
-<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.99 seconds.</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.000296 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.96 seconds.</span></span>
 <span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
 <span><span class="co">## Chain 1: </span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)</span></span>
-<span><span class="co">## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span></span>
-<span><span class="co">## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: Begin eta adaptation.</span></span>
+<span><span class="co">## Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Iteration: 250 / 250 [100%]  (Adaptation)</span></span>
+<span><span class="co">## Chain 1: Success! Found best value [eta = 0.1].</span></span>
 <span><span class="co">## Chain 1: </span></span>
-<span><span class="co">## Chain 1:  Elapsed Time: 4.037 seconds (Warm-up)</span></span>
-<span><span class="co">## Chain 1:                33.238 seconds (Sampling)</span></span>
-<span><span class="co">## Chain 1:                37.275 seconds (Total)</span></span>
-<span><span class="co">## Chain 1:</span></span></code></pre>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<span><span class="co">## Chain 1: Begin stochastic gradient ascent.</span></span>
+<span><span class="co">## Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes </span></span>
+<span><span class="co">## Chain 1:    100        -4362.156             1.000            1.000</span></span>
+<span><span class="co">## Chain 1:    200        -3780.244             0.577            1.000</span></span>
+<span><span class="co">## Chain 1:    300        -3568.887             0.404            0.154</span></span>
+<span><span class="co">## Chain 1:    400        -3445.120             0.312            0.154</span></span>
+<span><span class="co">## Chain 1:    500        -3379.177             0.254            0.059</span></span>
+<span><span class="co">## Chain 1:    600        -3321.402             0.214            0.059</span></span>
+<span><span class="co">## Chain 1:    700        -3290.427             0.185            0.036</span></span>
+<span><span class="co">## Chain 1:    800        -3261.035             0.163            0.036</span></span>
+<span><span class="co">## Chain 1:    900        -3242.879             0.146            0.020</span></span>
+<span><span class="co">## Chain 1:   1000        -3223.884             0.132            0.020</span></span>
+<span><span class="co">## Chain 1:   1100        -3214.270             0.032            0.017</span></span>
+<span><span class="co">## Chain 1:   1200        -3205.477             0.017            0.009   MEDIAN ELBO CONVERGED</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Drawing a sample of size 1000 from the approximate posterior... </span></span>
+<span><span class="co">## Chain 1: COMPLETED.</span></span></code></pre>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 60 × 14</span></span></span>
-<span><span class="co">##    cell_group       parameter factor c_lower c_effect  c_upper c_n_eff c_R_k_hat</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature       (Interce… <span style="color: #BB0000;">NA</span>      0.350     0.770  1.18      <span style="text-decoration: underline;">5</span>347.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature       typeheal… type    0.866     1.43   2.00      <span style="text-decoration: underline;">4</span>483.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem            (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.46</span>     -<span style="color: #BB0000;">0.869</span> -<span style="color: #BB0000;">0.185</span>     <span style="text-decoration: underline;">4</span>518.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem            typeheal… type    1.02      1.86   2.61      <span style="text-decoration: underline;">4</span>197.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S100A4    (Interce… <span style="color: #BB0000;">NA</span>      1.31      1.66   2.00      <span style="text-decoration: underline;">6</span>222.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S100A4    typeheal… type    0.494     0.937  1.40      <span style="text-decoration: underline;">5</span>028.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm high cyt… (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.05</span>     -<span style="color: #BB0000;">0.550</span> -<span style="color: #BB0000;">0.007</span><span style="color: #BB0000; text-decoration: underline;">34</span>   <span style="text-decoration: underline;">4</span>724.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm high cyt… typeheal… type   -<span style="color: #BB0000;">3.05</span>     -<span style="color: #BB0000;">1.24</span>   1.32      <span style="text-decoration: underline;">4</span>275.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm ribosome  (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.086</span><span style="color: #BB0000; text-decoration: underline;">9</span>    0.303  0.684     <span style="text-decoration: underline;">4</span>383.      1.00</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm ribosome  typeheal… type   -<span style="color: #BB0000;">1.79</span>     -<span style="color: #BB0000;">0.946</span>  0.121     <span style="text-decoration: underline;">3</span>703.      1.00</span></span>
+<span><span class="co">##    cell_group        parameter factor c_lower c_effect c_upper c_n_eff c_R_k_hat</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>       0.203    0.746   1.28      <span style="color: #BB0000;">NaN</span>      3.56</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type     0.336    1.18    2.03      <span style="color: #BB0000;">NaN</span>      3.51</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.33</span>    -<span style="color: #BB0000;">0.782</span>  -<span style="color: #BB0000;">0.245</span>     <span style="color: #BB0000;">NaN</span>      3.50</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type     0.740    1.53    2.33      <span style="color: #BB0000;">NaN</span>      3.51</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>       0.935    1.60    2.29      <span style="color: #BB0000;">NaN</span>      3.46</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S100A4     typeheal… type    -<span style="color: #BB0000;">0.434</span>    0.660   1.78      <span style="color: #BB0000;">NaN</span>      3.52</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.07</span>    -<span style="color: #BB0000;">0.399</span>   0.282     <span style="color: #BB0000;">NaN</span>      3.50</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm high cyto… typeheal… type    -<span style="color: #BB0000;">1.94</span>    -<span style="color: #BB0000;">0.851</span>   0.204     <span style="color: #BB0000;">NaN</span>      3.57</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.257</span>    0.340   0.843     <span style="color: #BB0000;">NaN</span>      3.57</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm ribosome   typeheal… type    -<span style="color: #BB0000;">1.90</span>    -<span style="color: #BB0000;">1.14</span>   -<span style="color: #BB0000;">0.348</span>     <span style="color: #BB0000;">NaN</span>      3.46</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 50 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 6 more variables: v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_n_eff &lt;dbl&gt;, v_R_k_hat &lt;dbl&gt;, count_data &lt;list&gt;</span></span></span></code></pre>
@@ -375,226 +614,6 @@ plots$credible_intervals_2D (see below).</p>
 <code>bimodal_mean_variability_association  = FALSE</code>
 (Default).</p>
 </div>
-</div>
-<div class="section level2">
-<h2 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a>
-</h2>
-<div class="section level3">
-<h3 id="summary-plots">Summary plots<a class="anchor" aria-label="anchor" href="#summary-plots"></a>
-</h3>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
-<pre><code><span><span class="co">## Warning: `plot_summary()` was deprecated in sccomp 1.7.1.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> sccomp says: plot_summary() is soft-deprecated. Please use sccomp_test().</span></span>
-<span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
-<pre><code><span><span class="co">##              cell_group   parameter factor      c_lower     c_effect</span></span>
-<span><span class="co">## 1            B immature (Intercept)   &lt;NA&gt;  0.350075608  0.770206234</span></span>
-<span><span class="co">## 2            B immature typehealthy   type  0.865827553  1.431369817</span></span>
-<span><span class="co">## 3                 B mem (Intercept)   &lt;NA&gt; -1.456430020 -0.869269538</span></span>
-<span><span class="co">## 4                 B mem typehealthy   type  1.020637451  1.856780626</span></span>
-<span><span class="co">## 5         CD4 cm S100A4 (Intercept)   &lt;NA&gt;  1.307186176  1.661070030</span></span>
-<span><span class="co">## 6         CD4 cm S100A4 typehealthy   type  0.494208328  0.937341673</span></span>
-<span><span class="co">## 7  CD4 cm high cytokine (Intercept)   &lt;NA&gt; -1.046409173 -0.550047679</span></span>
-<span><span class="co">## 8  CD4 cm high cytokine typehealthy   type -3.053768661 -1.241648630</span></span>
-<span><span class="co">## 9       CD4 cm ribosome (Intercept)   &lt;NA&gt; -0.086891709  0.303445207</span></span>
-<span><span class="co">## 10      CD4 cm ribosome typehealthy   type -1.791471352 -0.945984766</span></span>
-<span><span class="co">## 11 CD4 em high cytokine (Intercept)   &lt;NA&gt; -1.164605714 -0.705302242</span></span>
-<span><span class="co">## 12 CD4 em high cytokine typehealthy   type -2.354242299 -1.290839994</span></span>
-<span><span class="co">## 13            CD4 naive (Intercept)   &lt;NA&gt;  0.771053773  1.215777251</span></span>
-<span><span class="co">## 14            CD4 naive typehealthy   type  0.457669238  1.147760746</span></span>
-<span><span class="co">## 15         CD4 ribosome (Intercept)   &lt;NA&gt; -0.310396352  0.040804305</span></span>
-<span><span class="co">## 16         CD4 ribosome typehealthy   type  1.453765861  2.069264207</span></span>
-<span><span class="co">## 17             CD8 em 1 (Intercept)   &lt;NA&gt;  0.296380099  0.680858219</span></span>
-<span><span class="co">## 18             CD8 em 1 typehealthy   type -0.063016881  0.784897390</span></span>
-<span><span class="co">## 19             CD8 em 2 (Intercept)   &lt;NA&gt; -0.905720690  0.131227068</span></span>
-<span><span class="co">## 20             CD8 em 2 typehealthy   type -3.488584558 -1.164531278</span></span>
-<span><span class="co">## 21             CD8 em 3 (Intercept)   &lt;NA&gt; -1.383386111 -0.659718835</span></span>
-<span><span class="co">## 22             CD8 em 3 typehealthy   type -1.802336705 -0.815241065</span></span>
-<span><span class="co">## 23            CD8 naive (Intercept)   &lt;NA&gt;  0.625165610  1.019635462</span></span>
-<span><span class="co">## 24            CD8 naive typehealthy   type -0.676154037  0.005265703</span></span>
-<span><span class="co">## 25     CD8 transitional (Intercept)   &lt;NA&gt;  0.906479497  1.215822992</span></span>
-<span><span class="co">## 26     CD8 transitional typehealthy   type  0.169287432  0.680468620</span></span>
-<span><span class="co">## 27                 MAIT (Intercept)   &lt;NA&gt; -1.043158413 -0.601502485</span></span>
-<span><span class="co">## 28                 MAIT typehealthy   type  0.446881265  1.219360038</span></span>
-<span><span class="co">## 29               Mac M1 (Intercept)   &lt;NA&gt;  0.626803273  0.947793314</span></span>
-<span><span class="co">## 30               Mac M1 typehealthy   type  0.001151928  0.596578257</span></span>
-<span><span class="co">## 31        Mac M1 FCER1A (Intercept)   &lt;NA&gt; -1.346481755 -0.985901773</span></span>
-<span><span class="co">## 32        Mac M1 FCER1A typehealthy   type -1.827896226 -1.058653066</span></span>
-<span><span class="co">## 33                 Mono (Intercept)   &lt;NA&gt; -1.817728606 -1.344267519</span></span>
-<span><span class="co">## 34                 Mono typehealthy   type -0.851329777 -0.109123077</span></span>
-<span><span class="co">## 35          Mono NKG7 1 (Intercept)   &lt;NA&gt; -1.473336487 -0.855916833</span></span>
-<span><span class="co">## 36          Mono NKG7 1 typehealthy   type -3.954816424 -2.876059986</span></span>
-<span><span class="co">## 37          Mono NKG7 2 (Intercept)   &lt;NA&gt; -0.434149386 -0.006263967</span></span>
-<span><span class="co">## 38          Mono NKG7 2 typehealthy   type -2.459658603 -1.299723656</span></span>
-<span><span class="co">## 39  Mono classic inflam (Intercept)   &lt;NA&gt;  1.496637550  1.782291597</span></span>
-<span><span class="co">## 40  Mono classic inflam typehealthy   type -1.254007824 -0.470421134</span></span>
-<span><span class="co">## 41     Mono non-classic (Intercept)   &lt;NA&gt;  0.613544256  0.971134125</span></span>
-<span><span class="co">## 42     Mono non-classic typehealthy   type -0.627655422 -0.004353395</span></span>
-<span><span class="co">## 43    Myeloid migratory (Intercept)   &lt;NA&gt; -0.349283155  0.019777948</span></span>
-<span><span class="co">## 44    Myeloid migratory typehealthy   type -1.326315807 -0.555628165</span></span>
-<span><span class="co">## 45                   NK (Intercept)   &lt;NA&gt;  1.129146109  1.433472376</span></span>
-<span><span class="co">## 46                   NK typehealthy   type -0.043420829  0.547152232</span></span>
-<span><span class="co">## 47           NK cycling (Intercept)   &lt;NA&gt; -1.663291984 -1.207373146</span></span>
-<span><span class="co">## 48           NK cycling typehealthy   type -0.794626985 -0.184532677</span></span>
-<span><span class="co">## 49     NK high cytokine (Intercept)   &lt;NA&gt; -2.221170945 -1.634811180</span></span>
-<span><span class="co">## 50     NK high cytokine typehealthy   type -1.209992453  0.010811351</span></span>
-<span><span class="co">## 51                 Stem (Intercept)   &lt;NA&gt; -1.092335203 -0.578183675</span></span>
-<span><span class="co">## 52                 Stem typehealthy   type -3.227125060 -2.254077268</span></span>
-<span><span class="co">## 53                T gd1 (Intercept)   &lt;NA&gt; -1.063427714 -0.691983246</span></span>
-<span><span class="co">## 54                T gd1 typehealthy   type  0.051544710  0.927731580</span></span>
-<span><span class="co">## 55                T gd2 (Intercept)   &lt;NA&gt; -1.240204973 -0.668257877</span></span>
-<span><span class="co">## 56                T gd2 typehealthy   type -0.420899042  0.519032829</span></span>
-<span><span class="co">## 57                 cDC2 (Intercept)   &lt;NA&gt; -0.759271022 -0.290066235</span></span>
-<span><span class="co">## 58                 cDC2 typehealthy   type -0.367162606  0.309122589</span></span>
-<span><span class="co">## 59                  pDC (Intercept)   &lt;NA&gt; -1.128716632 -0.672560307</span></span>
-<span><span class="co">## 60                  pDC typehealthy   type -0.093617778  0.678363669</span></span>
-<span><span class="co">##         c_upper   c_pH0        c_FDR  c_n_eff c_R_k_hat     v_lower</span></span>
-<span><span class="co">## 1   1.184246864 0.00375 3.846154e-04 5346.796 0.9998132 -4.50543305</span></span>
-<span><span class="co">## 2   2.000856889 0.00000 0.000000e+00 4482.837 0.9998257 -1.67340409</span></span>
-<span><span class="co">## 3  -0.184573644 0.02875 4.779412e-03 4518.028 1.0000043 -5.30560249</span></span>
-<span><span class="co">## 4   2.608406746 0.00050 1.666667e-04 4196.768 0.9997766 -2.06462751</span></span>
-<span><span class="co">## 5   1.995619460 0.00000 0.000000e+00 6222.411 0.9998233 -3.81901323</span></span>
-<span><span class="co">## 6   1.401232300 0.00050 2.500000e-04 5028.344 0.9999969 -2.03347010</span></span>
-<span><span class="co">## 7  -0.007340886 0.10400 2.018478e-02 4724.006 1.0004194 -5.45374018</span></span>
-<span><span class="co">## 8   1.321660913 0.20450 6.054762e-02 4274.735 1.0020668 -0.45927442</span></span>
-<span><span class="co">## 9   0.684441268 0.28450 3.547000e-02 4383.083 0.9997530 -5.36222185</span></span>
-<span><span class="co">## 10  0.121427453 0.08250 2.240385e-02 3703.022 0.9998651 -0.55425684</span></span>
-<span><span class="co">## 11 -0.195911020 0.02650 3.281250e-03 4209.679 0.9997972 -5.90142439</span></span>
-<span><span class="co">## 12  0.299556461 0.06975 1.739583e-02 2845.235 0.9998812 -1.07718192</span></span>
-<span><span class="co">## 13  1.634108835 0.00000 0.000000e+00 5521.401 1.0011064 -3.68286687</span></span>
-<span><span class="co">## 14  1.805044757 0.00375 9.500000e-04 4904.786 0.9998659 -0.78141125</span></span>
-<span><span class="co">## 15  0.426540982 0.80525 9.215179e-02 5764.287 0.9998318 -5.66675104</span></span>
-<span><span class="co">## 16  2.641052180 0.00000 0.000000e+00 5592.575 0.9999336 -0.63078193</span></span>
-<span><span class="co">## 17  1.094759215 0.00850 9.642857e-04 4443.406 0.9997500 -4.75615064</span></span>
-<span><span class="co">## 18  1.611695421 0.08450 3.055000e-02 6223.529 0.9997814 -0.01747514</span></span>
-<span><span class="co">## 19  1.203807229 0.53975 6.574074e-02 4515.970 0.9997615 -3.66801396</span></span>
-<span><span class="co">## 20  1.179606262 0.22700 6.811364e-02 4395.508 0.9997681 -1.50218577</span></span>
-<span><span class="co">## 21  0.222127083 0.13800 2.509375e-02 5148.632 1.0000885 -4.72645738</span></span>
-<span><span class="co">## 22  0.058241607 0.09225 3.754412e-02 4557.969 1.0009539 -4.13604112</span></span>
-<span><span class="co">## 23  1.427452429 0.00025 2.777778e-05 4137.740 1.0005046 -4.15279185</span></span>
-<span><span class="co">## 24  0.743161148 0.69775 1.650000e-01 4756.159 0.9998839 -0.98811928</span></span>
-<span><span class="co">## 25  1.523385790 0.00000 0.000000e+00 5423.511 0.9997768 -4.83139960</span></span>
-<span><span class="co">## 26  1.178845041 0.02925 8.675000e-03 4211.889 1.0000681 -1.08967293</span></span>
-<span><span class="co">## 27 -0.099472762 0.05350 1.018750e-02 4592.803 0.9998508 -5.82916316</span></span>
-<span><span class="co">## 28  1.986624575 0.00500 1.625000e-03 5442.136 0.9997745 -0.70355760</span></span>
-<span><span class="co">## 29  1.273784299 0.00000 0.000000e+00 4636.563 0.9997500 -4.99687494</span></span>
-<span><span class="co">## 30  1.176583715 0.08775 3.412500e-02 4931.331 0.9998300 -0.84391953</span></span>
-<span><span class="co">## 31 -0.577525397 0.00050 1.041667e-04 4864.559 0.9997748 -6.98075720</span></span>
-<span><span class="co">## 32 -0.179946023 0.02600 6.388889e-03 4287.168 1.0003102 -1.48920168</span></span>
-<span><span class="co">## 33 -0.816819348 0.00025 5.000000e-05 5372.191 0.9998223 -6.61763236</span></span>
-<span><span class="co">## 34  0.664752760 0.59550 1.286667e-01 4730.183 0.9997957 -2.10694169</span></span>
-<span><span class="co">## 35 -0.171161720 0.03050 6.208333e-03 5855.693 0.9997829 -5.24385123</span></span>
-<span><span class="co">## 36 -0.692457815 0.01275 3.937500e-03 1201.496 1.0013502 -5.24321386</span></span>
-<span><span class="co">## 37  0.430211351 0.82900 1.408500e-01 5081.219 0.9999198 -5.44374385</span></span>
-<span><span class="co">## 38  0.381285523 0.08250 2.669643e-02 4279.728 0.9998294 -0.19333388</span></span>
-<span><span class="co">## 39  2.054089457 0.00000 0.000000e+00 3993.648 0.9998151 -4.34406426</span></span>
-<span><span class="co">## 40  0.292985551 0.24850 8.303125e-02 5964.566 0.9997668  0.39509456</span></span>
-<span><span class="co">## 41  1.321541722 0.00000 0.000000e+00 4935.986 0.9999919 -4.67747318</span></span>
-<span><span class="co">## 42  0.652790338 0.72875 1.837917e-01 4852.816 1.0007669 -0.85010014</span></span>
-<span><span class="co">## 43  0.434377743 0.81625 1.171207e-01 4524.798 1.0000600 -5.60660141</span></span>
-<span><span class="co">## 44  0.326467047 0.19775 5.335000e-02 4648.497 0.9997856 -0.78561808</span></span>
-<span><span class="co">## 45  1.712429656 0.00000 0.000000e+00 4070.850 0.9997541 -4.53609561</span></span>
-<span><span class="co">## 46  1.122601871 0.11875 4.575000e-02 4826.883 0.9998988 -0.50766484</span></span>
-<span><span class="co">## 47 -0.742148977 0.00000 0.000000e+00 5214.816 0.9997767 -6.64105167</span></span>
-<span><span class="co">## 48  0.401495458 0.51950 1.107115e-01 4574.274 0.9997501 -3.26758918</span></span>
-<span><span class="co">## 49 -0.961787686 0.00025 6.818182e-05 5061.864 1.0016821 -6.39600048</span></span>
-<span><span class="co">## 50  1.588801568 0.61325 1.459732e-01 3977.993 1.0010923 -0.63994763</span></span>
-<span><span class="co">## 51 -0.034459907 0.08475 1.637500e-02 4582.588 1.0001067 -5.46989314</span></span>
-<span><span class="co">## 52 -0.851473279 0.00900 2.678571e-03 2443.288 0.9997506 -2.89202232</span></span>
-<span><span class="co">## 53 -0.265899567 0.01250 1.733333e-03 4879.367 0.9997570 -6.48102091</span></span>
-<span><span class="co">## 54  1.836636220 0.05225 1.263636e-02 5148.158 1.0001821  0.16502948</span></span>
-<span><span class="co">## 55 -0.035407138 0.07175 1.311905e-02 5467.095 0.9997546 -5.29019660</span></span>
-<span><span class="co">## 56  1.515663968 0.24575 7.583696e-02 4853.555 0.9997501 -1.17901234</span></span>
-<span><span class="co">## 57  0.185695559 0.34850 4.750962e-02 5633.808 0.9997938 -5.38971785</span></span>
-<span><span class="co">## 58  1.021291768 0.36625 9.436000e-02 4687.027 0.9997573 -1.78763279</span></span>
-<span><span class="co">## 59 -0.142326261 0.03850 7.907895e-03 4492.209 1.0001562 -5.81231677</span></span>
-<span><span class="co">## 60  1.503752423 0.11225 4.169444e-02 5515.770 0.9997658 -1.11401235</span></span>
-<span><span class="co">##        v_effect     v_upper   v_pH0      v_FDR  v_n_eff v_R_k_hat   count_data</span></span>
-<span><span class="co">## 1  -3.830000924 -3.03169964 0.00000 0.00000000 5558.082 0.9997737 c("10x_6....</span></span>
-<span><span class="co">## 2  -0.497336160  0.67920588 0.30400 0.14338889 5393.055 0.9997607 c("10x_6....</span></span>
-<span><span class="co">## 3  -4.567028507 -3.57604507 0.00000 0.00000000 4656.263 1.0002195 c("10x_6....</span></span>
-<span><span class="co">## 4  -0.936946280  0.25386981 0.10575 0.05711111 4247.506 0.9998035 c("10x_6....</span></span>
-<span><span class="co">## 5  -3.211224555 -2.46479254 0.00000 0.00000000 5381.788 1.0001541 c("10x_6....</span></span>
-<span><span class="co">## 6  -0.927613156  0.26497830 0.11825 0.06322500 4565.503 1.0000555 c("10x_6....</span></span>
-<span><span class="co">## 7  -4.720033411 -3.83218319 0.00000 0.00000000 7640.803 0.9998067 c("10x_6....</span></span>
-<span><span class="co">## 8   1.512518005  3.47932376 0.09700 0.05103125 4164.340 1.0006317 c("10x_6....</span></span>
-<span><span class="co">## 9  -4.609023343 -3.74968521 0.00000 0.00000000 5907.043 1.0001762 c("10x_6....</span></span>
-<span><span class="co">## 10  0.666070524  1.88795746 0.21500 0.08808333 4472.916 0.9998481 c("10x_6....</span></span>
-<span><span class="co">## 11 -5.141437357 -4.20732273 0.00000 0.00000000 6114.256 1.0005068 c("10x_6....</span></span>
-<span><span class="co">## 12  0.370857852  1.91641904 0.41000 0.18819318 3724.736 1.0002580 c("10x_6....</span></span>
-<span><span class="co">## 13 -3.064870466 -2.31167596 0.00000 0.00000000 4843.924 1.0000173 c("10x_6....</span></span>
-<span><span class="co">## 14  0.214836488  1.29035151 0.49025 0.22118000 4614.913 0.9998245 c("10x_6....</span></span>
-<span><span class="co">## 15 -4.886023791 -3.98891155 0.00000 0.00000000 5554.694 0.9998650 c("10x_6....</span></span>
-<span><span class="co">## 16  0.577491060  1.82626199 0.27900 0.13394118 5788.045 0.9998776 c("10x_6....</span></span>
-<span><span class="co">## 17 -4.058929701 -3.20309032 0.00000 0.00000000 6650.338 0.9997515 c("10x_6....</span></span>
-<span><span class="co">## 18  1.080793137  2.20451163 0.05750 0.02775000 5075.931 0.9997780 c("10x_6....</span></span>
-<span><span class="co">## 19 -2.016893673 -0.62617162 0.00300 0.00010000 3164.684 0.9997547 c("10x_6....</span></span>
-<span><span class="co">## 20  0.558715961  2.64065829 0.37375 0.15551316 3789.365 0.9997511 c("10x_6....</span></span>
-<span><span class="co">## 21 -3.954846250 -2.59834587 0.00000 0.00000000 3496.288 1.0000858 c("10x_6....</span></span>
-<span><span class="co">## 22 -2.699620841 -1.30871016 0.00025 0.00025000 3940.555 1.0001331 c("10x_6....</span></span>
-<span><span class="co">## 23 -3.523835514 -2.76559728 0.00000 0.00000000 6280.888 1.0003049 c("10x_6....</span></span>
-<span><span class="co">## 24  0.015937179  1.02472942 0.63500 0.28479167 4902.702 0.9997695 c("10x_6....</span></span>
-<span><span class="co">## 25 -4.080699617 -3.22007715 0.00000 0.00000000 6067.061 0.9998679 c("10x_6....</span></span>
-<span><span class="co">## 26  0.061437951  1.30752264 0.59025 0.26007143 5652.677 0.9997640 c("10x_6....</span></span>
-<span><span class="co">## 27 -5.064106991 -4.15897590 0.00000 0.00000000 6010.765 1.0000910 c("10x_6....</span></span>
-<span><span class="co">## 28  0.354002693  1.56095954 0.38525 0.16700000 4456.685 1.0002214 c("10x_6....</span></span>
-<span><span class="co">## 29 -4.220008105 -3.35775843 0.00000 0.00000000 5966.316 0.9997555 c("10x_6....</span></span>
-<span><span class="co">## 30  0.307774593  1.48078125 0.42750 0.19859783 4846.653 1.0000397 c("10x_6....</span></span>
-<span><span class="co">## 31 -5.989213647 -4.93504366 0.00000 0.00000000 5072.525 0.9997933 c("10x_6....</span></span>
-<span><span class="co">## 32 -0.023800490  1.51732286 0.58950 0.24784259 4191.291 1.0000379 c("10x_6....</span></span>
-<span><span class="co">## 33 -5.739771689 -4.77856158 0.00000 0.00000000 5477.988 0.9997940 c("10x_6....</span></span>
-<span><span class="co">## 34 -0.779452665  0.64505505 0.20975 0.07654545 4849.454 1.0003389 c("10x_6....</span></span>
-<span><span class="co">## 35 -4.488916574 -3.52959954 0.00000 0.00000000 4806.318 0.9997676 c("10x_6....</span></span>
-<span><span class="co">## 36 -2.290736191  0.89001430 0.09450 0.04446429 1813.148 1.0000119 c("10x_6....</span></span>
-<span><span class="co">## 37 -4.669410798 -3.79217631 0.00000 0.00000000 6616.367 0.9997744 c("10x_6....</span></span>
-<span><span class="co">## 38  1.203317761  2.68303830 0.07800 0.03612500 4393.950 1.0002195 c("10x_6....</span></span>
-<span><span class="co">## 39 -3.575149272 -2.76771082 0.00000 0.00000000 7227.652 0.9999296 c("10x_6....</span></span>
-<span><span class="co">## 40  1.429132873  2.55986984 0.01075 0.00550000 5931.215 0.9997751 c("10x_6....</span></span>
-<span><span class="co">## 41 -4.010757455 -3.23203853 0.00000 0.00000000 6149.827 1.0002897 c("10x_6....</span></span>
-<span><span class="co">## 42  0.241219264  1.42665597 0.47150 0.20996875 5424.045 0.9998503 c("10x_6....</span></span>
-<span><span class="co">## 43 -4.818168320 -3.92643486 0.00000 0.00000000 6337.190 0.9997804 c("10x_6....</span></span>
-<span><span class="co">## 44  0.362107847  1.61472537 0.39025 0.17763095 4635.185 1.0004424 c("10x_6....</span></span>
-<span><span class="co">## 45 -3.809359375 -2.96443741 0.00000 0.00000000 6287.361 0.9998400 c("10x_6....</span></span>
-<span><span class="co">## 46  0.631615659  1.80737026 0.23050 0.09903846 5967.773 0.9998672 c("10x_6....</span></span>
-<span><span class="co">## 47 -5.789772746 -4.85045539 0.00000 0.00000000 5495.973 0.9997564 c("10x_6....</span></span>
-<span><span class="co">## 48 -1.604161688 -0.01450454 0.04150 0.02031250 6190.822 0.9999675 c("10x_6....</span></span>
-<span><span class="co">## 49 -5.566768034 -4.48133148 0.00000 0.00000000 5331.925 1.0004422 c("10x_6....</span></span>
-<span><span class="co">## 50  0.688829843  2.17718267 0.24100 0.12487500 3698.907 0.9997500 c("10x_6....</span></span>
-<span><span class="co">## 51 -4.763218961 -3.85111809 0.00000 0.00000000 6349.432 0.9999307 c("10x_6....</span></span>
-<span><span class="co">## 52 -0.895126127  1.05994276 0.23775 0.11713333 3390.256 0.9998047 c("10x_6....</span></span>
-<span><span class="co">## 53 -5.583136349 -4.59401809 0.00000 0.00000000 6305.352 0.9999196 c("10x_6....</span></span>
-<span><span class="co">## 54  1.335250590  2.62301443 0.02875 0.01325000 5144.762 0.9997810 c("10x_6....</span></span>
-<span><span class="co">## 55 -4.556940572 -3.60738620 0.00000 0.00000000 5496.248 0.9999040 c("10x_6....</span></span>
-<span><span class="co">## 56 -0.096105018  1.13469711 0.57275 0.23470192 3943.601 0.9999761 c("10x_6....</span></span>
-<span><span class="co">## 57 -4.629143611 -3.72467188 0.00000 0.00000000 6149.058 1.0000746 c("10x_6....</span></span>
-<span><span class="co">## 58 -0.630793093  0.54410583 0.23175 0.10851786 4884.644 1.0003668 c("10x_6....</span></span>
-<span><span class="co">## 59 -5.042925422 -4.14150611 0.00000 0.00000000 5988.801 0.9999629 c("10x_6....</span></span>
-<span><span class="co">## 60  0.008619909  1.16051695 0.62675 0.27271552 4750.977 0.9998312 c("10x_6....</span></span></code></pre>
-<p>A plot of group proportion, faceted by groups. The blue boxplots
-represent the posterior predictive check. If the model is likely to be
-descriptively adequate to the data, the blue box plot should roughly
-overlay with the black box plot, which represents the observed data. The
-outliers are coloured in red. A box plot will be returned for every
-(discrete) covariate present in <code>formula_composition</code>. The
-colour coding represents the significant associations for composition
-and/or variability.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">boxplot</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Unknown or uninitialised column: `boxplot`.</span></span></code></pre>
-<pre><code><span><span class="co">## NULL</span></span></code></pre>
-<p>A plot of estimates of differential composition (c_) on the x-axis
-and differential variability (v_) on the y-axis. The error bars
-represent 95% credible intervals. The dashed lines represent the minimal
-effect that the hypothesis test is based on. An effect is labelled as
-significant if bigger than the minimal effect according to the 95%
-credible interval. Facets represent the covariates in the model.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Unknown or uninitialised column: `credible_intervals_1D`.</span></span></code></pre>
-<pre><code><span><span class="co">## NULL</span></span></code></pre>
-</div>
 <div class="section level3">
 <h3 id="visualisation-of-the-mcmc-chains-from-the-posterior-distribution">Visualisation of the MCMC chains from the posterior
 distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mcmc-chains-from-the-posterior-distribution"></a>
@@ -603,199 +622,17 @@ distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mc
 this example, we plot the Monte Carlo chain for the slope parameter of
 the first cell type. We can see that it has converged and is negative
 with probability 1.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">rstan</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html" class="external-link">traceplot</a></span><span class="op">(</span><span class="st">"beta[2,1]"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
+<p><img src="introduction_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
 <p>Plot 1D significance plot</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/plot_summary.html">plot_summary</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##              cell_group   parameter factor      c_lower     c_effect</span></span>
-<span><span class="co">## 1            B immature (Intercept)   &lt;NA&gt;  0.350075608  0.770206234</span></span>
-<span><span class="co">## 2            B immature typehealthy   type  0.865827553  1.431369817</span></span>
-<span><span class="co">## 3                 B mem (Intercept)   &lt;NA&gt; -1.456430020 -0.869269538</span></span>
-<span><span class="co">## 4                 B mem typehealthy   type  1.020637451  1.856780626</span></span>
-<span><span class="co">## 5         CD4 cm S100A4 (Intercept)   &lt;NA&gt;  1.307186176  1.661070030</span></span>
-<span><span class="co">## 6         CD4 cm S100A4 typehealthy   type  0.494208328  0.937341673</span></span>
-<span><span class="co">## 7  CD4 cm high cytokine (Intercept)   &lt;NA&gt; -1.046409173 -0.550047679</span></span>
-<span><span class="co">## 8  CD4 cm high cytokine typehealthy   type -3.053768661 -1.241648630</span></span>
-<span><span class="co">## 9       CD4 cm ribosome (Intercept)   &lt;NA&gt; -0.086891709  0.303445207</span></span>
-<span><span class="co">## 10      CD4 cm ribosome typehealthy   type -1.791471352 -0.945984766</span></span>
-<span><span class="co">## 11 CD4 em high cytokine (Intercept)   &lt;NA&gt; -1.164605714 -0.705302242</span></span>
-<span><span class="co">## 12 CD4 em high cytokine typehealthy   type -2.354242299 -1.290839994</span></span>
-<span><span class="co">## 13            CD4 naive (Intercept)   &lt;NA&gt;  0.771053773  1.215777251</span></span>
-<span><span class="co">## 14            CD4 naive typehealthy   type  0.457669238  1.147760746</span></span>
-<span><span class="co">## 15         CD4 ribosome (Intercept)   &lt;NA&gt; -0.310396352  0.040804305</span></span>
-<span><span class="co">## 16         CD4 ribosome typehealthy   type  1.453765861  2.069264207</span></span>
-<span><span class="co">## 17             CD8 em 1 (Intercept)   &lt;NA&gt;  0.296380099  0.680858219</span></span>
-<span><span class="co">## 18             CD8 em 1 typehealthy   type -0.063016881  0.784897390</span></span>
-<span><span class="co">## 19             CD8 em 2 (Intercept)   &lt;NA&gt; -0.905720690  0.131227068</span></span>
-<span><span class="co">## 20             CD8 em 2 typehealthy   type -3.488584558 -1.164531278</span></span>
-<span><span class="co">## 21             CD8 em 3 (Intercept)   &lt;NA&gt; -1.383386111 -0.659718835</span></span>
-<span><span class="co">## 22             CD8 em 3 typehealthy   type -1.802336705 -0.815241065</span></span>
-<span><span class="co">## 23            CD8 naive (Intercept)   &lt;NA&gt;  0.625165610  1.019635462</span></span>
-<span><span class="co">## 24            CD8 naive typehealthy   type -0.676154037  0.005265703</span></span>
-<span><span class="co">## 25     CD8 transitional (Intercept)   &lt;NA&gt;  0.906479497  1.215822992</span></span>
-<span><span class="co">## 26     CD8 transitional typehealthy   type  0.169287432  0.680468620</span></span>
-<span><span class="co">## 27                 MAIT (Intercept)   &lt;NA&gt; -1.043158413 -0.601502485</span></span>
-<span><span class="co">## 28                 MAIT typehealthy   type  0.446881265  1.219360038</span></span>
-<span><span class="co">## 29               Mac M1 (Intercept)   &lt;NA&gt;  0.626803273  0.947793314</span></span>
-<span><span class="co">## 30               Mac M1 typehealthy   type  0.001151928  0.596578257</span></span>
-<span><span class="co">## 31        Mac M1 FCER1A (Intercept)   &lt;NA&gt; -1.346481755 -0.985901773</span></span>
-<span><span class="co">## 32        Mac M1 FCER1A typehealthy   type -1.827896226 -1.058653066</span></span>
-<span><span class="co">## 33                 Mono (Intercept)   &lt;NA&gt; -1.817728606 -1.344267519</span></span>
-<span><span class="co">## 34                 Mono typehealthy   type -0.851329777 -0.109123077</span></span>
-<span><span class="co">## 35          Mono NKG7 1 (Intercept)   &lt;NA&gt; -1.473336487 -0.855916833</span></span>
-<span><span class="co">## 36          Mono NKG7 1 typehealthy   type -3.954816424 -2.876059986</span></span>
-<span><span class="co">## 37          Mono NKG7 2 (Intercept)   &lt;NA&gt; -0.434149386 -0.006263967</span></span>
-<span><span class="co">## 38          Mono NKG7 2 typehealthy   type -2.459658603 -1.299723656</span></span>
-<span><span class="co">## 39  Mono classic inflam (Intercept)   &lt;NA&gt;  1.496637550  1.782291597</span></span>
-<span><span class="co">## 40  Mono classic inflam typehealthy   type -1.254007824 -0.470421134</span></span>
-<span><span class="co">## 41     Mono non-classic (Intercept)   &lt;NA&gt;  0.613544256  0.971134125</span></span>
-<span><span class="co">## 42     Mono non-classic typehealthy   type -0.627655422 -0.004353395</span></span>
-<span><span class="co">## 43    Myeloid migratory (Intercept)   &lt;NA&gt; -0.349283155  0.019777948</span></span>
-<span><span class="co">## 44    Myeloid migratory typehealthy   type -1.326315807 -0.555628165</span></span>
-<span><span class="co">## 45                   NK (Intercept)   &lt;NA&gt;  1.129146109  1.433472376</span></span>
-<span><span class="co">## 46                   NK typehealthy   type -0.043420829  0.547152232</span></span>
-<span><span class="co">## 47           NK cycling (Intercept)   &lt;NA&gt; -1.663291984 -1.207373146</span></span>
-<span><span class="co">## 48           NK cycling typehealthy   type -0.794626985 -0.184532677</span></span>
-<span><span class="co">## 49     NK high cytokine (Intercept)   &lt;NA&gt; -2.221170945 -1.634811180</span></span>
-<span><span class="co">## 50     NK high cytokine typehealthy   type -1.209992453  0.010811351</span></span>
-<span><span class="co">## 51                 Stem (Intercept)   &lt;NA&gt; -1.092335203 -0.578183675</span></span>
-<span><span class="co">## 52                 Stem typehealthy   type -3.227125060 -2.254077268</span></span>
-<span><span class="co">## 53                T gd1 (Intercept)   &lt;NA&gt; -1.063427714 -0.691983246</span></span>
-<span><span class="co">## 54                T gd1 typehealthy   type  0.051544710  0.927731580</span></span>
-<span><span class="co">## 55                T gd2 (Intercept)   &lt;NA&gt; -1.240204973 -0.668257877</span></span>
-<span><span class="co">## 56                T gd2 typehealthy   type -0.420899042  0.519032829</span></span>
-<span><span class="co">## 57                 cDC2 (Intercept)   &lt;NA&gt; -0.759271022 -0.290066235</span></span>
-<span><span class="co">## 58                 cDC2 typehealthy   type -0.367162606  0.309122589</span></span>
-<span><span class="co">## 59                  pDC (Intercept)   &lt;NA&gt; -1.128716632 -0.672560307</span></span>
-<span><span class="co">## 60                  pDC typehealthy   type -0.093617778  0.678363669</span></span>
-<span><span class="co">##         c_upper   c_pH0        c_FDR  c_n_eff c_R_k_hat     v_lower</span></span>
-<span><span class="co">## 1   1.184246864 0.00375 3.846154e-04 5346.796 0.9998132 -4.50543305</span></span>
-<span><span class="co">## 2   2.000856889 0.00000 0.000000e+00 4482.837 0.9998257 -1.67340409</span></span>
-<span><span class="co">## 3  -0.184573644 0.02875 4.779412e-03 4518.028 1.0000043 -5.30560249</span></span>
-<span><span class="co">## 4   2.608406746 0.00050 1.666667e-04 4196.768 0.9997766 -2.06462751</span></span>
-<span><span class="co">## 5   1.995619460 0.00000 0.000000e+00 6222.411 0.9998233 -3.81901323</span></span>
-<span><span class="co">## 6   1.401232300 0.00050 2.500000e-04 5028.344 0.9999969 -2.03347010</span></span>
-<span><span class="co">## 7  -0.007340886 0.10400 2.018478e-02 4724.006 1.0004194 -5.45374018</span></span>
-<span><span class="co">## 8   1.321660913 0.20450 6.054762e-02 4274.735 1.0020668 -0.45927442</span></span>
-<span><span class="co">## 9   0.684441268 0.28450 3.547000e-02 4383.083 0.9997530 -5.36222185</span></span>
-<span><span class="co">## 10  0.121427453 0.08250 2.240385e-02 3703.022 0.9998651 -0.55425684</span></span>
-<span><span class="co">## 11 -0.195911020 0.02650 3.281250e-03 4209.679 0.9997972 -5.90142439</span></span>
-<span><span class="co">## 12  0.299556461 0.06975 1.739583e-02 2845.235 0.9998812 -1.07718192</span></span>
-<span><span class="co">## 13  1.634108835 0.00000 0.000000e+00 5521.401 1.0011064 -3.68286687</span></span>
-<span><span class="co">## 14  1.805044757 0.00375 9.500000e-04 4904.786 0.9998659 -0.78141125</span></span>
-<span><span class="co">## 15  0.426540982 0.80525 9.215179e-02 5764.287 0.9998318 -5.66675104</span></span>
-<span><span class="co">## 16  2.641052180 0.00000 0.000000e+00 5592.575 0.9999336 -0.63078193</span></span>
-<span><span class="co">## 17  1.094759215 0.00850 9.642857e-04 4443.406 0.9997500 -4.75615064</span></span>
-<span><span class="co">## 18  1.611695421 0.08450 3.055000e-02 6223.529 0.9997814 -0.01747514</span></span>
-<span><span class="co">## 19  1.203807229 0.53975 6.574074e-02 4515.970 0.9997615 -3.66801396</span></span>
-<span><span class="co">## 20  1.179606262 0.22700 6.811364e-02 4395.508 0.9997681 -1.50218577</span></span>
-<span><span class="co">## 21  0.222127083 0.13800 2.509375e-02 5148.632 1.0000885 -4.72645738</span></span>
-<span><span class="co">## 22  0.058241607 0.09225 3.754412e-02 4557.969 1.0009539 -4.13604112</span></span>
-<span><span class="co">## 23  1.427452429 0.00025 2.777778e-05 4137.740 1.0005046 -4.15279185</span></span>
-<span><span class="co">## 24  0.743161148 0.69775 1.650000e-01 4756.159 0.9998839 -0.98811928</span></span>
-<span><span class="co">## 25  1.523385790 0.00000 0.000000e+00 5423.511 0.9997768 -4.83139960</span></span>
-<span><span class="co">## 26  1.178845041 0.02925 8.675000e-03 4211.889 1.0000681 -1.08967293</span></span>
-<span><span class="co">## 27 -0.099472762 0.05350 1.018750e-02 4592.803 0.9998508 -5.82916316</span></span>
-<span><span class="co">## 28  1.986624575 0.00500 1.625000e-03 5442.136 0.9997745 -0.70355760</span></span>
-<span><span class="co">## 29  1.273784299 0.00000 0.000000e+00 4636.563 0.9997500 -4.99687494</span></span>
-<span><span class="co">## 30  1.176583715 0.08775 3.412500e-02 4931.331 0.9998300 -0.84391953</span></span>
-<span><span class="co">## 31 -0.577525397 0.00050 1.041667e-04 4864.559 0.9997748 -6.98075720</span></span>
-<span><span class="co">## 32 -0.179946023 0.02600 6.388889e-03 4287.168 1.0003102 -1.48920168</span></span>
-<span><span class="co">## 33 -0.816819348 0.00025 5.000000e-05 5372.191 0.9998223 -6.61763236</span></span>
-<span><span class="co">## 34  0.664752760 0.59550 1.286667e-01 4730.183 0.9997957 -2.10694169</span></span>
-<span><span class="co">## 35 -0.171161720 0.03050 6.208333e-03 5855.693 0.9997829 -5.24385123</span></span>
-<span><span class="co">## 36 -0.692457815 0.01275 3.937500e-03 1201.496 1.0013502 -5.24321386</span></span>
-<span><span class="co">## 37  0.430211351 0.82900 1.408500e-01 5081.219 0.9999198 -5.44374385</span></span>
-<span><span class="co">## 38  0.381285523 0.08250 2.669643e-02 4279.728 0.9998294 -0.19333388</span></span>
-<span><span class="co">## 39  2.054089457 0.00000 0.000000e+00 3993.648 0.9998151 -4.34406426</span></span>
-<span><span class="co">## 40  0.292985551 0.24850 8.303125e-02 5964.566 0.9997668  0.39509456</span></span>
-<span><span class="co">## 41  1.321541722 0.00000 0.000000e+00 4935.986 0.9999919 -4.67747318</span></span>
-<span><span class="co">## 42  0.652790338 0.72875 1.837917e-01 4852.816 1.0007669 -0.85010014</span></span>
-<span><span class="co">## 43  0.434377743 0.81625 1.171207e-01 4524.798 1.0000600 -5.60660141</span></span>
-<span><span class="co">## 44  0.326467047 0.19775 5.335000e-02 4648.497 0.9997856 -0.78561808</span></span>
-<span><span class="co">## 45  1.712429656 0.00000 0.000000e+00 4070.850 0.9997541 -4.53609561</span></span>
-<span><span class="co">## 46  1.122601871 0.11875 4.575000e-02 4826.883 0.9998988 -0.50766484</span></span>
-<span><span class="co">## 47 -0.742148977 0.00000 0.000000e+00 5214.816 0.9997767 -6.64105167</span></span>
-<span><span class="co">## 48  0.401495458 0.51950 1.107115e-01 4574.274 0.9997501 -3.26758918</span></span>
-<span><span class="co">## 49 -0.961787686 0.00025 6.818182e-05 5061.864 1.0016821 -6.39600048</span></span>
-<span><span class="co">## 50  1.588801568 0.61325 1.459732e-01 3977.993 1.0010923 -0.63994763</span></span>
-<span><span class="co">## 51 -0.034459907 0.08475 1.637500e-02 4582.588 1.0001067 -5.46989314</span></span>
-<span><span class="co">## 52 -0.851473279 0.00900 2.678571e-03 2443.288 0.9997506 -2.89202232</span></span>
-<span><span class="co">## 53 -0.265899567 0.01250 1.733333e-03 4879.367 0.9997570 -6.48102091</span></span>
-<span><span class="co">## 54  1.836636220 0.05225 1.263636e-02 5148.158 1.0001821  0.16502948</span></span>
-<span><span class="co">## 55 -0.035407138 0.07175 1.311905e-02 5467.095 0.9997546 -5.29019660</span></span>
-<span><span class="co">## 56  1.515663968 0.24575 7.583696e-02 4853.555 0.9997501 -1.17901234</span></span>
-<span><span class="co">## 57  0.185695559 0.34850 4.750962e-02 5633.808 0.9997938 -5.38971785</span></span>
-<span><span class="co">## 58  1.021291768 0.36625 9.436000e-02 4687.027 0.9997573 -1.78763279</span></span>
-<span><span class="co">## 59 -0.142326261 0.03850 7.907895e-03 4492.209 1.0001562 -5.81231677</span></span>
-<span><span class="co">## 60  1.503752423 0.11225 4.169444e-02 5515.770 0.9997658 -1.11401235</span></span>
-<span><span class="co">##        v_effect     v_upper   v_pH0      v_FDR  v_n_eff v_R_k_hat   count_data</span></span>
-<span><span class="co">## 1  -3.830000924 -3.03169964 0.00000 0.00000000 5558.082 0.9997737 c("10x_6....</span></span>
-<span><span class="co">## 2  -0.497336160  0.67920588 0.30400 0.14338889 5393.055 0.9997607 c("10x_6....</span></span>
-<span><span class="co">## 3  -4.567028507 -3.57604507 0.00000 0.00000000 4656.263 1.0002195 c("10x_6....</span></span>
-<span><span class="co">## 4  -0.936946280  0.25386981 0.10575 0.05711111 4247.506 0.9998035 c("10x_6....</span></span>
-<span><span class="co">## 5  -3.211224555 -2.46479254 0.00000 0.00000000 5381.788 1.0001541 c("10x_6....</span></span>
-<span><span class="co">## 6  -0.927613156  0.26497830 0.11825 0.06322500 4565.503 1.0000555 c("10x_6....</span></span>
-<span><span class="co">## 7  -4.720033411 -3.83218319 0.00000 0.00000000 7640.803 0.9998067 c("10x_6....</span></span>
-<span><span class="co">## 8   1.512518005  3.47932376 0.09700 0.05103125 4164.340 1.0006317 c("10x_6....</span></span>
-<span><span class="co">## 9  -4.609023343 -3.74968521 0.00000 0.00000000 5907.043 1.0001762 c("10x_6....</span></span>
-<span><span class="co">## 10  0.666070524  1.88795746 0.21500 0.08808333 4472.916 0.9998481 c("10x_6....</span></span>
-<span><span class="co">## 11 -5.141437357 -4.20732273 0.00000 0.00000000 6114.256 1.0005068 c("10x_6....</span></span>
-<span><span class="co">## 12  0.370857852  1.91641904 0.41000 0.18819318 3724.736 1.0002580 c("10x_6....</span></span>
-<span><span class="co">## 13 -3.064870466 -2.31167596 0.00000 0.00000000 4843.924 1.0000173 c("10x_6....</span></span>
-<span><span class="co">## 14  0.214836488  1.29035151 0.49025 0.22118000 4614.913 0.9998245 c("10x_6....</span></span>
-<span><span class="co">## 15 -4.886023791 -3.98891155 0.00000 0.00000000 5554.694 0.9998650 c("10x_6....</span></span>
-<span><span class="co">## 16  0.577491060  1.82626199 0.27900 0.13394118 5788.045 0.9998776 c("10x_6....</span></span>
-<span><span class="co">## 17 -4.058929701 -3.20309032 0.00000 0.00000000 6650.338 0.9997515 c("10x_6....</span></span>
-<span><span class="co">## 18  1.080793137  2.20451163 0.05750 0.02775000 5075.931 0.9997780 c("10x_6....</span></span>
-<span><span class="co">## 19 -2.016893673 -0.62617162 0.00300 0.00010000 3164.684 0.9997547 c("10x_6....</span></span>
-<span><span class="co">## 20  0.558715961  2.64065829 0.37375 0.15551316 3789.365 0.9997511 c("10x_6....</span></span>
-<span><span class="co">## 21 -3.954846250 -2.59834587 0.00000 0.00000000 3496.288 1.0000858 c("10x_6....</span></span>
-<span><span class="co">## 22 -2.699620841 -1.30871016 0.00025 0.00025000 3940.555 1.0001331 c("10x_6....</span></span>
-<span><span class="co">## 23 -3.523835514 -2.76559728 0.00000 0.00000000 6280.888 1.0003049 c("10x_6....</span></span>
-<span><span class="co">## 24  0.015937179  1.02472942 0.63500 0.28479167 4902.702 0.9997695 c("10x_6....</span></span>
-<span><span class="co">## 25 -4.080699617 -3.22007715 0.00000 0.00000000 6067.061 0.9998679 c("10x_6....</span></span>
-<span><span class="co">## 26  0.061437951  1.30752264 0.59025 0.26007143 5652.677 0.9997640 c("10x_6....</span></span>
-<span><span class="co">## 27 -5.064106991 -4.15897590 0.00000 0.00000000 6010.765 1.0000910 c("10x_6....</span></span>
-<span><span class="co">## 28  0.354002693  1.56095954 0.38525 0.16700000 4456.685 1.0002214 c("10x_6....</span></span>
-<span><span class="co">## 29 -4.220008105 -3.35775843 0.00000 0.00000000 5966.316 0.9997555 c("10x_6....</span></span>
-<span><span class="co">## 30  0.307774593  1.48078125 0.42750 0.19859783 4846.653 1.0000397 c("10x_6....</span></span>
-<span><span class="co">## 31 -5.989213647 -4.93504366 0.00000 0.00000000 5072.525 0.9997933 c("10x_6....</span></span>
-<span><span class="co">## 32 -0.023800490  1.51732286 0.58950 0.24784259 4191.291 1.0000379 c("10x_6....</span></span>
-<span><span class="co">## 33 -5.739771689 -4.77856158 0.00000 0.00000000 5477.988 0.9997940 c("10x_6....</span></span>
-<span><span class="co">## 34 -0.779452665  0.64505505 0.20975 0.07654545 4849.454 1.0003389 c("10x_6....</span></span>
-<span><span class="co">## 35 -4.488916574 -3.52959954 0.00000 0.00000000 4806.318 0.9997676 c("10x_6....</span></span>
-<span><span class="co">## 36 -2.290736191  0.89001430 0.09450 0.04446429 1813.148 1.0000119 c("10x_6....</span></span>
-<span><span class="co">## 37 -4.669410798 -3.79217631 0.00000 0.00000000 6616.367 0.9997744 c("10x_6....</span></span>
-<span><span class="co">## 38  1.203317761  2.68303830 0.07800 0.03612500 4393.950 1.0002195 c("10x_6....</span></span>
-<span><span class="co">## 39 -3.575149272 -2.76771082 0.00000 0.00000000 7227.652 0.9999296 c("10x_6....</span></span>
-<span><span class="co">## 40  1.429132873  2.55986984 0.01075 0.00550000 5931.215 0.9997751 c("10x_6....</span></span>
-<span><span class="co">## 41 -4.010757455 -3.23203853 0.00000 0.00000000 6149.827 1.0002897 c("10x_6....</span></span>
-<span><span class="co">## 42  0.241219264  1.42665597 0.47150 0.20996875 5424.045 0.9998503 c("10x_6....</span></span>
-<span><span class="co">## 43 -4.818168320 -3.92643486 0.00000 0.00000000 6337.190 0.9997804 c("10x_6....</span></span>
-<span><span class="co">## 44  0.362107847  1.61472537 0.39025 0.17763095 4635.185 1.0004424 c("10x_6....</span></span>
-<span><span class="co">## 45 -3.809359375 -2.96443741 0.00000 0.00000000 6287.361 0.9998400 c("10x_6....</span></span>
-<span><span class="co">## 46  0.631615659  1.80737026 0.23050 0.09903846 5967.773 0.9998672 c("10x_6....</span></span>
-<span><span class="co">## 47 -5.789772746 -4.85045539 0.00000 0.00000000 5495.973 0.9997564 c("10x_6....</span></span>
-<span><span class="co">## 48 -1.604161688 -0.01450454 0.04150 0.02031250 6190.822 0.9999675 c("10x_6....</span></span>
-<span><span class="co">## 49 -5.566768034 -4.48133148 0.00000 0.00000000 5331.925 1.0004422 c("10x_6....</span></span>
-<span><span class="co">## 50  0.688829843  2.17718267 0.24100 0.12487500 3698.907 0.9997500 c("10x_6....</span></span>
-<span><span class="co">## 51 -4.763218961 -3.85111809 0.00000 0.00000000 6349.432 0.9999307 c("10x_6....</span></span>
-<span><span class="co">## 52 -0.895126127  1.05994276 0.23775 0.11713333 3390.256 0.9998047 c("10x_6....</span></span>
-<span><span class="co">## 53 -5.583136349 -4.59401809 0.00000 0.00000000 6305.352 0.9999196 c("10x_6....</span></span>
-<span><span class="co">## 54  1.335250590  2.62301443 0.02875 0.01325000 5144.762 0.9997810 c("10x_6....</span></span>
-<span><span class="co">## 55 -4.556940572 -3.60738620 0.00000 0.00000000 5496.248 0.9999040 c("10x_6....</span></span>
-<span><span class="co">## 56 -0.096105018  1.13469711 0.57275 0.23470192 3943.601 0.9999761 c("10x_6....</span></span>
-<span><span class="co">## 57 -4.629143611 -3.72467188 0.00000 0.00000000 6149.058 1.0000746 c("10x_6....</span></span>
-<span><span class="co">## 58 -0.630793093  0.54410583 0.23175 0.10851786 4884.644 1.0003668 c("10x_6....</span></span>
-<span><span class="co">## 59 -5.042925422 -4.14150611 0.00000 0.00000000 5988.801 0.9999629 c("10x_6....</span></span>
-<span><span class="co">## 60  0.008619909  1.16051695 0.62675 0.27271552 4750.977 0.9998312 c("10x_6....</span></span></code></pre>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Joining with `by = join_by(cell_group, sample)`</span></span>
+<span><span class="co">## Joining with `by = join_by(cell_group, type)`</span></span></code></pre>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Unknown or uninitialised column: `credible_intervals_1D`.</span></span></code></pre>
-<pre><code><span><span class="co">## NULL</span></span></code></pre>
+<p><img src="introduction_files/figure-html/unnamed-chunk-14-1.png" width="700"></p>
 <p>Plot 2D significance plot. Data points are cell groups. Error bars
 are the 95% credible interval. The dashed lines represent the default
 threshold fold change for which the probabilities (c_pH0, v_pH0) are
@@ -808,13 +645,12 @@ linear association between mean and variability for
 scatterplot (besides the Intercept) is provided for each category of
 interest. The for each category of interest, the composition and
 variability effects should be generally uncorrelated.</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: Unknown or uninitialised column: `credible_intervals_2D`.</span></span></code></pre>
-<pre><code><span><span class="co">## NULL</span></span></code></pre>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<p><img src="introduction_files/figure-html/unnamed-chunk-15-1.png" width="700"></p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R Under development (unstable) (2024-03-13 r86113)</span></span>
+<pre><code><span><span class="co">## R version 4.4.0 Patched (2024-04-24 r86483)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
 <span><span class="co">## Running under: Ubuntu 22.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
@@ -837,60 +673,61 @@ variability effects should be generally uncorrelated.</p>
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] rstan_2.32.6       StanHeaders_2.32.6 tidyr_1.3.1        forcats_1.0.0     </span></span>
-<span><span class="co">## [5] ggplot2_3.5.0      sccomp_1.7.6       dplyr_1.1.4        BiocStyle_2.31.0  </span></span>
+<span><span class="co">## [1] rstan_2.32.6       StanHeaders_2.32.7 tidyr_1.3.1        forcats_1.0.0     </span></span>
+<span><span class="co">## [5] ggplot2_3.5.1      sccomp_1.7.10      dplyr_1.1.4       </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] gridExtra_2.3               inline_0.3.19              </span></span>
-<span><span class="co">##  [3] rlang_1.1.3                 magrittr_2.0.3             </span></span>
-<span><span class="co">##  [5] matrixStats_1.2.0           compiler_4.4.0             </span></span>
-<span><span class="co">##  [7] loo_2.7.0                   systemfonts_1.0.6          </span></span>
-<span><span class="co">##  [9] vctrs_0.6.5                 stringr_1.5.1              </span></span>
-<span><span class="co">## [11] pkgconfig_2.0.3             crayon_1.5.2               </span></span>
-<span><span class="co">## [13] fastmap_1.1.1               XVector_0.43.1             </span></span>
-<span><span class="co">## [15] labeling_0.4.3              utf8_1.2.4                 </span></span>
-<span><span class="co">## [17] rmarkdown_2.26              tzdb_0.4.0                 </span></span>
-<span><span class="co">## [19] ragg_1.3.0                  purrr_1.0.2                </span></span>
-<span><span class="co">## [21] xfun_0.42                   zlibbioc_1.49.0            </span></span>
-<span><span class="co">## [23] cachem_1.0.8                GenomeInfoDb_1.39.8        </span></span>
-<span><span class="co">## [25] jsonlite_1.8.8              highr_0.10                 </span></span>
-<span><span class="co">## [27] DelayedArray_0.29.9         parallel_4.4.0             </span></span>
-<span><span class="co">## [29] R6_2.5.1                    bslib_0.6.1                </span></span>
-<span><span class="co">## [31] stringi_1.8.3               parallelly_1.37.1          </span></span>
-<span><span class="co">## [33] boot_1.3-30                 GenomicRanges_1.55.3       </span></span>
-<span><span class="co">## [35] jquerylib_0.1.4             Rcpp_1.0.12                </span></span>
-<span><span class="co">## [37] bookdown_0.38               SummarizedExperiment_1.33.3</span></span>
-<span><span class="co">## [39] knitr_1.45                  future.apply_1.11.1        </span></span>
-<span><span class="co">## [41] readr_2.1.5                 IRanges_2.37.1             </span></span>
-<span><span class="co">## [43] Matrix_1.6-5                tidyselect_1.2.1           </span></span>
-<span><span class="co">## [45] abind_1.4-5                 yaml_2.3.8                 </span></span>
-<span><span class="co">## [47] codetools_0.2-19            curl_5.2.1                 </span></span>
-<span><span class="co">## [49] listenv_0.9.1               pkgbuild_1.4.3             </span></span>
-<span><span class="co">## [51] lattice_0.22-5              tibble_3.2.1               </span></span>
-<span><span class="co">## [53] withr_3.0.0                 Biobase_2.63.0             </span></span>
-<span><span class="co">## [55] evaluate_0.23               future_1.33.1              </span></span>
-<span><span class="co">## [57] desc_1.4.3                  RcppParallel_5.1.7         </span></span>
-<span><span class="co">## [59] pillar_1.9.0                BiocManager_1.30.22        </span></span>
-<span><span class="co">## [61] MatrixGenerics_1.15.0       stats4_4.4.0               </span></span>
-<span><span class="co">## [63] generics_0.1.3              sp_2.1-3                   </span></span>
-<span><span class="co">## [65] S4Vectors_0.41.4            hms_1.1.3                  </span></span>
-<span><span class="co">## [67] rstantools_2.4.0            munsell_0.5.0              </span></span>
-<span><span class="co">## [69] scales_1.3.0                globals_0.16.3             </span></span>
-<span><span class="co">## [71] glue_1.7.0                  tools_4.4.0                </span></span>
-<span><span class="co">## [73] fs_1.6.3                    dotCall64_1.1-1            </span></span>
-<span><span class="co">## [75] grid_4.4.0                  QuickJSR_1.1.3             </span></span>
-<span><span class="co">## [77] colorspace_2.1-0            SingleCellExperiment_1.25.0</span></span>
-<span><span class="co">## [79] GenomeInfoDbData_1.2.11     patchwork_1.2.0            </span></span>
-<span><span class="co">## [81] cli_3.6.2                   textshaping_0.3.7          </span></span>
-<span><span class="co">## [83] spam_2.10-0                 fansi_1.0.6                </span></span>
-<span><span class="co">## [85] S4Arrays_1.3.6              V8_4.4.2                   </span></span>
-<span><span class="co">## [87] gtable_0.3.4                sass_0.4.8                 </span></span>
-<span><span class="co">## [89] digest_0.6.35               progressr_0.14.0           </span></span>
-<span><span class="co">## [91] BiocGenerics_0.49.1         SparseArray_1.3.4          </span></span>
-<span><span class="co">## [93] ggrepel_0.9.5               farver_2.1.1               </span></span>
-<span><span class="co">## [95] SeuratObject_5.0.1          memoise_2.0.1              </span></span>
-<span><span class="co">## [97] htmltools_0.5.7             pkgdown_2.0.7              </span></span>
-<span><span class="co">## [99] lifecycle_1.0.4</span></span></code></pre>
+<span><span class="co">##   [1] gridExtra_2.3               inline_0.3.19              </span></span>
+<span><span class="co">##   [3] rlang_1.1.3                 magrittr_2.0.3             </span></span>
+<span><span class="co">##   [5] matrixStats_1.3.0           compiler_4.4.0             </span></span>
+<span><span class="co">##   [7] loo_2.7.0                   systemfonts_1.0.6          </span></span>
+<span><span class="co">##   [9] vctrs_0.6.5                 stringr_1.5.1              </span></span>
+<span><span class="co">##  [11] pkgconfig_2.0.3             crayon_1.5.2               </span></span>
+<span><span class="co">##  [13] fastmap_1.1.1               XVector_0.43.1             </span></span>
+<span><span class="co">##  [15] labeling_0.4.3              utf8_1.2.4                 </span></span>
+<span><span class="co">##  [17] rmarkdown_2.26              tzdb_0.4.0                 </span></span>
+<span><span class="co">##  [19] UCSC.utils_0.99.7           ragg_1.3.0                 </span></span>
+<span><span class="co">##  [21] purrr_1.0.2                 xfun_0.43                  </span></span>
+<span><span class="co">##  [23] zlibbioc_1.49.3             cachem_1.0.8               </span></span>
+<span><span class="co">##  [25] GenomeInfoDb_1.39.14        jsonlite_1.8.8             </span></span>
+<span><span class="co">##  [27] highr_0.10                  DelayedArray_0.29.9        </span></span>
+<span><span class="co">##  [29] parallel_4.4.0              R6_2.5.1                   </span></span>
+<span><span class="co">##  [31] RColorBrewer_1.1-3          bslib_0.7.0                </span></span>
+<span><span class="co">##  [33] stringi_1.8.3               parallelly_1.37.1          </span></span>
+<span><span class="co">##  [35] boot_1.3-30                 GenomicRanges_1.55.4       </span></span>
+<span><span class="co">##  [37] jquerylib_0.1.4             Rcpp_1.0.12                </span></span>
+<span><span class="co">##  [39] SummarizedExperiment_1.33.3 knitr_1.46                 </span></span>
+<span><span class="co">##  [41] future.apply_1.11.2         readr_2.1.5                </span></span>
+<span><span class="co">##  [43] IRanges_2.37.1              Matrix_1.7-0               </span></span>
+<span><span class="co">##  [45] tidyselect_1.2.1            abind_1.4-5                </span></span>
+<span><span class="co">##  [47] yaml_2.3.8                  codetools_0.2-20           </span></span>
+<span><span class="co">##  [49] curl_5.2.1                  listenv_0.9.1              </span></span>
+<span><span class="co">##  [51] pkgbuild_1.4.4              lattice_0.22-6             </span></span>
+<span><span class="co">##  [53] tibble_3.2.1                withr_3.0.0                </span></span>
+<span><span class="co">##  [55] Biobase_2.63.1              evaluate_0.23              </span></span>
+<span><span class="co">##  [57] future_1.33.2               desc_1.4.3                 </span></span>
+<span><span class="co">##  [59] RcppParallel_5.1.7          pillar_1.9.0               </span></span>
+<span><span class="co">##  [61] MatrixGenerics_1.15.1       stats4_4.4.0               </span></span>
+<span><span class="co">##  [63] generics_0.1.3              sp_2.1-3                   </span></span>
+<span><span class="co">##  [65] S4Vectors_0.41.7            hms_1.1.3                  </span></span>
+<span><span class="co">##  [67] rstantools_2.4.0            munsell_0.5.1              </span></span>
+<span><span class="co">##  [69] scales_1.3.0                globals_0.16.3             </span></span>
+<span><span class="co">##  [71] glue_1.7.0                  tools_4.4.0                </span></span>
+<span><span class="co">##  [73] fs_1.6.4                    dotCall64_1.1-1            </span></span>
+<span><span class="co">##  [75] grid_4.4.0                  QuickJSR_1.1.3             </span></span>
+<span><span class="co">##  [77] colorspace_2.1-0            SingleCellExperiment_1.25.1</span></span>
+<span><span class="co">##  [79] GenomeInfoDbData_1.2.12     patchwork_1.2.0            </span></span>
+<span><span class="co">##  [81] cli_3.6.2                   textshaping_0.3.7          </span></span>
+<span><span class="co">##  [83] spam_2.10-0                 fansi_1.0.6                </span></span>
+<span><span class="co">##  [85] S4Arrays_1.3.7              V8_4.4.2                   </span></span>
+<span><span class="co">##  [87] gtable_0.3.5                sass_0.4.9                 </span></span>
+<span><span class="co">##  [89] digest_0.6.35               progressr_0.14.0           </span></span>
+<span><span class="co">##  [91] BiocGenerics_0.49.1         SparseArray_1.3.5          </span></span>
+<span><span class="co">##  [93] ggrepel_0.9.5               farver_2.1.1               </span></span>
+<span><span class="co">##  [95] htmlwidgets_1.6.4           SeuratObject_5.0.1         </span></span>
+<span><span class="co">##  [97] memoise_2.0.1               htmltools_0.5.8.1          </span></span>
+<span><span class="co">##  [99] pkgdown_2.0.9               lifecycle_1.0.4            </span></span>
+<span><span class="co">## [101] prettydoc_0.4.1             httr_1.4.7</span></span></code></pre>
 </div>
 </div>
   </div>
@@ -912,7 +749,7 @@ variability effects should be generally uncorrelated.</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
       </footer>
