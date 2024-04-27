@@ -273,15 +273,15 @@ vb_iterative = function(model,
       return(my_res)
     },
     error = function(e) {
-      i = i + 1
       writeLines(sprintf("Further attempt with Variational Bayes: %s", e))
       return(NULL)
     },
     finally = {
     })
+    i = i + 1
   }
 
-  if(is.null(res)) stop(sprintf("sccomp says: variational Bayes did not converge after %s attempts. Please use variational_bayes = FALSE for a HMC fitting.", i))
+  if(is.null(res)) stop(sprintf("sccomp says: variational Bayes did not converge after %s attempts. Please use variational_inference = FALSE for a HMC fitting.", i))
   
   return(res)
 }
