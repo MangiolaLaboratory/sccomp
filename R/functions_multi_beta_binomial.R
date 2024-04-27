@@ -293,19 +293,11 @@ sccomp_glm_data_frame_counts = function(.data,
       pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
     )
   
+
   
-  
-  
-  # argg <- c(as.list(environment()), list(...))
-  # 
-  # list(
-  # 	fit = fit,
-  # 	data_for_model = data_for_model,
-  # 	truncation_df2 =  .data
-  # )
-  
-  # Create a dummy tibble
-  tibble() |>
+  estimate_tibble = 
+    # Create a dummy tibble
+    tibble() |>
     # Attach association mean concentration
     add_attr(fit, "fit") %>%
     add_attr(data_for_model, "model_input") |>
@@ -327,6 +319,13 @@ sccomp_glm_data_frame_counts = function(.data,
     # drop hypothesis testing as the estimation exists without probabilities.
     # For hypothesis testing use sccomp_test
     select(-contains("_FDR"), -contains("_pH0")) 
+  
+  
+  if(variational_inference & max(na.omit(estimate_tibble$c_R_k_hat)) > 4)
+    warning("sccomp says: using variational inference, c_R_k_hat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using variational_inference = FALSE to use the state-of-the-art (although slower) HMC sampler.")
+  
+  estimate_tibble
+  
 }
 
 
