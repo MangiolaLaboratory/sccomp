@@ -484,7 +484,7 @@ fit_model = function(
       max(4000) 
     
     if(output_samples > max_sampling_iterations) {
-      message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+      # message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
       output_samples = max_sampling_iterations
     
   }}
@@ -1114,7 +1114,7 @@ data_spread_to_model_input =
     is_proportion = y |> as.numeric() |> max()  |> between(0,1) |> all()
     if(is_proportion & min(y)==0){
       warning("sccomp says: your proportion values include 0. Assuming that 0s derive from a precision threshold (e.g. deconvolution), 0s are converted to the smaller non 0 proportion value.")
-      y[y==0] = min(y)
+      y[y==0] = min(y[y>0])
      }
     
     data_for_model =

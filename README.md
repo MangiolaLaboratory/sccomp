@@ -24,7 +24,7 @@ Please cite [PNAS - sccomp: Robust differential composition and
 variability analysis for single-cell
 data](https://www.pnas.org/doi/full/10.1073/pnas.2203828120)
 
-## Characteristics
+# Characteristics
 
 - Complex linear models with continuous and categorical covariates
 - Multilevel modelling, with population fixed and random
@@ -75,6 +75,10 @@ model for composition.
 
 ### From proportions
 
+Of the output table, the estimate columns start with the prefix `c_`
+indicate `composition`, or with `v_` indicate `variability` (when
+formula_variability is set).
+
 If counts are available we strongly discourage the use of proportions,
 as an important source of uncertainty (i.e. for rare groups/cell-types)
 is not modeled.
@@ -92,27 +96,27 @@ res =
     .cell_group = cell_group,
     .count = proportion, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1,
-    verbose = FALSE
+    cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-    sccomp_test(test_composition_above_logit_fold_change = 0.2)
+  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
+  sccomp_test()
+
+res
 ```
 
     ## # A tibble: 72 × 18
-    ##    cell_group parameter   factor c_lower c_effect c_upper  c_pH0   c_FDR c_n_eff
-    ##    <chr>      <chr>       <chr>    <dbl>    <dbl>   <dbl>  <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercept) <NA>    0.811     1.07   1.32   0      0           NaN
-    ##  2 B1         typecancer  type   -0.810    -0.466 -0.117  0.0650 0.0105      NaN
-    ##  3 B2         (Intercept) <NA>    0.228     0.535  0.828  0.0170 0.00127     NaN
-    ##  4 B2         typecancer  type   -0.907    -0.475 -0.0285 0.114  0.0293      NaN
-    ##  5 B3         (Intercept) <NA>   -0.685    -0.419 -0.153  0.0500 0.00339     NaN
-    ##  6 B3         typecancer  type   -0.676    -0.314  0.0565 0.29   0.0887      NaN
-    ##  7 BM         (Intercept) <NA>   -1.39     -1.13  -0.864  0      0           NaN
-    ##  8 BM         typecancer  type   -0.548    -0.203  0.160  0.49   0.138       NaN
-    ##  9 CD4 1      (Intercept) <NA>    0.126     0.310  0.509  0.128  0.0206      NaN
-    ## 10 CD4 1      typecancer  type   -0.0734    0.176  0.453  0.571  0.169       NaN
-
+    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B1         (Intercep… <NA>    0.905    1.25    1.63   0       0           NaN
+    ##  2 B1         typecancer type   -1.27    -0.783  -0.332  0.00600 3.  e-3     NaN
+    ##  3 B2         (Intercep… <NA>    0.397    0.815   1.19   0.00100 5.26e-5     NaN
+    ##  4 B2         typecancer type   -1.40    -0.818  -0.222  0.0200  7.63e-3     NaN
+    ##  5 B3         (Intercep… <NA>   -0.661   -0.311   0.0608 0.288   2.91e-2     NaN
+    ##  6 B3         typecancer type   -0.888   -0.370   0.130  0.257   7.27e-2     NaN
+    ##  7 BM         (Intercep… <NA>   -1.33    -0.942  -0.569  0       0           NaN
+    ##  8 BM         typecancer type   -0.854   -0.330   0.205  0.31    1.01e-1     NaN
+    ##  9 CD4 1      (Intercep… <NA>    0.0815   0.414   0.766  0.091   8.74e-3     NaN
+    ## 10 CD4 1      typecancer type   -0.347    0.0738  0.504  0.713   3.31e-1     NaN
     ## # ℹ 62 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -148,21 +152,13 @@ plots$boxplot
 
 ![](inst/figures/unnamed-chunk-10-1.png)<!-- -->
 
-### Mean/variability association
+We can plot the relationship between abundance and variability. As we
+can see below, they are positively correlated, you also appreciate that
+this relationship is by model for single cell RNA sequencing data.
 
-Plot 2D significance plot. Data points are cell groups. Error bars are
-the 95% credible interval. The dashed lines represent the default
-threshold fold change for which the probabilities (c_pH0, v_pH0) are
-calculated. pH0 of 0 represent the rejection of the null hypothesis that
-no effect is observed.
-
-This plot is provided only if differential variability has been tested.
-The differential variability estimates are reliable only if the linear
-association between mean and variability for `(intercept)` (left-hand
-side facet) is satisfied. A scatterplot (besides the Intercept) is
-provided for each category of interest. The for each category of
-interest, the composition and variability effects should be generally
-uncorrelated.
+`sccomp` models, these relationship to obtain a shrinkage effect on the
+estimates of both the abundance and the variability. This shrinkage is
+adaptive as it is modelled jointly, thanks for Bayesian inference.
 
 ``` r
 plots$credible_intervals_2D
@@ -198,10 +194,6 @@ res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 
 ![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
 
-Of the output table, the estimate columns start with the prefix `c_`
-indicate `composition`, or with `v_` indicate `variability` (when
-formula_variability is set).
-
 ## Contrasts
 
 ``` r
@@ -212,34 +204,10 @@ counts_obj |>
     .cell_group = cell_group, 
     .count = proportion,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 ,
-    verbose = FALSE
+    cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-    sccomp_test(
-      contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
-      test_composition_above_logit_fold_change = 0.2
-    )
+  sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
 ```
-
-    ## # A tibble: 60 × 18
-    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -2.07    -1.66   -1.24  0       0            NA
-    ##  2 B immature  typeheal… <NA>     1.24     1.66    2.07  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.39    -1.78   -1.06  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.06     1.78    2.39  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.25    -0.948  -0.642 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.642    0.948   1.25  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.514    1.62    2.64  0.00400 1.27e-3      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.64    -1.62   -0.514 0.00400 1.27e-3      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.553    1.21    1.85  0.00200 6.25e-4      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.85    -1.21   -0.553 0.00200 6.25e-4      NA
-    ## # ℹ 50 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
-    ## #   count_data <list>
-
 
 ## Categorical factor (e.g. Bayesian ANOVA)
 
@@ -269,10 +237,8 @@ model_with_factor_association =
     .count = proportion,
     bimodal_mean_variability_association = TRUE,
     cores = 1, 
-    enable_loo = TRUE, # Needed for model comparison and ANOVA
-    verbose = FALSE
+    enable_loo = TRUE
   )
-
 
 # Fit second model
 model_without_association = 
@@ -284,10 +250,8 @@ model_without_association =
     .count = proportion,
     bimodal_mean_variability_association = TRUE,
     cores = 1 , 
-    enable_loo = TRUE, # Needed for model comparison and ANOVA
-    verbose = FALSE
+    enable_loo = TRUE
   )
-
 
 # Compare models
 loo_compare(
@@ -295,10 +259,6 @@ loo_compare(
   model_without_association |> attr("fit") |> loo()
 )
 ```
-
-    ##        elpd_diff se_diff
-    ## model1   0.0       0.0  
-    ## model2 -83.2      15.2
 
 ## Differential variability, binary factor
 
@@ -314,120 +274,50 @@ so test differences in variability
     .cell_group = cell_group,
     .count = proportion,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 ,
-    verbose = FALSE
-  ) |> 
-  sccomp_remove_outliers(verbose = FALSE) |> 
-    sccomp_test(
-      test_composition_above_logit_fold_change = 0.2
-    )
+    cores = 1, verbose = FALSE
+  )
 ```
+
+    ## # A tibble: 72 × 14
+    ##    cell_group parameter   factor c_lower c_effect c_upper c_n_eff c_R_k_hat
+    ##    <chr>      <chr>       <chr>    <dbl>    <dbl>   <dbl>   <dbl>     <dbl>
+    ##  1 B1         (Intercept) <NA>    1.01      1.27   1.52       NaN      3.83
+    ##  2 B1         typecancer  type   -0.927    -0.600 -0.267      NaN      3.86
+    ##  3 B2         (Intercept) <NA>    0.359     0.715  1.05       NaN      3.86
+    ##  4 B2         typecancer  type   -1.12     -0.668 -0.168      NaN      3.84
+    ##  5 B3         (Intercept) <NA>   -0.673    -0.370 -0.0775     NaN      3.85
+    ##  6 B3         typecancer  type   -0.581    -0.161  0.271      NaN      3.87
+    ##  7 BM         (Intercept) <NA>   -1.21     -0.912 -0.599      NaN      3.86
+    ##  8 BM         typecancer  type   -0.933    -0.502 -0.0694     NaN      3.85
+    ##  9 CD4 1      (Intercept) <NA>    0.193     0.382  0.549      NaN      3.88
+    ## 10 CD4 1      typecancer  type    0.0359    0.260  0.515      NaN      3.86
+    ## # ℹ 62 more rows
+    ## # ℹ 6 more variables: v_lower <dbl>, v_effect <dbl>, v_upper <dbl>,
+    ## #   v_n_eff <dbl>, v_R_k_hat <dbl>, count_data <list>
 
 ``` r
 res
 ```
 
-    ## # A tibble: 60 × 18
-    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  (Interce… <NA>     0.605    0.942  1.30   0       0           NaN
-    ##  2 B immature  typeheal… type     1.09     1.58   2.06   0       0           NaN
-    ##  3 B mem       (Interce… <NA>    -1.36    -1.03  -0.697  0       0           NaN
-    ##  4 B mem       typeheal… type     1.68     2.15   2.68   0       0           NaN
-    ##  5 CD4 cm S10… (Interce… <NA>     1.80     2.06   2.32   0       0           NaN
-    ##  6 CD4 cm S10… typeheal… type     0.501    0.823  1.14   0.00100 1.00e-4     NaN
-    ##  7 CD4 cm hig… (Interce… <NA>    -1.05    -0.509  0.0229 0.123   1.39e-2     NaN
-    ##  8 CD4 cm hig… typeheal… type    -2.37    -1.61  -0.849  0       0           NaN
-    ##  9 CD4 cm rib… (Interce… <NA>     0.198    0.566  0.950  0.0260  3.05e-3     NaN
-    ## 10 CD4 cm rib… typeheal… type    -2.35    -1.87  -1.36   0       0           NaN
-    ## # ℹ 50 more rows
-
+    ## # A tibble: 72 × 18
+    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B1         (Intercep… <NA>    0.905    1.25    1.63   0       0           NaN
+    ##  2 B1         typecancer type   -1.27    -0.783  -0.332  0.00600 3.  e-3     NaN
+    ##  3 B2         (Intercep… <NA>    0.397    0.815   1.19   0.00100 5.26e-5     NaN
+    ##  4 B2         typecancer type   -1.40    -0.818  -0.222  0.0200  7.63e-3     NaN
+    ##  5 B3         (Intercep… <NA>   -0.661   -0.311   0.0608 0.288   2.91e-2     NaN
+    ##  6 B3         typecancer type   -0.888   -0.370   0.130  0.257   7.27e-2     NaN
+    ##  7 BM         (Intercep… <NA>   -1.33    -0.942  -0.569  0       0           NaN
+    ##  8 BM         typecancer type   -0.854   -0.330   0.205  0.31    1.01e-1     NaN
+    ##  9 CD4 1      (Intercep… <NA>    0.0815   0.414   0.766  0.091   8.74e-3     NaN
+    ## 10 CD4 1      typecancer type   -0.347    0.0738  0.504  0.713   3.31e-1     NaN
+    ## # ℹ 62 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
     ## #   count_data <list>
 
-# Suggested settings
-
-## For single-cell RNA sequencing
-
-We recommend setting `bimodal_mean_variability_association  = TRUE`. The
-bimodality of the mean-variability association can be confirmed from the
-plots\$credible_intervals_2D (see below).
-
-## For CyTOF and microbiome data
-
-We recommend setting `bimodal_mean_variability_association  = FALSE`
-(Default).
-
-
-# Visualisation
-
-## Summary plots
-
-``` r
-plots = plot(res) 
-```
-
-    ## Joining with `by = join_by(cell_group, sample)`
-    ## Joining with `by = join_by(cell_group, type)`
-
-A plot of group proportion, faceted by groups. The blue boxplots
-represent the posterior predictive check. If the model is likely to be
-descriptively adequate to the data, the blue box plot should roughly
-overlay with the black box plot, which represents the observed data. The
-outliers are coloured in red. A box plot will be returned for every
-(discrete) covariate present in `formula_composition`. The colour coding
-represents the significant associations for composition and/or
-variability.
-
-``` r
-plots$boxplot
-```
-
-    ## [[1]]
-
-![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
-
-A plot of estimates of differential composition (c\_) on the x-axis and
-differential variability (v\_) on the y-axis. The error bars represent
-95% credible intervals. The dashed lines represent the minimal effect
-that the hypothesis test is based on. An effect is labelled as
-significant if bigger than the minimal effect according to the 95%
-credible interval. Facets represent the covariates in the model.
-
-``` r
-plots$credible_intervals_1D
-```
-
-![](inst/figures/unnamed-chunk-16-1.png)<!-- -->
-
-## Visualisation of the MCMC chains from the posterior distribution
-
-It is possible to directly evaluate the posterior distribution. In this
-example, we plot the Monte Carlo chain for the slope parameter of the
-first cell type. We can see that it has converged and is negative with
-probability 1.
-
-``` r
-res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
-```
-
-![](inst/figures/unnamed-chunk-17-1.png)<!-- -->
-
-Plot 1D significance plot
-
-``` r
-plots = plot(res)
-```
-
-    ## Joining with `by = join_by(cell_group, sample)`
-    ## Joining with `by = join_by(cell_group, type)`
-
-``` r
-plots$credible_intervals_1D
-```
-
-![](inst/figures/unnamed-chunk-18-1.png)<!-- -->
+### Mean/variability association
 
 Plot 2D significance plot. Data points are cell groups. Error bars are
 the 95% credible interval. The dashed lines represent the default
@@ -443,11 +333,18 @@ provided for each category of interest. The for each category of
 interest, the composition and variability effects should be generally
 uncorrelated.
 
-``` r
-plots$credible_intervals_2D
-```
+# Suggested settings
 
-![](inst/figures/unnamed-chunk-19-1.png)<!-- -->
+## For single-cell RNA sequencing
+
+We recommend setting `bimodal_mean_variability_association  = TRUE`. The
+bimodality of the mean-variability association can be confirmed from the
+plots\$credible_intervals_2D (see below).
+
+## For CyTOF and microbiome data
+
+We recommend setting `bimodal_mean_variability_association  = FALSE`
+(Default).
 
 # Multilevel modelling
 
@@ -478,25 +375,6 @@ res =
 res
 ```
 
-    ## # A tibble: 210 × 18
-    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature (Intercep… <NA>     0.461  1.00      1.58  0.00425 1.08e-3   1336.
-    ##  2 B immature typehealt… type     0.614  1.31      1.94  0.00100 5.01e-4   1527.
-    ##  3 B immature continuou… conti…  -0.187  0.0599    0.340 0.847   6.12e-1   4872.
-    ##  4 B immature (Intercep… <NA>    -0.606 -0.0682    0.399 0.723   6.31e-1     NA 
-    ##  5 B immature typehealt… <NA>    -0.552 -0.00762   0.570 0.771   6.59e-1     NA 
-    ##  6 B immature (Intercep… <NA>    -0.491  0.00427   0.466 0.803   7.05e-1     NA 
-    ##  7 B immature typehealt… <NA>    -0.358  0.146     0.742 0.590   5.32e-1     NA 
-    ##  8 B mem      (Intercep… <NA>    -1.07  -0.427     0.395 0.270   5.61e-2   2104.
-    ##  9 B mem      typehealt… type     0.656  1.52      2.30  0.00325 1.42e-3   2344.
-    ## 10 B mem      continuou… conti…  -0.225  0.0734    0.388 0.792   5.93e-1   4059.
-    ## # ℹ 200 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
-    ## #   count_data <list>
-
-
 # Removal of unwanted variation
 
 After you model your dataset, you can remove the unwanted variation from
@@ -509,27 +387,57 @@ abundance, and do not keep it for variability.
 res |> sccomp_remove_unwanted_variation(~type)
 ```
 
-    ## sccomp says: calculating residuals
+## Visualisation of the MCMC chains from the posterior distribution
 
-    ## sccomp says: regressing out unwanted factors
+It is possible to directly evaluate the posterior distribution. In this
+example, we plot the Monte Carlo chain for the slope parameter of the
+first cell type. We can see that it has converged and is negative with
+probability 1.
 
-    ## # A tibble: 600 × 5
-    ##    sample       cell_group adjusted_proportion adjusted_counts logit_residuals
-    ##    <chr>        <chr>                    <dbl>           <dbl>           <dbl>
-    ##  1 10x_6K       B immature              0.0674           316.          -0.545 
-    ##  2 10x_8K       B immature              0.170           1278.           0.548 
-    ##  3 GSE115189    B immature              0.134            315.           0.229 
-    ##  4 SCP345_580   B immature              0.0827           476.          -0.299 
-    ##  5 SCP345_860   B immature              0.141            905.           0.288 
-    ##  6 SCP424_pbmc1 B immature              0.102            273.          -0.0679
-    ##  7 SCP424_pbmc2 B immature              0.182            544.           0.635 
-    ##  8 SCP591       B immature              0.0311            17.7         -1.35  
-    ##  9 SI-GA-E5     B immature              0.0278           116.          -0.620 
-    ## 10 SI-GA-E7     B immature              0.0989           726.           0.729 
-    ## # ℹ 590 more rows
+``` r
+res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
+```
+
+![](inst/figures/unnamed-chunk-19-1.png)<!-- -->
+
+Plot 1D significance plot
+
+``` r
+plots = res |> sccomp_test() |> plot()
+```
+
+    ## Joining with `by = join_by(cell_group, sample)`
+    ## Joining with `by = join_by(cell_group, type)`
+
+``` r
+plots$credible_intervals_1D
+```
+
+![](inst/figures/unnamed-chunk-20-1.png)<!-- -->
+
+Plot 2D significance plot. Data points are cell groups. Error bars are
+the 95% credible interval. The dashed lines represent the default
+threshold fold change for which the probabilities (c_pH0, v_pH0) are
+calculated. pH0 of 0 represent the rejection of the null hypothesis that
+no effect is observed.
+
+This plot is provided only if differential variability has been tested.
+The differential variability estimates are reliable only if the linear
+association between mean and variability for `(intercept)` (left-hand
+side facet) is satisfied. A scatterplot (besides the Intercept) is
+provided for each category of interest. The for each category of
+interest, the composition and variability effects should be generally
+uncorrelated.
+
+``` r
+plots$credible_intervals_2D
+```
+
+![](inst/figures/unnamed-chunk-21-1.png)<!-- -->
 
 ## The old framework
 
 The new tidy framework was introduced in 2024, two, understand the
 differences and improvements. Compared to the old framework, please read
 this [blog
+post](https://tidyomics.github.io/tidyomicsBlog/post/2023-12-07-tidy-sccomp/).

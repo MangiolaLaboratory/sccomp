@@ -193,7 +193,7 @@ data{
   int<lower=1> B_intercept_columns; // How many intercept column in varibility design
   int<lower=1> Ar; // Rows of unique variability design
   array[N] int exposure;
-  array[N,M] real y;
+  array[N,M] real<lower=0, upper=1> y;
   matrix[N, C] X;
   matrix[Ar, A] XA; // The unique variability design
   matrix[N, A] Xa; // The variability design

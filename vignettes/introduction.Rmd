@@ -4,22 +4,28 @@ author: "Stefano Mangiola"
 date: "`r Sys.Date()`"
 package: sccomp
 output:
-  BiocStyle::html_document:
-    toc_float: true
+  prettydoc::html_pretty:
+    theme: cayman
+    toc: yes
+    toc_depth: 2
+    number_sections: yes
+    fig_caption: yes
+    df_print: paged
+abstract: > 
+  Sccomp is a generalised method for differential composition and variability analyses. It tests differences in cell type proportion, for count data. It is able of flexible continuous/discrete models, removal of unwanted variation, removal of outliers, multilevel random/effect modelling.
+
 vignette: >
-  %\VignetteEngine{knitr::knitr}
-  %\VignetteIndexEntry{Overview of the sccomp package}
-  %\usepackage[UTF-8]{inputenc}
+  %\VignetteIndexEntry{sccomp}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 <!-- badges: start -->
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/tidyseurat/actions/)
 <!-- badges: end -->
 
-# <img src="inst/logo-01.png" height="139px" width="120px"/>
 
-Sccomp is a generalised method for differential composition and
-variability analyses.
+Sccomp is a generalised method for differential composition and variability analyses.
 
 ## Characteristics
 
@@ -66,18 +72,23 @@ factor of interest only. The variability model must be a subset of the model for
 
 ## Binary factor 
 
+Of the output table, the estimate columns start with the prefix `c_` indicate `composition`, or with `v_` indicate `variability` (when formula_variability is set).
+
 ### From Seurat, SingleCellExperiment, metadata objects
 
 ```{r eval=FALSE}
 
-single_cell_object |>
+sccomp_result = 
+  single_cell_object |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_test()
 
 ```
 
@@ -85,7 +96,8 @@ single_cell_object |>
 
 ```{r, message=FALSE, warning=FALSE}
 
-counts_obj |>
+sccomp_result = 
+  counts_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample = sample,
@@ -93,11 +105,40 @@ counts_obj |>
     .count = count, 
     bimodal_mean_variability_association = TRUE,
     cores = 1 
-  )
+  ) |> 
+  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_test()
 
 ```
 
-Of the output table, the estimate columns start with the prefix `c_` indicate `composition`, or with `v_` indicate `variability` (when formula_variability is set).
+## Summary plots
+
+```{r, out.height="200%"}
+plots = sccomp_result |> plot() 
+```
+
+A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be descriptively adequate to the data, the blue box plot should roughly overlay with the black box plot, which represents the observed data. The outliers are coloured in red. A box plot will be returned for every (discrete) covariate present in `formula_composition`. The colour coding represents the significant associations for composition and/or variability.
+
+```{r}
+plots$boxplot
+```
+
+A plot of estimates of differential composition (c\_) on the x-axis and differential variability (v\_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
+
+```{r}
+plots$credible_intervals_1D
+```
+
+
+We can plot the relationship between abundance and variability. As we can see below, they are positively correlated, you also appreciate that this relationship is by model for single cell RNA sequencing data.
+
+`sccomp` models, these relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks for Bayesian inference.
+
+
+```{r}
+plots$credible_intervals_2D
+```
+
 
 ## Contrasts
 
@@ -191,30 +232,6 @@ We recommend setting `bimodal_mean_variability_association  = TRUE`. The bimodal
 
 We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 
-# Visualisation
-
-## Summary plots
-
-```{r, out.height="200%"}
-plots = res |> sccomp_test() |> plot() 
-```
-
-A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be
-descriptively adequate to the data, the blue box plot should roughly overlay with the black box plot, which represents the observed data. The
-outliers are coloured in red. A box plot will be returned for every (discrete) covariate present in `formula_composition`. The colour coding
-represents the significant associations for composition and/or variability.
-
-```{r}
-plots$boxplot
-```
-
-A plot of estimates of differential composition (c\_) on the x-axis and differential variability (v\_) on the y-axis. The error bars represent
-95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as
-significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
-
-```{r}
-plots$credible_intervals_1D
-```
 
 ## Visualisation of the MCMC chains from the posterior distribution
 

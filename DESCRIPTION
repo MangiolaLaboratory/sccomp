@@ -1,6 +1,6 @@
 Package: sccomp
 Title: Robust Outlier-aware Estimation of Composition and Heterogeneity for Single-cell Data
-Version: 1.7.7
+Version: 1.7.10
 Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
                   role = c("aut", "cre"))
                   )
@@ -48,7 +48,8 @@ Suggests:
     knitr,
     loo,
     tidyseurat,
-    tidySingleCellExperiment
+    tidySingleCellExperiment,
+    prettydoc
 Enhances:
     furrr,
     extraDistr

@@ -18,6 +18,7 @@
 #' @importFrom rlang quo_is_null
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
+#' @importFrom rlang inform
 #'
 #' @param .data A tibble including cell_group name column, sample name column, 
 #'              read counts column (optional depending on the input class), and factor columns.
@@ -116,7 +117,13 @@ sccomp_estimate <- function(.data,
                        approximate_posterior_inference = NULL
                        
                        ) {
-  if(variational_inference == TRUE) message("sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = TRUE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.")
+  if(variational_inference == TRUE) 
+    rlang::inform(
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = TRUE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
+      .frequency = "once", 
+      .frequency_id = "variational_message"
+    )
+  
   UseMethod("sccomp_estimate", .data)
 }
 
@@ -446,6 +453,7 @@ sccomp_estimate.data.frame = function(.data,
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #' @importFrom rlang quo_is_symbolic
+#' @importFrom rlang inform
 #'
 #' @param .estimate A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
@@ -510,7 +518,13 @@ sccomp_remove_outliers <- function(.estimate,
                                    # DEPRECATED
                                    approximate_posterior_inference = NULL
 ) {
-  if(variational_inference == TRUE) message("sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = TRUE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.")
+  if(variational_inference == TRUE) 
+    rlang::inform(
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = TRUE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
+      .frequency = "once", 
+      .frequency_id = "variational_message"
+    )
+    
   UseMethod("sccomp_remove_outliers", .estimate)
 }
 
