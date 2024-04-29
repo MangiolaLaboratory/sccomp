@@ -1,6 +1,6 @@
 Package: sccomp
 Title: Robust Outlier-aware Estimation of Composition and Heterogeneity for Single-cell Data
-Version: 0.99.30
+Version: 1.7.10
 Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
                   role = c("aut", "cre"))
                   )
@@ -9,10 +9,10 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.3.1
 Biarch: true
 Depends: 
-    R (>= 4.1.0)
+    R (>= 4.2.0)
 Imports: 
     methods,
     Rcpp (>= 0.12.0),
@@ -39,15 +39,17 @@ Imports:
     forcats,
     readr,
     scales,
-    stringr
+    stringr,
+    glue
 Suggests:
     BiocStyle,
     testthat (>= 3.0.0),
     markdown,
-    ggplot2,
     knitr,
+    loo,
     tidyseurat,
-    tidySingleCellExperiment
+    tidySingleCellExperiment,
+    prettydoc
 Enhances:
     furrr,
     extraDistr
@@ -56,8 +58,8 @@ LinkingTo:
     Rcpp (>= 0.12.0),
     RcppEigen (>= 0.3.3.3.0),
     RcppParallel (>= 5.0.1),
-    rstan (>= 2.18.1),
-    StanHeaders (>= 2.18.0)
+    rstan (>= 2.26.0),
+    StanHeaders (>= 2.26.0)
 SystemRequirements: GNU make
 VignetteBuilder: 
     knitr
@@ -77,3 +79,5 @@ LazyDataCompression: xz
 Config/testthat/edition: 3
 URL: https://github.com/stemangiola/sccomp
 BugReports: https://github.com/stemangiola/sccomp/issues
+Additional_repositories:
+    https://mc-stan.org/r-packages/
