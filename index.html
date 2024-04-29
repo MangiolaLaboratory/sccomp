@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.11</span>
       </span>
     </div>
 
@@ -231,18 +231,18 @@
 <span>  <span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span> contrasts <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"typecancer - typehealthy"</span>, <span class="st">"typehealthy - typecancer"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="do">## [90m# A tibble: 60 × 18[39m</span></span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="do">##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff</span></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="do">##    [3m[90m&lt;chr&gt;[39m[23m       [3m[90m&lt;chr&gt;[39m[23m     [3m[90m&lt;chr&gt;[39m[23m    [3m[90m&lt;dbl&gt;[39m[23m    [3m[90m&lt;dbl&gt;[39m[23m   [3m[90m&lt;dbl&gt;[39m[23m   [3m[90m&lt;dbl&gt;[39m[23m   [3m[90m&lt;dbl&gt;[39m[23m   [3m[90m&lt;dbl&gt;[39m[23m</span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="do">## [90m 1[39m B immature  typecanc… [31mNA[39m      -[31m1[39m[31m.[39m[31m84[39m     -[31m1[39m[31m.[39m[31m38[39m  -[31m0[39m[31m.[39m[31m911[39m 0       0   [90m [39m        [31mNA[39m</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="do">## [90m 2[39m B immature  typeheal… [31mNA[39m       0.911     1.38   1.84  0       0   [90m [39m        [31mNA[39m</span></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="do">## [90m 3[39m B mem       typecanc… [31mNA[39m      -[31m2[39m[31m.[39m[31m13[39m     -[31m1[39m[31m.[39m[31m60[39m  -[31m1[39m[31m.[39m[31m0[39m[31m8[39m  0       0   [90m [39m        [31mNA[39m</span></span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="do">## [90m 4[39m B mem       typeheal… [31mNA[39m       1.08      1.60   2.13  0       0   [90m [39m        [31mNA[39m</span></span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="do">## [90m 5[39m CD4 cm S10… typecanc… [31mNA[39m      -[31m1[39m[31m.[39m[31m51[39m     -[31m1[39m[31m.[39m[31m0[39m[31m2[39m  -[31m0[39m[31m.[39m[31m531[39m 0.001[4m0[24m[4m0[24m 1.43[90me[39m[31m-4[39m      [31mNA[39m</span></span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="do">## [90m 6[39m CD4 cm S10… typeheal… [31mNA[39m       0.531     1.02   1.51  0.001[4m0[24m[4m0[24m 1.43[90me[39m[31m-4[39m      [31mNA[39m</span></span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="do">## [90m 7[39m CD4 cm hig… typecanc… [31mNA[39m       0.771     1.73   2.73  0.001[4m0[24m[4m0[24m 2.50[90me[39m[31m-4[39m      [31mNA[39m</span></span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="do">## [90m 8[39m CD4 cm hig… typeheal… [31mNA[39m      -[31m2[39m[31m.[39m[31m73[39m     -[31m1[39m[31m.[39m[31m73[39m  -[31m0[39m[31m.[39m[31m771[39m 0.001[4m0[24m[4m0[24m 2.50[90me[39m[31m-4[39m      [31mNA[39m</span></span>
-<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="do">## [90m 9[39m CD4 cm rib… typecanc… [31mNA[39m       0.362     1.06   1.70  0.010[4m0[24m  1.36[90me[39m[31m-3[39m      [31mNA[39m</span></span>
-<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="do">## [90m10[39m CD4 cm rib… typeheal… [31mNA[39m      -[31m1[39m[31m.[39m[31m70[39m     -[31m1[39m[31m.[39m[31m0[39m[31m6[39m  -[31m0[39m[31m.[39m[31m362[39m 0.010[4m0[24m  1.36[90me[39m[31m-3[39m      [31mNA[39m</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="do">##    cell_group    parameter factor c_lower c_effect c_upper  c_pH0  c_FDR c_n_eff</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="do">##    [3m[90m&lt;chr&gt;[39m[23m         [3m[90m&lt;chr&gt;[39m[23m     [3m[90m&lt;chr&gt;[39m[23m    [3m[90m&lt;dbl&gt;[39m[23m    [3m[90m&lt;dbl&gt;[39m[23m   [3m[90m&lt;dbl&gt;[39m[23m  [3m[90m&lt;dbl&gt;[39m[23m  [3m[90m&lt;dbl&gt;[39m[23m   [3m[90m&lt;dbl&gt;[39m[23m</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="do">## [90m 1[39m B immature    typecanc… [31mNA[39m      -[31m1[39m[31m.[39m[31m93[39m    -[31m1[39m[31m.[39m[31m42[39m   -[31m0[39m[31m.[39m[31m919[39m 0      0           [31mNA[39m</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="do">## [90m 2[39m B immature    typeheal… [31mNA[39m       0.919    1.42    1.93  0      0           [31mNA[39m</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="do">## [90m 3[39m B mem         typecanc… [31mNA[39m      -[31m2[39m[31m.[39m[31m46[39m    -[31m1[39m[31m.[39m[31m83[39m   -[31m1[39m[31m.[39m[31m22[39m  0      0           [31mNA[39m</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="do">## [90m 4[39m B mem         typeheal… [31mNA[39m       1.22     1.83    2.46  0      0           [31mNA[39m</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="do">## [90m 5[39m CD4 cm S100A4 typecanc… [31mNA[39m      -[31m1[39m[31m.[39m[31m37[39m    -[31m0[39m[31m.[39m[31m936[39m  -[31m0[39m[31m.[39m[31m510[39m 0      0           [31mNA[39m</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="do">## [90m 6[39m CD4 cm S100A4 typeheal… [31mNA[39m       0.510    0.936   1.37  0      0           [31mNA[39m</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="do">## [90m 7[39m CD4 cm high … typecanc… [31mNA[39m       0.776    1.78    2.67  0      0           [31mNA[39m</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="do">## [90m 8[39m CD4 cm high … typeheal… [31mNA[39m      -[31m2[39m[31m.[39m[31m67[39m    -[31m1[39m[31m.[39m[31m78[39m   -[31m0[39m[31m.[39m[31m776[39m 0      0           [31mNA[39m</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="do">## [90m 9[39m CD4 cm ribos… typecanc… [31mNA[39m       0.104    0.775   1.48  0.051[4m0[24m 0.014[4m4[24m      [31mNA[39m</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="do">## [90m10[39m CD4 cm ribos… typeheal… [31mNA[39m      -[31m1[39m[31m.[39m[31m48[39m    -[31m0[39m[31m.[39m[31m775[39m  -[31m0[39m[31m.[39m[31m104[39m 0.051[4m0[24m 0.014[4m4[24m      [31mNA[39m</span></span>
 <span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="do">## [90m# ℹ 50 more rows[39m</span></span>
 <span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="do">## [90m# ℹ 9 more variables: c_R_k_hat &lt;dbl&gt;, v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;,[39m</span></span>
 <span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="do">## [90m#   v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, v_n_eff &lt;dbl&gt;, v_R_k_hat &lt;dbl&gt;,[39m</span></span>
@@ -306,16 +306,16 @@
 <div class="sourceCode" id="cb15"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="do">## [90m# A tibble: 60 × 14[39m</span></span>
 <span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="do">##    cell_group        parameter factor c_lower c_effect c_upper c_n_eff c_R_k_hat</span></span>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="do">##    [3m[90m&lt;chr&gt;[39m[23m             [3m[90m&lt;chr&gt;[39m[23m     [3m[90m&lt;chr&gt;[39m[23m    [3m[90m&lt;dbl&gt;[39m[23m    [3m[90m&lt;dbl&gt;[39m[23m   [3m[90m&lt;dbl&gt;[39m[23m   [3m[90m&lt;dbl&gt;[39m[23m     [3m[90m&lt;dbl&gt;[39m[23m</span></span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="do">## [90m 1[39m B immature        (Interce… [31mNA[39m      0.470     0.794  1.14       [31mNaN[39m      3.03</span></span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="do">## [90m 2[39m B immature        typeheal… type    0.944     1.48   1.97       [31mNaN[39m      3.10</span></span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="do">## [90m 3[39m B mem             (Interce… [31mNA[39m     -[31m1[39m[31m.[39m[31m19[39m     -[31m0[39m[31m.[39m[31m792[39m -[31m0[39m[31m.[39m[31m336[39m      [31mNaN[39m      3.09</span></span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="do">## [90m 4[39m B mem             typeheal… type    1.03      1.75   2.45       [31mNaN[39m      3.09</span></span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="do">## [90m 5[39m CD4 cm S100A4     (Interce… [31mNA[39m      1.41      1.71   2.03       [31mNaN[39m      3.09</span></span>
-<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="do">## [90m 6[39m CD4 cm S100A4     typeheal… type    0.539     0.898  1.27       [31mNaN[39m      3.09</span></span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="do">## [90m 7[39m CD4 cm high cyto… (Interce… [31mNA[39m     -[31m1[39m[31m.[39m[31m22[39m     -[31m0[39m[31m.[39m[31m686[39m -[31m0[39m[31m.[39m[31m0[39m[31m62[4m0[24m[39m     [31mNaN[39m      3.05</span></span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="do">## [90m 8[39m CD4 cm high cyto… typeheal… type   -[31m2[39m[31m.[39m[31m26[39m     -[31m1[39m[31m.[39m[31m40[39m  -[31m0[39m[31m.[39m[31m571[39m      [31mNaN[39m      3.17</span></span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="do">## [90m 9[39m CD4 cm ribosome   (Interce… [31mNA[39m     -[31m0[39m[31m.[39m[31m0[39m[31m95[4m3[24m[39m    0.373  0.809      [31mNaN[39m      3.03</span></span>
-<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="do">## [90m10[39m CD4 cm ribosome   typeheal… type   -[31m1[39m[31m.[39m[31m73[39m     -[31m1[39m[31m.[39m[31m11[39m  -[31m0[39m[31m.[39m[31m442[39m      [31mNaN[39m      3.07</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="do">## [90m 1[39m B immature        (Interce… [31mNA[39m       0.439    0.751   1.09      [31mNaN[39m      2.89</span></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="do">## [90m 2[39m B immature        typeheal… type     1.07     1.56    2.08      [31mNaN[39m      2.82</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="do">## [90m 3[39m B mem             (Interce… [31mNA[39m      -[31m1[39m[31m.[39m[31m41[39m    -[31m0[39m[31m.[39m[31m909[39m  -[31m0[39m[31m.[39m[31m479[39m     [31mNaN[39m      2.90</span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="do">## [90m 4[39m B mem             typeheal… type     1.36     2.02    2.71      [31mNaN[39m      3.04</span></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="do">## [90m 5[39m CD4 cm S100A4     (Interce… [31mNA[39m       1.51     1.78    2.08      [31mNaN[39m      2.87</span></span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="do">## [90m 6[39m CD4 cm S100A4     typeheal… type     0.528    1.00    1.44      [31mNaN[39m      2.78</span></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="do">## [90m 7[39m CD4 cm high cyto… (Interce… [31mNA[39m      -[31m1[39m[31m.[39m[31m28[39m    -[31m0[39m[31m.[39m[31m733[39m  -[31m0[39m[31m.[39m[31m153[39m     [31mNaN[39m      2.88</span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="do">## [90m 8[39m CD4 cm high cyto… typeheal… type    -[31m1[39m[31m.[39m[31m86[39m    -[31m1[39m[31m.[39m[31m17[39m   -[31m0[39m[31m.[39m[31m452[39m     [31mNaN[39m      3.04</span></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="do">## [90m 9[39m CD4 cm ribosome   (Interce… [31mNA[39m      -[31m0[39m[31m.[39m[31m105[39m    0.325   0.738     [31mNaN[39m      2.83</span></span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="do">## [90m10[39m CD4 cm ribosome   typeheal… type    -[31m1[39m[31m.[39m[31m68[39m    -[31m1[39m[31m.[39m[31m0[39m[31m4[39m   -[31m0[39m[31m.[39m[31m421[39m     [31mNaN[39m      2.85</span></span>
 <span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="do">## [90m# ℹ 50 more rows[39m</span></span>
 <span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="do">## [90m# ℹ 6 more variables: v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;,[39m</span></span>
 <span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="do">## [90m#   v_n_eff &lt;dbl&gt;, v_R_k_hat &lt;dbl&gt;, count_data &lt;list&gt;[39m</span></span></code></pre></div>
