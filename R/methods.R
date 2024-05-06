@@ -829,7 +829,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 sccomp_test <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
-                           test_composition_above_logit_fold_change = 0.2,
+                           test_composition_above_logit_fold_change = 0.1,
                            pass_fit = TRUE) {
   UseMethod("sccomp_test", .data)
 }
@@ -844,7 +844,7 @@ sccomp_test <- function(.data,
 sccomp_test.sccomp_tbl = function(.data,
                                      contrasts = NULL,
                                      percent_false_positive = 5,
-                                     test_composition_above_logit_fold_change = 0.2,
+                                     test_composition_above_logit_fold_change = 0.1,
                                      pass_fit = TRUE){
 
 
