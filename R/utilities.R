@@ -2430,19 +2430,10 @@ replicate_data = function(.data,
 
   # Select model based on noise model
   noise_model = attr(.data, "noise_model")
-  
-  if (noise_model == "multi_beta_binomial") {
-    my_model = stanmodels$glm_multi_beta_binomial_generate_date
-  } else if (noise_model == "dirichlet_multinomial") {
-    my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  }
-
 
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
-
-  fit_matrix = as.matrix(attr(.data, "fit") )
 
   # Composition
   if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
@@ -2624,19 +2615,32 @@ replicate_data = function(.data,
   model_input$X_random_intercept = new_X_random_intercept
   model_input$N_grouping_new = ncol(new_X_random_intercept)
 
+  number_of_draws_in_the_fit = attr(.data, "fit")$metadata()$output_samples
+  
   # To avoid error in case of a NULL posterior sample
-  number_of_draws = min(number_of_draws, nrow(fit_matrix))
+  number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
+  
+  # Load model
+  if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
+    mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+  else {
+    write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
+    mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
+    mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
+  }
+  
   # Generate quantities
-  rstan::gqs(
-    my_model,
-    draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
-    data = model_input |> c(
+  mod_rng$generate_quantities(
+    attr(.data, "fit")$draws(format = "matrix")[
+      sample(seq_len(number_of_draws_in_the_fit), size=number_of_draws),, drop=FALSE
+    ],
+    data = model_input |> c(list(
 
       # Add subset of coefficients
       length_X_which = length(X_which),
       length_XA_which = length(XA_which),
-      X_which,
-      XA_which,
+      X_which = X_which,
+      XA_which = XA_which,
 
       # Random intercept
       X_random_intercept_which = X_random_intercept_which,
@@ -2645,11 +2649,16 @@ replicate_data = function(.data,
       # Should I create intercept for generate quantities
       create_intercept = create_intercept
 
-    ),
+    )),
     seed = mcmc_seed
   )
 
 
+
+  
+  
+  
+  
 }
 
 get_model_from_data = function(file_compiled_model, model_code){
