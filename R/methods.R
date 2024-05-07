@@ -124,6 +124,13 @@ sccomp_estimate <- function(.data,
       .frequency_id = "variational_message"
     )
   
+  rlang::inform(
+      message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has be changed from 0.2 to 0.1.", 
+      .frequency = "once", 
+      .frequency_id = "new_logit_fold_change_threshold"
+  )
+  
+  
   UseMethod("sccomp_estimate", .data)
 }
 
