@@ -304,6 +304,7 @@ parameters{
   
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
   matrix[N_grouping * (N_random_intercepts>0), M-1] random_intercept_raw;
+  
   // sd of random intercept
   array[N_random_intercepts>0] real random_intercept_sigma_mu;
   array[N_random_intercepts>0] real random_intercept_sigma_sigma;
@@ -451,7 +452,10 @@ model{
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
   prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
   prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
-
+  prec_sd ~ std_normal();
+  prec_coeff ~ std_normal();
+  to_vector(beta_raw_raw) ~ std_normal();
+  
   // Random intercept
   if(N_random_intercepts>0){
     for(m in 1:(M-1)) random_intercept_raw[,m] ~ std_normal();

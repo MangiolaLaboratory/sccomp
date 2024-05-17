@@ -43,7 +43,7 @@ my_estimate_no_intercept =
 my_estimate_random = 
   seurat_obj |>
   sccomp_estimate(
-    formula_composition = ~ 0 + type + (type | group__),
+    formula_composition = ~ 0 + type + (0 + type | group__),
     formula_variability = ~ 1,
     sample, cell_group,
     cores = 1,
@@ -149,7 +149,7 @@ test_that("outliers",{
   
 
   my_estimate |>
-    sccomp_remove_outliers(cores = 1, max_sampling_iterations = 1000)
+    sccomp_remove_outliers(cores = 1, max_sampling_iterations = 1000, variational_inference = FALSE)
   
 })
 
@@ -305,7 +305,7 @@ test_that("remove unwanted variation",{
       formula_variability = ~ 1,
       sample, cell_group,
       cores = 1,
-      mcmc_seed = 42,    
+      mcmc_seed = 43,    
       max_sampling_iterations = 1000
     )
 

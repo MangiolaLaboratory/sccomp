@@ -1225,7 +1225,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   residuals =
     .data |>
     sccomp_predict(
-      number_of_draws = min(dim(fit_matrix)[1], 500)
+      number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
     mutate( proportion_mean =
@@ -1263,7 +1263,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   .data |>
     sccomp_predict(
       formula_composition = formula_composition,
-      number_of_draws = min(dim(fit_matrix)[1], 500)
+      number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
     mutate(proportion_mean =

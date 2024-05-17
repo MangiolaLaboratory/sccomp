@@ -259,6 +259,16 @@ vb_iterative = function(model,
   while  (is.null(res) & i < 5) {
     res = tryCatch({
 
+      # my_res = model$pathfinder(
+      #   data = data,
+      #   tol_rel_obj = tol_rel_obj,
+      #   output_dir = output_dir,
+      #   seed = seed+i,
+      #   init = init,
+      #   num_paths=10,
+      #   ...
+      # )
+
       my_res = model$variational(
         data = data,
         output_samples = output_samples,
@@ -387,7 +397,7 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
   #if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
 
   summary = 
-    fit$summary(par, ~quantile(.x, probs = probs,  na.rm=TRUE)) %>%
+    fit$summary(variables = par, "mean", ~quantile(.x, probs = probs,  na.rm=TRUE)) %>%
     rename(.variable = variable ) %>%
 
     when(
@@ -474,7 +484,7 @@ fit_model = function(
     mod = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
   else {
     write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
-    mod = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan" )
+    mod = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan", pp_options = list(stan_threads = TRUE))
     mod  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
   }
 
@@ -482,9 +492,21 @@ fit_model = function(
     prec_coeff = c(5,0),
     prec_sd = 1,
     alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
-    beta_raw_raw = matrix(rep(0, data_for_model$C * (data_for_model$M-1)), nrow = data_for_model$C, byrow = TRUE)
-  )
+    beta_raw_raw = matrix(0, data_for_model$C , data_for_model$M-1) ,
+    mix_p = 0.1 
+   )
 
+  if(data_for_model$N_random_intercepts>0){
+    init_list$random_intercept_raw = matrix(0, data_for_model$N_grouping  , data_for_model$M-1) |> as.data.frame()  
+    init_list$random_intercept_sigma_mu = 0.5 |> as.array()
+    init_list$random_intercept_sigma_sigma = 0.2 |> as.array()
+    init_list$random_intercept_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design)
+    init_list$sigma_correlation_factor = matrix(0, data_for_model$how_many_factors_in_random_design  , data_for_model$how_many_factors_in_random_design )
+    init_list$zero_random_intercept = rep(0, size = 1) |> as.array()
+    
+  }
+ 
+  
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
 
@@ -2615,7 +2637,9 @@ replicate_data = function(.data,
   model_input$X_random_intercept = new_X_random_intercept
   model_input$N_grouping_new = ncol(new_X_random_intercept)
 
-  number_of_draws_in_the_fit = attr(.data, "fit")$metadata()$output_samples
+
+  
+  number_of_draws_in_the_fit = attr(.data, "fit") |>  get_output_samples()
   
   # To avoid error in case of a NULL posterior sample
   number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
@@ -2966,4 +2990,34 @@ add_class = function(var, name) {
   if(!name %in% class(var)) class(var) <- append(class(var),name, after = 0)
 
   var
+}
+
+
+#' Get Output Samples from a Stan Fit Object
+#'
+#' This function retrieves the number of output samples from a Stan fit object, 
+#' supporting different methods (MHC and Variational) based on the available data within the object.
+#'
+#' @param fit A `stanfit` object, which is the result of fitting a model via Stan.
+#' @return The number of output samples used in the Stan model. 
+#'         Returns from MHC if available, otherwise from Variational inference.
+#' @examples
+#' # Assuming 'fit' is a stanfit object obtained from running a Stan model
+#' samples_count = get_output_samples(fit)
+#'
+get_output_samples = function(fit){
+  
+  # Check if the output_samples field is present in the metadata of the fit object
+  # This is generally available when the model is fit using MHC (Markov chain Monte Carlo)
+  if(!is.null(fit$metadata()$output_samples)) {
+    # Return the output_samples from the metadata
+    fit$metadata()$output_samples
+  }
+  
+  # If the output_samples field is not present, check for iter_sampling
+  # This occurs typically when the model is fit using Variational inference methods
+  else {
+    # Return the iter_sampling from the metadata
+    fit$metadata()$iter_sampling
+  }
 }
