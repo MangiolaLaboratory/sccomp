@@ -3560,7 +3560,7 @@ check_sample_consistency_of_factors = function(.data, my_formula, .sample){
   if( any_covariate_not_matching_sample_size |> nrow() > 0 ) stop(
     sprintf("sccomp says: your \"%s\" factor(s) is(are) mismatched across samples. ", any_covariate_not_matching_sample_size |> pull(name) |> paste(collapse = ", ")),
     "For example, sample_bar having more than one value for factor_foo. ",
-    "For sample_ar you should have one value for factor_foo. consistent across groups (e.g. cell types)."
+    "For sample_bar you should have one value for factor_foo. consistent across groups (e.g. cell types)."
   )
   
 }
