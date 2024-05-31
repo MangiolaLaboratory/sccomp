@@ -100,7 +100,7 @@ sccomp_estimate <- function(.data,
                        cores = detectCores(),
                        bimodal_mean_variability_association = FALSE,
                        percent_false_positive = 5,
-                       variational_inference = TRUE,
+                       inference_method = "variational",
                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                        .sample_cell_group_pairs_to_exclude = NULL,
@@ -114,12 +114,13 @@ sccomp_estimate <- function(.data,
                        pass_fit = TRUE,
                        
                        # DEPRECATED
-                       approximate_posterior_inference = NULL
+                       approximate_posterior_inference = NULL,
+                       variational_inference = NULL
                        
                        ) {
-  if(variational_inference == TRUE) 
+  if(inference_method == "variational") 
     rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = TRUE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = “variational”; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = \"hmc\".", 
       .frequency = "once", 
       .frequency_id = "variational_message"
     )
@@ -139,7 +140,7 @@ sccomp_estimate.Seurat = function(.data,
                                   cores = detectCores(),
                                   bimodal_mean_variability_association = FALSE,
                                   percent_false_positive = 5,
-                                  variational_inference = TRUE,
+                                  inference_method = "variational",
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
@@ -153,14 +154,29 @@ sccomp_estimate.Seurat = function(.data,
                                   pass_fit = TRUE,
                                   
                                   # DEPRECATED
-                                  approximate_posterior_inference = NULL){
+                                  approximate_posterior_inference = NULL,
+                                  variational_inference = NULL){
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
   # DEPRECATION OF approximate_posterior_inference
   if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use inference_method By default variational_inference value is inferred from approximate_posterior_inference.")
+    
+     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+  }
+  # DEPRECATION OF variational_inference
+  if (is_present(variational_inference) & !is.null(variational_inference)) {
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    
+    inference_method = ifelse(variational_inference, "variational","hmc")
+  }
+  
+  # DEPRECATION OF variational_inference
+  if (is_present(variational_inference) & !is.null(variational_inference)) {
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    
+    inference_method = ifelse(variational_inference, "variational","hmc")
   }
   
   # Prepare column same enquo
@@ -179,7 +195,7 @@ sccomp_estimate.Seurat = function(.data,
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
+      inference_method = inference_method,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
@@ -208,7 +224,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 cores = detectCores(),
                                                 bimodal_mean_variability_association = FALSE,
                                                 percent_false_positive = 5,
-                                                variational_inference = TRUE,
+                                                inference_method = "variational",
                                                 prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                                 prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                                 .sample_cell_group_pairs_to_exclude = NULL,
@@ -222,7 +238,8 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 pass_fit = TRUE,
                                                 
                                                 # DEPRECATED
-                                                approximate_posterior_inference = NULL) {
+                                                approximate_posterior_inference = NULL,
+                                                variational_inference = NULL) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -230,9 +247,16 @@ sccomp_estimate.SingleCellExperiment = function(.data,
   # DEPRECATION OF approximate_posterior_inference
   if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
     deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
   }
 
+  # DEPRECATION OF variational_inference
+  if (is_present(variational_inference) & !is.null(variational_inference)) {
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    
+    inference_method = ifelse(variational_inference, "variational","hmc")
+  }
+  
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
@@ -251,7 +275,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
+      inference_method = inference_method,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
@@ -280,7 +304,7 @@ sccomp_estimate.DFrame = function(.data,
                                   cores = detectCores(),
                                   bimodal_mean_variability_association = FALSE,
                                   percent_false_positive = 5,
-                                  variational_inference = TRUE,
+                                  inference_method = "variational",
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
@@ -294,7 +318,8 @@ sccomp_estimate.DFrame = function(.data,
                                   pass_fit = TRUE,
                                   
                                   # DEPRECATED
-                                  approximate_posterior_inference = NULL) {
+                                  approximate_posterior_inference = NULL,
+                                  variational_inference = NULL) {
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -302,7 +327,14 @@ sccomp_estimate.DFrame = function(.data,
   # DEPRECATION OF approximate_posterior_inference
   if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
     deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+  }
+  
+  # DEPRECATION OF variational_inference
+  if (is_present(variational_inference) & !is.null(variational_inference)) {
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    
+    inference_method = ifelse(variational_inference, "variational","hmc")
   }
   
   # Prepare column same enquo
@@ -323,7 +355,7 @@ sccomp_estimate.DFrame = function(.data,
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
+      inference_method = inference_method,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
@@ -351,7 +383,7 @@ sccomp_estimate.data.frame = function(.data,
                                       cores = detectCores(),
                                       bimodal_mean_variability_association = FALSE,
                                       percent_false_positive = 5,
-                                      variational_inference = TRUE,
+                                      inference_method = "variational",
                                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                       .sample_cell_group_pairs_to_exclude = NULL,
@@ -365,13 +397,21 @@ sccomp_estimate.data.frame = function(.data,
                                       pass_fit = TRUE,
                                       
                                       # DEPRECATED
-                                      approximate_posterior_inference = NULL) {
+                                      approximate_posterior_inference = NULL,
+                                      variational_inference = NULL) {
 
   
   # DEPRECATION OF approximate_posterior_inference
   if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
     deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+  }
+  
+  # DEPRECATION OF variational_inference
+  if (is_present(variational_inference) & !is.null(variational_inference)) {
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    
+    inference_method = ifelse(variational_inference, "variational","hmc")
   }
   
   # Prepare column same enquo
@@ -392,7 +432,7 @@ sccomp_estimate.data.frame = function(.data,
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
+      inference_method = inference_method,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
@@ -418,7 +458,7 @@ sccomp_estimate.data.frame = function(.data,
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
+      inference_method = inference_method,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
@@ -509,18 +549,19 @@ sccomp_estimate.data.frame = function(.data,
 sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
-                                   variational_inference = TRUE,
+                                   inference_method = "variational",
                                    verbose = TRUE,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
                                    enable_loo = FALSE,
                                    
                                    # DEPRECATED
-                                   approximate_posterior_inference = NULL
+                                   approximate_posterior_inference = NULL,
+                                   variational_inference = NULL
 ) {
-  if(variational_inference == TRUE) 
+  if(inference_method == "variational") 
     rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = TRUE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = “variational”; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = “hmc”.", 
       .frequency = "once", 
       .frequency_id = "variational_message"
     )
@@ -533,21 +574,29 @@ sccomp_remove_outliers <- function(.estimate,
 sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
-                                             variational_inference = TRUE,
+                                             inference_method = "variational",
                                              verbose = TRUE,
                                              mcmc_seed = sample(1e5, 1),
                                              max_sampling_iterations = 20000,
                                              enable_loo = FALSE,
                                              
                                              # DEPRECATED
-                                             approximate_posterior_inference = NULL
+                                             approximate_posterior_inference = NULL,
+                                             variational_inference = NULL
 ) {
   
   
   # DEPRECATION OF approximate_posterior_inference
   if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
     deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+  }
+  
+  # DEPRECATION OF variational_inference
+  if (is_present(variational_inference) & !is.null(variational_inference)) {
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    
+    inference_method = ifelse(variational_inference, "variational","hmc")
   }
   
   # Prepare column same enquo

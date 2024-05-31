@@ -253,32 +253,35 @@ vb_iterative = function(model,
                         output_dir = output_dir,
                         seed, 
                         init = "random",
+                        inference_method,
                         ...) {
   res = NULL
   i = 0
   while  (is.null(res) & i < 5) {
     res = tryCatch({
 
-      # my_res = model$pathfinder(
-      #   data = data,
-      #   tol_rel_obj = tol_rel_obj,
-      #   output_dir = output_dir,
-      #   seed = seed+i,
-      #   init = init,
-      #   num_paths=10,
-      #   ...
-      # )
-
-      my_res = model$variational(
-        data = data,
-        output_samples = output_samples,
-        iter = iter,
-        tol_rel_obj = tol_rel_obj,
-        output_dir = output_dir,
-        seed = seed+i,
-        init = init,
-        ...
-      )
+      if(inference_method=="pathfinder")
+        my_res = model$pathfinder(
+          data = data,
+          tol_rel_obj = tol_rel_obj,
+          output_dir = output_dir,
+          seed = seed+i,
+          init = init,
+          num_paths=10,
+          ...
+        )
+    
+      else if(inference_method=="variational")
+        my_res = model$variational(
+          data = data,
+          output_samples = output_samples,
+          iter = iter,
+          tol_rel_obj = tol_rel_obj,
+          output_dir = output_dir,
+          seed = seed+i,
+          init = init,
+          ...
+        )
 
       boolFalse <- TRUE
       return(my_res)
@@ -442,7 +445,7 @@ label_deleterious_outliers = function(.my_data){
 #' @importFrom cmdstanr cmdstan_model
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
-  warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
+  warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = FALSE,
   seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
 )
 {
@@ -514,7 +517,7 @@ fit_model = function(
   dir.create(output_directory, showWarnings = FALSE)
 
   # Fit
-  if(!approximate_posterior_inference){
+  if(inference_method == "hmc"){
 
       mod$sample(
         data = data_for_model ,
@@ -541,7 +544,8 @@ fit_model = function(
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
       output_dir = output_directory,
-      init = init
+      init = init,
+      inference_method = inference_method
     ) %>%
       suppressWarnings()
 
