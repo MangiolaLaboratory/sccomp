@@ -268,6 +268,7 @@ vb_iterative = function(model,
           seed = seed+i,
           init = init,
           num_paths=10,
+          single_path_draws = output_samples / 10 ,
           ...
         )
     
@@ -544,7 +545,7 @@ fit_model = function(
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
       output_dir = output_directory,
-      init = init,
+      init = list(init_list),
       inference_method = inference_method
     ) %>%
       suppressWarnings()
