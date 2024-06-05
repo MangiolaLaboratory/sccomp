@@ -267,7 +267,7 @@ vb_iterative = function(model,
           output_dir = output_dir,
           seed = seed+i,
           # init = init,
-          num_paths=100, 
+          num_paths=10, 
           single_path_draws = output_samples / 10 ,
           max_lbfgs_iters=100, 
           history_size = 100, 
@@ -491,7 +491,7 @@ fit_model = function(
     mod = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
   else {
     write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
-    mod = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan", pp_options = list(stan_threads = TRUE))
+    mod = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan", cpp_options = list(STAN_THREADS = TRUE))
     mod  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
   }
 
