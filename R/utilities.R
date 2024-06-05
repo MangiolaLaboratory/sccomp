@@ -266,9 +266,12 @@ vb_iterative = function(model,
           tol_rel_obj = tol_rel_obj,
           output_dir = output_dir,
           seed = seed+i,
-          init = init,
-          num_paths=10,
+          # init = init,
+          num_paths=100, 
           single_path_draws = output_samples / 10 ,
+          max_lbfgs_iters=100, 
+          history_size = 100, 
+          psis_resample = FALSE,
           ...
         )
     
