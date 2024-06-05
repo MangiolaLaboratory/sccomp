@@ -254,6 +254,7 @@ vb_iterative = function(model,
                         seed, 
                         init = "random",
                         inference_method,
+                        cores = 1,
                         ...) {
   res = NULL
   i = 0
@@ -267,8 +268,9 @@ vb_iterative = function(model,
           output_dir = output_dir,
           seed = seed+i,
           # init = init,
-          num_paths=10, 
-          single_path_draws = output_samples / 10 ,
+          num_paths=cores, 
+          num_threads = cores,
+          single_path_draws = output_samples / cores ,
           max_lbfgs_iters=100, 
           history_size = 100, 
           psis_resample = FALSE,
@@ -549,7 +551,8 @@ fit_model = function(
       seed = seed,
       output_dir = output_directory,
       init = list(init_list),
-      inference_method = inference_method
+      inference_method = inference_method, 
+      cores = cores
     ) %>%
       suppressWarnings()
 
