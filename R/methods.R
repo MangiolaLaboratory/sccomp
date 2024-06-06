@@ -1643,7 +1643,7 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     ) |> 
     
     # Calculate the proportional fold change
-    mutate(proportion_fold_change = if_else(ratio_mean<1, (-1/ratio_mean)+1 , ratio_mean-1)) |> 
+    mutate(proportion_fold_change = if_else(ratio_mean<1, (-1/ratio_mean) , ratio_mean)) |> 
     
     # Calculate the ratio of credible interval between 'to' and 'from' conditions
     mutate(
@@ -1661,8 +1661,8 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     
     # Calculate the proportional fold change
     mutate(
-      difference_proportion_upper_fold_change = if_else(ratio_mean<1, (-1/ratio_upper)+1 , ratio_upper-1) - proportion_fold_change,
-      difference_proportion_lower_fold_change = if_else(ratio_mean<1, (-1/ratio_lower)+1 , ratio_lower-1) - proportion_fold_change
+      difference_proportion_upper_fold_change = if_else(ratio_mean<1, (-1/ratio_upper) , ratio_upper) - proportion_fold_change,
+      difference_proportion_lower_fold_change = if_else(ratio_mean<1, (-1/ratio_lower) , ratio_lower) - proportion_fold_change
     ) |> 
     mutate(average_uncertainty = (abs(difference_proportion_upper_fold_change) + abs(difference_proportion_lower_fold_change))/2) |> 
     

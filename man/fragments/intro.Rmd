@@ -99,8 +99,36 @@ sccomp_result =
   ) |> 
   sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
   sccomp_test()
-
 ```
+
+
+Here you see the results of the fit, the effects of the factor on composition and variability. You also can see the uncertainty around those effects.
+
+```{r}
+sccomp_result
+```
+
+
+## An aid to result interpretation and communication
+
+The estimated effects are expressed in the unconstrained space of the parameters. Similarly, to differential expression analysis that express change in terms of log fold change. However, for differences, in proportion, logit foold change must be used. This measure is harder to interpret and understand. 
+
+Therefore, we provide a more intuitive proportion, full change, that can be easier understood. However, these cannot be used to infer significance (use sccomp_test() instead), and a lot of care must be taken given the nonlinearity of these measure (1 fold increase from 0.0001 to 0.0002 carried a different weight that 1 fold increase from 0.4 to 0.8).  
+
+From your estimates, you can state which effects you are interested about (this can be a part of the full model, in case you want to not consider unwanted effects), and the two points you would like to compare.
+
+In case of a chategorical variable, the starting and ending points are categories.
+
+```{r}
+sccomp_result |> 
+   sccomp_proportional_fold_change(
+     formula_composition = ~  type,
+     from =  "healthy", 
+     to = "cancer"
+    ) |> 
+  select(cell_group, statement)
+```
+
 
 ## Summary plots
 
