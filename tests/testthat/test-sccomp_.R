@@ -452,6 +452,18 @@ test_that("test constrasts",{
 
 
 
+test_that("sccomp_proportional_fold_change",{
+  
+  my_estimate |> 
+    sccomp_proportional_fold_change(formula_composition = ~  type, from =  "healthy", to = "cancer") |> 
+    expect_no_error()
+  
+ 
+  
+  
+})
+
+
 
 # fit = 
 # 	seurat_obj |> 
