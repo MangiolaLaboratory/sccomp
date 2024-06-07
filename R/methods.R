@@ -1626,7 +1626,7 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     ) |> 
     
     # Nest the predicted data by cell group
-    nest(data = -cell_group) |> 
+    nest(data = -!!.data |> attr(".cell_group")) |> 
     
     
     # Calculate the ratio of proportions between 'to' and 'from' conditions
@@ -1671,7 +1671,12 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     mutate(statement = glue("{round(abs(proportion_fold_change),1)}-fold {increase_decrease} (from {round(proportion_from, 4)} to {round(proportion_to, 4)})")) |> 
   
     # Select and return the relevant columns
-    select(cell_group, proportion_fold_change, average_uncertainty, statement) 
+    select(
+      !!.data |> attr(".cell_group"), 
+      proportion_fold_change, 
+      average_uncertainty, 
+      statement
+    ) 
     
 
 }
