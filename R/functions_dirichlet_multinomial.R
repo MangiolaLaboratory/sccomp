@@ -18,15 +18,16 @@
 #' @importFrom rlang :=
 #' @importFrom rstan stan_model
 #'
-#' @param .data A tibble including a cell_type name column | sample name column | read counts column | covariate columns | Pvaue column | a significance column
+#' @param .data A tibble including a cell_type name column | sample name column | read counts column | factor columns | Pvaue column | a significance column
 #' @param formula A formula. The sample formula used to perform the differential cell_type abundance analysis
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_type A column name as symbol. The cell_type identifier
 #' @param .count A column name as symbol. The cell_type abundance (read count)
-#' @param prior_mean_variable_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
+#' @param prior_overdispersion_mean_association A list of the form list(intercept = c(4.436925, 1.304049), slope = c(-0.73074903,  0.06532897), standard_deviation = c(0.4527292, 0.3318759)). Where for each parameter, we specify mean and standard deviation. This is used to incorporate prior knowledge about the mean/variability association of cell-type proportions.
 #' @param percent_false_positive A real between 0 and 100. It is the aimed percent of cell types being a false positive. For example, percent_false_positive_genes = 1 provide 1 percent of the calls for significant changes that are actually not significant.
 #' @param check_outliers A boolean. Whether to check for outliers before the fit.
 #' @param approximate_posterior_inference A boolean. Whether the inference of the joint posterior distribution should be approximated with variational Bayes. It confers execution time advantage.
+#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
 #' @param verbose A boolean. Prints progression.
 #' @param cores An integer. How many cored to be used with parallel calculations.
 #' @param seed An integer. Used for development and testing purposes
@@ -42,11 +43,12 @@ dirichlet_multinomial_glm = function(.data,
                                      .sample,
                                      .cell_type,
                                      .count,
-                                     prior_mean_variable_association = NULL,
+                                     prior_overdispersion_mean_association = NULL,
                                      percent_false_positive = 5,
                                      check_outliers = FALSE,
                                      approximate_posterior_inference = "none",
                                      variance_association = FALSE,
+                                     enable_loo = FALSE,
                                      test_composition_above_logit_fold_change = NULL,
                                      verbose = TRUE,
                                      exclude_priors = FALSE,
@@ -65,8 +67,7 @@ dirichlet_multinomial_glm = function(.data,
     data_to_spread (.data, formula, !!.sample, !!.cell_type, !!.count) %>%
     data_spread_to_model_input(
       formula, !!.sample, !!.cell_type, !!.count,
-      approximate_posterior_inference= approximate_posterior_inference == "all",
-      variance_association = variance_association
+      approximate_posterior_inference= approximate_posterior_inference == "all"
     )
 
   false_positive_rate = percent_false_positive/100
@@ -103,13 +104,6 @@ dirichlet_multinomial_glm = function(.data,
         )
       } %>%
       beta_to_CI(censoring_iteration = 1, false_positive_rate = false_positive_rate, factor_of_interest = data_for_model$X %>% colnames() %>% .[2] ) %>%
-
-      # # Join filtered
-      # mutate(
-      #   significant =
-      #     !!as.symbol(sprintf(".lower_%s", colnames(data_for_model$X)[2])) *
-      #     !!as.symbol(sprintf(".upper_%s", colnames(data_for_model$X)[2])) > 0
-      # ) %>%
 
       # add probability
       left_join( get_probability_non_zero_OLD(parsed_fit, prefix = "composition"), by="M" ) %>%
@@ -166,6 +160,7 @@ dirichlet_multinomial_glm = function(.data,
 #' @importFrom rlang :=
 #' @importFrom purrr map2_lgl
 #' @importFrom stats setNames
+#' @importFrom tibble enframe
 fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration = 1, chains, seed, approximate_posterior_inference){
 
 
@@ -185,7 +180,7 @@ fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_
     left_join(tibble(.sample = rownames(data_for_model$y), N = seq_len(nrow(data_for_model$y))), by = ".sample" %>% setNames(quo_name(.sample))) %>%
     left_join(tibble(.cell_type = colnames(data_for_model$y), M = seq_len(ncol(data_for_model$y))), by = ".cell_type" %>% setNames(quo_name(.cell_type))) %>%
 
-    # Add covariate from design
+    # Add factor from design
     left_join(fit_and_generated, by = c("M", "N")) %>%
 
     # Add theoretical data quantiles
@@ -242,18 +237,7 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
   data_for_model =
     .data %>%
     data_to_spread (formula, !!.sample, !!.cell_type, !!.count) %>%
-    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference = approximate_posterior_inference,
-                               variance_association = variance_association)
-
-  # .count = enquo(.count)
-  #
-  # .data_wide =
-  #   .my_data %>%
-  #   select(N, M, !!.count, parse_formula(formula)) %>%
-  #   distinct() %>%
-  #   spread(M, !!.count)
-
-  # .data_wide_no_covariates = .data_wide %>% select(-parse_formula(formula))
+    data_spread_to_model_input(formula, !!.sample, !!.cell_type, !!.count, approximate_posterior_inference = approximate_posterior_inference)
 
   to_exclude =
     .data %>%
@@ -616,13 +600,4 @@ generate_quantities = function(fit, data_for_model, model_generate){
 
 }
 
-get_model_from_data = function(file_compiled_model, model_code){
-  if(file.exists(file_compiled_model))
-    readRDS(file_compiled_model)
-  else {
-    model_generate = stan_model(model_code = model_code)
-    model_generate  %>% saveRDS(file_compiled_model)
-    model_generate
 
-  }
-}

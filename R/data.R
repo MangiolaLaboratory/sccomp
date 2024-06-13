@@ -111,10 +111,6 @@
 
 
 
-
-
-
-
 #' glm_multi_beta_binomial
 #'
 #' @description
@@ -159,3 +155,15 @@
 #'
 #'
 "glm_multi_beta_binomial_simulate"
+
+  
+#' multipanel_theme
+#'
+#' @description
+#' this object includes the ggplot, theme
+#' @format  A ggplot theme
+#' @usage data(multipanel_theme)
+#'
+#'
+"multipanel_theme"
+

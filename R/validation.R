@@ -29,7 +29,7 @@ check_if_count_integer = function(.data, .count){
 #' @importFrom tidyr drop_na
 #' @importFrom dplyr enquo
 #'
-#' @param .data A tibble including a gene name column | sample name column | read counts column | covariates column
+#' @param .data A tibble including a gene name column | sample name column | read counts column | factors column
 #' @param columns Columns to check
 #'
 #' @keywords internal
@@ -39,7 +39,7 @@ check_if_any_NA = function(.data, columns){
 
   if(
     .data %>%
-    drop_na(columns) %>%
+    drop_na(all_of(columns)) %>%
     nrow %>% st(      .data %>% nrow    )
   )
     stop(sprintf("There are NA values in you tibble for any of the column %s", paste(columns, collapse=", ")))

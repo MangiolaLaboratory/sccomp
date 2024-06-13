@@ -51,7 +51,7 @@ plot_auc =
       mutate(n_cell_type_ = glue("{n_cell_type} cell types"), n_samples_ = glue("{n_samples} samples")) %>%
       rename(Algorithm = name) %>%
       ggplot(aes(slope, `Accuracy (AUC)`, color=fct_relevel(Algorithm, levels_algorithm))) +
-      geom_line(size=0.3) +
+      geom_line(linewidth=0.3) +
       facet_grid( fct_reorder(n_cell_type_,n_cell_type)  ~ fct_reorder(n_samples_, n_samples), scale="free_y") +
       geom_hline(yintercept = 0.1, linetype="dashed", color="grey") +
       scale_color_manual(values = cool_palette) +
