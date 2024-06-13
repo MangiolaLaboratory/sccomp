@@ -1,83 +1,54 @@
 Package: sccomp
-Title: Robust Outlier-aware Estimation of Composition and Heterogeneity for Single-cell Data
-Version: 1.7.10
-Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
-                  role = c("aut", "cre"))
-                  )
-Description: A robust and outlier-aware method for testing differential tissue composition from single-cell data. This model can infer changes in tissue composition and heterogeneity, and can produce realistic data simulations based on any existing dataset. This model can also transfer knowledge from a large set of integrated datasets to increase accuracy further.
-License: GPL-3 
+Title: Bayesian Analysis of Generalized Linear Models with Historical Data
+Version: 0.0.3.9000
+Authors@R: c(person("Ethan M.", "Alt", email = "ethanalt@live.unc.edu", role = c("aut", "cre", "cph"), comment = c(ORCID = "0000-0002-6112-9030")), 
+    person("Xinxin", "Chen", role = "aut"), 
+    person("Luiz M.", "Carvalho", role = "aut"),
+    person("Joseph G.", "Ibrahim", role = "aut"),
+    person("Xiuya", "Chang", role = "ctb")
+    )
+Description: User-friendly functions for leveraging (multiple) historical data set(s)
+    for generalized linear models. Contains functions for sampling from the posterior
+    distribution of a generalized linear model using the prior induced by the Bayesian 
+    hierarchical model, power prior by Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>, 
+    normalized power prior by Duan et al. (2006) <doi:10.1002/env.752>, normalized
+    asymptotic power prior by Ibrahim et al. (2015) <doi:10.1002/sim.6728>, commensurate
+    prior by Hobbs et al. (2011) <doi:10.1111/j.1541-0420.2011.01564.x>, robust 
+    meta-analytic-predictive prior by Schmidli et al. (2014) <doi:10.1111/biom.12242>,
+    and the latent exchangeability prior (LEAP) by Alt et al. (2023) <arXiv:2303.05223>.
+    The package compiles all the 'CmdStan' models once during installation using the
+    'instantiate' package.
+License: MIT + file LICENSE
+URL: https://github.com/ethan-alt/sccomp
+BugReports: https://github.com/ethan-alt/sccomp/issues
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
-Biarch: true
-Depends: 
-    R (>= 4.2.0)
-Imports: 
-    methods,
-    Rcpp (>= 0.12.0),
-    RcppParallel (>= 5.0.1),
-    rstantools (>= 2.1.1),
-    cmdstanr (>= 0.8.0),
-    SeuratObject,
-    SingleCellExperiment,
-    parallel,
-    dplyr,
-    tidyr,
-    purrr,
-    magrittr,
-    rlang,
-    tibble,
-    boot,
-    lifecycle,
+Depends: R (>= 4.2.0)
+Imports:
+    instantiate (>= 0.1.0),
+    callr,
+    fs,
+    formula.tools,
     stats,
-    tidyselect,
-    utils,
-    ggplot2,
-    ggrepel,
-    patchwork,
-    forcats,
-    readr,
-    scales,
-    stringr,
-    glue
+    posterior,
+    enrichwith,
+    mclust,
+    bridgesampling,
+    mvtnorm
 Suggests:
-    BiocStyle,
-    testthat (>= 3.0.0),
-    markdown,
+    cmdstanr (>= 0.6.0),
+    ggplot2,
+    ggthemes,
     knitr,
-    loo,
-    tidyseurat,
-    tidySingleCellExperiment,
-    prettydoc
-Enhances:
-    furrr,
-    extraDistr
-LinkingTo: 
-    BH (>= 1.66.0),
-    Rcpp (>= 0.12.0),
-    RcppEigen (>= 0.3.3.3.0),
-    RcppParallel (>= 5.0.1),
-    rstan (>= 2.26.0),
-    StanHeaders (>= 2.26.0)
-SystemRequirements: GNU make
-VignetteBuilder: 
-    knitr
-RdMacros:
-    lifecycle
-biocViews: 
-    ImmunoOncology, 
-    Normalization, 
-    Sequencing, 
-    RNASeq, 
-    Software, 
-    GeneExpression,
-    Transcriptomics, 
-    SingleCell, 
-    Clustering
-LazyDataCompression: xz
-Config/testthat/edition: 3
-URL: https://github.com/stemangiola/sccomp
-BugReports: https://github.com/stemangiola/sccomp/issues
+    parallel,
+    rmarkdown,
+    scales,
+    tibble,
+    tidyverse,
+    wacolors
 Additional_repositories:
     https://mc-stan.org/r-packages/
+SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
+LazyData: true
+VignetteBuilder: knitr
