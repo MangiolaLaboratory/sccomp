@@ -17,6 +17,16 @@ my_estimate =
     max_sampling_iterations = 1000
   )
 
+my_estimate = 
+	seurat_obj |>
+	sccomp_estimate(
+		formula_composition = ~ continuous_covariate * type ,
+		formula_variability = ~ 1,
+		sample, cell_group,
+		mcmc_seed = 42, 
+		inference_method = "pathfinder"
+	)
+
 my_estimate_full_bayes = 
   seurat_obj |>
   sccomp_estimate(

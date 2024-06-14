@@ -19,6 +19,7 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #' @importFrom rlang inform
+#' @importFrom lifecycle is_present
 #'
 #' @param .data A tibble including cell_group name column, sample name column, 
 #'              read counts column (optional depending on the input class), and factor columns.
@@ -637,13 +638,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
   
   # Load model
-  if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
-    mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  else {
-    write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
-    mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
-    mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  }
+  mod = load_model("glm_multi_beta_binomial_generate")
 
   rng = mod_rng$generate_quantities(
     attr(.estimate , "fit"),
@@ -1263,13 +1258,8 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   fit = attr(.data, "fit")
 
   # Load model
-  if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
-    mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  else {
-    write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
-    mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
-    mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  }
+  mod = load_model("glm_multi_beta_binomial_generate")
+  
 
 
   message("sccomp says: calculating residuals")
