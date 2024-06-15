@@ -8,7 +8,7 @@ sccomp_remove_outliers(
   .estimate,
   percent_false_positive = 5,
   cores = detectCores(),
-  inference_method = "variational",
+  inference_method = "pathfinder",
   verbose = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,

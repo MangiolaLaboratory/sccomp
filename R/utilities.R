@@ -304,40 +304,10 @@ vb_iterative = function(model,
 }
 
 
-#' fit_to_counts_rng
-#'
-#' @importFrom tidyr separate
-#' @importFrom tidyr nest
-#' @importFrom rstan summary
-#'
-#' @param fit A fit object
-#' @param adj_prob_theshold fit real
-#'
-#' @keywords internal
-#' @noRd
-fit_to_counts_rng = function(fit, adj_prob_theshold){
-
-  writeLines(sprintf("executing %s", "fit_to_counts_rng"))
-
-  fit %>%
-    rstan::summary("counts_rng",
-                   prob = c(adj_prob_theshold, 1 - adj_prob_theshold)) %$%
-    summary %>%
-    as_tibble(rownames = ".variable") %>%
-    separate(.variable,
-             c(".variable", "S", "G"),
-             sep = "[\\[,\\]]",
-             extra = "drop") %>%
-    mutate(S = S %>% as.integer, G = G %>% as.integer) %>%
-    select(-any_of(c("n_eff", "Rhat", "khat"))) %>%
-    rename(`.lower` = (.) %>% ncol - 1,
-           `.upper` = (.) %>% ncol)
-}
 
 #' draws_to_tibble_x_y
 #'
 #' @importFrom tidyr pivot_longer
-#' @importFrom rstan extract
 #' @importFrom rlang :=
 #'
 #' @param fit A fit object
@@ -384,7 +354,6 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
 #' @importFrom tidyr separate
 #' @importFrom purrr when
-#' @importFrom rstan summary
 #' 
 #' @param fit A fit object from a statistical model, from the 'rstan' package.
 #' @param par A character vector specifying the parameters to extract from the fit object.
@@ -549,7 +518,6 @@ fit_model = function(
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
-#' @importFrom rstan extract
 #' @importFrom rlang :=
 #'
 #' @keywords internal
@@ -565,6 +533,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
+#' @importFrom tidyr spread
 #' @importFrom stats C
 #' @importFrom rlang :=
 #' @importFrom tibble enframe
@@ -706,8 +675,34 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
  }
 
 
+#' Get Random Intercept Design
+#'
+#' This function processes random intercept elements in the data and creates design matrices
+#' for random intercept models.
+#'
+#' @param .data_ A data frame containing the data.
+#' @param .sample A quosure representing the sample variable.
+#' @param random_intercept_elements A data frame containing the random intercept elements.
+#' 
+#' @return A data frame with the processed design matrices for random intercept models.
+#' 
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate
+#' @importFrom dplyr pull
+#' @importFrom dplyr if_else
+#' @importFrom dplyr distinct
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarise
+#' @importFrom dplyr set_names
+#' @importFrom purrr map_lgl
+#' @importFrom purrr pmap
+#' @importFrom purrr map_int
+#' @importFrom tidyr with_groups
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_name
+#' @importFrom tidyselect all_of
 #' @noRd
 get_random_intercept_design = function(.data_, .sample, random_intercept_elements ){
 
@@ -1410,10 +1405,7 @@ get_probability_non_zero_ = function(fit, parameter, prefix = "", test_above_log
       format = getOption("cmdstanr_draws_format", "draws_matrix")
     )
 
-  # draws = rstan::extract(fit, parameter)[[1]]
-
   total_draws = dim(draws)[1]
-
 
   bigger_zero =
     draws %>%
