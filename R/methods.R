@@ -20,6 +20,7 @@
 #' @importFrom parallel detectCores
 #' @importFrom rlang inform
 #' @importFrom lifecycle is_present
+#' @importFrom lifecycle deprecate_warn
 #'
 #' @param .data A tibble including cell_group name column, sample name column, 
 #'              read counts column (optional depending on the input class), and factor columns.
