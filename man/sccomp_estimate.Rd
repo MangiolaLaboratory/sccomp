@@ -14,7 +14,7 @@ sccomp_estimate(
   cores = detectCores(),
   bimodal_mean_variability_association = FALSE,
   percent_false_positive = 5,
-  inference_method = "variational",
+  inference_method = "pathfinder",
   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0, 0.6),
     standard_deviation = c(10, 20)),

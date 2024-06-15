@@ -19,6 +19,8 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #' @importFrom rlang inform
+#' @importFrom lifecycle is_present
+#' @importFrom lifecycle deprecate_warn
 #'
 #' @param .data A tibble including cell_group name column, sample name column, 
 #'              read counts column (optional depending on the input class), and factor columns.
@@ -100,7 +102,7 @@ sccomp_estimate <- function(.data,
                        cores = detectCores(),
                        bimodal_mean_variability_association = FALSE,
                        percent_false_positive = 5,
-                       inference_method = "variational",
+                       inference_method = "pathfinder",
                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                        .sample_cell_group_pairs_to_exclude = NULL,
@@ -140,7 +142,7 @@ sccomp_estimate.Seurat = function(.data,
                                   cores = detectCores(),
                                   bimodal_mean_variability_association = FALSE,
                                   percent_false_positive = 5,
-                                  inference_method = "variational",
+                                  inference_method = "pathfinder",
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
@@ -224,7 +226,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 cores = detectCores(),
                                                 bimodal_mean_variability_association = FALSE,
                                                 percent_false_positive = 5,
-                                                inference_method = "variational",
+                                                inference_method = "pathfinder",
                                                 prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                                 prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                                 .sample_cell_group_pairs_to_exclude = NULL,
@@ -240,6 +242,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 # DEPRECATED
                                                 approximate_posterior_inference = NULL,
                                                 variational_inference = NULL) {
+
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -304,7 +307,7 @@ sccomp_estimate.DFrame = function(.data,
                                   cores = detectCores(),
                                   bimodal_mean_variability_association = FALSE,
                                   percent_false_positive = 5,
-                                  inference_method = "variational",
+                                  inference_method = "pathfinder",
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
@@ -320,6 +323,7 @@ sccomp_estimate.DFrame = function(.data,
                                   # DEPRECATED
                                   approximate_posterior_inference = NULL,
                                   variational_inference = NULL) {
+
 
   if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
 
@@ -383,7 +387,7 @@ sccomp_estimate.data.frame = function(.data,
                                       cores = detectCores(),
                                       bimodal_mean_variability_association = FALSE,
                                       percent_false_positive = 5,
-                                      inference_method = "variational",
+                                      inference_method = "pathfinder",
                                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                       .sample_cell_group_pairs_to_exclude = NULL,
@@ -414,6 +418,7 @@ sccomp_estimate.data.frame = function(.data,
     inference_method = ifelse(variational_inference, "variational","hmc")
   }
   
+
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
@@ -494,6 +499,8 @@ sccomp_estimate.data.frame = function(.data,
 #' @importFrom parallel detectCores
 #' @importFrom rlang quo_is_symbolic
 #' @importFrom rlang inform
+#' @importFrom tidyr unnest
+#' @importFrom tidyr nest
 #'
 #' @param .estimate A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
@@ -549,7 +556,7 @@ sccomp_estimate.data.frame = function(.data,
 sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
-                                   inference_method = "variational",
+                                   inference_method = "pathfinder",
                                    verbose = TRUE,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
@@ -574,7 +581,7 @@ sccomp_remove_outliers <- function(.estimate,
 sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
-                                             inference_method = "variational",
+                                             inference_method = "pathfinder",
                                              verbose = TRUE,
                                              mcmc_seed = sample(1e5, 1),
                                              max_sampling_iterations = 20000,
@@ -634,13 +641,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
   
   # Load model
-  if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
-    mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  else {
-    write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
-    mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
-    mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  }
+  mod = load_model("glm_multi_beta_binomial_generate")
 
   rng = mod_rng$generate_quantities(
     attr(.estimate , "fit"),
@@ -1026,6 +1027,7 @@ sccomp_test.sccomp_tbl = function(.data,
     add_class("sccomp_tbl") 
 }
 
+
 #' sccomp_replicate
 #'
 #' @description This function replicates counts from a real-world dataset.
@@ -1259,13 +1261,8 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   fit = attr(.data, "fit")
 
   # Load model
-  if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
-    mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  else {
-    write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
-    mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
-    mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  }
+  mod = load_model("glm_multi_beta_binomial_generate")
+  
 
 
   message("sccomp says: calculating residuals")
@@ -1303,7 +1300,6 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   ) |>
   mutate(logit_residuals = observed_proportion - proportion_mean) |>
   select(!!.sample, !!.cell_group, logit_residuals, exposure)
-
 
   message("sccomp says: regressing out unwanted factors")
 

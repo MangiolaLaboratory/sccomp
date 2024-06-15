@@ -228,7 +228,6 @@ as_matrix <- function(tbl, rownames = NULL) {
 #'
 #' @description Runs iteratively variational bayes until it suceeds
 #'
-#' @importFrom rstan vb
 #'
 #' @keywords internal
 #' @noRd
@@ -263,18 +262,19 @@ vb_iterative = function(model,
 
       if(inference_method=="pathfinder")
         my_res = model$pathfinder(
-          data = data,
-          tol_rel_obj = tol_rel_obj,
-          output_dir = output_dir,
-          seed = seed+i,
-          # init = init,
-          num_paths=cores, 
+        	data = data,
+        	tol_rel_obj = tol_rel_obj,
+        	output_dir = output_dir,
+        	seed = seed+i,
+        	# init = init,
+        	num_paths=10, 
           num_threads = cores,
-          single_path_draws = output_samples / cores ,
-          max_lbfgs_iters=100, 
-          history_size = 100, 
-          psis_resample = FALSE,
-          ...
+        	single_path_draws = output_samples / 10 ,
+        	max_lbfgs_iters=100, 
+        	history_size = 100, 
+        	psis_resample = FALSE,
+        	...
+
         )
     
       else if(inference_method=="variational")
@@ -307,40 +307,10 @@ vb_iterative = function(model,
 }
 
 
-#' fit_to_counts_rng
-#'
-#' @importFrom tidyr separate
-#' @importFrom tidyr nest
-#' @importFrom rstan summary
-#'
-#' @param fit A fit object
-#' @param adj_prob_theshold fit real
-#'
-#' @keywords internal
-#' @noRd
-fit_to_counts_rng = function(fit, adj_prob_theshold){
-
-  writeLines(sprintf("executing %s", "fit_to_counts_rng"))
-
-  fit %>%
-    rstan::summary("counts_rng",
-                   prob = c(adj_prob_theshold, 1 - adj_prob_theshold)) %$%
-    summary %>%
-    as_tibble(rownames = ".variable") %>%
-    separate(.variable,
-             c(".variable", "S", "G"),
-             sep = "[\\[,\\]]",
-             extra = "drop") %>%
-    mutate(S = S %>% as.integer, G = G %>% as.integer) %>%
-    select(-any_of(c("n_eff", "Rhat", "khat"))) %>%
-    rename(`.lower` = (.) %>% ncol - 1,
-           `.upper` = (.) %>% ncol)
-}
 
 #' draws_to_tibble_x_y
 #'
 #' @importFrom tidyr pivot_longer
-#' @importFrom rstan extract
 #' @importFrom rlang :=
 #'
 #' @param fit A fit object
@@ -387,7 +357,6 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
 #' @importFrom tidyr separate
 #' @importFrom purrr when
-#' @importFrom rstan summary
 #' 
 #' @param fit A fit object from a statistical model, from the 'rstan' package.
 #' @param par A character vector specifying the parameters to extract from the fit object.
@@ -448,7 +417,6 @@ label_deleterious_outliers = function(.my_data){
 }
 
 #' @importFrom readr write_file
-#' @importFrom cmdstanr cmdstan_model
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = FALSE,
@@ -487,16 +455,6 @@ fit_model = function(
       ) %>%
       min(cores)
 
-  # rstan_options(threads_per_chain = floor(cores/chains))
-  # Load model
-  if(file.exists("glm_multi_beta_binomial_cmdstanr.rds"))
-    mod = readRDS("glm_multi_beta_binomial_cmdstanr.rds")
-  else {
-    write_file(glm_multi_beta_binomial, "glm_multi_beta_binomial_cmdstanr.stan")
-    mod = cmdstan_model( "glm_multi_beta_binomial_cmdstanr.stan", cpp_options = list(STAN_THREADS = TRUE))
-    mod  %>% saveRDS("glm_multi_beta_binomial_cmdstanr.rds")
-  }
-
   init_list=list(
     prec_coeff = c(5,0),
     prec_sd = 1,
@@ -523,6 +481,8 @@ fit_model = function(
   dir.create(output_directory, showWarnings = FALSE)
 
   # Fit
+  mod = load_model("glm_multi_beta_binomial")
+  
   if(inference_method == "hmc"){
 
       mod$sample(
@@ -562,7 +522,6 @@ fit_model = function(
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
-#' @importFrom rstan extract
 #' @importFrom rlang :=
 #'
 #' @keywords internal
@@ -578,6 +537,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
+#' @importFrom tidyr spread
 #' @importFrom stats C
 #' @importFrom rlang :=
 #' @importFrom tibble enframe
@@ -719,8 +679,34 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
  }
 
 
+#' Get Random Intercept Design
+#'
+#' This function processes random intercept elements in the data and creates design matrices
+#' for random intercept models.
+#'
+#' @param .data_ A data frame containing the data.
+#' @param .sample A quosure representing the sample variable.
+#' @param random_intercept_elements A data frame containing the random intercept elements.
+#' 
+#' @return A data frame with the processed design matrices for random intercept models.
+#' 
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate
+#' @importFrom dplyr pull
+#' @importFrom dplyr if_else
+#' @importFrom dplyr distinct
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarise
+#' @importFrom dplyr set_names
+#' @importFrom purrr map_lgl
+#' @importFrom purrr pmap
+#' @importFrom purrr map_int
+#' @importFrom tidyr with_groups
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_name
+#' @importFrom tidyselect all_of
 #' @noRd
 get_random_intercept_design = function(.data_, .sample, random_intercept_elements ){
 
@@ -1423,10 +1409,7 @@ get_probability_non_zero_ = function(fit, parameter, prefix = "", test_above_log
       format = getOption("cmdstanr_draws_format", "draws_matrix")
     )
 
-  # draws = rstan::extract(fit, parameter)[[1]]
-
   total_draws = dim(draws)[1]
-
 
   bigger_zero =
     draws %>%
@@ -2656,13 +2639,8 @@ replicate_data = function(.data,
   number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
   
   # Load model
-  if(file.exists("glm_multi_beta_binomial_generate_cmdstanr.rds"))
-    mod_rng = readRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  else {
-    write_file(glm_multi_beta_binomial_generate, "glm_multi_beta_binomial_generate_cmdstanr.stan")
-    mod_rng = cmdstan_model( "glm_multi_beta_binomial_generate_cmdstanr.stan" )
-    mod_rng  %>% saveRDS("glm_multi_beta_binomial_generate_cmdstanr.rds")
-  }
+  mod = load_model("glm_multi_beta_binomial_generate")
+  
   
   # Generate quantities
   mod_rng$generate_quantities(
@@ -3031,4 +3009,56 @@ get_output_samples = function(fit){
     # Return the iter_sampling from the metadata
     fit$metadata()$iter_sampling
   }
+}
+
+
+#' Load, Compile, and Cache a Stan Model
+#'
+#' This function attempts to load a precompiled Stan model using the `instantiate` package.
+#' If the model is not found, it will locate the Stan model file within the `sccomp` package,
+#' compile it using `cmdstanr`, and save the compiled model to the cache directory.
+#'
+#' @param name A character string representing the name of the Stan model.
+#' @param cache_dir A character string representing the path to the cache directory.
+#' 
+#' @return A compiled Stan model object.
+#' 
+#' @importFrom instantiate stan_package_model
+#' @importFrom cmdstanr cmdstan_model
+#' @export
+#' @examples
+#' \dontrun{
+#'   model <- load_model("glm_multi_beta_binomial_", "~/cache")
+#' }
+load_model <- function(name, cache_dir = file.path(path.expand("~"), ".sccomp_models")) {
+  
+  
+  tryCatch({
+    # Attempt to load a precompiled Stan model using the instantiate package
+    instantiate::stan_package_model(
+      name = name,
+      package = "sccomp"
+    )
+  }, error = function(e) {
+    # Try to load the model from cache
+    cache_file <- file.path(cache_dir, paste0(name, ".rds"))
+    if (file.exists(cache_file)) {
+      message("Loading model from cache...")
+      return(readRDS(cache_file))
+    }
+    
+    # If loading the precompiled model fails, find the Stan model file within the package
+    message("Precompiled model not found. Compiling the model...")
+    stan_model_path <- system.file("bin/stan/", paste0(name, ".stan"), package = "sccomp")
+    
+    # Compile the Stan model using cmdstanr with threading support enabled
+    mod <- cmdstan_model(stan_model_path, cpp_options = list(STAN_THREADS = TRUE))
+    
+    # Save the compiled model object to cache
+    saveRDS(mod, file = cache_file)
+    message("Model compiled and saved to cache successfully.")
+    
+    return(mod)
+  })
+
 }
