@@ -6,6 +6,18 @@ data("counts_obj")
 
 set.seed(42)
 
+
+
+test_that("model instantiate",{
+  
+  instantiate::stan_package_model(
+    name = "glm_multi_beta_binomial",
+    package = "sccomp"
+  ) |> 
+    expect_s3_class("CmdStanModel")
+  
+})
+
 my_estimate = 
   seurat_obj |>
   sccomp_estimate(
@@ -73,6 +85,8 @@ my_estimate_random =
 # 		mcmc_seed = 42,     
 # 		max_sampling_iterations = 1000
 # 	)
+
+
 
 test_that("Generate data",{
 

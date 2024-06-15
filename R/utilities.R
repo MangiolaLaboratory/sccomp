@@ -2639,7 +2639,7 @@ replicate_data = function(.data,
   number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
   
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate")
+  mod = load_model("glm_multi_beta_binomial_generate_data")
   
   
   # Generate quantities
@@ -3049,7 +3049,7 @@ load_model <- function(name, cache_dir = file.path(path.expand("~"), ".sccomp_mo
     
     # If loading the precompiled model fails, find the Stan model file within the package
     message("Precompiled model not found. Compiling the model...")
-    stan_model_path <- system.file("bin/stan/", paste0(name, ".stan"), package = "sccomp")
+    stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
     
     # Compile the Stan model using cmdstanr with threading support enabled
     mod <- cmdstan_model(stan_model_path, cpp_options = list(STAN_THREADS = TRUE))

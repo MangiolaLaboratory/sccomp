@@ -648,7 +648,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
   
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate")
+  mod = load_model("glm_multi_beta_binomial_generate_data")
 
   rng = mod_rng$generate_quantities(
     attr(.estimate , "fit"),
@@ -1268,7 +1268,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   fit = attr(.data, "fit")
 
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate")
+  mod = load_model("glm_multi_beta_binomial_generate_data")
   
 
 
