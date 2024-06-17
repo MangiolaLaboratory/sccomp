@@ -4,7 +4,7 @@
 \alias{load_model}
 \title{Load, Compile, and Cache a Stan Model}
 \usage{
-load_model(name, cache_dir = file.path(path.expand("~"), ".sccomp_models"))
+load_model(name, cache_dir = sccomp_stan_models_cache_dir)
 }
 \arguments{
 \item{name}{A character string representing the name of the Stan model.}

@@ -323,7 +323,7 @@ sccomp_glm_data_frame_counts = function(.data,
     select(-contains("_FDR"), -contains("_pH0")) 
   
   
-  if(inference_method %in% c("variational", "pathfinder") & max(na.omit(estimate_tibble$c_R_k_hat)) > 4)
+  if(inference_method %in% c("variational") && max(na.omit(estimate_tibble$c_R_k_hat)) > 4)
     warning("sccomp says: using variational inference, c_R_k_hat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using inference_method = \"hmc\" to use the state-of-the-art (although slower) HMC sampler.")
   
   estimate_tibble

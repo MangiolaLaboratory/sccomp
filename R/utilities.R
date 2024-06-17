@@ -1,4 +1,5 @@
 
+sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
 
 # Greater than
 gt = function(a, b){	a > b }
@@ -484,7 +485,7 @@ fit_model = function(
   mod = load_model("glm_multi_beta_binomial")
   
   if(inference_method == "hmc"){
-
+#mod$compile()
       mod$sample(
         data = data_for_model ,
         chains = chains,
@@ -613,8 +614,33 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 }
 
 
+#' Get Random Intercept Design 2
+#'
+#' This function processes the formula composition elements in the data and creates design matrices
+#' for random intercept models.
+#'
+#' @param .data_ A data frame containing the data.
+#' @param .sample A quosure representing the sample variable.
+#' @param formula_composition A data frame containing the formula composition elements.
+#' 
+#' @return A data frame with the processed design matrices for random intercept models.
+#' 
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
+#' @importFrom purrr map2
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom dplyr pull
+#' @importFrom dplyr filter
+#' @importFrom dplyr left_join
+#' @importFrom dplyr mutate_all
+#' @importFrom dplyr mutate_if
+#' @importFrom dplyr as_tibble
+#' @importFrom tidyr pivot_longer
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_name
+#' @importFrom tidyselect all_of
+#' @importFrom readr type_convert
 #' @noRd
 get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 
@@ -835,6 +861,31 @@ get_design_matrix = function(.data_spread, formula, .sample){
   design_matrix
 }
 
+
+#' Check Random Intercept Design
+#'
+#' This function checks the validity of the random intercept design in the data.
+#'
+#' @param .data A data frame containing the data.
+#' @param factor_names A character vector of factor names.
+#' @param random_intercept_elements A data frame containing the random intercept elements.
+#' @param formula The formula used for the model.
+#' @param X The design matrix.
+#' 
+#' @return A data frame with the checked random intercept elements.
+#' 
+#' @importFrom dplyr nest
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom dplyr pull
+#' @importFrom dplyr filter
+#' @importFrom dplyr distinct
+#' @importFrom dplyr set_names
+#' @importFrom tidyr unite
+#' @importFrom purrr map2
+#' @importFrom stringr str_subset
+#' @importFrom readr type_convert
+#' @noRd
 check_random_intercept_design = function(.data, factor_names, random_intercept_elements, formula, X){
 
   .data_ = .data
@@ -2623,8 +2674,10 @@ replicate_data = function(.data,
   }
 
   # New X
+  model_input$X_original = model_input$X
   model_input$X = new_X
   model_input$Xa = new_Xa
+  model_input$N_original = model_input$N
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
 
@@ -2639,7 +2692,7 @@ replicate_data = function(.data,
   number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
   
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate_data")
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data")
   
   
   # Generate quantities
@@ -3005,11 +3058,16 @@ get_output_samples = function(fit){
   
   # If the output_samples field is not present, check for iter_sampling
   # This occurs typically when the model is fit using Variational inference methods
-  else {
+  else if(!is.null(fit$metadata()$iter_sampling)) {
     # Return the iter_sampling from the metadata
     fit$metadata()$iter_sampling
   }
+  else
+    fit$metadata()$num_psis_draws
 }
+
+
+
 
 
 #' Load, Compile, and Cache a Stan Model
@@ -3030,17 +3088,18 @@ get_output_samples = function(fit){
 #' \dontrun{
 #'   model <- load_model("glm_multi_beta_binomial_", "~/cache")
 #' }
-load_model <- function(name, cache_dir = file.path(path.expand("~"), ".sccomp_models")) {
+load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir) {
   
   
-  tryCatch({
-    # Attempt to load a precompiled Stan model using the instantiate package
-    instantiate::stan_package_model(
-      name = name,
-      package = "sccomp"
-    )
-  }, error = function(e) {
+  # tryCatch({
+  #   # Attempt to load a precompiled Stan model using the instantiate package
+  #   instantiate::stan_package_model(
+  #     name = name,
+  #     package = "sccomp"
+  #   )
+  # }, error = function(e) {
     # Try to load the model from cache
+  cache_dir |> dir.create(showWarnings = FALSE, recursive = TRUE)
     cache_file <- file.path(cache_dir, paste0(name, ".rds"))
     if (file.exists(cache_file)) {
       message("Loading model from cache...")
@@ -3052,13 +3111,70 @@ load_model <- function(name, cache_dir = file.path(path.expand("~"), ".sccomp_mo
     stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
     
     # Compile the Stan model using cmdstanr with threading support enabled
-    mod <- cmdstan_model(stan_model_path, cpp_options = list(STAN_THREADS = TRUE))
+    mod <- cmdstan_model(
+      stan_model_path, 
+      cpp_options = list(STAN_THREADS = TRUE),
+      force_recompile = TRUE
+    )
     
     # Save the compiled model object to cache
     saveRDS(mod, file = cache_file)
     message("Model compiled and saved to cache successfully.")
     
     return(mod)
-  })
+  # })
 
 }
+
+#' Check and Install cmdstanr and CmdStan
+#'
+#' This function checks if the `cmdstanr` package and CmdStan are installed. 
+#' If they are not installed, it installs them automatically in non-interactive sessions
+#' or asks for permission to install them in interactive sessions.
+#'
+#' @importFrom instantiate stan_cmdstan_exists
+#' @importFrom utils install.packages
+#' @importFrom utils menu
+#' @return NULL
+#' 
+#' @examples
+#' \dontrun{
+#'   check_and_install_cmdstanr()
+#' }
+check_and_install_cmdstanr <- function() {
+  # Check if cmdstanr is installed
+  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
+    message("The 'cmdstanr' package is not installed.")
+    if (interactive()) {
+      install <- menu(c("yes", "no"), title = "Do you want to install 'cmdstanr'?")
+      if (install == 1) {
+        install.packages(pkgs = "cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+        library(cmdstanr)
+      } else {
+        stop("cmdstanr is required to proceed.")
+      }
+    } else {
+      message("Installing 'cmdstanr' package...")
+      install.packages(pkgs = "cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+      library(cmdstanr)
+    }
+  }
+  
+  # Check if CmdStan is installed
+  if (!stan_cmdstan_exists()) {
+    message("CmdStan is not installed.")
+    if (interactive()) {
+      install <- menu(c("yes", "no"), title = "Do you want to install CmdStan?")
+      if (install == 1) {
+        cmdstanr::install_cmdstan()
+      } else {
+        stop("CmdStan is required to proceed.")
+      }
+    } else {
+      message("Installing CmdStan...")
+      cmdstanr::install_cmdstan()
+    }
+  }
+}
+
+

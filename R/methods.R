@@ -133,6 +133,8 @@ sccomp_estimate <- function(.data,
       .frequency_id = "new_logit_fold_change_threshold"
   )
   
+  # Run the function
+  check_and_install_cmdstanr()
   
   UseMethod("sccomp_estimate", .data)
 }
@@ -174,6 +176,7 @@ sccomp_estimate.Seurat = function(.data,
     
      inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
   }
+  
   # DEPRECATION OF variational_inference
   if (is_present(variational_inference) & !is.null(variational_inference)) {
     deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
@@ -648,10 +651,10 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
   
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate_data")
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data")
 
   rng = mod_rng$generate_quantities(
-    attr(.estimate , "fit"),
+    attr(.estimate , "fit")$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
     data = 
@@ -660,6 +663,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       c(list(
         
         # Add subset of coefficients
+        X_original = data_for_model$X,
+        N_original = data_for_model$N,
         length_X_which = ncol(data_for_model$X),
         length_XA_which = ncol(data_for_model$XA),
         X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
@@ -734,7 +739,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       stanmodels$glm_multi_beta_binomial,
       cores = cores,
       quantile = my_quantile_step_2,
-      approximate_posterior_inference = variational_inference,
+      inference_method = inference_method,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -745,12 +750,14 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
   
   rng2 =  mod_rng$generate_quantities(
-    fit2,
+    fit2$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
     data = data_for_model |> c(list(
       
       # Add subset of coefficients
+      X_original = data_for_model$X,
+      N_original = data_for_model$N,
       length_X_which = ncol(data_for_model$X),
       length_XA_which = ncol(data_for_model$XA),
       X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
@@ -837,7 +844,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       stanmodels$glm_multi_beta_binomial,
       cores = cores,
       quantile = CI,
-      approximate_posterior_inference = variational_inference,
+      inference_method = inference_method,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -1660,4 +1667,30 @@ if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)
 
 plots
 
+}
+
+#' Clear Stan Model Cache
+#'
+#' This function attempts to delete the Stan model cache directory and its contents.
+#' If the cache directory does not exist, it prints a message indicating this.
+#'
+#' @param cache_dir A character string representing the path of the cache directory to delete. Defaults to `sccomp_stan_models_cache_dir`.
+#' 
+#' @return NULL
+#' 
+#' @examples
+#' \dontrun{
+#'   clear_stan_model_cache("path/to/cache_dir")
+#' }
+#' @export
+clear_stan_model_cache <- function(cache_dir = sccomp_stan_models_cache_dir) {
+  
+  # Check if the directory exists
+  if (dir.exists(cache_dir)) {
+    # Attempt to delete the directory and its contents
+    unlink(cache_dir, recursive = TRUE)
+    message("Cache deleted: ", cache_dir)
+  } else {
+    message("Cache does not exist: ", cache_dir)
+  }
 }

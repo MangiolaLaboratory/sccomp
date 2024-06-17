@@ -88,6 +88,7 @@ functions{
 data {
 
 	int N;
+	int N_original;
 	int M;
 	int C;
 	int A;
@@ -100,7 +101,8 @@ data {
 	array[length_XA_which] int XA_which;
 	matrix[N, length_X_which] X;
   matrix[N, length_XA_which] Xa; // The variability design
-
+  
+	matrix[N_original, C] X_original;
 	int is_truncated;
 	real<lower=1> truncation_ajustment;
 
@@ -124,13 +126,11 @@ data {
 
 }
 transformed data{
-  matrix[N, length_X_which] Q_ast;
   matrix[C, C] R_ast_inverse;
   vector[2*M] Q_r;
   
   // thin and scale the QR decomposition
-  Q_ast = qr_thin_Q(X) * sqrt(N - 1);
-  R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
+  R_ast_inverse = inverse(qr_thin_R(X_original) / sqrt(N_original - 1));
   Q_r = Q_sum_to_zero_QR(M);
   
   // If needed recreate the intercept
@@ -146,7 +146,6 @@ transformed data{
   if(N_random_intercepts>0) { 
     if(max(R_ast_inverse)>1000 )
       print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
-    Q_ast = X;
     R_ast_inverse = diag_matrix(rep_vector(1.0, C));
   }
   

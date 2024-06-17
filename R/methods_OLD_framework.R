@@ -342,6 +342,13 @@ sccomp_glm.data.frame = function(.data,
     details="sccomp says: sccomp_glm() is soft-deprecated. Please use the new modular framework instead, which includes sccomp_estimate(), sccomp_test(), sccomp_remove_outliers(), among other functions."
   )
 
+  # DEPRECATION OF variational_inference
+  if (is_present(variational_inference) & !is.null(variational_inference)) {
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    
+    inference_method = ifelse(variational_inference, "variational","hmc")
+  }
+  
   if(quo_is_null(.count) )
   result =    sccomp_glm_data_frame_raw(
         .data,
@@ -354,7 +361,7 @@ sccomp_glm.data.frame = function(.data,
         prior_overdispersion_mean_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
-        variational_inference = approximate_posterior_inference == "all",
+        inference_method = inference_method,
         test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, 
         .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
         verbose = verbose,
