@@ -505,7 +505,7 @@ fit_model = function(
   else
     vb_iterative(
       mod,
-      output_samples = 1000 ,
+      output_samples = output_samples ,
       iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),

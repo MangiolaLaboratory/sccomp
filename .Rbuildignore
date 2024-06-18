@@ -11,3 +11,6 @@
 ^\.Rbuildignore$
 ^\.RData$
 ^dev$
+sccomp_draws_files*
+src/stanExport*
+src/Rcpp*
