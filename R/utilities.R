@@ -268,12 +268,11 @@ vb_iterative = function(model,
         	output_dir = output_dir,
         	seed = seed+i,
         	# init = init,
-        	num_paths=10, 
+        	num_paths=50, 
           num_threads = cores,
-        	single_path_draws = output_samples / 10 ,
+        	single_path_draws = output_samples / 50 ,
         	max_lbfgs_iters=100, 
         	history_size = 100, 
-        	psis_resample = FALSE,
         	...
 
         )
@@ -484,6 +483,7 @@ fit_model = function(
   # Fit
   mod = load_model("glm_multi_beta_binomial")
   
+  
   if(inference_method == "hmc"){
 #mod$compile()
       mod$sample(
@@ -496,7 +496,7 @@ fit_model = function(
         #refresh = ifelse(verbose, 1000, 0),
         seed = seed,
         save_warmup = FALSE,
-        init = init,
+        init = pf,
         output_dir = output_directory
       ) %>%
       suppressWarnings()
@@ -511,9 +511,10 @@ fit_model = function(
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
       output_dir = output_directory,
-      init = list(init_list),
+      init = pf , #list(init_list),
       inference_method = inference_method, 
-      cores = cores
+      cores = cores,
+      psis_resample = FALSE
     ) %>%
       suppressWarnings()
 
@@ -2716,7 +2717,8 @@ replicate_data = function(.data,
       create_intercept = create_intercept
 
     )),
-    seed = mcmc_seed
+    seed = mcmc_seed, 
+    threads_per_chain = 1
   )
 
 
@@ -3113,7 +3115,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir) {
     # Compile the Stan model using cmdstanr with threading support enabled
     mod <- cmdstan_model(
       stan_model_path, 
-      cpp_options = list(STAN_THREADS = TRUE),
+      cpp_options = list(stan_threads = TRUE),
       force_recompile = TRUE
     )
     

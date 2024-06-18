@@ -676,7 +676,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
         create_intercept = FALSE
       )),
-    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains())
+    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains()), 
+    threads_per_chain = cores
     
   )
   
@@ -770,7 +771,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       create_intercept = FALSE
       
     )),
-    parallel_chains = ifelse(data_for_model$is_vb, 1, fit2$num_chains())
+    parallel_chains = ifelse(data_for_model$is_vb, 1, fit2$num_chains()), 
+    threads_per_chain = cores
     
   )
   
