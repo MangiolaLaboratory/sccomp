@@ -496,7 +496,7 @@ fit_model = function(
         #refresh = ifelse(verbose, 1000, 0),
         seed = seed,
         save_warmup = FALSE,
-        init = pf,
+        init = init,
         output_dir = output_directory
       ) %>%
       suppressWarnings()
