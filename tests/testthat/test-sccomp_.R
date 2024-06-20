@@ -13,7 +13,7 @@ my_estimate =
     formula_variability = ~ 1,
     sample, cell_group,
     cores = 1,
-    mcmc_seed = 42,
+    #mcmc_seed = 42,
     max_sampling_iterations = 1000
   )
 
