@@ -1580,7 +1580,7 @@ get_FDR = function(x){
 #' @examples
 #' # Example usage:
 #' # plot_1d_intervals(.data, "cell_group", 0.025, theme_minimal())
-plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.025){
+plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
   
   .cell_group = enquo(.cell_group)
   
@@ -1649,7 +1649,7 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.025)
 #' @examples
 #' # Example usage:
 #' # plot_2d_intervals(.data, "cell_group", theme_minimal(), 0.025)
-plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025){
+plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
   
   .cell_group = enquo(.cell_group)
   
@@ -1729,7 +1729,6 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025)
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
 #' 
-#' @export
 #' 
 #' @return A ggplot object representing the boxplot.
 #' @examples
@@ -1737,7 +1736,7 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.025)
 #' # plot_boxplot(.data, data_proportion, "condition", "cell_group", "sample", 0.025, theme_minimal())
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.025, my_theme
+    .sample, significance_threshold = 0.05, my_theme
 ){
   
   # Function to calculate boxplot statistics
@@ -1916,7 +1915,6 @@ plot_boxplot = function(
 #' @importFrom stats quantile
 #' @importFrom magrittr equals
 #' 
-#' @export
 #' 
 #' @return A ggplot object representing the scatterplot.
 #' @examples
@@ -1924,7 +1922,7 @@ plot_boxplot = function(
 #' # plot_scatterplot(.data, data_proportion, "condition", "cell_group", "sample", 0.025, theme_minimal())
 plot_scatterplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.025, my_theme
+    .sample, significance_threshold = 0.05, my_theme
 ){
   
   # Function to remove leading zero from labels

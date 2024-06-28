@@ -4,7 +4,7 @@
 \alias{sccomp_boxplot}
 \title{sccomp_boxplot}
 \usage{
-sccomp_boxplot(.data, factor, significance_threshold = 0.025)
+sccomp_boxplot(.data, factor, significance_threshold = 0.05)
 }
 \arguments{
 \item{.data}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
