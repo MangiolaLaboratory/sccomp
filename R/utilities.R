@@ -1598,7 +1598,7 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.025)
     mutate(plot = pmap(
       list(data, which, parameter),
       ~  {
-        browser()
+
         # Check if there are any statistics to plot
         if(..1 |> filter(!effect |> is.na()) |> nrow() |> equals(0))
           return(NA)
