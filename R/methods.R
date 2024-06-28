@@ -1573,10 +1573,10 @@ else {
 }
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, ...)
 
 # 2D intervals
-if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, ...)
 
 plots
 
