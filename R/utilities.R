@@ -1603,8 +1603,8 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, 
           )
         
           ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
-          geom_vline(xintercept = 0.2, colour="grey") +
-          geom_vline(xintercept = -0.2, colour="grey") +
+          geom_vline(xintercept = 0.1, colour="grey") +
+          geom_vline(xintercept = -0.1, colour="grey") +
           geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
           geom_point() +
           scale_color_brewer(palette = "Set1") +
@@ -1652,8 +1652,8 @@ plot_2d_intervals = function(.data, .cell_group, my_theme, significance_threshol
       .x = (.)
       # Plot
       ggplot(.x, aes(c_effect, v_effect)) +
-        geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", linewidth=0.3) +
-        geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", linewidth=0.3) +
+        geom_vline(xintercept = c(-0.1, 0.1), colour="grey", linetype="dashed", linewidth=0.3) +
+        geom_hline(yintercept = c(-0.1, 0.1), colour="grey", linetype="dashed", linewidth=0.3) +
         geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<significance_threshold, alpha=`c_FDR`<significance_threshold), linewidth=0.2) +
         geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<significance_threshold, alpha=`v_FDR`<significance_threshold), linewidth=0.2) +
 
