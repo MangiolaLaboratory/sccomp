@@ -946,6 +946,9 @@ sccomp_test.sccomp_tbl = function(.data,
       add_attr(.data |> attr("fit") , "fit")
 
   result |>
+    
+    add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
+    
     # Attach association mean concentration
     add_attr(.data |> attr("model_input") , "model_input") |>
     add_attr(.data |> attr("truncation_df2"), "truncation_df2") |>
