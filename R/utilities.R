@@ -1562,154 +1562,213 @@ get_FDR = function(x){
     pull(FDR)
 }
 
+#' Plot 1D Intervals for Cell-group Effects
+#'
+#' This function creates a series of 1D interval plots for cell-group effects, highlighting significant differences based on a given significance threshold.
+#'
+#' @param .data Data frame containing the main data.
+#' @param .cell_group The cell group to be analysed.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param my_theme A ggplot2 theme object to be applied to the plots.
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
 #' @importFrom tidyr drop_na
-#' @noRd
-plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, my_theme){
-
+#' 
+#' @export
+#' 
+#' @return A combined plot of 1D interval plots.
+#' @examples
+#' # Example usage:
+#' # plot_1d_intervals(.data, "cell_group", 0.025, theme_minimal())
+plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
+  
   .cell_group = enquo(.cell_group)
-
+  
   plot_list = 
     .data |>
     filter(parameter != "(Intercept)") |>
-
-    # Reshape
+    
+    # Reshape data
     select(-contains("n_eff"), -contains("R_k_hat")) |> 
-    pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
+    pivot_longer(c(contains("c_"), contains("v_")), names_sep = "_", names_to = c("which", "estimate")) |>
     pivot_wider(names_from = estimate, values_from = value) |>
-
+    
+    # Nest data by parameter and which
     nest(data = -c(parameter, which)) |>
     mutate(plot = pmap(
       list(data, which, parameter),
       ~  {
-        # if I don't have any statistics, for example, for variability, where has not been modelled
+
+        # Check if there are any statistics to plot
         if(..1 |> filter(!effect |> is.na()) |> nrow() |> equals(0))
-          return(NA
-            # ggplot() +
-            #   annotate("text", x = 0, y = 1, label = "Variability was not estimated for this contrast", angle = 90) +
-            #   ggtitle(sprintf("%s %s", ..2, ..3)) +
-            #   my_theme +
-            #   theme(
-            #     axis.title.x = element_blank(), 
-            #     axis.title.y = element_blank(), 
-            #     axis.ticks.x = element_blank(),
-            #     axis.ticks.y = element_blank(),
-            #     axis.text.x = element_blank(),
-            #     axis.text.y = element_blank(),
-            #     axis.line.x = element_blank(),
-            #     axis.line.y = element_blank()
-            #   ) 
-          )
+          return(NA)
         
-          ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
-          geom_vline(xintercept = 0.1, colour="grey") +
-          geom_vline(xintercept = -0.1, colour="grey") +
-          geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
+        # Create ggplot for each nested data
+        ggplot(..1, aes(x = effect, y = fct_reorder(!!.cell_group, effect))) +
+          geom_vline(xintercept = 0.1, colour = "grey") +
+          geom_vline(xintercept = -0.1, colour = "grey") +
+          geom_errorbar(aes(xmin = lower, xmax = upper, color = FDR < significance_threshold)) +
           geom_point() +
           scale_color_brewer(palette = "Set1") +
           xlab("Credible interval of the slope") +
           ylab("Cell group") +
           ggtitle(sprintf("%s %s", ..2, ..3)) +
-          my_theme +
+          multipanel_theme +
           theme(legend.position = "bottom") 
       }
     )) %>%
+    
+    # Filter out NA plots
     filter(!plot |> is.na()) |> 
     pull(plot) 
   
-  plot_list  |>
-    wrap_plots(ncol= plot_list |> length() |> sqrt() |> ceiling())
-
-
+  # Combine all individual plots into one plot
+  plot_list |>
+    wrap_plots(ncol = plot_list |> length() |> sqrt() |> ceiling())
 }
 
-plot_2d_intervals = function(.data, .cell_group, my_theme, significance_threshold = 0.025){
 
+#' Plot 2D Intervals for Mean-Variance Association
+#'
+#' This function creates a 2D interval plot for mean-variance association, highlighting significant differences based on a given significance threshold.
+#'
+#' @param .data Data frame containing the main data.
+#' @param .cell_group The cell group to be analysed.
+#' @param my_theme A ggplot2 theme object to be applied to the plot.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @importFrom dplyr filter arrange mutate if_else row_number
+#' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point annotate geom_text_repel aes facet_wrap
+#' @importFrom scales trans_new
+#' @importFrom stringr str_replace
+#' @importFrom stats quantile
+#' @importFrom magrittr equals
+#' 
+#' @export
+#' 
+#' @return A ggplot object representing the 2D interval plot.
+#' @examples
+#' # Example usage:
+#' # plot_2d_intervals(.data, "cell_group", theme_minimal(), 0.025)
+plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
+  
   .cell_group = enquo(.cell_group)
-
-  # mean-variance association
+  
+  # Mean-variance association
   .data %>%
-
-    # Filter where I did not inferred the variance
+    
+    # Filter where variance is inferred
     filter(!is.na(v_effect)) %>%
-
-    # Add labels
+    
+    # Add labels for significant cell groups
     with_groups(
       parameter,
       ~ .x %>%
         arrange(c_FDR) %>%
-        mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < significance_threshold & parameter!="(Intercept)", !!.cell_group, ""))
+        mutate(cell_type_label = if_else(row_number() <= 3 & c_FDR < significance_threshold & parameter != "(Intercept)", !!.cell_group, ""))
     ) %>%
     with_groups(
       parameter,
       ~ .x %>%
         arrange(v_FDR) %>%
-        mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < significance_threshold & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
+        mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & parameter != "(Intercept)"), !!.cell_group, cell_type_label))
     ) %>%
-
+    
     {
       .x = (.)
+      
       # Plot
       ggplot(.x, aes(c_effect, v_effect)) +
-        geom_vline(xintercept = c(-0.1, 0.1), colour="grey", linetype="dashed", linewidth=0.3) +
-        geom_hline(yintercept = c(-0.1, 0.1), colour="grey", linetype="dashed", linewidth=0.3) +
-        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<significance_threshold, alpha=`c_FDR`<significance_threshold), linewidth=0.2) +
-        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<significance_threshold, alpha=`v_FDR`<significance_threshold), linewidth=0.2) +
-
-        geom_point(size=0.2)  +
-        annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
-        annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
-
-        geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label!="") ) +
-
+        
+        # Add vertical and horizontal lines
+        geom_vline(xintercept = c(-0.1, 0.1), colour = "grey", linetype = "dashed", linewidth = 0.3) +
+        geom_hline(yintercept = c(-0.1, 0.1), colour = "grey", linetype = "dashed", linewidth = 0.3) +
+        
+        # Add error bars
+        geom_errorbar(aes(xmin = `c_lower`, xmax = `c_upper`, color = `c_FDR` < significance_threshold, alpha = `c_FDR` < significance_threshold), linewidth = 0.2) +
+        geom_errorbar(aes(ymin = v_lower, ymax = v_upper, color = `v_FDR` < significance_threshold, alpha = `v_FDR` < significance_threshold), linewidth = 0.2) +
+        
+        # Add points
+        geom_point(size = 0.2) +
+        
+        # Add annotations
+        annotate("text", x = 0, y = 3.5, label = "Variable", size = 2) +
+        annotate("text", x = 5, y = 0, label = "Abundant", size = 2, angle = 270) +
+        
+        # Add text labels for significant cell groups
+        geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label != "")) +
+        
+        # Set color and alpha scales
         scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
         scale_alpha_manual(values = c(0.4, 1)) +
-        facet_wrap(~parameter, scales="free") +
-        my_theme +
+        
+        # Facet by parameter
+        facet_wrap(~parameter, scales = "free") +
+        
+        # Apply custom theme
+        multipanel_theme +
         theme(
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank()
         )
     }
-
 }
 
+
+#' Plot Boxplot of Cell-group Proportion
+#'
+#' This function creates a boxplot of cell-group proportions, optionally highlighting significant differences based on a given significance threshold.
+#'
+#' @param .data Data frame containing the main data.
+#' @param data_proportion Data frame containing proportions of cell groups.
+#' @param factor_of_interest A factor indicating the biological condition of interest.
+#' @param .cell_group The cell group to be analysed.
+#' @param .sample The sample identifier.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param my_theme A ggplot2 theme object to be applied to the plot.
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
-#' @noRd
+#' 
+#' 
+#' @return A ggplot object representing the boxplot.
+#' @examples
+#' # Example usage:
+#' # plot_boxplot(.data, data_proportion, "condition", "cell_group", "sample", 0.025, theme_minimal())
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.025, my_theme
+    .sample, significance_threshold = 0.05, my_theme
 ){
-
+  
+  # Function to calculate boxplot statistics
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
     n <- sum(!is.na(x))
-    # calculate quantiles
+    
+    # Calculate quantiles
     stats <- quantile(x, probs = c(0.0, 0.25, 0.5, 0.75, 1.0))
     names(stats) <- c("ymin", "lower", "middle", "upper", "ymax")
     iqr <- diff(stats[c(2, 4)])
-    # set whiskers
+    
+    # Set whiskers
     outliers <- x < (stats[2] - coef * iqr) | x > (stats[4] + coef * iqr)
     if (any(outliers)) {
       stats[c(1, 5)] <- range(c(stats[2:4], x[!outliers]), na.rm = TRUE)
     }
     return(stats)
   }
-
+  
+  # Function to remove leading zero from labels
   dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
-
+  
+  # Define square root transformation and its inverse
   S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
   IS_sqrt <- function(x){x^2*sign(x)}
   S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
-
-
+  
   .cell_group = enquo(.cell_group)
   .sample = enquo(.sample)
-
-
+  
+  # Prepare significance colors
   significance_colors =
     .data %>%
     pivot_longer(
@@ -1725,17 +1784,15 @@ plot_boxplot = function(
   
   if(nrow(significance_colors) > 0){
     
-    
     if(.data |> attr("contrasts") |> is.null())
       significance_colors =
         significance_colors %>%
         unite("name", c(which, parameter), remove = FALSE) %>%
         distinct() %>%
+        
         # Get clean parameter
         mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
-        
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-    
     else
       significance_colors =
         significance_colors |>
@@ -1751,21 +1808,20 @@ plot_boxplot = function(
         
         # Merge contrasts
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-    
-    
   }
-
-  my_boxplot =  ggplot()
-
+  
+  my_boxplot = ggplot()
+  
   if("fit" %in% names(attributes(.data))){
-
+    
     simulated_proportion =
       .data |>
       sccomp_replicate(number_of_draws = 100) |>
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
-
+    
     my_boxplot = my_boxplot +
-
+      
+      # Add boxplot for simulated proportions
       stat_summary(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
         fun.data = calc_boxplot_stat, geom="boxplot",
@@ -1773,37 +1829,38 @@ plot_boxplot = function(
         fatten = 0.5, lwd=0.2,
         data =
           simulated_proportion %>%
-
-          # Filter uanitles because of limits
-          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)) ,
+          inner_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)),
         color="blue"
       )
-
-    # hideOutliers <- function(x) {
-    #   if (x$hoverinfo == 'y') {
-    #     x$marker = list(opacity = 0)
-    #     x$hoverinfo = NA
-    #   }
-    #   return(x)
-    # }
-    #
-    # my_boxplot[["x"]][["data"]] <- map(my_boxplot[["x"]][["data"]], ~ hideOutliers(.))
-
   }
-
-  # Get the exception if no significant cell types. This is not elegant
-  if(nrow(significance_colors)==0 |
-
-     # This is needed in case of contrasts
+  
+  if(nrow(significance_colors) == 0 |
      length(intersect(
-    significance_colors |> pull(!!as.symbol(factor_of_interest)),
-    data_proportion |> pull(!!as.symbol(factor_of_interest))
-    )) == 0){
+       significance_colors |> pull(!!as.symbol(factor_of_interest)),
+       data_proportion |> pull(!!as.symbol(factor_of_interest))
+     )) == 0){
+    
     my_boxplot=
       my_boxplot +
-
+      
+      # Add boxplot without significance colors
       geom_boxplot(
-        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL), # fill=Effect),
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        data =
+          data_proportion |>
+          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
+          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
+        fatten = 0.5,
+        lwd=0.5,
+      )
+  } else {
+    my_boxplot=
+      my_boxplot +
+      
+      # Add boxplot with significance colors
+      geom_boxplot(
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name),
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
@@ -1813,54 +1870,26 @@ plot_boxplot = function(
         lwd=0.5,
       )
   }
-
-  # If I have significance
-  else {
-    my_boxplot=
-      my_boxplot +
-
-      geom_boxplot(
-        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
-        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
-        data =
-          data_proportion |>
-          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
-          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
-        fatten = 0.5,
-        lwd=0.5,
-      )
-  }
-
-
-
+  
   my_boxplot +
+    
+    # Add jittered points for individual data
     geom_jitter(
       aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
       data = data_proportion,
       position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
       size = 0.5
     ) +
-
-    # geom_boxplot(
-    #   aes(Condition, generated_proportions),
-    #   outlier.shape = NA, alpha=0.2,
-    #   data = simulated_proportion, fatten = 0.5, size=0.5,
-    # ) +
-    # geom_jitter(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
-
+    
+    # Facet wrap by cell group
     facet_wrap(
-      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      vars(!!.cell_group),
       scales = "free_y",
       nrow = 4
     ) +
     scale_color_manual(values = c("black", "#e11f28")) +
-    #scale_fill_manual(values = c("white", "#E2D379")) +
-    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
-    #scale_color_distiller(palette = "Spectral") +
-
     scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
     scale_fill_discrete(na.value = "white") +
-    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
     guides(color="none", alpha="none", size="none") +
@@ -1868,32 +1897,46 @@ plot_boxplot = function(
     ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
     my_theme +
     theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
-
-
-
 }
 
+#' Plot Scatterplot of Cell-group Proportion
+#'
+#' This function creates a scatterplot of cell-group proportions, optionally highlighting significant differences based on a given significance threshold.
+#'
+#' @param .data Data frame containing the main data.
+#' @param data_proportion Data frame containing proportions of cell groups.
+#' @param factor_of_interest A factor indicating the biological condition of interest.
+#' @param .cell_group The cell group to be analysed.
+#' @param .sample The sample identifier.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param my_theme A ggplot2 theme object to be applied to the plot.
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
 #' @importFrom magrittr equals
-#' @noRd
+#' 
+#' 
+#' @return A ggplot object representing the scatterplot.
+#' @examples
+#' # Example usage:
+#' # plot_scatterplot(.data, data_proportion, "condition", "cell_group", "sample", 0.025, theme_minimal())
 plot_scatterplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.025, my_theme
+    .sample, significance_threshold = 0.05, my_theme
 ){
   
-  
+  # Function to remove leading zero from labels
   dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
   
+  # Define square root transformation and its inverse
   S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
   IS_sqrt <- function(x){x^2*sign(x)}
   S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
   
-  
   .cell_group = enquo(.cell_group)
   .sample = enquo(.sample)
   
+  # Prepare significance colors
   significance_colors =
     .data %>%
     pivot_longer(
@@ -1909,17 +1952,15 @@ plot_scatterplot = function(
   
   if(nrow(significance_colors) > 0){
     
-    
     if(.data |> attr("contrasts") |> is.null())
       significance_colors =
         significance_colors %>%
         unite("name", c(which, parameter), remove = FALSE) %>%
         distinct() %>%
+        
         # Get clean parameter
         mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
-        
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-    
     else
       significance_colors =
         significance_colors |>
@@ -1935,13 +1976,9 @@ plot_scatterplot = function(
         
         # Merge contrasts
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-    
-    
   }
-
   
-  
-  my_scatterplot =  ggplot()
+  my_scatterplot = ggplot()
   
   if("fit" %in% names(attributes(.data))){
     
@@ -1953,67 +1990,52 @@ plot_scatterplot = function(
     my_scatterplot = 
       my_scatterplot +
       
+      # Add smoothed line for simulated proportions
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
         lwd=0.2,
         data =
           simulated_proportion %>%
-          
-          # Filter uanitles because of limits
-          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group, !!.sample)) ,
+          inner_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group, !!.sample)) ,
         color="blue", fill="blue",
         span = 1
       )
-    
-    # hideOutliers <- function(x) {
-    #   if (x$hoverinfo == 'y') {
-    #     x$marker = list(opacity = 0)
-    #     x$hoverinfo = NA
-    #   }
-    #   return(x)
-    # }
-    #
-    # my_scatterplot[["x"]][["data"]] <- map(my_scatterplot[["x"]][["data"]], ~ hideOutliers(.))
-    
   }
   
-  # Get the exception if no significant cell types. This is not elegant
   if(
     nrow(significance_colors)==0 ||
-     
-     # This is needed in case of contrasts
-     significance_colors |> 
-     pull(!!as.symbol(factor_of_interest)) |> 
-     intersect(
-       data_proportion |> 
-       pull(!!as.symbol(factor_of_interest))
-     ) |> 
-     length() |> 
-     equals(0)
-     ) {
+    
+    significance_colors |> 
+    pull(!!as.symbol(factor_of_interest)) |> 
+    intersect(
+      data_proportion |> 
+      pull(!!as.symbol(factor_of_interest))
+    ) |> 
+    length() |> 
+    equals(0)
+  ) {
     
     my_scatterplot=
       my_scatterplot +
       
+      # Add smoothed line without significance colors
       geom_smooth(
-        aes(!!as.symbol(factor_of_interest), proportion, fill = NULL), # fill=Effect),
+        aes(!!as.symbol(factor_of_interest), proportion, fill = NULL),
         data =
           data_proportion ,
         lwd=0.5,
         color = "black",
         span = 1
       )
-  }
-  
-  # If I have significance
-  else {
+  } else {
     my_scatterplot=
       my_scatterplot +
       
+      # Add smoothed line with significance colors
       geom_smooth(
-        aes(!!as.symbol(factor_of_interest), proportion, fill = name), # fill=Effect),
+        aes(!!as.symbol(factor_of_interest), proportion, fill = name),
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
-        data =  data_proportion ,
+        data = data_proportion ,
         fatten = 0.5,
         lwd=0.5,
         color = "black",
@@ -2021,9 +2043,9 @@ plot_scatterplot = function(
       )
   }
   
-  
-  
   my_scatterplot +
+    
+    # Add jittered points for individual data
     geom_point(
       aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier),
       data = data_proportion,
@@ -2031,26 +2053,15 @@ plot_scatterplot = function(
       size = 0.5
     ) +
     
-    # geom_boxplot(
-    #   aes(Condition, generated_proportions),
-    #   outlier.shape = NA, alpha=0.2,
-    #   data = simulated_proportion, fatten = 0.5, size=0.5,
-    # ) +
-    # geom_point(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
-    
+    # Facet wrap by cell group
     facet_wrap(
-      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      vars(!!.cell_group),
       scales = "free_y",
       nrow = 4
     ) +
     scale_color_manual(values = c("black", "#e11f28")) +
-    #scale_fill_manual(values = c("white", "#E2D379")) +
-    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
-    #scale_color_distiller(palette = "Spectral") +
-    
     scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
     scale_fill_discrete(na.value = "white") +
-    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
     guides(color="none", alpha="none", size="none") +
@@ -2058,9 +2069,6 @@ plot_scatterplot = function(
     ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
     my_theme +
     theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
-  
-  
-  
 }
 
 draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){

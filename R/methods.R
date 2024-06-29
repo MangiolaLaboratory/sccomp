@@ -1430,7 +1430,7 @@ simulate_data.tbl = function(.data,
 #'   sccomp_test()
 #'
 #' # estimate |> sccomp_boxplot()
-sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
+sccomp_boxplot = function(.data, factor, significance_threshold = 0.05){
 
 
   .cell_group = attr(.data, ".cell_group")
@@ -1477,7 +1477,8 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #' @importFrom magrittr equals
 #'
 #' @param x A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
-#' @param ... parameters like significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param ... For internal use 
 #'
 #' @return A `ggplot`
 #'
@@ -1496,7 +1497,7 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #'
 #' # estimate |> plot()
 #'
-plot.sccomp_tbl <- function(x,  ...) {
+plot.sccomp_tbl <- function(x,  significance_threshold = 0.05) {
 
   .cell_group = attr(x, ".cell_group")
   .count = attr(x, ".count")
@@ -1549,7 +1550,7 @@ else {
               .cell_group = !!.cell_group,
               .sample =  !!.sample,
               my_theme = multipanel_theme,
-              ...
+              significance_threshold = significance_threshold
             )
         
         # If discrete
@@ -1562,7 +1563,7 @@ else {
               .cell_group = !!.cell_group,
               .sample =  !!.sample,
               my_theme = multipanel_theme,
-              ...
+              significance_threshold = significance_threshold
             ) 
         
         # Return
@@ -1573,10 +1574,10 @@ else {
 }
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, significance_threshold = significance_threshold)
 
 # 2D intervals
-if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, significance_threshold = significance_threshold)
 
 plots
 
