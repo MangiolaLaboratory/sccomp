@@ -1569,7 +1569,7 @@ get_FDR = function(x){
 #' @param .data Data frame containing the main data.
 #' @param .cell_group The cell group to be analysed.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
-#' @param my_theme A ggplot2 theme object to be applied to the plots.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
 #' @importFrom tidyr drop_na
@@ -1580,9 +1580,14 @@ get_FDR = function(x){
 #' @examples
 #' # Example usage:
 #' # plot_1d_intervals(.data, "cell_group", 0.025, theme_minimal())
-plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
+plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
   
   .cell_group = enquo(.cell_group)
+  
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+  
   
   plot_list = 
     .data |>
@@ -1605,8 +1610,8 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
         
         # Create ggplot for each nested data
         ggplot(..1, aes(x = effect, y = fct_reorder(!!.cell_group, effect))) +
-          geom_vline(xintercept = 0.1, colour = "grey") +
-          geom_vline(xintercept = -0.1, colour = "grey") +
+          geom_vline(xintercept = test_composition_above_logit_fold_change, colour = "grey") +
+          geom_vline(xintercept = -test_composition_above_logit_fold_change, colour = "grey") +
           geom_errorbar(aes(xmin = lower, xmax = upper, color = FDR < significance_threshold)) +
           geom_point() +
           scale_color_brewer(palette = "Set1") +
@@ -1634,8 +1639,10 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
 #'
 #' @param .data Data frame containing the main data.
 #' @param .cell_group The cell group to be analysed.
-#' @param my_theme A ggplot2 theme object to be applied to the plot.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' 
+#' 
 #' @importFrom dplyr filter arrange mutate if_else row_number
 #' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point annotate geom_text_repel aes facet_wrap
 #' @importFrom scales trans_new
@@ -1649,9 +1656,14 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
 #' @examples
 #' # Example usage:
 #' # plot_2d_intervals(.data, "cell_group", theme_minimal(), 0.025)
-plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
+plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
   
   .cell_group = enquo(.cell_group)
+  
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+  
   
   # Mean-variance association
   .data %>%
@@ -1680,8 +1692,8 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05){
       ggplot(.x, aes(c_effect, v_effect)) +
         
         # Add vertical and horizontal lines
-        geom_vline(xintercept = c(-0.1, 0.1), colour = "grey", linetype = "dashed", linewidth = 0.3) +
-        geom_hline(yintercept = c(-0.1, 0.1), colour = "grey", linetype = "dashed", linewidth = 0.3) +
+        geom_vline(xintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
+        geom_hline(yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
         
         # Add error bars
         geom_errorbar(aes(xmin = `c_lower`, xmax = `c_upper`, color = `c_FDR` < significance_threshold, alpha = `c_FDR` < significance_threshold), linewidth = 0.2) +
