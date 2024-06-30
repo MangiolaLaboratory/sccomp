@@ -1589,10 +1589,10 @@ else {
 }
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, significance_threshold = significance_threshold)
+plots$credible_intervals_1D = plot_1D_intervals(.data = x, significance_threshold = significance_threshold)
 
 # 2D intervals
-if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, significance_threshold = significance_threshold)
+if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2D_intervals(.data = x, significance_threshold = significance_threshold)
 
 plots
 
