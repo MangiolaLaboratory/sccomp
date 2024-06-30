@@ -43,3 +43,4 @@ glm_multi_beta_binomial_generate_cmdstanr.stan
 Rplot.pdf
 /doc/
 /Meta/
+sccomp_draws_files

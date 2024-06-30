@@ -4,7 +4,13 @@
 \alias{plot_2d_intervals}
 \title{Plot 2D Intervals for Mean-Variance Association}
 \usage{
-plot_2d_intervals(.data, .cell_group, significance_threshold = 0.05)
+plot_2d_intervals(
+  .data,
+  .cell_group,
+  significance_threshold = 0.05,
+  test_composition_above_logit_fold_change = attr(.data,
+    "test_composition_above_logit_fold_change")
+)
 }
 \arguments{
 \item{.data}{Data frame containing the main data.}
@@ -13,7 +19,7 @@ plot_2d_intervals(.data, .cell_group, significance_threshold = 0.05)
 
 \item{significance_threshold}{Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.}
 
-\item{my_theme}{A ggplot2 theme object to be applied to the plot.}
+\item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
 }
 \value{
 A ggplot object representing the 2D interval plot.
