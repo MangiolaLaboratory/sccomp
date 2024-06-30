@@ -3206,3 +3206,11 @@ add_class = function(var, name) {
 
   var
 }
+
+drop_environment <- function(obj) {
+  # Check if the object has an environment
+  if (!is.null(environment(obj))) {
+    environment(obj) <- new.env()
+  }
+  return(obj)
+}
