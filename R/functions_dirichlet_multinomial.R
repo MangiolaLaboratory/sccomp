@@ -58,6 +58,15 @@ dirichlet_multinomial_glm = function(.data,
                                      pass_fit = TRUE,
                                      formula_variability  = NULL
 ) {
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  detect_cores <- NULL
+  glm_dirichlet_multinomial <- NULL
+  censoring_iteration <- NULL
+  chains <- NULL
+  precision <- NULL
+  M <- NULL
+  
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
@@ -163,7 +172,11 @@ dirichlet_multinomial_glm = function(.data,
 #' @importFrom tibble enframe
 fit_model_and_parse_out_no_missing_data = function(.data, data_for_model, model_glm_dirichlet_multinomial, formula, .sample, .cell_type, .count, iteration = 1, chains, seed, approximate_posterior_inference){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  glm_dirichlet_multinomial_generate_quantities <- NULL
+  
 
+  
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
@@ -228,6 +241,31 @@ fit_model_and_parse_out_missing_data = function(.data, model_glm_dirichlet_multi
                                                 variance_association){
 
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  N <- NULL
+  M <- NULL
+  cores <- NULL
+  additional_parameters_to_save <- NULL
+  pass_fit <- NULL
+  tol_rel_obj <- NULL
+  glm_dirichlet_multinomial_generate_quantities <- NULL
+  .draw <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw_imputation <- NULL
+  .variable <- NULL
+  fit_list <- NULL
+  n_eff <- NULL
+  se_mean <- NULL
+  sd <- NULL
+  C_name <- NULL
+  .lower <- NULL
+  .median <- NULL
+  .upper <- NULL
+  `5%` <- NULL
+  `95%` <- NULL
+  `50%` <- NULL
+  
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
@@ -405,6 +443,11 @@ beta_summary %>%
 #' @importFrom rlang :=
 fit_and_generate_quantities = function(data_for_model, model, model_generate, censoring_iteration, chains, output_samples = 2000, seed, approximate_posterior_inference){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  N <- NULL
+  M <- NULL
+  precision <- NULL
+  
 
   # fit_discovery  = fit_model(data_for_model, model,  iteration, chains= 4, output_samples = output_samples)
 
@@ -481,7 +524,8 @@ do_inference_imputation = function(.data,
                                    precision) {
 
 
-
+  # Define the variables as NULL to avoid CRAN NOTES
+  glm_dirichlet_multinomial_imputation <- NULL
 
   # # if analysis approximated
   # # If posterior analysis is approximated I just need enough
@@ -581,6 +625,14 @@ do_inference_imputation = function(.data,
 #' @noRd
 generate_quantities = function(fit, data_for_model, model_generate){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  N_M <- NULL
+  generated_quantity <- NULL
+  draw <- NULL
+  N <- NULL
+  M <- NULL
+  
+  
   rstan::gqs(
     model_generate,
     #rstan::stan_model("inst/stan/generated_quantities.stan"),

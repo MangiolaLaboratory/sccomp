@@ -70,6 +70,9 @@ parse_formula <- function(fm) {
 #' @noRd
 formula_to_random_effect_formulae <- function(fm) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  formula <- NULL
+  
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
 
   random_intercept_elements =
@@ -117,6 +120,9 @@ formula_to_random_effect_formulae <- function(fm) {
 #' @noRd
 parse_formula_random_intercept <- function(fm) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  formula <- NULL
+  
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
 
   random_intercept_elements =
@@ -197,6 +203,10 @@ ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
 #'
 #' @return A matrix
 as_matrix <- function(tbl, rownames = NULL) {
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  variable <- NULL
+  
   tbl %>%
 
     ifelse_pipe(
@@ -300,6 +310,11 @@ vb_iterative = function(model,
 #' @noRd
 fit_to_counts_rng = function(fit, adj_prob_theshold){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  .variable <- NULL
+  S <- NULL
+  G <- NULL
+  
   writeLines(sprintf("executing %s", "fit_to_counts_rng"))
 
   fit %>%
@@ -332,6 +347,14 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #' @noRd
 draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  dummy <- NULL
+  .variable <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .value <- NULL
+  
   par_names =
     names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
@@ -370,6 +393,14 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
 draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  dummy <- NULL
+  .variable <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .value <- NULL
+  
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
 
   fit %>%
@@ -439,6 +470,17 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 #' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  .count <- NULL
+  `95%` <- NULL
+  `5%` <- NULL
+  X <- NULL
+  iteration <- NULL
+  outlier_above <- NULL
+  slope <- NULL
+  is_group_right <- NULL
+  outlier_below <- NULL
+  
   .my_data %>%
 
     # join CI
@@ -553,6 +595,10 @@ fit_model = function(
 #' @noRd
 parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  
+  
   fit %>%
     draws_to_tibble_x_y("beta", "C", "M") %>%
     left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
@@ -570,6 +616,13 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #' @noRd
 beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  C_name <- NULL
+  .lower <- NULL
+  .median <- NULL
+  .upper <- NULL
+  
   effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
 
   CI = fitted %>%
@@ -610,6 +663,13 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fact
 #' @noRd
 alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  C_name <- NULL
+  .lower <- NULL
+  .median <- NULL
+  .upper <- NULL
+  
   effect_column_name = sprintf("variability_effect_%s", factor_of_interest) %>% as.symbol()
 
   fitted %>%
@@ -642,6 +702,9 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @noRd
 get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  formula <- NULL
+  
   .sample = enquo(.sample)
 
  grouping_table =
@@ -708,6 +771,16 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 #' @noRd
 get_random_intercept_design = function(.data_, .sample, random_intercept_elements ){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  is_factor_continuous <- NULL
+  design <- NULL
+  max_mean_idx <- NULL
+  max_minus_sum <- NULL
+  max_factor_numeric <- NULL
+  max_group_numeric <- NULL
+  min_mean_idx <- NULL
+  min_minus_sum <- NULL
+  
   .sample = enquo(.sample)
 
   # If intercept is not defined create it
@@ -835,6 +908,11 @@ get_design_matrix = function(.data_spread, formula, .sample){
 
 check_random_intercept_design = function(.data, factor_names, random_intercept_elements, formula, X){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  factors <- NULL
+  groupings <- NULL
+  
+  
   .data_ = .data
 
   # Loop across groupings
@@ -964,6 +1042,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_remove_all
 #' @importFrom purrr reduce
+#' @importFrom stats as.formula
 #'
 #' @keywords internal
 #' @noRd
@@ -978,6 +1057,21 @@ data_spread_to_model_input =
     use_data = TRUE,
     random_intercept_elements){
 
+    # Define the variables as NULL to avoid CRAN NOTES
+    exposure <- NULL
+    design <- NULL
+    mat <- NULL
+    factor___numeric <- NULL
+    mean_idx <- NULL
+    design_matrix <- NULL
+    minus_sum <- NULL
+    group___numeric <- NULL
+    idx <- NULL
+    group___label <- NULL
+    parameter <- NULL
+    group <- NULL
+    design_matrix_col <- NULL
+    
     # Prepare column same enquo
     .sample = enquo(.sample)
     .cell_type = enquo(.cell_type)
@@ -1248,6 +1342,11 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
 data_simulation_to_model_input =
   function(.data, formula, .sample, .cell_type, .exposure, .coefficients, truncation_ajustment = 1, approximate_posterior_inference ){
 
+    # Define the variables as NULL to avoid CRAN NOTES
+    sd <- NULL
+    . <- NULL
+    
+    
     # Prepare column same enquo
     .sample = enquo(.sample)
     .cell_type = enquo(.cell_type)
@@ -1326,6 +1425,8 @@ find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
                                          max_number_to_check = 100, warmup = 200, parallelisation_start_penalty = 100) {
 
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  chains <- NULL
 
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
@@ -1355,6 +1456,13 @@ get.elbow.points.indices <- function(x, y, threshold) {
 #'
 get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fold_change = 0){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  .draw <- NULL
+  M <- NULL
+  C_name <- NULL
+  bigger_zero <- NULL
+  smaller_zero <- NULL
+  
   probability_column_name = sprintf("%s_prob_H0", prefix) %>% as.symbol()
 
   total_draws = .data %>% pull(2) %>% .[[1]] %>% distinct(.draw) %>% nrow()
@@ -1393,6 +1501,13 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 #'
 get_probability_non_zero_ = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  C_name <- NULL
+  bigger_zero <- NULL
+  smaller_zero <- NULL
+  
+  
 
   draws = rstan::extract(fit, parameter)[[1]]
 
@@ -1438,6 +1553,14 @@ get_probability_non_zero = function(draws, test_above_logit_fold_change = 0, pro
 #'
 parse_generated_quantities = function(rng, number_of_draws = 1){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  .draw <- NULL
+  N <- NULL
+  .value <- NULL
+  generated_counts <- NULL
+  M <- NULL
+  generated_proportions <- NULL
+  
   draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) %>%
     with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/max(1, sum(.value)))) %>%
     filter(.draw<= number_of_draws) %>%
@@ -1471,6 +1594,11 @@ design_matrix_and_coefficients_to_simulation = function(
 
 ){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  cell_type <- NULL
+  beta_1 <- NULL
+  beta_2 <- NULL
+  
   design_df = as.data.frame(design_matrix)
   coefficient_df = as.data.frame(coefficient_matrix)
 
@@ -1504,6 +1632,10 @@ design_matrix_and_coefficients_to_simulation = function(
 
 design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, precision = 100, seed = sample(1:100000, size = 1)){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  cell_type <- NULL
+  generated_counts <- NULL
+  factor_1 <- NULL
 
   # design_df = as.data.frame(design_matrix)
   # coefficient_df = as.data.frame(coefficient_matrix)
@@ -1555,6 +1687,13 @@ class_list_to_counts = function(.data, .sample, .cell_group){
 #' @importFrom dplyr cummean
 #' @noRd
 get_FDR = function(x){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  value <- NULL
+  name <- NULL
+  FDR <- NULL
+  
+  
   enframe(x) %>%
     arrange(value) %>%
     mutate(FDR = cummean(value)) %>%
@@ -1581,6 +1720,11 @@ get_FDR = function(x){
 #' # Example usage:
 #' # plot_1d_intervals(.data, "cell_group", 0.025, theme_minimal())
 plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  parameter <- NULL
+  estimate <- NULL
+  value <- NULL
   
   .cell_group = enquo(.cell_group)
   
@@ -1657,6 +1801,20 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05, 
 #' # Example usage:
 #' # plot_2d_intervals(.data, "cell_group", theme_minimal(), 0.025)
 plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  v_effect <- NULL
+  parameter <- NULL
+  c_effect <- NULL
+  c_lower <- NULL
+  c_upper <- NULL
+  c_FDR <- NULL
+  v_lower <- NULL
+  v_upper <- NULL
+  v_FDR <- NULL
+  cell_type_label <- NULL
+  multipanel_theme <- NULL
+  
   
   .cell_group = enquo(.cell_group)
   
@@ -1750,6 +1908,16 @@ plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
     .sample, significance_threshold = 0.05, my_theme
 ){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  stats_name <- NULL
+  parameter <- NULL
+  stats_value <- NULL
+  count_data <- NULL
+  generated_proportions <- NULL
+  proportion <- NULL
+  name <- NULL
+  outlier <- NULL
   
   # Function to calculate boxplot statistics
   calc_boxplot_stat <- function(x) {
@@ -1937,6 +2105,16 @@ plot_scatterplot = function(
     .sample, significance_threshold = 0.05, my_theme
 ){
   
+  # Define the variables as NULL to avoid CRAN NOTES
+  stats_name <- NULL
+  parameter <- NULL
+  stats_value <- NULL
+  count_data <- NULL
+  generated_proportions <- NULL
+  proportion <- NULL
+  name <- NULL
+  outlier <- NULL
+  
   # Function to remove leading zero from labels
   dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
   
@@ -2085,6 +2263,19 @@ plot_scatterplot = function(
 
 draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  parameter <- NULL
+  bigger_zero <- NULL
+  smaller_zero <- NULL
+  lower <- NULL
+  effect <- NULL
+  upper <- NULL
+  pH0 <- NULL
+  FDR <- NULL
+  n_eff <- NULL
+  R_k_hat <- NULL
+  
   .cell_group = enquo(.cell_group)
 
   draws =
@@ -2117,6 +2308,10 @@ enquos_from_list_of_symbols <- function(...) {
 }
 
 contrasts_to_enquos = function(contrasts){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  . <- NULL
+  
   contrasts |> enquo() |> quo_names() |> syms() %>% do.call(enquos_from_list_of_symbols, .)
 }
 
@@ -2245,6 +2440,19 @@ compress_zero_one = function(y){
 # this can be helpful if we want to draw PCA with uncertainty
 get_abundance_contrast_draws = function(.data, contrasts){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  X <- NULL
+  .value <- NULL
+  N_random_intercepts <- NULL
+  X_random_intercept <- NULL
+  .variable <- NULL
+  y <- NULL
+  M <- NULL
+  khat <- NULL
+  parameter <- NULL
+  n_eff <- NULL
+  R_k_hat <- NULL
+  
   .cell_group = .data |>  attr(".cell_group")
 
   # Beta
@@ -2361,6 +2569,16 @@ get_abundance_contrast_draws = function(.data, contrasts){
 #' @noRd
 get_variability_contrast_draws = function(.data, contrasts){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  XA <- NULL
+  .value <- NULL
+  y <- NULL
+  M <- NULL
+  khat <- NULL
+  parameter <- NULL
+  n_eff <- NULL
+  R_k_hat <- NULL
+  
   .cell_group = .data |>  attr(".cell_group")
 
   variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()

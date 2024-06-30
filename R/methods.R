@@ -1507,8 +1507,13 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_com
 #'
 #' # estimate |> plot()
 #'
-plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")) {
+plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), ...) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  parameter <- NULL
+  count_data <- NULL
+  v_effect <- NULL
+  
   .cell_group = attr(x, ".cell_group")
   .count = attr(x, ".count")
   .sample = attr(x, ".sample")
