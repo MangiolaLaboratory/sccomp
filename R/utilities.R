@@ -1706,7 +1706,6 @@ get_FDR = function(x){
 #' This function creates a series of 1D interval plots for cell-group effects, highlighting significant differences based on a given significance threshold.
 #'
 #' @param .data Data frame containing the main data.
-#' @param .cell_group The cell group to be analysed.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @importFrom patchwork wrap_plots
@@ -1718,15 +1717,15 @@ get_FDR = function(x){
 #' @return A combined plot of 1D interval plots.
 #' @examples
 #' # Example usage:
-#' # plot_1d_intervals(.data, "cell_group", 0.025, theme_minimal())
-plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+#' # plot_1D_intervals(.data, "cell_group", 0.025, theme_minimal())
+plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
   estimate <- NULL
   value <- NULL
   
-  .cell_group = enquo(.cell_group)
+  .cell_group = attr(.data, ".cell_group")
   
   # Check if test have been done
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
@@ -1782,7 +1781,6 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05, 
 #' This function creates a 2D interval plot for mean-variance association, highlighting significant differences based on a given significance threshold.
 #'
 #' @param .data Data frame containing the main data.
-#' @param .cell_group The cell group to be analysed.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' 
@@ -1799,8 +1797,8 @@ plot_1d_intervals = function(.data, .cell_group, significance_threshold = 0.05, 
 #' @return A ggplot object representing the 2D interval plot.
 #' @examples
 #' # Example usage:
-#' # plot_2d_intervals(.data, "cell_group", theme_minimal(), 0.025)
-plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+#' # plot_2D_intervals(.data, "cell_group", theme_minimal(), 0.025)
+plot_2D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
   
   # Define the variables as NULL to avoid CRAN NOTES
   v_effect <- NULL
@@ -1816,7 +1814,7 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05, 
   multipanel_theme <- NULL
   
   
-  .cell_group = enquo(.cell_group)
+  .cell_group = attr(.data, ".cell_group")
   
   # Check if test have been done
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
@@ -1875,11 +1873,7 @@ plot_2d_intervals = function(.data, .cell_group, significance_threshold = 0.05, 
         facet_wrap(~parameter, scales = "free") +
         
         # Apply custom theme
-        multipanel_theme +
-        theme(
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank()
-        )
+        multipanel_theme 
     }
 }
 

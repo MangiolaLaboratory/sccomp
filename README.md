@@ -112,13 +112,6 @@ sccomp_result =
 
 ## Summary plots
 
-``` r
-plots = sccomp_result |> plot() 
-```
-
-    ## Joining with `by = join_by(cell_group, sample)`
-    ## Joining with `by = join_by(cell_group, type)`
-
 A plot of group proportion, faceted by groups. The blue boxplots
 represent the posterior predictive check. If the model is likely to be
 descriptively adequate to the data, the blue box plot should roughly
@@ -129,12 +122,14 @@ represents the significant associations for composition and/or
 variability.
 
 ``` r
-plots$boxplot
+sccomp_result |> 
+  sccomp_boxplot(factor = "type")
 ```
 
-    ## [[1]]
+    ## Joining with `by = join_by(cell_group, sample)`
+    ## Joining with `by = join_by(cell_group, type)`
 
-![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-10-1.png)<!-- -->
 
 A plot of estimates of differential composition (c\_) on the x-axis and
 differential variability (v\_) on the y-axis. The error bars represent
@@ -144,10 +139,11 @@ significant if bigger than the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.
 
 ``` r
-plots$credible_intervals_1D
+sccomp_result |> 
+  plot_1D_intervals()
 ```
 
-![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
 
 We can plot the relationship between abundance and variability. As we
 can see below, they are positively correlated, you also appreciate that
@@ -158,10 +154,17 @@ estimates of both the abundance and the variability. This shrinkage is
 adaptive as it is modelled jointly, thanks for Bayesian inference.
 
 ``` r
-plots$credible_intervals_2D
+sccomp_result |> 
+  plot_2D_intervals()
 ```
 
-![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
+
+You can produce the series of plots calling the `plot` method.
+
+``` r
+sccomp_result |> plot() 
+```
 
 ## Contrasts
 
@@ -180,16 +183,16 @@ seurat_obj |>
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -1.79    -1.24   -0.676 0       0            NA
-    ##  2 B immature  typeheal… <NA>     0.676    1.24    1.79  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.44    -1.78   -1.16  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.16     1.78    2.44  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.32    -0.927  -0.535 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.535    0.927   1.32  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.780    1.73    2.71  0.00100 1.67e-4      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.71    -1.73   -0.780 0.00100 1.67e-4      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.398    1.05    1.66  0.00200 5.00e-4      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.66    -1.05   -0.398 0.00200 5.00e-4      NA
+    ##  1 B immature  typecanc… <NA>    -1.94     -1.40  -0.869 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.869     1.40   1.94  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.32     -1.80  -1.24  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.24      1.80   2.32  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.54     -1.10  -0.648 0       0            NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.648     1.10   1.54  0       0            NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.833     1.87   2.94  2.50e-4 5.00e-5      NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.94     -1.87  -0.833 2.50e-4 5.00e-5      NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.467     1.11   1.78  2.00e-3 5.23e-4      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.78     -1.11  -0.467 2.00e-3 5.23e-4      NA
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -267,16 +270,16 @@ res
     ## # A tibble: 60 × 14
     ##    cell_group        parameter factor c_lower c_effect c_upper c_n_eff c_R_k_hat
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>     <dbl>
-    ##  1 B immature        (Interce… <NA>    0.225     0.634   1.03      NaN      3.17
-    ##  2 B immature        typeheal… type    1.20      1.80    2.36      NaN      3.15
-    ##  3 B mem             (Interce… <NA>   -1.26     -0.864  -0.466     NaN      3.14
-    ##  4 B mem             typeheal… type    1.26      1.81    2.46      NaN      3.14
-    ##  5 CD4 cm S100A4     (Interce… <NA>    1.48      1.74    2.02      NaN      3.09
-    ##  6 CD4 cm S100A4     typeheal… type    0.575     0.967   1.38      NaN      3.12
-    ##  7 CD4 cm high cyto… (Interce… <NA>   -1.17     -0.655  -0.182     NaN      3.03
-    ##  8 CD4 cm high cyto… typeheal… type   -1.97     -1.27   -0.610     NaN      3.20
-    ##  9 CD4 cm ribosome   (Interce… <NA>   -0.0221    0.411   0.848     NaN      3.17
-    ## 10 CD4 cm ribosome   typeheal… type   -1.60     -0.974  -0.420     NaN      3.20
+    ##  1 B immature        (Interce… <NA>    0.459     0.791  1.12       NaN      2.43
+    ##  2 B immature        typeheal… type    0.946     1.41   1.89       NaN      2.42
+    ##  3 B mem             (Interce… <NA>   -1.25     -0.828 -0.401      NaN      2.51
+    ##  4 B mem             typeheal… type    1.33      1.95   2.56       NaN      2.51
+    ##  5 CD4 cm S100A4     (Interce… <NA>    1.36      1.62   1.88       NaN      2.43
+    ##  6 CD4 cm S100A4     typeheal… type    0.757     1.15   1.53       NaN      2.38
+    ##  7 CD4 cm high cyto… (Interce… <NA>   -1.08     -0.495  0.0909     NaN      2.44
+    ##  8 CD4 cm high cyto… typeheal… type   -2.32     -1.58  -0.852      NaN      2.45
+    ##  9 CD4 cm ribosome   (Interce… <NA>   -0.0578    0.339  0.724      NaN      2.46
+    ## 10 CD4 cm ribosome   typeheal… type   -1.57     -1.05  -0.516      NaN      2.43
     ## # ℹ 50 more rows
     ## # ℹ 6 more variables: v_lower <dbl>, v_effect <dbl>, v_upper <dbl>,
     ## #   v_n_eff <dbl>, v_R_k_hat <dbl>, count_data <list>

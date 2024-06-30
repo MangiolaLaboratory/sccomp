@@ -418,8 +418,7 @@ test_that("plot_1d_intervals function works correctly", {
 
     my_estimate |> 
     sccomp_test() |> 
-    plot_1d_intervals(
-    .cell_group = cell_group,
+    plot_1D_intervals(
     significance_threshold = 0.025
   ) |> 
   expect_s3_class("patchwork")
@@ -429,8 +428,7 @@ test_that("plot_1d_intervals function works correctly", {
 test_that("plot_2d_intervals function works correctly", {
   my_estimate |> 
     sccomp_test() |> 
-    plot_2d_intervals(
-      .cell_group = cell_group,
+    plot_2D_intervals(
       significance_threshold = 0.025
     ) |>
   expect_s3_class("ggplot")
