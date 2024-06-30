@@ -1027,6 +1027,9 @@ sccomp_test.sccomp_tbl = function(.data,
       add_attr(.data |> attr("fit") , "fit")
 
   result |>
+    
+    add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
+    
     # Attach association mean concentration
     add_attr(.data |> attr("model_input") , "model_input") |>
     add_attr(.data |> attr("truncation_df2"), "truncation_df2") |>
@@ -1501,6 +1504,7 @@ simulate_data.tbl = function(.data,
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param factor A character string for a factor of interest included in the model
 #' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #'
 #' @return A `ggplot`
 #'
@@ -1519,13 +1523,18 @@ simulate_data.tbl = function(.data,
 #'   sccomp_test()
 #'
 #' # estimate |> sccomp_boxplot()
-sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
+sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
 
 
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
   .sample = attr(.data, ".sample")
 
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+  
+  
   data_proportion =
     .data %>%
 
@@ -1566,7 +1575,9 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #' @importFrom magrittr equals
 #'
 #' @param x A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
-#' @param ... parameters like significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param ... For internal use 
 #'
 #' @return A `ggplot`
 #'
@@ -1585,8 +1596,13 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #'
 #' # estimate |> plot()
 #'
-plot.sccomp_tbl <- function(x,  ...) {
+plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), ...) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  parameter <- NULL
+  count_data <- NULL
+  v_effect <- NULL
+  
   .cell_group = attr(x, ".cell_group")
   .count = attr(x, ".count")
   .sample = attr(x, ".sample")
@@ -1638,7 +1654,7 @@ else {
               .cell_group = !!.cell_group,
               .sample =  !!.sample,
               my_theme = multipanel_theme,
-              ...
+              significance_threshold = significance_threshold
             )
         
         # If discrete
@@ -1651,7 +1667,7 @@ else {
               .cell_group = !!.cell_group,
               .sample =  !!.sample,
               my_theme = multipanel_theme,
-              ...
+              significance_threshold = significance_threshold
             ) 
         
         # Return
@@ -1662,10 +1678,10 @@ else {
 }
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+plots$credible_intervals_1D = plot_1D_intervals(.data = x, significance_threshold = significance_threshold)
 
 # 2D intervals
-if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2D_intervals(.data = x, significance_threshold = significance_threshold)
 
 plots
 

@@ -335,6 +335,12 @@ sccomp_glm_data_frame_counts = function(.data,
 
 #' @importFrom stats model.matrix
 get_mean_precision = function(fit, data_for_model){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  `2.5%` <- NULL
+  `97.5%` <- NULL
+  
   fit %>%
     summary_to_tibble("alpha", "C", "M") %>%
 
