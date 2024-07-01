@@ -264,7 +264,8 @@ vb_iterative = function(model,
                         seed, 
                         init = "random",
                         inference_method,
-                        cores = 1,
+                        cores = 1, 
+                        verbose = TRUE,
                         ...) {
   res = NULL
   i = 0
@@ -272,38 +273,45 @@ vb_iterative = function(model,
     res = tryCatch({
 
       if(inference_method=="pathfinder")
-        my_res = model$pathfinder(
-        	data = data,
-        	tol_rel_obj = tol_rel_obj,
-        	output_dir = output_dir,
-        	seed = seed+i,
-        	# init = init,
-        	num_paths=50, 
-          num_threads = cores,
-        	single_path_draws = output_samples / 50 ,
-        	max_lbfgs_iters=100, 
-        	history_size = 100, 
-        	...
-
-        )
+        my_res = model |> 
+          sample_safe(
+            pathfinder_fx,
+          	data = data,
+          	tol_rel_obj = tol_rel_obj,
+          	output_dir = output_dir,
+          	seed = seed+i,
+          	# init = init,
+          	num_paths=50, 
+            num_threads = cores,
+          	single_path_draws = output_samples / 50 ,
+          	max_lbfgs_iters=100, 
+          	history_size = 100, 
+            show_messages = verbose,
+          	...
+          )
     
       else if(inference_method=="variational")
-        my_res = model$variational(
-          data = data,
-          output_samples = output_samples,
-          iter = iter,
-          tol_rel_obj = tol_rel_obj,
-          output_dir = output_dir,
-          seed = seed+i,
-          init = init,
-          ...
-        )
+        my_res = model |> 
+          sample_safe(
+            variational_fx,
+            data = data,
+            output_samples = output_samples,
+            iter = iter,
+            tol_rel_obj = tol_rel_obj,
+            output_dir = output_dir,
+            seed = seed+i,
+            init = init,
+            show_messages = verbose,
+            ...
+          )
 
       boolFalse <- TRUE
       return(my_res)
     },
     error = function(e) {
-      writeLines(sprintf("Further attempt with Variational Bayes: %s", e))
+      
+      writeLines(sprintf("Further attempt with Variational Bayes: %s", e))     
+      
       return(NULL)
     },
     finally = {
@@ -450,7 +458,7 @@ label_deleterious_outliers = function(.my_data){
 #' @importFrom readr write_file
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
-  warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = FALSE,
+  warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
   seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
 )
 {
@@ -504,7 +512,6 @@ fit_model = function(
     
   }
  
-  
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
 
@@ -516,8 +523,10 @@ fit_model = function(
   
   
   if(inference_method == "hmc"){
-#mod$compile()
-      mod$sample(
+
+    tryCatch({
+      mod |> sample_safe(
+        sample_fx,
         data = data_for_model ,
         chains = chains,
         parallel_chains = chains,
@@ -528,9 +537,22 @@ fit_model = function(
         seed = seed,
         save_warmup = FALSE,
         init = init,
-        output_dir = output_directory
-      ) %>%
-      suppressWarnings()
+        output_dir = output_directory,
+        show_messages = verbose
+      ) |> 
+        suppressWarnings()
+      
+    },
+    error = function(e) {
+      
+      # I don't know why thi is needed nd why the model sometimes is not compliled correctly
+      if(e |> as.character() |>  str_detect("Model not compiled"))
+        model = load_model("glm_multi_beta_binomial", force=TRUE)
+      else 
+        stop()   
+      
+    })
+    
 
 }
   else
@@ -545,7 +567,8 @@ fit_model = function(
       init = pf , #list(init_list),
       inference_method = inference_method, 
       cores = cores,
-      psis_resample = FALSE
+      psis_resample = FALSE, 
+      verbose = verbose
     ) %>%
       suppressWarnings()
 
@@ -2921,7 +2944,8 @@ replicate_data = function(.data,
   
   
   # Generate quantities
-  mod_rng$generate_quantities(
+  mod_rng |> sample_safe(
+    generate_quantities_fx,
     attr(.data, "fit")$draws(format = "matrix")[
       sample(seq_len(number_of_draws_in_the_fit), size=number_of_draws),, drop=FALSE
     ],
@@ -2944,13 +2968,6 @@ replicate_data = function(.data,
     seed = mcmc_seed, 
     threads_per_chain = 1
   )
-
-
-
-  
-  
-  
-  
 }
 
 get_model_from_data = function(file_compiled_model, model_code){
@@ -3314,7 +3331,7 @@ get_output_samples = function(fit){
 #' \dontrun{
 #'   model <- load_model("glm_multi_beta_binomial_", "~/cache")
 #' }
-load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir) {
+load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FALSE) {
   
   
   # tryCatch({
@@ -3327,7 +3344,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir) {
     # Try to load the model from cache
   cache_dir |> dir.create(showWarnings = FALSE, recursive = TRUE)
     cache_file <- file.path(cache_dir, paste0(name, ".rds"))
-    if (file.exists(cache_file)) {
+    if (file.exists(cache_file) & !force) {
       message("Loading model from cache...")
       return(readRDS(cache_file))
     }

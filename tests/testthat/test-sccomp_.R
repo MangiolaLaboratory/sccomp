@@ -66,8 +66,7 @@ my_estimate_random =
     sample, cell_group,
     cores = 1,
     mcmc_seed = 42,     
-    max_sampling_iterations = 1000,
-    variational_inference = FALSE
+    max_sampling_iterations = 1000
   )
 
 # my_estimate_random2 = 

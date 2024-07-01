@@ -653,7 +653,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   # Load model
   mod_rng = load_model("glm_multi_beta_binomial_generate_data")
 
-  rng = mod_rng$generate_quantities(
+  rng = mod_rng |> sample_safe(
+    generate_quantities_fx,
     attr(.estimate , "fit")$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
@@ -750,7 +751,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
   
-  rng2 =  mod_rng$generate_quantities(
+  rng2 =  mod_rng |> sample_safe(
+    generate_quantities_fx,
     fit2$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
