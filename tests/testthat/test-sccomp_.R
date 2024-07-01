@@ -32,7 +32,7 @@ my_estimate =
     sample, cell_group,
     cores = 1, inference_method = "pathfinder",
      mcmc_seed = 42,
-    max_sampling_iterations = 1000
+    max_sampling_iterations = 1000, verbose=FALSE
   )
 
 my_estimate_full_bayes = 
@@ -44,7 +44,7 @@ my_estimate_full_bayes =
     cores = 1, 
     inference_method = "hmc",
     mcmc_seed = 42,
-    max_sampling_iterations = 1000
+    max_sampling_iterations = 1000, verbose=FALSE
   )
 
 my_estimate_no_intercept = 
@@ -55,7 +55,7 @@ my_estimate_no_intercept =
     sample, cell_group,
     cores = 1,
     mcmc_seed = 42,
-    max_sampling_iterations = 1000
+    max_sampling_iterations = 1000, verbose=FALSE
   )
 
 my_estimate_random = 
@@ -66,7 +66,7 @@ my_estimate_random =
     sample, cell_group,
     cores = 1,
     mcmc_seed = 42,     
-    max_sampling_iterations = 1000
+    max_sampling_iterations = 1000, verbose=FALSE
   )
 
 # my_estimate_random2 = 
@@ -168,7 +168,10 @@ test_that("outliers",{
   
 
   my_estimate |>
-    sccomp_remove_outliers(cores = 1, max_sampling_iterations = 1000, variational_inference = FALSE)
+    sccomp_remove_outliers(
+      cores = 1, max_sampling_iterations = 1000, inference_method = "hmc",
+       verbose=FALSE
+    )
   
 })
 
@@ -183,7 +186,7 @@ test_that("multilevel multi beta binomial from Seurat",{
       sample, cell_group,
       cores = 1,
       mcmc_seed = 42,     
-      max_sampling_iterations = 1000
+      max_sampling_iterations = 1000, verbose=FALSE
     )
 
   # # Check order
@@ -229,7 +232,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       cores = 1,
       mcmc_seed = 42,   
       max_sampling_iterations = 1000,
-      variational_inference = FALSE
+      variational_inference = FALSE, verbose=FALSE
     )
 
     expect(
@@ -325,7 +328,7 @@ test_that("remove unwanted variation",{
       sample, cell_group,
       cores = 1,
       mcmc_seed = 43,    
-      max_sampling_iterations = 1000
+      max_sampling_iterations = 1000, verbose = FALSE
     )
 
   estimate |>
@@ -344,7 +347,7 @@ test_that("multi beta binomial from SCE",{
       cell_group,
       cores = 1,
       mcmc_seed = 42,      
-      max_sampling_iterations = 1000
+      max_sampling_iterations = 1000, verbose = FALSE
     )
 
   # res |>
@@ -370,7 +373,7 @@ res_composition =
     cell_group,
     cores = 1,
     mcmc_seed = 42,   
-    max_sampling_iterations = 1000
+    max_sampling_iterations = 1000, verbose = FALSE
   )
 
 res_composition_variability =
@@ -382,7 +385,7 @@ res_composition_variability =
     cell_group,
     cores = 1,
     mcmc_seed = 42,    
-    max_sampling_iterations = 1000
+    max_sampling_iterations = 1000, verbose = FALSE
   )
 
 test_that("multi beta binomial from metadata",{
