@@ -441,9 +441,7 @@ sccomp_estimate.data.frame = function(.data,
   res  |> 
 
     # Track input parameters
-    add_attr(noise_model, "noise_model")  |> 
-    add_attr(.sample, ".sample")  |> 
-    add_attr(.cell_group, ".cell_group")
+    add_attr(noise_model, "noise_model")
 }
 
 
