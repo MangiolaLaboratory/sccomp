@@ -100,7 +100,7 @@ sccomp_estimate <- function(.data,
                        cores = detectCores(),
                        bimodal_mean_variability_association = FALSE,
                        percent_false_positive = 5,
-                       variational_inference = TRUE,
+                       variational_inference = FALSE,
                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                        .sample_cell_group_pairs_to_exclude = NULL,
@@ -119,10 +119,17 @@ sccomp_estimate <- function(.data,
                        ) {
   if(variational_inference == TRUE) 
     rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = TRUE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = FALSE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
       .frequency = "once", 
       .frequency_id = "variational_message"
     )
+  
+  rlang::inform(
+      message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has be changed from 0.2 to 0.1.", 
+      .frequency = "once", 
+      .frequency_id = "new_logit_fold_change_threshold"
+  )
+  
   
   UseMethod("sccomp_estimate", .data)
 }
@@ -139,7 +146,7 @@ sccomp_estimate.Seurat = function(.data,
                                   cores = detectCores(),
                                   bimodal_mean_variability_association = FALSE,
                                   percent_false_positive = 5,
-                                  variational_inference = TRUE,
+                                  variational_inference = FALSE,
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
@@ -208,7 +215,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 cores = detectCores(),
                                                 bimodal_mean_variability_association = FALSE,
                                                 percent_false_positive = 5,
-                                                variational_inference = TRUE,
+                                                variational_inference = FALSE,
                                                 prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                                 prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                                 .sample_cell_group_pairs_to_exclude = NULL,
@@ -280,7 +287,7 @@ sccomp_estimate.DFrame = function(.data,
                                   cores = detectCores(),
                                   bimodal_mean_variability_association = FALSE,
                                   percent_false_positive = 5,
-                                  variational_inference = TRUE,
+                                  variational_inference = FALSE,
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
@@ -351,7 +358,7 @@ sccomp_estimate.data.frame = function(.data,
                                       cores = detectCores(),
                                       bimodal_mean_variability_association = FALSE,
                                       percent_false_positive = 5,
-                                      variational_inference = TRUE,
+                                      variational_inference = FALSE,
                                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                       .sample_cell_group_pairs_to_exclude = NULL,
@@ -434,9 +441,7 @@ sccomp_estimate.data.frame = function(.data,
   res  |> 
 
     # Track input parameters
-    add_attr(noise_model, "noise_model")  |> 
-    add_attr(.sample, ".sample")  |> 
-    add_attr(.cell_group, ".cell_group")
+    add_attr(noise_model, "noise_model")
 }
 
 
@@ -509,7 +514,7 @@ sccomp_estimate.data.frame = function(.data,
 sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
-                                   variational_inference = TRUE,
+                                   variational_inference = FALSE,
                                    verbose = TRUE,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
@@ -520,7 +525,7 @@ sccomp_remove_outliers <- function(.estimate,
 ) {
   if(variational_inference == TRUE) 
     rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = TRUE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = FALSE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
       .frequency = "once", 
       .frequency_id = "variational_message"
     )
@@ -532,7 +537,7 @@ sccomp_remove_outliers <- function(.estimate,
 sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
-                                             variational_inference = TRUE,
+                                             variational_inference = FALSE,
                                              verbose = TRUE,
                                              mcmc_seed = sample(1e5, 1),
                                              max_sampling_iterations = 20000,
@@ -829,7 +834,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 sccomp_test <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
-                           test_composition_above_logit_fold_change = 0.2,
+                           test_composition_above_logit_fold_change = 0.1,
                            pass_fit = TRUE) {
   UseMethod("sccomp_test", .data)
 }
@@ -844,7 +849,7 @@ sccomp_test <- function(.data,
 sccomp_test.sccomp_tbl = function(.data,
                                      contrasts = NULL,
                                      percent_false_positive = 5,
-                                     test_composition_above_logit_fold_change = 0.2,
+                                     test_composition_above_logit_fold_change = 0.1,
                                      pass_fit = TRUE){
 
 
@@ -939,6 +944,9 @@ sccomp_test.sccomp_tbl = function(.data,
       add_attr(.data |> attr("fit") , "fit")
 
   result |>
+    
+    add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
+    
     # Attach association mean concentration
     add_attr(.data |> attr("model_input") , "model_input") |>
     add_attr(.data |> attr("truncation_df2"), "truncation_df2") |>
@@ -1405,6 +1413,7 @@ simulate_data.tbl = function(.data,
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param factor A character string for a factor of interest included in the model
 #' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #'
 #' @return A `ggplot`
 #'
@@ -1423,13 +1432,18 @@ simulate_data.tbl = function(.data,
 #'   sccomp_test()
 #'
 #' # estimate |> sccomp_boxplot()
-sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
+sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
 
 
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
   .sample = attr(.data, ".sample")
 
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+  
+  
   data_proportion =
     .data %>%
 
@@ -1470,7 +1484,9 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #' @importFrom magrittr equals
 #'
 #' @param x A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
-#' @param ... parameters like significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param ... For internal use 
 #'
 #' @return A `ggplot`
 #'
@@ -1489,8 +1505,13 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #'
 #' # estimate |> plot()
 #'
-plot.sccomp_tbl <- function(x,  ...) {
+plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), ...) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  parameter <- NULL
+  count_data <- NULL
+  v_effect <- NULL
+  
   .cell_group = attr(x, ".cell_group")
   .count = attr(x, ".count")
   .sample = attr(x, ".sample")
@@ -1542,7 +1563,7 @@ else {
               .cell_group = !!.cell_group,
               .sample =  !!.sample,
               my_theme = multipanel_theme,
-              ...
+              significance_threshold = significance_threshold
             )
         
         # If discrete
@@ -1555,7 +1576,7 @@ else {
               .cell_group = !!.cell_group,
               .sample =  !!.sample,
               my_theme = multipanel_theme,
-              ...
+              significance_threshold = significance_threshold
             ) 
         
         # Return
@@ -1566,10 +1587,10 @@ else {
 }
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+plots$credible_intervals_1D = plot_1D_intervals(.data = x, significance_threshold = significance_threshold)
 
 # 2D intervals
-if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2D_intervals(.data = x, significance_threshold = significance_threshold)
 
 plots
 

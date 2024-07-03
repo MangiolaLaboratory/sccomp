@@ -95,10 +95,6 @@ res
 
 ## Summary plots
 
-```{r, out.height="200%"}
-plots = plot(res) 
-```
-
 ### Visualise the descriptive adequacy of the model
 
 A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be
@@ -107,7 +103,8 @@ outliers are coloured in red. A box plot will be returned for every (discrete) c
 represents the significant associations for composition and/or variability.
 
 ```{r}
-plots$boxplot
+sccomp_result |> 
+  sccomp_boxplot(factor = "type")
 ```
 
 
@@ -117,7 +114,8 @@ We can plot the relationship between abundance and variability. As we can see be
 
 
 ```{r}
-plots$credible_intervals_2D
+sccomp_result |> 
+  plot_1D_intervals()
 ```
 
 
@@ -137,7 +135,14 @@ It is possible to directly evaluate the posterior distribution. In this example,
 first cell type. We can see that it has converged and is negative with probability 1.
 
 ```{r}
-res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
+sccomp_result |> 
+  plot_2D_intervals()
+```
+
+You can produce the series of plots calling the `plot` method.
+
+```{r, out.height="200%", eval=FALSE}
+sccomp_result |> plot() 
 ```
 
 

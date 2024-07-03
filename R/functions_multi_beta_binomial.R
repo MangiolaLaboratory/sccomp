@@ -15,7 +15,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      variational_inference = TRUE,
-                                     test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                     test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                      verbose = FALSE,
                                      exclude_priors = FALSE,
                                      bimodal_mean_variability_association = FALSE,
@@ -115,7 +115,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         variational_inference = TRUE,
-                                        test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                        test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                         verbose = FALSE,
                                         exclude_priors = FALSE,
                                         bimodal_mean_variability_association = FALSE,
@@ -302,12 +302,12 @@ sccomp_glm_data_frame_counts = function(.data,
     add_attr(fit, "fit") %>%
     add_attr(data_for_model, "model_input") |>
     add_attr(.data, "truncation_df2") |>
-    add_attr(.sample, ".sample") |>
-    add_attr(.cell_group, ".cell_group") |>
-    add_attr(.count, ".count") |>
+    add_attr(.sample |> drop_environment(), ".sample") |>
+    add_attr(.cell_group |> drop_environment(), ".cell_group") |>
+    add_attr(.count |> drop_environment(), ".count") |>
     add_attr(check_outliers, "check_outliers") |>
-    add_attr(formula_composition, "formula_composition") |>
-    add_attr(formula_variability, "formula_variability") |>
+    add_attr(formula_composition |> drop_environment(), "formula_composition") |>
+    add_attr(formula_variability |> drop_environment(), "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     
     # Add class to the tbl
@@ -333,6 +333,12 @@ sccomp_glm_data_frame_counts = function(.data,
 
 #' @importFrom stats model.matrix
 get_mean_precision = function(fit, data_for_model){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  `2.5%` <- NULL
+  `97.5%` <- NULL
+  
   fit %>%
     summary_to_tibble("alpha", "C", "M") %>%
 

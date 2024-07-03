@@ -1,4 +1,5 @@
 library(dplyr)
+library(tidyr)
 library(sccomp)
 data("seurat_obj")
 data("sce_obj")
@@ -407,6 +408,35 @@ test_that("plot test variability",{
     plot()
 
 
+})
+
+# Test for plot_boxplot function
+test_that("plot_boxplot function works correctly", {
+  my_estimate |> 
+    sccomp_test() |> 
+    sccomp_boxplot("type", significance_threshold = 0.025) |> 
+  expect_s3_class( "ggplot")
+})
+
+# Test for plot_1d_intervals function
+test_that("plot_1d_intervals function works correctly", {
+
+    my_estimate |> 
+    sccomp_test() |> 
+    plot_1D_intervals(
+    significance_threshold = 0.025
+  ) |> 
+  expect_s3_class("patchwork")
+})
+
+# Test for plot_2d_intervals function
+test_that("plot_2d_intervals function works correctly", {
+  my_estimate |> 
+    sccomp_test() |> 
+    plot_2D_intervals(
+      significance_threshold = 0.025
+    ) |>
+  expect_s3_class("ggplot")
 })
 
 test_that("test constrasts",{
