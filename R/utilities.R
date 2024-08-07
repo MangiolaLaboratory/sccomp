@@ -1127,20 +1127,9 @@ data_spread_to_model_input =
       random_intercept_grouping = get_random_intercept_design2(.data_spread, !!.sample,  formula )
 
       # Actual parameters, excluding for the sum to one parameters
-      N_random_intercepts = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow())) |> pull(n) |> sum()
+      is_random_effect = 1
 
-      # Number of sum to one
-      N_minus_sum = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(minus_sum>0) |> distinct(minus_sum) |> nrow())) |> pull(n) |> sum()
-
-      paring_cov_random_intercept =
-        random_intercept_grouping |>
-        mutate(mat = map(design, ~ .x |> distinct(factor___numeric, mean_idx) |> filter(mean_idx>0) )) |>
-        select(mat) |>
-        unnest(mat) |>
-        arrange(factor___numeric, mean_idx) |>
-        as_matrix()
-
-      X_random_intercept =
+      random_intercept_grouping =
         random_intercept_grouping |>
         mutate(design_matrix = map(
           design,
@@ -1148,30 +1137,26 @@ data_spread_to_model_input =
             select(!!.sample, group___label, value) |>
             pivot_wider(names_from = group___label, values_from = value) |>
             mutate(across(everything(), ~ .x |> replace_na(0)))
-        )) |>
+        )) 
+      
+      
+      X_random_intercept = random_intercept_grouping |> pull(design_matrix) |> _[[1]]  |>  as_matrix(rownames = quo_name(.sample))
+      
+      # For now that stan does not have tuples, I just allow max two levels
+      if(random_intercept_grouping |> nrow() > 2) stop("sccomp says: at the moment sccomp allow max two groupings")
+      # This will be modularised with the new stan
+      if(random_intercept_grouping |> nrow() > 1)
+        X_random_intercept_2 =   random_intercept_grouping |> pull(design_matrix) |> _[[2]] |>  as_matrix(rownames = quo_name(.sample))
+      else X_random_intercept_2 =  X_random_intercept[,0,drop=FALSE]
 
-        # Merge
-        pull(design_matrix) |>
-      	reduce(left_join, by = join_by(!!.sample)) |>
-        as_matrix(rownames = quo_name(.sample))
-
-    idx_group_random_intercepts =
-      random_intercept_grouping |>
-      mutate(design = map(design, ~ .x |> select(mean_idx, minus_sum, group___numeric, group___label))) |>
-      select(design) |>
-      unnest(design) |>
-
-      mutate(minus_sum = -minus_sum) |>
-      mutate(idx = mean_idx + minus_sum) |>
-      distinct(group___numeric, idx, group___label) |>
-      as_matrix(rownames = "group___label")
-
-
+    N_groups = random_intercept_grouping |> nrow()
+    
     N_grouping =
       random_intercept_grouping |>
       mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
-      pull(n) |> sum()
-
+      pull(n) 
+    
+    if(N_grouping |> length() < 2) N_grouping[2] = 0
     
     # TEMPORARY
     group_factor_indexes_for_covariance = 
@@ -1184,20 +1169,32 @@ data_spread_to_model_input =
     	pivot_wider(names_from = group, values_from = order)  |> 
     	as_matrix(rownames = "factor")
     
-    how_many_groups = ncol(group_factor_indexes_for_covariance )
-    how_many_factors_in_random_design = nrow(group_factor_indexes_for_covariance )
+    # This will be modularised with the new stan
+    if(random_intercept_grouping |> nrow() > 1)
+      group_factor_indexes_for_covariance_2 = 
+        X_random_intercept_2 |> 
+        colnames() |> 
+        enframe(value = "parameter", name = "order")  |> 
+        separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
+        complete(factor, group, fill = list(order=0)) |> 
+        select(-parameter) |> 
+        pivot_wider(names_from = group, values_from = order)  |> 
+        as_matrix(rownames = "factor")
+    else group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE]
+    
+    
+    how_many_factors_in_random_design = list(group_factor_indexes_for_covariance, group_factor_indexes_for_covariance_2) |> map_int(nrow)
     
     
     } else {
-      X_random_intercept = matrix(rep(1, nrow(.data_spread)))[,0]
-      N_random_intercepts = 0
-      N_minus_sum = 0
-      N_grouping =0
-      paring_cov_random_intercept = matrix(c(1, 1), ncol = 2)[0,]
-      idx_group_random_intercepts = matrix(c(1, 1), ncol = 2)[0,]
-      how_many_groups = 0
+      X_random_intercept = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
+      X_random_intercept_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
+      is_random_effect = 0
+      N_grouping = c(0,0)
+      N_groups = 0
       how_many_factors_in_random_design = 0
-      group_factor_indexes_for_covariance = matrix()[0,0]
+      group_factor_indexes_for_covariance = matrix()[0,0, drop=FALSE]
+      group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE] # This will be modularised with the new stan
     }
     
     
@@ -1219,14 +1216,13 @@ data_spread_to_model_input =
         use_data = use_data,
 
         # Random intercept
-        N_random_intercepts = N_random_intercepts,
-        N_minus_sum = N_minus_sum,
-        paring_cov_random_intercept = paring_cov_random_intercept,
+        is_random_effect = is_random_effect,
         N_grouping = N_grouping,
+        N_groups = N_groups,
         X_random_intercept = X_random_intercept,
-        idx_group_random_intercepts = idx_group_random_intercepts,
+        X_random_intercept_2 = X_random_intercept_2,
         group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
-        how_many_groups = how_many_groups,
+        group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
         how_many_factors_in_random_design = how_many_factors_in_random_design,
         
         ## LOO
@@ -2437,7 +2433,6 @@ get_abundance_contrast_draws = function(.data, contrasts){
   # Define the variables as NULL to avoid CRAN NOTES
   X <- NULL
   .value <- NULL
-  N_random_intercepts <- NULL
   X_random_intercept <- NULL
   .variable <- NULL
   y <- NULL
@@ -2446,6 +2441,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   parameter <- NULL
   n_eff <- NULL
   R_k_hat <- NULL
+  
   
   .cell_group = .data |>  attr(".cell_group")
 
@@ -2458,15 +2454,11 @@ get_abundance_contrast_draws = function(.data, contrasts){
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
 
-  # Random intercept
-  is_random_intercept =
-    .data |>
-    attr("model_input") %$%
-    N_random_intercepts |>
-    equals(0) |>
-    not()
-
-  if(is_random_intercept){
+  # Abundance
+  draws = select(beta, -.variable)
+  
+  # Random effect
+  if(.data |> attr("model_input") %$% N_groups > 0){
     beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
     beta_random_intercept =
       .data |>
@@ -2474,20 +2466,33 @@ get_abundance_contrast_draws = function(.data, contrasts){
       draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
       pivot_wider(names_from = C, values_from = .value) %>%
       setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
-  } else {
+    
+    draws = draws |> 
+      left_join(select(beta_random_intercept, -.variable),
+                by = c("M", ".chain", ".iteration", ".draw")
+      )
+  }  else {
     beta_random_intercept_factor_of_interest = ""
   }
-
-
-  # Abundance
-  draws = select(beta, -.variable)
   
-  # Random intercept
-  if(is_random_intercept) 
+  # Second random effect. IN THE FUTURE THIS WILL BE VECTORISED TO ARBUTRARY GRI+OUING
+  if(.data |> attr("model_input") %$% N_groups > 1){
+    beta_random_intercept_factor_of_interest_2 = .data |> attr("model_input") %$% X_random_intercept_2 |> colnames()
+    beta_random_intercept_2 =
+      .data |>
+      attr("fit") %>%
+      draws_to_tibble_x_y("beta_random_intercept_2", "C", "M") |>
+      pivot_wider(names_from = C, values_from = .value) %>%
+      setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest_2))
+    
     draws = draws |> 
-    left_join(select(beta_random_intercept, -.variable),
-              by = c("M", ".chain", ".iteration", ".draw")
-    )
+      left_join(select(beta_random_intercept_2, -.variable),
+                by = c("M", ".chain", ".iteration", ".draw")
+      )
+  } else {
+    beta_random_intercept_factor_of_interest_2 = ""
+  }
+
   
   # If I have constrasts calculate
   if(!is.null(contrasts))
