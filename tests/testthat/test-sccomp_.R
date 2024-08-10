@@ -44,7 +44,7 @@ my_estimate_no_intercept =
 my_estimate_random = 
   seurat_obj |>
   sccomp_estimate(
-    formula_composition = ~ 0 + type + (type | group__),
+    formula_composition = ~ type + (type | group__),
     formula_variability = ~ 1,
     sample, cell_group,
     cores = 1,

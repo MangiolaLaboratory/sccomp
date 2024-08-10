@@ -1192,7 +1192,7 @@ data_spread_to_model_input =
       is_random_effect = 0
       N_grouping = c(0,0)
       N_groups = 0
-      how_many_factors_in_random_design = 0
+      how_many_factors_in_random_design = c(0,0)
       group_factor_indexes_for_covariance = matrix()[0,0, drop=FALSE]
       group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE] # This will be modularised with the new stan
     }
