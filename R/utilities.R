@@ -717,12 +717,12 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 
        mydesign = .data_ |> get_design_matrix(.x, !!.sample)
 
-       mydesign_grouping = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
-       mydesign_grouping[mydesign==0L] = NA
-       colnames(mydesign_grouping) = colnames(mydesign)
-       rownames(mydesign_grouping) = rownames(mydesign)
+       mydesigncol_X_random_eff = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
+       mydesigncol_X_random_eff[mydesign==0L] = NA
+       colnames(mydesigncol_X_random_eff) = colnames(mydesign)
+       rownames(mydesigncol_X_random_eff) = rownames(mydesign)
 
-       mydesign_grouping |>
+       mydesigncol_X_random_eff |>
          as_tibble(rownames = quo_name(.sample)) |>
          pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
          filter(!is.na(grouping)) |>
@@ -1149,14 +1149,14 @@ data_spread_to_model_input =
         X_random_intercept_2 =   random_intercept_grouping |> pull(design_matrix) |> _[[2]] |>  as_matrix(rownames = quo_name(.sample))
       else X_random_intercept_2 =  X_random_intercept[,0,drop=FALSE]
 
-    N_groups = random_intercept_grouping |> nrow()
-    
-    N_grouping =
+    n_random_eff = random_intercept_grouping |> nrow()
+      
+    ncol_X_random_eff =
       random_intercept_grouping |>
       mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
       pull(n) 
     
-    if(N_grouping |> length() < 2) N_grouping[2] = 0
+    if(ncol_X_random_eff |> length() < 2) ncol_X_random_eff[2] = 0
     
     # TEMPORARY
     group_factor_indexes_for_covariance = 
@@ -1169,6 +1169,8 @@ data_spread_to_model_input =
     	pivot_wider(names_from = group, values_from = order)  |> 
     	as_matrix(rownames = "factor")
     
+    n_groups = group_factor_indexes_for_covariance |> ncol()
+      
     # This will be modularised with the new stan
     if(random_intercept_grouping |> nrow() > 1)
       group_factor_indexes_for_covariance_2 = 
@@ -1182,6 +1184,7 @@ data_spread_to_model_input =
         as_matrix(rownames = "factor")
     else group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE]
     
+    n_groups = n_groups |> c(group_factor_indexes_for_covariance_2 |> ncol())
     
     how_many_factors_in_random_design = list(group_factor_indexes_for_covariance, group_factor_indexes_for_covariance_2) |> map_int(nrow)
     
@@ -1190,8 +1193,9 @@ data_spread_to_model_input =
       X_random_intercept = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
       X_random_intercept_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
       is_random_effect = 0
-      N_grouping = c(0,0)
-      N_groups = 0
+      ncol_X_random_eff = c(0,0)
+      n_random_eff = 0
+      n_groups = c(0,0)
       how_many_factors_in_random_design = c(0,0)
       group_factor_indexes_for_covariance = matrix()[0,0, drop=FALSE]
       group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE] # This will be modularised with the new stan
@@ -1217,8 +1221,9 @@ data_spread_to_model_input =
 
         # Random intercept
         is_random_effect = is_random_effect,
-        N_grouping = N_grouping,
-        N_groups = N_groups,
+        ncol_X_random_eff = ncol_X_random_eff,
+        n_random_eff = n_random_eff,
+        n_groups  = n_groups,
         X_random_intercept = X_random_intercept,
         X_random_intercept_2 = X_random_intercept_2,
         group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
@@ -2458,7 +2463,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   draws = select(beta, -.variable)
   
   # Random effect
-  if(.data |> attr("model_input") %$% N_groups > 0){
+  if(.data |> attr("model_input") %$% n_random_eff > 0){
     beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
     beta_random_intercept =
       .data |>
@@ -2476,7 +2481,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   }
   
   # Second random effect. IN THE FUTURE THIS WILL BE VECTORISED TO ARBUTRARY GRI+OUING
-  if(.data |> attr("model_input") %$% N_groups > 1){
+  if(.data |> attr("model_input") %$% n_random_eff > 1){
     beta_random_intercept_factor_of_interest_2 = .data |> attr("model_input") %$% X_random_intercept_2 |> colnames()
     beta_random_intercept_2 =
       .data |>
@@ -2817,7 +2822,8 @@ replicate_data = function(.data,
     X_random_intercept_which = array()[0]
     new_X_random_intercept = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
 
-
+    X_random_intercept_which_2 = array()[0]
+    new_X_random_intercept_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
   }
   else {
 
@@ -2829,6 +2835,7 @@ replicate_data = function(.data,
         formula_composition
       )
 
+    # HAVE TO DEBUG
     new_X_random_intercept =
       random_intercept_grouping |>
       mutate(design_matrix = map(
@@ -2840,12 +2847,28 @@ replicate_data = function(.data,
       )) |>
 
       # Merge
-      pull(design_matrix) |>
-      bind_cols() |>
+      pull(design_matrix) |> 
+      _[[1]] |> 
       as_matrix(rownames = quo_name(.sample))  |>
-
       tail(nrow_new_data)
 
+    # HAVE TO DEBUG
+    new_X_random_intercept_2 =
+      random_intercept_grouping |>
+      mutate(design_matrix = map(
+        design,
+        ~ ..1 |>
+          select(!!.sample, group___label, value) |>
+          pivot_wider(names_from = group___label, values_from = value) |>
+          mutate(across(everything(), ~ .x |> replace_na(0)))
+      )) |>
+      
+      # Merge
+      pull(design_matrix) |> 
+      _[[2]] |> 
+      as_matrix(rownames = quo_name(.sample))  |>
+      tail(nrow_new_data)
+    
     # Check if I have column in the new design that are not in the old one
     missing_columns = new_X_random_intercept |> colnames() |> setdiff(colnames(model_input$X_random_intercept))
     if(missing_columns |> length() > 0)
@@ -2860,6 +2883,16 @@ replicate_data = function(.data,
           colnames()
       ) |>
       as.array()
+    
+    # DUPLICATE
+    X_random_intercept_which_2 =
+      colnames(new_X_random_intercept_2) |>
+      match(
+        model_input %$%
+          X_random_intercept_2 %>%
+          colnames()
+      ) |>
+      as.array()
   }
 
   # New X
@@ -2869,7 +2902,9 @@ replicate_data = function(.data,
   model_input$exposure = new_exposure
 
   model_input$X_random_intercept = new_X_random_intercept
-  model_input$N_grouping_new = ncol(new_X_random_intercept)
+  model_input$X_random_intercept_2 = new_X_random_intercept_2
+
+  model_input$ncol_X_random_eff_new = ncol(new_X_random_intercept) |> c(ncol(new_X_random_intercept_2))
 
   # To avoid error in case of a NULL posterior sample
   number_of_draws = min(number_of_draws, nrow(fit_matrix))
@@ -2877,22 +2912,22 @@ replicate_data = function(.data,
   rstan::gqs(
     my_model,
     draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
-    data = model_input |> c(
-
+    data = model_input |> c(list(
       # Add subset of coefficients
       length_X_which = length(X_which),
       length_XA_which = length(XA_which),
-      X_which,
-      XA_which,
+      X_which = X_which,
+      XA_which = XA_which,
 
       # Random intercept
       X_random_intercept_which = X_random_intercept_which,
-      length_X_random_intercept_which = length(X_random_intercept_which),
+      X_random_intercept_which_2 = X_random_intercept_which_2,
+      length_X_random_intercept_which = length(X_random_intercept_which) |> c(length(X_random_intercept_which_2)),
 
       # Should I create intercept for generate quantities
       create_intercept = create_intercept
 
-    ),
+    )),
     seed = mcmc_seed
   )
 

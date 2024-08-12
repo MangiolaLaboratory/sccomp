@@ -606,9 +606,13 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
         
         # Random intercept
-        N_grouping_new = ncol(data_for_model$X_random_intercept), # I could put this in the intial data
-        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
+        ncol_X_random_eff_new = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2) ), # I could put this in the intial data
+        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2)),
         X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        
+        # Random intercept DUPLICATED
+        X_random_intercept_which_2 = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        
         create_intercept = FALSE
       ))
   )
@@ -676,7 +680,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
+      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2")
     )
 
   
@@ -695,9 +699,13 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
       
       # Random intercept
-      N_grouping_new = ncol(data_for_model$X_random_intercept), # I could put this in the intial data
-      length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
+      ncol_X_random_eff_new = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2) ), # I could put this in the intial data
+      length_X_random_intercept_which = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2)),
       X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+      
+      # Random intercept DUPLICATED
+      X_random_intercept_which_2 = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+      
       create_intercept = FALSE
       
     ))
@@ -771,7 +779,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik")
     )
   
   # Create a dummy tibble

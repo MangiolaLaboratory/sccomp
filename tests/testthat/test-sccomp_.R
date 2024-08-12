@@ -155,8 +155,7 @@ test_that("outliers",{
 })
 
 test_that("multilevel multi beta binomial from Seurat",{
-
-  res =
+ res =
     seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
     sccomp_estimate(
@@ -239,6 +238,7 @@ test_that("multilevel nested",{
 
 test_that("multilevel multi beta binomial from Seurat with intercept and continuous covariate",{
 
+  library(sccomp)
 
   res =
     seurat_obj |>
@@ -495,7 +495,7 @@ test_that("test constrasts",{
     expect_warning("These components of your contrasts are not present")
   
   
-  res = my_estimate_random |> 
+  res = my_estimate_no_intercept |> 
     sccomp_test(contrasts = c("1/2*typecancer - 1/2*typehealthy", "1/2*typehealthy - 1/2*typecancer") )
   
   

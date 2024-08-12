@@ -23,11 +23,13 @@ data {
 	real<lower=1> truncation_ajustment;
 
 	// Random intercept
-	int length_X_random_intercept_which;
-	array[length_X_random_intercept_which] int X_random_intercept_which;
-	int N_grouping;
-	int N_grouping_new;
-	matrix[N, N_grouping_new] X_random_intercept;
+	array[2] int length_X_random_intercept_which;
+	array[length_X_random_intercept_which[1]] int X_random_intercept_which;
+	array[2] int ncol_X_random_eff;
+	array[2] int  ncol_X_random_eff_new;
+	matrix[N, ncol_X_random_eff_new[1]] X_random_intercept;
+	matrix[N, ncol_X_random_eff_new[2]] X_random_intercept_2;
+	array[length_X_random_intercept_which[2]] int X_random_intercept_which_2;
 
   // Should I create intercept for generate quantities
   int<lower=0, upper=1> create_intercept;
@@ -38,7 +40,8 @@ transformed data{
   matrix[N,1] X_intercept = to_matrix(rep_vector(1, N));
 
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-  int N_grouping_WINDOWS_BUG_FIX = max(N_grouping, 1);
+  int ncol_X_random_eff_WINDOWS_BUG_FIX = max(ncol_X_random_eff[1], 1);
+  int ncol_X_random_eff_WINDOWS_BUG_FIX_2 = max(ncol_X_random_eff[2], 1);
 }
 parameters {
 
@@ -46,7 +49,8 @@ parameters {
 	matrix[A,M] alpha;
 
 	// Random intercept
-	matrix[N_grouping_WINDOWS_BUG_FIX, M] beta_random_intercept;
+	matrix[ncol_X_random_eff_WINDOWS_BUG_FIX, M] beta_random_intercept;
+	matrix[ncol_X_random_eff_WINDOWS_BUG_FIX_2, M] beta_random_intercept_2;
 
 }
 transformed parameters{
@@ -109,9 +113,15 @@ generated quantities{
   }
 
   // Random intercept
-  if(length_X_random_intercept_which>0){
+  if(length_X_random_intercept_which[1]>0){
       matrix[M, N] mu_random_intercept = (X_random_intercept * beta_random_intercept[X_random_intercept_which,])';
       mu = mu + mu_random_intercept;
+  }
+  
+    // Random intercept 2
+  if(length_X_random_intercept_which[2]>0){
+      matrix[M, N] mu_random_intercept_2 = (X_random_intercept_2 * beta_random_intercept_2[X_random_intercept_which_2,])';
+      mu = mu + mu_random_intercept_2;
   }
 
   // Calculate proportions
