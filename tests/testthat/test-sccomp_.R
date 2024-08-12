@@ -87,8 +87,7 @@ test_that("Generate data",{
   # With grouping
   my_estimate_random |>
 
-
-    sccomp_replicate(~ 0 + type) |>
+    sccomp_replicate(~ 1 + type) |>
     nrow() |>
     expect_equal(600)
 
@@ -130,7 +129,7 @@ test_that("Predict data",{
   
   # With random effects
   my_estimate_random |>
-    sccomp_predict(~ 0 + type) |>
+    sccomp_predict(~ 1 + type) |>
     nrow() |>
     expect_equal(600)
   

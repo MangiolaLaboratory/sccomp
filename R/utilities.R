@@ -1140,13 +1140,21 @@ data_spread_to_model_input =
         )) 
       
       
-      X_random_intercept = random_intercept_grouping |> pull(design_matrix) |> _[[1]]  |>  as_matrix(rownames = quo_name(.sample))
+      X_random_intercept = 
+        random_intercept_grouping |> 
+        pull(design_matrix) |> 
+        _[[1]]  |>  
+        as_matrix(rownames = quo_name(.sample))
       
       # For now that stan does not have tuples, I just allow max two levels
       if(random_intercept_grouping |> nrow() > 2) stop("sccomp says: at the moment sccomp allow max two groupings")
       # This will be modularised with the new stan
       if(random_intercept_grouping |> nrow() > 1)
-        X_random_intercept_2 =   random_intercept_grouping |> pull(design_matrix) |> _[[2]] |>  as_matrix(rownames = quo_name(.sample))
+        X_random_intercept_2 =   
+          random_intercept_grouping |> 
+          pull(design_matrix) |> 
+          _[[2]] |>  
+          as_matrix(rownames = quo_name(.sample))
       else X_random_intercept_2 =  X_random_intercept[,0,drop=FALSE]
 
     n_random_eff = random_intercept_grouping |> nrow()
