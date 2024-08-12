@@ -107,12 +107,14 @@ data {
 	real<lower=1> truncation_ajustment;
 
 	// Random intercept
-	int length_X_random_intercept_which;
-	array[length_X_random_intercept_which] int X_random_intercept_which;
-	int N_grouping;
-	int N_grouping_new;
-	matrix[N, N_grouping_new] X_random_intercept;
-
+	array[2] int length_X_random_intercept_which;
+	array[length_X_random_intercept_which[1]] int X_random_intercept_which;
+	array[2] int ncol_X_random_eff;
+	array[2] int  ncol_X_random_eff_new;
+	matrix[N, ncol_X_random_eff_new[1]] X_random_intercept;
+	matrix[N, ncol_X_random_eff_new[2]] X_random_intercept_2;
+	array[length_X_random_intercept_which[2]] int X_random_intercept_which_2;
+        
   // Should I create intercept for generate quantities
   int<lower=0, upper=1> create_intercept;
   int<lower=0> A_intercept_columns;
