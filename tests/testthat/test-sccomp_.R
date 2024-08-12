@@ -63,7 +63,8 @@ my_estimate_no_intercept =
 my_estimate_random = 
   seurat_obj |>
   sccomp_estimate(
-    formula_composition = ~ 0 + type + (0 + type | group__),
+    formula_composition = ~ type + (type | group__),
+
     formula_variability = ~ 1,
     sample, cell_group,
     cores = 1,
@@ -107,8 +108,7 @@ test_that("Generate data",{
   # With grouping
   my_estimate_random |>
 
-
-    sccomp_replicate(~ 0 + type) |>
+    sccomp_replicate(~ 1 + type) |>
     nrow() |>
     expect_equal(600)
 
@@ -150,7 +150,7 @@ test_that("Predict data",{
   
   # With random effects
   my_estimate_random |>
-    sccomp_predict(~ 0 + type) |>
+    sccomp_predict(~ 1 + type) |>
     nrow() |>
     expect_equal(600)
   
@@ -178,8 +178,7 @@ test_that("outliers",{
 })
 
 test_that("multilevel multi beta binomial from Seurat",{
-
-  res =
+ res =
     seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
     sccomp_estimate(
@@ -222,8 +221,47 @@ test_that("multilevel multi beta binomial from Seurat",{
 
 })
 
+test_that("multilevel nested",{
+  
+  library(tidyseurat)
+  library(sccomp)
+  res =
+    seurat_obj |>
+    dplyr::left_join(
+      tibble(
+        sample = c("SI-GA-H1", "SI-GA-H3", "SI-GA-H4", "SI-GA-G6", "SI-GA-G7",
+                   "SI-GA-G8", "SI-GA-E5", "SI-GA-G9", "SI-GA-E7", "SI-GA-E8",
+                   "GSE115189", "10x_6K", "10x_8K", "SRR11038995", "SRR7244582",
+                   "SCP345_580", "SCP345_860", "SCP424_pbmc1", "SCP424_pbmc2", "SCP591"),
+        group__ = c("GROUP1", "GROUP1", "GROUP1", "GROUP1", "GROUP1",
+                    "GROUP2", "GROUP2", "GROUP2", "GROUP2", "GROUP2",
+                    "GROUP3", "GROUP3", "GROUP3", "GROUP3", "GROUP3",
+                    "GROUP4", "GROUP4", "GROUP4", "GROUP4", "GROUP4"),
+        nested_group = c("GROUP1_Group_1", "GROUP1_Group_2", "GROUP1_Group_1", 
+                         "GROUP1_Group_2", "GROUP1_Group_1", "GROUP2_Group_1", 
+                         "GROUP2_Group_2", "GROUP2_Group_1", "GROUP2_Group_2", 
+                         "GROUP2_Group_1", "GROUP3_Group_1", "GROUP3_Group_2", 
+                         "GROUP3_Group_1", "GROUP3_Group_2", "GROUP3_Group_1", 
+                         "GROUP4_Group_1", "GROUP4_Group_2", "GROUP4_Group_1", 
+                         "GROUP4_Group_2", "GROUP4_Group_1")
+      )
+    ) |> 
+    sccomp_estimate(
+      formula_composition = ~ type + (1 | group__) + (1 | nested_group),
+      formula_variability = ~ 1,
+      sample, cell_group,
+      cores = 1,
+      mcmc_seed = 42,     
+      max_sampling_iterations = 1000
+    )
+  
+  
+})
+
+
 test_that("multilevel multi beta binomial from Seurat with intercept and continuous covariate",{
 
+  library(sccomp)
 
   res =
     seurat_obj |>
@@ -480,7 +518,7 @@ test_that("test constrasts",{
     expect_warning("These components of your contrasts are not present")
   
   
-  res = my_estimate_random |> 
+  res = my_estimate_no_intercept |> 
     sccomp_test(contrasts = c("1/2*typecancer - 1/2*typehealthy", "1/2*typehealthy - 1/2*typecancer") )
   
   

@@ -292,7 +292,7 @@ sccomp_glm_data_frame_counts = function(.data,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik")
     )
   
 
@@ -304,12 +304,12 @@ sccomp_glm_data_frame_counts = function(.data,
     add_attr(fit, "fit") %>%
     add_attr(data_for_model, "model_input") |>
     add_attr(.data, "truncation_df2") |>
-    add_attr(.sample, ".sample") |>
-    add_attr(.cell_group, ".cell_group") |>
-    add_attr(.count, ".count") |>
+    add_attr(.sample |> drop_environment(), ".sample") |>
+    add_attr(.cell_group |> drop_environment(), ".cell_group") |>
+    add_attr(.count |> drop_environment(), ".count") |>
     add_attr(check_outliers, "check_outliers") |>
-    add_attr(formula_composition, "formula_composition") |>
-    add_attr(formula_variability, "formula_variability") |>
+    add_attr(formula_composition |> drop_environment(), "formula_composition") |>
+    add_attr(formula_variability |> drop_environment(), "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     
     # Add class to the tbl

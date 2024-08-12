@@ -8,7 +8,11 @@ sccomp_remove_outliers(
   .estimate,
   percent_false_positive = 5,
   cores = detectCores(),
+<<<<<<< HEAD
   inference_method = "pathfinder",
+=======
+  variational_inference = FALSE,
+>>>>>>> nested-grouping
   verbose = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
