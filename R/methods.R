@@ -127,6 +127,15 @@ sccomp_estimate <- function(.data,
       .frequency_id = "variational_message"
     )
   
+  rlang::inform(
+      message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has be changed from 0.2 to 0.1.", 
+      .frequency = "once", 
+      .frequency_id = "new_logit_fold_change_threshold"
+  )
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_estimate", .data)
 }
 
@@ -167,6 +176,7 @@ sccomp_estimate.Seurat = function(.data,
     
      inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
   }
+  
   # DEPRECATION OF variational_inference
   if (is_present(variational_inference) & !is.null(variational_inference)) {
     deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
@@ -641,10 +651,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
   
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate")
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data")
 
-  rng = mod_rng$generate_quantities(
-    attr(.estimate , "fit"),
+  rng = mod_rng |> sample_safe(
+    generate_quantities_fx,
+    attr(.estimate , "fit")$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
     data = 
@@ -653,6 +664,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       c(list(
         
         # Add subset of coefficients
+        X_original = data_for_model$X,
+        N_original = data_for_model$N,
         length_X_which = ncol(data_for_model$X),
         length_XA_which = ncol(data_for_model$XA),
         X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
@@ -664,7 +677,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
         create_intercept = FALSE
       )),
-    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains())
+    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains()), 
+    threads_per_chain = cores
     
   )
   
@@ -727,7 +741,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       stanmodels$glm_multi_beta_binomial,
       cores = cores,
       quantile = my_quantile_step_2,
-      approximate_posterior_inference = variational_inference,
+      inference_method = inference_method,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -737,13 +751,16 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
   
-  rng2 =  mod_rng$generate_quantities(
-    fit2,
+  rng2 =  mod_rng |> sample_safe(
+    generate_quantities_fx,
+    fit2$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
     data = data_for_model |> c(list(
       
       # Add subset of coefficients
+      X_original = data_for_model$X,
+      N_original = data_for_model$N,
       length_X_which = ncol(data_for_model$X),
       length_XA_which = ncol(data_for_model$XA),
       X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
@@ -756,7 +773,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       create_intercept = FALSE
       
     )),
-    parallel_chains = ifelse(data_for_model$is_vb, 1, fit2$num_chains())
+    parallel_chains = ifelse(data_for_model$is_vb, 1, fit2$num_chains()), 
+    threads_per_chain = cores
     
   )
   
@@ -830,7 +848,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       stanmodels$glm_multi_beta_binomial,
       cores = cores,
       quantile = CI,
-      approximate_posterior_inference = variational_inference,
+      inference_method = inference_method,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -897,7 +915,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 sccomp_test <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
-                           test_composition_above_logit_fold_change = 0.2,
+                           test_composition_above_logit_fold_change = 0.1,
                            pass_fit = TRUE) {
   UseMethod("sccomp_test", .data)
 }
@@ -912,7 +930,7 @@ sccomp_test <- function(.data,
 sccomp_test.sccomp_tbl = function(.data,
                                      contrasts = NULL,
                                      percent_false_positive = 5,
-                                     test_composition_above_logit_fold_change = 0.2,
+                                     test_composition_above_logit_fold_change = 0.1,
                                      pass_fit = TRUE){
 
 
@@ -1011,6 +1029,9 @@ sccomp_test.sccomp_tbl = function(.data,
       add_attr(.data |> attr("fit") , "fit")
 
   result |>
+    
+    add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
+    
     # Attach association mean concentration
     add_attr(.data |> attr("model_input") , "model_input") |>
     add_attr(.data |> attr("truncation_df2"), "truncation_df2") |>
@@ -1261,7 +1282,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   fit = attr(.data, "fit")
 
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate")
+  mod = load_model("glm_multi_beta_binomial_generate_data")
   
 
 
@@ -1485,6 +1506,7 @@ simulate_data.tbl = function(.data,
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param factor A character string for a factor of interest included in the model
 #' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #'
 #' @return A `ggplot`
 #'
@@ -1503,13 +1525,18 @@ simulate_data.tbl = function(.data,
 #'   sccomp_test()
 #'
 #' # estimate |> sccomp_boxplot()
-sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
+sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
 
 
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
   .sample = attr(.data, ".sample")
 
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+  
+  
   data_proportion =
     .data %>%
 
@@ -1550,7 +1577,9 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #' @importFrom magrittr equals
 #'
 #' @param x A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
-#' @param ... parameters like significance_threshold A real. FDR threshold for labelling significant cell-groups.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param ... For internal use 
 #'
 #' @return A `ggplot`
 #'
@@ -1569,8 +1598,13 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.025){
 #'
 #' # estimate |> plot()
 #'
-plot.sccomp_tbl <- function(x,  ...) {
+plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), ...) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  parameter <- NULL
+  count_data <- NULL
+  v_effect <- NULL
+  
   .cell_group = attr(x, ".cell_group")
   .count = attr(x, ".count")
   .sample = attr(x, ".sample")
@@ -1622,7 +1656,7 @@ else {
               .cell_group = !!.cell_group,
               .sample =  !!.sample,
               my_theme = multipanel_theme,
-              ...
+              significance_threshold = significance_threshold
             )
         
         # If discrete
@@ -1635,7 +1669,7 @@ else {
               .cell_group = !!.cell_group,
               .sample =  !!.sample,
               my_theme = multipanel_theme,
-              ...
+              significance_threshold = significance_threshold
             ) 
         
         # Return
@@ -1646,11 +1680,37 @@ else {
 }
 
 # 1D intervals
-plots$credible_intervals_1D = plot_1d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+plots$credible_intervals_1D = plot_1D_intervals(.data = x, significance_threshold = significance_threshold)
 
 # 2D intervals
-if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2d_intervals(.data = x, .cell_group = !!.cell_group, my_theme = multipanel_theme, ...)
+if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2D_intervals(.data = x, significance_threshold = significance_threshold)
 
 plots
 
+}
+
+#' Clear Stan Model Cache
+#'
+#' This function attempts to delete the Stan model cache directory and its contents.
+#' If the cache directory does not exist, it prints a message indicating this.
+#'
+#' @param cache_dir A character string representing the path of the cache directory to delete. Defaults to `sccomp_stan_models_cache_dir`.
+#' 
+#' @return NULL
+#' 
+#' @examples
+#' \dontrun{
+#'   clear_stan_model_cache("path/to/cache_dir")
+#' }
+#' @export
+clear_stan_model_cache <- function(cache_dir = sccomp_stan_models_cache_dir) {
+  
+  # Check if the directory exists
+  if (dir.exists(cache_dir)) {
+    # Attempt to delete the directory and its contents
+    unlink(cache_dir, recursive = TRUE)
+    message("Cache deleted: ", cache_dir)
+  } else {
+    message("Cache does not exist: ", cache_dir)
+  }
 }

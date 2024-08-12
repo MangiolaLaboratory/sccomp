@@ -8,7 +8,7 @@ test_contrasts(
   .data,
   contrasts = NULL,
   percent_false_positive = 5,
-  test_composition_above_logit_fold_change = 0.2,
+  test_composition_above_logit_fold_change = 0.1,
   pass_fit = TRUE
 )
 }
