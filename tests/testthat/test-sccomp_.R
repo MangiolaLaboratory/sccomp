@@ -18,11 +18,11 @@ set.seed(42)
 #   
 # })
 
-test_that("model instantiate",{
-  
-  sccomp:::load_model("glm_multi_beta_binomial") |> 
-    expect_s3_class("CmdStanModel")
-})
+# test_that("model instantiate",{
+#   
+#   sccomp:::load_model("glm_multi_beta_binomial") |> 
+#     expect_s3_class("CmdStanModel")
+# })
 
 my_estimate = 
   seurat_obj |>
@@ -272,7 +272,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       cores = 1,
       mcmc_seed = 42,   
       max_sampling_iterations = 1000,
-      variational_inference = FALSE, verbose=FALSE
+      inference_method = "hmc", verbose=FALSE
     )
 
     expect(

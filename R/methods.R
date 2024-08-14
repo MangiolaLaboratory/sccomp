@@ -179,17 +179,11 @@ sccomp_estimate.Seurat = function(.data,
   
   # DEPRECATION OF variational_inference
   if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
     
     inference_method = ifelse(variational_inference, "variational","hmc")
   }
   
-  # DEPRECATION OF variational_inference
-  if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
-    
-    inference_method = ifelse(variational_inference, "variational","hmc")
-  }
   
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -265,7 +259,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
 
   # DEPRECATION OF variational_inference
   if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
     
     inference_method = ifelse(variational_inference, "variational","hmc")
   }
@@ -346,7 +340,7 @@ sccomp_estimate.DFrame = function(.data,
   
   # DEPRECATION OF variational_inference
   if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
     
     inference_method = ifelse(variational_inference, "variational","hmc")
   }
@@ -423,7 +417,7 @@ sccomp_estimate.data.frame = function(.data,
   
   # DEPRECATION OF variational_inference
   if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
     
     inference_method = ifelse(variational_inference, "variational","hmc")
   }
@@ -609,7 +603,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   # DEPRECATION OF variational_inference
   if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use variational_inference. By default inference_method value is inferred from variational_inference")
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
     
     inference_method = ifelse(variational_inference, "variational","hmc")
   }

@@ -503,14 +503,22 @@ fit_model = function(
    )
 
   if(data_for_model$n_random_eff>0){
-    init_list$random_intercept_raw = matrix(0, data_for_model$N_grouping  , data_for_model$M-1) |> as.data.frame()  
-    init_list$random_intercept_sigma_mu = 0.5 |> as.array()
-    init_list$random_intercept_sigma_sigma = 0.2 |> as.array()
+    init_list$random_intercept_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1) |> as.data.frame()  
     init_list$random_intercept_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design)
     init_list$sigma_correlation_factor = matrix(0, data_for_model$how_many_factors_in_random_design  , data_for_model$how_many_factors_in_random_design )
+    
+    init_list$random_intercept_sigma_mu = 0.5 |> as.array()
+    init_list$random_intercept_sigma_sigma = 0.2 |> as.array()
     init_list$zero_random_intercept = rep(0, size = 1) |> as.array()
     
-  }
+  } 
+  
+  if(data_for_model$n_random_eff>1){
+    init_list$random_intercept_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1) |> as.data.frame()  
+    init_list$random_intercept_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design)
+    init_list$sigma_correlation_factor_2 = matrix(0, data_for_model$how_many_factors_in_random_design  , data_for_model$how_many_factors_in_random_design )
+
+  } 
  
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
