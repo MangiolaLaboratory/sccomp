@@ -438,6 +438,8 @@ sccomp_estimate.data.frame = function(.data,
       pass_fit = pass_fit
     )
   
+  message("sccomp says: to do hypothesis testing run `sccomp_test()`, the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%")
+  
   res  |> 
 
     # Track input parameters
