@@ -35,6 +35,11 @@ multi_beta_glm = function(.data,
                           cores = detect_cores(), # For development purpose,
                           seed = sample(1e5, 1)
 ) {
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  detect_cores <- NULL
+  
+  
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)

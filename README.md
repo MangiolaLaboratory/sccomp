@@ -121,16 +121,16 @@ sccomp_result
     ## # A tibble: 72 × 18
     ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercep… <NA>    0.842     1.08    1.32  0       0           NaN
-    ##  2 B1         typecancer type   -0.966    -0.611  -0.207 0.00800 8.18e-4     NaN
-    ##  3 B2         (Intercep… <NA>    0.499     0.816   1.12  0       0           NaN
-    ##  4 B2         typecancer type   -1.21     -0.823  -0.413 0.00100 1.00e-4     NaN
-    ##  5 B3         (Intercep… <NA>   -0.872    -0.525  -0.235 0       0           NaN
-    ##  6 B3         typecancer type   -0.684    -0.249   0.220 0.268   5.12e-2     NaN
-    ##  7 BM         (Intercep… <NA>   -1.33     -1.03   -0.716 0       0           NaN
-    ##  8 BM         typecancer type   -0.660    -0.221   0.206 0.295   6.06e-2     NaN
-    ##  9 CD4 1      (Intercep… <NA>    0.107     0.298   0.485 0.0200  1.52e-3     NaN
-    ## 10 CD4 1      typecancer type   -0.0204    0.238   0.494 0.155   3.63e-2     NaN
+    ##  1 B1         (Intercep… <NA>    0.881     1.11   1.32   0       0         4693.
+    ##  2 B1         typecancer type   -1.16     -0.747 -0.361  5.00e-4 1.00e-4   2396.
+    ##  3 B2         (Intercep… <NA>    0.404     0.703  0.990  2.50e-4 1.25e-5   4775.
+    ##  4 B2         typecancer type   -1.23     -0.722 -0.253  7.25e-3 1.03e-3   3857.
+    ##  5 B3         (Intercep… <NA>   -0.674    -0.384 -0.104  2.38e-2 2.48e-3   4022.
+    ##  6 B3         typecancer type   -0.749    -0.313  0.0808 1.47e-1 3.81e-2   2849.
+    ##  7 BM         (Intercep… <NA>   -1.32     -1.03  -0.753  0       0         3497.
+    ##  8 BM         typecancer type   -0.746    -0.320  0.0943 1.53e-1 4.34e-2   3270.
+    ##  9 CD4 1      (Intercep… <NA>    0.0795    0.303  0.507  3.70e-2 3.81e-3   3528.
+    ## 10 CD4 1      typecancer type   -0.102     0.187  0.472  2.65e-1 6.63e-2   3734.
     ## # ℹ 62 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -172,26 +172,19 @@ sccomp_result |>
     ## # A tibble: 36 × 2
     ##    cell_group statement                                
     ##    <chr>      <glue>                                   
-    ##  1 B1         1.9-fold decrease (from 0.054 to 0.0288) 
-    ##  2 B2         2.4-fold decrease (from 0.0421 to 0.0179)
-    ##  3 B3         1.3-fold decrease (from 0.0109 to 0.0082)
-    ##  4 BM         1.3-fold decrease (from 0.0066 to 0.0051)
-    ##  5 CD4 1      1.2-fold increase (from 0.0247 to 0.0304)
-    ##  6 CD4 2      1.4-fold increase (from 0.0533 to 0.0751)
-    ##  7 CD4 3      2.6-fold decrease (from 0.0848 to 0.0321)
-    ##  8 CD4 4      1-fold increase (from 0.0018 to 0.0018)  
-    ##  9 CD4 5      1.1-fold increase (from 0.0292 to 0.0323)
-    ## 10 CD8 1      1.3-fold increase (from 0.0999 to 0.1339)
+    ##  1 B1         2.1-fold decrease (from 0.0562 to 0.0264)
+    ##  2 B2         2.1-fold decrease (from 0.0374 to 0.0181)
+    ##  3 B3         1.4-fold decrease (from 0.0127 to 0.0092)
+    ##  4 BM         1.4-fold decrease (from 0.0066 to 0.0048)
+    ##  5 CD4 1      1.2-fold increase (from 0.025 to 0.0301) 
+    ##  6 CD4 2      1.5-fold increase (from 0.0488 to 0.0732)
+    ##  7 CD4 3      2.7-fold decrease (from 0.0863 to 0.0321)
+    ##  8 CD4 4      1-fold increase (from 0.0016 to 0.0016)  
+    ##  9 CD4 5      1.1-fold increase (from 0.0297 to 0.0313)
+    ## 10 CD8 1      1.2-fold increase (from 0.1051 to 0.1234)
     ## # ℹ 26 more rows
 
 ## Summary plots
-
-``` r
-plots = sccomp_result |> plot() 
-```
-
-    ## Joining with `by = join_by(cell_group, sample)`
-    ## Joining with `by = join_by(cell_group, type)`
 
 A plot of group proportion, faceted by groups. The blue boxplots
 represent the posterior predictive check. If the model is likely to be
@@ -203,12 +196,14 @@ represents the significant associations for composition and/or
 variability.
 
 ``` r
-plots$boxplot
+sccomp_result |> 
+  sccomp_boxplot(factor = "type")
 ```
 
-    ## [[1]]
+    ## Joining with `by = join_by(cell_group, sample)`
+    ## Joining with `by = join_by(cell_group, type)`
 
-![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
 
 A plot of estimates of differential composition (c\_) on the x-axis and
 differential variability (v\_) on the y-axis. The error bars represent
@@ -218,10 +213,11 @@ significant if bigger than the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.
 
 ``` r
-plots$credible_intervals_1D
+sccomp_result |> 
+  plot_1D_intervals()
 ```
 
-![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
 
 We can plot the relationship between abundance and variability. As we
 can see below, they are positively correlated, you also appreciate that
@@ -232,10 +228,17 @@ estimates of both the abundance and the variability. This shrinkage is
 adaptive as it is modelled jointly, thanks for Bayesian inference.
 
 ``` r
-plots$credible_intervals_2D
+sccomp_result |> 
+  plot_2D_intervals()
 ```
 
-![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
+
+You can produce the series of plots calling the `plot` method.
+
+``` r
+sccomp_result |> plot() 
+```
 
 ## Contrasts
 
@@ -254,16 +257,16 @@ seurat_obj |>
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -1.67    -1.18   -0.672 0       0            NA
-    ##  2 B immature  typeheal… <NA>     0.672    1.18    1.67  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.25    -1.63   -1.05  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.05     1.63    2.25  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.55    -1.11   -0.707 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.707    1.11    1.55  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.694    1.68    2.70  0.00100 1.43e-4      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.70    -1.68   -0.694 0.00100 1.43e-4      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.212    0.913   1.66  0.0120  2.33e-3      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.66    -0.913  -0.212 0.0120  2.33e-3      NA
+    ##  1 B immature  typecanc… <NA>    -1.92    -1.40   -0.903 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.903    1.40    1.92  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.34    -1.71   -1.06  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.06     1.71    2.34  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.48    -1.03   -0.596 0       0            NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.596    1.03    1.48  0       0            NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.809    1.76    2.88  0       0            NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.88    -1.76   -0.809 0       0            NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.327    0.994   1.68  0.00375 0.00117      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.68    -0.994  -0.327 0.00375 0.00117      NA
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -341,16 +344,16 @@ res
     ## # A tibble: 60 × 14
     ##    cell_group        parameter factor c_lower c_effect c_upper c_n_eff c_R_k_hat
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>     <dbl>
-    ##  1 B immature        (Interce… <NA>     0.559    0.898  1.25       NaN      3.08
-    ##  2 B immature        typeheal… type     0.885    1.29   1.74       NaN      2.93
-    ##  3 B mem             (Interce… <NA>    -1.49    -1.02  -0.502      NaN      3.12
-    ##  4 B mem             typeheal… type     1.53     2.13   2.77       NaN      3.11
-    ##  5 CD4 cm S100A4     (Interce… <NA>     1.49     1.75   2.03       NaN      2.99
-    ##  6 CD4 cm S100A4     typeheal… type     0.558    0.942  1.34       NaN      3.03
-    ##  7 CD4 cm high cyto… (Interce… <NA>    -0.900   -0.412  0.0815     NaN      2.99
-    ##  8 CD4 cm high cyto… typeheal… type    -2.20    -1.48  -0.796      NaN      2.96
-    ##  9 CD4 cm ribosome   (Interce… <NA>    -0.111    0.356  0.800      NaN      3.00
-    ## 10 CD4 cm ribosome   typeheal… type    -1.65    -1.09  -0.523      NaN      3.13
+    ##  1 B immature        (Interce… <NA>    0.366     0.771  1.18     5085.      1.00
+    ##  2 B immature        typeheal… type    0.857     1.43   1.98     5419.      1.00
+    ##  3 B mem             (Interce… <NA>   -1.49     -0.873 -0.216    5736.      1.00
+    ##  4 B mem             typeheal… type    1.08      1.85   2.63     4874.      1.00
+    ##  5 CD4 cm S100A4     (Interce… <NA>    1.30      1.65   1.98     6680.      1.00
+    ##  6 CD4 cm S100A4     typeheal… type    0.488     0.943  1.43     5134.      1.00
+    ##  7 CD4 cm high cyto… (Interce… <NA>   -1.06     -0.542  0.0339   4705.      1.00
+    ##  8 CD4 cm high cyto… typeheal… type   -3.07     -1.24   1.15     4987.      1.00
+    ##  9 CD4 cm ribosome   (Interce… <NA>   -0.0718    0.311  0.706    4282.      1.00
+    ## 10 CD4 cm ribosome   typeheal… type   -1.81     -0.966  0.0231   5178.      1.00
     ## # ℹ 50 more rows
     ## # ℹ 6 more variables: v_lower <dbl>, v_effect <dbl>, v_upper <dbl>,
     ## #   v_n_eff <dbl>, v_R_k_hat <dbl>, count_data <list>

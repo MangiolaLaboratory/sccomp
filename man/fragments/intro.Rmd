@@ -132,20 +132,19 @@ sccomp_result |>
 
 ## Summary plots
 
-```{r, out.height="200%"}
-plots = sccomp_result |> plot() 
-```
 
 A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be descriptively adequate to the data, the blue box plot should roughly overlay with the black box plot, which represents the observed data. The outliers are coloured in red. A box plot will be returned for every (discrete) covariate present in `formula_composition`. The colour coding represents the significant associations for composition and/or variability.
 
 ```{r}
-plots$boxplot
+sccomp_result |> 
+  sccomp_boxplot(factor = "type")
 ```
 
 A plot of estimates of differential composition (c\_) on the x-axis and differential variability (v\_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
 
 ```{r}
-plots$credible_intervals_1D
+sccomp_result |> 
+  plot_1D_intervals()
 ```
 
 
@@ -155,7 +154,14 @@ We can plot the relationship between abundance and variability. As we can see be
 
 
 ```{r}
-plots$credible_intervals_2D
+sccomp_result |> 
+  plot_2D_intervals()
+```
+
+You can produce the series of plots calling the `plot` method.
+
+```{r, out.height="200%", eval=FALSE}
+sccomp_result |> plot() 
 ```
 
 

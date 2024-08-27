@@ -47,6 +47,11 @@ check_if_any_NA = function(.data, columns){
 
 check_if_within_posterior = function(.data, my_df, .do_check, .count){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  .lower <- NULL
+  .upper <- NULL
+  ppc <- NULL
+  
   writeLines(sprintf("executing %s", "check_if_within_posterior"))
 
   .data %>%
