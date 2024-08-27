@@ -51,7 +51,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>simulate_data</h1>
-    <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/add_test_messaging/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/calculate_proportion_difference/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
     <div class="hidden name"><code>simulate_data.Rd</code></div>
     </div>
 
@@ -150,8 +150,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000331 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.31 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000329 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.29 seconds.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Adjust your expectations accordingly!</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
@@ -162,11 +162,10 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:  Elapsed Time: 2.75 seconds (Warm-up)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:                19.668 seconds (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:                22.418 seconds (Total)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:  Elapsed Time: 2.779 seconds (Warm-up)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:                19.745 seconds (Sampling)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:                22.524 seconds (Total)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`, the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.</span></span></span>
 <span class="r-in"><span><span class="va">counts_obj</span> <span class="op">=</span> <span class="va">counts_obj</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>b_0 <span class="op">=</span> <span class="fl">0</span>, b_1 <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
