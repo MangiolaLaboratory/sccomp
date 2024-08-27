@@ -1595,3 +1595,102 @@ if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)
 plots
 
 }
+
+#' Calculate Proportional Fold Change for sccomp Data
+#'
+#' This function calculates the proportional fold change for single-cell composition data
+#' from sccomp analysis, comparing two conditions.
+#' 
+#' Note! This statistic is just descriptive and should not be used to define significance. Use sccomp_test() for that. 
+#' This statistics is just meant to help interpretation. While fold increase in proportion is easier to understand than
+#' fold change in logit space, the first is not linear (the same change for rare cell types does not necessarily have the same weight 
+#' that for abundant cell types), while the latter is linear, and used to infer probabilities.
+#' 
+#'
+#' @param .data A `sccomp_tbl` object containing single-cell composition data.
+#' @param formula_composition The formula for the composition model.
+#' @param from The label for the control group (e.g., "healthy").
+#' @param to The label for the treatment group (e.g., "cancer").
+#' @return A tibble with cell groups and their respective proportional fold change.
+#' @examples
+#' \dontrun{
+#' # Example usage
+#' result <- sccomp_proportional_fold_change(sccomp_data, formula_composition, "healthy", "cancer")
+#' }
+#' @export
+sccomp_proportional_fold_change <- function(.data, formula_composition, from, to) {
+  UseMethod("sccomp_proportional_fold_change", .data)
+}
+
+#' @export
+#' 
+#' @importFrom glue glue
+#' 
+sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition, from, to){
+  
+  my_factor = parse_formula(formula_composition)
+  
+  # Predict the composition for the specified conditions
+  .data |> 
+    sccomp_predict(
+      formula_composition = formula_composition, 
+      new_data = 
+        tibble(sample=as.character(c(to, from)), factor = c(to, from)) |> 
+        rename(!!my_factor := `factor`)
+    ) |> 
+    
+    # Nest the predicted data by cell group
+    nest(data = -!!.data |> attr(".cell_group")) |> 
+    
+    
+    # Calculate the ratio of proportions between 'to' and 'from' conditions
+    mutate(
+      ratio_mean = map_dbl(
+        data, 
+        ~ {
+          x = .x |> arrange(sample != !!from) |> pull(proportion_mean); 
+          x[2]/x[1] })
+      ) |> 
+    mutate(
+      proportion_from = map_dbl(data, ~.x |> filter(sample==from) |> pull(proportion_mean)),
+      proportion_to = map_dbl(data, ~.x |> filter(sample!=from) |> pull(proportion_mean))
+    ) |> 
+    
+    # Calculate the proportional fold change
+    mutate(proportion_fold_change = if_else(ratio_mean<1, (-1/ratio_mean) , ratio_mean)) |> 
+    
+    # Calculate the ratio of credible interval between 'to' and 'from' conditions
+    mutate(
+      ratio_upper = map_dbl(
+        data,  
+        ~ {
+          x = .x |> arrange(sample != !!from) |> pull(proportion_upper); 
+          x[2]/x[1] }),
+      ratio_lower = map_dbl(
+        data, 
+        ~ {
+          x = .x |> arrange(sample != !!from) |> pull(proportion_lower); 
+          x[2]/x[1] })
+    ) |> 
+    
+    # Calculate the proportional fold change
+    mutate(
+      difference_proportion_upper_fold_change = if_else(ratio_mean<1, (-1/ratio_upper) , ratio_upper) - proportion_fold_change,
+      difference_proportion_lower_fold_change = if_else(ratio_mean<1, (-1/ratio_lower) , ratio_lower) - proportion_fold_change
+    ) |> 
+    mutate(average_uncertainty = (abs(difference_proportion_upper_fold_change) + abs(difference_proportion_lower_fold_change))/2) |> 
+    
+    # Print expression
+    mutate(increase_decrease = if_else(proportion_fold_change>0, "increase", "decrease")) |> 
+    mutate(statement = glue("{round(abs(proportion_fold_change),1)}-fold {increase_decrease} (from {round(proportion_from, 4)} to {round(proportion_to, 4)})")) |> 
+  
+    # Select and return the relevant columns
+    select(
+      !!.data |> attr(".cell_group"), 
+      proportion_fold_change, 
+      average_uncertainty, 
+      statement
+    ) 
+    
+
+}

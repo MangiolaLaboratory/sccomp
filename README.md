@@ -110,6 +110,80 @@ sccomp_result =
   sccomp_test()
 ```
 
+Here you see the results of the fit, the effects of the factor on
+composition and variability. You also can see the uncertainty around
+those effects.
+
+``` r
+sccomp_result
+```
+
+    ## # A tibble: 72 × 18
+    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+    ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+    ##  1 B1         (Intercep… <NA>    0.881     1.11   1.32   0       0         4693.
+    ##  2 B1         typecancer type   -1.16     -0.747 -0.361  5.00e-4 1.00e-4   2396.
+    ##  3 B2         (Intercep… <NA>    0.404     0.703  0.990  2.50e-4 1.25e-5   4775.
+    ##  4 B2         typecancer type   -1.23     -0.722 -0.253  7.25e-3 1.03e-3   3857.
+    ##  5 B3         (Intercep… <NA>   -0.674    -0.384 -0.104  2.38e-2 2.48e-3   4022.
+    ##  6 B3         typecancer type   -0.749    -0.313  0.0808 1.47e-1 3.81e-2   2849.
+    ##  7 BM         (Intercep… <NA>   -1.32     -1.03  -0.753  0       0         3497.
+    ##  8 BM         typecancer type   -0.746    -0.320  0.0943 1.53e-1 4.34e-2   3270.
+    ##  9 CD4 1      (Intercep… <NA>    0.0795    0.303  0.507  3.70e-2 3.81e-3   3528.
+    ## 10 CD4 1      typecancer type   -0.102     0.187  0.472  2.65e-1 6.63e-2   3734.
+    ## # ℹ 62 more rows
+    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## #   count_data <list>
+
+## An aid to result interpretation and communication
+
+The estimated effects are expressed in the unconstrained space of the
+parameters. Similarly, to differential expression analysis that express
+change in terms of log fold change. However, for differences, in
+proportion, logit foold change must be used. This measure is harder to
+interpret and understand.
+
+Therefore, we provide a more intuitive proportion, full change, that can
+be easier understood. However, these cannot be used to infer
+significance (use sccomp_test() instead), and a lot of care must be
+taken given the nonlinearity of these measure (1 fold increase from
+0.0001 to 0.0002 carried a different weight that 1 fold increase from
+0.4 to 0.8).
+
+From your estimates, you can state which effects you are interested
+about (this can be a part of the full model, in case you want to not
+consider unwanted effects), and the two points you would like to
+compare.
+
+In case of a chategorical variable, the starting and ending points are
+categories.
+
+``` r
+sccomp_result |> 
+   sccomp_proportional_fold_change(
+     formula_composition = ~  type,
+     from =  "healthy", 
+     to = "cancer"
+    ) |> 
+  select(cell_group, statement)
+```
+
+    ## # A tibble: 36 × 2
+    ##    cell_group statement                                
+    ##    <chr>      <glue>                                   
+    ##  1 B1         2.1-fold decrease (from 0.0562 to 0.0264)
+    ##  2 B2         2.1-fold decrease (from 0.0374 to 0.0181)
+    ##  3 B3         1.4-fold decrease (from 0.0127 to 0.0092)
+    ##  4 BM         1.4-fold decrease (from 0.0066 to 0.0048)
+    ##  5 CD4 1      1.2-fold increase (from 0.025 to 0.0301) 
+    ##  6 CD4 2      1.5-fold increase (from 0.0488 to 0.0732)
+    ##  7 CD4 3      2.7-fold decrease (from 0.0863 to 0.0321)
+    ##  8 CD4 4      1-fold increase (from 0.0016 to 0.0016)  
+    ##  9 CD4 5      1.1-fold increase (from 0.0297 to 0.0313)
+    ## 10 CD8 1      1.2-fold increase (from 0.1051 to 0.1234)
+    ## # ℹ 26 more rows
+
 ## Summary plots
 
 A plot of group proportion, faceted by groups. The blue boxplots
@@ -129,7 +203,7 @@ sccomp_result |>
     ## Joining with `by = join_by(cell_group, sample)`
     ## Joining with `by = join_by(cell_group, type)`
 
-![](inst/figures/unnamed-chunk-10-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
 
 A plot of estimates of differential composition (c\_) on the x-axis and
 differential variability (v\_) on the y-axis. The error bars represent
@@ -143,7 +217,7 @@ sccomp_result |>
   plot_1D_intervals()
 ```
 
-![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
 
 We can plot the relationship between abundance and variability. As we
 can see below, they are positively correlated, you also appreciate that
@@ -158,7 +232,7 @@ sccomp_result |>
   plot_2D_intervals()
 ```
 
-![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
 
 You can produce the series of plots calling the `plot` method.
 
@@ -183,16 +257,16 @@ seurat_obj |>
     ## # A tibble: 60 × 18
     ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -1.94     -1.40  -0.869 0       0            NA
-    ##  2 B immature  typeheal… <NA>     0.869     1.40   1.94  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.32     -1.80  -1.24  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.24      1.80   2.32  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.54     -1.10  -0.648 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.648     1.10   1.54  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.833     1.87   2.94  2.50e-4 5.00e-5      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.94     -1.87  -0.833 2.50e-4 5.00e-5      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.467     1.11   1.78  2.00e-3 5.23e-4      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.78     -1.11  -0.467 2.00e-3 5.23e-4      NA
+    ##  1 B immature  typecanc… <NA>    -1.92    -1.40   -0.903 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.903    1.40    1.92  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.34    -1.71   -1.06  0       0            NA
+    ##  4 B mem       typeheal… <NA>     1.06     1.71    2.34  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.48    -1.03   -0.596 0       0            NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.596    1.03    1.48  0       0            NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.809    1.76    2.88  0       0            NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.88    -1.76   -0.809 0       0            NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.327    0.994   1.68  0.00375 0.00117      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.68    -0.994  -0.327 0.00375 0.00117      NA
     ## # ℹ 50 more rows
     ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
@@ -270,16 +344,16 @@ res
     ## # A tibble: 60 × 14
     ##    cell_group        parameter factor c_lower c_effect c_upper c_n_eff c_R_k_hat
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>     <dbl>
-    ##  1 B immature        (Interce… <NA>    0.459     0.791  1.12       NaN      2.43
-    ##  2 B immature        typeheal… type    0.946     1.41   1.89       NaN      2.42
-    ##  3 B mem             (Interce… <NA>   -1.25     -0.828 -0.401      NaN      2.51
-    ##  4 B mem             typeheal… type    1.33      1.95   2.56       NaN      2.51
-    ##  5 CD4 cm S100A4     (Interce… <NA>    1.36      1.62   1.88       NaN      2.43
-    ##  6 CD4 cm S100A4     typeheal… type    0.757     1.15   1.53       NaN      2.38
-    ##  7 CD4 cm high cyto… (Interce… <NA>   -1.08     -0.495  0.0909     NaN      2.44
-    ##  8 CD4 cm high cyto… typeheal… type   -2.32     -1.58  -0.852      NaN      2.45
-    ##  9 CD4 cm ribosome   (Interce… <NA>   -0.0578    0.339  0.724      NaN      2.46
-    ## 10 CD4 cm ribosome   typeheal… type   -1.57     -1.05  -0.516      NaN      2.43
+    ##  1 B immature        (Interce… <NA>    0.366     0.771  1.18     5085.      1.00
+    ##  2 B immature        typeheal… type    0.857     1.43   1.98     5419.      1.00
+    ##  3 B mem             (Interce… <NA>   -1.49     -0.873 -0.216    5736.      1.00
+    ##  4 B mem             typeheal… type    1.08      1.85   2.63     4874.      1.00
+    ##  5 CD4 cm S100A4     (Interce… <NA>    1.30      1.65   1.98     6680.      1.00
+    ##  6 CD4 cm S100A4     typeheal… type    0.488     0.943  1.43     5134.      1.00
+    ##  7 CD4 cm high cyto… (Interce… <NA>   -1.06     -0.542  0.0339   4705.      1.00
+    ##  8 CD4 cm high cyto… typeheal… type   -3.07     -1.24   1.15     4987.      1.00
+    ##  9 CD4 cm ribosome   (Interce… <NA>   -0.0718    0.311  0.706    4282.      1.00
+    ## 10 CD4 cm ribosome   typeheal… type   -1.81     -0.966  0.0231   5178.      1.00
     ## # ℹ 50 more rows
     ## # ℹ 6 more variables: v_lower <dbl>, v_effect <dbl>, v_upper <dbl>,
     ## #   v_n_eff <dbl>, v_R_k_hat <dbl>, count_data <list>
@@ -308,7 +382,7 @@ probability 1.
 res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
 ```
 
-![](inst/figures/unnamed-chunk-17-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-19-1.png)<!-- -->
 
 Plot 1D significance plot
 
@@ -323,7 +397,7 @@ plots = res |> sccomp_test() |> plot()
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-18-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-20-1.png)<!-- -->
 
 Plot 2D significance plot. Data points are cell groups. Error bars are
 the 95% credible interval. The dashed lines represent the default
@@ -343,7 +417,7 @@ uncorrelated.
 plots$credible_intervals_2D
 ```
 
-![](inst/figures/unnamed-chunk-19-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-21-1.png)<!-- -->
 
 ## The old framework
 
