@@ -1,6 +1,6 @@
-pandoc: '3.2'
+pandoc: '3.3'
 pkgdown: 2.1.0
 pkgdown_sha: ~
 articles:
   introduction: introduction.html
-last_built: 2024-08-06T08:14Z
+last_built: 2024-08-27T12:40Z
