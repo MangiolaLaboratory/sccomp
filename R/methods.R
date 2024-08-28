@@ -438,6 +438,11 @@ sccomp_estimate.data.frame = function(.data,
       pass_fit = pass_fit
     )
   
+  message("sccomp says: to do hypothesis testing run `sccomp_test()`, 
+  the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and 
+  0.7 equates to ~100% increase, if the baseline is ~0.1 proportion. 
+  Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non linear).")
+  
   res  |> 
 
     # Track input parameters
