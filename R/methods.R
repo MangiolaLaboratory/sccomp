@@ -652,7 +652,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     )))
   
   # Random intercept
-  random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
+  random_effect_elements = .estimate |> attr("formula_composition") |> parse_formula_random_effect()
   
   # Load model
   mod_rng = load_model("glm_multi_beta_binomial_generate_data")
@@ -676,12 +676,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
         
         # Random intercept
-        ncol_X_random_eff_new = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2) ), # I could put this in the intial data
-        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2)),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
+        length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+        X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
         
         # Random intercept DUPLICATED
-        X_random_intercept_which_2 = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
         
         create_intercept = FALSE
       )),
@@ -754,7 +754,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2"),
+      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "random_effect", "random_effect_2"),
       ...
     )
 
@@ -775,12 +775,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
       
       # Random intercept
-      ncol_X_random_eff_new = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2) ), # I could put this in the intial data
-      length_X_random_intercept_which = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2)),
-      X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+      ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
+      length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+      X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
       
       # Random intercept DUPLICATED
-      X_random_intercept_which_2 = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+      X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
       
       create_intercept = FALSE
       
@@ -865,7 +865,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik"),
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
       ...
     )
   
@@ -1290,7 +1290,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
-  .grouping_for_random_intercept = attr(.data, ".grouping_for_random_intercept")
+  .grouping_for_random_effect = attr(.data, ".grouping_for_random_effect")
   .count = attr(.data, ".count")
 
   fit = attr(.data, "fit")
