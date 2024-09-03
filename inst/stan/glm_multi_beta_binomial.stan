@@ -110,28 +110,28 @@ return beta_binomial_lupmf(
 		int ncol_X_random_eff,
 		array[,] int group_factor_indexes_for_covariance,
 	
-		matrix random_intercept_raw,
+		matrix random_effect_raw,
 		
-		array[] vector random_intercept_sigma_raw,
-		array[] real random_intercept_sigma_mu,
-		array[] real random_intercept_sigma_sigma,
+		array[] vector random_effect_sigma_raw,
+		array[] real random_effect_sigma_mu,
+		array[] real random_effect_sigma_sigma,
 		matrix sigma_correlation_factor
 	){
 		
-		matrix[ncol_X_random_eff * (is_random_effect>0), M-1] random_intercept; 
+		matrix[ncol_X_random_eff * (is_random_effect>0), M-1] random_effect; 
 		
 		
 		// PIVOT WIDER
 		// increase of one dimension array[cell_type] matrix[group, factor]
 		array[M-1] matrix[ how_many_factors_in_random_design, n_groups] matrix_of_random_effects_raw;
 		
-		for(w in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
+		for(m in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
 			
 			// If I don't have the factor for one group 
 			if(group_factor_indexes_for_covariance[j,i] == 0)
 			matrix_of_random_effects_raw[w, j,i] = 0;
 			else 
-			matrix_of_random_effects_raw[w, j,i] = random_intercept_raw[group_factor_indexes_for_covariance[j,i], w];
+			matrix_of_random_effects_raw[w, j,i] = random_effect_raw[group_factor_indexes_for_covariance[j,i], w];
 		}
 		
 		// Design L
@@ -139,25 +139,112 @@ return beta_binomial_lupmf(
 		array[M-1] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects;
 		
 		// Non centered parameterisation
-		array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design] random_intercept_sigma;
-		for(w in 1:(M-1)) random_intercept_sigma[w] = random_intercept_sigma_mu[1] + random_intercept_sigma_sigma[1] * random_intercept_sigma_raw[w];
-		for(w in 1:(M-1)) random_intercept_sigma[w] = exp(random_intercept_sigma[w]/3.0);
+		array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design] random_effect_sigma;
+		for(m in 1:(M-1)) random_effect_sigma[m] = random_effect_sigma_mu[1] + random_effect_sigma_sigma[1] * random_effect_sigma_raw[m];
+		for(m in 1:(M-1)) random_effect_sigma[m] = exp(random_effect_sigma[m]/3.0);
 		
 		
-		for(w in 1:(M-1)) L[w] = diag_pre_multiply(random_intercept_sigma[w], sigma_correlation_factor) ;
-		for(w in 1:(M-1)) matrix_of_random_effects[w] = L[w] * matrix_of_random_effects_raw[w];
+		for(m in 1:(M-1)) L[m] = diag_pre_multiply(random_effect_sigma[m], sigma_correlation_factor) ;
+		for(m in 1:(M-1)) matrix_of_random_effects[m] = L[m] * matrix_of_random_effects_raw[m];
 		
 		// Pivot longer
-		for(w in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
+		for(m in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
 			
 			// If I don't have the factor for one group 
 			if(group_factor_indexes_for_covariance[j,i] > 0)
-			random_intercept[group_factor_indexes_for_covariance[j,i], w] = matrix_of_random_effects[w,j,i];
+			random_effect[group_factor_indexes_for_covariance[j,i], w] = matrix_of_random_effects[w,j,i];
 		}
 		
-		return(random_intercept);
+		return(random_effect);
 }
 
+
+
+  matrix get_mu_from_effects(
+      X, 
+      Beta, 
+    	M, 
+    	
+    	# Shared groups
+			random_effect_sigma_mu,
+			random_effect_sigma_sigma,
+			n_groups, 
+			how_many_factors_in_random_design, 
+			is_random_effect,
+			ncol_X_random_eff,
+			
+			# Group 1
+			group_factor_indexes_for_covariance,
+			random_effect_raw,
+			random_effect_sigma_raw,
+			sigma_correlation_factor,
+			
+			# Group 2
+			group_factor_indexes_for_covariance_2,
+			random_effect_raw_2,
+			random_effect_sigma_raw_2,
+			sigma_correlation_factor_2
+			
+  ){
+  
+  mu = (X * beta)';
+
+  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect; 
+  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2; 
+
+  // random intercept
+  if(ncol_X_random_eff[1]> 0){
+  	
+  // Covariate setup 
+  random_effect = 
+  	get_random_effect_matrix(
+			M, 
+			n_groups[1], 
+			how_many_factors_in_random_design[1], 
+			is_random_effect,
+			ncol_X_random_eff[1],
+			group_factor_indexes_for_covariance,
+			random_effect_raw,
+			random_effect_sigma_raw,
+			random_effect_sigma_mu,
+			random_effect_sigma_sigma,
+			sigma_correlation_factor
+		);
+
+    // Update with summing mu_random_effect
+    mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
+  }
+
+  // random intercept
+  if(ncol_X_random_eff[2]>0 ){
+  	
+  // Covariate setup 
+  random_effect_2 = 
+  	get_random_effect_matrix(
+			M, 
+			n_groups[2], 
+			how_many_factors_in_random_design[2], 
+			is_random_effect,
+			ncol_X_random_eff[2],
+			group_factor_indexes_for_covariance_2,
+		
+			random_effect_raw_2,
+			
+			random_effect_sigma_raw_2,
+			random_effect_sigma_mu,
+			random_effect_sigma_sigma,
+			sigma_correlation_factor_2
+		);
+
+    // Update with summing mu_random_effect
+    mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
+  }
+
+  // Calculate proportions
+  for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+    
+    return(mu)
+  }
 
 }
 data{
@@ -194,7 +281,6 @@ data{
   int<lower=0, upper=1> bimodal_mean_variability_association;
   int<lower=0, upper=1> use_data;
 
-
   // Parallel chain
   int<lower=1> grainsize;
 
@@ -208,8 +294,8 @@ data{
 
   // Is the parameters in random effect matrix
   array[2] int ncol_X_random_eff;
-  matrix[N, ncol_X_random_eff[1]] X_random_intercept;
-  matrix[N, ncol_X_random_eff[2]] X_random_intercept_2;
+  matrix[N, ncol_X_random_eff[1]] X_random_effect;
+  matrix[N, ncol_X_random_eff[2]] X_random_effect_2;
 
   // Covariance setup
   array[2] int n_groups;
@@ -261,25 +347,25 @@ parameters{
   real<lower=0, upper=1> mix_p;
   
   // Random intercept // matrix with ncol_X_random_effs rows and number of cells (-1) columns
-  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_intercept_raw;
-  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_intercept_raw_2;
+  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect_raw;
+  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_raw_2;
 
   
   // sd of random intercept
-  array[is_random_effect>0] real random_intercept_sigma_mu;
-  array[is_random_effect>0] real random_intercept_sigma_sigma;
+  array[is_random_effect>0] real random_effect_sigma_mu;
+  array[is_random_effect>0] real random_effect_sigma_sigma;
 
 	// Covariance
-  array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[1]]  random_intercept_sigma_raw;
+  array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[1]]  random_effect_sigma_raw;
 	cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
 
 	// Covariance
-  array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[2]]  random_intercept_sigma_raw_2;
+  array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[2]]  random_effect_sigma_raw_2;
 	cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
 
 
   // If I have just one group
-  array[is_random_effect>0] real zero_random_intercept;
+  array[is_random_effect>0] real zero_random_effect;
   
   
 }
@@ -301,16 +387,18 @@ transformed parameters{
   beta = R_ast_inverse * beta_raw; // coefficients on x
 
   // Calculate locations distribution
+  
+  
   mu = (Q_ast * beta_raw)';
 
-  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_intercept; 
-  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_intercept_2; 
+  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect; 
+  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2; 
 
   // random intercept
   if(ncol_X_random_eff[1]> 0){
   	
   // Covariate setup 
-  random_intercept = 
+  random_effect = 
   	get_random_effect_matrix(
 			M, 
 			n_groups[1], 
@@ -319,24 +407,23 @@ transformed parameters{
 			ncol_X_random_eff[1],
 			group_factor_indexes_for_covariance,
 		
-			random_intercept_raw,
+			random_effect_raw,
 			
-			random_intercept_sigma_raw,
-			random_intercept_sigma_mu,
-			random_intercept_sigma_sigma,
+			random_effect_sigma_raw,
+			random_effect_sigma_mu,
+			random_effect_sigma_sigma,
 			sigma_correlation_factor
 		);
 
-    // Update with summing mu_random_intercept
-    mu = mu + append_row((X_random_intercept * random_intercept)', rep_row_vector(0, N));
+    // Update with summing mu_random_effect
+    mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
   }
-
 
   // random intercept
   if(ncol_X_random_eff[2]>0 ){
   	
   // Covariate setup 
-  random_intercept_2 = 
+  random_effect_2 = 
   	get_random_effect_matrix(
 			M, 
 			n_groups[2], 
@@ -345,18 +432,17 @@ transformed parameters{
 			ncol_X_random_eff[2],
 			group_factor_indexes_for_covariance_2,
 		
-			random_intercept_raw_2,
+			random_effect_raw_2,
 			
-			random_intercept_sigma_raw_2,
-			random_intercept_sigma_mu,
-			random_intercept_sigma_sigma,
+			random_effect_sigma_raw_2,
+			random_effect_sigma_mu,
+			random_effect_sigma_sigma,
 			sigma_correlation_factor_2
 		);
 
-    // Update with summing mu_random_intercept
-    mu = mu + append_row((X_random_intercept_2 * random_intercept_2)', rep_row_vector(0, N));
+    // Update with summing mu_random_effect
+    mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
   }
-
 
   // Calculate proportions
   for(n in 1:N)  mu[,n] = softmax(mu[,n]);
@@ -372,6 +458,33 @@ model{
   // Fit main distribution
   if(use_data == 1){
     
+    mu2 = 
+    get_mu_from_effects(
+  Q_ast,
+  beta_raw,
+  	M, 
+    	
+    	# Shared groups
+			random_effect_sigma_mu,
+			random_effect_sigma_sigma,
+			n_groups, 
+			how_many_factors_in_random_design, 
+			is_random_effect,
+			ncol_X_random_eff,
+			
+			# Group 1
+			group_factor_indexes_for_covariance,
+			random_effect_raw,
+			random_effect_sigma_raw,
+			sigma_correlation_factor,
+			
+			# Group 2
+			group_factor_indexes_for_covariance_2,
+			random_effect_raw_2,
+			random_effect_sigma_raw_2,
+			sigma_correlation_factor_2
+)
+
     target +=  reduce_sum(
       partial_sum_lupmf,
       y_array[truncation_not_idx],
@@ -449,26 +562,26 @@ model{
   
   // Random intercept
   if(is_random_effect>0){
-    for(m in 1:(M-1)) random_intercept_raw[,m] ~ std_normal();
-    for(m in 1:(M-1)) random_intercept_sigma_raw[m] ~ std_normal();
+    for(m in 1:(M-1)) random_effect_raw[,m] ~ std_normal();
+    for(m in 1:(M-1)) random_effect_sigma_raw[m] ~ std_normal();
     sigma_correlation_factor ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
-    for(m in 1:(M-1)) random_intercept_raw_2[,m] ~ std_normal();
-    for(m in 1:(M-1)) random_intercept_sigma_raw_2[m] ~ std_normal();
+    for(m in 1:(M-1)) random_effect_raw_2[,m] ~ std_normal();
+    for(m in 1:(M-1)) random_effect_sigma_raw_2[m] ~ std_normal();
     if(is_random_effect>1) sigma_correlation_factor_2 ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
-    random_intercept_sigma_mu ~ std_normal();
-    random_intercept_sigma_sigma ~ std_normal();
+    random_effect_sigma_mu ~ std_normal();
+    random_effect_sigma_sigma ~ std_normal();
     
     // If I have just one group
-  	zero_random_intercept ~ std_normal();
+  	zero_random_effect ~ std_normal();
   }
 }
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
   // Rondom effect
-  matrix[ncol_X_random_eff_WINDOWS_BUG_FIX, M] beta_random_intercept;
-  matrix[ncol_X_random_eff_WINDOWS_BUG_FIX_2, M] beta_random_intercept_2;
+  matrix[ncol_X_random_eff_WINDOWS_BUG_FIX, M] beta_random_effect;
+  matrix[ncol_X_random_eff_WINDOWS_BUG_FIX_2, M] beta_random_effect_2;
 
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
@@ -485,18 +598,18 @@ generated quantities {
   
   // Random effect
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-  if(ncol_X_random_eff[1]==0) beta_random_intercept[1] = rep_row_vector(0.0, M);
+  if(ncol_X_random_eff[1]==0) beta_random_effect[1] = rep_row_vector(0.0, M);
   else{
-     beta_random_intercept[,1:(M-1)] = random_intercept;
-    for(n in 1:ncol_X_random_eff[1]) beta_random_intercept[n, M] = -sum(random_intercept[n,]);
+     beta_random_effect[,1:(M-1)] = random_effect;
+    for(n in 1:ncol_X_random_eff[1]) beta_random_effect[n, M] = -sum(random_effect[n,]);
   }
   
     // Random effect 2
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-  if(ncol_X_random_eff[2]==0) beta_random_intercept_2[1] = rep_row_vector(0.0, M);
+  if(ncol_X_random_eff[2]==0) beta_random_effect_2[1] = rep_row_vector(0.0, M);
   else{
-     beta_random_intercept_2[,1:(M-1)] = random_intercept_2;
-    for(n in 1:ncol_X_random_eff[2]) beta_random_intercept_2[n, M] = -sum(random_intercept_2[n,]);
+     beta_random_effect_2[,1:(M-1)] = random_effect_2;
+    for(n in 1:ncol_X_random_eff[2]) beta_random_effect_2[n, M] = -sum(random_effect_2[n,]);
   }
   
 
