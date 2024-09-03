@@ -106,6 +106,7 @@ sccomp_estimate <- function(.data,
                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                        .sample_cell_group_pairs_to_exclude = NULL,
+                       output_directory = "sccomp_draws_files",
                        verbose = TRUE,
                        enable_loo = FALSE,
                        noise_model = "multi_beta_binomial",
@@ -113,7 +114,7 @@ sccomp_estimate <- function(.data,
                        use_data = TRUE,
                        mcmc_seed = sample(1e5, 1),
                        max_sampling_iterations = 20000,
-                       pass_fit = TRUE,
+                       pass_fit = TRUE, ...,
                        
                        # DEPRECATED
                        approximate_posterior_inference = NULL,
@@ -155,6 +156,7 @@ sccomp_estimate.Seurat = function(.data,
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
+                                  output_directory = "sccomp_draws_files",
                                   verbose = TRUE,
                                   enable_loo = FALSE,
                                   noise_model = "multi_beta_binomial",
@@ -162,7 +164,7 @@ sccomp_estimate.Seurat = function(.data,
                                   use_data = TRUE,
                                   mcmc_seed = sample(1e5, 1),
                                   max_sampling_iterations = 20000,
-                                  pass_fit = TRUE,
+                                  pass_fit = TRUE, ...,
                                   
                                   # DEPRECATED
                                   approximate_posterior_inference = NULL,
@@ -205,6 +207,7 @@ sccomp_estimate.Seurat = function(.data,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
@@ -212,7 +215,7 @@ sccomp_estimate.Seurat = function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
 
 
@@ -234,6 +237,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                                 prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                                 .sample_cell_group_pairs_to_exclude = NULL,
+                                                output_directory = "sccomp_draws_files",
                                                 verbose = TRUE,
                                                 enable_loo = FALSE,
                                                 noise_model = "multi_beta_binomial",
@@ -241,7 +245,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 use_data = TRUE,
                                                 mcmc_seed = sample(1e5, 1),
                                                 max_sampling_iterations = 20000,
-                                                pass_fit = TRUE,
+                                                pass_fit = TRUE, ...,
                                                 
                                                 # DEPRECATED
                                                 approximate_posterior_inference = NULL,
@@ -286,6 +290,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
@@ -293,7 +298,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
 
 
@@ -315,6 +320,7 @@ sccomp_estimate.DFrame = function(.data,
                                   prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                   .sample_cell_group_pairs_to_exclude = NULL,
+                                  output_directory = "sccomp_draws_files",
                                   verbose = TRUE,
                                   enable_loo = FALSE,
                                   noise_model = "multi_beta_binomial",
@@ -322,7 +328,7 @@ sccomp_estimate.DFrame = function(.data,
                                   use_data = TRUE,
                                   mcmc_seed = sample(1e5, 1),
                                   max_sampling_iterations = 20000,
-                                  pass_fit = TRUE,
+                                  pass_fit = TRUE, ...,
                                   
                                   # DEPRECATED
                                   approximate_posterior_inference = NULL,
@@ -367,6 +373,7 @@ sccomp_estimate.DFrame = function(.data,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
@@ -374,7 +381,7 @@ sccomp_estimate.DFrame = function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
 }
 
@@ -395,6 +402,7 @@ sccomp_estimate.data.frame = function(.data,
                                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
                                       .sample_cell_group_pairs_to_exclude = NULL,
+                                      output_directory = "sccomp_draws_files",
                                       verbose = TRUE,
                                       enable_loo = FALSE,
                                       noise_model = "multi_beta_binomial",
@@ -402,7 +410,7 @@ sccomp_estimate.data.frame = function(.data,
                                       use_data = TRUE,
                                       mcmc_seed = sample(1e5, 1),
                                       max_sampling_iterations = 20000,
-                                      pass_fit = TRUE,
+                                      pass_fit = TRUE, ...,
                                       
                                       # DEPRECATED
                                       approximate_posterior_inference = NULL,
@@ -445,13 +453,14 @@ sccomp_estimate.data.frame = function(.data,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       exclude_priors = exclude_priors,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
   
   else 
@@ -471,13 +480,14 @@ sccomp_estimate.data.frame = function(.data,
       prior_mean = prior_mean, 
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       exclude_priors = exclude_priors,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
   
   res  |> 
@@ -559,6 +569,7 @@ sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
                                    inference_method = "pathfinder",
+                                   output_directory = "sccomp_draws_files",
                                    verbose = TRUE,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
@@ -584,6 +595,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
                                              inference_method = "pathfinder",
+                                             output_directory = "sccomp_draws_files",
                                              verbose = TRUE,
                                              mcmc_seed = sample(1e5, 1),
                                              max_sampling_iterations = 20000,
@@ -738,14 +750,14 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       cores = cores,
       quantile = my_quantile_step_2,
       inference_method = inference_method,
+      output_directory = output_directory,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2")
+      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2"),
+      ...
     )
 
-  
-  #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
   
   rng2 =  mod_rng |> sample_safe(
     generate_quantities_fx,
@@ -849,10 +861,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       cores = cores,
       quantile = CI,
       inference_method = inference_method,
+      output_directory = output_directory,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik")
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik"),
+      ...
     )
   
   # Create a dummy tibble

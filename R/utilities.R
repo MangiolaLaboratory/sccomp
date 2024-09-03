@@ -459,7 +459,9 @@ label_deleterious_outliers = function(.my_data){
 fit_model = function(
   data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
-  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
+  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000, 
+  output_directory = "sccomp_draws_files",
+  ...
 )
 {
 
@@ -494,6 +496,8 @@ fit_model = function(
       ) %>%
       min(cores)
 
+  # chains = 3
+  
   init_list=list(
     prec_coeff = c(5,0),
     prec_sd = 1,
@@ -503,9 +507,9 @@ fit_model = function(
    )
 
   if(data_for_model$n_random_eff>0){
-    init_list$random_intercept_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1) |> as.data.frame()  
-    init_list$random_intercept_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design)
-    init_list$sigma_correlation_factor = matrix(0, data_for_model$how_many_factors_in_random_design  , data_for_model$how_many_factors_in_random_design )
+    init_list$random_intercept_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1)  
+    init_list$random_intercept_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[1])
+    init_list$sigma_correlation_factor = matrix(0, data_for_model$how_many_factors_in_random_design[1]  , data_for_model$how_many_factors_in_random_design[1] )
     
     init_list$random_intercept_sigma_mu = 0.5 |> as.array()
     init_list$random_intercept_sigma_sigma = 0.2 |> as.array()
@@ -514,16 +518,16 @@ fit_model = function(
   } 
   
   if(data_for_model$n_random_eff>1){
-    init_list$random_intercept_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1) |> as.data.frame()  
-    init_list$random_intercept_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design)
-    init_list$sigma_correlation_factor_2 = matrix(0, data_for_model$how_many_factors_in_random_design  , data_for_model$how_many_factors_in_random_design )
+    init_list$random_intercept_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M-1)
+    init_list$random_intercept_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[2])
+    init_list$sigma_correlation_factor_2 = matrix(0, data_for_model$how_many_factors_in_random_design[2]  , data_for_model$how_many_factors_in_random_design[2] )
 
   } 
  
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
 
-  output_directory = "sccomp_draws_files"
+  #output_directory = "sccomp_draws_files"
   dir.create(output_directory, showWarnings = FALSE)
 
   # Fit
@@ -538,7 +542,7 @@ fit_model = function(
         data = data_for_model ,
         chains = chains,
         parallel_chains = chains,
-        threads_per_chain = 1,
+        threads_per_chain = ceiling(cores/chains),
         iter_warmup = warmup_samples,
         iter_sampling = as.integer(output_samples /chains),
         #refresh = ifelse(verbose, 1000, 0),
@@ -546,7 +550,8 @@ fit_model = function(
         save_warmup = FALSE,
         init = init,
         output_dir = output_directory,
-        show_messages = verbose
+        show_messages = verbose,
+        ...
       ) |> 
         suppressWarnings()
       

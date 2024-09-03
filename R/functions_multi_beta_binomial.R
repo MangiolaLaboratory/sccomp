@@ -17,6 +17,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      variational_inference = NULL,
                                      inference_method = "variational",
                                      test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
+                                     output_directory = "sccomp_draws_files",
                                      verbose = FALSE,
                                      exclude_priors = FALSE,
                                      bimodal_mean_variability_association = FALSE,
@@ -25,7 +26,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      cores = 4,
                                      mcmc_seed = sample(1e5, 1),
                                      max_sampling_iterations = 20000,
-                                     pass_fit = TRUE ) {
+                                     pass_fit = TRUE , ...) {
   
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
@@ -95,9 +96,10 @@ sccomp_glm_data_frame_raw = function(.data,
       cores = cores,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
+      output_directory = output_directory,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
 }
 
@@ -118,6 +120,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         variational_inference = NULL,
                                         inference_method = "variational",
                                         test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
+                                        output_directory = "sccomp_draws_files",
                                         verbose = FALSE,
                                         exclude_priors = FALSE,
                                         bimodal_mean_variability_association = FALSE,
@@ -126,7 +129,8 @@ sccomp_glm_data_frame_counts = function(.data,
                                         cores = 4,
                                         mcmc_seed = sample(1e5, 1),
                                         max_sampling_iterations = 20000,
-                                        pass_fit = TRUE) {
+                                        pass_fit = TRUE,
+                                        ...) {
   
   # Prepare column same enquo
   .sample = enquo(.sample)
@@ -290,9 +294,11 @@ sccomp_glm_data_frame_counts = function(.data,
       quantile = CI,
       inference_method = inference_method,
       verbose = verbose,
+      output_directory = output_directory,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik")
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik"),
+      ...
     )
   
 
