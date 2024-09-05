@@ -1195,10 +1195,6 @@ data_spread_to_model_input =
     A = ncol(XA);
     Ar = nrow(XA);
 
-
-
-
-
     factor_names = parse_formula(formula)
     factor_names_variability = parse_formula(formula_variability)
     cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% colnames()
@@ -1321,7 +1317,7 @@ data_spread_to_model_input =
         group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
         group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
         how_many_factors_in_random_design = how_many_factors_in_random_design,
-
+        
         # For parallel chains
         grainsize = 1,
         
@@ -2928,28 +2924,30 @@ replicate_data = function(.data,
     "(Intercept)" %in% colnames(new_X)
   if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
 
+  # Original grouping
+  original_grouping_names = .data |> attr("formula_composition") |> formula_to_random_effect_formulae() |> pull(grouping)
+  
   # Random intercept
   random_effect_elements = parse_formula_random_effect(formula_composition)
-  if(random_effect_elements |> nrow() |> equals(0)) {
-    X_random_effect_which = array()[0]
-    new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  
+  random_effect_grouping =
+    new_data %>%
+    
+    get_random_effect_design2(
+      !!.sample,
+      formula_composition
+    )
+  
 
-    X_random_effect_which_2 = array()[0]
-    new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  }
-  else {
-
-    random_effect_grouping =
-      new_data %>%
-
-        get_random_effect_design2(
-        !!.sample,
-        formula_composition
-      )
+  # if(random_effect_elements |> nrow() |> equals(0)) {
+  #   
+  # }
+  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any()) {
 
     # HAVE TO DEBUG
     new_X_random_effect =
       random_effect_grouping |>
+      filter(grouping==original_grouping_names[1]) |> 
       mutate(design_matrix = map(
         design,
         ~ ..1 |>
@@ -2964,28 +2962,6 @@ replicate_data = function(.data,
       as_matrix(rownames = quo_name(.sample))  |>
       tail(nrow_new_data)
 
-    # HAVE TO DEBUG
-    new_X_random_effect_2 =
-      random_effect_grouping |>
-      mutate(design_matrix = map(
-        design,
-        ~ ..1 |>
-          select(!!.sample, group___label, value) |>
-          pivot_wider(names_from = group___label, values_from = value) |>
-          mutate(across(everything(), ~ .x |> replace_na(0)))
-      )) |>
-      
-      # Merge
-      pull(design_matrix) |> 
-      _[[2]] |> 
-      as_matrix(rownames = quo_name(.sample))  |>
-      tail(nrow_new_data)
-    
-    # Check if I have column in the new design that are not in the old one
-    missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
-    if(missing_columns |> length() > 0)
-    	stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
-
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_effect_which =
       colnames(new_X_random_effect) |>
@@ -2996,6 +2972,39 @@ replicate_data = function(.data,
       ) |>
       as.array()
     
+    # Check if I have column in the new design that are not in the old one
+    missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
+    if(missing_columns |> length() > 0)
+      stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
+    
+  }
+  else{
+    X_random_effect_which = array()[0]
+    new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+    
+  }
+  if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()){
+    # HAVE TO DEBUG
+    new_X_random_effect_2 =
+      random_effect_grouping |>
+      filter(grouping==original_grouping_names[2]) |> 
+      mutate(design_matrix = map(
+        design,
+        ~ ..1 |>
+          select(!!.sample, group___label, value) |>
+          pivot_wider(names_from = group___label, values_from = value) |>
+          mutate(across(everything(), ~ .x |> replace_na(0)))
+      )) |>
+      
+      # Merge
+      pull(design_matrix) |> 
+      _[[1]] |> 
+      as_matrix(rownames = quo_name(.sample))  |>
+      tail(nrow_new_data)
+    
+
+
+    
     # DUPLICATE
     X_random_effect_which_2 =
       colnames(new_X_random_effect_2) |>
@@ -3005,8 +3014,13 @@ replicate_data = function(.data,
           colnames()
       ) |>
       as.array()
+  
   }
-
+  else{
+    X_random_effect_which_2 = array()[0]
+    new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  }
+  
   # New X
   model_input$X_original = model_input$X
   model_input$X = new_X
