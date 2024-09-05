@@ -1110,6 +1110,13 @@ sccomp_replicate.sccomp_tbl = function(fit,
   .sample = attr(fit, ".sample")
   .cell_group = attr(fit, ".cell_group")
 
+  sample_names =
+    fit |>
+    select(count_data) |>
+    unnest(count_data) |>
+    distinct(!!.sample) |> 
+    pull(!!.sample)
+  
   rng =
     replicate_data(
       fit,
@@ -1130,7 +1137,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
     # Get sample name
     nest(data = -N) %>%
     arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$y)) %>%
+    mutate(!!.sample := sample_names) %>%
     unnest(data) %>%
 
     # get cell type name
@@ -1140,7 +1147,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 
     select(-N, -M) |>
     select(!!.cell_group, !!.sample, everything())
-
+  
 }
 
 #' sccomp_predict
