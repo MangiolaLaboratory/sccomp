@@ -76,15 +76,15 @@ formula_to_random_effect_formulae <- function(fm) {
   
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
 
-  random_intercept_elements =
+  random_effect_elements =
     as.character(attr(terms(fm), "variables")) |>
 
     # Select random intercept part
     str_subset("\\|")
 
-  if(length(random_intercept_elements) > 0){
+  if(length(random_effect_elements) > 0){
 
-    random_intercept_elements |>
+    random_effect_elements |>
 
       # Divide grouping from factors
       str_split("\\|") |>
@@ -119,20 +119,20 @@ formula_to_random_effect_formulae <- function(fm) {
 #'
 #' @keywords internal
 #' @noRd
-parse_formula_random_intercept <- function(fm) {
+parse_formula_random_effect <- function(fm) {
 
   # Define the variables as NULL to avoid CRAN NOTES
   formula <- NULL
   
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
 
-  random_intercept_elements =
+  random_effect_elements =
     as.character(attr(terms(fm), "variables")) |>
 
     # Select random intercept part
     str_subset("\\|")
 
-  if(length(random_intercept_elements) > 0){
+  if(length(random_effect_elements) > 0){
 
     formula_to_random_effect_formulae(fm) |>
 
@@ -507,19 +507,19 @@ fit_model = function(
    )
 
   if(data_for_model$n_random_eff>0){
-    init_list$random_intercept_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1)  
-    init_list$random_intercept_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[1])
+    init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1)  
+    init_list$random_effect_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[1])
     init_list$sigma_correlation_factor = matrix(0, data_for_model$how_many_factors_in_random_design[1]  , data_for_model$how_many_factors_in_random_design[1] )
     
-    init_list$random_intercept_sigma_mu = 0.5 |> as.array()
-    init_list$random_intercept_sigma_sigma = 0.2 |> as.array()
-    init_list$zero_random_intercept = rep(0, size = 1) |> as.array()
+    init_list$random_effect_sigma_mu = 0.5 |> as.array()
+    init_list$random_effect_sigma_sigma = 0.2 |> as.array()
+    init_list$zero_random_effect = rep(0, size = 1) |> as.array()
     
   } 
   
   if(data_for_model$n_random_eff>1){
-    init_list$random_intercept_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M-1)
-    init_list$random_intercept_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[2])
+    init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M-1)
+    init_list$random_effect_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[2])
     init_list$sigma_correlation_factor_2 = matrix(0, data_for_model$how_many_factors_in_random_design[2]  , data_for_model$how_many_factors_in_random_design[2] )
 
   } 
@@ -728,7 +728,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom tidyselect all_of
 #' @importFrom readr type_convert
 #' @noRd
-get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
+get_random_effect_design2 = function(.data_, .sample, formula_composition ){
 
   # Define the variables as NULL to avoid CRAN NOTES
   formula <- NULL
@@ -801,7 +801,7 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 #'
 #' @param .data_ A data frame containing the data.
 #' @param .sample A quosure representing the sample variable.
-#' @param random_intercept_elements A data frame containing the random intercept elements.
+#' @param random_effect_elements A data frame containing the random intercept elements.
 #' 
 #' @return A data frame with the processed design matrices for random intercept models.
 #' 
@@ -823,7 +823,7 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 #' @importFrom rlang quo_name
 #' @importFrom tidyselect all_of
 #' @noRd
-get_random_intercept_design = function(.data_, .sample, random_intercept_elements ){
+get_random_effect_design = function(.data_, .sample, random_effect_elements ){
 
   # Define the variables as NULL to avoid CRAN NOTES
   is_factor_continuous <- NULL
@@ -838,9 +838,9 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
   .sample = enquo(.sample)
 
   # If intercept is not defined create it
-  if(nrow(random_intercept_elements) == 0 )
+  if(nrow(random_effect_elements) == 0 )
     return(
-      random_intercept_elements |>
+      random_effect_elements |>
         mutate(
           design = list(),
           is_factor_continuous = logical()
@@ -848,7 +848,7 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
     )
 
   # Otherwise process
-  random_intercept_elements |>
+  random_effect_elements |>
     mutate(is_factor_continuous = map_lgl(
       `factor`,
       ~ .x != "(Intercept)" && .data_ |> select(all_of(.x)) |> pull(1) |> is("numeric")
@@ -967,7 +967,7 @@ get_design_matrix = function(.data_spread, formula, .sample){
 #'
 #' @param .data A data frame containing the data.
 #' @param factor_names A character vector of factor names.
-#' @param random_intercept_elements A data frame containing the random intercept elements.
+#' @param random_effect_elements A data frame containing the random intercept elements.
 #' @param formula The formula used for the model.
 #' @param X The design matrix.
 #' 
@@ -985,7 +985,7 @@ get_design_matrix = function(.data_spread, formula, .sample){
 #' @importFrom stringr str_subset
 #' @importFrom readr type_convert
 #' @noRd
-check_random_intercept_design = function(.data, factor_names, random_intercept_elements, formula, X){
+check_random_effect_design = function(.data, factor_names, random_effect_elements, formula, X){
 
   # Define the variables as NULL to avoid CRAN NOTES
   factors <- NULL
@@ -995,7 +995,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
   .data_ = .data
 
   # Loop across groupings
-  random_intercept_elements |>
+  random_effect_elements |>
     nest(factors = `factor` ) |>
     mutate(checked = map2(
       grouping, factors,
@@ -1094,7 +1094,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
       }
     ))
 
-  random_intercept_elements |>
+  random_effect_elements |>
     nest(groupings = grouping ) |>
     mutate(checked = map2(`factor`, groupings, ~{
       # Check the same group spans multiple factors
@@ -1134,7 +1134,7 @@ data_spread_to_model_input =
     contrasts = NULL,
     bimodal_mean_variability_association = FALSE,
     use_data = TRUE,
-    random_intercept_elements){
+    random_effect_elements){
 
     # Define the variables as NULL to avoid CRAN NOTES
     exposure <- NULL
@@ -1155,12 +1155,12 @@ data_spread_to_model_input =
     .sample = enquo(.sample)
     .cell_type = enquo(.cell_type)
     .count = enquo(.count)
-    .grouping_for_random_intercept =
-      random_intercept_elements |>
+    .grouping_for_random_effect =
+      random_effect_elements |>
       pull(grouping) |>
       unique() 
     
-    if (length(.grouping_for_random_intercept)==0 ) .grouping_for_random_intercept = "random_intercept"
+    if (length(.grouping_for_random_effect)==0 ) .grouping_for_random_effect = "random_effect"
 
 
     X  =
@@ -1201,19 +1201,19 @@ data_spread_to_model_input =
 
     factor_names = parse_formula(formula)
     factor_names_variability = parse_formula(formula_variability)
-    cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% colnames()
+    cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% colnames()
 
     # Random intercept
-    if(nrow(random_intercept_elements)>0 ) {
+    if(nrow(random_effect_elements)>0 ) {
 
-      #check_random_intercept_design(.data_spread, any_of(factor_names), random_intercept_elements, formula, X)
-      random_intercept_grouping = get_random_intercept_design2(.data_spread, !!.sample,  formula )
+      #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
+      random_effect_grouping = get_random_effect_design2(.data_spread, !!.sample,  formula )
 
       # Actual parameters, excluding for the sum to one parameters
       is_random_effect = 1
 
-      random_intercept_grouping =
-        random_intercept_grouping |>
+      random_effect_grouping =
+        random_effect_grouping |>
         mutate(design_matrix = map(
           design,
           ~ ..1 |>
@@ -1223,27 +1223,27 @@ data_spread_to_model_input =
         )) 
       
       
-      X_random_intercept = 
-        random_intercept_grouping |> 
+      X_random_effect = 
+        random_effect_grouping |> 
         pull(design_matrix) |> 
         _[[1]]  |>  
         as_matrix(rownames = quo_name(.sample))
       
       # For now that stan does not have tuples, I just allow max two levels
-      if(random_intercept_grouping |> nrow() > 2) stop("sccomp says: at the moment sccomp allow max two groupings")
+      if(random_effect_grouping |> nrow() > 2) stop("sccomp says: at the moment sccomp allow max two groupings")
       # This will be modularised with the new stan
-      if(random_intercept_grouping |> nrow() > 1)
-        X_random_intercept_2 =   
-          random_intercept_grouping |> 
+      if(random_effect_grouping |> nrow() > 1)
+        X_random_effect_2 =   
+          random_effect_grouping |> 
           pull(design_matrix) |> 
           _[[2]] |>  
           as_matrix(rownames = quo_name(.sample))
-      else X_random_intercept_2 =  X_random_intercept[,0,drop=FALSE]
+      else X_random_effect_2 =  X_random_effect[,0,drop=FALSE]
 
-    n_random_eff = random_intercept_grouping |> nrow()
+    n_random_eff = random_effect_grouping |> nrow()
       
     ncol_X_random_eff =
-      random_intercept_grouping |>
+      random_effect_grouping |>
       mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
       pull(n) 
     
@@ -1251,7 +1251,7 @@ data_spread_to_model_input =
     
     # TEMPORARY
     group_factor_indexes_for_covariance = 
-    	X_random_intercept |> 
+    	X_random_effect |> 
     	colnames() |> 
     	enframe(value = "parameter", name = "order")  |> 
     	separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
@@ -1263,9 +1263,9 @@ data_spread_to_model_input =
     n_groups = group_factor_indexes_for_covariance |> ncol()
       
     # This will be modularised with the new stan
-    if(random_intercept_grouping |> nrow() > 1)
+    if(random_effect_grouping |> nrow() > 1)
       group_factor_indexes_for_covariance_2 = 
-        X_random_intercept_2 |> 
+        X_random_effect_2 |> 
         colnames() |> 
         enframe(value = "parameter", name = "order")  |> 
         separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
@@ -1281,8 +1281,8 @@ data_spread_to_model_input =
     
     
     } else {
-      X_random_intercept = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
-      X_random_intercept_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
+      X_random_effect = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
+      X_random_effect_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
       is_random_effect = 0
       ncol_X_random_eff = c(0,0)
       n_random_eff = 0
@@ -1297,9 +1297,9 @@ data_spread_to_model_input =
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
-        M = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% ncol(),
+        M = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% ncol(),
         exposure = .data_spread$exposure,
-        y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% as_matrix(rownames = quo_name(.sample)),
+        y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% as_matrix(rownames = quo_name(.sample)),
         X = X,
         XA = XA,
         Xa = Xa,
@@ -1316,8 +1316,8 @@ data_spread_to_model_input =
         ncol_X_random_eff = ncol_X_random_eff,
         n_random_eff = n_random_eff,
         n_groups  = n_groups,
-        X_random_intercept = X_random_intercept,
-        X_random_intercept_2 = X_random_intercept_2,
+        X_random_effect = X_random_effect,
+        X_random_effect_2 = X_random_effect_2,
         group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
         group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
         how_many_factors_in_random_design = how_many_factors_in_random_design,
@@ -1413,18 +1413,18 @@ data_spread_to_model_input =
     data_for_model
   }
 
-data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_intercept){
+data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_effect){
 
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
-  .grouping_for_random_intercept = .grouping_for_random_intercept |> map(~ .x |> quo_name() ) |> unlist()
+  .grouping_for_random_effect = .grouping_for_random_effect |> map(~ .x |> quo_name() ) |> unlist()
 
   .data %>%
     nest(data = -!!.sample) %>%
     mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
     unnest(data) %>%
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_intercept)) %>%
+    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) %>%
     spread(!!.cell_type, !!.count)
 
 }
@@ -2532,7 +2532,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   # Define the variables as NULL to avoid CRAN NOTES
   X <- NULL
   .value <- NULL
-  X_random_intercept <- NULL
+  X_random_effect <- NULL
   .variable <- NULL
   y <- NULL
   M <- NULL
@@ -2558,38 +2558,65 @@ get_abundance_contrast_draws = function(.data, contrasts){
   
   # Random effect
   if(.data |> attr("model_input") %$% n_random_eff > 0){
-    beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
-    beta_random_intercept =
+    beta_random_effect_factor_of_interest = .data |> attr("model_input") %$% X_random_effect |> colnames()
+    beta_random_effect =
       .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
+      draws_to_tibble_x_y("random_effect", "C", "M") 
+    
+    # Add last component
+    beta_random_effect = 
+      beta_random_effect |> 
+      bind_rows(
+        beta_random_effect |> 
+          with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
+          mutate(.value = -.value, M = beta_random_effect |> pull(M) |> max() + 1)
+      )
+    
+    # Reshape
+    beta_random_effect = 
+      beta_random_effect |>
       pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
+      setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest))
     
     draws = draws |> 
-      left_join(select(beta_random_intercept, -.variable),
+      left_join(select(beta_random_effect, -.variable),
                 by = c("M", ".chain", ".iteration", ".draw")
       )
   }  else {
-    beta_random_intercept_factor_of_interest = ""
+    beta_random_effect_factor_of_interest = ""
   }
   
   # Second random effect. IN THE FUTURE THIS WILL BE VECTORISED TO ARBUTRARY GRI+OUING
   if(.data |> attr("model_input") %$% n_random_eff > 1){
-    beta_random_intercept_factor_of_interest_2 = .data |> attr("model_input") %$% X_random_intercept_2 |> colnames()
-    beta_random_intercept_2 =
+    beta_random_effect_factor_of_interest_2 = .data |> attr("model_input") %$% X_random_effect_2 |> colnames()
+    beta_random_effect_2 =
       .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y("beta_random_intercept_2", "C", "M") |>
+      draws_to_tibble_x_y("random_effect_2", "C", "M") 
+    
+    # Add last component
+    beta_random_effect_2 = 
+      beta_random_effect_2 |> 
+      bind_rows(
+        beta_random_effect_2 |> 
+          with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
+          mutate(.value = -.value, M = beta_random_effect_2 |> pull(M) |> max() + 1)
+      )
+    
+    # Reshape
+    beta_random_effect_2 = 
+      beta_random_effect_2 |>
       pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest_2))
+      setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest_2))
+    
     
     draws = draws |> 
-      left_join(select(beta_random_intercept_2, -.variable),
+      left_join(select(beta_random_effect_2, -.variable),
                 by = c("M", ".chain", ".iteration", ".draw")
       )
   } else {
-    beta_random_intercept_factor_of_interest_2 = ""
+    beta_random_effect_factor_of_interest_2 = ""
   }
 
   
@@ -2598,7 +2625,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
     draws = 
       draws |> 
       mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
-      select(- any_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) 
+      select(- any_of(c(beta_factor_of_interest, beta_random_effect_factor_of_interest) |> setdiff(contrasts)) ) 
   
   # Add cell name
   draws = draws |> 
@@ -2902,27 +2929,27 @@ replicate_data = function(.data,
   if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
 
   # Random intercept
-  random_intercept_elements = parse_formula_random_intercept(formula_composition)
-  if(random_intercept_elements |> nrow() |> equals(0)) {
-    X_random_intercept_which = array()[0]
-    new_X_random_intercept = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  random_effect_elements = parse_formula_random_effect(formula_composition)
+  if(random_effect_elements |> nrow() |> equals(0)) {
+    X_random_effect_which = array()[0]
+    new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
 
-    X_random_intercept_which_2 = array()[0]
-    new_X_random_intercept_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+    X_random_effect_which_2 = array()[0]
+    new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
   }
   else {
 
-    random_intercept_grouping =
+    random_effect_grouping =
       new_data %>%
 
-        get_random_intercept_design2(
+        get_random_effect_design2(
         !!.sample,
         formula_composition
       )
 
     # HAVE TO DEBUG
-    new_X_random_intercept =
-      random_intercept_grouping |>
+    new_X_random_effect =
+      random_effect_grouping |>
       mutate(design_matrix = map(
         design,
         ~ ..1 |>
@@ -2938,8 +2965,8 @@ replicate_data = function(.data,
       tail(nrow_new_data)
 
     # HAVE TO DEBUG
-    new_X_random_intercept_2 =
-      random_intercept_grouping |>
+    new_X_random_effect_2 =
+      random_effect_grouping |>
       mutate(design_matrix = map(
         design,
         ~ ..1 |>
@@ -2955,26 +2982,26 @@ replicate_data = function(.data,
       tail(nrow_new_data)
     
     # Check if I have column in the new design that are not in the old one
-    missing_columns = new_X_random_intercept |> colnames() |> setdiff(colnames(model_input$X_random_intercept))
+    missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
     if(missing_columns |> length() > 0)
     	stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
 
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
-    X_random_intercept_which =
-      colnames(new_X_random_intercept) |>
+    X_random_effect_which =
+      colnames(new_X_random_effect) |>
       match(
         model_input %$%
-          X_random_intercept %>%
+          X_random_effect %>%
           colnames()
       ) |>
       as.array()
     
     # DUPLICATE
-    X_random_intercept_which_2 =
-      colnames(new_X_random_intercept_2) |>
+    X_random_effect_which_2 =
+      colnames(new_X_random_effect_2) |>
       match(
         model_input %$%
-          X_random_intercept_2 %>%
+          X_random_effect_2 %>%
           colnames()
       ) |>
       as.array()
@@ -2988,10 +3015,10 @@ replicate_data = function(.data,
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
 
-  model_input$X_random_intercept = new_X_random_intercept
-  model_input$X_random_intercept_2 = new_X_random_intercept_2
+  model_input$X_random_effect = new_X_random_effect
+  model_input$X_random_effect_2 = new_X_random_effect_2
 
-  model_input$ncol_X_random_eff_new = ncol(new_X_random_intercept) |> c(ncol(new_X_random_intercept_2))
+  model_input$ncol_X_random_eff_new = ncol(new_X_random_effect) |> c(ncol(new_X_random_effect_2))
 
 
   
@@ -3019,9 +3046,9 @@ replicate_data = function(.data,
       XA_which = XA_which,
 
       # Random intercept
-      X_random_intercept_which = X_random_intercept_which,
-      X_random_intercept_which_2 = X_random_intercept_which_2,
-      length_X_random_intercept_which = length(X_random_intercept_which) |> c(length(X_random_intercept_which_2)),
+      X_random_effect_which = X_random_effect_which,
+      X_random_effect_which_2 = X_random_effect_which_2,
+      length_X_random_effect_which = length(X_random_effect_which) |> c(length(X_random_effect_which_2)),
 
       # Should I create intercept for generate quantities
       create_intercept = create_intercept
@@ -3054,12 +3081,12 @@ add_formula_columns = function(.data, .original_data, .sample,  formula_composit
   if(length(formula_elements) == 0) return(.data)
 
   # Get random intercept
-  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
+  .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
 
   data_frame_formula =
     .original_data %>%
     as_tibble() |>
-    select( !!.sample, formula_elements, any_of(.grouping_for_random_intercept) ) %>%
+    select( !!.sample, formula_elements, any_of(.grouping_for_random_effect) ) %>%
     distinct()
 
   .data |>

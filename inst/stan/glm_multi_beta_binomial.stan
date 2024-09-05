@@ -49,13 +49,13 @@ functions{
   }
 
 
-  real partial_sum_lpmf(array[] int slice_y,
-
-                        int start,
-                        int end,
-                        array[] int exposure_array,
-                        vector mu_array,
-                        vector precision_array
+  real partial_sum_lpmf(
+    array[] int slice_y,
+    int start,
+    int end,
+    array[] int exposure_array,
+    vector mu_array,
+    vector precision_array
                         ) {
 
 return beta_binomial_lupmf(
@@ -66,8 +66,6 @@ return beta_binomial_lupmf(
   ) ;
 
 }
-
-
 
   row_vector average_by_col(matrix X) {
     int rows_X = rows(X);
@@ -129,9 +127,9 @@ return beta_binomial_lupmf(
 			
 			// If I don't have the factor for one group 
 			if(group_factor_indexes_for_covariance[j,i] == 0)
-			matrix_of_random_effects_raw[w, j,i] = 0;
+			matrix_of_random_effects_raw[m, j,i] = 0;
 			else 
-			matrix_of_random_effects_raw[w, j,i] = random_effect_raw[group_factor_indexes_for_covariance[j,i], w];
+			matrix_of_random_effects_raw[m, j,i] = random_effect_raw[group_factor_indexes_for_covariance[j,i], m];
 		}
 		
 		// Design L
@@ -152,7 +150,7 @@ return beta_binomial_lupmf(
 			
 			// If I don't have the factor for one group 
 			if(group_factor_indexes_for_covariance[j,i] > 0)
-			random_effect[group_factor_indexes_for_covariance[j,i], w] = matrix_of_random_effects[w,j,i];
+			random_effect[group_factor_indexes_for_covariance[j,i], m] = matrix_of_random_effects[m,j,i];
 		}
 		
 		return(random_effect);
@@ -160,90 +158,63 @@ return beta_binomial_lupmf(
 
 
 
-  matrix get_mu_from_effects(
-      X, 
-      Beta, 
-    	M, 
-    	
-    	# Shared groups
-			random_effect_sigma_mu,
-			random_effect_sigma_sigma,
-			n_groups, 
-			how_many_factors_in_random_design, 
-			is_random_effect,
-			ncol_X_random_eff,
-			
-			# Group 1
-			group_factor_indexes_for_covariance,
-			random_effect_raw,
-			random_effect_sigma_raw,
-			sigma_correlation_factor,
-			
-			# Group 2
-			group_factor_indexes_for_covariance_2,
-			random_effect_raw_2,
-			random_effect_sigma_raw_2,
-			sigma_correlation_factor_2
+  real partial_sum_2_lpmf(
+      // Parallel
+      array[] int idx_y,
+      int start,
+      int end,
+      
+      // General
+      array[,] int y,
+      array[] int exposure,  // Sliced
+      
+      // Precision
+      matrix Xa,                   // Sliced
+      matrix alpha,
+
+      // Fixed effects
+      matrix X,                   // Sliced
+      matrix beta, 
+    	int M, 
+
+    	// Random effects
+			array[] int ncol_X_random_eff,
+			matrix X_random_effect,   // Sliced
+			matrix X_random_effect_2,  // Sliced
+			matrix random_effect,
+			matrix random_effect_2
 			
   ){
   
-  mu = (X * beta)';
+  int N = end-start+1;
+  
+  // mu
+  matrix[M, N] mu = (X[idx_y,] * beta)';
+  if(ncol_X_random_eff[1]> 0)
+    mu = mu + append_row((X_random_effect[idx_y,] * random_effect)', rep_row_vector(0, N));
 
-  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect; 
-  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2; 
+  if(ncol_X_random_eff[2]>0 )
+    mu = mu + append_row((X_random_effect_2[idx_y,] * random_effect_2)', rep_row_vector(0, N));
 
-  // random intercept
-  if(ncol_X_random_eff[1]> 0){
-  	
-  // Covariate setup 
-  random_effect = 
-  	get_random_effect_matrix(
-			M, 
-			n_groups[1], 
-			how_many_factors_in_random_design[1], 
-			is_random_effect,
-			ncol_X_random_eff[1],
-			group_factor_indexes_for_covariance,
-			random_effect_raw,
-			random_effect_sigma_raw,
-			random_effect_sigma_mu,
-			random_effect_sigma_sigma,
-			sigma_correlation_factor
-		);
-
-    // Update with summing mu_random_effect
-    mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
-  }
-
-  // random intercept
-  if(ncol_X_random_eff[2]>0 ){
-  	
-  // Covariate setup 
-  random_effect_2 = 
-  	get_random_effect_matrix(
-			M, 
-			n_groups[2], 
-			how_many_factors_in_random_design[2], 
-			is_random_effect,
-			ncol_X_random_eff[2],
-			group_factor_indexes_for_covariance_2,
-		
-			random_effect_raw_2,
-			
-			random_effect_sigma_raw_2,
-			random_effect_sigma_mu,
-			random_effect_sigma_sigma,
-			sigma_correlation_factor_2
-		);
-
-    // Update with summing mu_random_effect
-    mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
-  }
-
-  // Calculate proportions
   for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-    
-    return(mu)
+  
+  // Precision
+  matrix[M, N] precision = (Xa[idx_y,] * alpha)';
+
+  // vectorisation
+  vector[N*M] mu_array = to_vector(mu);
+  vector[N*M] precision_array = to_vector(exp(precision));
+  array[N*M] int exposure_array = rep_each(exposure[idx_y], M);
+  array[N*M] int y_array =  to_array_1d(y[idx_y,]);
+
+  return beta_binomial_lupmf(
+    y_array |
+    exposure_array,
+    (mu_array .* precision_array),
+    (1.0 - mu_array) .* precision_array
+  ) ;
+  
+ 
   }
 
 }
@@ -373,15 +344,15 @@ transformed parameters{
 
   // Initialisation
   matrix[C,M] beta_raw;
-  matrix[M, N] precision = (Xa * alpha)';
+  // matrix[M, N] precision = (Xa * alpha)';
   matrix[C,M] beta;
 
-  // locations distribution
-  matrix[M, N] mu;
+  // // locations distribution
+  // matrix[M, N] mu;
 
-  // vectorisation
-  vector[N*M] mu_array;
-  vector[N*M] precision_array;
+  // // vectorisation
+  // vector[N*M] mu_array;
+  // vector[N*M] precision_array;
 
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   beta = R_ast_inverse * beta_raw; // coefficients on x
@@ -389,26 +360,25 @@ transformed parameters{
   // Calculate locations distribution
   
   
-  mu = (Q_ast * beta_raw)';
-
-  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect; 
-  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2; 
+//   mu = (Q_ast * beta_raw)';
+// 
+  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect;
+  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2;
 
   // random intercept
   if(ncol_X_random_eff[1]> 0){
-  	
-  // Covariate setup 
-  random_effect = 
+
+  // Covariate setup
+  random_effect =
   	get_random_effect_matrix(
-			M, 
-			n_groups[1], 
-			how_many_factors_in_random_design[1], 
+			M,
+			n_groups[1],
+			how_many_factors_in_random_design[1],
 			is_random_effect,
 			ncol_X_random_eff[1],
 			group_factor_indexes_for_covariance,
-		
+
 			random_effect_raw,
-			
 			random_effect_sigma_raw,
 			random_effect_sigma_mu,
 			random_effect_sigma_sigma,
@@ -416,24 +386,23 @@ transformed parameters{
 		);
 
     // Update with summing mu_random_effect
-    mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
+    // mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
   }
 
   // random intercept
   if(ncol_X_random_eff[2]>0 ){
-  	
-  // Covariate setup 
-  random_effect_2 = 
+
+  // Covariate setup
+  random_effect_2 =
   	get_random_effect_matrix(
-			M, 
-			n_groups[2], 
-			how_many_factors_in_random_design[2], 
+			M,
+			n_groups[2],
+			how_many_factors_in_random_design[2],
 			is_random_effect,
 			ncol_X_random_eff[2],
 			group_factor_indexes_for_covariance_2,
-		
+
 			random_effect_raw_2,
-			
 			random_effect_sigma_raw_2,
 			random_effect_sigma_mu,
 			random_effect_sigma_sigma,
@@ -441,60 +410,64 @@ transformed parameters{
 		);
 
     // Update with summing mu_random_effect
-    mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
+    // mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
   }
-
-  // Calculate proportions
-  for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-
-  // Convert the matrix m to a column vector in column-major order.
-  mu_array = to_vector(mu);
-  precision_array = to_vector(exp(precision));
+// 
+//   // Calculate proportions
+//   for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+// 
+//   // Convert the matrix m to a column vector in column-major order.
+//   mu_array = to_vector(mu);
+//   precision_array = to_vector(exp(precision));
   
 
 }
 model{
 
+  
   // Fit main distribution
   if(use_data == 1){
     
-    mu2 = 
-    get_mu_from_effects(
-  Q_ast,
-  beta_raw,
-  	M, 
-    	
-    	# Shared groups
-			random_effect_sigma_mu,
-			random_effect_sigma_sigma,
-			n_groups, 
-			how_many_factors_in_random_design, 
-			is_random_effect,
-			ncol_X_random_eff,
-			
-			# Group 1
-			group_factor_indexes_for_covariance,
-			random_effect_raw,
-			random_effect_sigma_raw,
-			sigma_correlation_factor,
-			
-			# Group 2
-			group_factor_indexes_for_covariance_2,
-			random_effect_raw_2,
-			random_effect_sigma_raw_2,
-			sigma_correlation_factor_2
-)
-
-    target +=  reduce_sum(
-      partial_sum_lupmf,
-      y_array[truncation_not_idx],
-      grainsize,
-      exposure_array[truncation_not_idx],
-      mu_array[truncation_not_idx],
-      precision_array[truncation_not_idx]
-    );
+    array[N] int array_N;
+    for(n in 1:N) array_N[n] = n;
     
+   target += reduce_sum(
+      partial_sum_2_lupmf,
+      array_N,
+      grainsize,
+      
+      // General
+      y,
+      exposure,  
+      
+      // Precision
+      Xa,                   
+      alpha,
 
+      // Fixed effects
+      Q_ast,                   
+      beta_raw, 
+    	M, 
+
+    	// Random effects
+			ncol_X_random_eff,
+			X_random_effect,   
+			X_random_effect_2, 
+			random_effect,
+			random_effect_2
+			
+  );
+
+    // target += reduce_sum(
+    //   partial_sum_lupmf,
+    //   y_array[truncation_not_idx],
+    //   grainsize,
+    //   exposure_array[truncation_not_idx],
+    //   mu_array[truncation_not_idx],
+    //   precision_array[truncation_not_idx]
+    // );
+    
+    
   }
 
 
@@ -579,9 +552,10 @@ model{
 }
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
-  // Rondom effect
-  matrix[ncol_X_random_eff_WINDOWS_BUG_FIX, M] beta_random_effect;
-  matrix[ncol_X_random_eff_WINDOWS_BUG_FIX_2, M] beta_random_effect_2;
+  
+  // // Rondom effect
+  // matrix[ncol_X_random_eff_WINDOWS_BUG_FIX, M] beta_random_effect;
+  // matrix[ncol_X_random_eff_WINDOWS_BUG_FIX_2, M] beta_random_effect_2;
 
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
@@ -596,33 +570,33 @@ generated quantities {
   }
 
   
-  // Random effect
-  // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-  if(ncol_X_random_eff[1]==0) beta_random_effect[1] = rep_row_vector(0.0, M);
-  else{
-     beta_random_effect[,1:(M-1)] = random_effect;
-    for(n in 1:ncol_X_random_eff[1]) beta_random_effect[n, M] = -sum(random_effect[n,]);
-  }
+  // // Random effect
+  // // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
+  // if(ncol_X_random_eff[1]==0) beta_random_effect[1] = rep_row_vector(0.0, M);
+  // else{
+  //    beta_random_effect[,1:(M-1)] = random_effect;
+  //   for(n in 1:ncol_X_random_eff[1]) beta_random_effect[n, M] = -sum(random_effect[n,]);
+  // }
   
-    // Random effect 2
-  // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-  if(ncol_X_random_eff[2]==0) beta_random_effect_2[1] = rep_row_vector(0.0, M);
-  else{
-     beta_random_effect_2[,1:(M-1)] = random_effect_2;
-    for(n in 1:ncol_X_random_eff[2]) beta_random_effect_2[n, M] = -sum(random_effect_2[n,]);
-  }
+  //   // Random effect 2
+  // // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
+  // if(ncol_X_random_eff[2]==0) beta_random_effect_2[1] = rep_row_vector(0.0, M);
+  // else{
+  //    beta_random_effect_2[,1:(M-1)] = random_effect_2;
+  //   for(n in 1:ncol_X_random_eff[2]) beta_random_effect_2[n, M] = -sum(random_effect_2[n,]);
+  // }
   
 
-  // LOO
-  if(enable_loo==1)
-    for (n in 1:TNS) {
-      log_lik[n] = beta_binomial_lpmf(
-        y_array[truncation_not_idx[n]] |
-        exposure_array[truncation_not_idx[n]],
-        (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
-        ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
-        ) ;
-    }
+  // // LOO
+  // if(enable_loo==1)
+  //   for (n in 1:TNS) {
+  //     log_lik[n] = beta_binomial_lpmf(
+  //       y_array[truncation_not_idx[n]] |
+  //       exposure_array[truncation_not_idx[n]],
+  //       (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
+  //       ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
+  //       ) ;
+  //   }
 
 
 }
