@@ -577,7 +577,8 @@ sccomp_remove_outliers <- function(.estimate,
                                    
                                    # DEPRECATED
                                    approximate_posterior_inference = NULL,
-                                   variational_inference = NULL
+                                   variational_inference = NULL,
+                                   ...
 ) {
   if(inference_method == "variational") 
     rlang::inform(
@@ -603,7 +604,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              
                                              # DEPRECATED
                                              approximate_posterior_inference = NULL,
-                                             variational_inference = NULL
+                                             variational_inference = NULL,
+                                             ...
 ) {
   
   
