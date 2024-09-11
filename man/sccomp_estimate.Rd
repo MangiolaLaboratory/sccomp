@@ -27,6 +27,7 @@ sccomp_estimate(
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   pass_fit = TRUE,
+  ...,
   approximate_posterior_inference = NULL,
   variational_inference = NULL
 )
