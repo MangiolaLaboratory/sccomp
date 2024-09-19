@@ -113,7 +113,7 @@ return beta_binomial_lupmf(
 		array[] vector random_effect_sigma_raw,
 		array[] real random_effect_sigma_mu,
 		array[] real random_effect_sigma_sigma,
-		matrix sigma_correlation_factor
+		array[] matrix sigma_correlation_factor
 	){
 		
 		matrix[ncol_X_random_eff * (is_random_effect>0), M-1] random_effect; 
@@ -142,7 +142,7 @@ return beta_binomial_lupmf(
 		for(m in 1:(M-1)) random_effect_sigma[m] = exp(random_effect_sigma[m]/3.0);
 		
 		
-		for(m in 1:(M-1)) L[m] = diag_pre_multiply(random_effect_sigma[m], sigma_correlation_factor) ;
+		for(m in 1:(M-1)) L[m] = diag_pre_multiply(random_effect_sigma[m], sigma_correlation_factor[m]) ;
 		for(m in 1:(M-1)) matrix_of_random_effects[m] = L[m] * matrix_of_random_effects_raw[m];
 		
 		// Pivot longer
@@ -328,11 +328,11 @@ parameters{
 
 	// Covariance
   array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[1]]  random_effect_sigma_raw;
-	cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
+	array[M-1] cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
 
 	// Covariance
   array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[2]]  random_effect_sigma_raw_2;
-	cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
+	array[M-1] cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
 
 
   // If I have just one group
@@ -537,11 +537,11 @@ model{
   if(is_random_effect>0){
     for(m in 1:(M-1)) random_effect_raw[,m] ~ std_normal();
     for(m in 1:(M-1)) random_effect_sigma_raw[m] ~ std_normal();
-    sigma_correlation_factor ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+    for(m in 1:(M-1)) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
     for(m in 1:(M-1)) random_effect_raw_2[,m] ~ std_normal();
     for(m in 1:(M-1)) random_effect_sigma_raw_2[m] ~ std_normal();
-    if(is_random_effect>1) sigma_correlation_factor_2 ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+    if(is_random_effect>1) for(m in 1:(M-1)) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
     random_effect_sigma_mu ~ std_normal();
     random_effect_sigma_sigma ~ std_normal();
