@@ -1331,7 +1331,9 @@ data_spread_to_model_input =
     data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
     data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
+    data_for_model$truncation_not_idx_minimal = matrix(c(0,0), nrow = 1)[0,,drop=FALSE]
+    data_for_model$TNIM = 0
+    
     # Add parameter factor dictionary
     data_for_model$factor_parameter_dictionary = tibble()
 

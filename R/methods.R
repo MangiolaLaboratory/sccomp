@@ -737,6 +737,23 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     sort()
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
   
+  data_for_model$truncation_not_idx_minimal = 
+    truncation_df %>% 
+    select(N, M, truncation_down) %>% 
+    spread(M, truncation_down) %>%
+    mutate(row = row_number()) %>%
+    pivot_longer(
+      cols = -c(N, row),
+      names_to = "columns",
+      values_to = "value"
+    ) %>%
+    filter(value == -1) %>%
+    select(row, columns) %>%
+    mutate(columns = as.integer(columns)) |> 
+    as.matrix()
+  
+  data_for_model$TNIM = nrow(data_for_model$truncation_not_idx_minimal)
+  
   message("sccomp says: outlier identification - step 1/2")
   
   my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
@@ -1045,6 +1062,9 @@ sccomp_test.sccomp_tbl = function(.data,
       add_attr(.data |> attr("fit") , "fit")
 
   result |>
+    
+    # TEMPORARILY DROPPING KHAT
+    select(-contains("n_eff"), -contains("_hat")) |> 
     
     add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
     
