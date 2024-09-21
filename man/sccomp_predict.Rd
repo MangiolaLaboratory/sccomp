@@ -31,15 +31,18 @@ This function replicates counts from a real-world dataset.
 }
 \examples{
 
-data("counts_obj")
+\donttest{
+  if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+    data("counts_obj")
 
-if(.Platform$OS.type == "unix")
-  sccomp_estimate(
-  counts_obj ,
-   ~ type, ~1,  sample, cell_group, count,
-    cores = 1
-  ) |>
+    sccomp_estimate(
+      counts_obj,
+      ~ type, ~1, sample, cell_group, count,
+      cores = 1
+    ) |>
+    sccomp_predict()
+  }
+}
 
-  sccomp_predict()
 
 }

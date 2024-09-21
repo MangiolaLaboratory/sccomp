@@ -51,7 +51,7 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula_composition)
   ))
   
-  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
+  .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
   
   # Make counts
   .data %>%
@@ -83,7 +83,7 @@ sccomp_glm_data_frame_raw = function(.data,
       .cell_group = !!.cell_group,
       .count = count,
       contrasts = contrasts,
-      #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
+      #.grouping_for_random_effect = !! .grouping_for_random_effect,
       prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       percent_false_positive =  percent_false_positive,
@@ -112,7 +112,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         
                                         # Secondary arguments
                                         contrasts = NULL,
-                                        #.grouping_for_random_intercept = NULL,
+                                        #.grouping_for_random_effect = NULL,
                                         prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                         prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
@@ -137,7 +137,7 @@ sccomp_glm_data_frame_counts = function(.data,
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
+  #.grouping_for_random_effect = enquo(.grouping_for_random_effect)
   
   
   #Check column class
@@ -198,19 +198,19 @@ sccomp_glm_data_frame_counts = function(.data,
   factor_names = parse_formula(formula_composition)
   
   # Random intercept
-  random_intercept_elements = parse_formula_random_intercept(formula_composition)
+  random_effect_elements = parse_formula_random_effect(formula_composition)
   
   # Variational only if no random intercept
-  if(inference_method=="variational" & random_intercept_elements |> filter(factor != "(Intercept)") |> nrow() > 0)
+  if(inference_method=="variational" & random_effect_elements |> filter(factor != "(Intercept)") |> nrow() > 0)
     stop("sccomp says: for random effect modelling plese use `inference_method` = \"hmc\", for the full Bayes HMC inference.")
   
   # If no random intercept fake it
-  if(nrow(random_intercept_elements)>0){
-    .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
+  if(nrow(random_effect_elements)>0){
+    .grouping_for_random_effect = random_effect_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
     
   } else{
-    .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
-    .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
+    .grouping_for_random_effect = list(quo(!! sym("random_effect")))
+    .data = .data |> mutate(!!.grouping_for_random_effect[[1]] := "1")
   }
   
   # If .sample_cell_group_pairs_to_exclude 
@@ -240,7 +240,7 @@ sccomp_glm_data_frame_counts = function(.data,
   
   data_for_model =
     .data %>%
-    data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
+    data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_effect) %>%
     data_spread_to_model_input(
       formula_composition, !!.sample, !!.cell_group, !!.count,
       truncation_ajustment = 1.1,
@@ -249,7 +249,7 @@ sccomp_glm_data_frame_counts = function(.data,
       contrasts = contrasts,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       use_data = use_data,
-      random_intercept_elements
+      random_effect_elements
     )
   
   # Print design matrix
@@ -278,7 +278,7 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$prior_mean_intercept = prior_mean$intercept
   data_for_model$prior_mean_coefficients = prior_mean$coefficients
   data_for_model$exclude_priors = exclude_priors
-  data_for_model$enable_loo = TRUE & enable_loo
+  data_for_model$enable_loo = enable_loo
   
   # # Check that design matrix is not too big
   # if(ncol(data_for_model$X)>20)
@@ -297,7 +297,7 @@ sccomp_glm_data_frame_counts = function(.data,
       output_directory = output_directory,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik"),
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
       ...
     )
   

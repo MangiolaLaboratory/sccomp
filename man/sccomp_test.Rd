@@ -31,15 +31,17 @@ This function test contrasts from a sccomp result.
 }
 \examples{
 
-data("counts_obj")
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
 
-  estimates =
-  sccomp_estimate(
-  counts_obj ,
-   ~ 0 + type, ~1,  sample, cell_group, count,
-    cores = 1
-  ) |>
-
-  sccomp_test("typecancer - typebenign")
+    estimates = sccomp_estimate(
+      counts_obj,
+      ~ 0 + type, ~1, sample, cell_group, count,
+      cores = 1
+    ) |>
+    sccomp_test("typecancer - typebenign")
+  }
+}
 
 }

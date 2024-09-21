@@ -46,19 +46,23 @@ This function simulates counts from a linear model.
 }
 \examples{
 
-data("counts_obj")
-library(dplyr)
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
+    library(dplyr)
 
-estimate =
- sccomp_estimate(
- counts_obj ,
-  ~ type, ~1,  sample, cell_group, count,
-   cores = 1
- )
+    estimate = sccomp_estimate(
+      counts_obj,
+      ~ type, ~1, sample, cell_group, count,
+      cores = 1
+    )
 
-# Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-# Simulate data
-simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+    # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
+    counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
+
+    # Simulate data
+    simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+  }
+}
 
 }

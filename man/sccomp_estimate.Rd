@@ -19,6 +19,7 @@ sccomp_estimate(
   prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0, 0.6),
     standard_deviation = c(10, 20)),
   .sample_cell_group_pairs_to_exclude = NULL,
+  output_directory = "sccomp_draws_files",
   verbose = TRUE,
   enable_loo = FALSE,
   noise_model = "multi_beta_binomial",
@@ -27,6 +28,7 @@ sccomp_estimate(
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   pass_fit = TRUE,
+  ...,
   approximate_posterior_inference = NULL,
   variational_inference = NULL
 )
@@ -114,17 +116,20 @@ group-size) and derives the count data from cell metadata.
 }
 \examples{
 
-data("counts_obj")
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
 
-estimate =
-  sccomp_estimate(
-  counts_obj ,
-   ~ type,
-   ~1,
-   sample,
-   cell_group,
-   count,
-    cores = 1
-  )
+    estimate = sccomp_estimate(
+      counts_obj,
+      ~ type,
+      ~1,
+      sample,
+      cell_group,
+      count,
+      cores = 1
+    )
+  }
+}
 
 }

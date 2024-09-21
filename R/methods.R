@@ -75,18 +75,21 @@
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type,
-#'    ~1,
-#'    sample,
-#'    cell_group,
-#'    count,
-#'     cores = 1
-#'   )
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'     )
+#'   }
+#' }
 #'
 #' @export
 #'
@@ -548,19 +551,22 @@ sccomp_estimate.data.frame = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type,
-#'    ~1,
-#'    sample,
-#'    cell_group,
-#'    count,
-#'     cores = 1
-#'   ) |>
-#'   sccomp_remove_outliers(cores = 1)
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_remove_outliers(cores = 1)
+#'   }
+#' }
 #'
 #' @export
 #'
@@ -577,7 +583,8 @@ sccomp_remove_outliers <- function(.estimate,
                                    
                                    # DEPRECATED
                                    approximate_posterior_inference = NULL,
-                                   variational_inference = NULL
+                                   variational_inference = NULL,
+                                   ...
 ) {
   if(inference_method == "variational") 
     rlang::inform(
@@ -603,7 +610,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              
                                              # DEPRECATED
                                              approximate_posterior_inference = NULL,
-                                             variational_inference = NULL
+                                             variational_inference = NULL,
+                                             ...
 ) {
   
   
@@ -652,7 +660,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     )))
   
   # Random intercept
-  random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
+  random_effect_elements = .estimate |> attr("formula_composition") |> parse_formula_random_effect()
   
   # Load model
   mod_rng = load_model("glm_multi_beta_binomial_generate_data")
@@ -676,12 +684,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
         
         # Random intercept
-        ncol_X_random_eff_new = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2) ), # I could put this in the intial data
-        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2)),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
+        length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+        X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
         
         # Random intercept DUPLICATED
-        X_random_intercept_which_2 = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
         
         create_intercept = FALSE
       )),
@@ -735,6 +743,23 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     sort()
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
   
+  data_for_model$truncation_not_idx_minimal = 
+    truncation_df %>% 
+    select(N, M, truncation_down) %>% 
+    spread(M, truncation_down) %>%
+    mutate(row = row_number()) %>%
+    pivot_longer(
+      cols = -c(N, row),
+      names_to = "columns",
+      values_to = "value"
+    ) %>%
+    filter(value == -1) %>%
+    select(row, columns) %>%
+    mutate(columns = as.integer(columns)) |> 
+    as.matrix()
+  
+  data_for_model$TNIM = nrow(data_for_model$truncation_not_idx_minimal)
+  
   message("sccomp says: outlier identification - step 1/2")
   
   my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
@@ -754,7 +779,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2"),
+      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "random_effect", "random_effect_2"),
       ...
     )
 
@@ -775,12 +800,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
       
       # Random intercept
-      ncol_X_random_eff_new = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2) ), # I could put this in the intial data
-      length_X_random_intercept_which = ncol(data_for_model$X_random_intercept) |> c(ncol(data_for_model$X_random_intercept_2)),
-      X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+      ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
+      length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+      X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
       
       # Random intercept DUPLICATED
-      X_random_intercept_which_2 = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+      X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
       
       create_intercept = FALSE
       
@@ -865,7 +890,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "beta_random_intercept_2", "log_lik"),
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
       ...
     )
   
@@ -915,16 +940,18 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#'   estimates =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ 0 + type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'
-#'   sccomp_test("typecancer - typebenign")
+#'     estimates = sccomp_estimate(
+#'       counts_obj,
+#'       ~ 0 + type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_test("typecancer - typebenign")
+#'   }
+#' }
 #'
 sccomp_test <- function(.data,
                            contrasts = NULL,
@@ -1044,6 +1071,9 @@ sccomp_test.sccomp_tbl = function(.data,
 
   result |>
     
+    # TEMPORARILY DROPPING KHAT
+    select(-contains("n_eff"), -contains("_hat")) |> 
+    
     add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
     
     # Attach association mean concentration
@@ -1080,17 +1110,18 @@ sccomp_test.sccomp_tbl = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+#'     data("counts_obj")
 #'
-#' if(.Platform$OS.type == "unix")
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'
-#'   sccomp_replicate()
-#'
+#'     sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_replicate()
+#'   }
+#' }
 sccomp_replicate <- function(fit,
                              formula_composition = NULL,
                              formula_variability = NULL,
@@ -1110,6 +1141,13 @@ sccomp_replicate.sccomp_tbl = function(fit,
   .sample = attr(fit, ".sample")
   .cell_group = attr(fit, ".cell_group")
 
+  sample_names =
+    fit |>
+    select(count_data) |>
+    unnest(count_data) |>
+    distinct(!!.sample) |> 
+    pull(!!.sample)
+  
   rng =
     replicate_data(
       fit,
@@ -1130,7 +1168,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
     # Get sample name
     nest(data = -N) %>%
     arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$y)) %>%
+    mutate(!!.sample := sample_names) %>%
     unnest(data) %>%
 
     # get cell type name
@@ -1140,7 +1178,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 
     select(-N, -M) |>
     select(!!.cell_group, !!.sample, everything())
-
+  
 }
 
 #' sccomp_predict
@@ -1160,16 +1198,19 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+#'     data("counts_obj")
 #'
-#' if(.Platform$OS.type == "unix")
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'
-#'   sccomp_predict()
+#'     sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_predict()
+#'   }
+#' }
+#' 
 #'
 sccomp_predict <- function(fit,
                            formula_composition = NULL,
@@ -1263,15 +1304,19 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#'   estimates = sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   )
+#'     estimates = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     )
 #'
-#'   sccomp_remove_unwanted_variation(estimates)
+#'     sccomp_remove_unwanted_variation(estimates)
+#'   }
+#' }
 #'
 sccomp_remove_unwanted_variation <- function(.data,
                                       formula_composition = ~1,
@@ -1290,7 +1335,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
-  .grouping_for_random_intercept = attr(.data, ".grouping_for_random_intercept")
+  .grouping_for_random_effect = attr(.data, ".grouping_for_random_effect")
   .count = attr(.data, ".count")
 
   fit = attr(.data, "fit")
@@ -1395,20 +1440,24 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
-#' library(dplyr)
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'     library(dplyr)
 #'
-#' estimate =
-#'  sccomp_estimate(
-#'  counts_obj ,
-#'   ~ type, ~1,  sample, cell_group, count,
-#'    cores = 1
-#'  )
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     )
 #'
-#' # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-#' counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-#' # Simulate data
-#' simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+#'     # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
+#'     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
+#'
+#'     # Simulate data
+#'     simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+#'   }
+#' }
 #'
 simulate_data <- function(.data,
                           .estimate_object,
@@ -1528,17 +1577,21 @@ simulate_data.tbl = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1, sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'   sccomp_test()
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_test()
 #'
-#' # estimate |> sccomp_boxplot()
+#'     # estimate |> sccomp_boxplot()
+#'   }
+#' }
+#' 
 sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
 
 
@@ -1601,16 +1654,19 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_com
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1, sample, cell_group, count,
-#'     cores = 1
-#'   )
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     )
 #'
-#' # estimate |> plot()
+#'     # estimate |> plot()
+#'   }
+#' }
 #'
 plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), ...) {
 
