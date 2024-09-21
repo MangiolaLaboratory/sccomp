@@ -3400,6 +3400,8 @@ add_class = function(var, name) {
 #' # Assuming 'fit' is a stanfit object obtained from running a Stan model
 #' samples_count = get_output_samples(fit)
 #'
+#' @export
+#' 
 get_output_samples = function(fit){
   
   # Check if the output_samples field is present in the metadata of the fit object
@@ -3426,20 +3428,25 @@ get_output_samples = function(fit){
 #' Load, Compile, and Cache a Stan Model
 #'
 #' This function attempts to load a precompiled Stan model using the `instantiate` package.
-#' If the model is not found, it will locate the Stan model file within the `sccomp` package,
-#' compile it using `cmdstanr`, and save the compiled model to the cache directory.
+#' If the model is not found in the cache or force recompilation is requested, it will locate
+#' the Stan model file within the `sccomp` package, compile it using `cmdstanr`, and save the 
+#' compiled model to the cache directory for future use.
 #'
-#' @param name A character string representing the name of the Stan model.
-#' @param cache_dir A character string representing the path to the cache directory.
+#' @param name A character string representing the name of the Stan model (without the `.stan` extension).
+#' @param cache_dir A character string representing the path to the cache directory where compiled models are saved. 
+#' Defaults to `sccomp_stan_models_cache_dir`.
+#' @param force A logical value. If `TRUE`, the model will be recompiled even if it exists in the cache. 
+#' Defaults to `FALSE`.
 #' 
-#' @return A compiled Stan model object.
+#' @return A compiled Stan model object from `cmdstanr`.
 #' 
 #' @importFrom instantiate stan_package_model
 #' @importFrom cmdstanr cmdstan_model
 #' @export
+#' 
 #' @examples
 #' \dontrun{
-#'   model <- load_model("glm_multi_beta_binomial_", "~/cache")
+#'   model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE)
 #' }
 load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FALSE) {
   
@@ -3464,7 +3471,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
     stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
     
     # Compile the Stan model using cmdstanr with threading support enabled
-    mod <- cmdstan_model(
+    mod <- cmdstanr::cmdstan_model(
       stan_model_path, 
       cpp_options = list(stan_threads = TRUE),
       force_recompile = TRUE
@@ -3499,7 +3506,7 @@ check_and_install_cmdstanr <- function() {
   if (!requireNamespace("cmdstanr", quietly = TRUE)) {
     message("The 'cmdstanr' package is not installed.")
     if (interactive()) {
-      install <- menu(c("yes", "no"), title = "Do you want to install 'cmdstanr'?")
+      install <- menu(c("yes", "no"), title = "Do you want to install 'cmdstanr'? It is needed for sccomp and it is not on CRAN.")
       if (install == 1) {
         install.packages(pkgs = "cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
         library(cmdstanr)
