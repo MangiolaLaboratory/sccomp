@@ -9,12 +9,14 @@ sccomp_remove_outliers(
   percent_false_positive = 5,
   cores = detectCores(),
   inference_method = "pathfinder",
+  output_directory = "sccomp_draws_files",
   verbose = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   enable_loo = FALSE,
   approximate_posterior_inference = NULL,
-  variational_inference = NULL
+  variational_inference = NULL,
+  ...
 )
 }
 \arguments{
