@@ -625,17 +625,6 @@ transformed parameters{
 }
 model{
   
-  
-  // int W = count_filtered_indices(truncation_not_idx_minimal, my_array);
-  // array[W,2] int truncation_not_idx_minimal_filtered = filter_missing_indices(truncation_not_idx_minimal, my_array);
-  // 
-  // // Get non missing, invert the missing, this will be a big array
-  // array[N * M - W] int non_missing_indices = get_non_missing_indices(N, M, truncation_not_idx_minimal_filtered);
-  // 
-  // print(W);
-  // print(size(non_missing_indices));
-  // print(size(truncation_not_idx));
-  
   // Fit main distribution
   if(use_data == 1 ){
     
@@ -673,13 +662,13 @@ model{
       );
       
       // print("2---", reduce_sum(
-      //   partial_sum_lupmf,
-      //   y_array[truncation_not_idx],
-      //   grainsize,
-      //   exposure_array[truncation_not_idx],
-      //   mu_array[truncation_not_idx],
-      //   precision_array[truncation_not_idx]
-      //   ));
+        //   partial_sum_lupmf,
+        //   y_array[truncation_not_idx],
+        //   grainsize,
+        //   exposure_array[truncation_not_idx],
+        //   mu_array[truncation_not_idx],
+        //   precision_array[truncation_not_idx]
+        //   ));
         
         
   }
@@ -781,34 +770,40 @@ generated quantities {
     for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
   }
   
-  
-  // // Random effect
-  // // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-  // if(ncol_X_random_eff[1]==0) beta_random_effect[1] = rep_row_vector(0.0, M);
-  // else{
-    //    beta_random_effect[,1:(M-1)] = random_effect;
-    //   for(n in 1:ncol_X_random_eff[1]) beta_random_effect[n, M] = -sum(random_effect[n,]);
-    // }
+  // LOO
+  if(enable_loo==1){
     
-    //   // Random effect 2
-    // // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
-    // if(ncol_X_random_eff[2]==0) beta_random_effect_2[1] = rep_row_vector(0.0, M);
-    // else{
-      //    beta_random_effect_2[,1:(M-1)] = random_effect_2;
-      //   for(n in 1:ncol_X_random_eff[2]) beta_random_effect_2[n, M] = -sum(random_effect_2[n,]);
-      // }
-      
-      
-      // // LOO
-      // if(enable_loo==1)
-      //   for (n in 1:TNS) {
-        //     log_lik[n] = beta_binomial_lpmf(
-          //       y_array[truncation_not_idx[n]] |
-          //       exposure_array[truncation_not_idx[n]],
-          //       (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
-          //       ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
-          //       ) ;
-          //   }
-          
-          
+    matrix[M, N] mu;
+    vector[N*M] mu_array;
+    vector[N*M] precision_array;
+  
+    mu = (Q_ast * beta_raw)';
+    
+    // random intercept
+    if(ncol_X_random_eff[1]> 0)
+    mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
+    if(ncol_X_random_eff[2]>0 )
+    mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
+    
+    
+    // Calculate proportions
+    for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+    
+    // Convert the matrix m to a column vector in column-major order.
+    mu_array = to_vector(mu);
+    precision_array = to_vector(exp(precision));
+    
+    for (n in 1:TNS) {
+      log_lik[n] = beta_binomial_lpmf(
+        y_array[truncation_not_idx[n]] |
+        exposure_array[truncation_not_idx[n]],
+        (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
+        ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
+        ) ;
+    }
+    
+  }
+  
+  
+  
 }
