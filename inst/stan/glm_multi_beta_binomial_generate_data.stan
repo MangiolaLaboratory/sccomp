@@ -41,7 +41,7 @@ matrix get_random_effect_matrix(
 		array[] vector random_effect_sigma_raw,
 		array[] real random_effect_sigma_mu,
 		array[] real random_effect_sigma_sigma,
-		matrix sigma_correlation_factor
+		array[] matrix sigma_correlation_factor
 	){
 		
 		matrix[ncol_X_random_eff * (is_random_effect>0), M-1] random_effect; 
@@ -70,9 +70,10 @@ matrix get_random_effect_matrix(
 		for(w in 1:(M-1)) random_effect_sigma[w] = exp(random_effect_sigma[w]/3.0);
 		
 		
-		for(w in 1:(M-1)) L[w] = diag_pre_multiply(random_effect_sigma[w], sigma_correlation_factor) ;
+		for(w in 1:(M-1)) L[w] = diag_pre_multiply(random_effect_sigma[w], sigma_correlation_factor[w]) ;
 		for(w in 1:(M-1)) matrix_of_random_effects[w] = L[w] * matrix_of_random_effects_raw[w];
 		
+
 		// Pivot longer
 		for(w in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
 			
@@ -176,11 +177,11 @@ parameters {
 
 	// Covariance
   array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[1]]  random_effect_sigma_raw;
-	cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
+	array[M-1 * (is_random_effect>0)] cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
 
 	// Covariance
   array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[2]]  random_effect_sigma_raw_2;
-	cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
+	array[M-1 * (is_random_effect>0)] cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
 
   // If I have just one group
   array[is_random_effect>0] real zero_random_effect;

@@ -227,7 +227,7 @@ functions{
             array[W,2] int truncation_not_idx_minimal_filtered = filter_missing_indices(truncation_not_idx_minimal, idx_y);
             
             // Get non missing, invert the missing, this will be a big array
-            array[N * M - dims(truncation_not_idx_minimal)[1]] int non_missing_indices = get_non_missing_indices(N, M, truncation_not_idx_minimal_filtered);
+            array[N * M - dims(truncation_not_idx_minimal_filtered)[1]] int non_missing_indices = get_non_missing_indices(N, M, truncation_not_idx_minimal_filtered);
             
             return beta_binomial_lupmf(
               y_array[non_missing_indices] |
@@ -439,7 +439,7 @@ data{
   int<lower=1, upper=N*M> TNS; // truncation_not_size
   array[TNS] int<lower=1, upper=N*M> truncation_not_idx;
   
-  int<lower=0, upper=N*M> TNIM; // truncation_not_size
+  int TNIM; // truncation_not_size
   array[TNIM,2] int<lower=1, upper=N*M> truncation_not_idx_minimal;
   
   int<lower=0, upper=1> is_vb;
@@ -532,11 +532,11 @@ parameters{
   
   // Covariance
   array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[1]]  random_effect_sigma_raw;
-  array[M-1] cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
+  array[M-1 * (is_random_effect>0)] cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
   
   // Covariance
   array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[2]]  random_effect_sigma_raw_2;
-  array[M-1] cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
+  array[M-1 * (is_random_effect>0)] cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
   
   
   // If I have just one group
