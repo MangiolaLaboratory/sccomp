@@ -7,97 +7,85 @@ data("counts_obj")
 
 set.seed(42)
 
-# test_that("model instantiate",{
-#   
-#   instantiate::stan_package_model(
-#     name = "glm_multi_beta_binomial",
-#     package = "sccomp"
-#   ) |> 
-#     expect_s3_class("CmdStanModel") |> 
-#     expect_warning()
-#   
-# })
-
-# test_that("model instantiate",{
-#   
-#   sccomp:::load_model("glm_multi_beta_binomial") |> 
-#     expect_s3_class("CmdStanModel")
-# })
-
-my_estimate = 
-  seurat_obj |>
-  sccomp_estimate(
-    formula_composition = ~ continuous_covariate * type ,
-    formula_variability = ~ 1,
-    sample, cell_group,
-
-    cores = 1, 
-    inference_method = "pathfinder",
-     # mcmc_seed = 42,
-    max_sampling_iterations = 1000, verbose=FALSE
-  )
-
-my_estimate_full_bayes = 
-  seurat_obj |>
-  sccomp_estimate(
-    formula_composition = ~ continuous_covariate * type ,
-    formula_variability = ~ 1,
-    sample, cell_group,
-    cores = 1, 
-    inference_method = "hmc",
-    mcmc_seed = 42,
-    max_sampling_iterations = 1000, verbose=FALSE
-  )
-
-my_estimate_no_intercept = 
-  seurat_obj |>
-  sccomp_estimate(
-    formula_composition = ~ 0 + type + continuous_covariate,
-    formula_variability = ~ 1,
-    sample, cell_group,
-    cores = 1,
-    mcmc_seed = 42,
-    max_sampling_iterations = 1000, verbose=FALSE
-  )
-
-my_estimate_random = 
-  seurat_obj |>
-  sccomp_estimate(
-    formula_composition = ~ type + (type | group__),
-
-    formula_variability = ~ 1,
-    sample, cell_group,
-    cores = 1,
-    mcmc_seed = 42,     
-    max_sampling_iterations = 1000, verbose=FALSE
-  )
-
-# my_estimate_random2 = 
-# 	seurat_obj |>
-# 	sccomp_estimate(
-# 		formula_composition = ~ 1 +  type + (1 + type | group__),
-# 		formula_variability = ~ 1,
-# 		sample, cell_group,
-# 		cores = 1,
-# 		mcmc_seed = 42,     
-# 		max_sampling_iterations = 1000
-# 	)
-# 
-# my_estimate_random3 = 
-# 	seurat_obj |>
-# 	sccomp_estimate(
-# 		formula_composition = ~  type + (1 | group__),
-# 		formula_variability = ~ 1,
-# 		sample, cell_group,
-# 		cores = 1,
-# 		mcmc_seed = 42,     
-# 		max_sampling_iterations = 1000
-# 	)
-
+if (instantiate::stan_cmdstan_exists()){
+  
+  my_estimate = 
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ continuous_covariate * type ,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      
+      cores = 1, 
+      inference_method = "pathfinder",
+      # mcmc_seed = 42,
+      max_sampling_iterations = 1000, verbose=FALSE
+    )
+  
+  my_estimate_full_bayes = 
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ continuous_covariate * type ,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      cores = 1, 
+      inference_method = "hmc",
+      mcmc_seed = 42,
+      max_sampling_iterations = 1000, verbose=FALSE
+    )
+  
+  my_estimate_no_intercept = 
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ 0 + type + continuous_covariate,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      cores = 1,
+      mcmc_seed = 42,
+      max_sampling_iterations = 1000, verbose=FALSE
+    )
+  
+  my_estimate_random = 
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ type + (type | group__),
+      
+      formula_variability = ~ 1,
+      sample, cell_group,
+      cores = 1,
+      mcmc_seed = 42,     
+      max_sampling_iterations = 1000, verbose=FALSE
+    )
+  
+  # my_estimate_random2 = 
+  # 	seurat_obj |>
+  # 	sccomp_estimate(
+  # 		formula_composition = ~ 1 +  type + (1 + type | group__),
+  # 		formula_variability = ~ 1,
+  # 		sample, cell_group,
+  # 		cores = 1,
+  # 		mcmc_seed = 42,     
+  # 		max_sampling_iterations = 1000
+  # 	)
+  # 
+  # my_estimate_random3 = 
+  # 	seurat_obj |>
+  # 	sccomp_estimate(
+  # 		formula_composition = ~  type + (1 | group__),
+  # 		formula_variability = ~ 1,
+  # 		sample, cell_group,
+  # 		cores = 1,
+  # 		mcmc_seed = 42,     
+  # 		max_sampling_iterations = 1000
+  # 	)
+  
+  
+  
+}
 
 
 test_that("Generate data",{
-
+  skip_cmdstan()
 
   my_estimate |>
 
@@ -116,7 +104,7 @@ test_that("Generate data",{
 })
 
 test_that("Predict data",{
-  
+  skip_cmdstan()
   library(stringr)
   
   new_data_seurat = seurat_obj[, seurat_obj[[]]$sample %in% c("10x_8K", "SI-GA-E5")] 
@@ -168,7 +156,8 @@ test_that("Predict data",{
 
 test_that("outliers",{
   
-
+  skip_cmdstan()
+  
   my_estimate |>
     sccomp_remove_outliers(
       cores = 1, max_sampling_iterations = 1000, inference_method = "hmc",
@@ -178,6 +167,9 @@ test_that("outliers",{
 })
 
 test_that("multilevel multi beta binomial from Seurat",{
+  
+  skip_cmdstan()
+  
  res =
     seurat_obj |>
     ## filter(cell_group %in% c("NK cycling", "B immature")) |>
@@ -223,6 +215,8 @@ test_that("multilevel multi beta binomial from Seurat",{
 
 test_that("multilevel nested",{
   
+  skip_cmdstan()
+  
   library(tidyseurat)
   library(sccomp)
   #debugonce(sccomp:::fit_model)
@@ -262,6 +256,8 @@ test_that("multilevel nested",{
 
 test_that("multilevel multi beta binomial from Seurat with intercept and continuous covariate",{
 
+  skip_cmdstan()
+  
   library(sccomp)
 
   res =
@@ -326,6 +322,8 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 
 test_that("multi beta binomial from Seurat",{
 
+  skip_cmdstan()
+  
   my_estimate |>
     filter(parameter == "typehealthy") |>
     arrange(desc(abs(c_effect))) |>
@@ -350,6 +348,8 @@ test_that("multi beta binomial from Seurat",{
 
 test_that("remove unwanted variation",{
 
+  skip_cmdstan()
+  
   library(tidyseurat)
 
   data =
@@ -379,6 +379,8 @@ test_that("remove unwanted variation",{
 
 test_that("multi beta binomial from SCE",{
 
+  skip_cmdstan()
+  
     res =
       sce_obj |>
     sccomp_estimate(
@@ -431,6 +433,8 @@ res_composition_variability =
 
 test_that("multi beta binomial from metadata",{
 
+  skip_cmdstan()
+  
   # res_composition  |>
   #   filter(parameter == "typehealthy") |>
   #   arrange(desc(abs(c_effect))) |>
@@ -448,6 +452,8 @@ test_that("multi beta binomial from metadata",{
 
 test_that("plot test composition",{
 
+  skip_cmdstan()
+  
   my_estimate |> 
     sccomp_test() |> 
     plot()
@@ -460,6 +466,8 @@ test_that("plot test composition",{
 
 test_that("plot test variability",{
 
+  skip_cmdstan()
+  
   res_composition_variability |> 
     sccomp_test() |> 
     plot()
@@ -469,6 +477,9 @@ test_that("plot test variability",{
 
 # Test for plot_boxplot function
 test_that("plot_boxplot function works correctly", {
+  
+  skip_cmdstan()
+  
   my_estimate |> 
     sccomp_test() |> 
     sccomp_boxplot("type", significance_threshold = 0.025) |> 
@@ -477,6 +488,8 @@ test_that("plot_boxplot function works correctly", {
 
 # Test for plot_1d_intervals function
 test_that("plot_1d_intervals function works correctly", {
+  
+  skip_cmdstan()
 
     my_estimate |> 
     sccomp_test() |> 
@@ -488,6 +501,9 @@ test_that("plot_1d_intervals function works correctly", {
 
 # Test for plot_2d_intervals function
 test_that("plot_2d_intervals function works correctly", {
+  
+  skip_cmdstan()
+  
   my_estimate |> 
     sccomp_test() |> 
     plot_2D_intervals(
@@ -498,7 +514,8 @@ test_that("plot_2d_intervals function works correctly", {
 
 test_that("test constrasts",{
 
-
+  skip_cmdstan()
+  
   new_test =
     my_estimate |>
     sccomp_test() 

@@ -278,7 +278,7 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$prior_mean_intercept = prior_mean$intercept
   data_for_model$prior_mean_coefficients = prior_mean$coefficients
   data_for_model$exclude_priors = exclude_priors
-  data_for_model$enable_loo = TRUE & enable_loo
+  data_for_model$enable_loo = enable_loo
   
   # # Check that design matrix is not too big
   # if(ncol(data_for_model$X)>20)

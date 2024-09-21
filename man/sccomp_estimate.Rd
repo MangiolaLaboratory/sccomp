@@ -116,17 +116,20 @@ group-size) and derives the count data from cell metadata.
 }
 \examples{
 
-data("counts_obj")
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
 
-estimate =
-  sccomp_estimate(
-  counts_obj ,
-   ~ type,
-   ~1,
-   sample,
-   cell_group,
-   count,
-    cores = 1
-  )
+    estimate = sccomp_estimate(
+      counts_obj,
+      ~ type,
+      ~1,
+      sample,
+      cell_group,
+      count,
+      cores = 1
+    )
+  }
+}
 
 }

@@ -75,18 +75,21 @@
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type,
-#'    ~1,
-#'    sample,
-#'    cell_group,
-#'    count,
-#'     cores = 1
-#'   )
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'     )
+#'   }
+#' }
 #'
 #' @export
 #'
@@ -548,19 +551,22 @@ sccomp_estimate.data.frame = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type,
-#'    ~1,
-#'    sample,
-#'    cell_group,
-#'    count,
-#'     cores = 1
-#'   ) |>
-#'   sccomp_remove_outliers(cores = 1)
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_remove_outliers(cores = 1)
+#'   }
+#' }
 #'
 #' @export
 #'
@@ -934,16 +940,18 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#'   estimates =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ 0 + type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'
-#'   sccomp_test("typecancer - typebenign")
+#'     estimates = sccomp_estimate(
+#'       counts_obj,
+#'       ~ 0 + type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_test("typecancer - typebenign")
+#'   }
+#' }
 #'
 sccomp_test <- function(.data,
                            contrasts = NULL,
@@ -1102,17 +1110,18 @@ sccomp_test.sccomp_tbl = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+#'     data("counts_obj")
 #'
-#' if(.Platform$OS.type == "unix")
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'
-#'   sccomp_replicate()
-#'
+#'     sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_replicate()
+#'   }
+#' }
 sccomp_replicate <- function(fit,
                              formula_composition = NULL,
                              formula_variability = NULL,
@@ -1189,16 +1198,19 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+#'     data("counts_obj")
 #'
-#' if(.Platform$OS.type == "unix")
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'
-#'   sccomp_predict()
+#'     sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_predict()
+#'   }
+#' }
+#' 
 #'
 sccomp_predict <- function(fit,
                            formula_composition = NULL,
@@ -1292,15 +1304,19 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#'   estimates = sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   )
+#'     estimates = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     )
 #'
-#'   sccomp_remove_unwanted_variation(estimates)
+#'     sccomp_remove_unwanted_variation(estimates)
+#'   }
+#' }
 #'
 sccomp_remove_unwanted_variation <- function(.data,
                                       formula_composition = ~1,
@@ -1424,20 +1440,24 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
-#' library(dplyr)
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'     library(dplyr)
 #'
-#' estimate =
-#'  sccomp_estimate(
-#'  counts_obj ,
-#'   ~ type, ~1,  sample, cell_group, count,
-#'    cores = 1
-#'  )
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     )
 #'
-#' # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-#' counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-#' # Simulate data
-#' simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+#'     # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
+#'     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
+#'
+#'     # Simulate data
+#'     simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+#'   }
+#' }
 #'
 simulate_data <- function(.data,
                           .estimate_object,
@@ -1557,17 +1577,21 @@ simulate_data.tbl = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1, sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'   sccomp_test()
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_test()
 #'
-#' # estimate |> sccomp_boxplot()
+#'     # estimate |> sccomp_boxplot()
+#'   }
+#' }
+#' 
 sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
 
 
@@ -1630,16 +1654,19 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_com
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1, sample, cell_group, count,
-#'     cores = 1
-#'   )
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     )
 #'
-#' # estimate |> plot()
+#'     # estimate |> plot()
+#'   }
+#' }
 #'
 plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), ...) {
 
