@@ -88,6 +88,54 @@
 #' }
 #'
 #' @export
+sccomp_estimate <- function(.data,
+                       formula_composition = ~ 1 ,
+                       formula_variability = ~ 1,
+                       .sample,
+                       .cell_group,
+                       .count = NULL,
+
+                       # Secondary arguments
+                       cores = detectCores(),
+                       bimodal_mean_variability_association = FALSE,
+                       percent_false_positive = 5,
+                       inference_method = "pathfinder",
+                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
+                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
+                       .sample_cell_group_pairs_to_exclude = NULL,
+                       output_directory = "sccomp_draws_files",
+                       verbose = TRUE,
+                       enable_loo = FALSE,
+                       noise_model = "multi_beta_binomial",
+                       exclude_priors = FALSE,
+                       use_data = TRUE,
+                       mcmc_seed = sample(1e5, 1),
+                       max_sampling_iterations = 20000,
+                       pass_fit = TRUE, ...,
+                       
+                       # DEPRECATED
+                       approximate_posterior_inference = NULL,
+                       variational_inference = NULL
+                       
+                       ) {
+  if(inference_method == "variational") 
+    rlang::inform(
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = “variational”; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = \"hmc\".", 
+      .frequency = "once", 
+      .frequency_id = "variational_message"
+    )
+  
+  rlang::inform(
+      message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has be changed from 0.2 to 0.1.", 
+      .frequency = "once", 
+      .frequency_id = "new_logit_fold_change_threshold"
+  )
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
+  UseMethod("sccomp_estimate", .data)
+}
 
 #' @export
 sccomp_estimate.Seurat = function(.data,
@@ -506,6 +554,33 @@ sccomp_estimate.data.frame = function(.data,
 #' }
 #'
 #' @export
+sccomp_remove_outliers <- function(.estimate,
+                                   percent_false_positive = 5,
+                                   cores = detectCores(),
+                                   inference_method = "pathfinder",
+                                   output_directory = "sccomp_draws_files",
+                                   verbose = TRUE,
+                                   mcmc_seed = sample(1e5, 1),
+                                   max_sampling_iterations = 20000,
+                                   enable_loo = FALSE,
+                                   
+                                   # DEPRECATED
+                                   approximate_posterior_inference = NULL,
+                                   variational_inference = NULL,
+                                   ...
+) {
+  if(inference_method == "variational") 
+    rlang::inform(
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = “variational”; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = “hmc”.", 
+      .frequency = "once", 
+      .frequency_id = "variational_message"
+    )
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
+  UseMethod("sccomp_remove_outliers", .estimate)
+}
 
 #' @importFrom readr write_file
 #' @export
@@ -574,7 +649,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_effect_elements = .estimate |> attr("formula_composition") |> parse_formula_random_effect()
   
   # Load model
-  mod_rng = load_model("glm_multi_beta_binomial_generate_data")
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
 
   rng = mod_rng |> sample_safe(
     generate_quantities_fx,
@@ -1219,8 +1294,9 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 #' @param .data A tibble. The result of sccomp_estimate.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
-#'
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' 
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
 #' @export
@@ -1243,7 +1319,8 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 sccomp_remove_unwanted_variation <- function(.data,
                                       formula_composition = ~1,
-                                      formula_variability = NULL) {
+                                      formula_variability = NULL,
+                                      cores = detectCores()) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -1256,7 +1333,8 @@ sccomp_remove_unwanted_variation <- function(.data,
 #'
 sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
                                                 formula_composition = ~1,
-                                                formula_variability = NULL){
+                                                formula_variability = NULL,
+                                                cores = detectCores()){
 
 
   model_input = attr(.data, "model_input")
@@ -1268,7 +1346,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   fit = attr(.data, "fit")
 
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate_data")
+  mod = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
   
 
 
@@ -1359,8 +1437,9 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
 #' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
-#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
-#'
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' 
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
 #' @export
@@ -1395,7 +1474,8 @@ simulate_data <- function(.data,
                        .coefficients = NULL,
                        variability_multiplier = 5,
                        number_of_draws = 1,
-                       mcmc_seed = sample(1e5, 1)) {
+                       mcmc_seed = sample(1e5, 1),
+                       cores = detectCores()) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -1420,7 +1500,8 @@ simulate_data.tbl = function(.data,
                                     .coefficients = NULL,
                                     variability_multiplier = 5,
                                     number_of_draws = 1,
-                                    mcmc_seed = sample(1e5, 1)){
+                                    mcmc_seed = sample(1e5, 1),
+                             cores = detectCores()){
 
 
   .sample = enquo(.sample)
@@ -1452,7 +1533,7 @@ simulate_data.tbl = function(.data,
     # [1]  5.6260004 -0.6940178
     # prec_sd  = 0.816423129
 
-  mod_rng = load_model("glm_multi_beta_binomial_generate_data")
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
   
   fit = my_model |> sample_safe(
     generate_quantities_fx,
