@@ -25,14 +25,18 @@ This function uses the model to remove unwanted variation from a dataset using t
 }
 \examples{
 
-data("counts_obj")
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
 
-  estimates = sccomp_estimate(
-  counts_obj ,
-   ~ type, ~1,  sample, cell_group, count,
-    cores = 1
-  )
+    estimates = sccomp_estimate(
+      counts_obj,
+      ~ type, ~1, sample, cell_group, count,
+      cores = 1
+    )
 
-  sccomp_remove_unwanted_variation(estimates)
+    sccomp_remove_unwanted_variation(estimates)
+  }
+}
 
 }

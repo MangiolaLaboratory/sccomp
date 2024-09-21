@@ -9,12 +9,14 @@ sccomp_remove_outliers(
   percent_false_positive = 5,
   cores = detectCores(),
   inference_method = "pathfinder",
+  output_directory = "sccomp_draws_files",
   verbose = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   enable_loo = FALSE,
   approximate_posterior_inference = NULL,
-  variational_inference = NULL
+  variational_inference = NULL,
+  ...
 )
 }
 \arguments{
@@ -64,18 +66,21 @@ The function for linear modelling takes as input a table of cell counts with thr
 }
 \examples{
 
-data("counts_obj")
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
 
-estimate =
-  sccomp_estimate(
-  counts_obj ,
-   ~ type,
-   ~1,
-   sample,
-   cell_group,
-   count,
-    cores = 1
-  ) |>
-  sccomp_remove_outliers(cores = 1)
+    estimate = sccomp_estimate(
+      counts_obj,
+      ~ type,
+      ~1,
+      sample,
+      cell_group,
+      count,
+      cores = 1
+    ) |>
+    sccomp_remove_outliers(cores = 1)
+  }
+}
 
 }

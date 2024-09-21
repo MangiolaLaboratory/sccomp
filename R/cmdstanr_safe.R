@@ -10,9 +10,9 @@ sample_safe <- function(model, fx, ...) {
     error = function(e) {
       # Check if the error message is "model not compiled"
       if (grepl("Model not compiled", e$message)) {
-        message("Model not compiled. Loading model with force=TRUE.")
+        message("Model not compiled. Compiling.")
         # Load the model with force=TRUE
-        model <- load_model("glm_multi_beta_binomial_generate_data", force = TRUE)
+        model <- model$compile(cpp_options = list(stan_threads = TRUE)) # load_model("glm_multi_beta_binomial_generate_data", force = TRUE)
         # Retry the arbitrary fx with additional arguments
         result <- fx(model, ...)
         return(result)
