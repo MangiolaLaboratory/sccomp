@@ -509,7 +509,11 @@ fit_model = function(
   if(data_for_model$n_random_eff>0){
     init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1)  
     init_list$random_effect_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[1])
-    init_list$sigma_correlation_factor = matrix(0, data_for_model$how_many_factors_in_random_design[1]  , data_for_model$how_many_factors_in_random_design[1] )
+    init_list$sigma_correlation_factor = array(0, dim = c(
+      M-1, 
+      data_for_model$how_many_factors_in_random_design[1], 
+      data_for_model$how_many_factors_in_random_design[1]
+    ))
     
     init_list$random_effect_sigma_mu = 0.5 |> as.array()
     init_list$random_effect_sigma_sigma = 0.2 |> as.array()
