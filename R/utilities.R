@@ -3476,7 +3476,7 @@ check_and_install_cmdstanr <- function() {
     message(
       "Step 1: The 'cmdstanr' package is not installed.\n",
       "Please install the R package 'cmdstanr' using the following command:\n",
-      "install.packages(\"cmdstanr\", repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\")))\n",
+      "install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))\n",
       "Note: 'cmdstanr' is not available on CRAN.\n\n",
       
       "Step 2: After installing 'cmdstanr', you can install CmdStan by running the following commands:\n",
