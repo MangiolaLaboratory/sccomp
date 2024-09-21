@@ -535,7 +535,7 @@ fit_model = function(
   dir.create(output_directory, showWarnings = FALSE)
 
   # Fit
-  mod = load_model("glm_multi_beta_binomial")
+  mod = load_model("glm_multi_beta_binomial", threads = cores)
   
   
   if(inference_method == "hmc"){
@@ -564,7 +564,7 @@ fit_model = function(
       
       # I don't know why thi is needed nd why the model sometimes is not compliled correctly
       if(e |> as.character() |>  str_detect("Model not compiled"))
-        model = load_model("glm_multi_beta_binomial", force=TRUE)
+        model = load_model("glm_multi_beta_binomial", force=TRUE, threads = cores)
       else 
         stop()   
       
@@ -2800,7 +2800,8 @@ replicate_data = function(.data,
           formula_variability = NULL,
           new_data = NULL,
           number_of_draws = 1,
-          mcmc_seed = sample(1e5, 1)){
+          mcmc_seed = sample(1e5, 1),
+          cores = detectCores()){
 
 
   # Select model based on noise model
@@ -3048,7 +3049,7 @@ replicate_data = function(.data,
   number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
   
   # Load model
-  mod_rng = load_model("glm_multi_beta_binomial_generate_data")
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
   
   
   # Generate quantities
@@ -3400,6 +3401,8 @@ add_class = function(var, name) {
 #' # Assuming 'fit' is a stanfit object obtained from running a Stan model
 #' samples_count = get_output_samples(fit)
 #'
+#' @export
+#' 
 get_output_samples = function(fit){
   
   # Check if the output_samples field is present in the metadata of the fit object
@@ -3426,22 +3429,28 @@ get_output_samples = function(fit){
 #' Load, Compile, and Cache a Stan Model
 #'
 #' This function attempts to load a precompiled Stan model using the `instantiate` package.
-#' If the model is not found, it will locate the Stan model file within the `sccomp` package,
-#' compile it using `cmdstanr`, and save the compiled model to the cache directory.
+#' If the model is not found in the cache or force recompilation is requested, it will locate
+#' the Stan model file within the `sccomp` package, compile it using `cmdstanr`, and save the 
+#' compiled model to the cache directory for future use.
 #'
-#' @param name A character string representing the name of the Stan model.
-#' @param cache_dir A character string representing the path to the cache directory.
+#' @param name A character string representing the name of the Stan model (without the `.stan` extension).
+#' @param cache_dir A character string representing the path to the cache directory where compiled models are saved. 
+#' Defaults to `sccomp_stan_models_cache_dir`.
+#' @param force A logical value. If `TRUE`, the model will be recompiled even if it exists in the cache. 
+#' Defaults to `FALSE`.
 #' 
-#' @return A compiled Stan model object.
+#' @return A compiled Stan model object from `cmdstanr`.
 #' 
 #' @importFrom instantiate stan_package_model
-#' @importFrom cmdstanr cmdstan_model
+#' @importFrom instantiate stan_package_compile
+#' 
 #' @export
+#' 
 #' @examples
 #' \dontrun{
-#'   model <- load_model("glm_multi_beta_binomial_", "~/cache")
+#'   model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE)
 #' }
-load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FALSE) {
+load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FALSE, threads = 1) {
   
   
   # tryCatch({
@@ -3464,10 +3473,10 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
     stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
     
     # Compile the Stan model using cmdstanr with threading support enabled
-    mod <- cmdstan_model(
-      stan_model_path, 
+    mod <- stan_package_compile(
+      stan_model_path,
       cpp_options = list(stan_threads = TRUE),
-      force_recompile = TRUE
+      force_recompile = TRUE, threads = threads
     )
     
     # Save the compiled model object to cache
@@ -3497,39 +3506,34 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 check_and_install_cmdstanr <- function() {
   # Check if cmdstanr is installed
   if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    message("The 'cmdstanr' package is not installed.")
-    if (interactive()) {
-      install <- menu(c("yes", "no"), title = "Do you want to install 'cmdstanr'?")
-      if (install == 1) {
-        install.packages(pkgs = "cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
-        library(cmdstanr)
-      } else {
-        stop("cmdstanr is required to proceed.")
-      }
-    } else {
-      message("Installing 'cmdstanr' package...")
-      install.packages(pkgs = "cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
-      library(cmdstanr)
-    }
+    message(
+      "Step 1: The 'cmdstanr' package is not installed.\n",
+      "Please install the R package 'cmdstanr' using the following command:\n",
+      "install.packages(\"cmdstanr\", repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\")))\n",
+      "Note: 'cmdstanr' is not available on CRAN.\n\n",
+      
+      "Step 2: After installing 'cmdstanr', you can install CmdStan by running the following commands:\n",
+      "cmdstanr::check_cmdstan_toolchain(fix = TRUE)\n",
+      "cmdstanr::install_cmdstan()\n",
+      "This will install the latest version of CmdStan. For more information, visit:\n",
+      "https://mc-stan.org/users/interfaces/cmdstan"
+    )
+    stop("cmdstanr is required to proceed.")
   }
   
   # Check if CmdStan is installed
-  if (!stan_cmdstan_exists()) {
-    message("CmdStan is not installed.")
-    if (interactive()) {
-      install <- menu(c("yes", "no"), title = "Do you want to install CmdStan?")
-      if (install == 1) {
-        cmdstanr::install_cmdstan()
-      } else {
-        stop("CmdStan is required to proceed.")
-      }
-    } else {
-      message("Installing CmdStan...")
-      cmdstanr::install_cmdstan()
-    }
+  if (!instantiate::stan_cmdstan_exists()) {
+    message(
+      "CmdStan is not installed.\n",
+      "You can install CmdStan by running the following command:\n",
+      "cmdstanr::check_cmdstan_toolchain(fix = TRUE)\n",
+      "cmdstanr::install_cmdstan()\n",
+      "This will install the latest version of CmdStan. For more information, visit:\n",
+      "https://mc-stan.org/users/interfaces/cmdstan"
+    )
+    stop("CmdStan installation is required to proceed.")
   }
 }
-
 
 
 drop_environment <- function(obj) {

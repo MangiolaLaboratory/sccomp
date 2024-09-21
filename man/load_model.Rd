@@ -4,23 +4,33 @@
 \alias{load_model}
 \title{Load, Compile, and Cache a Stan Model}
 \usage{
-load_model(name, cache_dir = sccomp_stan_models_cache_dir, force = FALSE)
+load_model(
+  name,
+  cache_dir = sccomp_stan_models_cache_dir,
+  force = FALSE,
+  threads = 1
+)
 }
 \arguments{
-\item{name}{A character string representing the name of the Stan model.}
+\item{name}{A character string representing the name of the Stan model (without the \code{.stan} extension).}
 
-\item{cache_dir}{A character string representing the path to the cache directory.}
+\item{cache_dir}{A character string representing the path to the cache directory where compiled models are saved.
+Defaults to \code{sccomp_stan_models_cache_dir}.}
+
+\item{force}{A logical value. If \code{TRUE}, the model will be recompiled even if it exists in the cache.
+Defaults to \code{FALSE}.}
 }
 \value{
-A compiled Stan model object.
+A compiled Stan model object from \code{cmdstanr}.
 }
 \description{
 This function attempts to load a precompiled Stan model using the \code{instantiate} package.
-If the model is not found, it will locate the Stan model file within the \code{sccomp} package,
-compile it using \code{cmdstanr}, and save the compiled model to the cache directory.
+If the model is not found in the cache or force recompilation is requested, it will locate
+the Stan model file within the \code{sccomp} package, compile it using \code{cmdstanr}, and save the
+compiled model to the cache directory for future use.
 }
 \examples{
 \dontrun{
-  model <- load_model("glm_multi_beta_binomial_", "~/cache")
+  model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE)
 }
 }

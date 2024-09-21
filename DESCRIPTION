@@ -38,7 +38,8 @@ Imports:
     readr,
     scales,
     stringr,
-    glue
+    glue,
+    withr
 Suggests:
     cmdstanr (>= 0.6.0),
     knitr,

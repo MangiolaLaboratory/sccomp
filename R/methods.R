@@ -3,9 +3,9 @@
 #' Main Function for SCCOMP Estimate
 #'
 #' @description
-#' The `sccomp_estimate` function performs linear modeling on a table of cell counts, 
+#' The `sccomp_estimate` function performs linear modelling on a table of cell counts, 
 #' which includes a cell-group identifier, sample identifier, integer count, and factors 
-#' (continuous or discrete). The user can define a linear model with an input R formula, 
+#' (continuous or discrete). The user can define a linear model using an R formula, 
 #' where the first factor is the factor of interest. Alternatively, `sccomp` accepts 
 #' single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or 
 #' group-size) and derives the count data from cell metadata.
@@ -26,51 +26,47 @@
 #'              read counts column (optional depending on the input class), and factor columns.
 #' @param formula_composition A formula describing the model for differential abundance.
 #' @param formula_variability A formula describing the model for differential variability.
-#' @param .sample A column name as symbol for the sample identifier.
-#' @param .cell_group A column name as symbol for the cell_group identifier.
-#' @param .count A column name as symbol for the cell_group abundance (read count).
+#' @param .sample A column name as a symbol for the sample identifier.
+#' @param .cell_group A column name as a symbol for the cell-group identifier.
+#' @param .count A column name as a symbol for the cell-group abundance (read count).
 #' @param cores Number of cores to use for parallel calculations.
-#' @param bimodal_mean_variability_association Boolean for modeling mean-variability as bimodal.
-#' @param prior_mean List with prior knowledge about mean distribution, they are the intercept and coefficient.
-#' @param prior_overdispersion_mean_association List with prior knowledge about mean/variability association.
-#' @param percent_false_positive Real number between 0 and 100 for outlier identification.
-#' @param variational_inference Boolean for using variational Bayes for posterior inference. It is faster and convenient. Setting this argument to FALSE runs the full Bayesian (Hamiltonian Monte Carlo) inference, slower but it is the gold standard.
-#' @param enable_loo Boolean to enable model comparison using the LOO package.
-#' @param exclude_priors Boolean to run a prior-free model.
-#' @param use_data Boolean to run the model data-free.
-#' @param max_sampling_iterations Integer to limit maximum iterations for large datasets.
-#' @param pass_fit Boolean to include the Stan fit as attribute in the output.
-#' @param .sample_cell_group_pairs_to_exclude Column name with boolean for sample/cell-group pairs exclusion.
-#' @param verbose Boolean to print progression.
-#' @param noise_model Character string for the noise model (e.g., 'multi_beta_binomial').
-#' @param mcmc_seed Integer for MCMC reproducibility.
-#' @param approximate_posterior_inference DEPRECATED please use the `variational_inference` argument.
+#' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
+#' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
+#' @param prior_overdispersion_mean_association A list specifying prior knowledge about mean/variability association.
+#' @param percent_false_positive A real number between 0 and 100 for outlier identification.
+#' @param variational_inference Logical, whether to use variational Bayes for posterior inference (faster and convenient).
+#' @param enable_loo Logical, whether to enable model comparison using the LOO package.
+#' @param exclude_priors Logical, whether to run a prior-free model.
+#' @param use_data Logical, whether to run the model data-free.
+#' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
+#' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
+#' @param .sample_cell_group_pairs_to_exclude A column name indicating sample/cell-group pairs to exclude.
+#' @param verbose Logical, whether to print progression details.
+#' @param noise_model A character string specifying the noise model (e.g., 'multi_beta_binomial').
+#' @param mcmc_seed An integer seed for MCMC reproducibility.
+#' @param approximate_posterior_inference DEPRECATED, use `variational_inference` instead.
+#' @param inference_method Character string specifying the inference method to use ('variational' or 'hmc').
 #' 
-#' 
-#' @return A nested tibble `tbl`, with the following columns
+#' @return A nested tibble (`tbl`) with the following columns:
 #' \itemize{
-#'   \item cell_group - column including the cell groups being tested
-#'   \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
-#'   \item factor - The factor in the formula corresponding to the covariate, if exists (e.g. it does not exist in case og Intercept or contrasts, which usually are combination of parameters)
-#'
-#'   \item c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_effect - mean of the posterior distribution for a composition (c) parameter.
-#'   \item c_upper - upper (97.5%) quantile of the posterior distribution fo a composition (c)  parameter.
-#'   \item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
-#'   \item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
-#'   \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'
-#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter
-#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_pH0 - Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
-#'   \item v_FDR - False-discovery rate of the null hypothesis (no difference), for a variability (v).
-#'   \item v_n_eff - Effective sample size for a variability (v) parameter - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'
-#'   \item count_data Nested input count data.
-#'
+#'   \item cell_group - The cell groups being tested.
+#'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+#'   \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+#'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_pH0 - Probability of the null hypothesis (no difference) for a composition (c). This is not a p-value.
+#'   \item c_FDR - False-discovery rate of the null hypothesis for a composition (c).
+#'   \item c_n_eff - Effective sample size for a composition (c) parameter.
+#'   \item c_R_k_hat - R statistic for a composition (c) parameter, should be within 0.05 of 1.0.
+#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
+#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_pH0 - Probability of the null hypothesis for a variability (v).
+#'   \item v_FDR - False-discovery rate of the null hypothesis for a variability (v).
+#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter.
+#'   \item count_data - Nested input count data.
 #' }
 #'
 #' @examples
@@ -92,8 +88,6 @@
 #' }
 #'
 #' @export
-#'
-#'
 sccomp_estimate <- function(.data,
                        formula_composition = ~ 1 ,
                        formula_variability = ~ 1,
@@ -502,51 +496,42 @@ sccomp_estimate.data.frame = function(.data,
 
 #' sccomp_remove_outliers main
 #'
-#' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
+#' @description 
+#' The `sccomp_remove_outliers` function takes as input a table of cell counts with columns for cell-group identifier, sample identifier, integer count, and factors (continuous or discrete). The user can define a linear model using an input R formula, where the first factor is the factor of interest. Alternatively, `sccomp` accepts single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or group-size) and derives the count data from cell metadata.
 #'
 #' @import dplyr
-#' @importFrom magrittr %$%
-#' @importFrom magrittr divide_by
-#' @importFrom magrittr multiply_by
-#' @importFrom magrittr equals
-#' @importFrom rlang quo_is_null
+#' @importFrom magrittr %$% divide_by multiply_by equals
+#' @importFrom rlang quo_is_null quo_is_symbolic inform
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
-#' @importFrom rlang quo_is_symbolic
-#' @importFrom rlang inform
-#' @importFrom tidyr unnest
-#' @importFrom tidyr nest
+#' @importFrom tidyr unnest nest
 #'
-#' @param .estimate A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.
-#' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
-#' @param variational_inference Boolean for using variational Bayes for posterior inference. It is faster and convenient. Setting this argument to FALSE runs the full Bayesian (Hamiltonian Monte Carlo) inference, slower but it is the gold standard.
-#' @param cores An integer. How many cored to be used with parallel calculations.
-#' @param verbose A boolean. Prints progression.
-#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
-#' @param max_sampling_iterations An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.
-#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
-#' @param approximate_posterior_inference DEPRECATED please use the `variational_inference` argument.
-#'
-#' @return A nested tibble `tbl`, with the following columns
+#' @param .estimate A tibble including a cell_group name column, sample name column, read counts column (optional depending on the input class), and factor columns.
+#' @param percent_false_positive A real number between 0 and 100 (not inclusive), used to identify outliers with a specific false positive rate.
+#' @param variational_inference Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
+#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param verbose Logical, whether to print progression details.
+#' @param mcmc_seed Integer, used for Markov-chain Monte Carlo reproducibility. By default, a random number is sampled from 1 to 999999.
+#' @param max_sampling_iterations Integer, limits the maximum number of iterations in case a large dataset is used, to limit computation time.
+#' @param enable_loo Logical, whether to enable model comparison using the R package LOO. This is useful for comparing fits between models, similar to ANOVA.
+#' @param approximate_posterior_inference DEPRECATED, use the `variational_inference` argument.
+#' 
+#' @return A nested tibble (`tbl`), with the following columns:
 #' \itemize{
-#'   \item cell_group - column including the cell groups being tested
-#'   \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
-#'   \item factor - The factor in the formula corresponding to the covariate, if exists (e.g. it does not exist in case og Intercept or contrasts, which usually are combination of parameters)
-#'
-#'   \item c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_effect - mean of the posterior distribution for a composition (c) parameter.
-#'   \item c_upper - upper (97.5%) quantile of the posterior distribution fo a composition (c)  parameter.
-#'   \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'
-#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter
-#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_n_eff - Effective sample size for a variability (v) parameter - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'
-#'   \item count_data Nested input count data.
-#'
+#'   \item cell_group - The cell groups being tested.
+#'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+#'   \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+#'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
+#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#'   \item count_data - Nested input count data.
 #' }
 #'
 #' @examples
@@ -554,7 +539,7 @@ sccomp_estimate.data.frame = function(.data,
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
 #'     data("counts_obj")
-#'
+#'     
 #'     estimate = sccomp_estimate(
 #'       counts_obj,
 #'       ~ type,
@@ -569,8 +554,6 @@ sccomp_estimate.data.frame = function(.data,
 #' }
 #'
 #' @export
-#'
-#'
 sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
@@ -592,7 +575,10 @@ sccomp_remove_outliers <- function(.estimate,
       .frequency = "once", 
       .frequency_id = "variational_message"
     )
-    
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_remove_outliers", .estimate)
 }
 
@@ -663,7 +649,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_effect_elements = .estimate |> attr("formula_composition") |> parse_formula_random_effect()
   
   # Load model
-  mod_rng = load_model("glm_multi_beta_binomial_generate_data")
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
 
   rng = mod_rng |> sample_safe(
     generate_quantities_fx,
@@ -958,6 +944,10 @@ sccomp_test <- function(.data,
                            percent_false_positive = 5,
                            test_composition_above_logit_fold_change = 0.1,
                            pass_fit = TRUE) {
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_test", .data)
 }
 
@@ -1127,6 +1117,10 @@ sccomp_replicate <- function(fit,
                              formula_variability = NULL,
                              number_of_draws = 1,
                              mcmc_seed = sample(1e5, 1)) {
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_replicate", fit)
 }
 
@@ -1217,6 +1211,10 @@ sccomp_predict <- function(fit,
                            new_data = NULL,
                            number_of_draws = 500,
                            mcmc_seed = sample(1e5, 1)) {
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_predict", fit)
 }
 
@@ -1296,8 +1294,9 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 #' @param .data A tibble. The result of sccomp_estimate.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
-#'
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' 
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
 #' @export
@@ -1320,7 +1319,12 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 sccomp_remove_unwanted_variation <- function(.data,
                                       formula_composition = ~1,
-                                      formula_variability = NULL) {
+                                      formula_variability = NULL,
+                                      cores = detectCores()) {
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_remove_unwanted_variation", .data)
 }
 
@@ -1329,7 +1333,8 @@ sccomp_remove_unwanted_variation <- function(.data,
 #'
 sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
                                                 formula_composition = ~1,
-                                                formula_variability = NULL){
+                                                formula_variability = NULL,
+                                                cores = detectCores()){
 
 
   model_input = attr(.data, "model_input")
@@ -1341,7 +1346,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   fit = attr(.data, "fit")
 
   # Load model
-  mod = load_model("glm_multi_beta_binomial_generate_data")
+  mod = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
   
 
 
@@ -1432,8 +1437,9 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
 #' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
-#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
-#'
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' 
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
 #' @export
@@ -1468,7 +1474,12 @@ simulate_data <- function(.data,
                        .coefficients = NULL,
                        variability_multiplier = 5,
                        number_of_draws = 1,
-                       mcmc_seed = sample(1e5, 1)) {
+                       mcmc_seed = sample(1e5, 1),
+                       cores = detectCores()) {
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("simulate_data", .data)
 }
 
@@ -1489,7 +1500,8 @@ simulate_data.tbl = function(.data,
                                     .coefficients = NULL,
                                     variability_multiplier = 5,
                                     number_of_draws = 1,
-                                    mcmc_seed = sample(1e5, 1)){
+                                    mcmc_seed = sample(1e5, 1),
+                             cores = detectCores()){
 
 
   .sample = enquo(.sample)
@@ -1521,12 +1533,18 @@ simulate_data.tbl = function(.data,
     # [1]  5.6260004 -0.6940178
     # prec_sd  = 0.816423129
 
-  fit =
-    rstan::gqs(
-    my_model,
-    draws =  as.matrix(attr(.estimate_object, "fit") ),
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
+  
+  fit = my_model |> sample_safe(
+    generate_quantities_fx,
+    attr(.estimate_object , "fit")$draws(format = "matrix"),
+    
+    # This is for the new data generation with selected factors to do adjustment
     data = model_input %>% c(list(variability_multiplier = variability_multiplier)),
-    seed = mcmc_seed
+    seed = mcmc_seed,
+    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains()), 
+    threads_per_chain = cores
+    
   )
 
   parsed_fit =
