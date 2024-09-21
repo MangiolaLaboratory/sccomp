@@ -3440,11 +3440,14 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
     stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
     
     # Compile the Stan model using cmdstanr with threading support enabled
-    mod <- stan_package_compile(
+    stan_package_compile(
       stan_model_path,
       cpp_options = list(stan_threads = TRUE),
-      force_recompile = TRUE, threads = threads
+      force_recompile = TRUE, 
+      threads = threads, 
+      dir = system.file("stan", package = "sccomp")
     )
+    mod = instantiate::stan_package_model(name = name, package = "sccomp") |> suppressWarnings()
     
     # Save the compiled model object to cache
     saveRDS(mod, file = cache_file)
