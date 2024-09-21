@@ -14,7 +14,8 @@ simulate_data(
   .coefficients = NULL,
   variability_multiplier = 5,
   number_of_draws = 1,
-  mcmc_seed = sample(1e+05, 1)
+  mcmc_seed = sample(1e+05, 1),
+  cores = detectCores()
 )
 }
 \arguments{
@@ -36,7 +37,9 @@ simulate_data(
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
-\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
+\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.}
+
+\item{cores}{Integer, the number of cores to be used for parallel calculations.}
 }
 \value{
 A nested tibble \code{tbl} with cell_group-wise statistics
