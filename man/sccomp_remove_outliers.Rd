@@ -26,6 +26,10 @@ sccomp_remove_outliers(
 
 \item{cores}{Integer, the number of cores to be used for parallel calculations.}
 
+\item{inference_method}{Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').}
+
+\item{output_directory}{A character string specifying the output directory for Stan draws.}
+
 \item{verbose}{Logical, whether to print progression details.}
 
 \item{mcmc_seed}{Integer, used for Markov-chain Monte Carlo reproducibility. By default, a random number is sampled from 1 to 999999.}
@@ -37,6 +41,8 @@ sccomp_remove_outliers(
 \item{approximate_posterior_inference}{DEPRECATED, use the \code{variational_inference} argument.}
 
 \item{variational_inference}{Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to \code{FALSE} runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.}
+
+\item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 }
 \value{
 A nested tibble (\code{tbl}), with the following columns:

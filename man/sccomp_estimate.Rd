@@ -53,13 +53,15 @@ read counts column (optional depending on the input class), and factor columns.}
 
 \item{percent_false_positive}{A real number between 0 and 100 for outlier identification.}
 
-\item{inference_method}{Character string specifying the inference method to use ('variational' or 'hmc').}
+\item{inference_method}{Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').}
 
 \item{prior_mean}{A list specifying prior knowledge about the mean distribution, including intercept and coefficients.}
 
 \item{prior_overdispersion_mean_association}{A list specifying prior knowledge about mean/variability association.}
 
 \item{.sample_cell_group_pairs_to_exclude}{A column name indicating sample/cell-group pairs to exclude.}
+
+\item{output_directory}{A character string specifying the output directory for Stan draws.}
 
 \item{verbose}{Logical, whether to print progression details.}
 
@@ -76,6 +78,8 @@ read counts column (optional depending on the input class), and factor columns.}
 \item{max_sampling_iterations}{Integer to limit the maximum number of iterations for large datasets.}
 
 \item{pass_fit}{Logical, whether to include the Stan fit as an attribute in the output.}
+
+\item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 
 \item{approximate_posterior_inference}{DEPRECATED, use \code{variational_inference} instead.}
 

@@ -19,6 +19,9 @@ Defaults to \code{sccomp_stan_models_cache_dir}.}
 
 \item{force}{A logical value. If \code{TRUE}, the model will be recompiled even if it exists in the cache.
 Defaults to \code{FALSE}.}
+
+\item{threads}{An integer specifying the number of threads to use for compilation.
+Defaults to \code{1}.}
 }
 \value{
 A compiled Stan model object from \code{cmdstanr}.
@@ -31,6 +34,6 @@ compiled model to the cache directory for future use.
 }
 \examples{
 \dontrun{
-  model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE)
+  model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE, threads = 1)
 }
 }

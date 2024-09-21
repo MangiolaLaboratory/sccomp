@@ -34,18 +34,20 @@
 #' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
 #' @param prior_overdispersion_mean_association A list specifying prior knowledge about mean/variability association.
 #' @param percent_false_positive A real number between 0 and 100 for outlier identification.
-#' @param variational_inference Logical, whether to use variational Bayes for posterior inference (faster and convenient).
+#' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').
+#' @param .sample_cell_group_pairs_to_exclude A column name indicating sample/cell-group pairs to exclude.
+#' @param output_directory A character string specifying the output directory for Stan draws.
+#' @param verbose Logical, whether to print progression details.
 #' @param enable_loo Logical, whether to enable model comparison using the LOO package.
+#' @param noise_model A character string specifying the noise model (e.g., 'multi_beta_binomial').
 #' @param exclude_priors Logical, whether to run a prior-free model.
 #' @param use_data Logical, whether to run the model data-free.
+#' @param mcmc_seed An integer seed for MCMC reproducibility.
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
 #' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
-#' @param .sample_cell_group_pairs_to_exclude A column name indicating sample/cell-group pairs to exclude.
-#' @param verbose Logical, whether to print progression details.
-#' @param noise_model A character string specifying the noise model (e.g., 'multi_beta_binomial').
-#' @param mcmc_seed An integer seed for MCMC reproducibility.
 #' @param approximate_posterior_inference DEPRECATED, use `variational_inference` instead.
-#' @param inference_method Character string specifying the inference method to use ('variational' or 'hmc').
+#' @param variational_inference Logical, whether to use variational Bayes for posterior inference (faster and convenient).
+#' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #' 
 #' @return A nested tibble (`tbl`) with the following columns:
 #' \itemize{
@@ -111,7 +113,8 @@ sccomp_estimate <- function(.data,
                        use_data = TRUE,
                        mcmc_seed = sample(1e5, 1),
                        max_sampling_iterations = 20000,
-                       pass_fit = TRUE, ...,
+                       pass_fit = TRUE, 
+                       ...,
                        
                        # DEPRECATED
                        approximate_posterior_inference = NULL,
@@ -120,7 +123,7 @@ sccomp_estimate <- function(.data,
                        ) {
   if(inference_method == "variational") 
     rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = “variational”; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = \"hmc\".", 
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = \"variational\"; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = \"hmc\".", 
       .frequency = "once", 
       .frequency_id = "variational_message"
     )
@@ -508,13 +511,16 @@ sccomp_estimate.data.frame = function(.data,
 #'
 #' @param .estimate A tibble including a cell_group name column, sample name column, read counts column (optional depending on the input class), and factor columns.
 #' @param percent_false_positive A real number between 0 and 100 (not inclusive), used to identify outliers with a specific false positive rate.
-#' @param variational_inference Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
 #' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').
+#' @param output_directory A character string specifying the output directory for Stan draws.
 #' @param verbose Logical, whether to print progression details.
 #' @param mcmc_seed Integer, used for Markov-chain Monte Carlo reproducibility. By default, a random number is sampled from 1 to 999999.
 #' @param max_sampling_iterations Integer, limits the maximum number of iterations in case a large dataset is used, to limit computation time.
 #' @param enable_loo Logical, whether to enable model comparison using the R package LOO. This is useful for comparing fits between models, similar to ANOVA.
 #' @param approximate_posterior_inference DEPRECATED, use the `variational_inference` argument.
+#' @param variational_inference Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
+#' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #' 
 #' @return A nested tibble (`tbl`), with the following columns:
 #' \itemize{
@@ -571,7 +577,7 @@ sccomp_remove_outliers <- function(.estimate,
 ) {
   if(inference_method == "variational") 
     rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = “variational”; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = “hmc”.", 
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = \"variational\"; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = \"hmc\".", 
       .frequency = "once", 
       .frequency_id = "variational_message"
     )

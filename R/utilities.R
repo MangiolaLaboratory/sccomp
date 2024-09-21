@@ -1727,38 +1727,6 @@ design_matrix_and_coefficients_to_simulation = function(
 
 }
 
-design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, precision = 100, seed = sample(1:100000, size = 1)){
-
-  # Define the variables as NULL to avoid CRAN NOTES
-  cell_type <- NULL
-  generated_counts <- NULL
-  factor_1 <- NULL
-
-  # design_df = as.data.frame(design_matrix)
-  # coefficient_df = as.data.frame(coefficient_matrix)
-  #
-  # rownames(design_df) = sprintf("sample_%s", 1:nrow(design_df))
-  # colnames(design_df) = sprintf("factor_%s", 1:ncol(design_df))
-  #
-  # rownames(coefficient_df) = sprintf("cell_type_%s", 1:nrow(coefficient_df))
-  # colnames(coefficient_df) = sprintf("beta_%s", 1:ncol(coefficient_df))
-
-  exposure = 500
-
-  prop.means =
-    design_matrix %*%
-    t(coefficient_matrix) %>%
-    boot::inv.logit()
-
-  extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * precision) %>%
-    as_tibble(.name_repair = "unique", rownames = "sample") %>%
-    mutate(factor_1= design_matrix) %>%
-    gather(cell_type, generated_counts, -sample, -factor_1) %>%
-    mutate(generated_counts = as.integer(generated_counts))
-
-
-}
-
 #' @importFrom rlang ensym
 #' @noRd
 class_list_to_counts = function(.data, .sample, .cell_group){
@@ -3399,7 +3367,7 @@ add_class = function(var, name) {
 #'         Returns from MHC if available, otherwise from Variational inference.
 #' @examples
 #' # Assuming 'fit' is a stanfit object obtained from running a Stan model
-#' samples_count = get_output_samples(fit)
+#' print("samples_count = get_output_samples(fit)")
 #'
 #' @export
 #' 
@@ -3423,9 +3391,6 @@ get_output_samples = function(fit){
 }
 
 
-
-
-
 #' Load, Compile, and Cache a Stan Model
 #'
 #' This function attempts to load a precompiled Stan model using the `instantiate` package.
@@ -3438,6 +3403,8 @@ get_output_samples = function(fit){
 #' Defaults to `sccomp_stan_models_cache_dir`.
 #' @param force A logical value. If `TRUE`, the model will be recompiled even if it exists in the cache. 
 #' Defaults to `FALSE`.
+#' @param threads An integer specifying the number of threads to use for compilation. 
+#' Defaults to `1`.
 #' 
 #' @return A compiled Stan model object from `cmdstanr`.
 #' 
@@ -3448,7 +3415,7 @@ get_output_samples = function(fit){
 #' 
 #' @examples
 #' \dontrun{
-#'   model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE)
+#'   model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE, threads = 1)
 #' }
 load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FALSE, threads = 1) {
   
