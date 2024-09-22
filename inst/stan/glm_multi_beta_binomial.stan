@@ -22,19 +22,6 @@ functions{
     return x;
   }
   
-  vector sum_to_zero_QR_vector(vector x_raw, vector Q_r) {
-    int N = num_elements(x_raw) + 1;
-    vector [N] x;
-    real x_aux = 0;
-    
-    for(i in 1:N-1){
-      x[i] = x_aux + x_raw[i] * Q_r[i];
-      x_aux = x_aux + x_raw[i] * Q_r[i+N];
-    }
-    x[N] = x_aux;
-    return x;
-  }
-  
   array[] int rep_each(array[] int x, int K) {
     int N = size(x);
     array[N * K] int y;
@@ -210,8 +197,10 @@ functions{
           array[N*M] int exposure_array = rep_each(exposure[idx_y], M);
           array[N*M] int y_array =  to_array_1d(y[idx_y,]);
           
+          int W = count_filtered_indices(truncation_not_idx_minimal, idx_y);
+
           // truncation
-          if(dims(truncation_not_idx_minimal)[1] == 0){
+          if(W == 0){
             
             return beta_binomial_lupmf(
               y_array |
@@ -222,23 +211,26 @@ functions{
               
           }
           else{
-            // Filter just sor my samples parallelised
-            int W = count_filtered_indices(truncation_not_idx_minimal, idx_y);
-            array[W,2] int truncation_not_idx_minimal_filtered = filter_missing_indices(truncation_not_idx_minimal, idx_y);
-            
+
+            // If truncation is null for my chunk
             // Get non missing, invert the missing, this will be a big array
-            array[N * M - dims(truncation_not_idx_minimal_filtered)[1]] int non_missing_indices = get_non_missing_indices(N, M, truncation_not_idx_minimal_filtered);
-            
-            return beta_binomial_lupmf(
+            array[N * M - W] int non_missing_indices = 
+            get_non_missing_indices(
+              N, 
+              M, 
+              filter_missing_indices(truncation_not_idx_minimal, idx_y)
+            );
+
+             return beta_binomial_lupmf(
               y_array[non_missing_indices] |
               exposure_array[non_missing_indices],
               (mu_array[non_missing_indices] .* precision_array[non_missing_indices]),
               (1.0 - mu_array[non_missing_indices]) .* precision_array[non_missing_indices]
               ) ;
+
           }
           
-          
-          
+
         }
         
         /**
@@ -279,31 +271,34 @@ functions{
         * This function uses the count_filtered_indices function to determine the size of the output array.
         * It then iterates over missing_indices to collect the matching rows.
         */
-        array[,] int filter_missing_indices(array[,] int missing_indices, array[] int idx_y) {
-          int num_missing = dims(missing_indices)[1];  // Number of rows in missing_indices
-          int num_idx_y = num_elements(idx_y);         // Number of elements in idx_y
-          
-          // Use the count_filtered_indices function to get the number of filtered rows
-          int num_filtered = count_filtered_indices(missing_indices, idx_y);
-          
-          // Allocate the output array with the determined size
-          array[num_filtered, 2] int missing_indices_filtered;
-          
-          // Fill the output array with matching rows
-          int count = 0;
-          for (i in 1:num_missing) {
-            for (j in 1:num_idx_y) {
-              if (missing_indices[i, 1] == idx_y[j]) {
-                count += 1;
-                missing_indices_filtered[count, ] = missing_indices[i, ];
-                break;  // Exit the inner loop once a match is found
-              }
-            }
-          }
-          
-          return missing_indices_filtered;
-        }
+array[,] int filter_missing_indices(array[,] int missing_indices, array[] int idx_y) {
+  int num_missing = dims(missing_indices)[1];  // Number of rows in missing_indices
+  int num_idx_y = num_elements(idx_y);         // Number of elements in idx_y
+  
+  // Use the count_filtered_indices function to get the number of filtered rows
+  int num_filtered = count_filtered_indices(missing_indices, idx_y);
+  
+  // Allocate the output array with the determined size
+  array[num_filtered, 2] int missing_indices_filtered;
+  
+  // Fill the output array with matching rows
+  int count = 0;
+  for (i in 1:num_missing) {
+    for (j in 1:num_idx_y) {
+      if (missing_indices[i, 1] == idx_y[j]) {
+        count += 1;
         
+        // Adjust the row index in the filtered array
+        missing_indices_filtered[count, 1] = j;  // Set to the relative position in idx_y
+        missing_indices_filtered[count, 2] = missing_indices[i, 2];  // Keep the column index
+        
+        break;  // Exit the inner loop once a match is found
+      }
+    }
+  }
+  
+  return missing_indices_filtered;
+}        
         /**
         * Compute indices of non-missing elements in a matrix when flattened in column-major order.
         * (Existing function; included here for completeness)
@@ -316,20 +311,21 @@ functions{
           int num_missing = dims(missing_indices)[1];  // Assuming missing_indices is [num_missing, 2]
           
           // Initialize a matrix to track missing data (0 = not missing, 1 = missing)
-          array[n_rows, n_cols] int is_missing = rep_array(0, n_rows, n_cols);
-          
+           array[n_rows, n_cols] int is_missing = rep_array(0, n_rows, n_cols);
+           
+          // 
           // Mark the missing positions in the is_missing matrix
           for (i in 1:num_missing) {
             int row = missing_indices[i, 1];  // Row index of missing element
             int col = missing_indices[i, 2];  // Column index of missing element
             is_missing[row, col] = 1;         // Mark as missing
           }
-          
+
           // Preallocate an array to hold the indices of non-missing elements
           int max_non_missing = N - num_missing;       // Maximum possible non-missing elements
           array[max_non_missing] int non_missing_indices;    // Array to store indices
           int count = 0;                               // Counter for non-missing elements
-          
+
           // **Iterate over the matrix in row-major order**
           for (row in 1:n_rows) {
             for (col in 1:n_cols) {
@@ -340,9 +336,10 @@ functions{
               }
             }
           }
-          
+
           // Return the array of non-missing indices (trimmed to the actual count)
           return non_missing_indices[1:count];
+
         }
         
         /**
@@ -625,8 +622,9 @@ transformed parameters{
 }
 model{
   
+  
   // Fit main distribution
-  if(use_data == 1 ){
+  if(use_data == 1){
     
     array[N] int array_N;
     for(n in 1:N) array_N[n] = n;

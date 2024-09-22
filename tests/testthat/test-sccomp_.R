@@ -160,7 +160,9 @@ test_that("outliers",{
   
   my_estimate |>
     sccomp_remove_outliers(
-      cores = 1, max_sampling_iterations = 1000, inference_method = "hmc",
+      cores = 1, 
+      max_sampling_iterations = 1000,
+      inference_method = "hmc",
        verbose=FALSE
     )
   
