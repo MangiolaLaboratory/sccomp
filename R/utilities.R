@@ -527,8 +527,12 @@ fit_model = function(
   if(data_for_model$n_random_eff>1){
     init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M-1)
     init_list$random_effect_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[2])
-    init_list$sigma_correlation_factor_2 = matrix(0, data_for_model$how_many_factors_in_random_design[2]  , data_for_model$how_many_factors_in_random_design[2] )
-
+    init_list$sigma_correlation_factor_2 = array(0, dim = c(
+      data_for_model$M-1, 
+      data_for_model$how_many_factors_in_random_design[2], 
+      data_for_model$how_many_factors_in_random_design[2]
+    ))
+    
   } 
  
   init = map(1:chains, ~ init_list) %>%
