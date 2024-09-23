@@ -5,12 +5,22 @@
 \alias{counts_obj}
 \title{counts_obj}
 \format{
-A tidy data frame.
+A tidy data frame with the following columns:
+\itemize{
+\item \strong{sample}: Factor, representing the sample identifier.
+\item \strong{type}: Factor, indicating the sample type (e.g., benign, cancerous).
+\item \strong{phenotype}: Factor, representing the cell phenotype (e.g., B_cell, HSC, etc.).
+\item \strong{count}: Integer, representing the number of cells for each cell group within each sample.
+\item \strong{cell_group}: Factor, representing the cell group (e.g., BM, B1, Dm, etc.).
+}
 }
 \usage{
 data(counts_obj)
 }
+\value{
+A \code{tibble} representing cell counts per cluster, with columns for sample, type, phenotype, cell group, and counts.
+}
 \description{
-Example data set containing cell counts per cell cluster
+A tidy example dataset containing cell counts per cell group (cluster), sample, and phenotype for differential analysis. This dataset represents the counts of cells in various phenotypes and cell groups across multiple samples.
 }
 \keyword{datasets}

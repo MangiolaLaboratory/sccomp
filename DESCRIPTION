@@ -1,6 +1,6 @@
 Package: sccomp
 Title: Robust Outlier-aware Estimation of Composition and Heterogeneity for Single-cell Data
-Version: 1.7.15
+Version: 1.7.16
 Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
                   role = c("aut", "cre"))
                   )
@@ -54,10 +54,9 @@ Suggests:
     tidySingleCellExperiment,
     bayesplot,
     posterior
-Remotes:
-    stan-dev/cmdstanr
 Additional_repositories:
     https://mc-stan.org/r-packages/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
+biocViews: Bayesian, Regression, DifferentialExpression, SingleCell
 LazyData: true
 VignetteBuilder: knitr

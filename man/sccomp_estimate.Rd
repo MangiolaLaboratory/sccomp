@@ -86,7 +86,7 @@ read counts column (optional depending on the input class), and factor columns.}
 \item{variational_inference}{Logical, whether to use variational Bayes for posterior inference (faster and convenient).}
 }
 \value{
-A nested tibble (\code{tbl}) with the following columns:
+A tibble (\code{tbl}) with the following columns:
 \itemize{
 \item cell_group - The cell groups being tested.
 \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
@@ -117,6 +117,8 @@ single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, 
 group-size) and derives the count data from cell metadata.
 }
 \examples{
+
+message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
 \donttest{
   if (instantiate::stan_cmdstan_exists()) {

@@ -49,7 +49,7 @@
 #' @param variational_inference Logical, whether to use variational Bayes for posterior inference (faster and convenient).
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #' 
-#' @return A nested tibble (`tbl`) with the following columns:
+#' @return A tibble (`tbl`) with the following columns:
 #' \itemize{
 #'   \item cell_group - The cell groups being tested.
 #'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
@@ -72,6 +72,8 @@
 #' }
 #'
 #' @examples
+#'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -522,7 +524,7 @@ sccomp_estimate.data.frame = function(.data,
 #' @param variational_inference Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #' 
-#' @return A nested tibble (`tbl`), with the following columns:
+#' @return A tibble (`tbl`), with the following columns:
 #' \itemize{
 #'   \item cell_group - The cell groups being tested.
 #'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
@@ -541,6 +543,8 @@ sccomp_estimate.data.frame = function(.data,
 #' }
 #'
 #' @examples
+#'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -926,11 +930,32 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
-#'
+#' @return A tibble (`tbl`), with the following columns:
+#' \itemize{
+#'   \item cell_group - The cell groups being tested.
+#'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+#'   \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+#'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
+#'   \item c_FDR - False discovery rate of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
+#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
+#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_pH0 - Probability of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
+#'   \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
+#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#'   \item count_data - Nested input count data.
+#' }#'
 #' @export
 #'
 #' @examples
+#'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1100,11 +1125,22 @@ sccomp_test.sccomp_tbl = function(.data,
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
+#' @return A tibble `tbl` with cell_group-wise statistics
+#'
+#' @return A tibble (`tbl`), with the following columns:
+#' \itemize{
+#'   \item \strong{cell_group} - A character column representing the cell group being tested.
+#'   \item \strong{sample} - A factor column representing the sample name from which data was generated.
+#'   \item \strong{generated_proportions} - A numeric column representing the proportions generated from the model.
+#'   \item \strong{generated_counts} - An integer column representing the counts generated from the model.
+#'   \item \strong{replicate} - An integer column representing the replicate number, where each row corresponds to a different replicate of the data.
+#' }
 #'
 #' @export
 #'
 #' @examples
+#'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
@@ -1192,11 +1228,20 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
-#'
+#' @return A tibble (`tbl`) with the following columns:
+#' \itemize{
+#'   \item \strong{cell_group} - A character column representing the cell group being tested.
+#'   \item \strong{sample} - A factor column representing the sample name for which the predictions are made.
+#'   \item \strong{proportion_mean} - A numeric column representing the predicted mean proportions from the model.
+#'   \item \strong{proportion_lower} - A numeric column representing the lower bound (2.5%) of the 95% credible interval for the predicted proportions.
+#'   \item \strong{proportion_upper} - A numeric column representing the upper bound (97.5%) of the 95% credible interval for the predicted proportions.
+#' }
+#' 
 #' @export
 #'
 #' @examples
+#'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
@@ -1303,11 +1348,20 @@ sccomp_predict.sccomp_tbl = function(fit,
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.#' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param cores Integer, the number of cores to be used for parallel calculations.
 #' 
-#' @return A nested tibble `tbl` with cell_group-wise statistics
+#' @return A tibble (`tbl`) with the following columns:
+#' \itemize{
+#'   \item \strong{sample} - A character column representing the sample name for which data was adjusted.
+#'   \item \strong{cell_group} - A character column representing the cell group being tested.
+#'   \item \strong{adjusted_proportion} - A numeric column representing the adjusted proportion after removing unwanted variation.
+#'   \item \strong{adjusted_counts} - A numeric column representing the adjusted counts after removing unwanted variation.
+#'   \item \strong{logit_residuals} - A numeric column representing the logit residuals calculated after adjustment.
+#' }
 #'
 #' @export
 #'
 #' @examples
+#'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1317,9 +1371,8 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'       counts_obj,
 #'       ~ type, ~1, sample, cell_group, count,
 #'       cores = 1
-#'     )
-#'
-#'     sccomp_remove_unwanted_variation(estimates)
+#'     ) |>
+#'     sccomp_remove_unwanted_variation()
 #'   }
 #' }
 #'
@@ -1446,11 +1499,26 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param cores Integer, the number of cores to be used for parallel calculations.
 #' 
-#' @return A nested tibble `tbl` with cell_group-wise statistics
+#' @return A tibble (`tbl`) with the following columns:
+#' \itemize{
+#'   \item \strong{sample} - A character column representing the sample name.
+#'   \item \strong{type} - A factor column representing the type of the sample.
+#'   \item \strong{phenotype} - A factor column representing the phenotype in the data.
+#'   \item \strong{count} - An integer column representing the original cell counts.
+#'   \item \strong{cell_group} - A character column representing the cell group identifier.
+#'   \item \strong{b_0} - A numeric column representing the first coefficient used for simulation.
+#'   \item \strong{b_1} - A numeric column representing the second coefficient used for simulation.
+#'   \item \strong{generated_proportions} - A numeric column representing the generated proportions from the simulation.
+#'   \item \strong{generated_counts} - An integer column representing the generated cell counts from the simulation.
+#'   \item \strong{replicate} - An integer column representing the replicate number for each draw from the posterior distribution.
+#' }
+#'
 #'
 #' @export
 #'
 #' @examples
+#'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1606,6 +1674,8 @@ simulate_data.tbl = function(.data,
 #'
 #' @examples
 #'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
 #'     data("counts_obj")
@@ -1682,6 +1752,8 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_com
 #' @export
 #'
 #' @examples
+#'
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1798,10 +1870,13 @@ plots
 #' @return NULL
 #' 
 #' @examples
-#' \dontrun{
+#' 
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' 
+#' \donttest{
 #'   clear_stan_model_cache("path/to/cache_dir")
 #' }
-#' @export
+#' @noRd
 clear_stan_model_cache <- function(cache_dir = sccomp_stan_models_cache_dir) {
   
   # Check if the directory exists

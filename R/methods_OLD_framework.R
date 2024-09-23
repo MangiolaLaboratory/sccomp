@@ -83,7 +83,7 @@
 #'   )
 #' }}
 #' 
-#' @export
+#' @noRd
 #'
 #'
 sccomp_glm <- function(.data,
@@ -454,7 +454,7 @@ sccomp_glm.data.frame = function(.data,
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
-#' @export
+#' @noRd
 #'
 #' @examples
 #'
@@ -506,7 +506,7 @@ test_contrasts <- function(.data,
 #'
 #' @return A `ggplot`
 #'
-#' @export
+#' @noRd
 #'
 #' @examples
 #'

@@ -826,11 +826,11 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
 #' @importFrom dplyr distinct
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarise
-#' @importFrom dplyr set_names
+#' @importFrom rlang set_names
 #' @importFrom purrr map_lgl
 #' @importFrom purrr pmap
 #' @importFrom purrr map_int
-#' @importFrom tidyr with_groups
+#' @importFrom dplyr with_groups
 #' @importFrom rlang enquo
 #' @importFrom rlang quo_name
 #' @importFrom tidyselect all_of
@@ -985,13 +985,13 @@ get_design_matrix = function(.data_spread, formula, .sample){
 #' 
 #' @return A data frame with the checked random intercept elements.
 #' 
-#' @importFrom dplyr nest
+#' @importFrom tidyr nest
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom dplyr pull
 #' @importFrom dplyr filter
 #' @importFrom dplyr distinct
-#' @importFrom dplyr set_names
+#' @importFrom rlang set_names
 #' @importFrom tidyr unite
 #' @importFrom purrr map2
 #' @importFrom stringr str_subset
@@ -1859,7 +1859,8 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
 #' 
 #' 
 #' @importFrom dplyr filter arrange mutate if_else row_number
-#' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point annotate geom_text_repel aes facet_wrap
+#' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point annotate aes facet_wrap
+#' @importFrom ggrepel geom_text_repel
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
@@ -3419,10 +3420,10 @@ get_output_samples = function(fit){
 #' @importFrom instantiate stan_package_model
 #' @importFrom instantiate stan_package_compile
 #' 
-#' @export
+#' @noRd
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE, threads = 1)
 #' }
 load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FALSE, threads = 1) {
@@ -3482,10 +3483,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 #' @importFrom utils menu
 #' @return NULL
 #' 
-#' @examples
-#' \dontrun{
-#'   check_and_install_cmdstanr()
-#' }
+#' @noRd
 check_and_install_cmdstanr <- function() {
   # Check if cmdstanr is installed
   if (!requireNamespace("cmdstanr", quietly = TRUE)) {

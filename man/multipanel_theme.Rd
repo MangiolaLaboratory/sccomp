@@ -5,12 +5,20 @@
 \alias{multipanel_theme}
 \title{multipanel_theme}
 \format{
-A ggplot theme
+A \code{ggplot2} theme with the following adjustments:
+\itemize{
+\item \strong{text}: Font size adjustments for plot titles, axis labels, and legend text.
+\item \strong{panel.spacing}: Adjusts the spacing between panels in multi-panel plots.
+\item \strong{axis.text}: Customises axis text appearance for better readability.
+}
 }
 \usage{
 data(multipanel_theme)
 }
+\value{
+A \code{ggplot2} theme object.
+}
 \description{
-this object includes the ggplot, theme
+A custom \code{ggplot2} theme used for creating publication-quality multi-panel plots. This theme modifies the appearance of plots by adjusting text sizes, spacing between panels, and axis formatting, ensuring better readability for complex figures.
 }
 \keyword{datasets}

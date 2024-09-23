@@ -24,12 +24,34 @@ sccomp_test(
 \item{pass_fit}{A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.}
 }
 \value{
-A nested tibble \code{tbl} with cell_group-wise statistics
+A tibble (\code{tbl}), with the following columns:
+\itemize{
+\item cell_group - The cell groups being tested.
+\item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+\item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+\item c_lower - Lower (2.5\%) quantile of the posterior distribution for a composition (c) parameter.
+\item c_effect - Mean of the posterior distribution for a composition (c) parameter.
+\item c_upper - Upper (97.5\%) quantile of the posterior distribution for a composition (c) parameter.
+\item c_pH0 - Probability of the c_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument.
+\item c_FDR - False discovery rate of the c_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023.
+\item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+\item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+\item v_lower - Lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter.
+\item v_effect - Mean of the posterior distribution for a variability (v) parameter.
+\item v_upper - Upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter.
+\item v_pH0 - Probability of the v_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument.
+\item v_FDR - False discovery rate of the v_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023.
+\item v_n_eff - Effective sample size for a variability (v) parameter.
+\item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+\item count_data - Nested input count data.
+}#'
 }
 \description{
 This function test contrasts from a sccomp result.
 }
 \examples{
+
+message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
 \donttest{
   if (instantiate::stan_cmdstan_exists()) {

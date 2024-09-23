@@ -21,12 +21,21 @@ sccomp_remove_unwanted_variation(
 \item{cores}{Integer, the number of cores to be used for parallel calculations.}
 }
 \value{
-A nested tibble \code{tbl} with cell_group-wise statistics
+A tibble (\code{tbl}) with the following columns:
+\itemize{
+\item \strong{sample} - A character column representing the sample name for which data was adjusted.
+\item \strong{cell_group} - A character column representing the cell group being tested.
+\item \strong{adjusted_proportion} - A numeric column representing the adjusted proportion after removing unwanted variation.
+\item \strong{adjusted_counts} - A numeric column representing the adjusted counts after removing unwanted variation.
+\item \strong{logit_residuals} - A numeric column representing the logit residuals calculated after adjustment.
+}
 }
 \description{
 This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula \code{~ factor_1 + factor_2} and use this formula to remove unwanted variation \code{~ factor_1}, the \code{factor_2} will be factored out.
 }
 \examples{
+
+message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
 \donttest{
   if (instantiate::stan_cmdstan_exists()) {
@@ -36,9 +45,8 @@ This function uses the model to remove unwanted variation from a dataset using t
       counts_obj,
       ~ type, ~1, sample, cell_group, count,
       cores = 1
-    )
-
-    sccomp_remove_unwanted_variation(estimates)
+    ) |>
+    sccomp_remove_unwanted_variation()
   }
 }
 
