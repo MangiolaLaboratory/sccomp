@@ -409,6 +409,7 @@ test_that("multi beta binomial from SCE",{
   #   expect_equal(0)
 })
 
+if (instantiate::stan_cmdstan_exists()){
 res_composition =
   seurat_obj[[]] |>
   sccomp_estimate(
@@ -432,6 +433,7 @@ res_composition_variability =
     mcmc_seed = 42,    
     max_sampling_iterations = 1000, verbose = FALSE
   )
+}
 
 test_that("multi beta binomial from metadata",{
 
@@ -563,6 +565,9 @@ test_that("test constrasts",{
 
 
 test_that("sccomp_proportional_fold_change",{
+  
+  skip_cmdstan()
+  
   
   my_estimate |> 
     sccomp_proportional_fold_change(formula_composition = ~  type, from =  "healthy", to = "cancer") |> 
