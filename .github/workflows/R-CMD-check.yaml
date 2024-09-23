@@ -2,11 +2,19 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: [main, master]
+    branches:
+    - master
+    - main
+    - devel
+    - RELEASE_**
   pull_request:
-    branches: [main, master]
+    branches:
+    - master
+    - main
+    - devel
+    - RELEASE_**
 
-name: R-CMD-check
+  name: R-CMD-check
 
 jobs:
   R-CMD-check:
@@ -18,8 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release', bioc: release, cont: ~, rspm: ~}
-          - {os: windows-latest, r: 'release', bioc: release, cont: ~, rspm: ~, rtools: '43'}
+          - {os: macos-latest,   r: 'auto', bioc: release, cont: ~, rspm: ~}
+          - {os: windows-latest, r: 'auto', bioc: release, cont: ~, rspm: ~, rtools: '43'}
           - {os: ubuntu-latest,  r: 'devel', bioc: devel, http-user-agent: 'release', cont: ghcr.io/bioconductor/bioconductor_docker:devel, rspm: ~}
           - {os: ubuntu-latest,  r: 'release', bioc: devel, cont: ghcr.io/bioconductor/bioconductor_docker:devel, rspm: ~}}
           - {os: ubuntu-latest,  r: 'oldrel-1', bioc: devel, cont: ghcr.io/bioconductor/bioconductor_docker:devel, rspm: ~}}
@@ -63,3 +71,21 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+      
+      - uses: neurogenomics/rworkflows@master
+        with:
+          run_bioccheck: ${{ false }}
+          run_rcmdcheck: ${{ true }}
+          as_cran: ${{ true }}
+          run_vignettes: ${{ true }}
+          has_testthat: ${{ true }}
+          run_covr: ${{ true }}
+          run_pkgdown: ${{ true }}
+          has_runit: ${{ false }}
+          has_latex: ${{ false }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run_docker: ${{ false }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+          runner_os: ${{ runner.os }}
+          cache_version: cache-v1
+          docker_registry: ghcr.io
