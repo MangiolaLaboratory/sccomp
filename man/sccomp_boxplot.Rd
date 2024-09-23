@@ -29,15 +29,21 @@ This function plots a boxplot of the results of the model.
 }
 \examples{
 
-data("counts_obj")
+message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
-estimate =
-  sccomp_estimate(
-  counts_obj ,
-   ~ type, ~1, sample, cell_group, count,
-    cores = 1
-  ) |>
-  sccomp_test()
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
 
-# estimate |> sccomp_boxplot()
+    estimate = sccomp_estimate(
+      counts_obj,
+      ~ type, ~1, sample, cell_group, count,
+      cores = 1
+    ) |>
+    sccomp_test()
+
+    # estimate |> sccomp_boxplot()
+  }
+}
+
 }

@@ -9,73 +9,82 @@ sccomp_remove_outliers(
   percent_false_positive = 5,
   cores = detectCores(),
   inference_method = "pathfinder",
+  output_directory = "sccomp_draws_files",
   verbose = TRUE,
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   enable_loo = FALSE,
   approximate_posterior_inference = NULL,
-  variational_inference = NULL
+  variational_inference = NULL,
+  ...
 )
 }
 \arguments{
-\item{.estimate}{A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.}
+\item{.estimate}{A tibble including a cell_group name column, sample name column, read counts column (optional depending on the input class), and factor columns.}
 
-\item{percent_false_positive}{A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.}
+\item{percent_false_positive}{A real number between 0 and 100 (not inclusive), used to identify outliers with a specific false positive rate.}
 
-\item{cores}{An integer. How many cored to be used with parallel calculations.}
+\item{cores}{Integer, the number of cores to be used for parallel calculations.}
 
-\item{verbose}{A boolean. Prints progression.}
+\item{inference_method}{Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').}
 
-\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
+\item{output_directory}{A character string specifying the output directory for Stan draws.}
 
-\item{max_sampling_iterations}{An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.}
+\item{verbose}{Logical, whether to print progression details.}
 
-\item{enable_loo}{A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.}
+\item{mcmc_seed}{Integer, used for Markov-chain Monte Carlo reproducibility. By default, a random number is sampled from 1 to 999999.}
 
-\item{approximate_posterior_inference}{DEPRECATED please use the \code{variational_inference} argument.}
+\item{max_sampling_iterations}{Integer, limits the maximum number of iterations in case a large dataset is used, to limit computation time.}
 
-\item{variational_inference}{Boolean for using variational Bayes for posterior inference. It is faster and convenient. Setting this argument to FALSE runs the full Bayesian (Hamiltonian Monte Carlo) inference, slower but it is the gold standard.}
+\item{enable_loo}{Logical, whether to enable model comparison using the R package LOO. This is useful for comparing fits between models, similar to ANOVA.}
+
+\item{approximate_posterior_inference}{DEPRECATED, use the \code{variational_inference} argument.}
+
+\item{variational_inference}{Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to \code{FALSE} runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.}
+
+\item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 }
 \value{
-A nested tibble \code{tbl}, with the following columns
+A tibble (\code{tbl}), with the following columns:
 \itemize{
-\item cell_group - column including the cell groups being tested
-\item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
-\item factor - The factor in the formula corresponding to the covariate, if exists (e.g. it does not exist in case og Intercept or contrasts, which usually are combination of parameters)
-
-\item c_lower - lower (2.5\%) quantile of the posterior distribution for a composition (c) parameter.
-\item c_effect - mean of the posterior distribution for a composition (c) parameter.
-\item c_upper - upper (97.5\%) quantile of the posterior distribution fo a composition (c)  parameter.
-\item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-\item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-
-\item v_lower - Lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter
-\item v_effect - Mean of the posterior distribution for a variability (v) parameter
-\item v_upper - Upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter
-\item v_n_eff - Effective sample size for a variability (v) parameter - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-\item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-
-\item count_data Nested input count data.
-
+\item cell_group - The cell groups being tested.
+\item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+\item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+\item c_lower - Lower (2.5\%) quantile of the posterior distribution for a composition (c) parameter.
+\item c_effect - Mean of the posterior distribution for a composition (c) parameter.
+\item c_upper - Upper (97.5\%) quantile of the posterior distribution for a composition (c) parameter.
+\item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+\item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+\item v_lower - Lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter.
+\item v_effect - Mean of the posterior distribution for a variability (v) parameter.
+\item v_upper - Upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter.
+\item v_n_eff - Effective sample size for a variability (v) parameter.
+\item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+\item count_data - Nested input count data.
 }
 }
 \description{
-The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
+The \code{sccomp_remove_outliers} function takes as input a table of cell counts with columns for cell-group identifier, sample identifier, integer count, and factors (continuous or discrete). The user can define a linear model using an input R formula, where the first factor is the factor of interest. Alternatively, \code{sccomp} accepts single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or group-size) and derives the count data from cell metadata.
 }
 \examples{
 
-data("counts_obj")
+message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
-estimate =
-  sccomp_estimate(
-  counts_obj ,
-   ~ type,
-   ~1,
-   sample,
-   cell_group,
-   count,
-    cores = 1
-  ) |>
-  sccomp_remove_outliers(cores = 1)
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
+    
+    estimate = sccomp_estimate(
+      counts_obj,
+      ~ type,
+      ~1,
+      sample,
+      cell_group,
+      count,
+      cores = 1
+    ) |>
+    sccomp_remove_outliers(cores = 1)
+  }
+}
 
 }

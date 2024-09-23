@@ -19,6 +19,6 @@ supporting different methods (MHC and Variational) based on the available data w
 }
 \examples{
 # Assuming 'fit' is a stanfit object obtained from running a Stan model
-samples_count = get_output_samples(fit)
+print("samples_count = get_output_samples(fit)")
 
 }
