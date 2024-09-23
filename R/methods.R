@@ -166,7 +166,8 @@ sccomp_estimate.Seurat = function(.data,
                                   use_data = TRUE,
                                   mcmc_seed = sample(1e5, 1),
                                   max_sampling_iterations = 20000,
-                                  pass_fit = TRUE, ...,
+                                  pass_fit = TRUE, 
+                                  ...,
                                   
                                   # DEPRECATED
                                   approximate_posterior_inference = NULL,
@@ -247,7 +248,8 @@ sccomp_estimate.SingleCellExperiment = function(.data,
                                                 use_data = TRUE,
                                                 mcmc_seed = sample(1e5, 1),
                                                 max_sampling_iterations = 20000,
-                                                pass_fit = TRUE, ...,
+                                                pass_fit = TRUE, 
+                                                ...,
                                                 
                                                 # DEPRECATED
                                                 approximate_posterior_inference = NULL,
@@ -330,7 +332,8 @@ sccomp_estimate.DFrame = function(.data,
                                   use_data = TRUE,
                                   mcmc_seed = sample(1e5, 1),
                                   max_sampling_iterations = 20000,
-                                  pass_fit = TRUE, ...,
+                                  pass_fit = TRUE, 
+                                  ...,
                                   
                                   # DEPRECATED
                                   approximate_posterior_inference = NULL,
@@ -412,7 +415,8 @@ sccomp_estimate.data.frame = function(.data,
                                       use_data = TRUE,
                                       mcmc_seed = sample(1e5, 1),
                                       max_sampling_iterations = 20000,
-                                      pass_fit = TRUE, ...,
+                                      pass_fit = TRUE, 
+                                      ...,
                                       
                                       # DEPRECATED
                                       approximate_posterior_inference = NULL,
