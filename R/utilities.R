@@ -266,6 +266,7 @@ vb_iterative = function(model,
                         inference_method,
                         cores = 1, 
                         verbose = TRUE,
+                        psis_resample = FALSE,
                         ...) {
   res = NULL
   i = 0
@@ -287,6 +288,7 @@ vb_iterative = function(model,
           	max_lbfgs_iters=100, 
           	history_size = 100, 
             show_messages = verbose,
+            psis_resample = psis_resample,
           	...
           )
     
@@ -302,6 +304,7 @@ vb_iterative = function(model,
             seed = seed+i,
             init = init,
             show_messages = verbose,
+            threads = cores,
             ...
           )
 
@@ -457,7 +460,7 @@ label_deleterious_outliers = function(.my_data){
 
 #' @importFrom readr write_file
 fit_model = function(
-  data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
+  data_for_model, model_name, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
   warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
   seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000, 
   output_directory = "sccomp_draws_files",
@@ -535,7 +538,7 @@ fit_model = function(
   dir.create(output_directory, showWarnings = FALSE)
 
   # Fit
-  mod = load_model("glm_multi_beta_binomial", threads = cores)
+  mod = load_model(model_name, threads = cores)
   
   
   if(inference_method == "hmc"){
@@ -564,15 +567,17 @@ fit_model = function(
       
       # I don't know why thi is needed nd why the model sometimes is not compliled correctly
       if(e |> as.character() |>  str_detect("Model not compiled"))
-        model = load_model("glm_multi_beta_binomial", force=TRUE, threads = cores)
+        model = load_model(model_name, force=TRUE, threads = cores)
       else 
         stop()   
       
     })
     
 
-}
-  else
+} else{
+    if(inference_method=="pathfinder") init = pf
+    else if(inference_method=="variational") init = list(init_list)
+    
     vb_iterative(
       mod,
       output_samples = output_samples ,
@@ -581,13 +586,16 @@ fit_model = function(
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
       output_dir = output_directory,
-      init = pf , #list(init_list),
+      init = init,
       inference_method = inference_method, 
       cores = cores,
       psis_resample = FALSE, 
       verbose = verbose
     ) %>%
       suppressWarnings()
+    
+  }
+    
 
 
 }

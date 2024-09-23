@@ -110,6 +110,9 @@ The function for linear modelling takes as input a table of cell counts with thr
 }
 \examples{
 
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+
 data("counts_obj")
 
 estimate =
@@ -123,5 +126,6 @@ estimate =
     check_outliers = FALSE,
     cores = 1
   )
+}}
 
 }

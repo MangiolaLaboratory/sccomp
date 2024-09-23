@@ -19,17 +19,41 @@ Please cite [PNAS - sccomp: Robust differential composition and variability anal
 
 # Installation
 
+`sccomp` is based on `cmdstanr` which provides the latest version of `cmdstan` the Bayesian modelling tool. `cmdstanr` is not on CRAN, so we need to have 3 simple step process (that will be prompted to the user is forgot).
+
+1. R installation of `sccomp`
+2. R installation of `cmdstanr`
+3. `cmdstanr` call to `cmdstan` installation
+
 **Bioconductor**
 
 ```{r eval=FALSE}
 if (!requireNamespace("BiocManager")) install.packages("BiocManager")
+
+# Step 1
 BiocManager::install("sccomp")
+
+# Step 2
+install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+
+# Step 3
+cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
+cmdstanr::install_cmdstan()
 ```
 
 **Github**
 
 ```{r eval=FALSE}
+
+# Step 1
 devtools::install_github("stemangiola/sccomp")
+
+# Step 2
+install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+
+# Step 3
+cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
+cmdstanr::install_cmdstan()
 ```
 
 Function | Description

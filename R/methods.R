@@ -763,7 +763,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   fit2 =
     data_for_model %>%
     fit_model(
-      stanmodels$glm_multi_beta_binomial,
+      "glm_multi_beta_binomial",
       cores = cores,
       quantile = my_quantile_step_2,
       inference_method = inference_method,
@@ -874,7 +874,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     data_for_model %>%
     # Run the first discovery phase with permissive false discovery rate
     fit_model(
-      stanmodels$glm_multi_beta_binomial,
+      "glm_multi_beta_binomial",
       cores = cores,
       quantile = CI,
       inference_method = inference_method,
@@ -1519,13 +1519,13 @@ simulate_data.tbl = function(.data,
 
   model_data = attr(.estimate_object, "model_input")
 
-  # Select model based on noise model
-  if(attr(.estimate_object, "noise_model") == "multi_beta_binomial") my_model = stanmodels$glm_multi_beta_binomial_simulate_data
-  else if(attr(.estimate_object, "noise_model") == "dirichlet_multinomial") my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  else if(attr(.estimate_object, "noise_model") == "logit_normal_multinomial") my_model = get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
+  # # Select model based on noise model
+  # if(attr(.estimate_object, "noise_model") == "multi_beta_binomial") my_model = stanmodels$glm_multi_beta_binomial_simulate_data
+  # else if(attr(.estimate_object, "noise_model") == "dirichlet_multinomial") my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  # else if(attr(.estimate_object, "noise_model") == "logit_normal_multinomial") my_model = get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
 
 
-  model_input =
+  data_for_model =
     .data %>%
     nest(data___ = -!!.sample) %>%
     mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) %>%
@@ -1535,20 +1535,25 @@ simulate_data.tbl = function(.data,
       #formula_variability,
       !!.sample, !!.cell_group, .exposure, !!.coefficients
     )
-
+    names(data_for_model)  = names(data_for_model) |> stringr::str_c("_simulated")
+    
+  # Drop data from old input
+  original_data = .estimate_object |> attr("model_input")
+  original_data = original_data[(names(original_data) %in% c("C", "M", "A", "ncol_X_random_eff", "is_random_effect", "how_many_factors_in_random_design"  ))]
+  
     # [1]  5.6260004 -0.6940178
     # prec_sd  = 0.816423129
 
-  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
+  mod_rng = load_model("glm_multi_beta_binomial_simulate_data", threads = cores)
   
-  fit = my_model |> sample_safe(
+  fit = mod_rng |> sample_safe(
     generate_quantities_fx,
     attr(.estimate_object , "fit")$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
-    data = model_input %>% c(list(variability_multiplier = variability_multiplier)),
+    data = data_for_model %>% c(original_data) |> c(list(variability_multiplier = variability_multiplier)),
     seed = mcmc_seed,
-    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains()), 
+    parallel_chains = attr(.estimate_object , "fit")$metadata()$threads_per_chain, 
     threads_per_chain = cores
     
   )
@@ -1560,12 +1565,12 @@ simulate_data.tbl = function(.data,
     # Get sample name
     nest(data = -N) %>%
     arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$X)) %>%
+    mutate(!!.sample := rownames(data_for_model$X_simulated)) %>%
     unnest(data) %>%
 
     # get cell type name
     nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(model_input$beta)) %>%
+    mutate(!!.cell_group := colnames(data_for_model$beta_simulated)) %>%
     unnest(data) %>%
 
     select(-N, -M)

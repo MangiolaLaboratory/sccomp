@@ -289,7 +289,7 @@ sccomp_glm_data_frame_counts = function(.data,
     
     # Run the first discovery phase with permissive false discovery rate
     fit_model(
-      stanmodels$glm_multi_beta_binomial,
+      "glm_multi_beta_binomial",
       cores= cores,
       quantile = CI,
       inference_method = inference_method,

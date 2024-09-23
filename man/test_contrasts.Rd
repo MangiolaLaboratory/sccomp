@@ -31,6 +31,9 @@ This function test ocntrasts from a sccomp result.
 }
 \examples{
 
+
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
 data("counts_obj")
 
   estimates =
@@ -42,5 +45,5 @@ data("counts_obj")
   ) |>
 
   test_contrasts("typecancer - typebenign")
-
+}}
 }

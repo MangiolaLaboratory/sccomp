@@ -65,6 +65,9 @@
 #'
 #' @examples
 #'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'
 #' data("counts_obj")
 #'
 #' estimate =
@@ -78,7 +81,8 @@
 #'     check_outliers = FALSE,
 #'     cores = 1
 #'   )
-#'
+#' }}
+#' 
 #' @export
 #'
 #'
@@ -454,6 +458,9 @@ sccomp_glm.data.frame = function(.data,
 #'
 #' @examples
 #'
+#'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
 #' data("counts_obj")
 #'
 #'   estimates =
@@ -465,7 +472,7 @@ sccomp_glm.data.frame = function(.data,
 #'   ) |>
 #'
 #'   test_contrasts("typecancer - typebenign")
-#'
+#' }}
 test_contrasts <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
@@ -503,17 +510,20 @@ test_contrasts <- function(.data,
 #'
 #' @examples
 #'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
 #' data("counts_obj")
 #'
 #' estimate =
 #'   sccomp_estimate(
 #'   counts_obj ,
 #'    ~ type, ~1, sample, cell_group, count,
-#'     approximate_posterior_inference = "all",
 #'     cores = 1
 #'   )
 #'
 #' # estimate |> plot_summary()
+#'   }
+#' }
 #'
 plot_summary <- function(.data, significance_threshold = 0.025) {
   
