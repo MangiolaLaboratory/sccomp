@@ -87,7 +87,7 @@ cmdstanr::install_cmdstan()
 ```{r eval=FALSE}
 
 # Step 1
-devtools::install_github("stemangiola/sccomp")
+devtools::install_github("MangiolaLaboratory/sccomp")
 
 # Step 2
 install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
@@ -103,13 +103,13 @@ Function | Description
 `sccomp_remove_outliers` | Identify outliers probabilistically based on the model fit, and exclude them from the estimation
 `sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change)
 `sccomp_replicate` | Simulate data from the model, or part of the model
-`sccomp_predict` | Predicts proportions, based on the mode, or part of the model
+`sccomp_predict` | Predicts proportions, based on the model, or part of the model
 `sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors
-`plot` | Plors summary plots to asses significance 
+`plot` | Plots summary plots to asses significance 
 
 # Analysis
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE}
 library(dplyr)
 library(sccomp)
 library(ggplot2)
@@ -134,7 +134,7 @@ Of the output table, the estimate columns start with the prefix `c_` indicate `c
 ```{r eval=FALSE}
 
 sccomp_result = 
-  single_cell_object |>
+  sce_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
@@ -333,7 +333,7 @@ library(posterior)
 library(bayesplot)
 
 # Assuming res contains the fit object from cmdstanr
-fit <- res %>% attr("fit")
+fit <- res |> attr("fit")
 
 # Extract draws for 'beta[2,1]'
 draws <- as_draws_array(fit$draws("beta[2,1]"))
@@ -353,7 +353,7 @@ plots$credible_intervals_1D
 
 Plot 2D significance plot. Data points are cell groups. Error bars are the 95% credible interval. The dashed lines represent the default threshold fold change for which the probabilities (c_pH0, v_pH0) are calculated. pH0 of 0 represent the rejection of the null hypothesis that no effect is observed.
 
-This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for `(intercept)` (left-hand side facet) is satisfied. A scatterplot (besides the Intercept) is provided for each category of interest. The for each category of interest, the composition and variability effects should be generally uncorrelated.
+This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for `(intercept)` (left-hand side facet) is satisfied. A scatterplot (besides the Intercept) is provided for each category of interest. For each category of interest, the composition and variability effects should be generally uncorrelated.
 
 ```{r, eval = instantiate::stan_cmdstan_exists()}
 plots$credible_intervals_2D
