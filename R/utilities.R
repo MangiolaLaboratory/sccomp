@@ -3491,9 +3491,9 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 check_and_install_cmdstanr <- function() {
   # Check if cmdstanr is installed
   if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    message(
-      "Step 1: The 'cmdstanr' package is not installed.\n",
-      "Please install the R package 'cmdstanr' using the following command:\n",
+    stop(
+      "cmdstanr is required to proceed.\n\n",
+      "Step 1: Please install the R package 'cmdstanr' using the following command:\n",
       "install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))\n",
       "Note: 'cmdstanr' is not available on CRAN.\n\n",
       
@@ -3503,20 +3503,18 @@ check_and_install_cmdstanr <- function() {
       "This will install the latest version of CmdStan. For more information, visit:\n",
       "https://mc-stan.org/users/interfaces/cmdstan"
     )
-    stop("cmdstanr is required to proceed.")
   }
   
   # Check if CmdStan is installed
   if (!instantiate::stan_cmdstan_exists()) {
-    message(
-      "CmdStan is not installed.\n",
+    stop(
+      "cmdstan is required to proceed.\n\n",
       "You can install CmdStan by running the following command:\n",
       "cmdstanr::check_cmdstan_toolchain(fix = TRUE)\n",
       "cmdstanr::install_cmdstan()\n",
       "This will install the latest version of CmdStan. For more information, visit:\n",
       "https://mc-stan.org/users/interfaces/cmdstan"
     )
-    stop("CmdStan installation is required to proceed.")
   }
 }
 

@@ -282,8 +282,8 @@ model_without_association =
 
 # Compare models
 loo_compare(
-  model_with_factor_association |> attr("fit") |> loo(),
-  model_without_association |> attr("fit") |> loo()
+   attr(model_with_factor_association, "fit")$loo(),
+   attr(model_without_association, "fit")$loo()
 )
 
 ```

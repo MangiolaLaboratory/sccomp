@@ -98,7 +98,6 @@ sccomp_result =
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
   sccomp_remove_outliers(cores = 1) |> # Optional
@@ -117,7 +116,6 @@ sccomp_result =
     .sample = sample,
     .cell_group = cell_group,
     .count = count, 
-    bimodal_mean_variability_association = TRUE,
     cores = 1, verbose = FALSE
   ) |> 
   sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
@@ -197,7 +195,6 @@ seurat_obj |>
     formula_composition = ~ 0 + type, 
     .sample = sample,
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
     cores = 1, verbose = FALSE
   ) |> 
   sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
@@ -223,7 +220,6 @@ model_with_factor_association =
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
     inference_method = "hmc",
     enable_loo = TRUE
   )
@@ -235,7 +231,6 @@ model_without_association =
     formula_composition = ~ 1, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
     inference_method = "hmc",
     enable_loo = TRUE
   )
@@ -261,7 +256,6 @@ res =
     formula_variability = ~ type,
     .sample = sample,
     .cell_group = cell_group,
-    bimodal_mean_variability_association = TRUE,
     cores = 1, verbose = FALSE
   )
 
