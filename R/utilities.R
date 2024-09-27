@@ -3491,6 +3491,9 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 check_and_install_cmdstanr <- function() {
   # Check if cmdstanr is installed
   if (!requireNamespace("cmdstanr", quietly = TRUE)) {
+    
+    clear_stan_model_cache()
+    
     stop(
       "cmdstanr is required to proceed.\n\n",
       "Step 1: Please install the R package 'cmdstanr' using the following command:\n",
@@ -3507,6 +3510,9 @@ check_and_install_cmdstanr <- function() {
   
   # Check if CmdStan is installed
   if (!instantiate::stan_cmdstan_exists()) {
+    
+    clear_stan_model_cache()
+    
     stop(
       "cmdstan is required to proceed.\n\n",
       "You can install CmdStan by running the following command:\n",
