@@ -263,8 +263,7 @@ model_with_factor_association =
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
-    cores = 1, 
+    inference_method = "hmc",
     enable_loo = TRUE
   )
 
@@ -275,8 +274,7 @@ model_without_association =
     formula_composition = ~ 1, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
-    cores = 1 , 
+    inference_method = "hmc",
     enable_loo = TRUE
   )
 
@@ -287,6 +285,7 @@ loo_compare(
 )
 
 ```
+
 
 ## Differential variability, binary factor
 
