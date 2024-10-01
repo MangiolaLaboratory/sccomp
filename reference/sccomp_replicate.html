@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.16</span>
       </span>
     </div>
 
@@ -36,7 +36,7 @@
     </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"><li>
-  <a href="https://github.com/stemangiola/sccomp/" class="external-link">
+  <a href="https://github.com/MangiolaLaboratory/sccomp/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
 
   </a>
@@ -51,7 +51,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>sccomp_replicate</h1>
-    <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/master/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/cmdstanr/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
     <div class="hidden name"><code>sccomp_replicate.Rd</code></div>
     </div>
 
@@ -95,64 +95,32 @@
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A nested tibble <code>tbl</code> with cell_group-wise statistics</p>
-    </div>
+    <p>A tibble <code>tbl</code> with cell_group-wise statistics</p>
+<p>A tibble (<code>tbl</code>), with the following columns:</p><ul><li><p><strong>cell_group</strong> - A character column representing the cell group being tested.</p></li>
+<li><p><strong>sample</strong> - A factor column representing the sample name from which data was generated.</p></li>
+<li><p><strong>generated_proportions</strong> - A numeric column representing the proportions generated from the model.</p></li>
+<li><p><strong>generated_counts</strong> - An integer column representing the counts generated from the model.</p></li>
+<li><p><strong>replicate</strong> - An integer column representing the replicate number, where each row corresponds to a different replicate of the data.</p></li>
+</ul></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))"</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Use the following example after having installed install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="va">.Platform</span><span class="op">$</span><span class="va">OS.type</span> <span class="op">==</span> <span class="st">"unix"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">counts_obj</span> ,</span></span>
-<span class="r-in"><span>   <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>,  <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span></span>
-<span class="r-in"><span>    cores <span class="op">=</span> <span class="fl">1</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu">instantiate</span><span class="fu">::</span><span class="fu"><a href="https://wlandau.github.io/instantiate/reference/stan_cmdstan_exists.html" class="external-link">stan_cmdstan_exists</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="va">.Platform</span><span class="op">$</span><span class="va">OS.type</span> <span class="op">==</span> <span class="st">"unix"</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="fu">sccomp_replicate</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: count column is an integer. The sum-constrained beta binomial model will be used</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000321 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.21 seconds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Adjust your expectations accordingly!</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:  Elapsed Time: 3.05 seconds (Warm-up)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:                19.651 seconds (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:                22.701 seconds (Total)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`, </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion. </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non linear).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cell_group sample       generated_proportions generated_counts replicate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> B1         10x_6K                      0.039<span style="text-decoration: underline;">7</span>              198         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> B1         10x_8K                      0.041<span style="text-decoration: underline;">8</span>              209         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> B1         GSE115189                   0.030<span style="text-decoration: underline;">2</span>              150         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> B1         SCP345_580                  0.040<span style="text-decoration: underline;">6</span>              203         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> B1         SCP345_860                  0.061<span style="text-decoration: underline;">9</span>              309         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> B1         SCP424_pbmc1                0.030<span style="text-decoration: underline;">7</span>              153         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> B1         SCP424_pbmc2                0.053<span style="text-decoration: underline;">6</span>              267         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> B1         SCP591                      0.044<span style="text-decoration: underline;">8</span>              223         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> B1         SI-GA-E5                    0.044<span style="text-decoration: underline;">7</span>              223         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> B1         SI-GA-E7                    0.073<span style="text-decoration: underline;">9</span>              369         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 710 more rows</span></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      <span class="va">counts_obj</span>,</span></span>
+<span class="r-in"><span>      <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>, <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span></span>
+<span class="r-in"><span>      cores <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>    <span class="fu">sccomp_replicate</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>

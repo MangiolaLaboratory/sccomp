@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.15</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.16</span>
       </span>
     </div>
 
@@ -36,7 +36,7 @@
     </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"><li>
-  <a href="https://github.com/stemangiola/sccomp/" class="external-link">
+  <a href="https://github.com/MangiolaLaboratory/sccomp/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
 
   </a>
@@ -51,7 +51,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>simulate_data</h1>
-    <small class="dont-index">Source: <a href="https://github.com/stemangiola/sccomp/blob/master/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/cmdstanr/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
     <div class="hidden name"><code>simulate_data.Rd</code></div>
     </div>
 
@@ -70,7 +70,8 @@
 <span>  .coefficients <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  variability_multiplier <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  number_of_draws <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -115,81 +116,51 @@
 
 
 <dt id="arg-mcmc-seed">mcmc_seed<a class="anchor" aria-label="anchor" href="#arg-mcmc-seed"></a></dt>
-<dd><p>An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()</p></dd>
+<dd><p>An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.</p></dd>
+
+
+<dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
+<dd><p>Integer, the number of cores to be used for parallel calculations.</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A nested tibble <code>tbl</code> with cell_group-wise statistics</p>
-    </div>
+    <p>A tibble (<code>tbl</code>) with the following columns:</p><ul><li><p><strong>sample</strong> - A character column representing the sample name.</p></li>
+<li><p><strong>type</strong> - A factor column representing the type of the sample.</p></li>
+<li><p><strong>phenotype</strong> - A factor column representing the phenotype in the data.</p></li>
+<li><p><strong>count</strong> - An integer column representing the original cell counts.</p></li>
+<li><p><strong>cell_group</strong> - A character column representing the cell group identifier.</p></li>
+<li><p><strong>b_0</strong> - A numeric column representing the first coefficient used for simulation.</p></li>
+<li><p><strong>b_1</strong> - A numeric column representing the second coefficient used for simulation.</p></li>
+<li><p><strong>generated_proportions</strong> - A numeric column representing the generated proportions from the simulation.</p></li>
+<li><p><strong>generated_counts</strong> - An integer column representing the generated cell counts from the simulation.</p></li>
+<li><p><strong>replicate</strong> - An integer column representing the replicate number for each draw from the posterior distribution.</p></li>
+</ul></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘dplyr’</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:stats’:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     filter, lag</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:base’:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     intersect, setdiff, setequal, union</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))"</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Use the following example after having installed install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">estimate</span> <span class="op">=</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span> <span class="va">counts_obj</span> ,</span></span>
-<span class="r-in"><span>  <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>,  <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span></span>
-<span class="r-in"><span>   cores <span class="op">=</span> <span class="fl">1</span></span></span>
-<span class="r-in"><span> <span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: count column is an integer. The sum-constrained beta binomial model will be used</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Gradient evaluation took 0.000336 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.36 seconds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Adjust your expectations accordingly!</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:  Elapsed Time: 2.788 seconds (Warm-up)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:                19.858 seconds (Sampling)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1:                22.646 seconds (Total)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1: </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`, </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion. </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non linear).</span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu">instantiate</span><span class="fu">::</span><span class="fu"><a href="https://wlandau.github.io/instantiate/reference/stan_cmdstan_exists.html" class="external-link">stan_cmdstan_exists</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.</span></span></span>
-<span class="r-in"><span><span class="va">counts_obj</span> <span class="op">=</span> <span class="va">counts_obj</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>b_0 <span class="op">=</span> <span class="fl">0</span>, b_1 <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Simulate data</span></span></span>
-<span class="r-in"><span><span class="fu">simulate_data</span><span class="op">(</span><span class="va">counts_obj</span>, <span class="va">estimate</span>, <span class="op">~</span><span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>, <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">b_0</span>, <span class="va">b_1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 10</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    sample type   phenotype    count cell_group   b_0   b_1 generated_proportions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K benign b_cell_macr…    42 BM             0     0             0.008<span style="text-decoration: underline;">09</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K benign B_cell:imma…   361 B1             0     0             0.000<span style="text-decoration: underline;">216</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K benign B_cell:imma…    57 B2             0     0             0        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K benign B_cell:Memo…    40 B3             0     0             0.000<span style="text-decoration: underline;">053</span>9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K benign Dendritic_C…    75 Dm             0     0             0.003<span style="text-decoration: underline;">07</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K benign HSC_-G-CSF_…   187 H1             0     0             0.089<span style="text-decoration: underline;">3</span>   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K benign HSC_-G-CSF_…   269 H2             0     0             0.000<span style="text-decoration: underline;">053</span>9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K benign HSC_Bcell_m…   190 H3             0     0             0        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K benign Mixed_CD3_c…   123 TM1            0     0             0.089<span style="text-decoration: underline;">1</span>   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K benign Mixed_CD3_c…    19 TM2            0     0             0.123    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 710 more rows</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: generated_counts &lt;int&gt;, replicate &lt;int&gt;</span></span>
+<span class="r-in"><span>    <span class="va">estimate</span> <span class="op">=</span> <span class="fu"><a href="sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      <span class="va">counts_obj</span>,</span></span>
+<span class="r-in"><span>      <span class="op">~</span> <span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>, <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="va">count</span>,</span></span>
+<span class="r-in"><span>      cores <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>    <span class="co"># Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.</span></span></span>
+<span class="r-in"><span>    <span class="va">counts_obj</span> <span class="op">=</span> <span class="va">counts_obj</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>b_0 <span class="op">=</span> <span class="fl">0</span>, b_1 <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>    <span class="co"># Simulate data</span></span></span>
+<span class="r-in"><span>    <span class="fu">simulate_data</span><span class="op">(</span><span class="va">counts_obj</span>, <span class="va">estimate</span>, <span class="op">~</span><span class="va">type</span>, <span class="op">~</span><span class="fl">1</span>, <span class="va">sample</span>, <span class="va">cell_group</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">b_0</span>, <span class="va">b_1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
