@@ -125,7 +125,7 @@ sccomp_result =
 
 Here you see the results of the fit, the effects of the factor on composition and variability. You also can see the uncertainty around those effects.
 
-```{r}
+```{r, eval = instantiate::stan_cmdstan_exists()}
 sccomp_result
 ```
 
@@ -140,7 +140,7 @@ From your estimates, you can state which effects you are interested about (this 
 
 In case of a chategorical variable, the starting and ending points are categories.
 
-```{r}
+```{r, eval = instantiate::stan_cmdstan_exists()}
 sccomp_result |> 
    sccomp_proportional_fold_change(
      formula_composition = ~  type,
@@ -210,7 +210,7 @@ This is achieved through model comparison with `loo`. In the following example, 
 If `elpd_diff` is away from zero of \> 5 `se_diff` difference of 5, we are confident that a model is better than the other [reference](https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola).
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model one, the one with factor association, is better than model two.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = instantiate::stan_cmdstan_exists()}
 library(loo)
 
 # Fit first model
