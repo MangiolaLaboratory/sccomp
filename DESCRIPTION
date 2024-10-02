@@ -13,7 +13,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends: R (>= 4.2.0)
 Imports:
-    instantiate (>= 0.2.2.9001),
+    instantiate (>= 0.2.3),
     callr,
     fs,
     stats,
