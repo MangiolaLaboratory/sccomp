@@ -65,6 +65,9 @@
 #'
 #' @examples
 #'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'
 #' data("counts_obj")
 #'
 #' estimate =
@@ -78,8 +81,9 @@
 #'     check_outliers = FALSE,
 #'     cores = 1
 #'   )
-#'
-#' @export
+#' }}
+#' 
+#' @noRd
 #'
 #'
 sccomp_glm <- function(.data,
@@ -342,6 +346,13 @@ sccomp_glm.data.frame = function(.data,
     details="sccomp says: sccomp_glm() is soft-deprecated. Please use the new modular framework instead, which includes sccomp_estimate(), sccomp_test(), sccomp_remove_outliers(), among other functions."
   )
 
+  # DEPRECATION OF approximate_posterior_inference
+  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use inference_method By default variational_inference value is inferred from approximate_posterior_inference.")
+    
+    inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+  }
+  
   if(quo_is_null(.count) )
   result =    sccomp_glm_data_frame_raw(
         .data,
@@ -354,7 +365,7 @@ sccomp_glm.data.frame = function(.data,
         prior_overdispersion_mean_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
-        variational_inference = approximate_posterior_inference == "all",
+        inference_method = inference_method,
         test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, 
         .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
         verbose = verbose,
@@ -443,10 +454,13 @@ sccomp_glm.data.frame = function(.data,
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
-#' @export
+#' @noRd
 #'
 #' @examples
 #'
+#'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
 #' data("counts_obj")
 #'
 #'   estimates =
@@ -458,7 +472,7 @@ sccomp_glm.data.frame = function(.data,
 #'   ) |>
 #'
 #'   test_contrasts("typecancer - typebenign")
-#'
+#' }}
 test_contrasts <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
@@ -492,21 +506,24 @@ test_contrasts <- function(.data,
 #'
 #' @return A `ggplot`
 #'
-#' @export
+#' @noRd
 #'
 #' @examples
 #'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
 #' data("counts_obj")
 #'
 #' estimate =
 #'   sccomp_estimate(
 #'   counts_obj ,
 #'    ~ type, ~1, sample, cell_group, count,
-#'     approximate_posterior_inference = "all",
 #'     cores = 1
 #'   )
 #'
 #' # estimate |> plot_summary()
+#'   }
+#' }
 #'
 plot_summary <- function(.data, significance_threshold = 0.025) {
   
