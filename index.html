@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.17</span>
       </span>
     </div>
 
@@ -239,6 +239,28 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="from-proportions">From proportions<a class="anchor" aria-label="anchor" href="#from-proportions"></a>
+</h3>
+<p>!!! If counts are available we strongly discourage the use of proportions, as an important source of uncertainty (i.e. for rare groups/cell-types) is not modeled.</p>
+<p>The use of proportions is more better suited in modelling deconvolution results (e.g. of bulk RNA data), in which case counts are not available.</p>
+<p>Proportions should be bigger than 0. Assuming that 0s derive from a precision threshold (e.g. deconvolution), 0s are converted to the smaller non 0 value.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
+<span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
+<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
+<span>    .sample <span class="op">=</span> <span class="va">sample</span>,</span>
+<span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>,</span>
+<span>    .abundance <span class="op">=</span> <span class="va">proportion</span>, </span>
+<span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    cores <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="reference/sccomp_remove_outliers.html">sccomp_remove_outliers</a></span><span class="op">(</span>cores <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Optional</span></span>
+<span>  <span class="fu"><a href="reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">res</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="an-aid-to-result-interpretation-and-communication">An aid to result interpretation and communication<a class="anchor" aria-label="anchor" href="#an-aid-to-result-interpretation-and-communication"></a>
@@ -247,7 +269,7 @@
 <p>Therefore, we provide a more intuitive proportion, full change, that can be easier understood. However, these cannot be used to infer significance (use sccomp_test() instead), and a lot of care must be taken given the nonlinearity of these measure (1 fold increase from 0.0001 to 0.0002 carried a different weight that 1 fold increase from 0.4 to 0.8).</p>
 <p>From your estimates, you can state which effects you are interested about (this can be a part of the full model, in case you want to not consider unwanted effects), and the two points you would like to compare.</p>
 <p>In case of a chategorical variable, the starting and ending points are categories.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>   <span class="fu"><a href="reference/sccomp_proportional_fold_change.html">sccomp_proportional_fold_change</a></span><span class="op">(</span></span>
 <span>     formula_composition <span class="op">=</span> <span class="op">~</span>  <span class="va">type</span>,</span>
@@ -260,26 +282,26 @@
 <h2 id="summary-plots">Summary plots<a class="anchor" aria-label="anchor" href="#summary-plots"></a>
 </h2>
 <p>A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be descriptively adequate to the data, the blue box plot should roughly overlay with the black box plot, which represents the observed data. The outliers are coloured in red. A box plot will be returned for every (discrete) covariate present in <code>formula_composition</code>. The colour coding represents the significant associations for composition and/or variability.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span></span></code></pre></div>
 <p>A plot of estimates of differential composition (c_) on the x-axis and differential variability (v_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="reference/plot_1d_intervals.html">plot_1D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>We can plot the relationship between abundance and variability. As we can see below, they are positively correlated, you also appreciate that this relationship is by model for single cell RNA sequencing data.</p>
-<p><code>sccomp</code> models, these relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks for Bayesian inference.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="reference/plot_2d_intervals.html">plot_2D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>You can produce the series of plots calling the <code>plot</code> method.</p>
+<span>  <span class="fu"><a href="reference/plot_1D_intervals.html">plot_1D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>We can plot the relationship between abundance and variability. As we can see below, they are positively correlated, you also appreciate that this relationship is by model for single cell RNA sequencing data.</p>
+<p><code>sccomp</code> models, these relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks for Bayesian inference.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="reference/plot_2D_intervals.html">plot_2D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>You can produce the series of plots calling the <code>plot</code> method.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="contrasts">Contrasts<a class="anchor" aria-label="anchor" href="#contrasts"></a>
 </h2>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">type</span>, </span>
@@ -294,7 +316,7 @@
 </h2>
 <p>This is achieved through model comparison with <code>loo</code>. In the following example, the model with association with factors better fits the data compared to the baseline model with no factor association. For comparisons <code>check_outliers</code> must be set to FALSE as the leave-one-out must work with the same amount of data, while outlier elimination does not guarantee it.</p>
 <p>If <code>elpd_diff</code> is away from zero of &gt; 5 <code>se_diff</code> difference of 5, we are confident that a model is better than the other <a href="https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola" class="external-link">reference</a>. In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model one, the one with factor association, is better than model two.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/loo/" class="external-link">loo</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fit first model</span></span>
@@ -329,7 +351,7 @@
 <h2 id="differential-variability-binary-factor">Differential variability, binary factor<a class="anchor" aria-label="anchor" href="#differential-variability-binary-factor"></a>
 </h2>
 <p>We can model the cell-group variability also dependent on the type, and so test differences in variability</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -360,7 +382,7 @@
 <h2 id="visualisation-of-the-mcmc-chains-from-the-posterior-distribution">Visualisation of the MCMC chains from the posterior distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mcmc-chains-from-the-posterior-distribution"></a>
 </h2>
 <p>It is possible to directly evaluate the posterior distribution. In this example, we plot the Monte Carlo chain for the slope parameter of the first cell type. We can see that it has converged and is negative with probability 1.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/posterior/" class="external-link">posterior</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span></span>
@@ -374,13 +396,13 @@
 <span><span class="co"># Create a traceplot for 'beta[2,1]'</span></span>
 <span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/MCMC-traces.html" class="external-link">mcmc_trace</a></span><span class="op">(</span><span class="va">draws</span>, pars <span class="op">=</span> <span class="st">"beta[2,1]"</span><span class="op">)</span></span></code></pre></div>
 <p>Plot 1D significance plot</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
 <p>Plot 2D significance plot. Data points are cell groups. Error bars are the 95% credible interval. The dashed lines represent the default threshold fold change for which the probabilities (c_pH0, v_pH0) are calculated. pH0 of 0 represent the rejection of the null hypothesis that no effect is observed.</p>
 <p>This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for <code>(intercept)</code> (left-hand side facet) is satisfied. A scatterplot (besides the Intercept) is provided for each category of interest. For each category of interest, the composition and variability effects should be generally uncorrelated.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
 </div>
 <div class="section level2">

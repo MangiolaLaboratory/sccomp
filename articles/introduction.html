@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.16</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.7.17</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@ Mangiola</h4>
             
             <h4 data-toc-skip class="date">2024-10-11</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/proportions/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="hidden name"><code>introduction.Rmd</code></div>
 
     </div>
@@ -282,7 +282,7 @@ formula_variability is set).</p>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
 <span>    .sample <span class="op">=</span> <span class="va">sample</span>,</span>
 <span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>,</span>
-<span>    .count <span class="op">=</span> <span class="va">count</span>, </span>
+<span>    .abundance <span class="op">=</span> <span class="va">count</span>, </span>
 <span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    cores <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span> </span>
@@ -293,6 +293,34 @@ composition and variability. You also can see the uncertainty around
 those effects.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="from-proportions">From proportions<a class="anchor" aria-label="anchor" href="#from-proportions"></a>
+</h4>
+<p>!!! If counts are available we strongly discourage the use of
+proportions, as an important source of uncertainty (i.e. for rare
+groups/cell-types) is not modeled.</p>
+<p>The use of proportions is more better suited in modelling
+deconvolution results (e.g. of bulk RNA data), in which case counts are
+not available.</p>
+<p>Proportions should be bigger than 0. Assuming that 0s derive from a
+precision threshold (e.g. deconvolution), 0s are converted to the
+smaller non 0 value.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
+<span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
+<span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, </span>
+<span>    .sample <span class="op">=</span> <span class="va">sample</span>,</span>
+<span>    .cell_group <span class="op">=</span> <span class="va">cell_group</span>,</span>
+<span>    .abundance <span class="op">=</span> <span class="va">proportion</span>, </span>
+<span>    bimodal_mean_variability_association <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    cores <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="../reference/sccomp_remove_outliers.html">sccomp_remove_outliers</a></span><span class="op">(</span>cores <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Optional</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">res</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -315,7 +343,7 @@ consider unwanted effects), and the two points you would like to
 compare.</p>
 <p>In case of a chategorical variable, the starting and ending points
 are categories.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>   <span class="fu"><a href="../reference/sccomp_proportional_fold_change.html">sccomp_proportional_fold_change</a></span><span class="op">(</span></span>
 <span>     formula_composition <span class="op">=</span> <span class="op">~</span>  <span class="va">type</span>,</span>
@@ -335,7 +363,7 @@ outliers are coloured in red. A box plot will be returned for every
 (discrete) covariate present in <code>formula_composition</code>. The
 colour coding represents the significant associations for composition
 and/or variability.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span></span></code></pre></div>
 <p>A plot of estimates of differential composition (c_) on the x-axis
@@ -344,9 +372,9 @@ represent 95% credible intervals. The dashed lines represent the minimal
 effect that the hypothesis test is based on. An effect is labelled as
 significant if bigger than the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="../reference/plot_1d_intervals.html">plot_1D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="../reference/plot_1D_intervals.html">plot_1D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>We can plot the relationship between abundance and variability. As we
 can see below, they are positively correlated, you also appreciate that
 this relationship is by model for single cell RNA sequencing data.</p>
@@ -354,18 +382,18 @@ this relationship is by model for single cell RNA sequencing data.</p>
 effect on the estimates of both the abundance and the variability. This
 shrinkage is adaptive as it is modelled jointly, thanks for Bayesian
 inference.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="../reference/plot_2d_intervals.html">plot_2D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="../reference/plot_2D_intervals.html">plot_2D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>You can produce the series of plots calling the <code>plot</code>
 method.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="contrasts">Contrasts<a class="anchor" aria-label="anchor" href="#contrasts"></a>
 </h3>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">type</span>, </span>
@@ -390,7 +418,7 @@ elimination does not guarantee it.</p>
 better than the other <a href="https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola" class="external-link">reference</a>.
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model
 one, the one with factor association, is better than model two.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/loo/" class="external-link">loo</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fit first model</span></span>
@@ -426,7 +454,7 @@ one, the one with factor association, is better than model two.</p>
 </h3>
 <p>We can model the cell-group variability also dependent on the type,
 and so test differences in variability</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -467,7 +495,7 @@ distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mc
 this example, we plot the Monte Carlo chain for the slope parameter of
 the first cell type. We can see that it has converged and is negative
 with probability 1.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/posterior/" class="external-link">posterior</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span></span>
@@ -481,7 +509,7 @@ with probability 1.</p>
 <span><span class="co"># Create a traceplot for 'beta[2,1]'</span></span>
 <span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/MCMC-traces.html" class="external-link">mcmc_trace</a></span><span class="op">(</span><span class="va">draws</span>, pars <span class="op">=</span> <span class="st">"beta[2,1]"</span><span class="op">)</span></span></code></pre></div>
 <p>Plot 1D significance plot</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
@@ -497,9 +525,9 @@ linear association between mean and variability for
 scatterplot (besides the Intercept) is provided for each category of
 interest. For each category of interest, the composition and variability
 effects should be generally uncorrelated.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.4.1 (2024-06-14)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -524,7 +552,7 @@ effects should be generally uncorrelated.</p>
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] tidyr_1.3.1   forcats_1.0.0 ggplot2_3.5.1 sccomp_1.7.16 dplyr_1.1.4  </span></span>
+<span><span class="co">## [1] tidyr_1.3.1   forcats_1.0.0 ggplot2_3.5.1 sccomp_1.7.17 dplyr_1.1.4  </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] tidyselect_1.2.1            farver_2.1.2               </span></span>
@@ -542,7 +570,7 @@ effects should be generally uncorrelated.</p>
 <span><span class="co">## [25] BiocGenerics_0.51.3         desc_1.4.3                 </span></span>
 <span><span class="co">## [27] grid_4.4.1                  stats4_4.4.1               </span></span>
 <span><span class="co">## [29] fansi_1.0.6                 colorspace_2.1-1           </span></span>
-<span><span class="co">## [31] scales_1.3.0                SummarizedExperiment_1.35.3</span></span>
+<span><span class="co">## [31] scales_1.3.0                SummarizedExperiment_1.35.4</span></span>
 <span><span class="co">## [33] cli_3.6.3                   rmarkdown_2.28             </span></span>
 <span><span class="co">## [35] crayon_1.5.3                ragg_1.3.3                 </span></span>
 <span><span class="co">## [37] generics_0.1.3              httr_1.4.7                 </span></span>
@@ -558,16 +586,16 @@ effects should be generally uncorrelated.</p>
 <span><span class="co">## [57] glue_1.8.0                  pkgdown_2.1.1              </span></span>
 <span><span class="co">## [59] ps_1.8.0                    distributional_0.5.0       </span></span>
 <span><span class="co">## [61] stringi_1.8.4               gtable_0.3.5               </span></span>
-<span><span class="co">## [63] GenomeInfoDb_1.41.2         GenomicRanges_1.57.1       </span></span>
+<span><span class="co">## [63] GenomeInfoDb_1.41.2         GenomicRanges_1.57.2       </span></span>
 <span><span class="co">## [65] UCSC.utils_1.1.0            munsell_0.5.1              </span></span>
 <span><span class="co">## [67] instantiate_0.2.3.9000      tibble_3.2.1               </span></span>
 <span><span class="co">## [69] pillar_1.9.0                htmltools_0.5.8.1          </span></span>
 <span><span class="co">## [71] GenomeInfoDbData_1.2.13     R6_2.5.1                   </span></span>
-<span><span class="co">## [73] textshaping_0.4.0           evaluate_1.0.0             </span></span>
+<span><span class="co">## [73] textshaping_0.4.0           evaluate_1.0.1             </span></span>
 <span><span class="co">## [75] Biobase_2.65.1              lattice_0.22-6             </span></span>
 <span><span class="co">## [77] readr_2.1.5                 backports_1.5.0            </span></span>
 <span><span class="co">## [79] bslib_0.8.0                 Rcpp_1.0.13                </span></span>
-<span><span class="co">## [81] SparseArray_1.5.43          checkmate_2.3.2            </span></span>
+<span><span class="co">## [81] SparseArray_1.5.44          checkmate_2.3.2            </span></span>
 <span><span class="co">## [83] xfun_0.48                   fs_1.6.4                   </span></span>
 <span><span class="co">## [85] MatrixGenerics_1.17.0       prettydoc_0.4.1            </span></span>
 <span><span class="co">## [87] pkgconfig_2.0.3</span></span></code></pre>
