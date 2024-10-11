@@ -5,12 +5,20 @@
 \alias{seurat_obj}
 \title{seurat_obj}
 \format{
-A Seurat object
+A \code{Seurat} object with the following structure:
+\itemize{
+\item \strong{assays}: Contains gene expression data. The active assay is \code{RNA}, with 1 feature and no variable features.
+\item \strong{layers}: Two layers: counts and data, representing raw and processed RNA expression values, respectively.
+\item \strong{samples}: 106,297 samples (cells) within the RNA assay.
+}
 }
 \usage{
 data(seurat_obj)
 }
+\value{
+A \code{Seurat} object containing single-cell RNA expression data.
+}
 \description{
-Example Seurat data set. Seurat data objects can be directly used with sccomp_glm function.
+Example \code{Seurat} object containing gene expression data for 106,297 cells across a single assay. The object includes RNA counts and data layers, but no variable features are defined. This dataset can be directly used with functions like \code{sccomp_glm} for differential abundance analysis.
 }
 \keyword{datasets}
