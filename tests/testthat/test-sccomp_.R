@@ -5,6 +5,11 @@ data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 
+counts_obj = 
+  counts_obj |>
+  mutate(count = count+1) |> 
+  with_groups(sample, ~ .x |> mutate(proportion = count/sum(count))) 
+
 set.seed(42)
 
 if (instantiate::stan_cmdstan_exists()){
@@ -578,6 +583,38 @@ test_that("test constrasts",{
 
 })
 
+
+test_that("proportions",{
+  
+  skip_cmdstan()
+  
+      counts_obj |>
+      sccomp_estimate(
+      formula_composition = ~ type , 
+      .sample = sample,  
+      .cell_group = cell_group, 
+      .count = proportion,
+      cores = 1,
+      mcmc_seed = 42,
+      max_sampling_iterations = 1000
+    ) |> 
+      expect_warning("The argument '.count' is deprecated")
+ 
+  counts_obj |>
+    sccomp_estimate(
+      formula_composition = ~ type , 
+      .sample = sample,  
+      .cell_group = cell_group, 
+      .abundance = proportion,
+      cores = 1,
+      mcmc_seed = 42,
+      max_sampling_iterations = 1000
+    ) |> 
+    expect_no_warning()
+  
+})
+
+
 test_that("sccomp_proportional_fold_change",{
   
   skip_cmdstan()
@@ -592,6 +629,7 @@ test_that("sccomp_proportional_fold_change",{
   
 })
 
+
 # fit = 
 # 	seurat_obj |> 
 # 	dplyr::count(sample, cell_group, continuous_covariate, type, group__) |> 
@@ -599,8 +637,8 @@ test_that("sccomp_proportional_fold_change",{
 # 	rename(group = group__) |> 
 # 	filter(cell_group=="B mem") |> 
 # 	brm(
-# 		n | trials(tot) ~ type + (1 + type| group), 
-# 		data = _, 
-# 		family=beta_binomial(), 
+# 		n | trials(tot) ~ type + (1 + type| group),
+# 		data = _,
+# 		family=beta_binomial(),
 # 		cores = 4
 # 	)

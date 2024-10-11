@@ -36,23 +36,23 @@ functions{
   }
   
   
-  real partial_sum_lpmf(
-    array[] int slice_y,
-    int start,
-    int end,
-    array[] int exposure_array,
-    vector mu_array,
-    vector precision_array
-    ) {
-      
-      return beta_binomial_lupmf(
-        slice_y |
-        exposure_array[start:end],
-        (mu_array[start:end] .* precision_array[start:end]),
-        (1.0 - mu_array[start:end]) .* precision_array[start:end]
-        ) ;
-        
-    }
+  // real partial_sum_lpmf(
+  //   array[] int slice_y,
+  //   int start,
+  //   int end,
+  //   array[] int exposure_array,
+  //   vector mu_array,
+  //   vector precision_array
+  //   ) {
+  //     
+  //     return beta_binomial_lupmf(
+  //       slice_y |
+  //       exposure_array[start:end],
+  //       (mu_array[start:end] .* precision_array[start:end]),
+  //       (1.0 - mu_array[start:end]) .* precision_array[start:end]
+  //       ) ;
+  //       
+  //   }
     
     row_vector average_by_col(matrix X) {
       int rows_X = rows(X);
@@ -152,7 +152,9 @@ functions{
         int end,
         
         // General
+        int is_proportion,
         array[,] int y,
+        array[,] real y_proportion,
         array[] int exposure,  // Sliced
         
         // Precision
@@ -194,20 +196,27 @@ functions{
           // vectorisation
           vector[N*M] mu_array = to_vector(mu);
           vector[N*M] precision_array = to_vector(exp(precision));
-          array[N*M] int exposure_array = rep_each(exposure[idx_y], M);
-          array[N*M] int y_array =  to_array_1d(y[idx_y,]);
-          
           int W = count_filtered_indices(truncation_not_idx_minimal, idx_y);
 
           // truncation
           if(W == 0){
             
-            return beta_binomial_lupmf(
-              y_array |
-              exposure_array,
-              (mu_array .* precision_array),
-              (1.0 - mu_array) .* precision_array
-              ) ;
+            // If input is proportions
+            if(is_proportion)
+              return beta_lupdf(
+                to_array_1d(y_proportion[idx_y,]) |
+                (mu_array .* precision_array),
+                (1.0 - mu_array) .* precision_array
+                ) ;
+                
+              // If input is counts
+              else
+                return beta_binomial_lupmf(
+                  to_array_1d(y[idx_y,]) |
+                  rep_each(exposure[idx_y], M),
+                  (mu_array .* precision_array),
+                  (1.0 - mu_array) .* precision_array
+                ) ;
               
           }
           else{
@@ -221,9 +230,19 @@ functions{
               filter_missing_indices(truncation_not_idx_minimal, idx_y)
             );
 
+            // If input is proportions
+             if(is_proportion)
+              return beta_lupdf(
+              to_array_1d(y_proportion[idx_y,])[non_missing_indices] |
+              (mu_array[non_missing_indices] .* precision_array[non_missing_indices]),
+              (1.0 - mu_array[non_missing_indices]) .* precision_array[non_missing_indices]
+              ) ;
+              
+             // If input is counts
+             else
              return beta_binomial_lupmf(
-              y_array[non_missing_indices] |
-              exposure_array[non_missing_indices],
+              to_array_1d(y[idx_y,])[non_missing_indices] |
+              rep_each(exposure[idx_y], M)[non_missing_indices],
               (mu_array[non_missing_indices] .* precision_array[non_missing_indices]),
               (1.0 - mu_array[non_missing_indices]) .* precision_array[non_missing_indices]
               ) ;
@@ -416,6 +435,7 @@ array[,] int filter_missing_indices(array[,] int missing_indices, array[] int id
         
 }
 data{
+  int<lower=0, upper=1> is_proportion;
   int<lower=1> N;
   int<lower=1> M;
   int<lower=1> C;
@@ -424,7 +444,8 @@ data{
   int<lower=1> B_intercept_columns; // How many intercept column in varibility design
   int<lower=1> Ar; // Rows of unique variability design
   array[N] int exposure;
-  array[N,M] int y;
+  array[N * !is_proportion,M] int<lower=0> y;
+  array[N * is_proportion,M] real<lower=0, upper=1> y_proportion;
   matrix[N, C] X;
   matrix[Ar, A] XA; // The unique variability design
   matrix[N, A] Xa; // The variability design
@@ -486,13 +507,12 @@ transformed data{
   matrix[N, C] Q_ast;
   matrix[C, C] R_ast;
   matrix[C, C] R_ast_inverse;
-  array[N*M] int y_array;
+  // array[N*M] real y_array;
   array[N*M] int truncation_down_array;
-  array[N*M] int exposure_array;
+  // array[N*M] int exposure_array;
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   int ncol_X_random_eff_WINDOWS_BUG_FIX = max(ncol_X_random_eff[1], 1);
   int ncol_X_random_eff_WINDOWS_BUG_FIX_2 = max(ncol_X_random_eff[2], 1);
-  
   
   // thin and scale the QR decomposition
   Q_ast = qr_thin_Q(X) * sqrt(N - 1);
@@ -506,9 +526,13 @@ transformed data{
     R_ast_inverse = diag_matrix(rep_vector(1.0, C));
   }
   
+  // For parallelisation
+  array[N] int array_N;
+  for(n in 1:N) array_N[n] = n;
+    
   // Data vectorised
-  y_array =  to_array_1d(y);
-  exposure_array = rep_each(exposure, M);
+  // y_array =  to_array_1d(y);
+  // exposure_array = rep_each(exposure, M);
 }
 parameters{
   matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
@@ -550,7 +574,6 @@ transformed parameters{
   
   // // // locations distribution
   // matrix[M, N] mu;
-  // 
   // // vectorisation
   // vector[N*M] mu_array;
   // vector[N*M] precision_array;
@@ -558,8 +581,9 @@ transformed parameters{
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   beta = R_ast_inverse * beta_raw; // coefficients on x
   
-  // mu = (Q_ast * beta_raw)';
-  // 
+  // // JUST FOR SANITY CHECK
+  //  mu = (Q_ast * beta_raw)';
+  
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect;
   matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2;
   
@@ -617,7 +641,7 @@ transformed parameters{
   // // Convert the matrix m to a column vector in column-major order.
   // mu_array = to_vector(mu);
   // precision_array = to_vector(exp(precision));
-  
+  // 
   
 }
 model{
@@ -626,16 +650,15 @@ model{
   // Fit main distribution
   if(use_data == 1){
     
-    array[N] int array_N;
-    for(n in 1:N) array_N[n] = n;
-    
-    target += reduce_sum(
+   target += reduce_sum(
       partial_sum_2_lupmf,
       array_N,
       grainsize,
       
       // General
+      is_proportion,
       y,
+      y_proportion,
       exposure,  
       
       // Precision
@@ -770,38 +793,47 @@ generated quantities {
   
   // LOO
   if(enable_loo==1){
-    
+
     matrix[M, N] mu;
     vector[N*M] mu_array;
     vector[N*M] precision_array;
-  
+
     mu = (Q_ast * beta_raw)';
-    
+
     // random intercept
     if(ncol_X_random_eff[1]> 0)
     mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
     if(ncol_X_random_eff[2]>0 )
     mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
-    
-    
+
+
     // Calculate proportions
     for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-    
+
     // Convert the matrix m to a column vector in column-major order.
     mu_array = to_vector(mu);
     precision_array = to_vector(exp(precision));
-    
-    for (n in 1:TNS) {
-      log_lik[n] = beta_binomial_lpmf(
-        y_array[truncation_not_idx[n]] |
-        exposure_array[truncation_not_idx[n]],
+
+    if(is_proportion)
+          for (n in 1:TNS) {
+      log_lik[n] = beta_lpdf(
+        to_array_1d(y_proportion)[truncation_not_idx[n]] |
+        (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
+        ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
+        ) ;
+      }
+    else
+      for (n in 1:TNS) {
+       log_lik[n] = beta_binomial_lpmf(
+        to_array_1d(y)[truncation_not_idx[n]] |
+        rep_each(exposure, M)[truncation_not_idx[n]],
         (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
         ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
         ) ;
     }
-    
+
   }
-  
-  
+
+
   
 }

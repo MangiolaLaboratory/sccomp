@@ -1,5 +1,5 @@
-
-sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
+# Define global variable
+sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
 
 # Greater than
 gt = function(a, b){	a > b }
@@ -1305,13 +1305,33 @@ data_spread_to_model_input =
     }
     
     
+    y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% as_matrix(rownames = quo_name(.sample))
     
+    # If proportion ix 0 issue
+    is_proportion = y |> as.numeric() |> max()  |> between(0,1) |> all()
+    if(is_proportion){
+      y_proportion = y
+      y = y[0,,drop = FALSE]
+    }
+    else{
+      y = y
+      y_proportion = y[0,,drop = FALSE]
+    }
+    
+    if(is_proportion && min(y_proportion)==0){
+      warning("sccomp says: your proportion values include 0. Assuming that 0s derive from a precision threshold (e.g. deconvolution), 0s are converted to the smaller non 0 proportion value.")
+      y_proportion[y_proportion==0] = min(y_proportion[y_proportion>0])
+     }
+    
+
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
         M = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% ncol(),
         exposure = .data_spread$exposure,
-        y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% as_matrix(rownames = quo_name(.sample)),
+        is_proportion = is_proportion,
+        y = y,
+        y_proportion = y_proportion,
         X = X,
         XA = XA,
         Xa = Xa,
@@ -1434,12 +1454,24 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
   .count = enquo(.count)
   .grouping_for_random_effect = .grouping_for_random_effect |> map(~ .x |> quo_name() ) |> unlist()
 
-  .data %>%
-    nest(data = -!!.sample) %>%
-    mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
-    unnest(data) %>%
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) %>%
-    spread(!!.cell_type, !!.count)
+  is_proportion = .data |> pull(!!.count) |> max() <= 1
+  
+  .data = 
+    .data |>
+    nest(data = -!!.sample) 
+  
+  # If proportions exposure = 1
+  if(is_proportion) .data = .data |> mutate(exposure = 1)
+  else
+    .data = 
+      .data |>
+      mutate(exposure = map_int(data, ~ .x |> pull(!!.count) |> sum() )) 
+  
+  .data |>
+      unnest(data) |>
+      select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) |>
+      spread(!!.cell_type, !!.count)
+  
 
 }
 
@@ -3441,8 +3473,14 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   #   )
   # }, error = function(e) {
     # Try to load the model from cache
+  
+  # RDS compiled model
   cache_dir |> dir.create(showWarnings = FALSE, recursive = TRUE)
-    cache_file <- file.path(cache_dir, paste0(name, ".rds"))
+  cache_file <- file.path(cache_dir, paste0(name, ".rds"))
+  
+  # .STAN raw model
+  stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
+  
     if (file.exists(cache_file) & !force) {
       message("Loading model from cache...")
       return(readRDS(cache_file))
@@ -3450,8 +3488,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
     
     # If loading the precompiled model fails, find the Stan model file within the package
     message("Precompiled model not found. Compiling the model...")
-    stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
-    
+
     # Compile the Stan model using cmdstanr with threading support enabled
     stan_package_compile(
       stan_model_path, 
