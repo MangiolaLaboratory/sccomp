@@ -184,7 +184,7 @@ Proportions should be bigger than 0. Assuming that 0s derive from a
 precision threshold (e.g. deconvolution), 0s are converted to the
 smaller non 0 value.
 
-```{r}
+```{r, eval = instantiate::stan_cmdstan_exists()}
 res = 
   counts_obj |>
   sccomp_estimate( 
