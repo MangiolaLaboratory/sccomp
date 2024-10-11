@@ -108,9 +108,7 @@ test_that("Predict data",{
   library(stringr)
   
   new_data_seurat = seurat_obj[, seurat_obj[[]]$sample %in% c("10x_8K", "SI-GA-E5")] 
-  
   new_data_seurat[[]]$sample = new_data_seurat[[]]$sample |> str_replace("SI", "AB") |>  str_replace("10x", "9x") 
-   
   new_data_tibble = new_data_seurat[[]] |> distinct(sample, type, continuous_covariate)
   
   # With new tibble data
@@ -147,7 +145,8 @@ test_that("Predict data",{
     
     sccomp_predict(
       formula_composition = ~ type,
-      new_data = new_data_seurat
+      new_data = new_data_tibble, 
+      number_of_draws = 1
     ) |>
     nrow() |>
     expect_equal(60)
@@ -294,8 +293,6 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 
 })
 
-
-
 # test_that("wrongly-set groups",{
 #
 #   # library(tidyseurat)
@@ -348,20 +345,33 @@ test_that("multi beta binomial from Seurat",{
 
 })
 
+test_that("calculate residuals",{
+
+  skip_cmdstan()
+  library(dplyr)
+  
+  my_estimate_random |> 
+    sccomp_calculate_residuals() |> 
+    pull(residuals) |> 
+    max() |> 
+    expect_lt(1)
+  
+})
+
 test_that("remove unwanted variation",{
 
   skip_cmdstan()
   
   library(tidyseurat)
-
+  
   data =
     seurat_obj |>
-
+    
     # Add batch
     nest(data = -c(sample, type)) |>
     mutate(batch = rep(c(0,1), 10)) |>
     unnest(data)
-
+  
   # Estimate
   estimate =
     data |>
@@ -568,8 +578,6 @@ test_that("test constrasts",{
 
 })
 
-
-
 test_that("sccomp_proportional_fold_change",{
   
   skip_cmdstan()
@@ -583,8 +591,6 @@ test_that("sccomp_proportional_fold_change",{
   
   
 })
-
-
 
 # fit = 
 # 	seurat_obj |> 

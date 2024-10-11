@@ -1236,6 +1236,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' @param new_data A sample-wise data frame including the column that represent the factors in your formula. If you want to predict proportions for 10 samples, there should be 10 rows. T
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
+#' @param summary_instead_of_draws Return the summary values (i.e. mean and quantiles) of the predicted proportions, or return single draws. Single draws can be helful to better analyse the uncertainty of the prediction.
 #'
 #' @return A tibble (`tbl`) with the following columns:
 #' \itemize{
@@ -1270,11 +1271,14 @@ sccomp_predict <- function(fit,
                            formula_composition = NULL,
                            new_data = NULL,
                            number_of_draws = 500,
-                           mcmc_seed = sample(1e5, 1)) {
+                           mcmc_seed = sample(1e5, 1),
+													 summary_instead_of_draws = TRUE) {
+
   
   # Run the function
   check_and_install_cmdstanr()
   
+
   UseMethod("sccomp_predict", fit)
 }
 
@@ -1284,7 +1288,8 @@ sccomp_predict.sccomp_tbl = function(fit,
                                      formula_composition = NULL,
                                      new_data = NULL,
                                      number_of_draws = 500,
-                                     mcmc_seed = sample(1e5, 1)){
+                                     mcmc_seed = sample(1e5, 1),
+																		 summary_instead_of_draws = TRUE){
 
 
 
@@ -1304,31 +1309,36 @@ sccomp_predict.sccomp_tbl = function(fit,
 
   # New data
   if(new_data |> is.null())
-    sample_names =
-      fit |>
-      select(count_data) |>
-      unnest(count_data) |>
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  	new_data =
+	  	fit |>
+	  	select(count_data) |>
+	  	unnest(count_data) |> 
+      distinct() |> 
+      .subset(!!.sample)
   
   # If seurat
   else if(new_data |> is("Seurat")) 
-    sample_names = 
-      new_data[[]] |> 
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  	new_data = new_data[[]] 
   
-  # Just subset
-  else 
-    sample_names = 
-      new_data |> 
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  sample_names =
+  	new_data |>
+  	distinct(!!.sample) |> 
+  	pull(!!.sample)
   
   # mean generated
-  rng |>
-    summary_to_tibble("mu", "M", "N") |>
-    select(M, N, proportion_mean = mean, proportion_lower = `2.5%`, proportion_upper = `97.5%`) |>
+  if(summary_instead_of_draws)
+  	prediction_df = 
+	  	rng |>
+	    summary_to_tibble("mu", "M", "N") |>
+	    select(M, N, proportion_mean = mean, proportion_lower = `2.5%`, proportion_upper = `97.5%`) 
+  else
+  	prediction_df = 
+  	rng |>
+  	draws_to_tibble_x_y("mu", "M", "N") |> 
+  	select(M, N, proportion = .value, .draw) 
+  
+  prediction_df = 
+  	prediction_df |>
 
     # Get sample name
     nest(data = -N) %>%
@@ -1344,8 +1354,126 @@ sccomp_predict.sccomp_tbl = function(fit,
     select(-N, -M) |>
     select(!!.cell_group, !!.sample, everything())
 
+  new_data |> 
+  	left_join(prediction_df, by = join_by(!!.sample))
 }
 
+#' Calculate Residuals Between Observed and Predicted Proportions
+#'
+#' @description
+#' `sccomp_calculate_residuals` computes the residuals between observed cell group proportions and the predicted proportions from a fitted `sccomp` model. This function is useful for assessing model fit and identifying cell groups or samples where the model may not adequately capture the observed data. The residuals are calculated as the difference between the observed proportions and the predicted mean proportions from the model.
+#'
+#' @param .data A tibble of class `sccomp_tbl`, which is the result of `sccomp_estimate()`. This tibble contains the fitted model and associated data necessary for calculating residuals.
+#'
+#' @return A tibble (`tbl`) with the following columns:
+#' \itemize{
+#'   \item \strong{sample} - A character column representing the sample identifiers.
+#'   \item \strong{cell_group} - A character column representing the cell group identifiers.
+#'   \item \strong{residuals} - A numeric column representing the residuals, calculated as the difference between observed and predicted proportions.
+#'   \item \strong{exposure} - A numeric column representing the total counts (sum of counts across cell groups) for each sample.
+#' }
+#'
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Extracts the predicted mean proportions for each cell group and sample using `sccomp_predict()`.
+#'   \item Calculates the observed proportions from the original count data.
+#'   \item Computes residuals by subtracting the predicted proportions from the observed proportions.
+#'   \item Returns a tibble containing the sample, cell group, residuals, and exposure (total counts per sample).
+#' }
+#'
+#' @importFrom dplyr %>%
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate
+#' @importFrom dplyr left_join
+#' @importFrom dplyr distinct
+#' @importFrom dplyr with_groups
+#' @importFrom tidyr pivot_longer
+#' @importFrom tibble as_tibble
+#' @importFrom magrittr %$%
+#' @importFrom sccomp sccomp_predict
+#'
+#' @export
+#'
+#' @examples
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+#' # Load example data
+#' data("counts_obj")
+#'
+#' # Fit the sccomp model
+#' estimates <- sccomp_estimate(
+#'   counts_obj,
+#'   formula_composition = ~ type,
+#'   formula_variability = ~1,
+#'   .sample = sample,
+#'   .cell_group = cell_group,
+#'   .count = count,
+#'   approximate_posterior_inference = "all",
+#'   cores = 1
+#' )
+#'
+#' # Calculate residuals
+#' residuals <- sccomp_calculate_residuals(estimates)
+#'
+#' # View the residuals
+#' print(residuals)
+#' }}
+#'
+sccomp_calculate_residuals <- function(.data) {
+  UseMethod("sccomp_calculate_residuals", .data)
+}
+
+#' @export
+#'
+sccomp_calculate_residuals.sccomp_tbl = function(.data){
+  
+  
+  
+  model_input = attr(.data, "model_input")
+  .sample = attr(.data, ".sample")
+  .cell_group = attr(.data, ".cell_group")
+  .grouping_for_random_intercept = attr(.data, ".grouping_for_random_intercept")
+  .count = attr(.data, ".count")
+  
+  # Residuals
+  .data |>
+    sccomp_predict( 
+      number_of_draws = 
+        .data |>
+        attr("fit") |>
+        dim() |>
+        _[1] |> 
+        min(500) 
+    ) |>
+    distinct(!!.sample, !!.cell_group, proportion_mean) |>
+    # mutate( proportion_mean =
+    #           proportion_mean |>
+    #           boot::logit()
+    # )|>
+    # Join counts
+    left_join(
+      .data |>
+        attr("model_input") %$%
+        y |>
+        as_tibble(rownames = quo_name(.sample)) |>
+        pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
+        with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
+        
+        with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  ),
+      # |>
+      #   
+      #   mutate(observed_proportion =
+      #            observed_proportion |>
+      #            compress_zero_one() |>
+      #            boot::logit()
+      #   ),
+      by = c(quo_name(.sample), quo_name(.cell_group))
+    ) |>
+    mutate(residuals = observed_proportion - proportion_mean) |>
+    select(!!.sample, !!.cell_group, residuals, exposure)
+  
+}
 
 #' sccomp_remove_unwanted_variation
 #'
@@ -1423,48 +1551,10 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   .grouping_for_random_effect = attr(.data, ".grouping_for_random_effect")
   .count = attr(.data, ".count")
 
-  fit = attr(.data, "fit")
-
-  # Load model
-  mod = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
-  
-
-
-  message("sccomp says: calculating residuals")
-
   # Residuals
-  residuals =
-    .data |>
-    sccomp_predict(
-      number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
-    ) |>
-    distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    mutate( proportion_mean =
-              proportion_mean |>
-             #compress_zero_one() |>
-             boot::logit()
-    )|>
-  # Join counts
-  left_join(
-    .data |>
-      attr("model_input") %$%
-      y |>
-      as_tibble(rownames = quo_name(.sample)) |>
-      pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
-      with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
+  message("sccomp says: calculating residuals")
+  residuals = .data |> sccomp_calculate_residuals()
 
-      with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  ) |>
-
-
-      mutate(observed_proportion =
-               observed_proportion |>
-               compress_zero_one() |>
-               boot::logit()
-      ),
-    by = c(quo_name(.sample), quo_name(.cell_group))
-  ) |>
-  mutate(logit_residuals = observed_proportion - proportion_mean) |>
-  select(!!.sample, !!.cell_group, logit_residuals, exposure)
 
   message("sccomp says: regressing out unwanted factors")
 
@@ -1474,22 +1564,24 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
     sccomp_predict(
       formula_composition = formula_composition_keep,
       number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
+
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    mutate(proportion_mean =
-             proportion_mean |>
-             # compress_zero_one() |>
-             boot::logit()
-    ) |>
+    # mutate(proportion_mean =
+    #          proportion_mean |>
+    #          # compress_zero_one() |>
+    #          boot::logit()
+    # ) |>
     left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
-    mutate(adjusted_proportion = proportion_mean + logit_residuals) |>
-    mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
-    with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
+    mutate(adjusted_proportion = proportion_mean + residuals) |>
+  	mutate(adjusted_proportion = adjusted_proportion |> pmax(0)) |> 
+    # mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
+    # with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
 
     # Recostituite counts
     mutate(adjusted_counts = adjusted_proportion * exposure) |>
 
-    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, logit_residuals)
+    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, residuals)
 
 
 
