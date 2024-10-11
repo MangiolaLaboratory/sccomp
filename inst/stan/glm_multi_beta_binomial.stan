@@ -36,23 +36,23 @@ functions{
   }
   
   
-  real partial_sum_lpmf(
-    array[] int slice_y,
-    int start,
-    int end,
-    array[] int exposure_array,
-    vector mu_array,
-    vector precision_array
-    ) {
-      
-      return beta_binomial_lupmf(
-        slice_y |
-        exposure_array[start:end],
-        (mu_array[start:end] .* precision_array[start:end]),
-        (1.0 - mu_array[start:end]) .* precision_array[start:end]
-        ) ;
-        
-    }
+  // real partial_sum_lpmf(
+  //   array[] int slice_y,
+  //   int start,
+  //   int end,
+  //   array[] int exposure_array,
+  //   vector mu_array,
+  //   vector precision_array
+  //   ) {
+  //     
+  //     return beta_binomial_lupmf(
+  //       slice_y |
+  //       exposure_array[start:end],
+  //       (mu_array[start:end] .* precision_array[start:end]),
+  //       (1.0 - mu_array[start:end]) .* precision_array[start:end]
+  //       ) ;
+  //       
+  //   }
     
     row_vector average_by_col(matrix X) {
       int rows_X = rows(X);
@@ -814,9 +814,19 @@ generated quantities {
     mu_array = to_vector(mu);
     precision_array = to_vector(exp(precision));
 
-    for (n in 1:TNS) {
+    if(is_proportion)
+          for (n in 1:TNS) {
       log_lik[n] = beta_lpdf(
+        to_array_1d(y_proportion)[truncation_not_idx[n]] |
+        (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
+        ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
+        ) ;
+      }
+    else
+      for (n in 1:TNS) {
+       log_lik[n] = beta_binomial_lpmf(
         to_array_1d(y)[truncation_not_idx[n]] |
+        rep_each(exposure, M)[truncation_not_idx[n]],
         (mu_array[truncation_not_idx[n]] .* precision_array[truncation_not_idx[n]]),
         ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
         ) ;

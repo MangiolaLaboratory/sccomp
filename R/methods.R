@@ -3,11 +3,11 @@
 #' Main Function for SCCOMP Estimate
 #'
 #' @description
-#' The `sccomp_estimate` function performs linear modelling on a table of cell counts, 
-#' which includes a cell-group identifier, sample identifier, integer count, and factors 
-#' (continuous or discrete). The user can define a linear model using an R formula, 
-#' where the first factor is the factor of interest. Alternatively, `sccomp` accepts 
-#' single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or 
+#' The `sccomp_estimate` function performs linear modeling on a table of cell counts or proportions,
+#' which includes a cell-group identifier, sample identifier, abundance (counts or proportions), and factors
+#' (continuous or discrete). The user can define a linear model using an R formula,
+#' where the first factor is the factor of interest. Alternatively, `sccomp` accepts
+#' single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or
 #' group-size) and derives the count data from cell metadata.
 #'
 #' @import dplyr
@@ -22,13 +22,13 @@
 #' @importFrom lifecycle is_present
 #' @importFrom lifecycle deprecate_warn
 #'
-#' @param .data A tibble including cell_group name column, sample name column, 
-#'              read counts column (optional depending on the input class), and factor columns.
+#' @param .data A tibble including cell_group name column, sample name column,
+#'              abundance column (counts or proportions), and factor columns.
 #' @param formula_composition A formula describing the model for differential abundance.
 #' @param formula_variability A formula describing the model for differential variability.
 #' @param .sample A column name as a symbol for the sample identifier.
 #' @param .cell_group A column name as a symbol for the cell-group identifier.
-#' @param .count A column name as a symbol for the cell-group abundance (read count).
+#' @param .abundance A column name as a symbol for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across `.cell_group`).
 #' @param cores Number of cores to use for parallel calculations.
 #' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
 #' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
@@ -45,14 +45,15 @@
 #' @param mcmc_seed An integer seed for MCMC reproducibility.
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
 #' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
-#' @param approximate_posterior_inference DEPRECATED, use `variational_inference` instead.
-#' @param variational_inference Logical, whether to use variational Bayes for posterior inference (faster and convenient).
+#' @param .count **DEPRECATED**. Use `.abundance` instead.
+#' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
+#' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
-#' 
+#'
 #' @return A tibble (`tbl`) with the following columns:
 #' \itemize{
 #'   \item cell_group - The cell groups being tested.
-#'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+#'   \item parameter - The parameter being estimated from the design matrix described by the input `formula_composition` and `formula_variability`.
 #'   \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
 #'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
 #'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
@@ -73,19 +74,19 @@
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' message("Use the following example after having installed cmdstanr with install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
 #'     data("counts_obj")
 #'
-#'     estimate = sccomp_estimate(
+#'     estimate <- sccomp_estimate(
 #'       counts_obj,
 #'       ~ type,
 #'       ~1,
 #'       sample,
 #'       cell_group,
-#'       count,
+#'       abundance,
 #'       cores = 1
 #'     )
 #'   }
@@ -93,48 +94,48 @@
 #'
 #' @export
 sccomp_estimate <- function(.data,
-                       formula_composition = ~ 1 ,
-                       formula_variability = ~ 1,
-                       .sample,
-                       .cell_group,
-                       .count = NULL,
+                            formula_composition = ~1,
+                            formula_variability = ~1,
+                            .sample,
+                            .cell_group,
+                            .abundance = NULL,
 
-                       # Secondary arguments
-                       cores = detectCores(),
-                       bimodal_mean_variability_association = FALSE,
-                       percent_false_positive = 5,
-                       inference_method = "pathfinder",
-                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
-                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                       .sample_cell_group_pairs_to_exclude = NULL,
-                       output_directory = "sccomp_draws_files",
-                       verbose = TRUE,
-                       enable_loo = FALSE,
-                       noise_model = "multi_beta_binomial",
-                       exclude_priors = FALSE,
-                       use_data = TRUE,
-                       mcmc_seed = sample(1e5, 1),
-                       max_sampling_iterations = 20000,
-                       pass_fit = TRUE, 
-                       ...,
-                       
-                       # DEPRECATED
-                       approximate_posterior_inference = NULL,
-                       variational_inference = NULL
-                       
-                       ) {
-  if(inference_method == "variational") 
-    rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = \"variational\"; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = \"hmc\".", 
-      .frequency = "once", 
-      .frequency_id = "variational_message"
-    )
+                            # Secondary arguments
+                            cores = detectCores(),
+                            bimodal_mean_variability_association = FALSE,
+                            percent_false_positive = 5,
+                            inference_method = "pathfinder",
+                            prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                            prior_overdispersion_mean_association = list(
+                              intercept = c(5, 2),
+                              slope = c(0, 0.6),
+                              standard_deviation = c(10, 20)
+                            ),
+                            .sample_cell_group_pairs_to_exclude = NULL,
+                            output_directory = "sccomp_draws_files",
+                            verbose = TRUE,
+                            enable_loo = FALSE,
+                            noise_model = "multi_beta_binomial",
+                            exclude_priors = FALSE,
+                            use_data = TRUE,
+                            mcmc_seed = sample(1e5, 1),
+                            max_sampling_iterations = 20000,
+                            pass_fit = TRUE,
+                            ...,
+                            
+                            # DEPRECATED
+                            .count = NULL,
+                            approximate_posterior_inference = NULL,
+                            variational_inference = NULL) {
+  
+
   
   rlang::inform(
-      message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has be changed from 0.2 to 0.1.", 
-      .frequency = "once", 
-      .frequency_id = "new_logit_fold_change_threshold"
+    message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has been changed from 0.2 to 0.1.",
+    .frequency = "once",
+    .frequency_id = "new_logit_fold_change_threshold"
   )
+  
   
   # Run the function
   check_and_install_cmdstanr()
@@ -143,58 +144,66 @@ sccomp_estimate <- function(.data,
 }
 
 #' @export
-sccomp_estimate.Seurat = function(.data,
-                                  formula_composition = ~ 1 ,
-                                  formula_variability = ~ 1,
-                                  .sample,
-                                  .cell_group,
-                                  .count = NULL,
-                                  
-                                  # Secondary arguments
-                                  cores = detectCores(),
-                                  bimodal_mean_variability_association = FALSE,
-                                  percent_false_positive = 5,
-                                  inference_method = "pathfinder",
-                                  prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                                  .sample_cell_group_pairs_to_exclude = NULL,
-                                  output_directory = "sccomp_draws_files",
-                                  verbose = TRUE,
-                                  enable_loo = FALSE,
-                                  noise_model = "multi_beta_binomial",
-                                  exclude_priors = FALSE,
-                                  use_data = TRUE,
-                                  mcmc_seed = sample(1e5, 1),
-                                  max_sampling_iterations = 20000,
-                                  pass_fit = TRUE, 
-                                  ...,
-                                  
-                                  # DEPRECATED
-                                  approximate_posterior_inference = NULL,
-                                  variational_inference = NULL){
+sccomp_estimate.Seurat <- function(.data,
+                                   formula_composition = ~1,
+                                   formula_variability = ~1,
+                                   .sample,
+                                   .cell_group,
+                                   .abundance = NULL,
 
-  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
-
+                                   # Secondary arguments
+                                   cores = detectCores(),
+                                   bimodal_mean_variability_association = FALSE,
+                                   percent_false_positive = 5,
+                                   inference_method = "pathfinder",
+                                   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                   prior_overdispersion_mean_association = list(
+                                     intercept = c(5, 2),
+                                     slope = c(0, 0.6),
+                                     standard_deviation = c(10, 20)
+                                   ),
+                                   .sample_cell_group_pairs_to_exclude = NULL,
+                                   output_directory = "sccomp_draws_files",
+                                   verbose = TRUE,
+                                   enable_loo = FALSE,
+                                   noise_model = "multi_beta_binomial",
+                                   exclude_priors = FALSE,
+                                   use_data = TRUE,
+                                   mcmc_seed = sample(1e5, 1),
+                                   max_sampling_iterations = 20000,
+                                   pass_fit = TRUE,
+                                   ...,
+                                   
+                                   # DEPRECATED
+                                   .count = NULL,
+                                   approximate_posterior_inference = NULL,
+                                   variational_inference = NULL) {
+  
+  if (!is.null(.abundance))
+    stop("sccomp says: .abundance argument can be used only for data frame input")
+  
+  if (!is.null(.count))
+    stop("sccomp says: .count argument can be used only for data frame input")
+  
   # DEPRECATION OF approximate_posterior_inference
-  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use inference_method By default variational_inference value is inferred from approximate_posterior_inference.")
+  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
     
-     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
   }
   
   # DEPRECATION OF variational_inference
-  if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
+  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
+    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
     
-    inference_method = ifelse(variational_inference, "variational","hmc")
+    inference_method <- ifelse(variational_inference, "variational", "hmc")
   }
   
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-
   .data[[]] %>%
     sccomp_estimate(
       formula_composition = formula_composition,
@@ -207,7 +216,7 @@ sccomp_estimate.Seurat = function(.data,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
       inference_method = inference_method,
-      prior_mean = prior_mean, 
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       output_directory = output_directory,
@@ -220,64 +229,69 @@ sccomp_estimate.Seurat = function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit, ...
     )
-
-
 }
 
 #' @export
-sccomp_estimate.SingleCellExperiment = function(.data,
-                                                formula_composition = ~ 1 ,
-                                                formula_variability = ~ 1,
-                                                .sample,
-                                                .cell_group,
-                                                .count = NULL,
-                                                
-                                                # Secondary arguments
-                                                cores = detectCores(),
-                                                bimodal_mean_variability_association = FALSE,
-                                                percent_false_positive = 5,
-                                                inference_method = "pathfinder",
-                                                prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                                prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                                                .sample_cell_group_pairs_to_exclude = NULL,
-                                                output_directory = "sccomp_draws_files",
-                                                verbose = TRUE,
-                                                enable_loo = FALSE,
-                                                noise_model = "multi_beta_binomial",
-                                                exclude_priors = FALSE,
-                                                use_data = TRUE,
-                                                mcmc_seed = sample(1e5, 1),
-                                                max_sampling_iterations = 20000,
-                                                pass_fit = TRUE, 
-                                                ...,
-                                                
-                                                # DEPRECATED
-                                                approximate_posterior_inference = NULL,
-                                                variational_inference = NULL) {
+sccomp_estimate.SingleCellExperiment <- function(.data,
+                                                 formula_composition = ~1,
+                                                 formula_variability = ~1,
+                                                 .sample,
+                                                 .cell_group,
+                                                 .abundance = NULL,
 
-
-  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
-
+                                                 # Secondary arguments
+                                                 cores = detectCores(),
+                                                 bimodal_mean_variability_association = FALSE,
+                                                 percent_false_positive = 5,
+                                                 inference_method = "pathfinder",
+                                                 prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                                 prior_overdispersion_mean_association = list(
+                                                   intercept = c(5, 2),
+                                                   slope = c(0, 0.6),
+                                                   standard_deviation = c(10, 20)
+                                                 ),
+                                                 .sample_cell_group_pairs_to_exclude = NULL,
+                                                 output_directory = "sccomp_draws_files",
+                                                 verbose = TRUE,
+                                                 enable_loo = FALSE,
+                                                 noise_model = "multi_beta_binomial",
+                                                 exclude_priors = FALSE,
+                                                 use_data = TRUE,
+                                                 mcmc_seed = sample(1e5, 1),
+                                                 max_sampling_iterations = 20000,
+                                                 pass_fit = TRUE,
+                                                 ...,
+                                                 
+                                                 # DEPRECATED
+                                                 .count = NULL,
+                                                 approximate_posterior_inference = NULL,
+                                                 variational_inference = NULL) {
+  
+  if (!is.null(.abundance))
+    stop("sccomp says: .abundance argument can be used only for data frame input")
+  
+  if (!is.null(.count))
+    stop("sccomp says: .count argument can be used only for data frame input")
   
   # DEPRECATION OF approximate_posterior_inference
-  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
-  }
-
-  # DEPRECATION OF variational_inference
-  if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
+  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
     
-    inference_method = ifelse(variational_inference, "variational","hmc")
+    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
   }
   
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-
-
+  # DEPRECATION OF variational_inference
+  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
+    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
+    
+    inference_method <- ifelse(variational_inference, "variational", "hmc")
+  }
+  
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  
   .data %>%
     colData() %>%
     sccomp_estimate(
@@ -291,7 +305,7 @@ sccomp_estimate.SingleCellExperiment = function(.data,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
       inference_method = inference_method,
-      prior_mean = prior_mean, 
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       output_directory = output_directory,
@@ -304,78 +318,71 @@ sccomp_estimate.SingleCellExperiment = function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit, ...
     )
-
-
 }
 
 #' @export
-sccomp_estimate.DFrame = function(.data,
-                                  formula_composition = ~ 1 ,
-                                  formula_variability = ~ 1,
-                                  .sample,
-                                  .cell_group,
-                                  .count = NULL,
-                                  
-                                  # Secondary arguments
-                                  cores = detectCores(),
-                                  bimodal_mean_variability_association = FALSE,
-                                  percent_false_positive = 5,
-                                  inference_method = "pathfinder",
-                                  prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                                  .sample_cell_group_pairs_to_exclude = NULL,
-                                  output_directory = "sccomp_draws_files",
-                                  verbose = TRUE,
-                                  enable_loo = FALSE,
-                                  noise_model = "multi_beta_binomial",
-                                  exclude_priors = FALSE,
-                                  use_data = TRUE,
-                                  mcmc_seed = sample(1e5, 1),
-                                  max_sampling_iterations = 20000,
-                                  pass_fit = TRUE, 
-                                  ...,
-                                  
-                                  # DEPRECATED
-                                  approximate_posterior_inference = NULL,
-                                  variational_inference = NULL) {
-
-
-  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
-
+sccomp_estimate.DFrame <- function(.data,
+                                   formula_composition = ~1,
+                                   formula_variability = ~1,
+                                   .sample,
+                                   .cell_group,
+                                   .abundance = NULL,
+                                   
+                                   # Secondary arguments
+                                   cores = detectCores(),
+                                   bimodal_mean_variability_association = FALSE,
+                                   percent_false_positive = 5,
+                                   inference_method = "pathfinder",
+                                   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                   prior_overdispersion_mean_association = list(
+                                     intercept = c(5, 2),
+                                     slope = c(0, 0.6),
+                                     standard_deviation = c(10, 20)
+                                   ),
+                                   .sample_cell_group_pairs_to_exclude = NULL,
+                                   output_directory = "sccomp_draws_files",
+                                   verbose = TRUE,
+                                   enable_loo = FALSE,
+                                   noise_model = "multi_beta_binomial",
+                                   exclude_priors = FALSE,
+                                   use_data = TRUE,
+                                   mcmc_seed = sample(1e5, 1),
+                                   max_sampling_iterations = 20000,
+                                   pass_fit = TRUE,
+                                   ...,
+                                   
+                                   # DEPRECATED
+                                   .count = NULL,
+                                   approximate_posterior_inference = NULL,
+                                   variational_inference = NULL) {
   
-  # DEPRECATION OF approximate_posterior_inference
-  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
-  }
+  if (!is.null(.abundance))
+    stop("sccomp says: .abundance argument can be used only for data frame input")
   
-  # DEPRECATION OF variational_inference
-  if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
-    
-    inference_method = ifelse(variational_inference, "variational","hmc")
-  }
+  if (!is.null(.count))
+    stop("sccomp says: .count argument can be used only for data frame input")
   
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .count = enquo(.count)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .abundance <- enquo(.abundance)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  
   .data %>%
-    as.data.frame %>%
+    as.data.frame() %>%
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       !!.sample,
       !!.cell_group,
+      .abundance = !!.abundance,
       
       # Secondary arguments
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
       inference_method = inference_method,
-      prior_mean = prior_mean, 
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       output_directory = output_directory,
@@ -392,59 +399,72 @@ sccomp_estimate.DFrame = function(.data,
 
 #' @importFrom purrr when
 #' @export
-sccomp_estimate.data.frame = function(.data,
-                                      formula_composition = ~ 1 ,
-                                      formula_variability = ~ 1,
-                                      .sample,
-                                      .cell_group,
-                                      .count = NULL,
-                                      
-                                      # Secondary arguments
-                                      cores = detectCores(),
-                                      bimodal_mean_variability_association = FALSE,
-                                      percent_false_positive = 5,
-                                      inference_method = "pathfinder",
-                                      prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                      prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                                      .sample_cell_group_pairs_to_exclude = NULL,
-                                      output_directory = "sccomp_draws_files",
-                                      verbose = TRUE,
-                                      enable_loo = FALSE,
-                                      noise_model = "multi_beta_binomial",
-                                      exclude_priors = FALSE,
-                                      use_data = TRUE,
-                                      mcmc_seed = sample(1e5, 1),
-                                      max_sampling_iterations = 20000,
-                                      pass_fit = TRUE, 
-                                      ...,
-                                      
-                                      # DEPRECATED
-                                      approximate_posterior_inference = NULL,
-                                      variational_inference = NULL) {
+sccomp_estimate.data.frame <- function(.data,
+                                       formula_composition = ~1,
+                                       formula_variability = ~1,
+                                       .sample,
+                                       .cell_group,
+                                       .abundance = NULL,
+                                       
+                                       # Secondary arguments
+                                       cores = detectCores(),
+                                       bimodal_mean_variability_association = FALSE,
+                                       percent_false_positive = 5,
+                                       inference_method = "pathfinder",
+                                       prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                       prior_overdispersion_mean_association = list(
+                                         intercept = c(5, 2),
+                                         slope = c(0, 0.6),
+                                         standard_deviation = c(10, 20)
+                                       ),
+                                       .sample_cell_group_pairs_to_exclude = NULL,
+                                       output_directory = "sccomp_draws_files",
+                                       verbose = TRUE,
+                                       enable_loo = FALSE,
+                                       noise_model = "multi_beta_binomial",
+                                       exclude_priors = FALSE,
+                                       use_data = TRUE,
+                                       mcmc_seed = sample(1e5, 1),
+                                       max_sampling_iterations = 20000,
+                                       pass_fit = TRUE,
+                                       ...,
+                                       
+                                       # DEPRECATED
+                                       .count = NULL,
+                                       approximate_posterior_inference = NULL,
+                                       variational_inference = NULL) {
+  
 
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .abundance <- enquo(.abundance)
+  .count <- enquo(.count)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  
+  # Deprecation of .count
+  if (rlang::quo_is_symbolic(.count)) {
+    rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
+    .abundance <- .count
+  }
+  
   
   # DEPRECATION OF approximate_posterior_inference
-  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
+    
+    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
   }
   
   # DEPRECATION OF variational_inference
-  if (is_present(variational_inference) & !is.null(variational_inference)) {
-    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
+  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
+    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
     
-    inference_method = ifelse(variational_inference, "variational","hmc")
+    inference_method <- ifelse(variational_inference, "variational", "hmc")
   }
   
-
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .count = enquo(.count)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-
-  if( quo_is_null(.count))
-    res = sccomp_glm_data_frame_raw(
+  if (quo_is_null(.abundance))
+    res <- sccomp_glm_data_frame_raw(
       .data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
@@ -456,7 +476,7 @@ sccomp_estimate.data.frame = function(.data,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
       inference_method = inference_method,
-      prior_mean = prior_mean, 
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       output_directory = output_directory,
@@ -476,14 +496,14 @@ sccomp_estimate.data.frame = function(.data,
       formula_variability = formula_variability,
       !!.sample,
       !!.cell_group,
-      !!.count,
+      .count = !!.abundance,
       
       # Secondary arguments
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
       inference_method = inference_method,
-      prior_mean = prior_mean, 
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       output_directory = output_directory,
@@ -496,17 +516,16 @@ sccomp_estimate.data.frame = function(.data,
       pass_fit = pass_fit, ...
     )
   
-  message("sccomp says: to do hypothesis testing run `sccomp_test()`, 
-  the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and 
-  0.7 equates to ~100% increase, if the baseline is ~0.1 proportion. 
-  Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non linear).")
+  message("sccomp says: to do hypothesis testing run `sccomp_test()`,
+  the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+  0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
+  Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).")
   
-  res  |> 
-
+  res %>%
+    
     # Track input parameters
     add_attr(noise_model, "noise_model")
 }
-
 
 #' sccomp_remove_outliers main
 #'
@@ -712,7 +731,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     left_join(
       summary_to_tibble(rng, "counts", "N", "M", probs = c(0.05, 0.95)) %>%
         nest(data = -N) %>%
-        mutate(!!.sample := rownames(data_for_model$y)) %>%
+        mutate(!!.sample := rownames(data_for_model$X)) %>%
         unnest(data) %>%
         nest(data = -M) %>%
         mutate(!!.cell_group := colnames(data_for_model$y)) %>%
@@ -836,7 +855,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       .upper := !!as.symbol(column_quantile_names[2])
     ) %>%
     nest(data = -N) %>%
-    mutate(!!.sample := rownames(data_for_model$y)) %>%
+    mutate(!!.sample := rownames(data_for_model$X)) %>%
     unnest(data) %>%
     nest(data = -M) %>%
     mutate(!!.cell_group := colnames(data_for_model$y)) %>%

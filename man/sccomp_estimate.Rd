@@ -10,7 +10,7 @@ sccomp_estimate(
   formula_variability = ~1,
   .sample,
   .cell_group,
-  .count = NULL,
+  .abundance = NULL,
   cores = detectCores(),
   bimodal_mean_variability_association = FALSE,
   percent_false_positive = 5,
@@ -29,13 +29,14 @@ sccomp_estimate(
   max_sampling_iterations = 20000,
   pass_fit = TRUE,
   ...,
+  .count = NULL,
   approximate_posterior_inference = NULL,
   variational_inference = NULL
 )
 }
 \arguments{
 \item{.data}{A tibble including cell_group name column, sample name column,
-read counts column (optional depending on the input class), and factor columns.}
+abundance column (counts or proportions), and factor columns.}
 
 \item{formula_composition}{A formula describing the model for differential abundance.}
 
@@ -45,7 +46,7 @@ read counts column (optional depending on the input class), and factor columns.}
 
 \item{.cell_group}{A column name as a symbol for the cell-group identifier.}
 
-\item{.count}{A column name as a symbol for the cell-group abundance (read count).}
+\item{.abundance}{A column name as a symbol for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across \code{.cell_group}).}
 
 \item{cores}{Number of cores to use for parallel calculations.}
 
@@ -81,15 +82,17 @@ read counts column (optional depending on the input class), and factor columns.}
 
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 
-\item{approximate_posterior_inference}{DEPRECATED, use \code{variational_inference} instead.}
+\item{.count}{\strong{DEPRECATED}. Use \code{.abundance} instead.}
 
-\item{variational_inference}{Logical, whether to use variational Bayes for posterior inference (faster and convenient).}
+\item{approximate_posterior_inference}{\strong{DEPRECATED}. Use \code{inference_method} instead.}
+
+\item{variational_inference}{\strong{DEPRECATED}. Use \code{inference_method} instead.}
 }
 \value{
 A tibble (\code{tbl}) with the following columns:
 \itemize{
 \item cell_group - The cell groups being tested.
-\item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+\item parameter - The parameter being estimated from the design matrix described by the input \code{formula_composition} and \code{formula_variability}.
 \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
 \item c_lower - Lower (2.5\%) quantile of the posterior distribution for a composition (c) parameter.
 \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
@@ -109,8 +112,8 @@ A tibble (\code{tbl}) with the following columns:
 }
 }
 \description{
-The \code{sccomp_estimate} function performs linear modelling on a table of cell counts,
-which includes a cell-group identifier, sample identifier, integer count, and factors
+The \code{sccomp_estimate} function performs linear modeling on a table of cell counts or proportions,
+which includes a cell-group identifier, sample identifier, abundance (counts or proportions), and factors
 (continuous or discrete). The user can define a linear model using an R formula,
 where the first factor is the factor of interest. Alternatively, \code{sccomp} accepts
 single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or
@@ -118,19 +121,19 @@ group-size) and derives the count data from cell metadata.
 }
 \examples{
 
-message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+message("Use the following example after having installed cmdstanr with install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
 \donttest{
   if (instantiate::stan_cmdstan_exists()) {
     data("counts_obj")
 
-    estimate = sccomp_estimate(
+    estimate <- sccomp_estimate(
       counts_obj,
       ~ type,
       ~1,
       sample,
       cell_group,
-      count,
+      abundance,
       cores = 1
     )
   }

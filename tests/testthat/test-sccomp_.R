@@ -581,8 +581,19 @@ test_that("proportions",{
       mcmc_seed = 42,
       max_sampling_iterations = 1000
     ) |> 
-      expect_no_error()
+      expect_warning("The argument '.count' is deprecated")
  
+  counts_obj |>
+    sccomp_estimate(
+      formula_composition = ~ type , 
+      .sample = sample,  
+      .cell_group = cell_group, 
+      .abundance = proportion,
+      cores = 1,
+      mcmc_seed = 42,
+      max_sampling_iterations = 1000
+    ) |> 
+    expect_no_warning()
   
 })
 

@@ -157,7 +157,7 @@ sccomp_result =
     formula_composition = ~ type, 
     .sample = sample,
     .cell_group = cell_group,
-    .count = count, 
+    .abundance = count, 
     bimodal_mean_variability_association = TRUE,
     cores = 1, verbose = FALSE
   ) |> 
@@ -172,6 +172,34 @@ Here you see the results of the fit, the effects of the factor on composition an
 sccomp_result
 ```
 
+### From proportions
+
+!!! If counts are available we strongly discourage the use of proportions,
+as an important source of uncertainty (i.e. for rare groups/cell-types)
+is not modeled.
+
+The use of proportions is more better suited in modelling deconvolution results (e.g. of bulk RNA data), in which case counts are not available. 
+
+Proportions should be bigger than 0. Assuming that 0s derive from a
+precision threshold (e.g. deconvolution), 0s are converted to the
+smaller non 0 value.
+
+```{r}
+res = 
+  counts_obj |>
+  sccomp_estimate( 
+    formula_composition = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    .abundance = proportion, 
+    bimodal_mean_variability_association = TRUE,
+    cores = 1, verbose = FALSE
+  ) |> 
+  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
+  sccomp_test()
+
+res
+```
 
 ## An aid to result interpretation and communication
 

@@ -1,5 +1,5 @@
-
-sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
+# Define global variable
+sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
 
 # Greater than
 gt = function(a, b){	a > b }
@@ -1311,7 +1311,7 @@ data_spread_to_model_input =
     is_proportion = y |> as.numeric() |> max()  |> between(0,1) |> all()
     if(is_proportion){
       y_proportion = y
-      y = y_proportion[0,,drop = FALSE]
+      y = y[0,,drop = FALSE]
     }
     else{
       y = y
@@ -3473,8 +3473,14 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   #   )
   # }, error = function(e) {
     # Try to load the model from cache
+  
+  # RDS compiled model
   cache_dir |> dir.create(showWarnings = FALSE, recursive = TRUE)
-    cache_file <- file.path(cache_dir, paste0(name, ".rds"))
+  cache_file <- file.path(cache_dir, paste0(name, ".rds"))
+  
+  # .STAN raw model
+  stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
+  
     if (file.exists(cache_file) & !force) {
       message("Loading model from cache...")
       return(readRDS(cache_file))
@@ -3482,8 +3488,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
     
     # If loading the precompiled model fails, find the Stan model file within the package
     message("Precompiled model not found. Compiling the model...")
-    stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
-    
+
     # Compile the Stan model using cmdstanr with threading support enabled
     stan_package_compile(
       stan_model_path, 
