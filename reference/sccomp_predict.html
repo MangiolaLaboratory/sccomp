@@ -51,7 +51,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>sccomp_predict</h1>
-    <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/change-residuals/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
     <div class="hidden name"><code>sccomp_predict.Rd</code></div>
     </div>
 
@@ -65,7 +65,8 @@
 <span>  formula_composition <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  new_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  number_of_draws <span class="op">=</span> <span class="fl">500</span>,</span>
-<span>  mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  mcmc_seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  summary_instead_of_draws <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -91,6 +92,10 @@
 
 <dt id="arg-mcmc-seed">mcmc_seed<a class="anchor" aria-label="anchor" href="#arg-mcmc-seed"></a></dt>
 <dd><p>An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()</p></dd>
+
+
+<dt id="arg-summary-instead-of-draws">summary_instead_of_draws<a class="anchor" aria-label="anchor" href="#arg-summary-instead-of-draws"></a></dt>
+<dd><p>Return the summary values (i.e. mean and quantiles) of the predicted proportions, or return single draws. Single draws can be helful to better analyse the uncertainty of the prediction.</p></dd>
 
 </dl></div>
     <div id="value">
