@@ -1305,14 +1305,22 @@ data_spread_to_model_input =
     }
     
     
-  
     y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% as_matrix(rownames = quo_name(.sample))
     
     # If proportion ix 0 issue
     is_proportion = y |> as.numeric() |> max()  |> between(0,1) |> all()
-    if(is_proportion & min(y)==0){
+    if(is_proportion){
+      y_proportion = y
+      y = y_proportion[0,,drop = FALSE]
+    }
+    else{
+      y = y
+      y_proportion = y[0,,drop = FALSE]
+    }
+    
+    if(is_proportion && min(y_proportion)==0){
       warning("sccomp says: your proportion values include 0. Assuming that 0s derive from a precision threshold (e.g. deconvolution), 0s are converted to the smaller non 0 proportion value.")
-      y[y==0] = min(y[y>0])
+      y_proportion[y_proportion==0] = min(y_proportion[y_proportion>0])
      }
     
 
@@ -1321,7 +1329,9 @@ data_spread_to_model_input =
         N = .data_spread %>% nrow(),
         M = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% ncol(),
         exposure = .data_spread$exposure,
+        is_proportion = is_proportion,
         y = y,
+        y_proportion = y_proportion,
         X = X,
         XA = XA,
         Xa = Xa,

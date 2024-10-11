@@ -260,7 +260,7 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$user_forced_truncation_not_idx = 
     .data |> 
     select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
-    left_join( data_for_model$y |> rownames() |> enframe(name="N", value=quo_name(.sample)), by = join_by(!!.sample) ) |>  
+    left_join( data_for_model$X |> rownames() |> enframe(name="N", value=quo_name(.sample)), by = join_by(!!.sample) ) |>  
     left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)), by = join_by(!!.cell_group) ) |> 
     select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
     arrange(N, M) |>

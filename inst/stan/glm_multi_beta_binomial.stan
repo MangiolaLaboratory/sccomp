@@ -201,7 +201,7 @@ functions{
           // truncation
           if(W == 0){
             
-            # If input is proportions
+            // If input is proportions
             if(is_proportion)
               return beta_lupdf(
                 to_array_1d(y_proportion[idx_y,]) |
@@ -209,7 +209,7 @@ functions{
                 (1.0 - mu_array) .* precision_array
                 ) ;
                 
-              # If input is counts
+              // If input is counts
               else
                 return beta_binomial_lupmf(
                   to_array_1d(y[idx_y,]) |
@@ -230,7 +230,7 @@ functions{
               filter_missing_indices(truncation_not_idx_minimal, idx_y)
             );
 
-            # If input is proportions
+            // If input is proportions
              if(is_proportion)
               return beta_lupdf(
               to_array_1d(y_proportion[idx_y,])[non_missing_indices] |
@@ -238,7 +238,7 @@ functions{
               (1.0 - mu_array[non_missing_indices]) .* precision_array[non_missing_indices]
               ) ;
               
-             # If input is counts
+             // If input is counts
              else
              return beta_binomial_lupmf(
               to_array_1d(y[idx_y,])[non_missing_indices] |
@@ -444,7 +444,7 @@ data{
   int<lower=1> B_intercept_columns; // How many intercept column in varibility design
   int<lower=1> Ar; // Rows of unique variability design
   array[N] int exposure;
-  array[N * !is_proportion,M] real<lower=0, upper=1> y;
+  array[N * !is_proportion,M] int<lower=0> y;
   array[N * is_proportion,M] real<lower=0, upper=1> y_proportion;
   matrix[N, C] X;
   matrix[Ar, A] XA; // The unique variability design
@@ -514,7 +514,6 @@ transformed data{
   int ncol_X_random_eff_WINDOWS_BUG_FIX = max(ncol_X_random_eff[1], 1);
   int ncol_X_random_eff_WINDOWS_BUG_FIX_2 = max(ncol_X_random_eff[2], 1);
   
-  
   // thin and scale the QR decomposition
   Q_ast = qr_thin_Q(X) * sqrt(N - 1);
   R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
@@ -573,18 +572,18 @@ transformed parameters{
   matrix[M, N] precision = (Xa * alpha)';
   matrix[C,M] beta;
   
-  // // locations distribution
-  matrix[M, N] mu;
-
-  // vectorisation
-  vector[N*M] mu_array;
-  vector[N*M] precision_array;
+  // // // locations distribution
+  // matrix[M, N] mu;
+  // // vectorisation
+  // vector[N*M] mu_array;
+  // vector[N*M] precision_array;
   
   for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
   beta = R_ast_inverse * beta_raw; // coefficients on x
   
-  // mu = (Q_ast * beta_raw)';
-  // 
+  // // JUST FOR SANITY CHECK
+  //  mu = (Q_ast * beta_raw)';
+  
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect;
   matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2;
   
@@ -609,7 +608,7 @@ transformed parameters{
       );
       
       // // Update with summing mu_random_effect
-      mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
+      // mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
   }
   
   // random intercept
@@ -633,16 +632,16 @@ transformed parameters{
       );
       
       // // Update with summing mu_random_effect
-      mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
+      // mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
   }
   
-  // Calculate proportions
-  for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-
-  // Convert the matrix m to a column vector in column-major order.
-  mu_array = to_vector(mu);
-  precision_array = to_vector(exp(precision));
-  
+  // // Calculate proportions
+  // for(n in 1:N)  mu[,n] = softmax(mu[,n]);
+  // 
+  // // Convert the matrix m to a column vector in column-major order.
+  // mu_array = to_vector(mu);
+  // precision_array = to_vector(exp(precision));
+  // 
   
 }
 model{
@@ -650,16 +649,8 @@ model{
   
   // Fit main distribution
   if(use_data == 1){
-
-    print( beta_lpdf(
-      to_array_1d(y)[truncation_not_idx] |
-      (mu_array[truncation_not_idx] .* precision_array[truncation_not_idx]),
-      ((1.0 - mu_array[truncation_not_idx]) .* precision_array[truncation_not_idx])
-      )) ;
     
-
-    
-    print( reduce_sum(
+   target += reduce_sum(
       partial_sum_2_lupmf,
       array_N,
       grainsize,
@@ -689,7 +680,7 @@ model{
       //truncation
       truncation_not_idx_minimal
       
-      ));
+      );
       
       // print("2---", reduce_sum(
         //   partial_sum_lupmf,
@@ -802,27 +793,27 @@ generated quantities {
   
   // LOO
   if(enable_loo==1){
-    
+
     matrix[M, N] mu;
     vector[N*M] mu_array;
     vector[N*M] precision_array;
-  
+
     mu = (Q_ast * beta_raw)';
-    
+
     // random intercept
     if(ncol_X_random_eff[1]> 0)
     mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
     if(ncol_X_random_eff[2]>0 )
     mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
-    
-    
+
+
     // Calculate proportions
     for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-    
+
     // Convert the matrix m to a column vector in column-major order.
     mu_array = to_vector(mu);
     precision_array = to_vector(exp(precision));
-    
+
     for (n in 1:TNS) {
       log_lik[n] = beta_lpdf(
         to_array_1d(y)[truncation_not_idx[n]] |
@@ -830,9 +821,9 @@ generated quantities {
         ((1.0 - mu_array[truncation_not_idx[n]]) .* precision_array[truncation_not_idx[n]])
         ) ;
     }
-    
+
   }
-  
-  
+
+
   
 }
