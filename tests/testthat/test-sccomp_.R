@@ -383,10 +383,16 @@ test_that("remove unwanted variation",{
       mcmc_seed = 43,    
       max_sampling_iterations = 1000, verbose = FALSE
     )
+
+  # DEPRECATION TEST
+  estimate |>
+    sccomp_remove_unwanted_variation(formula_composition = ~ type) |> 
+    expect_warning("The argument 'formula_composition' is deprecated")
   
   estimate |>
-    sccomp_remove_unwanted_variation(formula_composition = ~ type)
-  
+    sccomp_remove_unwanted_variation(formula_composition_keep = ~ type) |> 
+    expect_no_warning()
+
 })
 
 test_that("multi beta binomial from SCE",{

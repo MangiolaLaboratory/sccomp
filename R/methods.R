@@ -1477,12 +1477,12 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
 
 #' sccomp_remove_unwanted_variation
 #'
-#' @description This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula `~ factor_1 + factor_2` and use this formula to remove unwanted variation `~ factor_1`, the `factor_2` will be factored out.
+#' @description This function uses the model to remove unwanted variation from a dataset using the estimates of the model. For example, if you fit your data with the formula `~ factor_1 + factor_2` and use the formula `~ factor_1` to remove unwanted variation, the `factor_2` effect will be factored out.
 #'
-#'
-#' @param .data A tibble. The result of sccomp_estimate.
-#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param .data A tibble. The result of `sccomp_estimate`.
+#' @param formula_composition_keep A formula. The formula describing the model for differential abundance, for example `~type`. In this case, only the effect of the `type` factor will be preserved, while all other factors will be factored out.
+#' @param formula_composition DEPRECATED. Use `formula_composition_keep` instead.
+#' @param formula_variability DEPRECATED. Use `formula_variability_keep` instead.
 #' @param cores Integer, the number of cores to be used for parallel calculations.
 #' 
 #' @return A tibble (`tbl`) with the following columns:
@@ -1498,7 +1498,7 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' message("Use the following example after having installed cmdstanr with install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1514,9 +1514,20 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
 #' }
 #'
 sccomp_remove_unwanted_variation <- function(.data,
-                                      formula_composition = ~1,
-                                      formula_variability = NULL,
-                                      cores = detectCores()) {
+                                             formula_composition_keep = NULL,
+                                             formula_composition = NULL,
+                                             formula_variability = NULL,
+                                             cores = detectCores()) {
+  
+  # Check for deprecated arguments
+  if (!is.null(formula_composition)) {
+    warning("The argument 'formula_composition' is deprecated. Please use 'formula_composition_keep' instead.", call. = FALSE)
+    formula_composition_keep <- formula_composition
+  }
+  
+  if (!is.null(formula_variability)) {
+    warning("The argument 'formula_variability' is deprecated as not used.", call. = FALSE)
+  }
   
   # Run the function
   check_and_install_cmdstanr()
@@ -1528,9 +1539,10 @@ sccomp_remove_unwanted_variation <- function(.data,
 #' @export
 #'
 sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
-                                                formula_composition = ~1,
-                                                formula_variability = NULL,
-                                                cores = detectCores()){
+                                                       formula_composition_keep = NULL,
+                                                       formula_composition = NULL,
+                                                       formula_variability = NULL,
+                                                       cores = detectCores()){
 
 
   model_input = attr(.data, "model_input")
@@ -1550,7 +1562,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   # Generate quantities
   .data |>
     sccomp_predict(
-      formula_composition = formula_composition,
+      formula_composition = formula_composition_keep,
       number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
 
     ) |>
