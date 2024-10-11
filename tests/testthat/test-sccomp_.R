@@ -83,53 +83,6 @@ if (instantiate::stan_cmdstan_exists()){
   
 }
 
-my_estimate_no_intercept = 
-  seurat_obj |>
-  sccomp_estimate(
-    formula_composition = ~ 0 + type + continuous_covariate,
-    formula_variability = ~ 1,
-    sample, cell_group,
-    approximate_posterior_inference = FALSE,
-    cores = 1,
-    mcmc_seed = 42,
-    max_sampling_iterations = 1000
-  )
-
-my_estimate_random = 
-  seurat_obj |>
-  sccomp_estimate(
-    formula_composition = ~ 0 + type + (0 + type | group__),
-    formula_variability = ~ 1,
-    sample, cell_group,
-    approximate_posterior_inference = FALSE,
-    cores = 1,
-    mcmc_seed = 42,     
-    max_sampling_iterations = 1000
-  )
-
-# my_estimate_random2 = 
-# 	seurat_obj |>
-# 	sccomp_estimate(
-# 		formula_composition = ~ 1 +  type + (1 + type | group__),
-# 		formula_variability = ~ 1,
-# 		sample, cell_group,
-# 		approximate_posterior_inference = FALSE,
-# 		cores = 1,
-# 		mcmc_seed = 42,     
-# 		max_sampling_iterations = 1000
-# 	)
-# 
-# my_estimate_random3 = 
-# 	seurat_obj |>
-# 	sccomp_estimate(
-# 		formula_composition = ~  type + (1 | group__),
-# 		formula_variability = ~ 1,
-# 		sample, cell_group,
-# 		approximate_posterior_inference = FALSE,
-# 		cores = 1,
-# 		mcmc_seed = 42,     
-# 		max_sampling_iterations = 1000
-# 	)
 
 test_that("Generate data",{
   skip_cmdstan()
@@ -340,8 +293,6 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 
 })
 
-
-
 # test_that("wrongly-set groups",{
 #
 #   # library(tidyseurat)
@@ -396,6 +347,7 @@ test_that("multi beta binomial from Seurat",{
 
 test_that("calculate residuals",{
 
+  skip_cmdstan()
   library(dplyr)
   
   my_estimate_random |> 
@@ -436,7 +388,6 @@ test_that("remove unwanted variation",{
     sccomp_remove_unwanted_variation(formula_composition = ~ type)
   
 })
-
 
 test_that("multi beta binomial from SCE",{
 
@@ -621,8 +572,6 @@ test_that("test constrasts",{
 
 })
 
-
-
 test_that("sccomp_proportional_fold_change",{
   
   skip_cmdstan()
@@ -636,8 +585,6 @@ test_that("sccomp_proportional_fold_change",{
   
   
 })
-
-
 
 # fit = 
 # 	seurat_obj |> 
