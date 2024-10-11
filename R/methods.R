@@ -1313,7 +1313,8 @@ sccomp_predict.sccomp_tbl = function(fit,
 	  	fit |>
 	  	select(count_data) |>
 	  	unnest(count_data) |> 
-	  	distinct()
+      distinct() |> 
+      .subset(!!.sample)
   
   # If seurat
   else if(new_data |> is("Seurat")) 

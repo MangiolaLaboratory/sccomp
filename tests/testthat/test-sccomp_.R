@@ -155,9 +155,7 @@ test_that("Predict data",{
   library(stringr)
   
   new_data_seurat = seurat_obj[, seurat_obj[[]]$sample %in% c("10x_8K", "SI-GA-E5")] 
-  
   new_data_seurat[[]]$sample = new_data_seurat[[]]$sample |> str_replace("SI", "AB") |>  str_replace("10x", "9x") 
-   
   new_data_tibble = new_data_seurat[[]] |> distinct(sample, type, continuous_covariate)
   
   # With new tibble data
@@ -194,7 +192,8 @@ test_that("Predict data",{
     
     sccomp_predict(
       formula_composition = ~ type,
-      new_data = new_data_seurat
+      new_data = new_data_tibble, 
+      number_of_draws = 1
     ) |>
     nrow() |>
     expect_equal(60)
@@ -397,9 +396,11 @@ test_that("multi beta binomial from Seurat",{
 
 test_that("calculate residuals",{
 
+  library(dplyr)
+  
   my_estimate_random |> 
     sccomp_calculate_residuals() |> 
-    pull(logit_residuals) |> 
+    pull(residuals) |> 
     max() |> 
     expect_lt(1)
   
