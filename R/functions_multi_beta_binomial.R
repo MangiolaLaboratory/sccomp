@@ -14,8 +14,10 @@ sccomp_glm_data_frame_raw = function(.data,
                                      prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
-                                     approximate_posterior_inference = "none",
-                                     test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                     variational_inference = NULL,
+                                     inference_method = "variational",
+                                     test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
+                                     output_directory = "sccomp_draws_files",
                                      verbose = FALSE,
                                      exclude_priors = FALSE,
                                      bimodal_mean_variability_association = FALSE,
@@ -24,7 +26,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      cores = 4,
                                      mcmc_seed = sample(1e5, 1),
                                      max_sampling_iterations = 20000,
-                                     pass_fit = TRUE ) {
+                                     pass_fit = TRUE , ...) {
   
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
@@ -49,7 +51,7 @@ sccomp_glm_data_frame_raw = function(.data,
     parse_formula(formula_composition)
   ))
   
-  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
+  .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
   
   # Make counts
   .data %>%
@@ -81,12 +83,12 @@ sccomp_glm_data_frame_raw = function(.data,
       .cell_group = !!.cell_group,
       .count = count,
       contrasts = contrasts,
-      #.grouping_for_random_intercept = !! .grouping_for_random_intercept,
+      #.grouping_for_random_effect = !! .grouping_for_random_effect,
       prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
-      approximate_posterior_inference = approximate_posterior_inference,
+      inference_method = inference_method,
       exclude_priors = exclude_priors,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       enable_loo = enable_loo,
@@ -94,9 +96,10 @@ sccomp_glm_data_frame_raw = function(.data,
       cores = cores,
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
+      output_directory = output_directory,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
 }
 
@@ -109,13 +112,15 @@ sccomp_glm_data_frame_counts = function(.data,
                                         
                                         # Secondary arguments
                                         contrasts = NULL,
-                                        #.grouping_for_random_intercept = NULL,
+                                        #.grouping_for_random_effect = NULL,
                                         prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
                                         prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
-                                        approximate_posterior_inference = "none",
-                                        test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                        variational_inference = NULL,
+                                        inference_method = "variational",
+                                        test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
+                                        output_directory = "sccomp_draws_files",
                                         verbose = FALSE,
                                         exclude_priors = FALSE,
                                         bimodal_mean_variability_association = FALSE,
@@ -124,22 +129,24 @@ sccomp_glm_data_frame_counts = function(.data,
                                         cores = 4,
                                         mcmc_seed = sample(1e5, 1),
                                         max_sampling_iterations = 20000,
-                                        pass_fit = TRUE) {
+                                        pass_fit = TRUE,
+                                        ...) {
   
   # Prepare column same enquo
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-  #.grouping_for_random_intercept = enquo(.grouping_for_random_intercept)
+  #.grouping_for_random_effect = enquo(.grouping_for_random_effect)
   
   
   #Check column class
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)
   
   # Check that count is integer
-  if(.data %>% pull(!!.count) %>% is("integer") %>% not())
-    stop(sprintf("sccomp: %s column must be an integer", quo_name(.count)))
+  if(.data %>% pull(!!.count) %>% is("integer")) message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))
+  else if(.data %>% pull(!!.count) %>% is("integer") |> not() & .data %>% pull(!!.count) |> dplyr::between(0, 1) |> all()) message(sprintf("sccomp says: %s column is a proportion. The sum-constrained beta model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).", quo_name(.count)))
+  else stop(sprintf("sccomp: %s column must be an integer or a proportion", quo_name(.count)))
   
   # Check if columns exist
   check_columns_exist(.data, c(
@@ -191,15 +198,19 @@ sccomp_glm_data_frame_counts = function(.data,
   factor_names = parse_formula(formula_composition)
   
   # Random intercept
-  random_intercept_elements = parse_formula_random_intercept(formula_composition)
+  random_effect_elements = parse_formula_random_effect(formula_composition)
+  
+  # Variational only if no random intercept
+  if(inference_method=="variational" & random_effect_elements |> filter(factor != "(Intercept)") |> nrow() > 0)
+    stop("sccomp says: for random effect modelling plese use `inference_method` = \"hmc\", for the full Bayes HMC inference.")
   
   # If no random intercept fake it
-  if(nrow(random_intercept_elements)>0){
-    .grouping_for_random_intercept = random_intercept_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
+  if(nrow(random_effect_elements)>0){
+    .grouping_for_random_effect = random_effect_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
     
   } else{
-    .grouping_for_random_intercept = list(quo(!! sym("random_intercept")))
-    .data = .data |> mutate(!!.grouping_for_random_intercept[[1]] := "1")
+    .grouping_for_random_effect = list(quo(!! sym("random_effect")))
+    .data = .data |> mutate(!!.grouping_for_random_effect[[1]] := "1")
   }
   
   # If .sample_cell_group_pairs_to_exclude 
@@ -229,16 +240,16 @@ sccomp_glm_data_frame_counts = function(.data,
   
   data_for_model =
     .data %>%
-    data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_intercept) %>%
+    data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_effect) %>%
     data_spread_to_model_input(
       formula_composition, !!.sample, !!.cell_group, !!.count,
       truncation_ajustment = 1.1,
-      approximate_posterior_inference = approximate_posterior_inference == "all",
+      approximate_posterior_inference = inference_method %in% c("variational", "pathfinder"),
       formula_variability = formula_variability,
       contrasts = contrasts,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       use_data = use_data,
-      random_intercept_elements
+      random_effect_elements
     )
   
   # Print design matrix
@@ -267,7 +278,7 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$prior_mean_intercept = prior_mean$intercept
   data_for_model$prior_mean_coefficients = prior_mean$coefficients
   data_for_model$exclude_priors = exclude_priors
-  data_for_model$enable_loo = TRUE & enable_loo
+  data_for_model$enable_loo = enable_loo
   
   # # Check that design matrix is not too big
   # if(ncol(data_for_model$X)>20)
@@ -278,39 +289,33 @@ sccomp_glm_data_frame_counts = function(.data,
     
     # Run the first discovery phase with permissive false discovery rate
     fit_model(
-      stanmodels$glm_multi_beta_binomial,
+      "glm_multi_beta_binomial",
       cores= cores,
       quantile = CI,
-      approximate_posterior_inference = approximate_posterior_inference == "all",
+      inference_method = inference_method,
       verbose = verbose,
+      output_directory = output_directory,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
+      ...
     )
   
+
   
-  
-  
-  # argg <- c(as.list(environment()), list(...))
-  # 
-  # list(
-  # 	fit = fit,
-  # 	data_for_model = data_for_model,
-  # 	truncation_df2 =  .data
-  # )
-  
-  # Create a dummy tibble
-  tibble() |>
+  estimate_tibble = 
+    # Create a dummy tibble
+    tibble() |>
     # Attach association mean concentration
     add_attr(fit, "fit") %>%
     add_attr(data_for_model, "model_input") |>
     add_attr(.data, "truncation_df2") |>
-    add_attr(.sample, ".sample") |>
-    add_attr(.cell_group, ".cell_group") |>
-    add_attr(.count, ".count") |>
+    add_attr(.sample |> drop_environment(), ".sample") |>
+    add_attr(.cell_group |> drop_environment(), ".cell_group") |>
+    add_attr(.count |> drop_environment(), ".count") |>
     add_attr(check_outliers, "check_outliers") |>
-    add_attr(formula_composition, "formula_composition") |>
-    add_attr(formula_variability, "formula_variability") |>
+    add_attr(formula_composition |> drop_environment(), "formula_composition") |>
+    add_attr(formula_variability |> drop_environment(), "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     
     # Add class to the tbl
@@ -322,6 +327,13 @@ sccomp_glm_data_frame_counts = function(.data,
     # drop hypothesis testing as the estimation exists without probabilities.
     # For hypothesis testing use sccomp_test
     select(-contains("_FDR"), -contains("_pH0")) 
+  
+  
+  if(inference_method %in% c("variational") && max(na.omit(estimate_tibble$c_R_k_hat)) > 4)
+    warning("sccomp says: using variational inference, c_R_k_hat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using inference_method = \"hmc\" to use the state-of-the-art (although slower) HMC sampler.")
+  
+  estimate_tibble
+  
 }
 
 
@@ -329,6 +341,12 @@ sccomp_glm_data_frame_counts = function(.data,
 
 #' @importFrom stats model.matrix
 get_mean_precision = function(fit, data_for_model){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  `2.5%` <- NULL
+  `97.5%` <- NULL
+  
   fit %>%
     summary_to_tibble("alpha", "C", "M") %>%
 
@@ -367,14 +385,7 @@ get_mean_precision = function(fit, data_for_model){
 
 get_mean_precision_association = function(fit){
   c(
-    fit %>%
-      summary("prec_coeff") %$%
-      summary %>%
-      .[,1] ,
-
-    fit %>%
-      summary("prec_sd") %$%
-      summary %>%
-      .[,1]
+    fit$summary("prec_coeff")[,2] |> set_names("prec_coeff") ,
+    fit$summary("prec_sd")[,2] |> set_names("prec_sd")
   )
 }

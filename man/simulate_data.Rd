@@ -14,7 +14,8 @@ simulate_data(
   .coefficients = NULL,
   variability_multiplier = 5,
   number_of_draws = 1,
-  mcmc_seed = sample(1e+05, 1)
+  mcmc_seed = sample(1e+05, 1),
+  cores = detectCores()
 )
 }
 \arguments{
@@ -36,30 +37,49 @@ simulate_data(
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
-\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
+\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.}
+
+\item{cores}{Integer, the number of cores to be used for parallel calculations.}
 }
 \value{
-A nested tibble \code{tbl} with cell_group-wise statistics
+A tibble (\code{tbl}) with the following columns:
+\itemize{
+\item \strong{sample} - A character column representing the sample name.
+\item \strong{type} - A factor column representing the type of the sample.
+\item \strong{phenotype} - A factor column representing the phenotype in the data.
+\item \strong{count} - An integer column representing the original cell counts.
+\item \strong{cell_group} - A character column representing the cell group identifier.
+\item \strong{b_0} - A numeric column representing the first coefficient used for simulation.
+\item \strong{b_1} - A numeric column representing the second coefficient used for simulation.
+\item \strong{generated_proportions} - A numeric column representing the generated proportions from the simulation.
+\item \strong{generated_counts} - An integer column representing the generated cell counts from the simulation.
+\item \strong{replicate} - An integer column representing the replicate number for each draw from the posterior distribution.
+}
 }
 \description{
 This function simulates counts from a linear model.
 }
 \examples{
 
-data("counts_obj")
-library(dplyr)
+message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
-estimate =
- sccomp_estimate(
- counts_obj ,
-  ~ type, ~1,  sample, cell_group, count,
-   approximate_posterior_inference = "all",
-   cores = 1
- )
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
+    library(dplyr)
 
-# Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-# Simulate data
-simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+    estimate = sccomp_estimate(
+      counts_obj,
+      ~ type, ~1, sample, cell_group, count,
+      cores = 1
+    )
+
+    # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
+    counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
+
+    # Simulate data
+    simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+  }
+}
 
 }

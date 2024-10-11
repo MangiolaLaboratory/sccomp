@@ -27,23 +27,34 @@ sccomp_predict(
 \item{summary_instead_of_draws}{Return the summary values (i.e. mean and quantiles) of the predicted proportions, or return single draws. Single draws can be helful to better analyse the uncertainty of the prediction.}
 }
 \value{
-A nested tibble \code{tbl} with cell_group-wise statistics
+A tibble (\code{tbl}) with the following columns:
+\itemize{
+\item \strong{cell_group} - A character column representing the cell group being tested.
+\item \strong{sample} - A factor column representing the sample name for which the predictions are made.
+\item \strong{proportion_mean} - A numeric column representing the predicted mean proportions from the model.
+\item \strong{proportion_lower} - A numeric column representing the lower bound (2.5\%) of the 95\% credible interval for the predicted proportions.
+\item \strong{proportion_upper} - A numeric column representing the upper bound (97.5\%) of the 95\% credible interval for the predicted proportions.
+}
 }
 \description{
 This function replicates counts from a real-world dataset.
 }
 \examples{
 
-data("counts_obj")
+message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
-if(.Platform$OS.type == "unix")
-  sccomp_estimate(
-  counts_obj ,
-   ~ type, ~1,  sample, cell_group, count,
-    approximate_posterior_inference = "all",
-    cores = 1
-  ) |>
+\donttest{
+  if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+    data("counts_obj")
 
-  sccomp_predict()
+    sccomp_estimate(
+      counts_obj,
+      ~ type, ~1, sample, cell_group, count,
+      cores = 1
+    ) |>
+    sccomp_predict()
+  }
+}
+
 
 }

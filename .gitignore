@@ -2,8 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-README_cache/*
-vignettes/introduction_cache*
+.Rapp.history
+inst/doc
 sccomp.Rproj
 Meta
 doc
@@ -43,3 +43,4 @@ glm_multi_beta_binomial_generate_cmdstanr.stan
 Rplot.pdf
 /doc/
 /Meta/
+sccomp_draws_files

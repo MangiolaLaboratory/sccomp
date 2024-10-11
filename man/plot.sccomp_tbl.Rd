@@ -4,12 +4,22 @@
 \alias{plot.sccomp_tbl}
 \title{plot}
 \usage{
-\method{plot}{sccomp_tbl}(x, ...)
+\method{plot}{sccomp_tbl}(
+  x,
+  significance_threshold = 0.05,
+  test_composition_above_logit_fold_change = attr(.data,
+    "test_composition_above_logit_fold_change"),
+  ...
+)
 }
 \arguments{
 \item{x}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
 
-\item{...}{parameters like significance_threshold A real. FDR threshold for labelling significant cell-groups.}
+\item{significance_threshold}{Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.}
+
+\item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
+
+\item{...}{For internal use}
 }
 \value{
 A \code{ggplot}
@@ -19,16 +29,20 @@ This function plots a summary of the results of the model.
 }
 \examples{
 
-data("counts_obj")
+message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 
-estimate =
-  sccomp_estimate(
-  counts_obj ,
-   ~ type, ~1, sample, cell_group, count,
-    approximate_posterior_inference = "all",
-    cores = 1
-  )
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
 
-# estimate |> plot()
+    estimate = sccomp_estimate(
+      counts_obj,
+      ~ type, ~1, sample, cell_group, count,
+      cores = 1
+    )
+
+    # estimate |> plot()
+  }
+}
 
 }

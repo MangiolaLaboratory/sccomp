@@ -10,23 +10,54 @@ status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.sv
 
 <!-- badges: end -->
 
+Cell omics such as single-cell genomics, proteomics, and microbiomics
+allow the characterisation of tissue and microbial community
+composition, which can be compared between conditions to identify
+biological drivers. This strategy has been critical to unveiling markers
+of disease progression, such as cancer and pathogen infection.
+
+For cell omic data, no method for differential variability analysis
+exists, and methods for differential composition analysis only take a
+few fundamental data properties into account. Here we introduce sccomp,
+a generalised method for differential composition and variability
+analyses capable of jointly modelling data count distribution,
+compositionality, group-specific variability, and proportion
+mean-variability association, with awareness against outliers.
+
+Sccomp is an extensive analysis framework that allows realistic data
+simulation and cross-study knowledge transfer. We demonstrate that
+mean-variability association is ubiquitous across technologies,
+highlighting the inadequacy of the very popular Dirichlet-multinomial
+modelling and providing essential principles for differential
+variability analysis.
+
+We show that sccomp accurately fits experimental data, with a 50%
+incremental improvement over state-of-the-art algorithms. Using sccomp,
+we identified novel differential constraints and composition in the
+microenvironment of primary breast cancer.
+
 <a href="https://www.youtube.com/watch?v=R_lt58We9nA&ab_channel=RConsortium" target="_blank">
 <img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10" />
 </a>
 
 # <img src="inst/logo-01.png" height="139px" width="120px"/>
 
-Sccomp is a generalised method for differential composition and
-variability analyses.
+`sccomp` tests differences in cell type proportions from single-cell
+data. It is robust against outliers, it models continuous and discrete
+factors, and capable of random-effect/intercept modelling.
+
+Please cite [PNAS - sccomp: Robust differential composition and
+variability analysis for single-cell
+data](https://www.pnas.org/doi/full/10.1073/pnas.2203828120)
 
 ## Characteristics
 
 - Complex linear models with continuous and categorical covariates
-- Multilevel modelling, with population (i.e. fixed) and group (random)
-  effects
-- Modelling counts
-- Modelling proportionality
-- Modelling cell-type specific variability
+- Multilevel modelling, with population fixed and random
+  effects/intercept
+- Modelling data from counts
+- Testing differences in cell-type proportionality
+- Testing differences in cell-type specific variability
 - Cell-type information share for variability adaptive shrinkage
 - Testing differential variability
 - Probabilistic outlier identification
@@ -34,17 +65,43 @@ variability analyses.
 
 # Installation
 
+`sccomp` is based on `cmdstanr` which provides the latest version of
+`cmdstan` the Bayesian modelling tool. `cmdstanr` is not on CRAN, so we
+need to have 3 simple step process (that will be prompted to the user is
+forgot).
+
+1.  R installation of `sccomp`
+2.  R installation of `cmdstanr`
+3.  `cmdstanr` call to `cmdstan` installation
+
 **Bioconductor**
 
 ``` r
 if (!requireNamespace("BiocManager")) install.packages("BiocManager")
+
+# Step 1
 BiocManager::install("sccomp")
+
+# Step 2
+install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+
+# Step 3
+cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
+cmdstanr::install_cmdstan()
 ```
 
 **Github**
 
 ``` r
+# Step 1
 devtools::install_github("stemangiola/sccomp")
+
+# Step 2
+install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+
+# Step 3
+cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
+cmdstanr::install_cmdstan()
 ```
 
 | Function                           | Description                                                                                                                 |
@@ -53,9 +110,9 @@ devtools::install_github("stemangiola/sccomp")
 | `sccomp_remove_outliers`           | Identify outliers probabilistically based on the model fit, and exclude them from the estimation                            |
 | `sccomp_test`                      | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change) |
 | `sccomp_replicate`                 | Simulate data from the model, or part of the model                                                                          |
-| `sccomp_predict`                   | Predicts proportions, based on the mode, or part of the model                                                               |
+| `sccomp_predict`                   | Predicts proportions, based on the model, or part of the model                                                               |
 | `sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors                                                                                |
-| `plot`                             | Plors summary plots to asses significance                                                                                   |
+| `plot`                             | Plots summary plots to asses significance                                                                                   |
 
 # Analysis
 
@@ -68,10 +125,15 @@ model for composition.
 
 ## Binary factor
 
+Of the output table, the estimate columns start with the prefix `c_`
+indicate `composition`, or with `v_` indicate `variability` (when
+formula_variability is set).
+
 ### From Seurat, SingleCellExperiment, metadata objects
 
 ``` r
-single_cell_object |>
+sccomp_result = 
+  single_cell_object |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
@@ -79,67 +141,175 @@ single_cell_object |>
     bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
-  sccomp_remove_outliers() |> 
-    sccomp_test(test_composition_above_logit_fold_change = 0.2)
+  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_test()
 ```
 
 ### From counts
 
 ``` r
-counts_obj |>
+sccomp_result = 
+  counts_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample = sample,
     .cell_group = cell_group,
     .count = count, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers() |> 
-    sccomp_test(test_composition_above_logit_fold_change = 0.2)
+  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
+  sccomp_test()
 ```
 
+    ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000394 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.94 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
-    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
-    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
-    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
-    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.839 seconds (Warm-up)
-    ## Chain 1:                21.137 seconds (Sampling)
-    ## Chain 1:                23.976 seconds (Total)
-    ## Chain 1:
+    ## Chain 1 finished in 0.0 seconds.
+    ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
+    ## 
+    ## Chain 1 finished in 0.0 seconds.
 
-    ## # A tibble: 72 × 18
-    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+Here you see the results of the fit, the effects of the factor on
+composition and variability. You also can see the uncertainty around
+those effects.
+
+``` r
+sccomp_result
+```
+
+    ## # A tibble: 72 × 14
+    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR v_lower
     ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B1         (Intercep… <NA>    0.884     1.12   1.32   0       0         4441.
-    ##  2 B1         typecancer type   -1.17     -0.760 -0.381  1.75e-3 6.51e-4   2922.
-    ##  3 B2         (Intercep… <NA>    0.423     0.703  0.974  2.50e-4 1.32e-5   6265.
-    ##  4 B2         typecancer type   -1.23     -0.730 -0.263  1.25e-2 3.53e-3   3965.
-    ##  5 B3         (Intercep… <NA>   -0.657    -0.389 -0.114  8.51e-2 6.86e-3   4537.
-    ##  6 B3         typecancer type   -0.719    -0.317  0.0704 2.76e-1 6.71e-2   3631.
-    ##  7 BM         (Intercep… <NA>   -1.32     -1.03  -0.767  0       0         3997.
-    ##  8 BM         typecancer type   -0.736    -0.312  0.0916 2.94e-1 8.78e-2   3760.
-    ##  9 CD4 1      (Intercep… <NA>    0.0853    0.298  0.499  1.79e-1 3.16e-2   4733.
-    ## 10 CD4 1      typecancer type   -0.0963    0.186  0.467  5.41e-1 1.52e-1   3783.
+    ##  1 B1         (Intercep… <NA>     0.886    1.05   1.23   0       0         -6.13
+    ##  2 B1         typecancer type    -1.16    -0.884 -0.623  0       0         NA   
+    ##  3 B2         (Intercep… <NA>     0.422    0.702  0.969  0       0         -5.78
+    ##  4 B2         typecancer type    -1.18    -0.810 -0.429  2.50e-4 3.12e-5   NA   
+    ##  5 B3         (Intercep… <NA>    -0.638   -0.377 -0.130  1.55e-2 1.06e-3   -6.78
+    ##  6 B3         typecancer type    -0.606   -0.248  0.134  2.17e-1 4.81e-2   NA   
+    ##  7 BM         (Intercep… <NA>    -1.27    -1.01  -0.744  0       0         -7.36
+    ##  8 BM         typecancer type    -0.715   -0.350  0.0280 9.88e-2 1.87e-2   NA   
+    ##  9 CD4 1      (Intercep… <NA>     0.146    0.318  0.503  8.25e-3 4.35e-4   -6.59
+    ## 10 CD4 1      typecancer type    -0.113    0.132  0.376  3.99e-1 1.26e-1   NA   
     ## # ℹ 62 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## # ℹ 5 more variables: v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>,
     ## #   count_data <list>
 
-Of the output table, the estimate columns start with the prefix `c_`
-indicate `composition`, or with `v_` indicate `variability` (when
-formula_variability is set).
+## An aid to result interpretation and communication
+
+The estimated effects are expressed in the unconstrained space of the
+parameters. Similarly, to differential expression analysis that express
+change in terms of log fold change. However, for differences, in
+proportion, logit foold change must be used. This measure is harder to
+interpret and understand.
+
+Therefore, we provide a more intuitive proportion, full change, that can
+be easier understood. However, these cannot be used to infer
+significance (use sccomp_test() instead), and a lot of care must be
+taken given the nonlinearity of these measure (1 fold increase from
+0.0001 to 0.0002 carried a different weight that 1 fold increase from
+0.4 to 0.8).
+
+From your estimates, you can state which effects you are interested
+about (this can be a part of the full model, in case you want to not
+consider unwanted effects), and the two points you would like to
+compare.
+
+In case of a chategorical variable, the starting and ending points are
+categories.
+
+``` r
+sccomp_result |> 
+   sccomp_proportional_fold_change(
+     formula_composition = ~  type,
+     from =  "healthy", 
+     to = "cancer"
+    ) |> 
+  select(cell_group, statement)
+```
+
+    ## Loading model from cache...
+
+    ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
+    ## 
+    ## Chain 1 finished in 0.0 seconds.
+
+    ## # A tibble: 36 × 2
+    ##    cell_group statement                                
+    ##    <chr>      <glue>                                   
+    ##  1 B1         2.4-fold decrease (from 0.0528 to 0.0225)
+    ##  2 B2         2.2-fold decrease (from 0.0373 to 0.0171)
+    ##  3 B3         1.2-fold decrease (from 0.0126 to 0.0103)
+    ##  4 BM         1.4-fold decrease (from 0.0068 to 0.005) 
+    ##  5 CD4 1      1.2-fold increase (from 0.0253 to 0.0298)
+    ##  6 CD4 2      1.7-fold increase (from 0.0476 to 0.0827)
+    ##  7 CD4 3      3.3-fold decrease (from 0.1019 to 0.0307)
+    ##  8 CD4 4      1.2-fold increase (from 0.0016 to 0.0019)
+    ##  9 CD4 5      1-fold increase (from 0.0302 to 0.0312)  
+    ## 10 CD8 1      1.2-fold increase (from 0.1027 to 0.1269)
+    ## # ℹ 26 more rows
+
+## Summary plots
+
+A plot of group proportion, faceted by groups. The blue boxplots
+represent the posterior predictive check. If the model is likely to be
+descriptively adequate to the data, the blue box plot should roughly
+overlay with the black box plot, which represents the observed data. The
+outliers are coloured in red. A box plot will be returned for every
+(discrete) covariate present in `formula_composition`. The colour coding
+represents the significant associations for composition and/or
+variability.
+
+``` r
+sccomp_result |> 
+  sccomp_boxplot(factor = "type")
+```
+
+    ## Loading model from cache...
+
+    ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
+    ## 
+    ## Chain 1 finished in 0.0 seconds.
+
+    ## Joining with `by = join_by(cell_group, sample)`
+
+    ## Joining with `by = join_by(cell_group, type)`
+
+![](inst/figures/unnamed-chunk-12-1.png)<!-- -->
+
+A plot of estimates of differential composition (c\_) on the x-axis and
+differential variability (v\_) on the y-axis. The error bars represent
+95% credible intervals. The dashed lines represent the minimal effect
+that the hypothesis test is based on. An effect is labelled as
+significant if bigger than the minimal effect according to the 95%
+credible interval. Facets represent the covariates in the model.
+
+``` r
+sccomp_result |> 
+  plot_1D_intervals()
+```
+
+![](inst/figures/unnamed-chunk-13-1.png)<!-- -->
+
+We can plot the relationship between abundance and variability. As we
+can see below, they are positively correlated, you also appreciate that
+this relationship is by model for single cell RNA sequencing data.
+
+`sccomp` models, these relationship to obtain a shrinkage effect on the
+estimates of both the abundance and the variability. This shrinkage is
+adaptive as it is modelled jointly, thanks for Bayesian inference.
+
+``` r
+sccomp_result |> 
+  plot_2D_intervals()
+```
+
+![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
+
+You can produce the series of plots calling the `plot` method.
+
+``` r
+sccomp_result |> plot() 
+```
 
 ## Contrasts
 
@@ -150,51 +320,26 @@ seurat_obj |>
     .sample = sample,
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers() |> 
-    sccomp_test(
-      contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"),
-      test_composition_above_logit_fold_change = 0.2
-    )
+  sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
 ```
 
-    ## 
-    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000371 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.71 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
-    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
-    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
-    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
-    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.127 seconds (Warm-up)
-    ## Chain 1:                17.85 seconds (Sampling)
-    ## Chain 1:                19.977 seconds (Total)
-    ## Chain 1:
-
-    ## # A tibble: 60 × 18
-    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
+    ## # A tibble: 60 × 14
+    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR v_lower
     ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  typecanc… <NA>    -1.91    -1.42   -0.937 0       0            NA
-    ##  2 B immature  typeheal… <NA>     0.937    1.42    1.91  0       0            NA
-    ##  3 B mem       typecanc… <NA>    -2.37    -1.74   -1.11  0       0            NA
-    ##  4 B mem       typeheal… <NA>     1.11     1.74    2.37  0       0            NA
-    ##  5 CD4 cm S10… typecanc… <NA>    -1.25    -0.858  -0.514 0       0            NA
-    ##  6 CD4 cm S10… typeheal… <NA>     0.514    0.858   1.25  0       0            NA
-    ##  7 CD4 cm hig… typecanc… <NA>     0.829    1.83    2.96  2.50e-4 4.17e-5      NA
-    ##  8 CD4 cm hig… typeheal… <NA>    -2.96    -1.83   -0.829 2.50e-4 4.17e-5      NA
-    ##  9 CD4 cm rib… typecanc… <NA>     0.346    1.01    1.74  6.51e-3 1.25e-3      NA
-    ## 10 CD4 cm rib… typeheal… <NA>    -1.74    -1.01   -0.346 6.51e-3 1.25e-3      NA
+    ##  1 B immature  typecanc… <NA>    -1.89    -1.34   -0.780 0       0            NA
+    ##  2 B immature  typeheal… <NA>     0.780    1.34    1.89  0       0            NA
+    ##  3 B mem       typecanc… <NA>    -2.25    -1.63   -0.988 0       0            NA
+    ##  4 B mem       typeheal… <NA>     0.988    1.63    2.25  0       0            NA
+    ##  5 CD4 cm S10… typecanc… <NA>    -1.46    -0.986  -0.527 0       0            NA
+    ##  6 CD4 cm S10… typeheal… <NA>     0.527    0.986   1.46  0       0            NA
+    ##  7 CD4 cm hig… typecanc… <NA>     0.808    1.55    2.25  0       0            NA
+    ##  8 CD4 cm hig… typeheal… <NA>    -2.25    -1.55   -0.808 0       0            NA
+    ##  9 CD4 cm rib… typecanc… <NA>     0.375    0.980   1.60  0.00250 5.31e-4      NA
+    ## 10 CD4 cm rib… typeheal… <NA>    -1.60    -0.980  -0.375 0.00250 5.31e-4      NA
     ## # ℹ 50 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
+    ## # ℹ 5 more variables: v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>,
     ## #   count_data <list>
 
 ## Categorical factor (e.g. Bayesian ANOVA)
@@ -223,32 +368,10 @@ model_with_factor_association =
     .sample =  sample, 
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1, 
+    inference_method = "hmc",
     enable_loo = TRUE
   )
-```
 
-    ## 
-    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000394 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.94 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
-    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
-    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
-    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
-    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.234 seconds (Warm-up)
-    ## Chain 1:                20.698 seconds (Sampling)
-    ## Chain 1:                22.932 seconds (Total)
-    ## Chain 1:
-
-``` r
 # Fit second model
 model_without_association = 
   seurat_obj |>
@@ -257,42 +380,16 @@ model_without_association =
     .sample =  sample, 
     .cell_group = cell_group, 
     bimodal_mean_variability_association = TRUE,
-    cores = 1 , 
+    inference_method = "hmc",
     enable_loo = TRUE
   )
-```
 
-    ## 
-    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000286 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.86 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
-    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
-    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
-    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
-    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.229 seconds (Warm-up)
-    ## Chain 1:                23.82 seconds (Sampling)
-    ## Chain 1:                26.049 seconds (Total)
-    ## Chain 1:
-
-``` r
 # Compare models
 loo_compare(
-  model_with_factor_association |> attr("fit") |> loo(),
-  model_without_association |> attr("fit") |> loo()
+   attr(model_with_factor_association, "fit")$loo(),
+   attr(model_without_association, "fit")$loo()
 )
 ```
-
-    ##        elpd_diff se_diff
-    ## model1   0.0       0.0  
-    ## model2 -81.1      11.3
 
 ## Differential variability, binary factor
 
@@ -308,55 +405,27 @@ res =
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
-    cores = 1 
-  ) |> 
-  sccomp_remove_outliers() |> 
-    sccomp_test(
-      test_composition_above_logit_fold_change = 0.2
-    )
-```
+    cores = 1, verbose = FALSE
+  )
 
-    ## 
-    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.001618 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 16.18 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
-    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
-    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
-    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
-    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 4.185 seconds (Warm-up)
-    ## Chain 1:                33.902 seconds (Sampling)
-    ## Chain 1:                38.087 seconds (Total)
-    ## Chain 1:
-
-``` r
 res
 ```
 
-    ## # A tibble: 60 × 18
-    ##    cell_group  parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>       <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature  (Interce… <NA>     0.548    0.934  1.30   2.50e-4 2.28e-5   5948.
-    ##  2 B immature  typeheal… type     0.809    1.33   1.89   0       0         4471.
-    ##  3 B mem       (Interce… <NA>    -1.30    -0.759 -0.159  3.08e-2 2.21e-3   5687.
-    ##  4 B mem       typeheal… type     1.06     1.81   2.52   2.50e-4 8.34e-5   4832.
-    ##  5 CD4 cm S10… (Interce… <NA>     1.73     1.98   2.23   0       0         5733.
-    ##  6 CD4 cm S10… typeheal… type     0.301    0.689  1.07   8.26e-3 3.42e-3   4382.
-    ##  7 CD4 cm hig… (Interce… <NA>    -0.881   -0.413  0.113  1.92e-1 2.72e-2   4595.
-    ##  8 CD4 cm hig… typeheal… type    -3.22    -1.49   1.03   1.52e-1 5.59e-2   2946.
-    ##  9 CD4 cm rib… (Interce… <NA>     0.144    0.471  0.809  5.13e-2 4.67e-3   3843.
-    ## 10 CD4 cm rib… typeheal… type    -1.90    -1.09  -0.0711 4.25e-2 9.48e-3   3818.
+    ## # A tibble: 60 × 10
+    ##    cell_group parameter factor c_lower c_effect c_upper v_lower v_effect v_upper
+    ##    <chr>      <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>    <dbl>   <dbl>
+    ##  1 B immature (Interce… <NA>     0.350    0.759  1.17   -4.37     -3.94  -3.48  
+    ##  2 B immature typeheal… type     0.768    1.34   1.87   -1.03     -0.289  0.330 
+    ##  3 B mem      (Interce… <NA>    -1.35    -0.832 -0.351  -5.13     -4.58  -4.07  
+    ##  4 B mem      typeheal… type     0.992    1.67   2.37   -1.69     -0.789 -0.0238
+    ##  5 CD4 cm S1… (Interce… <NA>     1.35     1.68   2.01   -3.80     -3.36  -2.91  
+    ##  6 CD4 cm S1… typeheal… type     0.364    0.811  1.25   -1.34     -0.752 -0.243 
+    ##  7 CD4 cm hi… (Interce… <NA>    -1.05    -0.511  0.0150 -5.20     -4.67  -4.17  
+    ##  8 CD4 cm hi… typeheal… type    -1.94    -0.936  0.0524  0.531     1.55   2.57  
+    ##  9 CD4 cm ri… (Interce… <NA>    -0.158    0.301  0.773  -5.10     -4.57  -4.04  
+    ## 10 CD4 cm ri… typeheal… type    -1.73    -1.03  -0.362  -0.0762    0.530  1.30  
     ## # ℹ 50 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
-    ## #   count_data <list>
+    ## # ℹ 1 more variable: count_data <list>
 
 # Suggested settings
 
@@ -371,50 +440,6 @@ plots\$credible_intervals_2D (see below).
 We recommend setting `bimodal_mean_variability_association  = FALSE`
 (Default).
 
-# Visualisation
-
-## Summary plots
-
-``` r
-plots = plot(res) 
-```
-
-    ## Joining with `by = join_by(cell_group, sample)`
-    ## Joining with `by = join_by(cell_group, type)`
-
-    ## Warning: Expected 2 pieces. Additional pieces discarded in 4 rows [6, 7, 13,
-    ## 14].
-
-A plot of group proportion, faceted by groups. The blue boxplots
-represent the posterior predictive check. If the model is likely to be
-descriptively adequate to the data, the blue box plot should roughly
-overlay with the black box plot, which represents the observed data. The
-outliers are coloured in red. A box plot will be returned for every
-(discrete) covariate present in `formula_composition`. The colour coding
-represents the significant associations for composition and/or
-variability.
-
-``` r
-plots$boxplot
-```
-
-    ## [[1]]
-
-![](inst/figures/unnamed-chunk-14-1.png)<!-- -->
-
-A plot of estimates of differential composition (c\_) on the x-axis and
-differential variability (v\_) on the y-axis. The error bars represent
-95% credible intervals. The dashed lines represent the minimal effect
-that the hypothesis test is based on. An effect is labelled as
-significant if bigger than the minimal effect according to the 95%
-credible interval. Facets represent the covariates in the model.
-
-``` r
-plots$credible_intervals_1D
-```
-
-![](inst/figures/unnamed-chunk-15-1.png)<!-- -->
-
 ## Visualisation of the MCMC chains from the posterior distribution
 
 It is possible to directly evaluate the posterior distribution. In this
@@ -423,28 +448,89 @@ first cell type. We can see that it has converged and is negative with
 probability 1.
 
 ``` r
-res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
+library(cmdstanr)
 ```
 
-![](inst/figures/unnamed-chunk-16-1.png)<!-- -->
+    ## This is cmdstanr version 0.8.1.9000
+
+    ## - CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
+
+    ## - CmdStan path: /Users/a1234450/.cmdstan/cmdstan-2.35.0
+
+    ## - CmdStan version: 2.35.0
+
+``` r
+library(posterior)
+```
+
+    ## This is posterior version 1.6.0
+
+    ## 
+    ## Attaching package: 'posterior'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     mad, sd, var
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     %in%, match
+
+``` r
+library(bayesplot)
+```
+
+    ## This is bayesplot version 1.11.1
+
+    ## - Online documentation and vignettes at mc-stan.org/bayesplot
+
+    ## - bayesplot theme set to bayesplot::theme_default()
+
+    ##    * Does _not_ affect other ggplot2 plots
+
+    ##    * See ?bayesplot_theme_set for details on theme setting
+
+    ## 
+    ## Attaching package: 'bayesplot'
+
+    ## The following object is masked from 'package:posterior':
+    ## 
+    ##     rhat
+
+``` r
+# Assuming res contains the fit object from cmdstanr
+fit <- res %>% attr("fit")
+
+# Extract draws for 'beta[2,1]'
+draws <- as_draws_array(fit$draws("beta[2,1]"))
+
+# Create a traceplot for 'beta[2,1]'
+mcmc_trace(draws, pars = "beta[2,1]")
+```
+
+![](inst/figures/unnamed-chunk-19-1.png)<!-- -->
 
 Plot 1D significance plot
 
 ``` r
-plots = plot(res)
+plots = res |> sccomp_test() |> plot()
 ```
 
-    ## Joining with `by = join_by(cell_group, sample)`
-    ## Joining with `by = join_by(cell_group, type)`
+    ## Loading model from cache...
 
-    ## Warning: Expected 2 pieces. Additional pieces discarded in 4 rows [6, 7, 13,
-    ## 14].
+    ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
+    ## 
+    ## Chain 1 finished in 0.0 seconds.
+
+    ## Joining with `by = join_by(cell_group, sample)`
+
+    ## Joining with `by = join_by(cell_group, type)`
 
 ``` r
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-17-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-20-1.png)<!-- -->
 
 Plot 2D significance plot. Data points are cell groups. Error bars are
 the 95% credible interval. The dashed lines represent the default
@@ -456,7 +542,7 @@ This plot is provided only if differential variability has been tested.
 The differential variability estimates are reliable only if the linear
 association between mean and variability for `(intercept)` (left-hand
 side facet) is satisfied. A scatterplot (besides the Intercept) is
-provided for each category of interest. The for each category of
+provided for each category of interest. For each category of
 interest, the composition and variability effects should be generally
 uncorrelated.
 
@@ -464,102 +550,11 @@ uncorrelated.
 plots$credible_intervals_2D
 ```
 
-![](inst/figures/unnamed-chunk-18-1.png)<!-- -->
+![](inst/figures/unnamed-chunk-21-1.png)<!-- -->
 
-# Multilevel modelling
+## The old framework
 
-`sccomp` is cabable of estimating population (i.e. fixed) and group
-(i.e. random) effects. The formulation is analogous to the `lme4`
-package and `brms`.
-
-!! For now, only one grouping is allowed (e.g. group2\_\_).
-
-``` r
-res = 
-  seurat_obj |>
-  sccomp_estimate( 
-    formula_composition = ~ type + continuous_covariate + (type | group2__), 
-    formula_variability = ~ type,
-    .sample = sample,
-    .cell_group = cell_group,
-    bimodal_mean_variability_association = TRUE,
-    cores = 1 
-  ) |> 
-  sccomp_remove_outliers() |> 
-    sccomp_test(
-      test_composition_above_logit_fold_change = 0.2
-    )
-```
-
-    ## 
-    ## SAMPLING FOR MODEL 'glm_multi_beta_binomial' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000458 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 4.58 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 4300 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  301 / 4300 [  7%]  (Sampling)
-    ## Chain 1: Iteration: 1300 / 4300 [ 30%]  (Sampling)
-    ## Chain 1: Iteration: 2300 / 4300 [ 53%]  (Sampling)
-    ## Chain 1: Iteration: 3300 / 4300 [ 76%]  (Sampling)
-    ## Chain 1: Iteration: 4300 / 4300 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 5.428 seconds (Warm-up)
-    ## Chain 1:                39.833 seconds (Sampling)
-    ## Chain 1:                45.261 seconds (Total)
-    ## Chain 1:
-
-``` r
-res
-```
-
-    ## # A tibble: 210 × 18
-    ##    cell_group parameter  factor c_lower c_effect c_upper   c_pH0   c_FDR c_n_eff
-    ##    <chr>      <chr>      <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-    ##  1 B immature (Intercep… <NA>     0.543   1.05     1.61  0       0         2521.
-    ##  2 B immature typehealt… type     0.611   1.26     1.88  0.00175 8.76e-4   2604.
-    ##  3 B immature continuou… conti…  -0.207   0.0390   0.334 0.873   6.26e-1   6341.
-    ##  4 B immature (Intercep… <NA>    -0.607  -0.0870   0.392 0.681   5.86e-1     NA 
-    ##  5 B immature typehealt… <NA>    -0.392   0.0870   0.607 0.681   5.86e-1     NA 
-    ##  6 B immature (Intercep… <NA>    -0.576  -0.0465   0.435 0.733   6.50e-1     NA 
-    ##  7 B immature typehealt… <NA>    -0.435   0.0465   0.576 0.733   6.50e-1     NA 
-    ##  8 B mem      (Intercep… <NA>    -1.04   -0.379    0.459 0.305   5.49e-2   2005.
-    ##  9 B mem      typehealt… type     0.506   1.41     2.22  0.00475 2.70e-3   2206.
-    ## 10 B mem      continuou… conti…  -0.234   0.0635   0.399 0.805   5.97e-1   7345.
-    ## # ℹ 200 more rows
-    ## # ℹ 9 more variables: c_R_k_hat <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_n_eff <dbl>, v_R_k_hat <dbl>,
-    ## #   count_data <list>
-
-# Removal of unwanted variation
-
-After you model your dataset, you can remove the unwanted variation from
-your input data, **for visualisation purposes**
-
-We decide to just keep the type population (i.e. fixed) effect for
-abundance, and do not keep it for variability.
-
-``` r
-res |> sccomp_remove_unwanted_variation(~type)
-```
-
-    ## sccomp says: calculating residuals
-
-    ## sccomp says: regressing out unwanted factors
-
-    ## # A tibble: 600 × 5
-    ##    sample       cell_group adjusted_proportion adjusted_counts logit_residuals
-    ##    <chr>        <chr>                    <dbl>           <dbl>           <dbl>
-    ##  1 10x_6K       B immature              0.0554           260.          -0.702 
-    ##  2 10x_8K       B immature              0.144           1080.           0.366 
-    ##  3 GSE115189    B immature              0.114            268.           0.0767
-    ##  4 SCP345_580   B immature              0.0903           520.          -0.161 
-    ##  5 SCP345_860   B immature              0.151            969.           0.421 
-    ##  6 SCP424_pbmc1 B immature              0.110            295.           0.0129
-    ##  7 SCP424_pbmc2 B immature              0.200            596.           0.755 
-    ##  8 SCP591       B immature              0.0251            14.3         -1.52  
-    ##  9 SI-GA-E5     B immature              0.0272           114.          -0.692 
-    ## 10 SI-GA-E7     B immature              0.105            772.           0.747 
-    ## # ℹ 590 more rows
+The new tidy framework was introduced in 2024, two, understand the
+differences and improvements. Compared to the old framework, please read
+this [blog
+post](https://tidyomics.github.io/tidyomicsBlog/post/2023-12-07-tidy-sccomp/).

@@ -65,6 +65,9 @@
 #'
 #' @examples
 #'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'
 #' data("counts_obj")
 #'
 #' estimate =
@@ -78,8 +81,9 @@
 #'     check_outliers = FALSE,
 #'     cores = 1
 #'   )
-#'
-#' @export
+#' }}
+#' 
+#' @noRd
 #'
 #'
 sccomp_glm <- function(.data,
@@ -100,7 +104,7 @@ sccomp_glm <- function(.data,
                        cores = detectCores(),
                        percent_false_positive = 5,
                        approximate_posterior_inference = "none",
-                       test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                       test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                        verbose = FALSE,
                        noise_model = "multi_beta_binomial",
                        exclude_priors = FALSE,
@@ -130,7 +134,7 @@ sccomp_glm.Seurat = function(.data,
                              cores = detectCores(),
                              percent_false_positive = 5,
                              approximate_posterior_inference = "none",
-                             test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                             test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              exclude_priors = FALSE,
@@ -192,7 +196,7 @@ sccomp_glm.SingleCellExperiment = function(.data,
                                            cores = detectCores(),
                                            percent_false_positive = 5,
                                            approximate_posterior_inference = "none",
-                                           test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                           test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                            verbose = FALSE,
                                            noise_model = "multi_beta_binomial",
                                            exclude_priors = FALSE,
@@ -257,7 +261,7 @@ sccomp_glm.DFrame = function(.data,
                              cores = detectCores(),
                              percent_false_positive = 5,
                              approximate_posterior_inference = "none",
-                             test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                             test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                              verbose = FALSE,
                              noise_model = "multi_beta_binomial",
                              exclude_priors = FALSE,
@@ -320,7 +324,7 @@ sccomp_glm.data.frame = function(.data,
                                  cores = detectCores(),
                                  percent_false_positive = 5,
                                  approximate_posterior_inference = "none",
-                                 test_composition_above_logit_fold_change = 0.2, .sample_cell_group_pairs_to_exclude = NULL,
+                                 test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                  verbose = FALSE,
                                  noise_model = "multi_beta_binomial",
                                  exclude_priors = FALSE,
@@ -342,6 +346,13 @@ sccomp_glm.data.frame = function(.data,
     details="sccomp says: sccomp_glm() is soft-deprecated. Please use the new modular framework instead, which includes sccomp_estimate(), sccomp_test(), sccomp_remove_outliers(), among other functions."
   )
 
+  # DEPRECATION OF approximate_posterior_inference
+  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use inference_method By default variational_inference value is inferred from approximate_posterior_inference.")
+    
+    inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+  }
+  
   if(quo_is_null(.count) )
   result =    sccomp_glm_data_frame_raw(
         .data,
@@ -354,8 +365,9 @@ sccomp_glm.data.frame = function(.data,
         prior_overdispersion_mean_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
-        approximate_posterior_inference = approximate_posterior_inference,
-        test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+        inference_method = inference_method,
+        test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, 
+        .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
         verbose = verbose,
         # my_glm_model = my_glm_model,
         exclude_priors = exclude_priors,
@@ -382,7 +394,7 @@ sccomp_glm.data.frame = function(.data,
         prior_overdispersion_mean_association = prior_mean_variable_association,
         percent_false_positive = percent_false_positive ,
         check_outliers = check_outliers,
-        approximate_posterior_inference = approximate_posterior_inference,
+        variational_inference = approximate_posterior_inference == "all",
         test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
         verbose = verbose,
         # my_glm_model = my_glm_model,
@@ -442,10 +454,13 @@ sccomp_glm.data.frame = function(.data,
 #'
 #' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
-#' @export
+#' @noRd
 #'
 #' @examples
 #'
+#'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
 #' data("counts_obj")
 #'
 #'   estimates =
@@ -457,11 +472,11 @@ sccomp_glm.data.frame = function(.data,
 #'   ) |>
 #'
 #'   test_contrasts("typecancer - typebenign")
-#'
+#' }}
 test_contrasts <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
-                           test_composition_above_logit_fold_change = 0.2,
+                           test_composition_above_logit_fold_change = 0.1,
                            pass_fit = TRUE) {
   
   # DEPRECATE
@@ -491,21 +506,24 @@ test_contrasts <- function(.data,
 #'
 #' @return A `ggplot`
 #'
-#' @export
+#' @noRd
 #'
 #' @examples
 #'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
 #' data("counts_obj")
 #'
 #' estimate =
 #'   sccomp_estimate(
 #'   counts_obj ,
 #'    ~ type, ~1, sample, cell_group, count,
-#'     approximate_posterior_inference = "all",
 #'     cores = 1
 #'   )
 #'
 #' # estimate |> plot_summary()
+#'   }
+#' }
 #'
 plot_summary <- function(.data, significance_threshold = 0.025) {
   
@@ -516,7 +534,7 @@ plot_summary <- function(.data, significance_threshold = 0.025) {
     details="sccomp says: plot_summary() is soft-deprecated. Please use sccomp_test()."
   )
   
-  UseMethod("print", .data)
+  UseMethod("plot", .data)
  
   
 }

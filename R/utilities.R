@@ -1,4 +1,5 @@
 
+sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
 
 # Greater than
 gt = function(a, b){	a > b }
@@ -70,17 +71,20 @@ parse_formula <- function(fm) {
 #' @noRd
 formula_to_random_effect_formulae <- function(fm) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  formula <- NULL
+  
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
 
-  random_intercept_elements =
+  random_effect_elements =
     as.character(attr(terms(fm), "variables")) |>
 
     # Select random intercept part
     str_subset("\\|")
 
-  if(length(random_intercept_elements) > 0){
+  if(length(random_effect_elements) > 0){
 
-    random_intercept_elements |>
+    random_effect_elements |>
 
       # Divide grouping from factors
       str_split("\\|") |>
@@ -115,17 +119,20 @@ formula_to_random_effect_formulae <- function(fm) {
 #'
 #' @keywords internal
 #' @noRd
-parse_formula_random_intercept <- function(fm) {
+parse_formula_random_effect <- function(fm) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  formula <- NULL
+  
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
 
-  random_intercept_elements =
+  random_effect_elements =
     as.character(attr(terms(fm), "variables")) |>
 
     # Select random intercept part
     str_subset("\\|")
 
-  if(length(random_intercept_elements) > 0){
+  if(length(random_effect_elements) > 0){
 
     formula_to_random_effect_formulae(fm) |>
 
@@ -197,6 +204,10 @@ ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
 #'
 #' @return A matrix
 as_matrix <- function(tbl, rownames = NULL) {
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  variable <- NULL
+  
   tbl %>%
 
     ifelse_pipe(
@@ -228,7 +239,6 @@ as_matrix <- function(tbl, rownames = NULL) {
 #'
 #' @description Runs iteratively variational bayes until it suceeds
 #'
-#' @importFrom rstan vb
 #'
 #' @keywords internal
 #' @noRd
@@ -250,72 +260,79 @@ vb_iterative = function(model,
                         tol_rel_obj,
                         additional_parameters_to_save = c(),
                         data,
-                        seed,
+                        output_dir = output_dir,
+                        seed, 
+                        init = "random",
+                        inference_method,
+                        cores = 1, 
+                        verbose = TRUE,
+                        psis_resample = FALSE,
                         ...) {
   res = NULL
   i = 0
-  while (res %>% is.null | i > 5) {
+  while  (is.null(res) & i < 5) {
     res = tryCatch({
-      my_res = vb(
-        model,
-        data = data,
-        output_samples = output_samples,
-        iter = iter,
-        tol_rel_obj = tol_rel_obj,
-        seed = seed,
-        #pars=c("counts_rng", "exposure_rate", "alpha_sub_1", additional_parameters_to_save),
-        ...
-      )
+
+      if(inference_method=="pathfinder")
+        my_res = model |> 
+          sample_safe(
+            pathfinder_fx,
+          	data = data,
+          	tol_rel_obj = tol_rel_obj,
+          	output_dir = output_dir,
+          	seed = seed+i,
+          	# init = init,
+          	num_paths=50, 
+            num_threads = cores,
+          	single_path_draws = output_samples / 50 ,
+          	max_lbfgs_iters=100, 
+          	history_size = 100, 
+            show_messages = verbose,
+            psis_resample = psis_resample,
+          	...
+          )
+    
+      else if(inference_method=="variational")
+        my_res = model |> 
+          sample_safe(
+            variational_fx,
+            data = data,
+            output_samples = output_samples,
+            iter = iter,
+            tol_rel_obj = tol_rel_obj,
+            output_dir = output_dir,
+            seed = seed+i,
+            init = init,
+            show_messages = verbose,
+            threads = cores,
+            ...
+          )
+
       boolFalse <- TRUE
       return(my_res)
     },
     error = function(e) {
-      i = i + 1
-      writeLines(sprintf("Further attempt with Variational Bayes: %s", e))
+      
+      writeLines(sprintf("Further attempt with Variational Bayes: %s", e))     
+      
       return(NULL)
     },
     finally = {
     })
+    i = i + 1
   }
 
+  if(is.null(res)) stop(sprintf("sccomp says: variational Bayes did not converge after %s attempts. Please use variational_inference = FALSE for a HMC fitting.", i))
+  
   return(res)
 }
 
 
-#' fit_to_counts_rng
-#'
-#' @importFrom tidyr separate
-#' @importFrom tidyr nest
-#' @importFrom rstan summary
-#'
-#' @param fit A fit object
-#' @param adj_prob_theshold fit real
-#'
-#' @keywords internal
-#' @noRd
-fit_to_counts_rng = function(fit, adj_prob_theshold){
 
-  writeLines(sprintf("executing %s", "fit_to_counts_rng"))
-
-  fit %>%
-    rstan::summary("counts_rng",
-                   prob = c(adj_prob_theshold, 1 - adj_prob_theshold)) %$%
-    summary %>%
-    as_tibble(rownames = ".variable") %>%
-    separate(.variable,
-             c(".variable", "S", "G"),
-             sep = "[\\[,\\]]",
-             extra = "drop") %>%
-    mutate(S = S %>% as.integer, G = G %>% as.integer) %>%
-    select(-any_of(c("n_eff", "Rhat", "khat"))) %>%
-    rename(`.lower` = (.) %>% ncol - 1,
-           `.upper` = (.) %>% ncol)
-}
 
 #' draws_to_tibble_x_y
 #'
 #' @importFrom tidyr pivot_longer
-#' @importFrom rstan extract
 #' @importFrom rlang :=
 #'
 #' @param fit A fit object
@@ -327,23 +344,29 @@ fit_to_counts_rng = function(fit, adj_prob_theshold){
 #' @noRd
 draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  dummy <- NULL
+  .variable <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .value <- NULL
+  
   par_names =
-    names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
+    fit$metadata()$stan_variables %>% grep(sprintf("%s", par), ., value = TRUE)
 
-  fit %>%
-    extract(par, permuted=FALSE) %>%
-    as.data.frame %>%
-    as_tibble() %>%
+  fit$draws(variables = par, format = "draws_df") %>%
     mutate(.iteration = seq_len(n())) %>%
 
     pivot_longer(
-      names_to = c("dummy", ".chain", ".variable", x, y),
+      names_to = "parameter", # c( ".chain", ".variable", x, y),
       cols = contains(par),
-      names_sep = "\\.|\\[|,|\\]|:",
-      names_ptypes = list(
-        ".variable" = character()),
+      #names_sep = "\\.?|\\[|,|\\]|:",
+      # names_ptypes = list(
+      #   ".variable" = character()),
       values_to = ".value"
     ) %>%
+    tidyr::extract(parameter, c(".chain", ".variable", x, y), "([1-9]+)?\\.?([a-zA-Z0-9_\\.]+)\\[([0-9]+),([0-9]+)") |> 
 
     # Warning message:
     # Expected 5 pieces. Additional pieces discarded
@@ -353,7 +376,6 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
     ) %>%
-    select(-dummy) %>%
     arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
     group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
     mutate(.draw = seq_len(n())) %>%
@@ -363,34 +385,9 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 
 }
 
-draws_to_tibble_x = function(fit, par, x, number_of_draws = NULL) {
 
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
-
-  fit %>%
-    rstan::extract(par_names, permuted=FALSE) %>%
-    as.data.frame %>%
-    as_tibble() %>%
-    mutate(.iteration = seq_len(n())) %>%
-    pivot_longer(names_to = c("dummy", ".chain", ".variable", x),  cols = contains(par), names_sep = "\\.|\\[|,|\\]|:", values_to = ".value") %>%
-
-    mutate(
-      !!as.symbol(x) := as.integer(!!as.symbol(x)),
-    ) %>%
-
-    select(-dummy) %>%
-    arrange(.variable, !!as.symbol(x), .chain) %>%
-    group_by(.variable, !!as.symbol(x)) %>%
-    mutate(.draw = seq_len(n())) %>%
-    ungroup() %>%
-    select(!!as.symbol(x), .chain, .iteration, .draw ,.variable ,     .value)
-
-}
-
-# Import necessary functions from other packages
 #' @importFrom tidyr separate
 #' @importFrom purrr when
-#' @importFrom rstan summary
 #' 
 #' @param fit A fit object from a statistical model, from the 'rstan' package.
 #' @param par A character vector specifying the parameters to extract from the fit object.
@@ -404,36 +401,41 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
   
   # Extract parameter names from the fit object that match the 'par' argument
   par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
-  
-  # Handling potential null value in the fit object's method attribute
-  # Avoiding a bug by setting a default method if none is specified
-  if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
-  
-  # Extracting the summary of the specified parameters with the given probabilities
-  summary = 
-    fit %>%
-    rstan::summary(par_names, probs = probs) %$%
-    summary %>%
-    as_tibble(rownames = ".variable") # Convert the summary to a tibble for easier handling
-  
-  # Separate the variable names in the summary based on the presence of 'y'
-  # This process involves splitting the variable names into different columns
-  if(is.null(y)) {
-    summary = summary |> 
-      tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
-  } else {
-    summary = summary |> 
-      tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
-  }
-  
-  # Filter the summary to only include rows where the variable matches 'par'
-  summary |> filter(.variable == par)
-}
 
+  # Avoid bug
+  #if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
+
+  summary = 
+    fit$summary(variables = par, "mean", ~quantile(.x, probs = probs,  na.rm=TRUE)) %>%
+    rename(.variable = variable ) %>%
+
+    when(
+      is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
+      ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
+    )
+  
+  # summaries are returned only for HMC
+  if(!"n_eff" %in% colnames(summary)) summary = summary |> mutate(n_eff = NA)
+  if(!"R_k_hat" %in% colnames(summary)) summary = summary |> mutate(R_k_hat = NA)
+  
+  summary
+
+}
 
 #' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  .count <- NULL
+  `95%` <- NULL
+  `5%` <- NULL
+  X <- NULL
+  iteration <- NULL
+  outlier_above <- NULL
+  slope <- NULL
+  is_group_right <- NULL
+  outlier_below <- NULL
+  
   .my_data %>%
 
     # join CI
@@ -456,10 +458,13 @@ label_deleterious_outliers = function(.my_data){
 
 }
 
+#' @importFrom readr write_file
 fit_model = function(
-  data_for_model, model, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
-  warmup_samples = 300, approximate_posterior_inference = TRUE, verbose = FALSE,
-  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000
+  data_for_model, model_name, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
+  warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
+  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000, 
+  output_directory = "sccomp_draws_files",
+  ...
 )
 {
 
@@ -479,59 +484,122 @@ fit_model = function(
       max(4000) 
     
     if(output_samples > max_sampling_iterations) {
-      message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
+      # message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
       output_samples = max_sampling_iterations
     
   }}
     
-
   # Find optimal number of chains
   if(is.null(chains))
     chains =
       find_optimal_number_of_chains(
         how_many_posterior_draws = output_samples,
-        warmup = warmup_samples
+        warmup = warmup_samples,
+        parallelisation_start_penalty = 100
       ) %>%
       min(cores)
 
+  # chains = 3
+  
   init_list=list(
     prec_coeff = c(5,0),
     prec_sd = 1,
     alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
-    beta_raw_raw = matrix(rep(0, data_for_model$C * (data_for_model$M-1)), nrow = data_for_model$C, byrow = TRUE)
-  )
+    beta_raw_raw = matrix(0, data_for_model$C , data_for_model$M-1) ,
+    mix_p = 0.1 
+   )
 
+  if(data_for_model$n_random_eff>0){
+    init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1)  
+    init_list$random_effect_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[1])
+    init_list$sigma_correlation_factor = array(0, dim = c(
+      data_for_model$M-1, 
+      data_for_model$how_many_factors_in_random_design[1], 
+      data_for_model$how_many_factors_in_random_design[1]
+    ))
+    
+    init_list$random_effect_sigma_mu = 0.5 |> as.array()
+    init_list$random_effect_sigma_sigma = 0.2 |> as.array()
+    init_list$zero_random_effect = rep(0, size = 1) |> as.array()
+    
+  } 
+  
+  if(data_for_model$n_random_eff>1){
+    init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M-1)
+    init_list$random_effect_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[2])
+    init_list$sigma_correlation_factor_2 = array(0, dim = c(
+      data_for_model$M-1, 
+      data_for_model$how_many_factors_in_random_design[2], 
+      data_for_model$how_many_factors_in_random_design[2]
+    ))
+    
+  } 
+ 
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
-  
-  # Fit
-  if(!approximate_posterior_inference)
-    sampling(
-      model,
-      data = data_for_model,
-      chains = chains,
-      cores = chains,
-      iter = as.integer(output_samples /chains) + warmup_samples,
-      warmup = warmup_samples,
-      refresh = ifelse(verbose, 1000, 0),
-      seed = seed,
-      pars = pars,
-      save_warmup = FALSE,
-      init = init
-    ) %>%
-      suppressWarnings()
 
-  else
+  #output_directory = "sccomp_draws_files"
+  dir.create(output_directory, showWarnings = FALSE)
+
+  # Fit
+  mod = load_model(model_name, threads = cores)
+  
+  
+  if(inference_method == "hmc"){
+
+    tryCatch({
+      mod |> sample_safe(
+        sample_fx,
+        data = data_for_model ,
+        chains = chains,
+        parallel_chains = chains,
+        threads_per_chain = ceiling(cores/chains),
+        iter_warmup = warmup_samples,
+        iter_sampling = as.integer(output_samples /chains),
+        #refresh = ifelse(verbose, 1000, 0),
+        seed = seed,
+        save_warmup = FALSE,
+        init = init,
+        output_dir = output_directory,
+        show_messages = verbose,
+        ...
+      ) |> 
+        suppressWarnings()
+      
+    },
+    error = function(e) {
+      
+      # I don't know why thi is needed nd why the model sometimes is not compliled correctly
+      if(e |> as.character() |>  str_detect("Model not compiled"))
+        model = load_model(model_name, force=TRUE, threads = cores)
+      else 
+        stop()   
+      
+    })
+    
+
+} else{
+    if(inference_method=="pathfinder") init = pf
+    else if(inference_method=="variational") init = list(init_list)
+    
     vb_iterative(
-      model,
+      mod,
       output_samples = output_samples ,
       iter = 10000,
       tol_rel_obj = 0.01,
       data = data_for_model, refresh = ifelse(verbose, 1000, 0),
       seed = seed,
-      pars = pars
+      output_dir = output_directory,
+      init = init,
+      inference_method = inference_method, 
+      cores = cores,
+      psis_resample = FALSE, 
+      verbose = verbose
     ) %>%
       suppressWarnings()
+    
+  }
+    
 
 
 }
@@ -539,13 +607,16 @@ fit_model = function(
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
-#' @importFrom rstan extract
 #' @importFrom rlang :=
 #'
 #' @keywords internal
 #' @noRd
 parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  
+  
   fit %>%
     draws_to_tibble_x_y("beta", "C", "M") %>%
     left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
@@ -555,6 +626,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 
 #' @importFrom purrr map2_lgl
 #' @importFrom tidyr pivot_wider
+#' @importFrom tidyr spread
 #' @importFrom stats C
 #' @importFrom rlang :=
 #' @importFrom tibble enframe
@@ -563,6 +635,13 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #' @noRd
 beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  C_name <- NULL
+  .lower <- NULL
+  .median <- NULL
+  .upper <- NULL
+  
   effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
 
   CI = fitted %>%
@@ -603,6 +682,13 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fact
 #' @noRd
 alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  C_name <- NULL
+  .lower <- NULL
+  .median <- NULL
+  .upper <- NULL
+  
   effect_column_name = sprintf("variability_effect_%s", factor_of_interest) %>% as.symbol()
 
   fitted %>%
@@ -630,11 +716,39 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 }
 
 
+#' Get Random Intercept Design 2
+#'
+#' This function processes the formula composition elements in the data and creates design matrices
+#' for random intercept models.
+#'
+#' @param .data_ A data frame containing the data.
+#' @param .sample A quosure representing the sample variable.
+#' @param formula_composition A data frame containing the formula composition elements.
+#' 
+#' @return A data frame with the processed design matrices for random intercept models.
+#' 
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
+#' @importFrom purrr map2
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom dplyr pull
+#' @importFrom dplyr filter
+#' @importFrom dplyr left_join
+#' @importFrom dplyr mutate_all
+#' @importFrom dplyr mutate_if
+#' @importFrom dplyr as_tibble
+#' @importFrom tidyr pivot_longer
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_name
+#' @importFrom tidyselect all_of
+#' @importFrom readr type_convert
 #' @noRd
-get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
+get_random_effect_design2 = function(.data_, .sample, formula_composition ){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  formula <- NULL
+  
   .sample = enquo(.sample)
 
  grouping_table =
@@ -647,12 +761,12 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
 
        mydesign = .data_ |> get_design_matrix(.x, !!.sample)
 
-       mydesign_grouping = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
-       mydesign_grouping[mydesign==0L] = NA
-       colnames(mydesign_grouping) = colnames(mydesign)
-       rownames(mydesign_grouping) = rownames(mydesign)
+       mydesigncol_X_random_eff = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
+       mydesigncol_X_random_eff[mydesign==0L] = NA
+       colnames(mydesigncol_X_random_eff) = colnames(mydesign)
+       rownames(mydesigncol_X_random_eff) = rownames(mydesign)
 
-       mydesign_grouping |>
+       mydesigncol_X_random_eff |>
          as_tibble(rownames = quo_name(.sample)) |>
          pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
          filter(!is.na(grouping)) |>
@@ -696,17 +810,53 @@ get_random_intercept_design2 = function(.data_, .sample, formula_composition ){
  }
 
 
+#' Get Random Intercept Design
+#'
+#' This function processes random intercept elements in the data and creates design matrices
+#' for random intercept models.
+#'
+#' @param .data_ A data frame containing the data.
+#' @param .sample A quosure representing the sample variable.
+#' @param random_effect_elements A data frame containing the random intercept elements.
+#' 
+#' @return A data frame with the processed design matrices for random intercept models.
+#' 
 #' @importFrom glue glue
 #' @importFrom magrittr subtract
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate
+#' @importFrom dplyr pull
+#' @importFrom dplyr if_else
+#' @importFrom dplyr distinct
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarise
+#' @importFrom rlang set_names
+#' @importFrom purrr map_lgl
+#' @importFrom purrr pmap
+#' @importFrom purrr map_int
+#' @importFrom dplyr with_groups
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_name
+#' @importFrom tidyselect all_of
 #' @noRd
-get_random_intercept_design = function(.data_, .sample, random_intercept_elements ){
+get_random_effect_design = function(.data_, .sample, random_effect_elements ){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  is_factor_continuous <- NULL
+  design <- NULL
+  max_mean_idx <- NULL
+  max_minus_sum <- NULL
+  max_factor_numeric <- NULL
+  max_group_numeric <- NULL
+  min_mean_idx <- NULL
+  min_minus_sum <- NULL
+  
   .sample = enquo(.sample)
 
   # If intercept is not defined create it
-  if(nrow(random_intercept_elements) == 0 )
+  if(nrow(random_effect_elements) == 0 )
     return(
-      random_intercept_elements |>
+      random_effect_elements |>
         mutate(
           design = list(),
           is_factor_continuous = logical()
@@ -714,7 +864,7 @@ get_random_intercept_design = function(.data_, .sample, random_intercept_element
     )
 
   # Otherwise process
-  random_intercept_elements |>
+  random_effect_elements |>
     mutate(is_factor_continuous = map_lgl(
       `factor`,
       ~ .x != "(Intercept)" && .data_ |> select(all_of(.x)) |> pull(1) |> is("numeric")
@@ -826,12 +976,42 @@ get_design_matrix = function(.data_spread, formula, .sample){
   design_matrix
 }
 
-check_random_intercept_design = function(.data, factor_names, random_intercept_elements, formula, X){
 
+#' Check Random Intercept Design
+#'
+#' This function checks the validity of the random intercept design in the data.
+#'
+#' @param .data A data frame containing the data.
+#' @param factor_names A character vector of factor names.
+#' @param random_effect_elements A data frame containing the random intercept elements.
+#' @param formula The formula used for the model.
+#' @param X The design matrix.
+#' 
+#' @return A data frame with the checked random intercept elements.
+#' 
+#' @importFrom tidyr nest
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom dplyr pull
+#' @importFrom dplyr filter
+#' @importFrom dplyr distinct
+#' @importFrom rlang set_names
+#' @importFrom tidyr unite
+#' @importFrom purrr map2
+#' @importFrom stringr str_subset
+#' @importFrom readr type_convert
+#' @noRd
+check_random_effect_design = function(.data, factor_names, random_effect_elements, formula, X){
+
+  # Define the variables as NULL to avoid CRAN NOTES
+  factors <- NULL
+  groupings <- NULL
+  
+  
   .data_ = .data
 
   # Loop across groupings
-  random_intercept_elements |>
+  random_effect_elements |>
     nest(factors = `factor` ) |>
     mutate(checked = map2(
       grouping, factors,
@@ -930,7 +1110,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
       }
     ))
 
-  random_intercept_elements |>
+  random_effect_elements |>
     nest(groupings = grouping ) |>
     mutate(checked = map2(`factor`, groupings, ~{
       # Check the same group spans multiple factors
@@ -957,6 +1137,7 @@ check_random_intercept_design = function(.data, factor_names, random_intercept_e
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_remove_all
 #' @importFrom purrr reduce
+#' @importFrom stats as.formula
 #'
 #' @keywords internal
 #' @noRd
@@ -969,18 +1150,33 @@ data_spread_to_model_input =
     contrasts = NULL,
     bimodal_mean_variability_association = FALSE,
     use_data = TRUE,
-    random_intercept_elements){
+    random_effect_elements){
 
+    # Define the variables as NULL to avoid CRAN NOTES
+    exposure <- NULL
+    design <- NULL
+    mat <- NULL
+    factor___numeric <- NULL
+    mean_idx <- NULL
+    design_matrix <- NULL
+    minus_sum <- NULL
+    group___numeric <- NULL
+    idx <- NULL
+    group___label <- NULL
+    parameter <- NULL
+    group <- NULL
+    design_matrix_col <- NULL
+    
     # Prepare column same enquo
     .sample = enquo(.sample)
     .cell_type = enquo(.cell_type)
     .count = enquo(.count)
-    .grouping_for_random_intercept =
-      random_intercept_elements |>
+    .grouping_for_random_effect =
+      random_effect_elements |>
       pull(grouping) |>
       unique() 
     
-    if (length(.grouping_for_random_intercept)==0 ) .grouping_for_random_intercept = "random_intercept"
+    if (length(.grouping_for_random_effect)==0 ) .grouping_for_random_effect = "random_effect"
 
 
     X  =
@@ -1017,64 +1213,57 @@ data_spread_to_model_input =
 
     factor_names = parse_formula(formula)
     factor_names_variability = parse_formula(formula_variability)
-    cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% colnames()
+    cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% colnames()
 
     # Random intercept
-    if(nrow(random_intercept_elements)>0 ) {
+    if(nrow(random_effect_elements)>0 ) {
 
-      #check_random_intercept_design(.data_spread, any_of(factor_names), random_intercept_elements, formula, X)
-      random_intercept_grouping = get_random_intercept_design2(.data_spread, !!.sample,  formula )
+      #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
+      random_effect_grouping = get_random_effect_design2(.data_spread, !!.sample,  formula )
 
       # Actual parameters, excluding for the sum to one parameters
-      N_random_intercepts = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(mean_idx>0) |> distinct(mean_idx) |> nrow())) |> pull(n) |> sum()
+      is_random_effect = 1
 
-      # Number of sum to one
-      N_minus_sum = random_intercept_grouping |> mutate(n = map_int(design, ~ .x |> filter(minus_sum>0) |> distinct(minus_sum) |> nrow())) |> pull(n) |> sum()
-
-      paring_cov_random_intercept =
-        random_intercept_grouping |>
-        mutate(mat = map(design, ~ .x |> distinct(factor___numeric, mean_idx) |> filter(mean_idx>0) )) |>
-        select(mat) |>
-        unnest(mat) |>
-        arrange(factor___numeric, mean_idx) |>
-        as_matrix()
-
-      X_random_intercept =
-        random_intercept_grouping |>
+      random_effect_grouping =
+        random_effect_grouping |>
         mutate(design_matrix = map(
           design,
           ~ ..1 |>
             select(!!.sample, group___label, value) |>
             pivot_wider(names_from = group___label, values_from = value) |>
             mutate(across(everything(), ~ .x |> replace_na(0)))
-        )) |>
-
-        # Merge
-        pull(design_matrix) |>
-      	reduce(left_join, by = join_by(!!.sample)) |>
+        )) 
+      
+      
+      X_random_effect = 
+        random_effect_grouping |> 
+        pull(design_matrix) |> 
+        _[[1]]  |>  
         as_matrix(rownames = quo_name(.sample))
+      
+      # For now that stan does not have tuples, I just allow max two levels
+      if(random_effect_grouping |> nrow() > 2) stop("sccomp says: at the moment sccomp allow max two groupings")
+      # This will be modularised with the new stan
+      if(random_effect_grouping |> nrow() > 1)
+        X_random_effect_2 =   
+          random_effect_grouping |> 
+          pull(design_matrix) |> 
+          _[[2]] |>  
+          as_matrix(rownames = quo_name(.sample))
+      else X_random_effect_2 =  X_random_effect[,0,drop=FALSE]
 
-    idx_group_random_intercepts =
-      random_intercept_grouping |>
-      mutate(design = map(design, ~ .x |> select(mean_idx, minus_sum, group___numeric, group___label))) |>
-      select(design) |>
-      unnest(design) |>
-
-      mutate(minus_sum = -minus_sum) |>
-      mutate(idx = mean_idx + minus_sum) |>
-      distinct(group___numeric, idx, group___label) |>
-      as_matrix(rownames = "group___label")
-
-
-    N_grouping =
-      random_intercept_grouping |>
+    n_random_eff = random_effect_grouping |> nrow()
+      
+    ncol_X_random_eff =
+      random_effect_grouping |>
       mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
-      pull(n) |> sum()
-
+      pull(n) 
+    
+    if(ncol_X_random_eff |> length() < 2) ncol_X_random_eff[2] = 0
     
     # TEMPORARY
     group_factor_indexes_for_covariance = 
-    	X_random_intercept |> 
+    	X_random_effect |> 
     	colnames() |> 
     	enframe(value = "parameter", name = "order")  |> 
     	separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
@@ -1083,29 +1272,46 @@ data_spread_to_model_input =
     	pivot_wider(names_from = group, values_from = order)  |> 
     	as_matrix(rownames = "factor")
     
-    how_many_groups = ncol(group_factor_indexes_for_covariance )
-    how_many_factors_in_random_design = nrow(group_factor_indexes_for_covariance )
+    n_groups = group_factor_indexes_for_covariance |> ncol()
+      
+    # This will be modularised with the new stan
+    if(random_effect_grouping |> nrow() > 1)
+      group_factor_indexes_for_covariance_2 = 
+        X_random_effect_2 |> 
+        colnames() |> 
+        enframe(value = "parameter", name = "order")  |> 
+        separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
+        complete(factor, group, fill = list(order=0)) |> 
+        select(-parameter) |> 
+        pivot_wider(names_from = group, values_from = order)  |> 
+        as_matrix(rownames = "factor")
+    else group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE]
+    
+    n_groups = n_groups |> c(group_factor_indexes_for_covariance_2 |> ncol())
+    
+    how_many_factors_in_random_design = list(group_factor_indexes_for_covariance, group_factor_indexes_for_covariance_2) |> map_int(nrow)
     
     
     } else {
-      X_random_intercept = matrix(rep(1, nrow(.data_spread)))[,0]
-      N_random_intercepts = 0
-      N_minus_sum = 0
-      N_grouping =0
-      paring_cov_random_intercept = matrix(c(1, 1), ncol = 2)[0,]
-      idx_group_random_intercepts = matrix(c(1, 1), ncol = 2)[0,]
-      how_many_groups = 0
-      how_many_factors_in_random_design = 0
-      group_factor_indexes_for_covariance = matrix()[0,0]
+      X_random_effect = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
+      X_random_effect_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
+      is_random_effect = 0
+      ncol_X_random_eff = c(0,0)
+      n_random_eff = 0
+      n_groups = c(0,0)
+      how_many_factors_in_random_design = c(0,0)
+      group_factor_indexes_for_covariance = matrix()[0,0, drop=FALSE]
+      group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE] # This will be modularised with the new stan
     }
+    
     
     
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
-        M = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% ncol(),
+        M = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% ncol(),
         exposure = .data_spread$exposure,
-        y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_intercept) %>% as_matrix(rownames = quo_name(.sample)),
+        y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% as_matrix(rownames = quo_name(.sample)),
         X = X,
         XA = XA,
         Xa = Xa,
@@ -1118,15 +1324,18 @@ data_spread_to_model_input =
         use_data = use_data,
 
         # Random intercept
-        N_random_intercepts = N_random_intercepts,
-        N_minus_sum = N_minus_sum,
-        paring_cov_random_intercept = paring_cov_random_intercept,
-        N_grouping = N_grouping,
-        X_random_intercept = X_random_intercept,
-        idx_group_random_intercepts = idx_group_random_intercepts,
+        is_random_effect = is_random_effect,
+        ncol_X_random_eff = ncol_X_random_eff,
+        n_random_eff = n_random_eff,
+        n_groups  = n_groups,
+        X_random_effect = X_random_effect,
+        X_random_effect_2 = X_random_effect_2,
         group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
-        how_many_groups = how_many_groups,
+        group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
         how_many_factors_in_random_design = how_many_factors_in_random_design,
+        
+        # For parallel chains
+        grainsize = 1,
         
         ## LOO
         enable_loo = FALSE
@@ -1138,7 +1347,9 @@ data_spread_to_model_input =
     data_for_model$truncation_down = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
     data_for_model$truncation_not_idx = seq_len(data_for_model$M*data_for_model$N)
     data_for_model$TNS = length(data_for_model$truncation_not_idx)
-
+    data_for_model$truncation_not_idx_minimal = matrix(c(1,1), nrow = 1)[0,,drop=FALSE]
+    data_for_model$TNIM = 0
+    
     # Add parameter factor dictionary
     data_for_model$factor_parameter_dictionary = tibble()
 
@@ -1216,18 +1427,18 @@ data_spread_to_model_input =
     data_for_model
   }
 
-data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_intercept){
+data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_effect){
 
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
-  .grouping_for_random_intercept = .grouping_for_random_intercept |> map(~ .x |> quo_name() ) |> unlist()
+  .grouping_for_random_effect = .grouping_for_random_effect |> map(~ .x |> quo_name() ) |> unlist()
 
   .data %>%
     nest(data = -!!.sample) %>%
     mutate(exposure = map_int(data, ~ .x %>% pull(!!.count) %>% sum() )) %>%
     unnest(data) %>%
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_intercept)) %>%
+    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) %>%
     spread(!!.cell_type, !!.count)
 
 }
@@ -1241,6 +1452,11 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
 data_simulation_to_model_input =
   function(.data, formula, .sample, .cell_type, .exposure, .coefficients, truncation_ajustment = 1, approximate_posterior_inference ){
 
+    # Define the variables as NULL to avoid CRAN NOTES
+    sd <- NULL
+    . <- NULL
+    
+    
     # Prepare column same enquo
     .sample = enquo(.sample)
     .cell_type = enquo(.cell_type)
@@ -1320,6 +1536,10 @@ find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
 
 
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  chains <- NULL
+
+
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
     mutate(tot = (how_many_posterior_draws / chains) + warmup + (parallelisation_start_penalty * chains))
@@ -1348,6 +1568,13 @@ get.elbow.points.indices <- function(x, y, threshold) {
 #'
 get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fold_change = 0){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  .draw <- NULL
+  M <- NULL
+  C_name <- NULL
+  bigger_zero <- NULL
+  smaller_zero <- NULL
+  
   probability_column_name = sprintf("%s_prob_H0", prefix) %>% as.symbol()
 
   total_draws = .data %>% pull(2) %>% .[[1]] %>% distinct(.draw) %>% nrow()
@@ -1386,31 +1613,35 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 #'
 get_probability_non_zero_ = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  C_name <- NULL
+  bigger_zero <- NULL
+  smaller_zero <- NULL
+  
+  
 
-  draws = rstan::extract(fit, parameter)[[1]]
+  draws = fit$draws(
+      variables = parameter,
+      inc_warmup = FALSE,
+      format = getOption("cmdstanr_draws_format", "draws_matrix")
+    )
 
   total_draws = dim(draws)[1]
 
-
   bigger_zero =
     draws %>%
-    apply(2, function(y){
-      y %>%
-        apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
-    })
-
+      apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
 
   smaller_zero =
     draws %>%
-    apply(2, function(y){
-      y %>%
         apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
-    })
-
 
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
-    as.data.frame() %>%
-    rowid_to_column(var = "M")
+    enframe() %>%
+    tidyr::extract(name, c("C", "M"), ".+\\[([0-9]+),([0-9]+)\\]") %>%
+    mutate(across(c(C, M), ~ as.integer(.x))) %>%
+    tidyr::spread(C, value)
 
 }
 
@@ -1431,8 +1662,16 @@ get_probability_non_zero = function(draws, test_above_logit_fold_change = 0, pro
 #'
 parse_generated_quantities = function(rng, number_of_draws = 1){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  .draw <- NULL
+  N <- NULL
+  .value <- NULL
+  generated_counts <- NULL
+  M <- NULL
+  generated_proportions <- NULL
+  
   draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) %>%
-    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/sum(.value))) %>%
+    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/max(1, sum(.value)))) %>%
     filter(.draw<= number_of_draws) %>%
     rename(generated_counts = .value, replicate = .draw) %>%
 
@@ -1464,6 +1703,11 @@ design_matrix_and_coefficients_to_simulation = function(
 
 ){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  cell_type <- NULL
+  beta_1 <- NULL
+  beta_2 <- NULL
+  
   design_df = as.data.frame(design_matrix)
   coefficient_df = as.data.frame(coefficient_matrix)
 
@@ -1495,34 +1739,6 @@ design_matrix_and_coefficients_to_simulation = function(
 
 }
 
-design_matrix_and_coefficients_to_dir_mult_simulation =function(design_matrix, coefficient_matrix, precision = 100, seed = sample(1:100000, size = 1)){
-
-
-  # design_df = as.data.frame(design_matrix)
-  # coefficient_df = as.data.frame(coefficient_matrix)
-  #
-  # rownames(design_df) = sprintf("sample_%s", 1:nrow(design_df))
-  # colnames(design_df) = sprintf("factor_%s", 1:ncol(design_df))
-  #
-  # rownames(coefficient_df) = sprintf("cell_type_%s", 1:nrow(coefficient_df))
-  # colnames(coefficient_df) = sprintf("beta_%s", 1:ncol(coefficient_df))
-
-  exposure = 500
-
-  prop.means =
-    design_matrix %*%
-    t(coefficient_matrix) %>%
-    boot::inv.logit()
-
-  extraDistr::rdirmnom(length(design_matrix), exposure, prop.means * precision) %>%
-    as_tibble(.name_repair = "unique", rownames = "sample") %>%
-    mutate(factor_1= design_matrix) %>%
-    gather(cell_type, generated_counts, -sample, -factor_1) %>%
-    mutate(generated_counts = as.integer(generated_counts))
-
-
-}
-
 #' @importFrom rlang ensym
 #' @noRd
 class_list_to_counts = function(.data, .sample, .cell_group){
@@ -1548,6 +1764,13 @@ class_list_to_counts = function(.data, .sample, .cell_group){
 #' @importFrom dplyr cummean
 #' @noRd
 get_FDR = function(x){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  value <- NULL
+  name <- NULL
+  FDR <- NULL
+  
+  
   enframe(x) %>%
     arrange(value) %>%
     mutate(FDR = cummean(value)) %>%
@@ -1555,130 +1778,249 @@ get_FDR = function(x){
     pull(FDR)
 }
 
+#' Plot 1D Intervals for Cell-group Effects
+#'
+#' This function creates a series of 1D interval plots for cell-group effects, highlighting significant differences based on a given significance threshold.
+#'
+#' @param .data Data frame containing the main data.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
 #' @importFrom tidyr drop_na
-#' @noRd
-plot_1d_intervals = function(.data, .cell_group, significance_threshold= 0.025, my_theme){
-
-  .cell_group = enquo(.cell_group)
-
-  .data |>
+#' 
+#' @export
+#' 
+#' @return A combined plot of 1D interval plots.
+#' @examples
+#' # Example usage:
+#' # plot_1D_intervals(.data, "cell_group", 0.025, theme_minimal())
+plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  parameter <- NULL
+  estimate <- NULL
+  value <- NULL
+  
+  .cell_group = attr(.data, ".cell_group")
+  
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+  
+  
+  plot_list = 
+    .data |>
     filter(parameter != "(Intercept)") |>
-
-    # Reshape
+    
+    # Reshape data
     select(-contains("n_eff"), -contains("R_k_hat")) |> 
-    pivot_longer(c(contains("c_"), contains("v_")),names_sep = "_" , names_to=c("which", "estimate") ) |>
-    drop_na() |>
+    pivot_longer(c(contains("c_"), contains("v_")), names_sep = "_", names_to = c("which", "estimate")) |>
     pivot_wider(names_from = estimate, values_from = value) |>
-
+    
+    # Nest data by parameter and which
     nest(data = -c(parameter, which)) |>
     mutate(plot = pmap(
       list(data, which, parameter),
-      ~  ggplot(..1, aes(x=effect, y=fct_reorder(!!.cell_group, effect))) +
-        geom_vline(xintercept = 0.2, colour="grey") +
-        geom_vline(xintercept = -0.2, colour="grey") +
-        geom_errorbar(aes(xmin=lower, xmax=upper, color=FDR<significance_threshold)) +
-        geom_point() +
-        scale_color_brewer(palette = "Set1") +
-        xlab("Credible interval of the slope") +
-        ylab("Cell group") +
-        ggtitle(sprintf("%s %s", ..2, ..3)) +
-        theme(legend.position = "bottom") +
-        my_theme
+      ~  {
+
+        # Check if there are any statistics to plot
+        if(..1 |> filter(!effect |> is.na()) |> nrow() |> equals(0))
+          return(NA)
+        
+        # Create ggplot for each nested data
+        ggplot(..1, aes(x = effect, y = fct_reorder(!!.cell_group, effect))) +
+          geom_vline(xintercept = test_composition_above_logit_fold_change, colour = "grey") +
+          geom_vline(xintercept = -test_composition_above_logit_fold_change, colour = "grey") +
+          geom_errorbar(aes(xmin = lower, xmax = upper, color = FDR < significance_threshold)) +
+          geom_point() +
+          scale_color_brewer(palette = "Set1") +
+          xlab("Credible interval of the slope") +
+          ylab("Cell group") +
+          ggtitle(sprintf("%s %s", ..2, ..3)) +
+          multipanel_theme +
+          theme(legend.position = "bottom") 
+      }
     )) %>%
-    pull(plot) |>
-    wrap_plots(ncol=2)
-
-
+    
+    # Filter out NA plots
+    filter(!plot |> is.na()) |> 
+    pull(plot) 
+  
+  # Combine all individual plots into one plot
+  plot_list |>
+    wrap_plots(ncol = plot_list |> length() |> sqrt() |> ceiling())
 }
 
-plot_2d_intervals = function(.data, .cell_group, my_theme, significance_threshold = 0.025){
 
-  .cell_group = enquo(.cell_group)
-
-  # mean-variance association
+#' Plot 2D Intervals for Mean-Variance Association
+#'
+#' This function creates a 2D interval plot for mean-variance association, highlighting significant differences based on a given significance threshold.
+#'
+#' @param .data Data frame containing the main data.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' 
+#' 
+#' @importFrom dplyr filter arrange mutate if_else row_number
+#' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point annotate aes facet_wrap
+#' @importFrom ggrepel geom_text_repel
+#' @importFrom scales trans_new
+#' @importFrom stringr str_replace
+#' @importFrom stats quantile
+#' @importFrom magrittr equals
+#' 
+#' @export
+#' 
+#' @return A ggplot object representing the 2D interval plot.
+#' @examples
+#' # Example usage:
+#' # plot_2D_intervals(.data, "cell_group", theme_minimal(), 0.025)
+plot_2D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  v_effect <- NULL
+  parameter <- NULL
+  c_effect <- NULL
+  c_lower <- NULL
+  c_upper <- NULL
+  c_FDR <- NULL
+  v_lower <- NULL
+  v_upper <- NULL
+  v_FDR <- NULL
+  cell_type_label <- NULL
+  multipanel_theme <- NULL
+  
+  
+  .cell_group = attr(.data, ".cell_group")
+  
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+  
+  
+  # Mean-variance association
   .data %>%
-
-    # Filter where I did not inferred the variance
+    
+    # Filter where variance is inferred
     filter(!is.na(v_effect)) %>%
-
-    # Add labels
+    
+    # Add labels for significant cell groups
     with_groups(
       parameter,
       ~ .x %>%
         arrange(c_FDR) %>%
-        mutate(cell_type_label = if_else(row_number()<=3 & c_FDR < significance_threshold & parameter!="(Intercept)", !!.cell_group, ""))
+        mutate(cell_type_label = if_else(row_number() <= 3 & c_FDR < significance_threshold & parameter != "(Intercept)", !!.cell_group, ""))
     ) %>%
     with_groups(
       parameter,
       ~ .x %>%
         arrange(v_FDR) %>%
-        mutate(cell_type_label = if_else((row_number()<=3 & v_FDR < significance_threshold & parameter!="(Intercept)"), !!.cell_group, cell_type_label))
+        mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & parameter != "(Intercept)"), !!.cell_group, cell_type_label))
     ) %>%
-
+    
     {
       .x = (.)
+      
       # Plot
       ggplot(.x, aes(c_effect, v_effect)) +
-        geom_vline(xintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", linewidth=0.3) +
-        geom_hline(yintercept = c(-0.2, 0.2), colour="grey", linetype="dashed", linewidth=0.3) +
-        geom_errorbar(aes(xmin=`c_lower`, xmax=`c_upper`, color=`c_FDR`<significance_threshold, alpha=`c_FDR`<significance_threshold), linewidth=0.2) +
-        geom_errorbar(aes(ymin=v_lower, ymax=v_upper, color=`v_FDR`<significance_threshold, alpha=`v_FDR`<significance_threshold), linewidth=0.2) +
-
-        geom_point(size=0.2)  +
-        annotate("text", x = 0, y = 3.5, label = "Variable", size=2) +
-        annotate("text", x = 5, y = 0, label = "Abundant", size=2, angle=270) +
-
-        geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label!="") ) +
-
+        
+        # Add vertical and horizontal lines
+        geom_vline(xintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
+        geom_hline(yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
+        
+        # Add error bars
+        geom_errorbar(aes(xmin = `c_lower`, xmax = `c_upper`, color = `c_FDR` < significance_threshold, alpha = `c_FDR` < significance_threshold), linewidth = 0.2) +
+        geom_errorbar(aes(ymin = v_lower, ymax = v_upper, color = `v_FDR` < significance_threshold, alpha = `v_FDR` < significance_threshold), linewidth = 0.2) +
+        
+        # Add points
+        geom_point(size = 0.2) +
+        
+        # Add annotations
+        annotate("text", x = 0, y = 3.5, label = "Variable", size = 2) +
+        annotate("text", x = 5, y = 0, label = "Abundant", size = 2, angle = 270) +
+        
+        # Add text labels for significant cell groups
+        geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label != "")) +
+        
+        # Set color and alpha scales
         scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
         scale_alpha_manual(values = c(0.4, 1)) +
-        facet_wrap(~parameter, scales="free") +
-        my_theme +
-        theme(
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank()
-        )
+        
+        # Facet by parameter
+        facet_wrap(~parameter, scales = "free") +
+        
+        # Apply custom theme
+        multipanel_theme 
     }
-
 }
 
+
+#' Plot Boxplot of Cell-group Proportion
+#'
+#' This function creates a boxplot of cell-group proportions, optionally highlighting significant differences based on a given significance threshold.
+#'
+#' @param .data Data frame containing the main data.
+#' @param data_proportion Data frame containing proportions of cell groups.
+#' @param factor_of_interest A factor indicating the biological condition of interest.
+#' @param .cell_group The cell group to be analysed.
+#' @param .sample The sample identifier.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param my_theme A ggplot2 theme object to be applied to the plot.
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
-#' @noRd
+#' 
+#' 
+#' @return A ggplot object representing the boxplot.
+#' @examples
+#' # Example usage:
+#' # plot_boxplot(.data, data_proportion, "condition", "cell_group", "sample", 0.025, theme_minimal())
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.025, my_theme
+    .sample, significance_threshold = 0.05, my_theme
 ){
-
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  stats_name <- NULL
+  parameter <- NULL
+  stats_value <- NULL
+  count_data <- NULL
+  generated_proportions <- NULL
+  proportion <- NULL
+  name <- NULL
+  outlier <- NULL
+  
+  # Function to calculate boxplot statistics
   calc_boxplot_stat <- function(x) {
     coef <- 1.5
     n <- sum(!is.na(x))
-    # calculate quantiles
+    
+    # Calculate quantiles
     stats <- quantile(x, probs = c(0.0, 0.25, 0.5, 0.75, 1.0))
     names(stats) <- c("ymin", "lower", "middle", "upper", "ymax")
     iqr <- diff(stats[c(2, 4)])
-    # set whiskers
+    
+    # Set whiskers
     outliers <- x < (stats[2] - coef * iqr) | x > (stats[4] + coef * iqr)
     if (any(outliers)) {
       stats[c(1, 5)] <- range(c(stats[2:4], x[!outliers]), na.rm = TRUE)
     }
     return(stats)
   }
-
+  
+  # Function to remove leading zero from labels
   dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
-
+  
+  # Define square root transformation and its inverse
   S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
   IS_sqrt <- function(x){x^2*sign(x)}
   S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
-
-
+  
   .cell_group = enquo(.cell_group)
   .sample = enquo(.sample)
-
-
+  
+  # Prepare significance colors
   significance_colors =
     .data %>%
     pivot_longer(
@@ -1694,17 +2036,15 @@ plot_boxplot = function(
   
   if(nrow(significance_colors) > 0){
     
-    
     if(.data |> attr("contrasts") |> is.null())
       significance_colors =
         significance_colors %>%
         unite("name", c(which, parameter), remove = FALSE) %>%
         distinct() %>%
+        
         # Get clean parameter
         mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
-        
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-    
     else
       significance_colors =
         significance_colors |>
@@ -1720,21 +2060,20 @@ plot_boxplot = function(
         
         # Merge contrasts
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-    
-    
   }
-
-  my_boxplot =  ggplot()
-
+  
+  my_boxplot = ggplot()
+  
   if("fit" %in% names(attributes(.data))){
-
+    
     simulated_proportion =
       .data |>
       sccomp_replicate(number_of_draws = 100) |>
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
-
+    
     my_boxplot = my_boxplot +
-
+      
+      # Add boxplot for simulated proportions
       stat_summary(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
         fun.data = calc_boxplot_stat, geom="boxplot",
@@ -1742,37 +2081,38 @@ plot_boxplot = function(
         fatten = 0.5, lwd=0.2,
         data =
           simulated_proportion %>%
-
-          # Filter uanitles because of limits
-          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)) ,
+          inner_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)),
         color="blue"
       )
-
-    # hideOutliers <- function(x) {
-    #   if (x$hoverinfo == 'y') {
-    #     x$marker = list(opacity = 0)
-    #     x$hoverinfo = NA
-    #   }
-    #   return(x)
-    # }
-    #
-    # my_boxplot[["x"]][["data"]] <- map(my_boxplot[["x"]][["data"]], ~ hideOutliers(.))
-
   }
-
-  # Get the exception if no significant cell types. This is not elegant
-  if(nrow(significance_colors)==0 |
-
-     # This is needed in case of contrasts
+  
+  if(nrow(significance_colors) == 0 |
      length(intersect(
-    significance_colors |> pull(!!as.symbol(factor_of_interest)),
-    data_proportion |> pull(!!as.symbol(factor_of_interest))
-    )) == 0){
+       significance_colors |> pull(!!as.symbol(factor_of_interest)),
+       data_proportion |> pull(!!as.symbol(factor_of_interest))
+     )) == 0){
+    
     my_boxplot=
       my_boxplot +
-
+      
+      # Add boxplot without significance colors
       geom_boxplot(
-        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL), # fill=Effect),
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = NULL),
+        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        data =
+          data_proportion |>
+          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
+          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
+        fatten = 0.5,
+        lwd=0.5,
+      )
+  } else {
+    my_boxplot=
+      my_boxplot +
+      
+      # Add boxplot with significance colors
+      geom_boxplot(
+        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name),
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
@@ -1782,54 +2122,26 @@ plot_boxplot = function(
         lwd=0.5,
       )
   }
-
-  # If I have significance
-  else {
-    my_boxplot=
-      my_boxplot +
-
-      geom_boxplot(
-        aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name), # fill=Effect),
-        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
-        data =
-          data_proportion |>
-          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
-          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
-        fatten = 0.5,
-        lwd=0.5,
-      )
-  }
-
-
-
+  
   my_boxplot +
+    
+    # Add jittered points for individual data
     geom_jitter(
       aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
       data = data_proportion,
       position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
       size = 0.5
     ) +
-
-    # geom_boxplot(
-    #   aes(Condition, generated_proportions),
-    #   outlier.shape = NA, alpha=0.2,
-    #   data = simulated_proportion, fatten = 0.5, size=0.5,
-    # ) +
-    # geom_jitter(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
-
+    
+    # Facet wrap by cell group
     facet_wrap(
-      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      vars(!!.cell_group),
       scales = "free_y",
       nrow = 4
     ) +
     scale_color_manual(values = c("black", "#e11f28")) +
-    #scale_fill_manual(values = c("white", "#E2D379")) +
-    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
-    #scale_color_distiller(palette = "Spectral") +
-
     scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
     scale_fill_discrete(na.value = "white") +
-    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
     guides(color="none", alpha="none", size="none") +
@@ -1837,32 +2149,56 @@ plot_boxplot = function(
     ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
     my_theme +
     theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
-
-
-
 }
 
+#' Plot Scatterplot of Cell-group Proportion
+#'
+#' This function creates a scatterplot of cell-group proportions, optionally highlighting significant differences based on a given significance threshold.
+#'
+#' @param .data Data frame containing the main data.
+#' @param data_proportion Data frame containing proportions of cell groups.
+#' @param factor_of_interest A factor indicating the biological condition of interest.
+#' @param .cell_group The cell group to be analysed.
+#' @param .sample The sample identifier.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param my_theme A ggplot2 theme object to be applied to the plot.
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
 #' @importFrom magrittr equals
-#' @noRd
+#' 
+#' 
+#' @return A ggplot object representing the scatterplot.
+#' @examples
+#' # Example usage:
+#' # plot_scatterplot(.data, data_proportion, "condition", "cell_group", "sample", 0.025, theme_minimal())
 plot_scatterplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.025, my_theme
+    .sample, significance_threshold = 0.05, my_theme
 ){
   
+  # Define the variables as NULL to avoid CRAN NOTES
+  stats_name <- NULL
+  parameter <- NULL
+  stats_value <- NULL
+  count_data <- NULL
+  generated_proportions <- NULL
+  proportion <- NULL
+  name <- NULL
+  outlier <- NULL
   
+  # Function to remove leading zero from labels
   dropLeadingZero <- function(l){  stringr::str_replace(l, '0(?=.)', '') }
   
+  # Define square root transformation and its inverse
   S_sqrt <- function(x){sign(x)*sqrt(abs(x))}
   IS_sqrt <- function(x){x^2*sign(x)}
   S_sqrt_trans <- function() scales::trans_new("S_sqrt",S_sqrt,IS_sqrt)
   
-  
   .cell_group = enquo(.cell_group)
   .sample = enquo(.sample)
   
+  # Prepare significance colors
   significance_colors =
     .data %>%
     pivot_longer(
@@ -1878,17 +2214,15 @@ plot_scatterplot = function(
   
   if(nrow(significance_colors) > 0){
     
-    
     if(.data |> attr("contrasts") |> is.null())
       significance_colors =
         significance_colors %>%
         unite("name", c(which, parameter), remove = FALSE) %>%
         distinct() %>%
+        
         # Get clean parameter
         mutate(!!as.symbol(factor_of_interest) := str_replace(parameter, sprintf("^%s", `factor`), "")) %>%
-        
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-    
     else
       significance_colors =
         significance_colors |>
@@ -1904,13 +2238,9 @@ plot_scatterplot = function(
         
         # Merge contrasts
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
-    
-    
   }
-
   
-  
-  my_scatterplot =  ggplot()
+  my_scatterplot = ggplot()
   
   if("fit" %in% names(attributes(.data))){
     
@@ -1922,67 +2252,52 @@ plot_scatterplot = function(
     my_scatterplot = 
       my_scatterplot +
       
+      # Add smoothed line for simulated proportions
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
         lwd=0.2,
         data =
           simulated_proportion %>%
-          
-          # Filter uanitles because of limits
-          inner_join( data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group, !!.sample)) ,
+          inner_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group, !!.sample)) ,
         color="blue", fill="blue",
         span = 1
       )
-    
-    # hideOutliers <- function(x) {
-    #   if (x$hoverinfo == 'y') {
-    #     x$marker = list(opacity = 0)
-    #     x$hoverinfo = NA
-    #   }
-    #   return(x)
-    # }
-    #
-    # my_scatterplot[["x"]][["data"]] <- map(my_scatterplot[["x"]][["data"]], ~ hideOutliers(.))
-    
   }
   
-  # Get the exception if no significant cell types. This is not elegant
   if(
     nrow(significance_colors)==0 ||
-     
-     # This is needed in case of contrasts
-     significance_colors |> 
-     pull(!!as.symbol(factor_of_interest)) |> 
-     intersect(
-       data_proportion |> 
-       pull(!!as.symbol(factor_of_interest))
-     ) |> 
-     length() |> 
-     equals(0)
-     ) {
+    
+    significance_colors |> 
+    pull(!!as.symbol(factor_of_interest)) |> 
+    intersect(
+      data_proportion |> 
+      pull(!!as.symbol(factor_of_interest))
+    ) |> 
+    length() |> 
+    equals(0)
+  ) {
     
     my_scatterplot=
       my_scatterplot +
       
+      # Add smoothed line without significance colors
       geom_smooth(
-        aes(!!as.symbol(factor_of_interest), proportion, fill = NULL), # fill=Effect),
+        aes(!!as.symbol(factor_of_interest), proportion, fill = NULL),
         data =
           data_proportion ,
         lwd=0.5,
         color = "black",
         span = 1
       )
-  }
-  
-  # If I have significance
-  else {
+  } else {
     my_scatterplot=
       my_scatterplot +
       
+      # Add smoothed line with significance colors
       geom_smooth(
-        aes(!!as.symbol(factor_of_interest), proportion, fill = name), # fill=Effect),
+        aes(!!as.symbol(factor_of_interest), proportion, fill = name),
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
-        data =  data_proportion ,
+        data = data_proportion ,
         fatten = 0.5,
         lwd=0.5,
         color = "black",
@@ -1990,9 +2305,9 @@ plot_scatterplot = function(
       )
   }
   
-  
-  
   my_scatterplot +
+    
+    # Add jittered points for individual data
     geom_point(
       aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier),
       data = data_proportion,
@@ -2000,26 +2315,15 @@ plot_scatterplot = function(
       size = 0.5
     ) +
     
-    # geom_boxplot(
-    #   aes(Condition, generated_proportions),
-    #   outlier.shape = NA, alpha=0.2,
-    #   data = simulated_proportion, fatten = 0.5, size=0.5,
-    # ) +
-    # geom_point(aes(Condition, generated_proportions), color="black" ,alpha=0.2, size = 0.2, data = simulated_proportion) +
-    
+    # Facet wrap by cell group
     facet_wrap(
-      vars(!!.cell_group) ,# forcats::fct_reorder(!!.cell_group, abs(Effect), .desc = TRUE, na.rm=TRUE),
+      vars(!!.cell_group),
       scales = "free_y",
       nrow = 4
     ) +
     scale_color_manual(values = c("black", "#e11f28")) +
-    #scale_fill_manual(values = c("white", "#E2D379")) +
-    #scale_fill_distiller(palette = "Spectral", na.value = "white") +
-    #scale_color_distiller(palette = "Spectral") +
-    
     scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
     scale_fill_discrete(na.value = "white") +
-    #scale_y_continuous(labels = dropLeadingZero, trans="logit") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
     guides(color="none", alpha="none", size="none") +
@@ -2027,13 +2331,23 @@ plot_scatterplot = function(
     ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
     my_theme +
     theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
-  
-  
-  
 }
 
 draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  M <- NULL
+  parameter <- NULL
+  bigger_zero <- NULL
+  smaller_zero <- NULL
+  lower <- NULL
+  effect <- NULL
+  upper <- NULL
+  pH0 <- NULL
+  FDR <- NULL
+  n_eff <- NULL
+  R_k_hat <- NULL
+  
   .cell_group = enquo(.cell_group)
 
   draws =
@@ -2053,7 +2367,7 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     mutate(pH0 =  (1 - (pmax(bigger_zero, smaller_zero) / n))) |>
     with_groups(parameter, ~ mutate(.x, FDR = get_FDR(pH0))) |>
 
-    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, n_eff, R_k_hat) |>
+    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, any_of(c("n_eff", "R_k_hat"))) |>
     suppressWarnings()
 
   # Setting up names separately because |> is not flexible enough
@@ -2066,6 +2380,10 @@ enquos_from_list_of_symbols <- function(...) {
 }
 
 contrasts_to_enquos = function(contrasts){
+  
+  # Define the variables as NULL to avoid CRAN NOTES
+  . <- NULL
+  
   contrasts |> enquo() |> quo_names() |> syms() %>% do.call(enquos_from_list_of_symbols, .)
 }
 
@@ -2194,6 +2512,19 @@ compress_zero_one = function(y){
 # this can be helpful if we want to draw PCA with uncertainty
 get_abundance_contrast_draws = function(.data, contrasts){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  X <- NULL
+  .value <- NULL
+  X_random_effect <- NULL
+  .variable <- NULL
+  y <- NULL
+  M <- NULL
+  khat <- NULL
+  parameter <- NULL
+  n_eff <- NULL
+  R_k_hat <- NULL
+  
+  
   .cell_group = .data |>  attr(".cell_group")
 
   # Beta
@@ -2205,43 +2536,79 @@ get_abundance_contrast_draws = function(.data, contrasts){
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
 
-  # Random intercept
-  is_random_intercept =
-    .data |>
-    attr("model_input") %$%
-    N_random_intercepts |>
-    equals(0) |>
-    not()
-
-  if(is_random_intercept){
-    beta_random_intercept_factor_of_interest = .data |> attr("model_input") %$% X_random_intercept |> colnames()
-    beta_random_intercept =
-      .data |>
-      attr("fit") %>%
-      draws_to_tibble_x_y("beta_random_intercept", "C", "M") |>
-      pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(beta_random_intercept_factor_of_interest))
-  } else {
-    beta_random_intercept_factor_of_interest = ""
-  }
-
-
   # Abundance
   draws = select(beta, -.variable)
   
-  # Random intercept
-  if(is_random_intercept) 
+  # Random effect
+  if(.data |> attr("model_input") %$% n_random_eff > 0){
+    beta_random_effect_factor_of_interest = .data |> attr("model_input") %$% X_random_effect |> colnames()
+    beta_random_effect =
+      .data |>
+      attr("fit") %>%
+      draws_to_tibble_x_y("random_effect", "C", "M") 
+    
+    # Add last component
+    beta_random_effect = 
+      beta_random_effect |> 
+      bind_rows(
+        beta_random_effect |> 
+          with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
+          mutate(.value = -.value, M = beta_random_effect |> pull(M) |> max() + 1)
+      )
+    
+    # Reshape
+    beta_random_effect = 
+      beta_random_effect |>
+      pivot_wider(names_from = C, values_from = .value) %>%
+      setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest))
+    
     draws = draws |> 
-    left_join(select(beta_random_intercept, -.variable),
-              by = c("M", ".chain", ".iteration", ".draw")
-    )
+      left_join(select(beta_random_effect, -.variable),
+                by = c("M", ".chain", ".iteration", ".draw")
+      )
+  }  else {
+    beta_random_effect_factor_of_interest = ""
+  }
+  
+  # Second random effect. IN THE FUTURE THIS WILL BE VECTORISED TO ARBUTRARY GRI+OUING
+  if(.data |> attr("model_input") %$% n_random_eff > 1){
+    beta_random_effect_factor_of_interest_2 = .data |> attr("model_input") %$% X_random_effect_2 |> colnames()
+    beta_random_effect_2 =
+      .data |>
+      attr("fit") %>%
+      draws_to_tibble_x_y("random_effect_2", "C", "M") 
+    
+    # Add last component
+    beta_random_effect_2 = 
+      beta_random_effect_2 |> 
+      bind_rows(
+        beta_random_effect_2 |> 
+          with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
+          mutate(.value = -.value, M = beta_random_effect_2 |> pull(M) |> max() + 1)
+      )
+    
+    # Reshape
+    beta_random_effect_2 = 
+      beta_random_effect_2 |>
+      pivot_wider(names_from = C, values_from = .value) %>%
+      setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest_2))
+    
+    
+    draws = draws |> 
+      left_join(select(beta_random_effect_2, -.variable),
+                by = c("M", ".chain", ".iteration", ".draw")
+      )
+  } else {
+    beta_random_effect_factor_of_interest_2 = ""
+  }
+
   
   # If I have constrasts calculate
   if(!is.null(contrasts))
     draws = 
       draws |> 
       mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
-      select(- any_of(c(beta_factor_of_interest, beta_random_intercept_factor_of_interest) |> setdiff(contrasts)) ) 
+      select(- any_of(c(beta_factor_of_interest, beta_random_effect_factor_of_interest) |> setdiff(contrasts)) ) 
   
   # Add cell name
   draws = draws |> 
@@ -2291,7 +2658,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 
     convergence_df =
       convergence_df |> 
-      select(!!.cell_group, parameter, n_eff, R_k_hat) |>
+      select(!!.cell_group, parameter, any_of(c("n_eff", "R_k_hat"))) |>
       suppressWarnings()
 
   draws |>
@@ -2310,6 +2677,16 @@ get_abundance_contrast_draws = function(.data, contrasts){
 #' @noRd
 get_variability_contrast_draws = function(.data, contrasts){
 
+  # Define the variables as NULL to avoid CRAN NOTES
+  XA <- NULL
+  .value <- NULL
+  y <- NULL
+  M <- NULL
+  khat <- NULL
+  parameter <- NULL
+  n_eff <- NULL
+  R_k_hat <- NULL
+  
   .cell_group = .data |>  attr(".cell_group")
 
   variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()
@@ -2345,7 +2722,7 @@ get_variability_contrast_draws = function(.data, contrasts){
     select(!!.cell_group, everything())
 
   # If no contrasts of interest just return an empty data frame
-  if(ncol(draws)==5) return(draws |> distinct(M))
+  if(ncol(draws)==5) return(draws |> distinct(M, !!.cell_group))
 
   # Get convergence
   convergence_df =
@@ -2380,7 +2757,7 @@ get_variability_contrast_draws = function(.data, contrasts){
 
     convergence_df =
     convergence_df |> 
-      select(!!.cell_group, parameter, n_eff, R_k_hat) |>
+      select(!!.cell_group, parameter, any_of(c("n_eff", "R_k_hat"))) |>
       suppressWarnings()
 
 
@@ -2404,24 +2781,16 @@ replicate_data = function(.data,
           formula_variability = NULL,
           new_data = NULL,
           number_of_draws = 1,
-          mcmc_seed = sample(1e5, 1)){
+          mcmc_seed = sample(1e5, 1),
+          cores = detectCores()){
 
 
   # Select model based on noise model
   noise_model = attr(.data, "noise_model")
-  
-  if (noise_model == "multi_beta_binomial") {
-    my_model = stanmodels$glm_multi_beta_binomial_generate_date
-  } else if (noise_model == "dirichlet_multinomial") {
-    my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  }
-
 
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
-
-  fit_matrix = as.matrix(attr(.data, "fit") )
 
   # Composition
   if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
@@ -2543,26 +2912,30 @@ replicate_data = function(.data,
     "(Intercept)" %in% colnames(new_X)
   if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
 
+  # Original grouping
+  original_grouping_names = .data |> attr("formula_composition") |> formula_to_random_effect_formulae() |> pull(grouping)
+  
   # Random intercept
-  random_intercept_elements = parse_formula_random_intercept(formula_composition)
-  if(random_intercept_elements |> nrow() |> equals(0)) {
-    X_random_intercept_which = array()[0]
-    new_X_random_intercept = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  random_effect_elements = parse_formula_random_effect(formula_composition)
+  
+  random_effect_grouping =
+    new_data %>%
+    
+    get_random_effect_design2(
+      !!.sample,
+      formula_composition
+    )
+  
 
+  # if(random_effect_elements |> nrow() |> equals(0)) {
+  #   
+  # }
+  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any()) {
 
-  }
-  else {
-
-    random_intercept_grouping =
-      new_data %>%
-
-        get_random_intercept_design2(
-        !!.sample,
-        formula_composition
-      )
-
-    new_X_random_intercept =
-      random_intercept_grouping |>
+    # HAVE TO DEBUG
+    new_X_random_effect =
+      random_effect_grouping |>
+      filter(grouping==original_grouping_names[1]) |> 
       mutate(design_matrix = map(
         design,
         ~ ..1 |>
@@ -2572,63 +2945,121 @@ replicate_data = function(.data,
       )) |>
 
       # Merge
-      pull(design_matrix) |>
-      bind_cols() |>
+      pull(design_matrix) |> 
+      _[[1]] |> 
       as_matrix(rownames = quo_name(.sample))  |>
-
       tail(nrow_new_data)
 
-    # Check if I have column in the new design that are not in the old one
-    missing_columns = new_X_random_intercept |> colnames() |> setdiff(colnames(model_input$X_random_intercept))
-    if(missing_columns |> length() > 0)
-    	stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
-
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
-    X_random_intercept_which =
-      colnames(new_X_random_intercept) |>
+    X_random_effect_which =
+      colnames(new_X_random_effect) |>
       match(
         model_input %$%
-          X_random_intercept %>%
+          X_random_effect %>%
           colnames()
       ) |>
       as.array()
+    
+    # Check if I have column in the new design that are not in the old one
+    missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
+    if(missing_columns |> length() > 0)
+      stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
+    
   }
+  else{
+    X_random_effect_which = array()[0]
+    new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+    
+  }
+  if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()){
+    # HAVE TO DEBUG
+    new_X_random_effect_2 =
+      random_effect_grouping |>
+      filter(grouping==original_grouping_names[2]) |> 
+      mutate(design_matrix = map(
+        design,
+        ~ ..1 |>
+          select(!!.sample, group___label, value) |>
+          pivot_wider(names_from = group___label, values_from = value) |>
+          mutate(across(everything(), ~ .x |> replace_na(0)))
+      )) |>
+      
+      # Merge
+      pull(design_matrix) |> 
+      _[[1]] |> 
+      as_matrix(rownames = quo_name(.sample))  |>
+      tail(nrow_new_data)
+    
 
+
+    
+    # DUPLICATE
+    X_random_effect_which_2 =
+      colnames(new_X_random_effect_2) |>
+      match(
+        model_input %$%
+          X_random_effect_2 %>%
+          colnames()
+      ) |>
+      as.array()
+  
+  }
+  else{
+    X_random_effect_which_2 = array()[0]
+    new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  }
+  
   # New X
+  model_input$X_original = model_input$X
   model_input$X = new_X
   model_input$Xa = new_Xa
+  model_input$N_original = model_input$N
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
 
-  model_input$X_random_intercept = new_X_random_intercept
-  model_input$N_grouping_new = ncol(new_X_random_intercept)
+  model_input$X_random_effect = new_X_random_effect
+  model_input$X_random_effect_2 = new_X_random_effect_2
 
+  model_input$ncol_X_random_eff_new = ncol(new_X_random_effect) |> c(ncol(new_X_random_effect_2))
+
+
+  
+  number_of_draws_in_the_fit = attr(.data, "fit") |>  get_output_samples()
+  
   # To avoid error in case of a NULL posterior sample
-  number_of_draws = min(number_of_draws, nrow(fit_matrix))
+  number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
+  
+  # Load model
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
+  
+  
   # Generate quantities
-  rstan::gqs(
-    my_model,
-    draws =  fit_matrix[sample(seq_len(nrow(fit_matrix)), size=number_of_draws),, drop=FALSE],
-    data = model_input |> c(
+  mod_rng |> sample_safe(
+    generate_quantities_fx,
+    attr(.data, "fit")$draws(format = "matrix")[
+      sample(seq_len(number_of_draws_in_the_fit), size=number_of_draws),, drop=FALSE
+    ],
+    data = model_input |> c(list(
 
       # Add subset of coefficients
       length_X_which = length(X_which),
       length_XA_which = length(XA_which),
-      X_which,
-      XA_which,
+      X_which = X_which,
+      XA_which = XA_which,
 
       # Random intercept
-      X_random_intercept_which = X_random_intercept_which,
-      length_X_random_intercept_which = length(X_random_intercept_which),
+      X_random_effect_which = X_random_effect_which,
+      X_random_effect_which_2 = X_random_effect_which_2,
+      length_X_random_effect_which = length(X_random_effect_which) |> c(length(X_random_effect_which_2)),
 
       # Should I create intercept for generate quantities
       create_intercept = create_intercept
 
-    ),
-    seed = mcmc_seed
+    )),
+    seed = mcmc_seed, 
+    threads_per_chain = 1
+
   )
-
-
 }
 
 get_model_from_data = function(file_compiled_model, model_code){
@@ -2652,12 +3083,12 @@ add_formula_columns = function(.data, .original_data, .sample,  formula_composit
   if(length(formula_elements) == 0) return(.data)
 
   # Get random intercept
-  .grouping_for_random_intercept = parse_formula_random_intercept(formula_composition) |> pull(grouping) |> unique()
+  .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
 
   data_frame_formula =
     .original_data %>%
     as_tibble() |>
-    select( !!.sample, formula_elements, any_of(.grouping_for_random_intercept) ) %>%
+    select( !!.sample, formula_elements, any_of(.grouping_for_random_effect) ) %>%
     distinct()
 
   .data |>
@@ -2937,3 +3368,168 @@ add_class = function(var, name) {
 
   var
 }
+
+
+#' Get Output Samples from a Stan Fit Object
+#'
+#' This function retrieves the number of output samples from a Stan fit object, 
+#' supporting different methods (MHC and Variational) based on the available data within the object.
+#'
+#' @param fit A `stanfit` object, which is the result of fitting a model via Stan.
+#' @return The number of output samples used in the Stan model. 
+#'         Returns from MHC if available, otherwise from Variational inference.
+#' @examples
+#' # Assuming 'fit' is a stanfit object obtained from running a Stan model
+#' print("samples_count = get_output_samples(fit)")
+#'
+#' @export
+#' 
+get_output_samples = function(fit){
+  
+  # Check if the output_samples field is present in the metadata of the fit object
+  # This is generally available when the model is fit using MHC (Markov chain Monte Carlo)
+  if(!is.null(fit$metadata()$output_samples)) {
+    # Return the output_samples from the metadata
+    fit$metadata()$output_samples
+  }
+  
+  # If the output_samples field is not present, check for iter_sampling
+  # This occurs typically when the model is fit using Variational inference methods
+  else if(!is.null(fit$metadata()$iter_sampling)) {
+    # Return the iter_sampling from the metadata
+    fit$metadata()$iter_sampling
+  }
+  else
+    fit$metadata()$num_psis_draws
+}
+
+
+#' Load, Compile, and Cache a Stan Model
+#'
+#' This function attempts to load a precompiled Stan model using the `instantiate` package.
+#' If the model is not found in the cache or force recompilation is requested, it will locate
+#' the Stan model file within the `sccomp` package, compile it using `cmdstanr`, and save the 
+#' compiled model to the cache directory for future use.
+#'
+#' @param name A character string representing the name of the Stan model (without the `.stan` extension).
+#' @param cache_dir A character string representing the path to the cache directory where compiled models are saved. 
+#' Defaults to `sccomp_stan_models_cache_dir`.
+#' @param force A logical value. If `TRUE`, the model will be recompiled even if it exists in the cache. 
+#' Defaults to `FALSE`.
+#' @param threads An integer specifying the number of threads to use for compilation. 
+#' Defaults to `1`.
+#' 
+#' @return A compiled Stan model object from `cmdstanr`.
+#' 
+#' @importFrom instantiate stan_package_model
+#' @importFrom instantiate stan_package_compile
+#' 
+#' @noRd
+#' 
+#' @examples
+#' \donttest{
+#'   model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE, threads = 1)
+#' }
+load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FALSE, threads = 1) {
+  
+  
+  # tryCatch({
+  #   # Attempt to load a precompiled Stan model using the instantiate package
+  #   instantiate::stan_package_model(
+  #     name = name,
+  #     package = "sccomp"
+  #   )
+  # }, error = function(e) {
+    # Try to load the model from cache
+  cache_dir |> dir.create(showWarnings = FALSE, recursive = TRUE)
+    cache_file <- file.path(cache_dir, paste0(name, ".rds"))
+    if (file.exists(cache_file) & !force) {
+      message("Loading model from cache...")
+      return(readRDS(cache_file))
+    }
+    
+    # If loading the precompiled model fails, find the Stan model file within the package
+    message("Precompiled model not found. Compiling the model...")
+    stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
+    
+    # Compile the Stan model using cmdstanr with threading support enabled
+    stan_package_compile(
+      stan_model_path, 
+      cpp_options = list(stan_threads = TRUE),
+      force_recompile = TRUE, 
+      threads = threads, 
+      dir = system.file("stan", package = "sccomp")
+    )
+    mod = instantiate::stan_package_model(
+      name = name, 
+      package = "sccomp", 
+      compile = TRUE,
+      cpp_options = list(stan_threads = TRUE)
+    ) |> suppressWarnings()
+    
+    # Save the compiled model object to cache
+    saveRDS(mod, file = cache_file)
+    message("Model compiled and saved to cache successfully.")
+    
+    return(mod)
+  # })
+
+}
+
+#' Check and Install cmdstanr and CmdStan
+#'
+#' This function checks if the `cmdstanr` package and CmdStan are installed. 
+#' If they are not installed, it installs them automatically in non-interactive sessions
+#' or asks for permission to install them in interactive sessions.
+#'
+#' @importFrom instantiate stan_cmdstan_exists
+#' @importFrom utils install.packages
+#' @importFrom utils menu
+#' @return NULL
+#' 
+#' @noRd
+check_and_install_cmdstanr <- function() {
+  # Check if cmdstanr is installed
+  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
+    
+    clear_stan_model_cache()
+    
+    stop(
+      "cmdstanr is required to proceed.\n\n",
+      "Step 1: Please install the R package 'cmdstanr' using the following command:\n",
+      "install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))\n",
+      "Note: 'cmdstanr' is not available on CRAN.\n\n",
+      
+      "Step 2: After installing 'cmdstanr', you can install CmdStan by running the following commands:\n",
+      "cmdstanr::check_cmdstan_toolchain(fix = TRUE)\n",
+      "cmdstanr::install_cmdstan()\n",
+      "This will install the latest version of CmdStan. For more information, visit:\n",
+      "https://mc-stan.org/users/interfaces/cmdstan"
+    )
+  }
+  
+  # Check if CmdStan is installed
+  if (!instantiate::stan_cmdstan_exists()) {
+    
+    clear_stan_model_cache()
+    
+    stop(
+      "cmdstan is required to proceed.\n\n",
+      "You can install CmdStan by running the following command:\n",
+      "cmdstanr::check_cmdstan_toolchain(fix = TRUE)\n",
+      "cmdstanr::install_cmdstan()\n",
+      "This will install the latest version of CmdStan. For more information, visit:\n",
+      "https://mc-stan.org/users/interfaces/cmdstan"
+    )
+  }
+}
+
+
+drop_environment <- function(obj) {
+  # Check if the object has an environment
+  if (!is.null(environment(obj))) {
+    environment(obj) <- new.env()
+  }
+  return(obj)
+}
+
