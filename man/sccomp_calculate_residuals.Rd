@@ -2,34 +2,57 @@
 % Please edit documentation in R/methods.R
 \name{sccomp_calculate_residuals}
 \alias{sccomp_calculate_residuals}
-\title{sccomp_calculate_residuals}
+\title{Calculate Residuals Between Observed and Predicted Proportions}
 \usage{
 sccomp_calculate_residuals(.data)
 }
 \arguments{
-\item{.data}{A tibble. The result of sccomp_estimate.}
-
-\item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
-
-\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
+\item{.data}{A tibble of class \code{sccomp_tbl}, which is the result of \code{sccomp_estimate()}. This tibble contains the fitted model and associated data necessary for calculating residuals.}
 }
 \value{
-A nested tibble \code{tbl} with cell_group-wise statistics
+A tibble (\code{tbl}) with the following columns:
+\itemize{
+\item \strong{sample} - A character column representing the sample identifiers.
+\item \strong{cell_group} - A character column representing the cell group identifiers.
+\item \strong{residuals} - A numeric column representing the residuals, calculated as the difference between observed and predicted proportions.
+\item \strong{exposure} - A numeric column representing the total counts (sum of counts across cell groups) for each sample.
+}
 }
 \description{
-This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula \code{~ factor_1 + factor_2} and use this formula to remove unwanted variation \code{~ factor_1}, the \code{factor_2} will be factored out.
+\code{sccomp_calculate_residuals} computes the residuals between observed cell group proportions and the predicted proportions from a fitted \code{sccomp} model. This function is useful for assessing model fit and identifying cell groups or samples where the model may not adequately capture the observed data. The residuals are calculated as the difference between the observed proportions and the predicted mean proportions from the model.
+}
+\details{
+The function performs the following steps:
+\enumerate{
+\item Extracts the predicted mean proportions for each cell group and sample using \code{sccomp_predict()}.
+\item Calculates the observed proportions from the original count data.
+\item Computes residuals by subtracting the predicted proportions from the observed proportions.
+\item Returns a tibble containing the sample, cell group, residuals, and exposure (total counts per sample).
+}
 }
 \examples{
-
+\donttest{
+  if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+# Load example data
 data("counts_obj")
 
-  estimates = sccomp_estimate(
-  counts_obj ,
-   ~ type, ~1,  sample, cell_group, count,
-    approximate_posterior_inference = "all",
-    cores = 1
-  )
+# Fit the sccomp model
+estimates <- sccomp_estimate(
+  counts_obj,
+  formula_composition = ~ type,
+  formula_variability = ~1,
+  .sample = sample,
+  .cell_group = cell_group,
+  .count = count,
+  approximate_posterior_inference = "all",
+  cores = 1
+)
 
-  sccomp_calculate_residuals(estimates)
+# Calculate residuals
+residuals <- sccomp_calculate_residuals(estimates)
+
+# View the residuals
+print(residuals)
+}}
 
 }
