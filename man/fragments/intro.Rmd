@@ -190,7 +190,7 @@ Proportions should be greater than 0. Assuming that zeros derive from a precisio
 
 `sccomp` is able to fit erbitrary complex models. In this example we have a continuous and binary covariate.
 
-```{r}
+```{r, eval = instantiate::stan_cmdstan_exists()}
 
 res =
     seurat_obj |>
