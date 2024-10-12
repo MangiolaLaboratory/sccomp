@@ -1,5 +1,5 @@
 ---
-title: "sccomp - Outlier-aware and count-based compositional analysis of single-cell data"
+title: "sccomp - Tests differences in cell type proportions and variability from single-cell data"
 output: github_document
 always_allow_html: true
 editor_options: 
@@ -15,13 +15,11 @@ status](https://github.com/MangiolaLaboratory/sccomp/workflows/R-CMD-check/badge
 
 <!-- badges: end -->
 
-Cell omics such as single-cell genomics, proteomics, and microbiomics allow the characterisation of tissue and microbial community composition, which can be compared between conditions to identify biological drivers. This strategy has been critical to unveiling markers of disease progression, such as cancer and pathogen infection.
+Cellular omics such as single-cell genomics, proteomics, and microbiomics allow the characterization of tissue and microbial community composition, which can be compared between conditions to identify biological drivers. This strategy has been critical to unveiling markers of disease progression in conditions such as cancer and pathogen infections.
 
-For cell omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce sccomp, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, with awareness against outliers.
+For cellular omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce **sccomp**, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, while being robust to outliers.
 
-Sccomp is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. We demonstrate that mean-variability association is ubiquitous across technologies, highlighting the inadequacy of the very popular Dirichlet-multinomial modelling and providing essential principles for differential variability analysis.
-
-We show that sccomp accurately fits experimental data, with a 50% incremental improvement over state-of-the-art algorithms. Using sccomp, we identified novel differential constraints and composition in the microenvironment of primary breast cancer.
+**sccomp** is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. We demonstrate that mean-variability association is ubiquitous across technologies, highlighting the inadequacy of the very popular Dirichlet-multinomial modeling and providing essential principles for differential variability analysis.
 
 <a href="https://www.youtube.com/watch?v=R_lt58We9nA&ab_channel=RConsortium" target="_blank">
  <img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10" />
@@ -34,7 +32,7 @@ knitr::opts_chunk$set( fig.path = "inst/figures/")
 ### Cite
 
 Mangiola, Stefano, Alexandra J. Roth-Schulze, Marie Trussart, Enrique Zozaya-Valdés, Mengyao Ma, Zijie Gao, Alan F. Rubin, Terence P. Speed, Heejung Shim, and Anthony T. Papenfuss. 2023. “Sccomp: Robust Differential Composition and Variability Analysis for Single-Cell Data.” Proceedings of the National Academy of Sciences of the United States of America 120 (33): e2203828120. https://doi.org/10.1073/pnas.2203828120
-
+[PNAS - sccomp: Robust differential composition and variability analysis for single-cell data](https://www.pnas.org/doi/full/10.1073/pnas.2203828120)
 
 ```{r child="man/fragments/intro.Rmd"}
 ```
