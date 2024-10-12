@@ -23,48 +23,84 @@ vignette: >
 <!-- badges: start -->
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/tidyseurat/actions/)
 <!-- badges: end -->
+`sccomp` tests differences in cell type proportions from single-cell data. It is robust against outliers, it models continuous and discrete factors, and capable of random-effect/intercept modelling.
 
-
-Sccomp is a generalised method for differential composition and variability analyses.
+Please cite [PNAS - sccomp: Robust differential composition and variability analysis for single-cell data](https://www.pnas.org/doi/full/10.1073/pnas.2203828120)
 
 ## Characteristics
 
-- Modelling counts 
-- Modelling proportionality 
-- Modelling cell-type specific variability 
-- Cell-type information share for variability shrinkage
+- Complex linear models with continuous and categorical covariates
+- Multilevel modelling, with population fixed and random effects/intercept
+- Modelling data from counts 
+- Testing differences in cell-type proportionality 
+- Testing differences in cell-type specific variability 
+- Cell-type information share for variability adaptive shrinkage
 - Testing differential variability 
 - Probabilistic outlier identification 
 - Cross-dataset learning (hyperpriors).
 
 # Installation
 
+`sccomp` is based on `cmdstanr` which provides the latest version of `cmdstan` the Bayesian modelling tool. `cmdstanr` is not on CRAN, so we need to have 3 simple step process (that will be prompted to the user is forgot).
+
+1. R installation of `sccomp`
+2. R installation of `cmdstanr`
+3. `cmdstanr` call to `cmdstan` installation
+
 **Bioconductor**
 
 ```{r eval=FALSE}
 if (!requireNamespace("BiocManager")) install.packages("BiocManager")
+
+# Step 1
 BiocManager::install("sccomp")
+
+# Step 2
+install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+
+# Step 3
+cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
+cmdstanr::install_cmdstan()
 ```
 
 **Github**
 
 ```{r eval=FALSE}
-devtools::install_github("stemangiola/sccomp")
+
+# Step 1
+devtools::install_github("MangiolaLaboratory/sccomp")
+
+# Step 2
+install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+
+# Step 3
+cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
+cmdstanr::install_cmdstan()
 ```
+
+Function | Description
+------------ | -------------
+`sccomp_estimate` | Fit the model onto the data, and estimate the coefficients
+`sccomp_remove_outliers` | Identify outliers probabilistically based on the model fit, and exclude them from the estimation
+`sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change)
+`sccomp_replicate` | Simulate data from the model, or part of the model
+`sccomp_predict` | Predicts proportions, based on the model, or part of the model
+`sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors
+`plot` | Plots summary plots to asses significance 
 
 # Analysis
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE}
 library(dplyr)
 library(sccomp)
 library(ggplot2)
 library(forcats)
 library(tidyr)
-library(rstan)
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 ```
+
 
 `sccomp` can model changes in composition and variability. By default, the formula for variability is either `~1`, which assumes that the
 cell-group variability is independent of any covariate or `~ factor_of_interest`, which assumes that the model is dependent on the
@@ -79,12 +115,11 @@ Of the output table, the estimate columns start with the prefix `c_` indicate `c
 ```{r eval=FALSE}
 
 sccomp_result = 
-  single_cell_object |>
+  sce_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
     cores = 1 
   ) |> 
   sccomp_remove_outliers(cores = 1) |> # Optional
@@ -94,7 +129,7 @@ sccomp_result =
 
 ### From counts
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = instantiate::stan_cmdstan_exists()}
 
 sccomp_result = 
   counts_obj |>
@@ -103,38 +138,58 @@ sccomp_result =
     .sample = sample,
     .cell_group = cell_group,
     .count = count, 
-    bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(cores = 1) |> # Optional
+  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
   sccomp_test()
-
 ```
+
+
+Here you see the results of the fit, the effects of the factor on composition and variability. You also can see the uncertainty around those effects.
+
+The output is a tibble containing the **Following columns** 
+
+- `cell_group` - The cell groups being tested.
+- `parameter` - The parameter being estimated from the design matrix described by the input `formula_composition` and `formula_variability`.
+- `factor` - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+- `c_lower` - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+- `c_effect` - Mean of the posterior distribution for a composition (c) parameter.
+- `c_upper` - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
+- `c_pH0` - Probability of the null hypothesis (no difference) for a composition (c). This is not a p-value.
+- `c_FDR` - False-discovery rate of the null hypothesis for a composition (c).
+- `v_lower` - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
+- `v_effect` - Mean of the posterior distribution for a variability (v) parameter.
+- `v_upper` - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
+- `v_pH0` - Probability of the null hypothesis for a variability (v).
+- `v_FDR` - False-discovery rate of the null hypothesis for a variability (v).
+- `count_data` - Nested input count data.
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+sccomp_result
+```
+
 
 ## Summary plots
 
+A plot of group proportions, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is descriptively adequate for the data, the blue boxplots should roughly overlay the black boxplots, which represent the observed data. The outliers are coloured in red. A boxplot will be returned for every (discrete) covariate present in formula_composition. The colour coding represents the significant associations for composition and/or variability.
 
-A plot of group proportion, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is likely to be descriptively adequate to the data, the blue box plot should roughly overlay with the black box plot, which represents the observed data. The outliers are coloured in red. A box plot will be returned for every (discrete) covariate present in `formula_composition`. The colour coding represents the significant associations for composition and/or variability.
-
-```{r}
+```{r, eval = instantiate::stan_cmdstan_exists()}
 sccomp_result |> 
   sccomp_boxplot(factor = "type")
 ```
 
-A plot of estimates of differential composition (c\_) on the x-axis and differential variability (v\_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if bigger than the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
+A plot of estimates of differential composition (c_) on the x-axis and differential variability (v_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if it exceeds the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
 
-```{r}
+```{r, eval = instantiate::stan_cmdstan_exists()}
 sccomp_result |> 
   plot_1D_intervals()
 ```
 
 
-We can plot the relationship between abundance and variability. As we can see below, they are positively correlated, you also appreciate that this relationship is by model for single cell RNA sequencing data.
-
-`sccomp` models, these relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks for Bayesian inference.
+We can plot the relationship between abundance and variability. As we can see below, they are positively correlated. sccomp models this relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks to Bayesian inference.
 
 
-```{r}
+```{r, eval = instantiate::stan_cmdstan_exists()}
 sccomp_result |> 
   plot_2D_intervals()
 ```
@@ -145,17 +200,128 @@ You can produce the series of plots calling the `plot` method.
 sccomp_result |> plot() 
 ```
 
+
+## Model proportions directly (e.g. from deconvolution)
+
+**Note:** If counts are available, we strongly discourage the use of proportions, as an important source of uncertainty (i.e., for rare groups/cell types) is not modeled.
+
+The use of proportions is better suited for modelling deconvolution results (e.g., of bulk RNA data), in which case counts are not available.
+
+Proportions should be greater than 0. Assuming that zeros derive from a precision threshold (e.g., deconvolution), zeros are converted to the smallest non-zero value.
+
+
+## Continuous factor 
+
+`sccomp` is able to fit erbitrary complex models. In this example we have a continuous and binary covariate.
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+
+res =
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ type + continuous_covariate, 
+      .sample = sample, .cell_group = cell_group,
+      cores = 1, verbose=FALSE
+    )
+
+res
+```
+
+## Random Effect Modeling
+
+`sccomp` supports multilevel modeling by allowing the inclusion of random effects in the compositional and variability formulas. This is particularly useful when your data has hierarchical or grouped structures, such as measurements nested within subjects, batches, or experimental units. By incorporating random effects, sccomp can account for variability at different levels of your data, improving model fit and inference accuracy.
+
+### Random Intercept Model
+
+In this example, we demonstrate how to fit a random intercept model using sccomp. We’ll model the cell-type proportions with both fixed effects (e.g., treatment) and random effects (e.g., subject-specific variability).
+
+Here is the input data
+
+```{r}
+seurat_obj[[]] |> as_tibble()
+```
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+res = 
+  seurat_obj |>
+  sccomp_estimate( 
+    formula_composition = ~ type + (1 | group__), 
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1, verbose = FALSE
+  ) 
+
+res
+```
+
+### Random Effect Model (random slopes)
+
+`sccomp` can model random slopes. We providean example below.
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+res = 
+  seurat_obj |>
+  sccomp_estimate(
+      formula_composition = ~ type + (type | group__),
+      .sample = sample,
+      .cell_group = cell_group,
+      bimodal_mean_variability_association = TRUE,
+      cores = 1, verbose = FALSE
+    )
+
+res
+```
+
+### Nested Random Effects
+
+If you have a more complex hierarchy, such as measurements nested within subjects and subjects nested within batches, you can include multiple grouping variables. Here `group2__` is nested within `group__`.
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+res = 
+  seurat_obj |>
+  sccomp_estimate(
+      formula_composition = ~ type + (type | group__) + (1 | group2__),
+      .sample = sample,
+      .cell_group = cell_group,
+      bimodal_mean_variability_association = TRUE,
+      cores = 1, verbose = FALSE
+    )
+
+res
+```
+
+## An aid to result interpretation and communication
+
+The estimated effects are expressed in the unconstrained space of the parameters, similar to differential expression analysis that expresses changes in terms of log fold change. However, for differences in proportion, logit fold change must be used, which is harder to interpret and understand.
+
+Therefore, we provide a more intuitive proportional fold change that can be more easily understood. However, these cannot be used to infer significance (use sccomp_test() instead), and a lot of care must be taken given the nonlinearity of these measures (a 1-fold increase from 0.0001 to 0.0002 carries a different weight than a 1-fold increase from 0.4 to 0.8).
+
+From your estimates, you can specify which effects you are interested in (this can be a subset of the full model if you wish to exclude unwanted effects), and the two points you would like to compare.
+
+In the case of a categorical variable, the starting and ending points are categories.
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+sccomp_result |> 
+   sccomp_proportional_fold_change(
+     formula_composition = ~  type,
+     from =  "healthy", 
+     to = "cancer"
+    ) |> 
+  select(cell_group, statement)
+```
+
+
 ## Contrasts
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = instantiate::stan_cmdstan_exists()}
 
 seurat_obj |>
   sccomp_estimate( 
     formula_composition = ~ 0 + type, 
     .sample = sample,
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   ) |> 
   sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
 
@@ -170,7 +336,7 @@ This is achieved through model comparison with `loo`. In the following example, 
 If `elpd_diff` is away from zero of \> 5 `se_diff` difference of 5, we are confident that a model is better than the other [reference](https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola).
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model one, the one with factor association, is better than model two.
 
-```{r, eval=FALSE, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = instantiate::stan_cmdstan_exists()}
 library(loo)
 
 # Fit first model
@@ -180,8 +346,7 @@ model_with_factor_association =
     formula_composition = ~ type, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
-    cores = 1, 
+    inference_method = "hmc",
     enable_loo = TRUE
   )
 
@@ -192,15 +357,14 @@ model_without_association =
     formula_composition = ~ 1, 
     .sample =  sample, 
     .cell_group = cell_group, 
-    bimodal_mean_variability_association = TRUE,
-    cores = 1 , 
+    inference_method = "hmc",
     enable_loo = TRUE
   )
 
 # Compare models
 loo_compare(
-  model_with_factor_association |> attr("fit") |> loo(),
-  model_without_association |> attr("fit") |> loo()
+   attr(model_with_factor_association, "fit")$loo(),
+   attr(model_without_association, "fit")$loo()
 )
 
 ```
@@ -209,7 +373,7 @@ loo_compare(
 
 We can model the cell-group variability also dependent on the type, and so test differences in variability
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = instantiate::stan_cmdstan_exists()}
 
 res = 
   seurat_obj |>
@@ -218,14 +382,28 @@ res =
     formula_variability = ~ type,
     .sample = sample,
     .cell_group = cell_group,
-    bimodal_mean_variability_association = TRUE,
-    cores = 1 
+    cores = 1, verbose = FALSE
   )
 
 res
 
 ```
 
+**Plot 1D significance plot**
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+plots = res |> sccomp_test() |> plot()
+
+plots$credible_intervals_1D
+```
+
+**Plot 2D significance plot** Data points are cell groups. Error bars are the 95% credible interval. The dashed lines represent the default threshold fold change for which the probabilities (c_pH0, v_pH0) are calculated. pH0 of 0 represent the rejection of the null hypothesis that no effect is observed.
+
+This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for `(intercept)` (left-hand side facet) is satisfied. A scatterplot (besides the Intercept) is provided for each category of interest. For each category of interest, the composition and variability effects should be generally uncorrelated.
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+plots$credible_intervals_2D
+```
 
 # Suggested settings 
 
@@ -243,24 +421,21 @@ We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 It is possible to directly evaluate the posterior distribution. In this example, we plot the Monte Carlo chain for the slope parameter of the
 first cell type. We can see that it has converged and is negative with probability 1.
 
-```{r}
-res %>% attr("fit") %>% rstan::traceplot("beta[2,1]")
-```
+```{r, eval = instantiate::stan_cmdstan_exists()}
 
-Plot 1D significance plot
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
 
-```{r}
-plots = res |> sccomp_test() |> plot()
+# Assuming res contains the fit object from cmdstanr
+fit <- res |> attr("fit")
 
-plots$credible_intervals_1D
-```
+# Extract draws for 'beta[2,1]'
+draws <- as_draws_array(fit$draws("beta[2,1]"))
 
-Plot 2D significance plot. Data points are cell groups. Error bars are the 95% credible interval. The dashed lines represent the default threshold fold change for which the probabilities (c_pH0, v_pH0) are calculated. pH0 of 0 represent the rejection of the null hypothesis that no effect is observed.
+# Create a traceplot for 'beta[2,1]'
+mcmc_trace(draws, pars = "beta[2,1]")
 
-This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for `(intercept)` (left-hand side facet) is satisfied. A scatterplot (besides the Intercept) is provided for each category of interest. The for each category of interest, the composition and variability effects should be generally uncorrelated.
-
-```{r}
-plots$credible_intervals_2D
 ```
 
 

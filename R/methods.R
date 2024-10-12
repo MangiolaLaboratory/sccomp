@@ -3,11 +3,11 @@
 #' Main Function for SCCOMP Estimate
 #'
 #' @description
-#' The `sccomp_estimate` function performs linear modeling on a table of cell counts, 
-#' which includes a cell-group identifier, sample identifier, integer count, and factors 
-#' (continuous or discrete). The user can define a linear model with an input R formula, 
-#' where the first factor is the factor of interest. Alternatively, `sccomp` accepts 
-#' single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or 
+#' The `sccomp_estimate` function performs linear modeling on a table of cell counts or proportions,
+#' which includes a cell-group identifier, sample identifier, abundance (counts or proportions), and factors
+#' (continuous or discrete). The user can define a linear model using an R formula,
+#' where the first factor is the factor of interest. Alternatively, `sccomp` accepts
+#' single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or
 #' group-size) and derives the count data from cell metadata.
 #'
 #' @import dplyr
@@ -19,162 +19,191 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #' @importFrom rlang inform
+#' @importFrom lifecycle is_present
+#' @importFrom lifecycle deprecate_warn
 #'
-#' @param .data A tibble including cell_group name column, sample name column, 
-#'              read counts column (optional depending on the input class), and factor columns.
+#' @param .data A tibble including cell_group name column, sample name column,
+#'              abundance column (counts or proportions), and factor columns.
 #' @param formula_composition A formula describing the model for differential abundance.
 #' @param formula_variability A formula describing the model for differential variability.
-#' @param .sample A column name as symbol for the sample identifier.
-#' @param .cell_group A column name as symbol for the cell_group identifier.
-#' @param .count A column name as symbol for the cell_group abundance (read count).
+#' @param .sample A column name as a symbol for the sample identifier.
+#' @param .cell_group A column name as a symbol for the cell-group identifier.
+#' @param .abundance A column name as a symbol for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across `.cell_group`).
 #' @param cores Number of cores to use for parallel calculations.
-#' @param bimodal_mean_variability_association Boolean for modeling mean-variability as bimodal.
-#' @param prior_mean List with prior knowledge about mean distribution, they are the intercept and coefficient.
-#' @param prior_overdispersion_mean_association List with prior knowledge about mean/variability association.
-#' @param percent_false_positive Real number between 0 and 100 for outlier identification.
-#' @param variational_inference Boolean for using variational Bayes for posterior inference. It is faster and convenient. Setting this argument to FALSE runs the full Bayesian (Hamiltonian Monte Carlo) inference, slower but it is the gold standard.
-#' @param enable_loo Boolean to enable model comparison using the LOO package.
-#' @param exclude_priors Boolean to run a prior-free model.
-#' @param use_data Boolean to run the model data-free.
-#' @param max_sampling_iterations Integer to limit maximum iterations for large datasets.
-#' @param pass_fit Boolean to include the Stan fit as attribute in the output.
-#' @param .sample_cell_group_pairs_to_exclude Column name with boolean for sample/cell-group pairs exclusion.
-#' @param verbose Boolean to print progression.
-#' @param noise_model Character string for the noise model (e.g., 'multi_beta_binomial').
-#' @param mcmc_seed Integer for MCMC reproducibility.
-#' @param approximate_posterior_inference DEPRECATED please use the `variational_inference` argument.
-#' 
-#' 
-#' @return A nested tibble `tbl`, with the following columns
+#' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
+#' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
+#' @param prior_overdispersion_mean_association A list specifying prior knowledge about mean/variability association.
+#' @param percent_false_positive A real number between 0 and 100 for outlier identification.
+#' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').
+#' @param .sample_cell_group_pairs_to_exclude A column name indicating sample/cell-group pairs to exclude.
+#' @param output_directory A character string specifying the output directory for Stan draws.
+#' @param verbose Logical, whether to print progression details.
+#' @param enable_loo Logical, whether to enable model comparison using the LOO package.
+#' @param noise_model A character string specifying the noise model (e.g., 'multi_beta_binomial').
+#' @param exclude_priors Logical, whether to run a prior-free model.
+#' @param use_data Logical, whether to run the model data-free.
+#' @param mcmc_seed An integer seed for MCMC reproducibility.
+#' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
+#' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
+#' @param .count **DEPRECATED**. Use `.abundance` instead.
+#' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
+#' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
+#' @param ... Additional arguments passed to the `cmdstanr::sample` function.
+#'
+#' @return A tibble (`tbl`) with the following columns:
 #' \itemize{
-#'   \item cell_group - column including the cell groups being tested
-#'   \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
-#'   \item factor - The factor in the formula corresponding to the covariate, if exists (e.g. it does not exist in case og Intercept or contrasts, which usually are combination of parameters)
-#'
-#'   \item c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_effect - mean of the posterior distribution for a composition (c) parameter.
-#'   \item c_upper - upper (97.5%) quantile of the posterior distribution fo a composition (c)  parameter.
-#'   \item c_pH0 - Probability of the null hypothesis (no difference) for  a composition (c). This is not a p-value.
-#'   \item c_FDR - False-discovery rate of the null hypothesis (no difference) for  a composition (c).
-#'   \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'
-#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter
-#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_pH0 - Probability of the null hypothesis (no difference) for a variability (v). This is not a p-value.
-#'   \item v_FDR - False-discovery rate of the null hypothesis (no difference), for a variability (v).
-#'   \item v_n_eff - Effective sample size for a variability (v) parameter - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'
-#'   \item count_data Nested input count data.
-#'
+#'   \item cell_group - The cell groups being tested.
+#'   \item parameter - The parameter being estimated from the design matrix described by the input `formula_composition` and `formula_variability`.
+#'   \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+#'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_pH0 - Probability of the null hypothesis (no difference) for a composition (c). This is not a p-value.
+#'   \item c_FDR - False-discovery rate of the null hypothesis for a composition (c).
+#'   \item c_n_eff - Effective sample size for a composition (c) parameter.
+#'   \item c_R_k_hat - R statistic for a composition (c) parameter, should be within 0.05 of 1.0.
+#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
+#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_pH0 - Probability of the null hypothesis for a variability (v).
+#'   \item v_FDR - False-discovery rate of the null hypothesis for a variability (v).
+#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter.
+#'   \item count_data - Nested input count data.
 #' }
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' message("Use the following example after having installed cmdstanr with install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type,
-#'    ~1,
-#'    sample,
-#'    cell_group,
-#'    count,
-#'     cores = 1
-#'   )
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'
+#'     estimate <- sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       abundance,
+#'       cores = 1
+#'     )
+#'   }
+#' }
 #'
 #' @export
-#'
-#'
 sccomp_estimate <- function(.data,
-                       formula_composition = ~ 1 ,
-                       formula_variability = ~ 1,
-                       .sample,
-                       .cell_group,
-                       .count = NULL,
+                            formula_composition = ~1,
+                            formula_variability = ~1,
+                            .sample,
+                            .cell_group,
+                            .abundance = NULL,
 
-                       # Secondary arguments
-                       cores = detectCores(),
-                       bimodal_mean_variability_association = FALSE,
-                       percent_false_positive = 5,
-                       variational_inference = FALSE,
-                       prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),
-                       prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                       .sample_cell_group_pairs_to_exclude = NULL,
-                       verbose = TRUE,
-                       enable_loo = FALSE,
-                       noise_model = "multi_beta_binomial",
-                       exclude_priors = FALSE,
-                       use_data = TRUE,
-                       mcmc_seed = sample(1e5, 1),
-                       max_sampling_iterations = 20000,
-                       pass_fit = TRUE,
-                       
-                       # DEPRECATED
-                       approximate_posterior_inference = NULL
-                       
-                       ) {
-  if(variational_inference == TRUE) 
-    rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = FALSE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
-      .frequency = "once", 
-      .frequency_id = "variational_message"
-    )
+                            # Secondary arguments
+                            cores = detectCores(),
+                            bimodal_mean_variability_association = FALSE,
+                            percent_false_positive = 5,
+                            inference_method = "pathfinder",
+                            prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                            prior_overdispersion_mean_association = list(
+                              intercept = c(5, 2),
+                              slope = c(0, 0.6),
+                              standard_deviation = c(10, 20)
+                            ),
+                            .sample_cell_group_pairs_to_exclude = NULL,
+                            output_directory = "sccomp_draws_files",
+                            verbose = TRUE,
+                            enable_loo = FALSE,
+                            noise_model = "multi_beta_binomial",
+                            exclude_priors = FALSE,
+                            use_data = TRUE,
+                            mcmc_seed = sample(1e5, 1),
+                            max_sampling_iterations = 20000,
+                            pass_fit = TRUE,
+                            ...,
+                            
+                            # DEPRECATED
+                            .count = NULL,
+                            approximate_posterior_inference = NULL,
+                            variational_inference = NULL) {
   
-  rlang::inform(
-      message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has be changed from 0.2 to 0.1.", 
-      .frequency = "once", 
-      .frequency_id = "new_logit_fold_change_threshold"
-  )
+
   
+  # rlang::inform(
+  #   message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has been changed from 0.2 to 0.1.",
+  #   .frequency = "once",
+  #   .frequency_id = "new_logit_fold_change_threshold"
+  # )
+  
+  
+  # Run the function
+  check_and_install_cmdstanr()
   
   UseMethod("sccomp_estimate", .data)
 }
 
 #' @export
-sccomp_estimate.Seurat = function(.data,
-                                  formula_composition = ~ 1 ,
-                                  formula_variability = ~ 1,
-                                  .sample,
-                                  .cell_group,
-                                  .count = NULL,
-                                  
-                                  # Secondary arguments
-                                  cores = detectCores(),
-                                  bimodal_mean_variability_association = FALSE,
-                                  percent_false_positive = 5,
-                                  variational_inference = FALSE,
-                                  prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                                  .sample_cell_group_pairs_to_exclude = NULL,
-                                  verbose = TRUE,
-                                  enable_loo = FALSE,
-                                  noise_model = "multi_beta_binomial",
-                                  exclude_priors = FALSE,
-                                  use_data = TRUE,
-                                  mcmc_seed = sample(1e5, 1),
-                                  max_sampling_iterations = 20000,
-                                  pass_fit = TRUE,
-                                  
-                                  # DEPRECATED
-                                  approximate_posterior_inference = NULL){
+sccomp_estimate.Seurat <- function(.data,
+                                   formula_composition = ~1,
+                                   formula_variability = ~1,
+                                   .sample,
+                                   .cell_group,
+                                   .abundance = NULL,
 
-  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
-
+                                   # Secondary arguments
+                                   cores = detectCores(),
+                                   bimodal_mean_variability_association = FALSE,
+                                   percent_false_positive = 5,
+                                   inference_method = "pathfinder",
+                                   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                   prior_overdispersion_mean_association = list(
+                                     intercept = c(5, 2),
+                                     slope = c(0, 0.6),
+                                     standard_deviation = c(10, 20)
+                                   ),
+                                   .sample_cell_group_pairs_to_exclude = NULL,
+                                   output_directory = "sccomp_draws_files",
+                                   verbose = TRUE,
+                                   enable_loo = FALSE,
+                                   noise_model = "multi_beta_binomial",
+                                   exclude_priors = FALSE,
+                                   use_data = TRUE,
+                                   mcmc_seed = sample(1e5, 1),
+                                   max_sampling_iterations = 20000,
+                                   pass_fit = TRUE,
+                                   ...,
+                                   
+                                   # DEPRECATED
+                                   .count = NULL,
+                                   approximate_posterior_inference = NULL,
+                                   variational_inference = NULL) {
+  
+  if (!is.null(.abundance))
+    stop("sccomp says: .abundance argument can be used only for data frame input")
+  
+  if (!is.null(.count))
+    stop("sccomp says: .count argument can be used only for data frame input")
+  
   # DEPRECATION OF approximate_posterior_inference
-  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
+    
+    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
   }
   
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-
+  # DEPRECATION OF variational_inference
+  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
+    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
+    
+    inference_method <- ifelse(variational_inference, "variational", "hmc")
+  }
+  
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  
   .data[[]] %>%
     sccomp_estimate(
       formula_composition = formula_composition,
@@ -186,10 +215,11 @@ sccomp_estimate.Seurat = function(.data,
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
-      prior_mean = prior_mean, 
+      inference_method = inference_method,
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
@@ -197,55 +227,71 @@ sccomp_estimate.Seurat = function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
-
-
 }
 
 #' @export
-sccomp_estimate.SingleCellExperiment = function(.data,
-                                                formula_composition = ~ 1 ,
-                                                formula_variability = ~ 1,
-                                                .sample,
-                                                .cell_group,
-                                                .count = NULL,
-                                                
-                                                # Secondary arguments
-                                                cores = detectCores(),
-                                                bimodal_mean_variability_association = FALSE,
-                                                percent_false_positive = 5,
-                                                variational_inference = FALSE,
-                                                prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                                prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                                                .sample_cell_group_pairs_to_exclude = NULL,
-                                                verbose = TRUE,
-                                                enable_loo = FALSE,
-                                                noise_model = "multi_beta_binomial",
-                                                exclude_priors = FALSE,
-                                                use_data = TRUE,
-                                                mcmc_seed = sample(1e5, 1),
-                                                max_sampling_iterations = 20000,
-                                                pass_fit = TRUE,
-                                                
-                                                # DEPRECATED
-                                                approximate_posterior_inference = NULL) {
+sccomp_estimate.SingleCellExperiment <- function(.data,
+                                                 formula_composition = ~1,
+                                                 formula_variability = ~1,
+                                                 .sample,
+                                                 .cell_group,
+                                                 .abundance = NULL,
 
-  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
-
+                                                 # Secondary arguments
+                                                 cores = detectCores(),
+                                                 bimodal_mean_variability_association = FALSE,
+                                                 percent_false_positive = 5,
+                                                 inference_method = "pathfinder",
+                                                 prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                                 prior_overdispersion_mean_association = list(
+                                                   intercept = c(5, 2),
+                                                   slope = c(0, 0.6),
+                                                   standard_deviation = c(10, 20)
+                                                 ),
+                                                 .sample_cell_group_pairs_to_exclude = NULL,
+                                                 output_directory = "sccomp_draws_files",
+                                                 verbose = TRUE,
+                                                 enable_loo = FALSE,
+                                                 noise_model = "multi_beta_binomial",
+                                                 exclude_priors = FALSE,
+                                                 use_data = TRUE,
+                                                 mcmc_seed = sample(1e5, 1),
+                                                 max_sampling_iterations = 20000,
+                                                 pass_fit = TRUE,
+                                                 ...,
+                                                 
+                                                 # DEPRECATED
+                                                 .count = NULL,
+                                                 approximate_posterior_inference = NULL,
+                                                 variational_inference = NULL) {
+  
+  if (!is.null(.abundance))
+    stop("sccomp says: .abundance argument can be used only for data frame input")
+  
+  if (!is.null(.count))
+    stop("sccomp says: .count argument can be used only for data frame input")
   
   # DEPRECATION OF approximate_posterior_inference
-  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
+    
+    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
   }
-
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-
-
+  
+  # DEPRECATION OF variational_inference
+  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
+    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
+    
+    inference_method <- ifelse(variational_inference, "variational", "hmc")
+  }
+  
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  
   .data %>%
     colData() %>%
     sccomp_estimate(
@@ -258,10 +304,11 @@ sccomp_estimate.SingleCellExperiment = function(.data,
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
-      prior_mean = prior_mean, 
+      inference_method = inference_method,
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
@@ -269,71 +316,76 @@ sccomp_estimate.SingleCellExperiment = function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
-
-
 }
 
 #' @export
-sccomp_estimate.DFrame = function(.data,
-                                  formula_composition = ~ 1 ,
-                                  formula_variability = ~ 1,
-                                  .sample,
-                                  .cell_group,
-                                  .count = NULL,
-                                  
-                                  # Secondary arguments
-                                  cores = detectCores(),
-                                  bimodal_mean_variability_association = FALSE,
-                                  percent_false_positive = 5,
-                                  variational_inference = FALSE,
-                                  prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                                  .sample_cell_group_pairs_to_exclude = NULL,
-                                  verbose = TRUE,
-                                  enable_loo = FALSE,
-                                  noise_model = "multi_beta_binomial",
-                                  exclude_priors = FALSE,
-                                  use_data = TRUE,
-                                  mcmc_seed = sample(1e5, 1),
-                                  max_sampling_iterations = 20000,
-                                  pass_fit = TRUE,
-                                  
-                                  # DEPRECATED
-                                  approximate_posterior_inference = NULL) {
-
-  if(!is.null(.count)) stop("sccomp says: .count argument can be used only for data frame input")
-
+sccomp_estimate.DFrame <- function(.data,
+                                   formula_composition = ~1,
+                                   formula_variability = ~1,
+                                   .sample,
+                                   .cell_group,
+                                   .abundance = NULL,
+                                   
+                                   # Secondary arguments
+                                   cores = detectCores(),
+                                   bimodal_mean_variability_association = FALSE,
+                                   percent_false_positive = 5,
+                                   inference_method = "pathfinder",
+                                   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                   prior_overdispersion_mean_association = list(
+                                     intercept = c(5, 2),
+                                     slope = c(0, 0.6),
+                                     standard_deviation = c(10, 20)
+                                   ),
+                                   .sample_cell_group_pairs_to_exclude = NULL,
+                                   output_directory = "sccomp_draws_files",
+                                   verbose = TRUE,
+                                   enable_loo = FALSE,
+                                   noise_model = "multi_beta_binomial",
+                                   exclude_priors = FALSE,
+                                   use_data = TRUE,
+                                   mcmc_seed = sample(1e5, 1),
+                                   max_sampling_iterations = 20000,
+                                   pass_fit = TRUE,
+                                   ...,
+                                   
+                                   # DEPRECATED
+                                   .count = NULL,
+                                   approximate_posterior_inference = NULL,
+                                   variational_inference = NULL) {
   
-  # DEPRECATION OF approximate_posterior_inference
-  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
-  }
+  if (!is.null(.abundance))
+    stop("sccomp says: .abundance argument can be used only for data frame input")
   
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .count = enquo(.count)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-
+  if (!is.null(.count))
+    stop("sccomp says: .count argument can be used only for data frame input")
+  
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .abundance <- enquo(.abundance)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  
   .data %>%
-    as.data.frame %>%
+    as.data.frame() %>%
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       !!.sample,
       !!.cell_group,
+      .abundance = !!.abundance,
       
       # Secondary arguments
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
-      prior_mean = prior_mean, 
+      inference_method = inference_method,
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
@@ -341,54 +393,78 @@ sccomp_estimate.DFrame = function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
 }
 
 #' @importFrom purrr when
 #' @export
-sccomp_estimate.data.frame = function(.data,
-                                      formula_composition = ~ 1 ,
-                                      formula_variability = ~ 1,
-                                      .sample,
-                                      .cell_group,
-                                      .count = NULL,
-                                      
-                                      # Secondary arguments
-                                      cores = detectCores(),
-                                      bimodal_mean_variability_association = FALSE,
-                                      percent_false_positive = 5,
-                                      variational_inference = FALSE,
-                                      prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                      prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(10, 20)),
-                                      .sample_cell_group_pairs_to_exclude = NULL,
-                                      verbose = TRUE,
-                                      enable_loo = FALSE,
-                                      noise_model = "multi_beta_binomial",
-                                      exclude_priors = FALSE,
-                                      use_data = TRUE,
-                                      mcmc_seed = sample(1e5, 1),
-                                      max_sampling_iterations = 20000,
-                                      pass_fit = TRUE,
-                                      
-                                      # DEPRECATED
-                                      approximate_posterior_inference = NULL) {
-
+sccomp_estimate.data.frame <- function(.data,
+                                       formula_composition = ~1,
+                                       formula_variability = ~1,
+                                       .sample,
+                                       .cell_group,
+                                       .abundance = NULL,
+                                       
+                                       # Secondary arguments
+                                       cores = detectCores(),
+                                       bimodal_mean_variability_association = FALSE,
+                                       percent_false_positive = 5,
+                                       inference_method = "pathfinder",
+                                       prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                       prior_overdispersion_mean_association = list(
+                                         intercept = c(5, 2),
+                                         slope = c(0, 0.6),
+                                         standard_deviation = c(10, 20)
+                                       ),
+                                       .sample_cell_group_pairs_to_exclude = NULL,
+                                       output_directory = "sccomp_draws_files",
+                                       verbose = TRUE,
+                                       enable_loo = FALSE,
+                                       noise_model = "multi_beta_binomial",
+                                       exclude_priors = FALSE,
+                                       use_data = TRUE,
+                                       mcmc_seed = sample(1e5, 1),
+                                       max_sampling_iterations = 20000,
+                                       pass_fit = TRUE,
+                                       ...,
+                                       
+                                       # DEPRECATED
+                                       .count = NULL,
+                                       approximate_posterior_inference = NULL,
+                                       variational_inference = NULL) {
   
-  # DEPRECATION OF approximate_posterior_inference
-  if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .abundance <- enquo(.abundance)
+  .count <- enquo(.count)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  
+  # Deprecation of .count
+  if (rlang::quo_is_symbolic(.count)) {
+    rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
+    .abundance <- .count
   }
   
-  # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .count = enquo(.count)
-  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
-
-  if( quo_is_null(.count))
-    res = sccomp_glm_data_frame_raw(
+  
+  # DEPRECATION OF approximate_posterior_inference
+  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
+    
+    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
+  }
+  
+  # DEPRECATION OF variational_inference
+  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
+    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
+    
+    inference_method <- ifelse(variational_inference, "variational", "hmc")
+  }
+  
+  if (quo_is_null(.abundance))
+    res <- sccomp_glm_data_frame_raw(
       .data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
@@ -399,17 +475,18 @@ sccomp_estimate.data.frame = function(.data,
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
-      prior_mean = prior_mean, 
+      inference_method = inference_method,
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       exclude_priors = exclude_priors,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
   
   else 
@@ -419,139 +496,160 @@ sccomp_estimate.data.frame = function(.data,
       formula_variability = formula_variability,
       !!.sample,
       !!.cell_group,
-      !!.count,
+      .count = !!.abundance,
       
       # Secondary arguments
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
-      variational_inference = variational_inference,
-      prior_mean = prior_mean, 
+      inference_method = inference_method,
+      prior_mean = prior_mean,
       prior_overdispersion_mean_association = prior_overdispersion_mean_association,
       .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
       exclude_priors = exclude_priors,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit
+      pass_fit = pass_fit, ...
     )
   
-  res  |> 
-
+  message("sccomp says: to do hypothesis testing run `sccomp_test()`,
+  the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+  0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
+  Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).")
+  
+  res %>%
+    
     # Track input parameters
     add_attr(noise_model, "noise_model")
 }
 
-
 #' sccomp_remove_outliers main
 #'
-#' @description The function for linear modelling takes as input a table of cell counts with three columns containing a cell-group identifier, sample identifier, integer count and the factors (continuous or discrete). The user can define a linear model with an input R formula, where the first factor is the factor of interest. Alternatively, sccomp accepts single-cell data containers (Seurat, SingleCellExperiment44, cell metadata or group-size). In this case, sccomp derives the count data from cell metadata.
+#' @description 
+#' The `sccomp_remove_outliers` function takes as input a table of cell counts with columns for cell-group identifier, sample identifier, integer count, and factors (continuous or discrete). The user can define a linear model using an input R formula, where the first factor is the factor of interest. Alternatively, `sccomp` accepts single-cell data containers (e.g., Seurat, SingleCellExperiment, cell metadata, or group-size) and derives the count data from cell metadata.
 #'
 #' @import dplyr
-#' @importFrom magrittr %$%
-#' @importFrom magrittr divide_by
-#' @importFrom magrittr multiply_by
-#' @importFrom magrittr equals
-#' @importFrom rlang quo_is_null
+#' @importFrom magrittr %$% divide_by multiply_by equals
+#' @importFrom rlang quo_is_null quo_is_symbolic inform
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
-#' @importFrom rlang quo_is_symbolic
-#' @importFrom rlang inform
+#' @importFrom tidyr unnest nest
 #'
-#' @param .estimate A tibble including a cell_group name column | sample name column | read counts column (optional depending on the input class) | factor columns.
-#' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
-#' @param variational_inference Boolean for using variational Bayes for posterior inference. It is faster and convenient. Setting this argument to FALSE runs the full Bayesian (Hamiltonian Monte Carlo) inference, slower but it is the gold standard.
-#' @param cores An integer. How many cored to be used with parallel calculations.
-#' @param verbose A boolean. Prints progression.
-#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
-#' @param max_sampling_iterations An integer. This limit the maximum number of iterations in case a large dataset is used, for limiting the computation time.
-#' @param enable_loo A boolean. Enable model comparison by the R package LOO. This is helpful when you want to compare the fit between two models, for example, analogously to ANOVA, between a one factor model versus a interceot-only model.
-#' @param approximate_posterior_inference DEPRECATED please use the `variational_inference` argument.
-#'
-#' @return A nested tibble `tbl`, with the following columns
+#' @param .estimate A tibble including a cell_group name column, sample name column, read counts column (optional depending on the input class), and factor columns.
+#' @param percent_false_positive A real number between 0 and 100 (not inclusive), used to identify outliers with a specific false positive rate.
+#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').
+#' @param output_directory A character string specifying the output directory for Stan draws.
+#' @param verbose Logical, whether to print progression details.
+#' @param mcmc_seed Integer, used for Markov-chain Monte Carlo reproducibility. By default, a random number is sampled from 1 to 999999.
+#' @param max_sampling_iterations Integer, limits the maximum number of iterations in case a large dataset is used, to limit computation time.
+#' @param enable_loo Logical, whether to enable model comparison using the R package LOO. This is useful for comparing fits between models, similar to ANOVA.
+#' @param approximate_posterior_inference DEPRECATED, use the `variational_inference` argument.
+#' @param variational_inference Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
+#' @param ... Additional arguments passed to the `cmdstanr::sample` function.
+#' 
+#' @return A tibble (`tbl`), with the following columns:
 #' \itemize{
-#'   \item cell_group - column including the cell groups being tested
-#'   \item parameter - The parameter being estimated, from the design matrix dscribed with the input formula_composition and formula_variability
-#'   \item factor - The factor in the formula corresponding to the covariate, if exists (e.g. it does not exist in case og Intercept or contrasts, which usually are combination of parameters)
-#'
-#'   \item c_lower - lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_effect - mean of the posterior distribution for a composition (c) parameter.
-#'   \item c_upper - upper (97.5%) quantile of the posterior distribution fo a composition (c)  parameter.
-#'   \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'
-#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter
-#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter
-#'   \item v_n_eff - Effective sample size for a variability (v) parameter - the number of independent draws in the sample, the higher the better (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium, should be within 0.05 of 1.0 (mc-stan.org/docs/2_25/cmdstan-guide/stansummary.html).
-#'
-#'   \item count_data Nested input count data.
-#'
+#'   \item cell_group - The cell groups being tested.
+#'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+#'   \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+#'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
+#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#'   \item count_data - Nested input count data.
 #' }
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type,
-#'    ~1,
-#'    sample,
-#'    cell_group,
-#'    count,
-#'     cores = 1
-#'   ) |>
-#'   sccomp_remove_outliers(cores = 1)
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'     
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_remove_outliers(cores = 1)
+#'   }
+#' }
 #'
 #' @export
-#'
-#'
 sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
-                                   variational_inference = FALSE,
+                                   inference_method = "pathfinder",
+                                   output_directory = "sccomp_draws_files",
                                    verbose = TRUE,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
                                    enable_loo = FALSE,
                                    
                                    # DEPRECATED
-                                   approximate_posterior_inference = NULL
+                                   approximate_posterior_inference = NULL,
+                                   variational_inference = NULL,
+                                   ...
 ) {
-  if(variational_inference == TRUE) 
+  if(inference_method == "variational") 
     rlang::inform(
-      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (variational_inference = FALSE; much faster). For a full Bayesian inference (HMC method; the gold standard) use variational_inference = FALSE.", 
+      message = "sccomp says: From version 1.7.7 the model by default is fit with the variational inference method (inference_method = \"variational\"; much faster). For a full Bayesian inference (HMC method; the gold standard) use inference_method = \"hmc\".", 
       .frequency = "once", 
       .frequency_id = "variational_message"
     )
-    
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_remove_outliers", .estimate)
 }
 
+#' @importFrom readr write_file
 #' @export
 sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
-                                             variational_inference = FALSE,
+                                             inference_method = "pathfinder",
+                                             output_directory = "sccomp_draws_files",
                                              verbose = TRUE,
                                              mcmc_seed = sample(1e5, 1),
                                              max_sampling_iterations = 20000,
                                              enable_loo = FALSE,
                                              
                                              # DEPRECATED
-                                             approximate_posterior_inference = NULL
+                                             approximate_posterior_inference = NULL,
+                                             variational_inference = NULL,
+                                             ...
 ) {
   
   
   # DEPRECATION OF approximate_posterior_inference
   if (is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
     deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated please use variational_inference. By default variational_inference value is inferred from approximate_posterior_inference.")
-    variational_inference = approximate_posterior_inference == "all"
+     inference_method = ifelse(approximate_posterior_inference == "all", "variational","hmc")
+  }
+  
+  # DEPRECATION OF variational_inference
+  if (is_present(variational_inference) & !is.null(variational_inference)) {
+    deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated please use inference_method. By default inference_method value is inferred from variational_inference")
+    
+    inference_method = ifelse(variational_inference, "variational","hmc")
   }
   
   # Prepare column same enquo
@@ -586,12 +684,14 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     )))
   
   # Random intercept
-  random_intercept_elements = .estimate |> attr("formula_composition") |> parse_formula_random_intercept()
+  random_effect_elements = .estimate |> attr("formula_composition") |> parse_formula_random_effect()
   
-  rng =  rstan::gqs(
-    stanmodels$glm_multi_beta_binomial_generate_date, 
-    #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-    draws = .estimate |> attr("fit") |>  as.matrix(), 
+  # Load model
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
+
+  rng = mod_rng |> sample_safe(
+    generate_quantities_fx,
+    attr(.estimate , "fit")$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
     data = 
@@ -600,17 +700,26 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       c(list(
         
         # Add subset of coefficients
+        X_original = data_for_model$X,
+        N_original = data_for_model$N,
         length_X_which = ncol(data_for_model$X),
         length_XA_which = ncol(data_for_model$XA),
         X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
         XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
         
         # Random intercept
-        N_grouping_new = ncol(data_for_model$X_random_intercept), # I could put this in the intial data
-        length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-        X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+        ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
+        length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+        X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
+        
+        # Random intercept DUPLICATED
+        X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
+        
         create_intercept = FALSE
-      ))
+      )),
+    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains()), 
+    threads_per_chain = cores
+    
   )
   
   # Free memory
@@ -622,7 +731,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     left_join(
       summary_to_tibble(rng, "counts", "N", "M", probs = c(0.05, 0.95)) %>%
         nest(data = -N) %>%
-        mutate(!!.sample := rownames(data_for_model$y)) %>%
+        mutate(!!.sample := rownames(data_for_model$X)) %>%
         unnest(data) %>%
         nest(data = -M) %>%
         mutate(!!.cell_group := colnames(data_for_model$y)) %>%
@@ -658,6 +767,23 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     sort()
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
   
+  data_for_model$truncation_not_idx_minimal = 
+    truncation_df %>% 
+    select(N, M, truncation_down) %>% 
+    spread(M, truncation_down) %>%
+    mutate(row = row_number()) %>%
+    pivot_longer(
+      cols = -c(N, row),
+      names_to = "columns",
+      values_to = "value"
+    ) %>%
+    filter(value == -1) %>%
+    select(row, columns) %>%
+    mutate(columns = as.integer(columns)) |> 
+    as.matrix()
+  
+  data_for_model$TNIM = nrow(data_for_model$truncation_not_idx_minimal)
+  
   message("sccomp says: outlier identification - step 1/2")
   
   my_quantile_step_2 = 1 - (0.1 / data_for_model$N)
@@ -669,60 +795,76 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   fit2 =
     data_for_model %>%
     fit_model(
-      stanmodels$glm_multi_beta_binomial,
+      "glm_multi_beta_binomial",
       cores = cores,
       quantile = my_quantile_step_2,
-      approximate_posterior_inference = variational_inference,
+      inference_method = inference_method,
+      output_directory = output_directory,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "beta_random_intercept")
+      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "random_effect", "random_effect_2"),
+      ...
     )
 
   
-  #fit_model(stan_model("inst/stan/glm_multi_beta_binomial.stan"), chains= 4, output_samples = 500, approximate_posterior_inference = FALSE, verbose = TRUE)
-  
-  rng2 =  rstan::gqs(
-    stanmodels$glm_multi_beta_binomial_generate_date,
-    #rstan::stan_model("inst/stan/glm_multi_beta_binomial_generate_date.stan"),
-    draws =  as.matrix(fit2),
+  rng2 =  mod_rng |> sample_safe(
+    generate_quantities_fx,
+    fit2$draws(format = "matrix"),
+    
+    # This is for the new data generation with selected factors to do adjustment
     data = data_for_model |> c(list(
       
       # Add subset of coefficients
+      X_original = data_for_model$X,
+      N_original = data_for_model$N,
       length_X_which = ncol(data_for_model$X),
       length_XA_which = ncol(data_for_model$XA),
       X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
       XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
       
       # Random intercept
-      N_grouping_new = ncol(data_for_model$X_random_intercept), # I could put this in the intial data
-      length_X_random_intercept_which = ncol(data_for_model$X_random_intercept),
-      X_random_intercept_which = seq_len(ncol(data_for_model$X_random_intercept)) |> as.array(),
+      ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
+      length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+      X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
+      
+      # Random intercept DUPLICATED
+      X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
+      
       create_intercept = FALSE
       
-    ))
+    )),
+    parallel_chains = ifelse(data_for_model$is_vb, 1, fit2$num_chains()), 
+    threads_per_chain = cores
+    
   )
+  
+  rng2_summary = 
+    summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 0.5, 1-CI_step_2)) 
+  
+  column_quantile_names = rng2_summary |> colnames() |> str_subset("\\%") |> _[c(1,3)]
+  
+  rng2_summary = 
+    rng2_summary %>%
+    
+    # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
+    # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
+    rename(
+      .lower := !!as.symbol(column_quantile_names[1]) ,
+      .median = `50%`,
+      .upper := !!as.symbol(column_quantile_names[2])
+    ) %>%
+    nest(data = -N) %>%
+    mutate(!!.sample := rownames(data_for_model$X)) %>%
+    unnest(data) %>%
+    nest(data = -M) %>%
+    mutate(!!.cell_group := colnames(data_for_model$y)) %>%
+    unnest(data) 
   
   # Detect outliers
   truncation_df2 =
     .data %>%
-    left_join(
-      summary_to_tibble(rng2, "counts", "N", "M", probs = c(CI_step_2, 0.5, 1-CI_step_2)) %>%
-        
-        # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
-        # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
-        rename(
-          .lower := !!as.symbol(colnames(.)[7]) ,
-          .median = `50%`,
-          .upper := !!as.symbol(colnames(.)[9])
-        ) %>%
-        nest(data = -N) %>%
-        mutate(!!.sample := rownames(data_for_model$y)) %>%
-        unnest(data) %>%
-        nest(data = -M) %>%
-        mutate(!!.cell_group := colnames(data_for_model$y)) %>%
-        unnest(data) ,
-      
+    left_join(rng2_summary,
       by = c(quo_name(.sample), quo_name(.cell_group))
     ) %>%
     
@@ -764,14 +906,16 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     data_for_model %>%
     # Run the first discovery phase with permissive false discovery rate
     fit_model(
-      stanmodels$glm_multi_beta_binomial,
+      "glm_multi_beta_binomial",
       cores = cores,
       quantile = CI,
-      approximate_posterior_inference = variational_inference,
+      inference_method = inference_method,
+      output_directory = output_directory,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "beta_random_intercept", "log_lik")
+      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
+      ...
     )
   
   # Create a dummy tibble
@@ -814,28 +958,55 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
-#'
+#' @return A tibble (`tbl`), with the following columns:
+#' \itemize{
+#'   \item cell_group - The cell groups being tested.
+#'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
+#'   \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
+#'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
+#'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
+#'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
+#'   \item c_FDR - False discovery rate of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
+#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+#'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
+#'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
+#'   \item v_pH0 - Probability of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
+#'   \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
+#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#'   \item count_data - Nested input count data.
+#' }#'
 #' @export
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
-#'   estimates =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ 0 + type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#'   sccomp_test("typecancer - typebenign")
+#'     estimates = sccomp_estimate(
+#'       counts_obj,
+#'       ~ 0 + type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_test("typecancer - typebenign")
+#'   }
+#' }
 #'
 sccomp_test <- function(.data,
                            contrasts = NULL,
                            percent_false_positive = 5,
                            test_composition_above_logit_fold_change = 0.1,
                            pass_fit = TRUE) {
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_test", .data)
 }
 
@@ -874,13 +1045,17 @@ sccomp_test.sccomp_tbl = function(.data,
         "c_"
       )
 
-
-  # Variability
   variability_CI =
-    get_variability_contrast_draws(.data, contrasts) |>
+    get_variability_contrast_draws(.data, contrasts)
+  
+  # Variability
+  if ("parameter" %in% colnames(variability_CI))
+  variability_CI = 
+    variability_CI |>
     draws_to_statistics(
       percent_false_positive / 100,
-      test_composition_above_logit_fold_change,!!.cell_group,
+      test_composition_above_logit_fold_change,
+      !!.cell_group,
       "v_"
     )
 
@@ -945,6 +1120,9 @@ sccomp_test.sccomp_tbl = function(.data,
 
   result |>
     
+    # TEMPORARILY DROPPING KHAT
+    select(-contains("n_eff"), -contains("_hat")) |> 
+    
     add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
     
     # Attach association mean concentration
@@ -963,6 +1141,7 @@ sccomp_test.sccomp_tbl = function(.data,
     add_class("sccomp_tbl") 
 }
 
+
 #' sccomp_replicate
 #'
 #' @description This function replicates counts from a real-world dataset.
@@ -974,28 +1153,44 @@ sccomp_test.sccomp_tbl = function(.data,
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
+#' @return A tibble `tbl` with cell_group-wise statistics
+#'
+#' @return A tibble (`tbl`), with the following columns:
+#' \itemize{
+#'   \item \strong{cell_group} - A character column representing the cell group being tested.
+#'   \item \strong{sample} - A factor column representing the sample name from which data was generated.
+#'   \item \strong{generated_proportions} - A numeric column representing the proportions generated from the model.
+#'   \item \strong{generated_counts} - An integer column representing the counts generated from the model.
+#'   \item \strong{replicate} - An integer column representing the replicate number, where each row corresponds to a different replicate of the data.
+#' }
 #'
 #' @export
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
-#' if(.Platform$OS.type == "unix")
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+#'     data("counts_obj")
 #'
-#'   sccomp_replicate()
-#'
+#'     sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_replicate()
+#'   }
+#' }
 sccomp_replicate <- function(fit,
                              formula_composition = NULL,
                              formula_variability = NULL,
                              number_of_draws = 1,
                              mcmc_seed = sample(1e5, 1)) {
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("sccomp_replicate", fit)
 }
 
@@ -1010,6 +1205,13 @@ sccomp_replicate.sccomp_tbl = function(fit,
   .sample = attr(fit, ".sample")
   .cell_group = attr(fit, ".cell_group")
 
+  sample_names =
+    fit |>
+    select(count_data) |>
+    unnest(count_data) |>
+    distinct(!!.sample) |> 
+    pull(!!.sample)
+  
   rng =
     replicate_data(
       fit,
@@ -1030,7 +1232,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
     # Get sample name
     nest(data = -N) %>%
     arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$y)) %>%
+    mutate(!!.sample := sample_names) %>%
     unnest(data) %>%
 
     # get cell type name
@@ -1040,7 +1242,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 
     select(-N, -M) |>
     select(!!.cell_group, !!.sample, everything())
-
+  
 }
 
 #' sccomp_predict
@@ -1053,29 +1255,49 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' @param new_data A sample-wise data frame including the column that represent the factors in your formula. If you want to predict proportions for 10 samples, there should be 10 rows. T
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
+#' @param summary_instead_of_draws Return the summary values (i.e. mean and quantiles) of the predicted proportions, or return single draws. Single draws can be helful to better analyse the uncertainty of the prediction.
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
-#'
+#' @return A tibble (`tbl`) with the following columns:
+#' \itemize{
+#'   \item \strong{cell_group} - A character column representing the cell group being tested.
+#'   \item \strong{sample} - A factor column representing the sample name for which the predictions are made.
+#'   \item \strong{proportion_mean} - A numeric column representing the predicted mean proportions from the model.
+#'   \item \strong{proportion_lower} - A numeric column representing the lower bound (2.5%) of the 95% credible interval for the predicted proportions.
+#'   \item \strong{proportion_upper} - A numeric column representing the upper bound (97.5%) of the 95% credible interval for the predicted proportions.
+#' }
+#' 
 #' @export
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
-#' if(.Platform$OS.type == "unix")
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+#'     data("counts_obj")
 #'
-#'   sccomp_predict()
+#'     sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_predict()
+#'   }
+#' }
+#' 
 #'
 sccomp_predict <- function(fit,
                            formula_composition = NULL,
                            new_data = NULL,
                            number_of_draws = 500,
-                           mcmc_seed = sample(1e5, 1)) {
+                           mcmc_seed = sample(1e5, 1),
+													 summary_instead_of_draws = TRUE) {
+
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
+
   UseMethod("sccomp_predict", fit)
 }
 
@@ -1085,7 +1307,9 @@ sccomp_predict.sccomp_tbl = function(fit,
                                      formula_composition = NULL,
                                      new_data = NULL,
                                      number_of_draws = 500,
-                                     mcmc_seed = sample(1e5, 1)){
+                                     mcmc_seed = sample(1e5, 1),
+																		 summary_instead_of_draws = TRUE){
+
 
 
   model_input = attr(fit, "model_input")
@@ -1104,31 +1328,36 @@ sccomp_predict.sccomp_tbl = function(fit,
 
   # New data
   if(new_data |> is.null())
-    sample_names =
-      fit |>
-      select(count_data) |>
-      unnest(count_data) |>
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  	new_data =
+	  	fit |>
+	  	select(count_data) |>
+	  	unnest(count_data) |> 
+      distinct() |> 
+      .subset(!!.sample)
   
   # If seurat
   else if(new_data |> is("Seurat")) 
-    sample_names = 
-      new_data[[]] |> 
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  	new_data = new_data[[]] 
   
-  # Just subset
-  else 
-    sample_names = 
-      new_data |> 
-      distinct(!!.sample) |> 
-      pull(!!.sample)
+  sample_names =
+  	new_data |>
+  	distinct(!!.sample) |> 
+  	pull(!!.sample)
   
   # mean generated
-  rng |>
-    summary_to_tibble("mu", "M", "N") |>
-    select(M, N, proportion_mean = mean, proportion_lower = `2.5%`, proportion_upper = `97.5%`) |>
+  if(summary_instead_of_draws)
+  	prediction_df = 
+	  	rng |>
+	    summary_to_tibble("mu", "M", "N") |>
+	    select(M, N, proportion_mean = mean, proportion_lower = `2.5%`, proportion_upper = `97.5%`) 
+  else
+  	prediction_df = 
+  	rng |>
+  	draws_to_tibble_x_y("mu", "M", "N") |> 
+  	select(M, N, proportion = .value, .draw) 
+  
+  prediction_df = 
+  	prediction_df |>
 
     # Get sample name
     nest(data = -N) %>%
@@ -1144,115 +1373,234 @@ sccomp_predict.sccomp_tbl = function(fit,
     select(-N, -M) |>
     select(!!.cell_group, !!.sample, everything())
 
+  new_data |> 
+  	left_join(prediction_df, by = join_by(!!.sample))
 }
 
-
-#' sccomp_remove_unwanted_variation
+#' Calculate Residuals Between Observed and Predicted Proportions
 #'
-#' @description This function uses the model to remove unwanted variation from a dataset using the estimated of the model. For example if you fit your data with this formula `~ factor_1 + factor_2` and use this formula to remove unwanted variation `~ factor_1`, the `factor_2` will be factored out.
+#' @description
+#' `sccomp_calculate_residuals` computes the residuals between observed cell group proportions and the predicted proportions from a fitted `sccomp` model. This function is useful for assessing model fit and identifying cell groups or samples where the model may not adequately capture the observed data. The residuals are calculated as the difference between the observed proportions and the predicted mean proportions from the model.
 #'
+#' @param .data A tibble of class `sccomp_tbl`, which is the result of `sccomp_estimate()`. This tibble contains the fitted model and associated data necessary for calculating residuals.
 #'
-#' @param .data A tibble. The result of sccomp_estimate.
-#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
+#' @return A tibble (`tbl`) with the following columns:
+#' \itemize{
+#'   \item \strong{sample} - A character column representing the sample identifiers.
+#'   \item \strong{cell_group} - A character column representing the cell group identifiers.
+#'   \item \strong{residuals} - A numeric column representing the residuals, calculated as the difference between observed and predicted proportions.
+#'   \item \strong{exposure} - A numeric column representing the total counts (sum of counts across cell groups) for each sample.
+#' }
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Extracts the predicted mean proportions for each cell group and sample using `sccomp_predict()`.
+#'   \item Calculates the observed proportions from the original count data.
+#'   \item Computes residuals by subtracting the predicted proportions from the observed proportions.
+#'   \item Returns a tibble containing the sample, cell group, residuals, and exposure (total counts per sample).
+#' }
+#'
+#' @importFrom dplyr %>%
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate
+#' @importFrom dplyr left_join
+#' @importFrom dplyr distinct
+#' @importFrom dplyr with_groups
+#' @importFrom tidyr pivot_longer
+#' @importFrom tibble as_tibble
+#' @importFrom magrittr %$%
+#' @importFrom sccomp sccomp_predict
 #'
 #' @export
 #'
 #' @examples
-#'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
+#' # Load example data
 #' data("counts_obj")
 #'
-#'   estimates = sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1,  sample, cell_group, count,
-#'     cores = 1
-#'   )
+#' # Fit the sccomp model
+#' estimates <- sccomp_estimate(
+#'   counts_obj,
+#'   formula_composition = ~ type,
+#'   formula_variability = ~1,
+#'   .sample = sample,
+#'   .cell_group = cell_group,
+#'   .count = count,
+#'   approximate_posterior_inference = "all",
+#'   cores = 1
+#' )
 #'
-#'   sccomp_remove_unwanted_variation(estimates)
+#' # Calculate residuals
+#' residuals <- sccomp_calculate_residuals(estimates)
 #'
-sccomp_remove_unwanted_variation <- function(.data,
-                                      formula_composition = ~1,
-                                      formula_variability = NULL) {
-  UseMethod("sccomp_remove_unwanted_variation", .data)
+#' # View the residuals
+#' print(residuals)
+#' }}
+#'
+sccomp_calculate_residuals <- function(.data) {
+  UseMethod("sccomp_calculate_residuals", .data)
 }
 
 #' @export
 #'
-sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
-                                                formula_composition = ~1,
-                                                formula_variability = NULL){
-
-
-
+sccomp_calculate_residuals.sccomp_tbl = function(.data){
+  
+  
+  
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
   .grouping_for_random_intercept = attr(.data, ".grouping_for_random_intercept")
   .count = attr(.data, ".count")
-
-  fit_matrix = as.matrix(attr(.data, "fit") )
-
-  message("sccomp says: calculating residuals")
-
+  
   # Residuals
-  residuals =
-    .data |>
-    sccomp_predict(
-      number_of_draws = min(dim(fit_matrix)[1], 500)
+  .data |>
+    sccomp_predict( 
+      number_of_draws = 
+        .data |>
+        attr("fit") |>
+        dim() |>
+        _[1] |> 
+        min(500) 
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    mutate( proportion_mean =
-              proportion_mean |>
-             #compress_zero_one() |>
-             boot::logit()
-    )|>
-  # Join counts
-  left_join(
-    .data |>
-      attr("model_input") %$%
-      y |>
-      as_tibble(rownames = quo_name(.sample)) |>
-      pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
-      with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
+    # mutate( proportion_mean =
+    #           proportion_mean |>
+    #           boot::logit()
+    # )|>
+    # Join counts
+    left_join(
+      .data |>
+        attr("model_input") %$%
+        y |>
+        as_tibble(rownames = quo_name(.sample)) |>
+        pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
+        with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
+        
+        with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  ),
+      # |>
+      #   
+      #   mutate(observed_proportion =
+      #            observed_proportion |>
+      #            compress_zero_one() |>
+      #            boot::logit()
+      #   ),
+      by = c(quo_name(.sample), quo_name(.cell_group))
+    ) |>
+    mutate(residuals = observed_proportion - proportion_mean) |>
+    select(!!.sample, !!.cell_group, residuals, exposure)
+  
+}
 
-      with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  ) |>
+#' sccomp_remove_unwanted_variation
+#'
+#' @description This function uses the model to remove unwanted variation from a dataset using the estimates of the model. For example, if you fit your data with the formula `~ factor_1 + factor_2` and use the formula `~ factor_1` to remove unwanted variation, the `factor_2` effect will be factored out.
+#'
+#' @param .data A tibble. The result of `sccomp_estimate`.
+#' @param formula_composition_keep A formula. The formula describing the model for differential abundance, for example `~type`. In this case, only the effect of the `type` factor will be preserved, while all other factors will be factored out.
+#' @param formula_composition DEPRECATED. Use `formula_composition_keep` instead.
+#' @param formula_variability DEPRECATED. Use `formula_variability_keep` instead.
+#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' 
+#' @return A tibble (`tbl`) with the following columns:
+#' \itemize{
+#'   \item \strong{sample} - A character column representing the sample name for which data was adjusted.
+#'   \item \strong{cell_group} - A character column representing the cell group being tested.
+#'   \item \strong{adjusted_proportion} - A numeric column representing the adjusted proportion after removing unwanted variation.
+#'   \item \strong{adjusted_counts} - A numeric column representing the adjusted counts after removing unwanted variation.
+#'   \item \strong{logit_residuals} - A numeric column representing the logit residuals calculated after adjustment.
+#' }
+#'
+#' @export
+#'
+#' @examples
+#'
+#' message("Use the following example after having installed cmdstanr with install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#'
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'
+#'     estimates = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_remove_unwanted_variation()
+#'   }
+#' }
+#'
+sccomp_remove_unwanted_variation <- function(.data,
+                                             formula_composition_keep = NULL,
+                                             formula_composition = NULL,
+                                             formula_variability = NULL,
+                                             cores = detectCores()) {
+  
+  # Check for deprecated arguments
+  if (!is.null(formula_composition)) {
+    warning("The argument 'formula_composition' is deprecated. Please use 'formula_composition_keep' instead.", call. = FALSE)
+    formula_composition_keep <- formula_composition
+  }
+  
+  if (!is.null(formula_variability)) {
+    warning("The argument 'formula_variability' is deprecated as not used.", call. = FALSE)
+  }
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
+  UseMethod("sccomp_remove_unwanted_variation", .data)
+}
 
-      mutate(observed_proportion =
-               observed_proportion |>
-               compress_zero_one() |>
-               boot::logit()
-      ),
-    by = c(quo_name(.sample), quo_name(.cell_group))
-  ) |>
-  mutate(logit_residuals = observed_proportion - proportion_mean) |>
-  select(!!.sample, !!.cell_group, logit_residuals, exposure)
+#' @importFrom readr write_file
+#' @export
+#'
+sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
+                                                       formula_composition_keep = NULL,
+                                                       formula_composition = NULL,
+                                                       formula_variability = NULL,
+                                                       cores = detectCores()){
+
+
+  model_input = attr(.data, "model_input")
+  .sample = attr(.data, ".sample")
+  .cell_group = attr(.data, ".cell_group")
+  .grouping_for_random_effect = attr(.data, ".grouping_for_random_effect")
+  .count = attr(.data, ".count")
+
+  # Residuals
+  message("sccomp says: calculating residuals")
+  residuals = .data |> sccomp_calculate_residuals()
 
 
   message("sccomp says: regressing out unwanted factors")
 
+
   # Generate quantities
   .data |>
     sccomp_predict(
-      formula_composition = formula_composition,
-      number_of_draws = min(dim(fit_matrix)[1], 500)
+      formula_composition = formula_composition_keep,
+      number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
+
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    mutate(proportion_mean =
-             proportion_mean |>
-             # compress_zero_one() |>
-             boot::logit()
-    ) |>
+    # mutate(proportion_mean =
+    #          proportion_mean |>
+    #          # compress_zero_one() |>
+    #          boot::logit()
+    # ) |>
     left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
-    mutate(adjusted_proportion = proportion_mean + logit_residuals) |>
-    mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
-    with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
+    mutate(adjusted_proportion = proportion_mean + residuals) |>
+  	mutate(adjusted_proportion = adjusted_proportion |> pmax(0)) |> 
+    # mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
+    # with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
 
     # Recostituite counts
     mutate(adjusted_counts = adjusted_proportion * exposure) |>
 
-    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, logit_residuals)
+    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, residuals)
 
 
 
@@ -1280,28 +1628,48 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
 #' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
-#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' 
+#' @return A tibble (`tbl`) with the following columns:
+#' \itemize{
+#'   \item \strong{sample} - A character column representing the sample name.
+#'   \item \strong{type} - A factor column representing the type of the sample.
+#'   \item \strong{phenotype} - A factor column representing the phenotype in the data.
+#'   \item \strong{count} - An integer column representing the original cell counts.
+#'   \item \strong{cell_group} - A character column representing the cell group identifier.
+#'   \item \strong{b_0} - A numeric column representing the first coefficient used for simulation.
+#'   \item \strong{b_1} - A numeric column representing the second coefficient used for simulation.
+#'   \item \strong{generated_proportions} - A numeric column representing the generated proportions from the simulation.
+#'   \item \strong{generated_counts} - An integer column representing the generated cell counts from the simulation.
+#'   \item \strong{replicate} - An integer column representing the replicate number for each draw from the posterior distribution.
+#' }
 #'
-#' @return A nested tibble `tbl` with cell_group-wise statistics
 #'
 #' @export
 #'
 #' @examples
 #'
-#' data("counts_obj")
-#' library(dplyr)
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
-#' estimate =
-#'  sccomp_estimate(
-#'  counts_obj ,
-#'   ~ type, ~1,  sample, cell_group, count,
-#'    cores = 1
-#'  )
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'     library(dplyr)
 #'
-#' # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-#' counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-#' # Simulate data
-#' simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     )
+#'
+#'     # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
+#'     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
+#'
+#'     # Simulate data
+#'     simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+#'   }
+#' }
 #'
 simulate_data <- function(.data,
                           .estimate_object,
@@ -1312,7 +1680,12 @@ simulate_data <- function(.data,
                        .coefficients = NULL,
                        variability_multiplier = 5,
                        number_of_draws = 1,
-                       mcmc_seed = sample(1e5, 1)) {
+                       mcmc_seed = sample(1e5, 1),
+                       cores = detectCores()) {
+  
+  # Run the function
+  check_and_install_cmdstanr()
+  
   UseMethod("simulate_data", .data)
 }
 
@@ -1333,7 +1706,8 @@ simulate_data.tbl = function(.data,
                                     .coefficients = NULL,
                                     variability_multiplier = 5,
                                     number_of_draws = 1,
-                                    mcmc_seed = sample(1e5, 1)){
+                                    mcmc_seed = sample(1e5, 1),
+                             cores = detectCores()){
 
 
   .sample = enquo(.sample)
@@ -1345,13 +1719,13 @@ simulate_data.tbl = function(.data,
 
   model_data = attr(.estimate_object, "model_input")
 
-  # Select model based on noise model
-  if(attr(.estimate_object, "noise_model") == "multi_beta_binomial") my_model = stanmodels$glm_multi_beta_binomial_simulate_data
-  else if(attr(.estimate_object, "noise_model") == "dirichlet_multinomial") my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  else if(attr(.estimate_object, "noise_model") == "logit_normal_multinomial") my_model = get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
+  # # Select model based on noise model
+  # if(attr(.estimate_object, "noise_model") == "multi_beta_binomial") my_model = stanmodels$glm_multi_beta_binomial_simulate_data
+  # else if(attr(.estimate_object, "noise_model") == "dirichlet_multinomial") my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
+  # else if(attr(.estimate_object, "noise_model") == "logit_normal_multinomial") my_model = get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
 
 
-  model_input =
+  data_for_model =
     .data %>%
     nest(data___ = -!!.sample) %>%
     mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) %>%
@@ -1361,16 +1735,27 @@ simulate_data.tbl = function(.data,
       #formula_variability,
       !!.sample, !!.cell_group, .exposure, !!.coefficients
     )
-
+    names(data_for_model)  = names(data_for_model) |> stringr::str_c("_simulated")
+    
+  # Drop data from old input
+  original_data = .estimate_object |> attr("model_input")
+  original_data = original_data[(names(original_data) %in% c("C", "M", "A", "ncol_X_random_eff", "is_random_effect", "how_many_factors_in_random_design"  ))]
+  
     # [1]  5.6260004 -0.6940178
     # prec_sd  = 0.816423129
 
-  fit =
-    rstan::gqs(
-    my_model,
-    draws =  as.matrix(attr(.estimate_object, "fit") ),
-    data = model_input %>% c(list(variability_multiplier = variability_multiplier)),
-    seed = mcmc_seed
+  mod_rng = load_model("glm_multi_beta_binomial_simulate_data", threads = cores)
+  
+  fit = mod_rng |> sample_safe(
+    generate_quantities_fx,
+    attr(.estimate_object , "fit")$draws(format = "matrix"),
+    
+    # This is for the new data generation with selected factors to do adjustment
+    data = data_for_model %>% c(original_data) |> c(list(variability_multiplier = variability_multiplier)),
+    seed = mcmc_seed,
+    parallel_chains = attr(.estimate_object , "fit")$metadata()$threads_per_chain, 
+    threads_per_chain = cores
+    
   )
 
   parsed_fit =
@@ -1380,12 +1765,12 @@ simulate_data.tbl = function(.data,
     # Get sample name
     nest(data = -N) %>%
     arrange(N) %>%
-    mutate(!!.sample := rownames(model_input$X)) %>%
+    mutate(!!.sample := rownames(data_for_model$X_simulated)) %>%
     unnest(data) %>%
 
     # get cell type name
     nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(model_input$beta)) %>%
+    mutate(!!.cell_group := colnames(data_for_model$beta_simulated)) %>%
     unnest(data) %>%
 
     select(-N, -M)
@@ -1421,17 +1806,23 @@ simulate_data.tbl = function(.data,
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1, sample, cell_group, count,
-#'     cores = 1
-#'   ) |>
-#'   sccomp_test()
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' # estimate |> sccomp_boxplot()
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     ) |>
+#'     sccomp_test()
+#'
+#'     # estimate |> sccomp_boxplot()
+#'   }
+#' }
+#' 
 sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
 
 
@@ -1494,16 +1885,21 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_com
 #'
 #' @examples
 #'
-#' data("counts_obj")
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
 #'
-#' estimate =
-#'   sccomp_estimate(
-#'   counts_obj ,
-#'    ~ type, ~1, sample, cell_group, count,
-#'     cores = 1
-#'   )
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
 #'
-#' # estimate |> plot()
+#'     estimate = sccomp_estimate(
+#'       counts_obj,
+#'       ~ type, ~1, sample, cell_group, count,
+#'       cores = 1
+#'     )
+#'
+#'     # estimate |> plot()
+#'   }
+#' }
 #'
 plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), ...) {
 
@@ -1593,5 +1989,134 @@ plots$credible_intervals_1D = plot_1D_intervals(.data = x, significance_threshol
 if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2D_intervals(.data = x, significance_threshold = significance_threshold)
 
 plots
+
+}
+
+
+#' Clear Stan Model Cache
+#'
+#' This function attempts to delete the Stan model cache directory and its contents.
+#' If the cache directory does not exist, it prints a message indicating this.
+#'
+#' @param cache_dir A character string representing the path of the cache directory to delete. Defaults to `sccomp_stan_models_cache_dir`.
+#' 
+#' @return NULL
+#' 
+#' @examples
+#' 
+#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' 
+#' \donttest{
+#'   clear_stan_model_cache("path/to/cache_dir")
+#' }
+#' @noRd
+clear_stan_model_cache <- function(cache_dir = sccomp_stan_models_cache_dir) {
+  
+  # Check if the directory exists
+  if (dir.exists(cache_dir)) {
+    # Attempt to delete the directory and its contents
+    unlink(cache_dir, recursive = TRUE)
+    message("Cache deleted: ", cache_dir)
+  } else {
+    message("Cache does not exist: ", cache_dir)
+  }
+}
+
+#' Calculate Proportional Fold Change for sccomp Data
+#'
+#' This function calculates the proportional fold change for single-cell composition data
+#' from sccomp analysis, comparing two conditions.
+#' 
+#' Note! This statistic is just descriptive and should not be used to define significance. Use sccomp_test() for that. 
+#' This statistics is just meant to help interpretation. While fold increase in proportion is easier to understand than
+#' fold change in logit space, the first is not linear (the same change for rare cell types does not necessarily have the same weight 
+#' that for abundant cell types), while the latter is linear, and used to infer probabilities.
+#' 
+#'
+#' @param .data A `sccomp_tbl` object containing single-cell composition data.
+#' @param formula_composition The formula for the composition model.
+#' @param from The label for the control group (e.g., "healthy").
+#' @param to The label for the treatment group (e.g., "cancer").
+#' @return A tibble with cell groups and their respective proportional fold change.
+#' @examples
+#' \dontrun{
+#' # Example usage
+#' result <- sccomp_proportional_fold_change(sccomp_data, formula_composition, "healthy", "cancer")
+#' }
+#' @export
+sccomp_proportional_fold_change <- function(.data, formula_composition, from, to) {
+  UseMethod("sccomp_proportional_fold_change", .data)
+}
+
+#' @export
+#' 
+#' @importFrom glue glue
+#' 
+sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition, from, to){
+  
+  my_factor = parse_formula(formula_composition)
+  
+  # Predict the composition for the specified conditions
+  .data |> 
+    sccomp_predict(
+      formula_composition = formula_composition, 
+      new_data = 
+        tibble(sample=as.character(c(to, from)), factor = c(to, from)) |> 
+        rename(!!my_factor := `factor`)
+    ) |> 
+    
+    # Nest the predicted data by cell group
+    nest(data = -!!.data |> attr(".cell_group")) |> 
+    
+    
+    # Calculate the ratio of proportions between 'to' and 'from' conditions
+    mutate(
+      ratio_mean = map_dbl(
+        data, 
+        ~ {
+          x = .x |> arrange(sample != !!from) |> pull(proportion_mean); 
+          x[2]/x[1] })
+      ) |> 
+    mutate(
+      proportion_from = map_dbl(data, ~.x |> filter(sample==from) |> pull(proportion_mean)),
+      proportion_to = map_dbl(data, ~.x |> filter(sample!=from) |> pull(proportion_mean))
+    ) |> 
+    
+    # Calculate the proportional fold change
+    mutate(proportion_fold_change = if_else(ratio_mean<1, (-1/ratio_mean) , ratio_mean)) |> 
+    
+    # Calculate the ratio of credible interval between 'to' and 'from' conditions
+    mutate(
+      ratio_upper = map_dbl(
+        data,  
+        ~ {
+          x = .x |> arrange(sample != !!from) |> pull(proportion_upper); 
+          x[2]/x[1] }),
+      ratio_lower = map_dbl(
+        data, 
+        ~ {
+          x = .x |> arrange(sample != !!from) |> pull(proportion_lower); 
+          x[2]/x[1] })
+    ) |> 
+    
+    # Calculate the proportional fold change
+    mutate(
+      difference_proportion_upper_fold_change = if_else(ratio_mean<1, (-1/ratio_upper) , ratio_upper) - proportion_fold_change,
+      difference_proportion_lower_fold_change = if_else(ratio_mean<1, (-1/ratio_lower) , ratio_lower) - proportion_fold_change
+    ) |> 
+    mutate(average_uncertainty = (abs(difference_proportion_upper_fold_change) + abs(difference_proportion_lower_fold_change))/2) |> 
+    
+    # Print expression
+    mutate(increase_decrease = if_else(proportion_fold_change>0, "increase", "decrease")) |> 
+    mutate(statement = glue("{round(abs(proportion_fold_change),1)}-fold {increase_decrease} (from {round(proportion_from, 4)} to {round(proportion_to, 4)})")) |> 
+  
+    # Select and return the relevant columns
+    select(
+      !!.data |> attr(".cell_group"), 
+      proportion_fold_change, 
+      average_uncertainty, 
+      statement
+    ) 
+    
 
 }
