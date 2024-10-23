@@ -2119,7 +2119,7 @@ plot_boxplot = function(
       )
   }
   
-  if(nrow(significance_colors) == 0 |
+  if(nrow(significance_colors) == 0 ||
      length(intersect(
        significance_colors |> pull(!!as.symbol(factor_of_interest)),
        data_proportion |> pull(!!as.symbol(factor_of_interest))
@@ -2134,8 +2134,7 @@ plot_boxplot = function(
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
-          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
-          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
+          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) ,
         fatten = 0.5,
         lwd=0.5,
       )
