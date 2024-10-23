@@ -629,6 +629,26 @@ test_that("sccomp_proportional_fold_change",{
   
 })
 
+test_that("plotting for no significance",{
+  
+  skip_cmdstan()
+  
+  
+  no_significance_df |>
+    mutate(count = count |> as.integer()) |> 
+    sccomp_estimate(formula_composition = ~ condition,
+                    .sample = sample,
+                    .cell_group = cell_group,.abundance = count,
+                    bimodal_mean_variability_association = TRUE) |>
+    sccomp_remove_outliers() |> 
+    sccomp_test() |> 
+    sccomp_boxplot("condition") |> 
+    expect_no_error()
+  
+  
+  
+  
+})
 
 # fit = 
 # 	seurat_obj |> 
