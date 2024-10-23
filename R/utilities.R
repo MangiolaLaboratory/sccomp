@@ -544,6 +544,12 @@ fit_model = function(
   # Fit
   mod = load_model(model_name, threads = cores)
   
+  # Avoid 0 proportions
+  if(data_for_model$is_proportion && min(data_for_model$y_proportion)==0){
+    warning("sccomp says: your proportion values include 0. Assuming that 0s derive from a precision threshold (e.g. deconvolution), 0s are converted to the smaller non 0 proportion value.")
+    data_for_model$y_proportion[data_for_model$y_proportion==0] =
+      min(data_for_model$y_proportion[data_for_model$y_proportion>0])
+  }
   
   if(inference_method == "hmc"){
 
@@ -1317,11 +1323,6 @@ data_spread_to_model_input =
       y = y
       y_proportion = y[0,,drop = FALSE]
     }
-    
-    if(is_proportion && min(y_proportion)==0){
-      warning("sccomp says: your proportion values include 0. Assuming that 0s derive from a precision threshold (e.g. deconvolution), 0s are converted to the smaller non 0 proportion value.")
-      y_proportion[y_proportion==0] = min(y_proportion[y_proportion>0])
-     }
     
 
     data_for_model =
@@ -2118,7 +2119,7 @@ plot_boxplot = function(
       )
   }
   
-  if(nrow(significance_colors) == 0 |
+  if(nrow(significance_colors) == 0 ||
      length(intersect(
        significance_colors |> pull(!!as.symbol(factor_of_interest)),
        data_proportion |> pull(!!as.symbol(factor_of_interest))
@@ -2133,8 +2134,7 @@ plot_boxplot = function(
         outlier.shape = NA, outlier.color = NA,outlier.size = 0,
         data =
           data_proportion |>
-          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
-          left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
+          mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) ,
         fatten = 0.5,
         lwd=0.5,
       )
