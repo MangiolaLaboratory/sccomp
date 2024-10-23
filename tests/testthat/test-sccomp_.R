@@ -639,8 +639,9 @@ test_that("plotting for no significance",{
     sccomp_estimate(formula_composition = ~ condition,
                     .sample = sample,
                     .cell_group = cell_group,.abundance = count,
-                    bimodal_mean_variability_association = TRUE) |>
-    sccomp_remove_outliers() |> 
+                    bimodal_mean_variability_association = TRUE,      
+                    cores = 1
+) |>
     sccomp_test() |> 
     sccomp_boxplot("condition") |> 
     expect_no_error()
