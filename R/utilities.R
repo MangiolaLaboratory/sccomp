@@ -3490,7 +3490,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
     message("Precompiled model not found. Compiling the model...")
 
     # Compile the Stan model using cmdstanr with threading support enabled
-    stan_package_compile(
+    instantiate::stan_package_compile(
       stan_model_path, 
       cpp_options = list(stan_threads = TRUE),
       force_recompile = TRUE, 
