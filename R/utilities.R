@@ -41,14 +41,14 @@ add_attr = function(var, attribute, name) {
 #' @noRd
 parse_formula <- function(fm) {
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
-
-    as.character(attr(terms(fm), "variables")) |>
+  
+  as.character(attr(terms(fm), "variables")) |>
     str_subset("\\|", negate = TRUE) %>%
-
-      # Does not work the following
-      # |>
-      # extract2(-1)
-      .[-1]
+    
+    # Does not work the following
+    # |>
+    # extract2(-1)
+    .[-1]
 }
 
 
@@ -70,37 +70,37 @@ parse_formula <- function(fm) {
 #' @keywords internal
 #' @noRd
 formula_to_random_effect_formulae <- function(fm) {
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   formula <- NULL
   
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
-
+  
   random_effect_elements =
     as.character(attr(terms(fm), "variables")) |>
-
+    
     # Select random intercept part
     str_subset("\\|")
-
+  
   if(length(random_effect_elements) > 0){
-
+    
     random_effect_elements |>
-
+      
       # Divide grouping from factors
       str_split("\\|") |>
-
+      
       # Set name
       map_dfr(~ .x |> set_names(c("formula", "grouping"))) |>
-
+      
       # Create formula
       mutate(formula = map(formula, ~ formula(glue("~ {.x}")))) |>
       mutate(grouping = grouping |> str_trim())
-
+    
   }
-
+  
   else
     tibble(`formula` = list(), grouping = character())
-
+  
 }
 
 #' Formula parser
@@ -120,22 +120,22 @@ formula_to_random_effect_formulae <- function(fm) {
 #' @keywords internal
 #' @noRd
 parse_formula_random_effect <- function(fm) {
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   formula <- NULL
   
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
-
+  
   random_effect_elements =
     as.character(attr(terms(fm), "variables")) |>
-
+    
     # Select random intercept part
     str_subset("\\|")
-
+  
   if(length(random_effect_elements) > 0){
-
+    
     formula_to_random_effect_formulae(fm) |>
-
+      
       # Divide factors
       mutate(factor = map(
         formula,
@@ -146,25 +146,25 @@ parse_formula_random_effect <- function(fm) {
           attr("intercept") |>
           str_replace("^1$", "(Intercept)") |>
           str_subset("0", negate = TRUE) |>
-
+          
           # Attach variables
           c(
             .x |>
-            terms() |>
-            attr("variables") |>
-            as.character() |>
-            str_split("\\+") |>
-            as.character() %>%
-            .[-1]
+              terms() |>
+              attr("variables") |>
+              as.character() |>
+              str_split("\\+") |>
+              as.character() %>%
+              .[-1]
           )
       )) |>
       unnest(factor)
-
+    
   }
-
+  
   else
     tibble(factor = character(), grouping = character())
-
+  
 }
 
 #' Get matrix from tibble
@@ -190,7 +190,7 @@ ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
            as_mapper(.f2)(.x)
          else
            .x)
-
+  
 }
 
 #' @importFrom tidyr gather
@@ -209,7 +209,7 @@ as_matrix <- function(tbl, rownames = NULL) {
   variable <- NULL
   
   tbl %>%
-
+    
     ifelse_pipe(
       tbl %>%
         ifelse_pipe(!is.null(rownames),		~ .x %>% dplyr::select(-contains(rownames))) %>%
@@ -224,13 +224,13 @@ as_matrix <- function(tbl, rownames = NULL) {
       }
     ) %>%
     as.data.frame() %>%
-
+    
     # Deal with rownames column if present
     ifelse_pipe(!is.null(rownames),
                 ~ .x  %>%
                   set_rownames(tbl %>% pull(!!rownames)) %>%
                   select(-!!rownames)) %>%
-
+    
     # Convert to matrix
     as.matrix()
 }
@@ -272,26 +272,26 @@ vb_iterative = function(model,
   i = 0
   while  (is.null(res) & i < 5) {
     res = tryCatch({
-
+      
       if(inference_method=="pathfinder")
         my_res = model |> 
           sample_safe(
             pathfinder_fx,
-          	data = data,
-          	tol_rel_obj = tol_rel_obj,
-          	output_dir = output_dir,
-          	seed = seed+i,
-          	# init = init,
-          	num_paths=50, 
+            data = data,
+            tol_rel_obj = tol_rel_obj,
+            output_dir = output_dir,
+            seed = seed+i,
+            # init = init,
+            num_paths=50, 
             num_threads = cores,
-          	single_path_draws = output_samples / 50 ,
-          	max_lbfgs_iters=100, 
-          	history_size = 100, 
+            single_path_draws = output_samples / 50 ,
+            max_lbfgs_iters=100, 
+            history_size = 100, 
             show_messages = verbose,
             psis_resample = psis_resample,
-          	...
+            ...
           )
-    
+      
       else if(inference_method=="variational")
         my_res = model |> 
           sample_safe(
@@ -307,7 +307,7 @@ vb_iterative = function(model,
             threads = cores,
             ...
           )
-
+      
       boolFalse <- TRUE
       return(my_res)
     },
@@ -321,7 +321,7 @@ vb_iterative = function(model,
     })
     i = i + 1
   }
-
+  
   if(is.null(res)) stop(sprintf("sccomp says: variational Bayes did not converge after %s attempts. Please use variational_inference = FALSE for a HMC fitting.", i))
   
   return(res)
@@ -343,7 +343,7 @@ vb_iterative = function(model,
 #' @keywords internal
 #' @noRd
 draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   dummy <- NULL
   .variable <- NULL
@@ -354,10 +354,10 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   
   par_names =
     fit$metadata()$stan_variables %>% grep(sprintf("%s", par), ., value = TRUE)
-
+  
   fit$draws(variables = par, format = "draws_df") %>%
     mutate(.iteration = seq_len(n())) %>%
-
+    
     pivot_longer(
       names_to = "parameter", # c( ".chain", ".variable", x, y),
       cols = contains(par),
@@ -367,11 +367,11 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       values_to = ".value"
     ) %>%
     tidyr::extract(parameter, c(".chain", ".variable", x, y), "([1-9]+)?\\.?([a-zA-Z0-9_\\.]+)\\[([0-9]+),([0-9]+)") |> 
-
+    
     # Warning message:
     # Expected 5 pieces. Additional pieces discarded
     suppressWarnings() %>%
-
+    
     mutate(
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
@@ -382,7 +382,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     ungroup() %>%
     select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
     filter(.variable == par)
-
+  
 }
 
 
@@ -399,32 +399,29 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 #' @noRd
 summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
   
-  # Extract parameter names from the fit object that match the 'par' argument
-  par_names = names(fit) %>% grep(sprintf("%s", par), ., value = TRUE)
-
   # Avoid bug
   #if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
-
+  
   summary = 
-    fit$summary(variables = par, "mean", ~quantile(.x, probs = probs,  na.rm=TRUE)) %>%
+    fit$summary(variables = par, "mean", ~quantile(.x, probs = probs,  na.rm=TRUE), "rhat", "ess_bulk", "ess_tail") %>%
     rename(.variable = variable ) %>%
-
+    
     when(
       is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
       ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
     )
   
-  # summaries are returned only for HMC
-  if(!"n_eff" %in% colnames(summary)) summary = summary |> mutate(n_eff = NA)
-  if(!"R_k_hat" %in% colnames(summary)) summary = summary |> mutate(R_k_hat = NA)
+  # # summaries are returned only for HMC
+  # if(!"n_eff" %in% colnames(summary)) summary = summary |> mutate(n_eff = NA)
+  # if(!"R_k_hat" %in% colnames(summary)) summary = summary |> mutate(R_k_hat = NA)
   
   summary
-
+  
 }
 
 #' @importFrom rlang :=
 label_deleterious_outliers = function(.my_data){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   .count <- NULL
   `95%` <- NULL
@@ -437,14 +434,14 @@ label_deleterious_outliers = function(.my_data){
   outlier_below <- NULL
   
   .my_data %>%
-
+    
     # join CI
     mutate(outlier_above = !!.count > `95%`) %>%
     mutate(outlier_below = !!.count < `5%`) %>%
-
+    
     # Mark if on the right of the factor scale
     mutate(is_group_right = !!as.symbol(colnames(X)[2]) > mean( !!as.symbol(colnames(X)[2]) )) %>%
-
+    
     # Check if outlier might be deleterious for the statistics
     mutate(
       !!as.symbol(sprintf("deleterious_outlier_%s", iteration)) :=
@@ -453,28 +450,28 @@ label_deleterious_outliers = function(.my_data){
         (outlier_above & slope < 0 & !is_group_right) |
         (outlier_below & slope < 0 & is_group_right)
     ) %>%
-
+    
     select(-outlier_above, -outlier_below, -is_group_right)
-
+  
 }
 
 #' @importFrom readr write_file
 fit_model = function(
-  data_for_model, model_name, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
-  warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
-  seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000, 
-  output_directory = "sccomp_draws_files",
-  ...
+    data_for_model, model_name, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
+    warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
+    seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000, 
+    output_directory = "sccomp_draws_files",
+    ...
 )
 {
-
-
+  
+  
   # # if analysis approximated
   # # If posterior analysis is approximated I just need enough
   # how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
   # additional_parameters_to_save = additional_parameters_to_save %>% c("lambda_log_param", "sigma_raw") %>% unique
-
-
+  
+  
   # Find number of draws
   draws_supporting_quantile = 50
   if(is.null(output_samples)){
@@ -486,9 +483,9 @@ fit_model = function(
     if(output_samples > max_sampling_iterations) {
       # message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
       output_samples = max_sampling_iterations
-    
-  }}
-    
+      
+    }}
+  
   # Find optimal number of chains
   if(is.null(chains))
     chains =
@@ -498,7 +495,7 @@ fit_model = function(
         parallelisation_start_penalty = 100
       ) %>%
       min(cores)
-
+  
   # chains = 3
   
   init_list=list(
@@ -507,8 +504,8 @@ fit_model = function(
     alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
     beta_raw_raw = matrix(0, data_for_model$C , data_for_model$M-1) ,
     mix_p = 0.1 
-   )
-
+  )
+  
   if(data_for_model$n_random_eff>0){
     init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1)  
     init_list$random_effect_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[1])
@@ -534,13 +531,13 @@ fit_model = function(
     ))
     
   } 
- 
+  
   init = map(1:chains, ~ init_list) %>%
     setNames(as.character(1:chains))
-
+  
   #output_directory = "sccomp_draws_files"
   dir.create(output_directory, showWarnings = FALSE)
-
+  
   # Fit
   mod = load_model(model_name, threads = cores)
   
@@ -552,7 +549,7 @@ fit_model = function(
   }
   
   if(inference_method == "hmc"){
-
+    
     tryCatch({
       mod |> sample_safe(
         sample_fx,
@@ -583,8 +580,8 @@ fit_model = function(
       
     })
     
-
-} else{
+    
+  } else{
     if(inference_method=="pathfinder") init = pf
     else if(inference_method=="variational") init = list(init_list)
     
@@ -605,9 +602,9 @@ fit_model = function(
       suppressWarnings()
     
   }
-    
-
-
+  
+  
+  
 }
 
 
@@ -618,7 +615,7 @@ fit_model = function(
 #' @keywords internal
 #' @noRd
 parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   M <- NULL
   
@@ -627,7 +624,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
     draws_to_tibble_x_y("beta", "C", "M") %>%
     left_join(tibble(C=seq_len(ncol(data_for_model$X)), C_name = colnames(data_for_model$X)), by = "C") %>%
     nest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration)) := -M)
-
+  
 }
 
 #' @importFrom purrr map2_lgl
@@ -640,7 +637,7 @@ parse_fit = function(data_for_model, fit, censoring_iteration = 1, chains){
 #' @keywords internal
 #' @noRd
 beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   M <- NULL
   C_name <- NULL
@@ -649,7 +646,7 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fact
   .upper <- NULL
   
   effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
-
+  
   CI = fitted %>%
     unnest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration))) %>%
     nest(data = -c(M, C, C_name)) %>%
@@ -676,7 +673,7 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fact
   
   else 
     CI |> nest(composition_CI = -c(M))
-
+  
 }
 
 #' @importFrom purrr map2_lgl
@@ -687,7 +684,7 @@ beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fact
 #' @keywords internal
 #' @noRd
 alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   M <- NULL
   C_name <- NULL
@@ -696,7 +693,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
   .upper <- NULL
   
   effect_column_name = sprintf("variability_effect_%s", factor_of_interest) %>% as.symbol()
-
+  
   fitted %>%
     unnest(!!as.symbol(sprintf("alpha_%s", censoring_iteration))) %>%
     nest(data = -c(M, C, C_name)) %>%
@@ -716,9 +713,9 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
     pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
     mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
     nest(variability_CI = -c(M, !!effect_column_name))
-
-
-
+  
+  
+  
 }
 
 
@@ -751,69 +748,69 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom readr type_convert
 #' @noRd
 get_random_effect_design2 = function(.data_, .sample, formula_composition ){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   formula <- NULL
   
   .sample = enquo(.sample)
-
- grouping_table =
-   formula_composition |>
-   formula_to_random_effect_formulae() |>
-
-   mutate(design = map2(
-     formula, grouping,
-     ~ {
-
-       mydesign = .data_ |> get_design_matrix(.x, !!.sample)
-
-       mydesigncol_X_random_eff = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
-       mydesigncol_X_random_eff[mydesign==0L] = NA
-       colnames(mydesigncol_X_random_eff) = colnames(mydesign)
-       rownames(mydesigncol_X_random_eff) = rownames(mydesign)
-
-       mydesigncol_X_random_eff |>
-         as_tibble(rownames = quo_name(.sample)) |>
-         pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
-         filter(!is.na(grouping)) |>
-
+  
+  grouping_table =
+    formula_composition |>
+    formula_to_random_effect_formulae() |>
+    
+    mutate(design = map2(
+      formula, grouping,
+      ~ {
+        
+        mydesign = .data_ |> get_design_matrix(.x, !!.sample)
+        
+        mydesigncol_X_random_eff = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
+        mydesigncol_X_random_eff[mydesign==0L] = NA
+        colnames(mydesigncol_X_random_eff) = colnames(mydesign)
+        rownames(mydesigncol_X_random_eff) = rownames(mydesign)
+        
+        mydesigncol_X_random_eff |>
+          as_tibble(rownames = quo_name(.sample)) |>
+          pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
+          filter(!is.na(grouping)) |>
+          
           mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() )|>
           with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
-         mutate(minus_sum = if_else(mean_idx==0, factor |> as.factor() |> as.integer(), 0L)) |>
-
-         # Make right rank
-         mutate(mean_idx = mean_idx |> as.factor() |> as.integer() |> subtract(1)) |>
-
-         # drop minus_sum if we just have one grouping per factor
-         with_groups(factor, ~ {
-           if(length(unique(..1$grouping)) == 1) ..1 |> mutate(., minus_sum = 0)
-             else ..1
-         }) |>
-
-         # Add value
-        left_join(
-
-          mydesign |>
-            as_tibble(rownames = quo_name(.sample)) |>
-            mutate_all(as.character) |>
-            readr::type_convert(guess_integer = TRUE ) |>
-            suppressMessages() |>
-            mutate_if(is.integer, ~1) |>
-            pivot_longer(-!!.sample, names_to = "factor"),
-
-          by = join_by(!!.sample, factor)
-        ) |>
-
-         # Create unique name
-         mutate(group___label = glue("{factor}___{grouping}")) |>
-         mutate(group___numeric = group___label |> as.factor() |> as.integer()) |>
-         mutate(factor___numeric = `factor` |> as.factor() |> as.integer())
-
-
-
-     }))
-
- }
+          mutate(minus_sum = if_else(mean_idx==0, factor |> as.factor() |> as.integer(), 0L)) |>
+          
+          # Make right rank
+          mutate(mean_idx = mean_idx |> as.factor() |> as.integer() |> subtract(1)) |>
+          
+          # drop minus_sum if we just have one grouping per factor
+          with_groups(factor, ~ {
+            if(length(unique(..1$grouping)) == 1) ..1 |> mutate(., minus_sum = 0)
+            else ..1
+          }) |>
+          
+          # Add value
+          left_join(
+            
+            mydesign |>
+              as_tibble(rownames = quo_name(.sample)) |>
+              mutate_all(as.character) |>
+              readr::type_convert(guess_integer = TRUE ) |>
+              suppressMessages() |>
+              mutate_if(is.integer, ~1) |>
+              pivot_longer(-!!.sample, names_to = "factor"),
+            
+            by = join_by(!!.sample, factor)
+          ) |>
+          
+          # Create unique name
+          mutate(group___label = glue("{factor}___{grouping}")) |>
+          mutate(group___numeric = group___label |> as.factor() |> as.integer()) |>
+          mutate(factor___numeric = `factor` |> as.factor() |> as.integer())
+        
+        
+        
+      }))
+  
+}
 
 
 #' Get Random Intercept Design
@@ -846,7 +843,7 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
 #' @importFrom tidyselect all_of
 #' @noRd
 get_random_effect_design = function(.data_, .sample, random_effect_elements ){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   is_factor_continuous <- NULL
   design <- NULL
@@ -858,7 +855,7 @@ get_random_effect_design = function(.data_, .sample, random_effect_elements ){
   min_minus_sum <- NULL
   
   .sample = enquo(.sample)
-
+  
   # If intercept is not defined create it
   if(nrow(random_effect_elements) == 0 )
     return(
@@ -868,7 +865,7 @@ get_random_effect_design = function(.data_, .sample, random_effect_elements ){
           is_factor_continuous = logical()
         )
     )
-
+  
   # Otherwise process
   random_effect_elements |>
     mutate(is_factor_continuous = map_lgl(
@@ -878,65 +875,65 @@ get_random_effect_design = function(.data_, .sample, random_effect_elements ){
     mutate(design = pmap(
       list(grouping, `factor`, is_factor_continuous),
       ~ {
-
+        
         # Make exception for random intercept
         if(..2 == "(Intercept)")
           .data_ = .data_ |> mutate(`(Intercept)` = 1)
-
+        
         .data_ =
           .data_ |>
           select(!!.sample, ..1, ..2) |>
           set_names(c(quo_name(.sample), "group___", "factor___")) |>
           mutate(group___numeric = group___, factor___numeric = factor___) |>
-
+          
           mutate(group___label := glue("{group___}___{.y}")) |>
           mutate(factor___ = ..2)
-
-
+        
+        
         # If factor is continuous
         if(..3)
           .data_ %>%
-
+          
           # Mutate random intercept grouping to number
           mutate(group___numeric = factor(group___numeric) |> as.integer()) |>
-
+          
           # If intercept is not defined create it
           mutate(., factor___numeric = 1L) |>
-
+          
           # If categorical make sure the group is independent for factors
           mutate(mean_idx = glue("{group___numeric}") |> as.factor() |> as.integer()) |>
           mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx)) |>
           mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
           mutate(minus_sum = if_else(mean_idx==0, 1L, 0L))
-
+        
         #|>
         #  distinct()
-
+        
         # If factor is discrete
         else
           .data_ %>%
-
+          
           # Mutate random intercept grouping to number
           mutate(group___numeric = factor(group___numeric) |> as.integer()) |>
-
+          
           # If categorical make sure the group is independent for factors
           mutate(mean_idx = glue("{factor___numeric}{group___numeric}") |> as.factor() |> as.integer()) |>
           with_groups(factor___numeric, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
           mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
           mutate(minus_sum = if_else(mean_idx==0, as.factor(factor___numeric) |> as.integer(), 0L)) |>
-
+          
           # drop minus_sum if we just have one group___numeric per factor
           with_groups(factor___numeric, ~ {
             if(length(unique(..1$group___numeric)) == 1) ..1 |> mutate(., minus_sum = 0)
             else ..1
           }) |>
           mutate(factor___numeric = as.factor(factor___numeric) |> as.integer())
-
+        
         #|>
         #  distinct()
       }
     )) |>
-
+    
     # Make indexes unique across parameters
     mutate(
       max_mean_idx = map_int(design, ~ ..1 |> pull(mean_idx) |> max()),
@@ -958,27 +955,27 @@ get_random_effect_design = function(.data_, .sample, random_effect_elements ){
           minus_sum = if_else(minus_sum>0, minus_sum + ..3, minus_sum),
           factor___numeric = factor___numeric + ..4,
           group___numeric = group___numeric + ..5
-
+          
         )
     ))
-
+  
 }
 
 #' @importFrom glue glue
 #' @noRd
 get_design_matrix = function(.data_spread, formula, .sample){
-
+  
   .sample = enquo(.sample)
-
+  
   design_matrix =
-  	.data_spread %>%
-
+    .data_spread %>%
+    
     select(!!.sample, parse_formula(formula)) |>
-  	mutate(across(where(is.numeric),  scale)) |>
+    mutate(across(where(is.numeric),  scale)) |>
     model.matrix(formula, data=_)
-
+  
   rownames(design_matrix) = .data_spread |> pull(!!.sample)
-
+  
   design_matrix
 }
 
@@ -1008,23 +1005,23 @@ get_design_matrix = function(.data_spread, formula, .sample){
 #' @importFrom readr type_convert
 #' @noRd
 check_random_effect_design = function(.data, factor_names, random_effect_elements, formula, X){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   factors <- NULL
   groupings <- NULL
   
   
   .data_ = .data
-
+  
   # Loop across groupings
   random_effect_elements |>
     nest(factors = `factor` ) |>
     mutate(checked = map2(
       grouping, factors,
       ~ {
-
+        
         .y = unlist(.y)
-
+        
         # Check that the group column is categorical
         stopifnot("sccomp says: the grouping column should be categorical (not numeric)" =
                     .data_ |>
@@ -1033,8 +1030,8 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
                     class() %in%
                     c("factor", "logical", "character")
         )
-
-
+        
+        
         # # Check sanity of the grouping if only random intercept
         # stopifnot(
         #   "sccomp says: the random intercept completely confounded with one or more discrete factors" =
@@ -1055,7 +1052,7 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
         #         any()
         #     )
         # )
-
+        
         # # Check if random intercept with random continuous slope. At the moment is not possible
         # # Because it would require I believe a multivariate prior
         # stopifnot(
@@ -1070,23 +1067,23 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
         #         c("integer", "numeric")
         #     )
         # )
-
+        
         # Check if random intercept with random continuous slope. At the moment is not possible
         # Because it would require I believe a multivariate prior
         stopifnot(
           "sccomp says: currently, discrete random slope is only supported in a intercept-free model. For example ~ 0 + treatment + (treatment | group)" =
             !(
               # If I have both random intercept and random discrete slope
-
-                .y |> equals("(Intercept)") |> any() &&
-                  length(.y) > 1 &&
+              
+              .y |> equals("(Intercept)") |> any() &&
+                length(.y) > 1 &&
                 # If I have random slope and non-intercept-free model
                 .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
-
+              
             )
         )
-
-
+        
+        
         # I HAVE TO REVESIT THIS
         #  stopifnot(
         #   "sccomp says: the groups in the formula (factor | group) should not be shared across factor groups" =
@@ -1112,10 +1109,10 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
         #
         #     )
         # )
-
+        
       }
     ))
-
+  
   random_effect_elements |>
     nest(groupings = grouping ) |>
     mutate(checked = map2(`factor`, groupings, ~{
@@ -1123,18 +1120,18 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
       stopifnot(
         "sccomp says: the groups in the formula (factor | group) should be present in only one factor, including the intercept" =
           !(
-              # If I duplicated groups
+            # If I duplicated groups
             .y |> unlist() |> length() |> gt(1)
-
+            
           )
       )
-
-
+      
+      
     }))
-
-
-
-
+  
+  
+  
+  
 }
 
 #' @importFrom purrr when
@@ -1157,7 +1154,7 @@ data_spread_to_model_input =
     bimodal_mean_variability_association = FALSE,
     use_data = TRUE,
     random_effect_elements){
-
+    
     # Define the variables as NULL to avoid CRAN NOTES
     exposure <- NULL
     design <- NULL
@@ -1183,53 +1180,53 @@ data_spread_to_model_input =
       unique() 
     
     if (length(.grouping_for_random_effect)==0 ) .grouping_for_random_effect = "random_effect"
-
-
+    
+    
     X  =
-
-    .data_spread |>
+      
+      .data_spread |>
       get_design_matrix(
-      # Drop random intercept
-      formula |>
-      as.character() |>
-      str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
-      paste(collapse="") |>
-      as.formula(),
-       !!.sample
-    )
-
+        # Drop random intercept
+        formula |>
+          as.character() |>
+          str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+          paste(collapse="") |>
+          as.formula(),
+        !!.sample
+      )
+    
     Xa  =
       .data_spread |>
       get_design_matrix(
-      # Drop random intercept
-      formula_variability |>
-      as.character() |>
-      str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
-      paste(collapse="") |>
-      as.formula() ,
-      !!.sample
-    )
-
+        # Drop random intercept
+        formula_variability |>
+          as.character() |>
+          str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+          paste(collapse="") |>
+          as.formula() ,
+        !!.sample
+      )
+    
     XA = Xa %>%
       as_tibble() %>%
       distinct()
-
+    
     A = ncol(XA);
     Ar = nrow(XA);
-
+    
     factor_names = parse_formula(formula)
     factor_names_variability = parse_formula(formula_variability)
     cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% colnames()
-
+    
     # Random intercept
     if(nrow(random_effect_elements)>0 ) {
-
+      
       #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
       random_effect_grouping = get_random_effect_design2(.data_spread, !!.sample,  formula )
-
+      
       # Actual parameters, excluding for the sum to one parameters
       is_random_effect = 1
-
+      
       random_effect_grouping =
         random_effect_grouping |>
         mutate(design_matrix = map(
@@ -1252,37 +1249,37 @@ data_spread_to_model_input =
       # This will be modularised with the new stan
       if(random_effect_grouping |> nrow() > 1)
         X_random_effect_2 =   
-          random_effect_grouping |> 
-          pull(design_matrix) |> 
-          _[[2]] |>  
-          as_matrix(rownames = quo_name(.sample))
+        random_effect_grouping |> 
+        pull(design_matrix) |> 
+        _[[2]] |>  
+        as_matrix(rownames = quo_name(.sample))
       else X_random_effect_2 =  X_random_effect[,0,drop=FALSE]
-
-    n_random_eff = random_effect_grouping |> nrow()
       
-    ncol_X_random_eff =
-      random_effect_grouping |>
-      mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
-      pull(n) 
-    
-    if(ncol_X_random_eff |> length() < 2) ncol_X_random_eff[2] = 0
-    
-    # TEMPORARY
-    group_factor_indexes_for_covariance = 
-    	X_random_effect |> 
-    	colnames() |> 
-    	enframe(value = "parameter", name = "order")  |> 
-    	separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
-    	complete(factor, group, fill = list(order=0)) |> 
-    	select(-parameter) |> 
-    	pivot_wider(names_from = group, values_from = order)  |> 
-    	as_matrix(rownames = "factor")
-    
-    n_groups = group_factor_indexes_for_covariance |> ncol()
+      n_random_eff = random_effect_grouping |> nrow()
       
-    # This will be modularised with the new stan
-    if(random_effect_grouping |> nrow() > 1)
-      group_factor_indexes_for_covariance_2 = 
+      ncol_X_random_eff =
+        random_effect_grouping |>
+        mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
+        pull(n) 
+      
+      if(ncol_X_random_eff |> length() < 2) ncol_X_random_eff[2] = 0
+      
+      # TEMPORARY
+      group_factor_indexes_for_covariance = 
+        X_random_effect |> 
+        colnames() |> 
+        enframe(value = "parameter", name = "order")  |> 
+        separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
+        complete(factor, group, fill = list(order=0)) |> 
+        select(-parameter) |> 
+        pivot_wider(names_from = group, values_from = order)  |> 
+        as_matrix(rownames = "factor")
+      
+      n_groups = group_factor_indexes_for_covariance |> ncol()
+      
+      # This will be modularised with the new stan
+      if(random_effect_grouping |> nrow() > 1)
+        group_factor_indexes_for_covariance_2 = 
         X_random_effect_2 |> 
         colnames() |> 
         enframe(value = "parameter", name = "order")  |> 
@@ -1291,13 +1288,13 @@ data_spread_to_model_input =
         select(-parameter) |> 
         pivot_wider(names_from = group, values_from = order)  |> 
         as_matrix(rownames = "factor")
-    else group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE]
-    
-    n_groups = n_groups |> c(group_factor_indexes_for_covariance_2 |> ncol())
-    
-    how_many_factors_in_random_design = list(group_factor_indexes_for_covariance, group_factor_indexes_for_covariance_2) |> map_int(nrow)
-    
-    
+      else group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE]
+      
+      n_groups = n_groups |> c(group_factor_indexes_for_covariance_2 |> ncol())
+      
+      how_many_factors_in_random_design = list(group_factor_indexes_for_covariance, group_factor_indexes_for_covariance_2) |> map_int(nrow)
+      
+      
     } else {
       X_random_effect = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
       X_random_effect_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
@@ -1324,7 +1321,6 @@ data_spread_to_model_input =
       y_proportion = y[0,,drop = FALSE]
     }
     
-
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
@@ -1343,7 +1339,7 @@ data_spread_to_model_input =
         is_vb = as.integer(approximate_posterior_inference),
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
-
+        
         # Random intercept
         is_random_effect = is_random_effect,
         ncol_X_random_eff = ncol_X_random_eff,
@@ -1361,7 +1357,7 @@ data_spread_to_model_input =
         ## LOO
         enable_loo = FALSE
       )
-
+    
     # Add censoring
     data_for_model$is_truncated = 0
     data_for_model$truncation_up = matrix(rep(-1, data_for_model$M * data_for_model$N), ncol = data_for_model$M)
@@ -1373,7 +1369,7 @@ data_spread_to_model_input =
     
     # Add parameter factor dictionary
     data_for_model$factor_parameter_dictionary = tibble()
-
+    
     if(.data_spread  |> select(any_of(parse_formula(formula))) |> lapply(class) %in% c("factor", "character") |> any())
       data_for_model$factor_parameter_dictionary =
       data_for_model$factor_parameter_dictionary |> bind_rows(
@@ -1381,7 +1377,7 @@ data_spread_to_model_input =
         .data_spread  |>
           select(any_of(parse_formula(formula)))  |>
           distinct()  |>
-
+          
           # Drop numerical
           select_if(function(x) !is.numeric(x)) |>
           pivot_longer(everything(), names_to =  "factor", values_to = "parameter") %>%
@@ -1389,39 +1385,39 @@ data_spread_to_model_input =
           select(-parameter) |>
           filter(design_matrix_col %in% colnames(data_for_model$X)) %>%
           distinct()
-
+        
       )
-
- # For continuous
+    
+    # For continuous
     if(.data_spread  |> select(all_of(parse_formula(formula))) |> lapply(class) |> equals("numeric") |> any())
       data_for_model$factor_parameter_dictionary =
       data_for_model$factor_parameter_dictionary |>
-          bind_rows(
-            tibble(
-              design_matrix_col =  .data_spread  |>
-                select(all_of(parse_formula(formula)))  |>
-                distinct()  |>
-
-                # Drop numerical
-                select_if(function(x) is.numeric(x)) |>
-                names()
-            ) |>
-              mutate(`factor` = design_matrix_col)
-)
-
+      bind_rows(
+        tibble(
+          design_matrix_col =  .data_spread  |>
+            select(all_of(parse_formula(formula)))  |>
+            distinct()  |>
+            
+            # Drop numerical
+            select_if(function(x) is.numeric(x)) |>
+            names()
+        ) |>
+          mutate(`factor` = design_matrix_col)
+      )
+    
     # If constrasts is set it is a bit more complicated
     if(! is.null(contrasts))
       data_for_model$factor_parameter_dictionary =
-        data_for_model$factor_parameter_dictionary |>
-        distinct() |>
-        expand_grid(parameter=contrasts) |>
-        filter(str_detect(parameter, design_matrix_col )) |>
-        select(-design_matrix_col) |>
-        rename(design_matrix_col = parameter) |>
-        distinct()
-
+      data_for_model$factor_parameter_dictionary |>
+      distinct() |>
+      expand_grid(parameter=contrasts) |>
+      filter(str_detect(parameter, design_matrix_col )) |>
+      select(-design_matrix_col) |>
+      rename(design_matrix_col = parameter) |>
+      distinct()
+    
     data_for_model$intercept_in_design = X[,1] |> unique() |> identical(1)
-
+    
     
     if (data_for_model$intercept_in_design | length(factor_names_variability) == 0) {
       data_for_model$A_intercept_columns = 1
@@ -1449,12 +1445,12 @@ data_spread_to_model_input =
   }
 
 data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_effect){
-
+  
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
   .grouping_for_random_effect = .grouping_for_random_effect |> map(~ .x |> quo_name() ) |> unlist()
-
+  
   is_proportion = .data |> pull(!!.count) |> max() <= 1
   
   .data = 
@@ -1465,15 +1461,15 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
   if(is_proportion) .data = .data |> mutate(exposure = 1)
   else
     .data = 
-      .data |>
-      mutate(exposure = map_int(data, ~ .x |> pull(!!.count) |> sum() )) 
+    .data |>
+    mutate(exposure = map_int(data, ~ .x |> pull(!!.count) |> sum() )) 
   
   .data |>
-      unnest(data) |>
-      select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) |>
-      spread(!!.cell_type, !!.count)
+    unnest(data) |>
+    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) |>
+    spread(!!.cell_type, !!.count)
   
-
+  
 }
 
 #' @importFrom purrr when
@@ -1484,7 +1480,7 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
 #'
 data_simulation_to_model_input =
   function(.data, formula, .sample, .cell_type, .exposure, .coefficients, truncation_ajustment = 1, approximate_posterior_inference ){
-
+    
     # Define the variables as NULL to avoid CRAN NOTES
     sd <- NULL
     . <- NULL
@@ -1495,9 +1491,9 @@ data_simulation_to_model_input =
     .cell_type = enquo(.cell_type)
     .exposure = enquo(.exposure)
     .coefficients = enquo(.coefficients)
-
+    
     factor_names = parse_formula(formula)
-
+    
     sample_data =
       .data %>%
       select(!!.sample, any_of(factor_names)) %>%
@@ -1517,20 +1513,20 @@ data_simulation_to_model_input =
         rownames(.x) = sample_data %>% pull(!!.sample)
         .x
       }
-
+    
     if(factor_names == "1") XA = X[,1, drop=FALSE]
     else XA = X[,c(1,2), drop=FALSE]
     
     XA = XA |> 
       as_tibble()  |> 
       distinct()
-
+    
     cell_cluster_names =
       .data %>%
       distinct(!!.cell_type) %>%
       arrange(!!.cell_type) %>%
       pull(!!.cell_type)
-
+    
     coefficients =
       .data %>%
       select(!!.cell_type, !!.coefficients) %>%
@@ -1539,7 +1535,7 @@ data_simulation_to_model_input =
       arrange(!!.cell_type) %>%
       as_matrix(rownames = quo_name(.cell_type)) %>%
       t()
-
+    
     list(
       N = .data %>% distinct(!!.sample) %>% nrow(),
       M = .data %>% distinct(!!.cell_type) %>% nrow(),
@@ -1550,7 +1546,7 @@ data_simulation_to_model_input =
       A =  ncol(XA),
       beta = coefficients
     )
-
+    
   }
 
 
@@ -1566,21 +1562,21 @@ data_simulation_to_model_input =
 #' @return A Stan fit object
 find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
                                          max_number_to_check = 100, warmup = 200, parallelisation_start_penalty = 100) {
-
-
-
+  
+  
+  
   # Define the variables as NULL to avoid CRAN NOTES
   chains <- NULL
-
-
+  
+  
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
     mutate(tot = (how_many_posterior_draws / chains) + warmup + (parallelisation_start_penalty * chains))
-
+  
   d1 <- diff(chains_df$tot) / diff(seq_len(nrow(chains_df))) # first derivative
   abs(d1) %>% order() %>% .[1] # Find derivative == 0
-
-
+  
+  
 }
 
 
@@ -1600,7 +1596,7 @@ get.elbow.points.indices <- function(x, y, threshold) {
 #' @noRd
 #'
 get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fold_change = 0){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   .draw <- NULL
   M <- NULL
@@ -1609,9 +1605,9 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
   smaller_zero <- NULL
   
   probability_column_name = sprintf("%s_prob_H0", prefix) %>% as.symbol()
-
+  
   total_draws = .data %>% pull(2) %>% .[[1]] %>% distinct(.draw) %>% nrow()
-
+  
   .data %>%
     unnest(2 ) %>%
     filter(C ==2) %>%
@@ -1633,7 +1629,7 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
     select(M, !!probability_column_name)
   # %>%
   # mutate(false_discovery_rate = cummean(prob_non_zero))
-
+  
 }
 
 #' @importFrom magrittr divide_by
@@ -1645,7 +1641,7 @@ get_probability_non_zero_OLD = function(.data, prefix = "", test_above_logit_fol
 #' @noRd
 #'
 get_probability_non_zero_ = function(fit, parameter, prefix = "", test_above_logit_fold_change = 0){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   M <- NULL
   C_name <- NULL
@@ -1653,33 +1649,33 @@ get_probability_non_zero_ = function(fit, parameter, prefix = "", test_above_log
   smaller_zero <- NULL
   
   
-
+  
   draws = fit$draws(
-      variables = parameter,
-      inc_warmup = FALSE,
-      format = getOption("cmdstanr_draws_format", "draws_matrix")
-    )
-
+    variables = parameter,
+    inc_warmup = FALSE,
+    format = getOption("cmdstanr_draws_format", "draws_matrix")
+  )
+  
   total_draws = dim(draws)[1]
-
+  
   bigger_zero =
     draws %>%
-      apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
-
+    apply(2, function(x) (x>test_above_logit_fold_change) %>% which %>% length)
+  
   smaller_zero =
     draws %>%
-        apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
-
+    apply(2, function(x) (x< -test_above_logit_fold_change) %>% which %>% length)
+  
   (1 - (pmax(bigger_zero, smaller_zero) / total_draws)) %>%
     enframe() %>%
     tidyr::extract(name, c("C", "M"), ".+\\[([0-9]+),([0-9]+)\\]") %>%
     mutate(across(c(C, M), ~ as.integer(.x))) %>%
     tidyr::spread(C, value)
-
+  
 }
 
 get_probability_non_zero = function(draws, test_above_logit_fold_change = 0, probability_column_name){
-
+  
   draws %>%
     with_groups(c(M, C_name), ~ .x |> summarise(
       bigger_zero = which(.value>test_above_logit_fold_change) |> length(),
@@ -1687,14 +1683,14 @@ get_probability_non_zero = function(draws, test_above_logit_fold_change = 0, pro
       n=n()
     )) |>
     mutate(!!as.symbol(probability_column_name) :=  (1 - (pmax(bigger_zero, smaller_zero) / n)))
-
+  
 }
 
 #' @keywords internal
 #' @noRd
 #'
 parse_generated_quantities = function(rng, number_of_draws = 1){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   .draw <- NULL
   N <- NULL
@@ -1707,10 +1703,10 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
     with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/max(1, sum(.value)))) %>%
     filter(.draw<= number_of_draws) %>%
     rename(generated_counts = .value, replicate = .draw) %>%
-
+    
     mutate(generated_counts = as.integer(generated_counts)) %>%
     select(M, N, generated_proportions, generated_counts, replicate)
-
+  
 }
 
 #' design_matrix_and_coefficients_to_simulation
@@ -1731,11 +1727,11 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
 #'
 #'
 design_matrix_and_coefficients_to_simulation = function(
-
+    
   design_matrix, coefficient_matrix, .estimate_object
-
+  
 ){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   cell_type <- NULL
   beta_1 <- NULL
@@ -1743,13 +1739,13 @@ design_matrix_and_coefficients_to_simulation = function(
   
   design_df = as.data.frame(design_matrix)
   coefficient_df = as.data.frame(coefficient_matrix)
-
+  
   rownames(design_df) = sprintf("sample_%s", seq_len(nrow(design_df)))
   colnames(design_df) = sprintf("factor_%s", seq_len(ncol(design_df)))
-
+  
   rownames(coefficient_df) = sprintf("cell_type_%s", seq_len(nrow(coefficient_df)))
   colnames(coefficient_df) = sprintf("beta_%s", seq_len(ncol(coefficient_df)))
-
+  
   input_data =
     expand_grid(
       sample = rownames(design_df),
@@ -1757,36 +1753,36 @@ design_matrix_and_coefficients_to_simulation = function(
     ) |>
     left_join(design_df |> as_tibble(rownames = "sample") , by = "sample") |>
     left_join(coefficient_df |>as_tibble(rownames = "cell_type"), by = "cell_type")
-
+  
   simulate_data(.data = input_data,
-
+                
                 .estimate_object = .estimate_object,
-
+                
                 formula_composition = ~ factor_1 ,
                 .sample = sample,
                 .cell_group = cell_type,
                 .coefficients = c(beta_1, beta_2),
                 mcmc_seed = sample(1e5, 1)
   )
-
-
+  
+  
 }
 
 #' @importFrom rlang ensym
 #' @noRd
 class_list_to_counts = function(.data, .sample, .cell_group){
-
+  
   .sample_for_tidyr = ensym(.sample)
   .cell_group_for_tidyr = ensym(.cell_group)
-
+  
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
-
+  
   .data %>%
     count(!!.sample,
           !!.cell_group,
           name = "count") %>%
-
+    
     complete(
       !!.sample_for_tidyr,!!.cell_group_for_tidyr,
       fill = list(count = 0)
@@ -1856,7 +1852,7 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
     mutate(plot = pmap(
       list(data, which, parameter),
       ~  {
-
+        
         # Check if there are any statistics to plot
         if(..1 |> filter(!effect |> is.na()) |> nrow() |> equals(0))
           return(NA)
@@ -1909,7 +1905,12 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
 #' @examples
 #' # Example usage:
 #' # plot_2D_intervals(.data, "cell_group", theme_minimal(), 0.025)
-plot_2D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+plot_2D_intervals = function(
+    .data, 
+    significance_threshold = 0.05, 
+    test_composition_above_logit_fold_change = 
+      .data |> attr("test_composition_above_logit_fold_change")
+){
   
   # Define the variables as NULL to avoid CRAN NOTES
   v_effect <- NULL
@@ -2379,7 +2380,7 @@ plot_scatterplot = function(
 }
 
 draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   M <- NULL
   parameter <- NULL
@@ -2394,27 +2395,29 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
   R_k_hat <- NULL
   
   .cell_group = enquo(.cell_group)
-
+  
   draws =
-    draws |>
-    with_groups(c(!!.cell_group, M, parameter), ~ .x |> summarise(
-      lower = quantile(.value, false_positive_rate/2),
+    draws %>%
+    group_by(!!.cell_group, M, parameter, rhat, ess_bulk, ess_tail) %>%
+    summarise(
+      lower = quantile(.value, false_positive_rate / 2),
       effect = quantile(.value, 0.5),
-      upper = quantile(.value, 1-(false_positive_rate/2)),
-      bigger_zero = which(.value>test_composition_above_logit_fold_change) |> length(),
-      smaller_zero = which(.value< -test_composition_above_logit_fold_change) |> length(),
-      R_k_hat = unique(R_k_hat),
-      n_eff = unique(n_eff),
-      n=n()
-    )) |>
-
+      upper = quantile(.value, 1 - (false_positive_rate / 2)),
+      bigger_zero = sum(.value > test_composition_above_logit_fold_change),
+      smaller_zero = sum(.value < -test_composition_above_logit_fold_change),
+      # R_k_hat = unique(R_k_hat),
+      # n_eff = unique(n_eff),
+      n = n(),
+      .groups = "drop"  # To ungroup the output if needed
+    ) |> 
+    
     # Calculate probability non 0
     mutate(pH0 =  (1 - (pmax(bigger_zero, smaller_zero) / n))) |>
     with_groups(parameter, ~ mutate(.x, FDR = get_FDR(pH0))) |>
-
-    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, any_of(c("n_eff", "R_k_hat"))) |>
+    
+    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, any_of(c("n_eff", "R_k_hat", "rhat", "ess_bulk", "ess_tail"))) |>
     suppressWarnings()
-
+  
   # Setting up names separately because |> is not flexible enough
   draws |>
     setNames(c(colnames(draws)[1:3], sprintf("%s%s", prefix, colnames(draws)[4:ncol(draws)])))
@@ -2460,15 +2463,15 @@ contrasts_to_enquos = function(contrasts){
 #' @noRd
 #' 
 mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
-
+  
   if(formula_expr |> names() |> is.null())
     names(formula_expr) = formula_expr
-
+  
   
   
   # Check if all elements of contrasts are in the parameter
   parameter_names = x |> colnames()
-
+  
   # Creating a named vector where the names are the strings to be replaced
   # and the values are empty strings
   
@@ -2516,13 +2519,13 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
     names(formula_expr),
     ~  x |>
       my_mutate(!!.y := eval(rlang::parse_expr(.x))) |>
-        # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
-        select(any_of(.y))
-  ) |>
-
-  	# I could drop this to just result contrasts
-    add_column(x |> select(-any_of(names(formula_expr))), .before = 1)
-
+      # mutate(!!column_name := eval(rlang::parse_expr(.x))) |>
+      select(any_of(.y))
+  )  |>
+    
+    # I could drop this to just result contrasts
+    add_column(x |> select(M, .chain, .iteration, .draw), .before = 1)
+  
 }
 
 mutate_ignore_error = function(x, ...){
@@ -2533,30 +2536,30 @@ mutate_ignore_error = function(x, ...){
 }
 
 simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
-
+  
   mu = model_input$X %*% model_input$beta
-
+  
   proportions =
     rnorm(length(mu), mu, sd) %>%
     matrix(nrow = nrow(model_input$X)) %>%
     boot::inv.logit()
   apply(1, function(x) x/sum(x)) %>%
     t()
-
+  
   rownames(proportions) = rownames(model_input$X)
   colnames(proportions) = colnames(model_input$beta )
 }
 
 compress_zero_one = function(y){
   # https://stats.stackexchange.com/questions/48028/beta-regression-of-proportion-data-including-1-and-0
-
+  
   n = length(y)
   (y * (n-1) + 0.5) / n
 }
 
 # this can be helpful if we want to draw PCA with uncertainty
 get_abundance_contrast_draws = function(.data, contrasts){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   X <- NULL
   .value <- NULL
@@ -2571,7 +2574,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   
   
   .cell_group = .data |>  attr(".cell_group")
-
+  
   # Beta
   beta_factor_of_interest = .data |> attr("model_input") %$% X |> colnames()
   beta =
@@ -2580,7 +2583,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
     draws_to_tibble_x_y("beta", "C", "M") |>
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
-
+  
   # Abundance
   draws = select(beta, -.variable)
   
@@ -2646,14 +2649,14 @@ get_abundance_contrast_draws = function(.data, contrasts){
   } else {
     beta_random_effect_factor_of_interest_2 = ""
   }
-
+  
   
   # If I have constrasts calculate
   if(!is.null(contrasts))
     draws = 
-      draws |> 
-      mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
-      select(- any_of(c(beta_factor_of_interest, beta_random_effect_factor_of_interest) |> setdiff(contrasts)) ) 
+    draws |> 
+    mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
+    select(- any_of(c(beta_factor_of_interest, beta_random_effect_factor_of_interest) |> setdiff(contrasts)) ) 
   
   # Add cell name
   draws = draws |> 
@@ -2666,62 +2669,62 @@ get_abundance_contrast_draws = function(.data, contrasts){
       by = "M"
     ) %>%
     select(!!.cell_group, everything())
-
-
+  
+  
   # If no contrasts of interest just return an empty data frame
   if(ncol(draws)==5) return(draws |> distinct(M, !!.cell_group))
-
+  
   # Get convergence
   convergence_df =
     .data |>
-      attr("fit") |>
-      summary_to_tibble("beta", "C", "M") |>
-
-      # Add cell name
-      left_join(
-        .data |>
-          attr("model_input") %$%
-          y %>%
-          colnames() |>
-          enframe(name = "M", value  = quo_name(.cell_group)),
-        by = "M"
-      ) |>
-
-      # factor names
-      left_join(
-        beta_factor_of_interest |>
-          enframe(name = "C", value = "parameter"),
-        by = "C"
-      )
-
-  if ("Rhat" %in% colnames(convergence_df)) {
-    convergence_df <- rename(convergence_df, R_k_hat = Rhat)
-  } else if ("khat" %in% colnames(convergence_df)) {
-    convergence_df <- rename(convergence_df, R_k_hat = khat)
-  }
+    attr("fit") |>
+    summary_to_tibble("beta", "C", "M") |>
+    
+    # Add cell name
+    left_join(
+      .data |>
+        attr("model_input") %$%
+        y %>%
+        colnames() |>
+        enframe(name = "M", value  = quo_name(.cell_group)),
+      by = "M"
+    ) |>
+    
+    # factor names
+    left_join(
+      beta_factor_of_interest |>
+        enframe(name = "C", value = "parameter"),
+      by = "C"
+    )
   
-
-    convergence_df =
-      convergence_df |> 
-      select(!!.cell_group, parameter, any_of(c("n_eff", "R_k_hat"))) |>
-      suppressWarnings()
-
+  # if ("Rhat" %in% colnames(convergence_df)) {
+  #   convergence_df <- rename(convergence_df, R_k_hat = Rhat)
+  # } else if ("khat" %in% colnames(convergence_df)) {
+  #   convergence_df <- rename(convergence_df, R_k_hat = khat)
+  # }
+  
+  
+  convergence_df =
+    convergence_df |> 
+    select(!!.cell_group, parameter, any_of(c("n_eff", "R_k_hat", "rhat", "ess_bulk", "ess_tail"))) |>
+    suppressWarnings()
+  
   draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
-
+    
     # Attach convergence if I have no contrasts
     left_join(convergence_df, by = c(quo_name(.cell_group), "parameter")) |>
-
+    
     # Reorder because pivot long is bad
     mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
     arrange(parameter)
-
+  
 }
 
 #' @importFrom forcats fct_relevel
 #' @noRd
 get_variability_contrast_draws = function(.data, contrasts){
-
+  
   # Define the variables as NULL to avoid CRAN NOTES
   XA <- NULL
   .value <- NULL
@@ -2733,29 +2736,29 @@ get_variability_contrast_draws = function(.data, contrasts){
   R_k_hat <- NULL
   
   .cell_group = .data |>  attr(".cell_group")
-
+  
   variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()
-
+  
   draws =
-
-  .data |>
+    
+    .data |>
     attr("fit") %>%
     draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
-
+    
     # We want variability, not concentration
     mutate(.value = -.value) |>
-
+    
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
-
+    
     select( -.variable) 
   
   # If I have constrasts calculate
   if (!is.null(contrasts)) 
     draws <- mutate_from_expr_list(draws, contrasts, ignore_errors = TRUE)
-    
+  
   draws =  draws |>
-
+    
     # Add cell name
     left_join(
       .data |> attr("model_input") %$%
@@ -2765,16 +2768,16 @@ get_variability_contrast_draws = function(.data, contrasts){
       by = "M"
     ) %>%
     select(!!.cell_group, everything())
-
+  
   # If no contrasts of interest just return an empty data frame
   if(ncol(draws)==5) return(draws |> distinct(M, !!.cell_group))
-
+  
   # Get convergence
   convergence_df =
     .data |>
     attr("fit") |>
     summary_to_tibble("alpha_normalised", "C", "M") |>
-
+    
     # Add cell name
     left_join(
       .data |>
@@ -2784,62 +2787,55 @@ get_variability_contrast_draws = function(.data, contrasts){
         enframe(name = "M", value  = quo_name(.cell_group)),
       by = "M"
     ) |>
-
+    
     # factor names
     left_join(
       variability_factor_of_interest |>
         enframe(name = "C", value = "parameter"),
       by = "C"
     )
-
-
-  if ("Rhat" %in% colnames(convergence_df)) {
-    convergence_df <- rename(convergence_df, R_k_hat = Rhat)
-  } else if ("khat" %in% colnames(convergence_df)) {
-    convergence_df <- rename(convergence_df, R_k_hat = khat)
-  }
   
-
-    convergence_df =
+  convergence_df =
     convergence_df |> 
-      select(!!.cell_group, parameter, any_of(c("n_eff", "R_k_hat"))) |>
-      suppressWarnings()
-
-
+    select(!!.cell_group, parameter, any_of(c("n_eff", "R_k_hat", "rhat", "ess_bulk", "ess_tail"))) |>
+    suppressWarnings()
+  
+  
   draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
-
+    
     # Attach convergence if I have no contrasts
     left_join(convergence_df, by = c(quo_name(.cell_group), "parameter")) |>
-
+    
     # Reorder because pivot long is bad
     mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
     arrange(parameter)
-
+  
 }
 
 #' @importFrom tibble deframe
 #'
 #' @noRd
 replicate_data = function(.data,
-          formula_composition = NULL,
-          formula_variability = NULL,
-          new_data = NULL,
-          number_of_draws = 1,
-          mcmc_seed = sample(1e5, 1),
-          cores = detectCores()){
-
-
+                          formula_composition = NULL,
+                          formula_variability = NULL,
+                          new_data = NULL,
+                          number_of_draws = 1,
+                          mcmc_seed = sample(1e5, 1),
+                          cores = detectCores()){
+  
+  
   # Select model based on noise model
   noise_model = attr(.data, "noise_model")
-
+  
   model_input = attr(.data, "model_input")
   .sample = attr(.data, ".sample")
   .cell_group = attr(.data, ".cell_group")
-
+  .count = attr(.data, ".count")
+  
   # Composition
   if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
-
+  
   # New data
   if(new_data |> is.null())
     new_data =
@@ -2847,19 +2843,19 @@ replicate_data = function(.data,
     select(count_data) |>
     unnest(count_data) |>
     distinct()
-
+  
   # If seurat
   else if(new_data |> is("Seurat")) new_data = new_data[[]]
-
+  
   # Just subset
   new_data = new_data |> .subset(!!.sample)
-
-
+  
+  
   # Check if the input new data is not suitable
   if(!parse_formula(formula_composition) %in% colnames(new_data) |> all())
     stop("sccomp says: your `new_data` might be malformed. It might have the covariate columns with multiple values for some element of the \"%s\" column. As a generic example, a sample identifier (\"Sample_123\") might be associated with multiple treatment values, or age values.")
-
-
+  
+  
   # Match factors with old data
   nrow_new_data = nrow(new_data)
   new_exposure = new_data |>
@@ -2867,38 +2863,38 @@ replicate_data = function(.data,
     mutate(exposure = map_dbl(
       data,
       ~{
-        if ("count" %in% colnames(.x))  sum(.x$count)
+        if (quo_name(.count) %in% colnames(.x)) .x |> pull(!!.count) |> sum()
         else 5000
       })) |>
     select(!!.sample, exposure) |>
     deframe() |>
     as.array()
-
+  
   # Update data, merge with old data because
   # I need the same ordering of the design matrix
   new_data =
-
+    
     # Old data
     .data |>
     select(count_data) |>
     unnest(count_data) |>
-    select(-count) |>
+    select(-!!.count) |>
     select(new_data |> as_tibble() |> colnames() |>  any_of()) |>
     distinct() |>
-
+    
     # Change sample names to make unique
     mutate(dummy = "OLD") |>
     tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___") |>
-
+    
     # New data
     bind_rows(
       new_data |> as_tibble()
     )
-
+  
   new_X =
     new_data |>
     get_design_matrix(
-
+      
       # Drop random intercept
       formula_composition |>
         as.character() |>
@@ -2908,10 +2904,16 @@ replicate_data = function(.data,
       !!.sample
     ) |>
     tail(nrow_new_data) %>%
-
+    
     # Remove columns that are not in the original design matrix
     .[,colnames(.) %in% colnames(model_input$X), drop=FALSE]
-
+  
+  # Check that all effect combination were present when the model was fitted
+  check_missing_parameters(
+    new_X |> colnames(), 
+    model_input$X |> colnames()
+  ) 
+  
   X_which =
     colnames(new_X) |>
     match(
@@ -2920,14 +2922,14 @@ replicate_data = function(.data,
     ) |>
     na.omit() |>
     as.array()
-
+  
   # Variability
   if(is.null(formula_variability)) formula_variability =  .data |> attr("formula_variability")
-
+  
   new_Xa =
     new_data |>
     get_design_matrix(
-
+      
       # Drop random intercept
       formula_variability |>
         as.character() |>
@@ -2937,10 +2939,10 @@ replicate_data = function(.data,
       !!.sample
     ) |>
     tail(nrow_new_data) %>%
-
+    
     # Remove columns that are not in the original design matrix
     .[,colnames(.) %in% colnames(model_input$Xa), drop=FALSE]
-
+  
   XA_which =
     colnames(new_Xa) |>
     match(
@@ -2950,13 +2952,13 @@ replicate_data = function(.data,
     ) |>
     na.omit() |>
     as.array()
-
+  
   # If I want to replicate data with intercept and I don't have intercept in my fit
   create_intercept =
     model_input %$% intercept_in_design |> not() &
     "(Intercept)" %in% colnames(new_X)
   if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
-
+  
   # Original grouping
   original_grouping_names = .data |> attr("formula_composition") |> formula_to_random_effect_formulae() |> pull(grouping)
   
@@ -2971,12 +2973,12 @@ replicate_data = function(.data,
       formula_composition
     )
   
-
+  
   # if(random_effect_elements |> nrow() |> equals(0)) {
   #   
   # }
   if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any()) {
-
+    
     # HAVE TO DEBUG
     new_X_random_effect =
       random_effect_grouping |>
@@ -2988,13 +2990,19 @@ replicate_data = function(.data,
           pivot_wider(names_from = group___label, values_from = value) |>
           mutate(across(everything(), ~ .x |> replace_na(0)))
       )) |>
-
+      
       # Merge
       pull(design_matrix) |> 
       _[[1]] |> 
       as_matrix(rownames = quo_name(.sample))  |>
       tail(nrow_new_data)
-
+    
+    # Check that all effect combination were present when the model was fitted
+    check_missing_parameters(
+      new_X_random_effect |> colnames(), 
+      model_input %$% X_random_effect |> colnames()
+    ) 
+    
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
     X_random_effect_which =
       colnames(new_X_random_effect) |>
@@ -3035,9 +3043,13 @@ replicate_data = function(.data,
       as_matrix(rownames = quo_name(.sample))  |>
       tail(nrow_new_data)
     
-
-
     
+    # Check that all effect combination were present when the model was fitted
+    check_missing_parameters(
+      new_X_random_effect_2 |> colnames(), 
+      model_input %$% X_random_effect_2 |> colnames()
+    ) 
+      
     # DUPLICATE
     X_random_effect_which_2 =
       colnames(new_X_random_effect_2) |>
@@ -3047,7 +3059,7 @@ replicate_data = function(.data,
           colnames()
       ) |>
       as.array()
-  
+    
   }
   else{
     X_random_effect_which_2 = array()[0]
@@ -3061,13 +3073,13 @@ replicate_data = function(.data,
   model_input$N_original = model_input$N
   model_input$N = nrow_new_data
   model_input$exposure = new_exposure
-
+  
   model_input$X_random_effect = new_X_random_effect
   model_input$X_random_effect_2 = new_X_random_effect_2
-
+  
   model_input$ncol_X_random_eff_new = ncol(new_X_random_effect) |> c(ncol(new_X_random_effect_2))
-
-
+  
+  
   
   number_of_draws_in_the_fit = attr(.data, "fit") |>  get_output_samples()
   
@@ -3085,25 +3097,25 @@ replicate_data = function(.data,
       sample(seq_len(number_of_draws_in_the_fit), size=number_of_draws),, drop=FALSE
     ],
     data = model_input |> c(list(
-
+      
       # Add subset of coefficients
       length_X_which = length(X_which),
       length_XA_which = length(XA_which),
       X_which = X_which,
       XA_which = XA_which,
-
+      
       # Random intercept
       X_random_effect_which = X_random_effect_which,
       X_random_effect_which_2 = X_random_effect_which_2,
       length_X_random_effect_which = length(X_random_effect_which) |> c(length(X_random_effect_which_2)),
-
+      
       # Should I create intercept for generate quantities
       create_intercept = create_intercept
-
+      
     )),
     seed = mcmc_seed, 
     threads_per_chain = 1
-
+    
   )
 }
 
@@ -3114,31 +3126,31 @@ get_model_from_data = function(file_compiled_model, model_code){
     model_generate = stan_model(model_code = model_code)
     model_generate  %>% saveRDS(file_compiled_model)
     model_generate
-
+    
   }
 }
 
 add_formula_columns = function(.data, .original_data, .sample,  formula_composition){
-
+  
   .sample = enquo(.sample)
-
+  
   formula_elements = parse_formula(formula_composition)
-
+  
   # If no formula return the input
   if(length(formula_elements) == 0) return(.data)
-
+  
   # Get random intercept
   .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
-
+  
   data_frame_formula =
     .original_data %>%
     as_tibble() |>
     select( !!.sample, formula_elements, any_of(.grouping_for_random_effect) ) %>%
     distinct()
-
+  
   .data |>
     left_join(data_frame_formula, by = quo_name(.sample) )
-
+  
 }
 
 #' chatGPT - Remove Specified Regex Pattern from Each String in a Vector
@@ -3391,11 +3403,11 @@ not = function(is){	!is }
 #'
 #' @return A character vector
 quo_names <- function(v) {
-
-	v = quo_name(quo_squash(v))
-	gsub('^c\\(|`|\\)$', '', v) |>
-		strsplit(', ') |>
-		unlist()
+  
+  v = quo_name(quo_squash(v))
+  gsub('^c\\(|`|\\)$', '', v) |>
+    strsplit(', ') |>
+    unlist()
 }
 
 #' Add class to abject
@@ -3408,9 +3420,9 @@ quo_names <- function(v) {
 #'
 #' @return A tibble with an additional attribute
 add_class = function(var, name) {
-
+  
   if(!name %in% class(var)) class(var) <- append(class(var),name, after = 0)
-
+  
   var
 }
 
@@ -3485,7 +3497,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   #     package = "sccomp"
   #   )
   # }, error = function(e) {
-    # Try to load the model from cache
+  # Try to load the model from cache
   
   # RDS compiled model
   cache_dir |> dir.create(showWarnings = FALSE, recursive = TRUE)
@@ -3494,36 +3506,36 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   # .STAN raw model
   stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
   
-    if (file.exists(cache_file) & !force) {
-      message("Loading model from cache...")
-      return(readRDS(cache_file))
-    }
-    
-    # If loading the precompiled model fails, find the Stan model file within the package
-    message("Precompiled model not found. Compiling the model...")
-
-    # Compile the Stan model using cmdstanr with threading support enabled
-    instantiate::stan_package_compile(
-      stan_model_path, 
-      cpp_options = list(stan_threads = TRUE),
-      force_recompile = TRUE, 
-      threads = threads, 
-      dir = system.file("stan", package = "sccomp")
-    )
-    mod = instantiate::stan_package_model(
-      name = name, 
-      package = "sccomp", 
-      compile = TRUE,
-      cpp_options = list(stan_threads = TRUE)
-    ) |> suppressWarnings()
-    
-    # Save the compiled model object to cache
-    saveRDS(mod, file = cache_file)
-    message("Model compiled and saved to cache successfully.")
-    
-    return(mod)
+  if (file.exists(cache_file) & !force) {
+    message("Loading model from cache...")
+    return(readRDS(cache_file))
+  }
+  
+  # If loading the precompiled model fails, find the Stan model file within the package
+  message("Precompiled model not found. Compiling the model...")
+  
+  # Compile the Stan model using cmdstanr with threading support enabled
+  instantiate::stan_package_compile(
+    stan_model_path, 
+    cpp_options = list(stan_threads = TRUE),
+    force_recompile = TRUE, 
+    threads = threads, 
+    dir = system.file("stan", package = "sccomp")
+  )
+  mod = instantiate::stan_package_model(
+    name = name, 
+    package = "sccomp", 
+    compile = TRUE,
+    cpp_options = list(stan_threads = TRUE)
+  ) |> suppressWarnings()
+  
+  # Save the compiled model object to cache
+  saveRDS(mod, file = cache_file)
+  message("Model compiled and saved to cache successfully.")
+  
+  return(mod)
   # })
-
+  
 }
 
 #' Check and Install cmdstanr and CmdStan
@@ -3583,3 +3595,18 @@ drop_environment <- function(obj) {
   return(obj)
 }
 
+check_missing_parameters <- function(effects, model_effects) {
+  # Find missing parameters
+  missing_parameters <- 
+    effects |> 
+    setdiff(model_effects)
+  
+  # If there are any missing parameters, stop and show an error message
+  if (length(missing_parameters) > 0) {
+    stop(
+      "sccomp says: Some of the parameters present in the data provided were not present when the model was fitted. For example:\n",
+      paste(missing_parameters[1:min(3, length(missing_parameters))], collapse = "\n"),
+      if (length(missing_parameters) > 3) "\n..."
+    )
+  }
+}
