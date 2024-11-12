@@ -1121,7 +1121,7 @@ sccomp_test.sccomp_tbl = function(.data,
   result |>
     
     # TEMPORARILY DROPPING KHAT
-    select(-contains("n_eff"), -contains("_hat")) |> 
+    # select(-contains("n_eff"), -contains("_hat")) |> 
     
     add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
     
@@ -1456,7 +1456,8 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
   .count = attr(.data, ".count")
   
   # Residuals
-  .data |>
+  residual = 
+    .data |>
     sccomp_predict( 
       number_of_draws = 
         .data |>
@@ -1465,28 +1466,24 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
         _[1] |> 
         min(500) 
     ) |>
-    distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    # mutate( proportion_mean =
-    #           proportion_mean |>
-    #           boot::logit()
-    # )|>
-    # Join counts
+    distinct(!!.sample, !!.cell_group, proportion_mean) 
+  
+  if(.data |> attr("model_input") %$% is_proportion)
+    y = .data |> attr("model_input") %$% y_proportion
+  else
+    y = .data |> attr("model_input") %$% y
+  
+  y = 
+    y |> 
+      as_tibble(rownames = quo_name(.sample)) |>
+      pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
+      with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
+      with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  )
+  
+  
+  residual |>
     left_join(
-      .data |>
-        attr("model_input") %$%
-        y |>
-        as_tibble(rownames = quo_name(.sample)) |>
-        pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
-        with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
-        
-        with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  ),
-      # |>
-      #   
-      #   mutate(observed_proportion =
-      #            observed_proportion |>
-      #            compress_zero_one() |>
-      #            boot::logit()
-      #   ),
+      y,
       by = c(quo_name(.sample), quo_name(.cell_group))
     ) |>
     mutate(residuals = observed_proportion - proportion_mean) |>
