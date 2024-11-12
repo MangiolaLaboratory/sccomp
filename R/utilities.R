@@ -1319,6 +1319,7 @@ data_spread_to_model_input =
       y_proportion = y[0,,drop = FALSE]
     }
     
+
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
@@ -2492,7 +2493,7 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   
   if(formula_expr |> names() |> is.null())
     names(formula_expr) = formula_expr
-  
+
   # Creating a named vector where the names are the strings to be replaced
   # and the values are empty strings
   contrasts_elements = contrasts_to_parameter_list(formula_expr, drop_back_quotes = FALSE)
@@ -2598,7 +2599,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
     .data |>
     attr("fit") %>%
     draws_to_tibble_x_y("beta", "C", "M") 
-  
+
   # Reshape
   # Speed up if I have contrasts
   if(!contrasts |> is.null())
@@ -2901,6 +2902,7 @@ get_variability_contrast_draws = function(.data, contrasts){
     draws |>  
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
+
     select( -.variable) 
   
   # If I have constrasts calculate
