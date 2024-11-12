@@ -1121,7 +1121,7 @@ sccomp_test.sccomp_tbl = function(.data,
   result |>
     
     # TEMPORARILY DROPPING KHAT
-    select(-contains("n_eff"), -contains("_hat")) |> 
+    # select(-contains("n_eff"), -contains("_hat")) |> 
     
     add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
     
