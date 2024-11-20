@@ -351,9 +351,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   .iteration <- NULL
   .draw <- NULL
   .value <- NULL
-  
-  par_names =
-    fit$metadata()$stan_variables %>% grep(sprintf("%s", par), ., value = TRUE)
+
   
   fit$draws(variables = par, format = "draws_df") %>%
     mutate(.iteration = seq_len(n())) %>%
@@ -2422,6 +2420,34 @@ contrasts_to_enquos = function(contrasts){
   contrasts |> enquo() |> quo_names() |> syms() %>% do.call(enquos_from_list_of_symbols, .)
 }
 
+
+contrasts_to_parameter_list = function(contrasts, drop_back_quotes = TRUE){
+  
+  if(contrasts |> names() |> is.null())
+    names(contrasts) = contrasts
+  
+  # Using str_replace_all to replace each instance of the strings in A with an empty string in B
+  contrast_list = 
+    contrasts |> 
+    
+    # Remove fractions
+    str_remove_all_ignoring_if_inside_backquotes("[0-9]+/[0-9]+ ?\\*") |>  
+    
+    # Remove decimals
+    str_remove_all_ignoring_if_inside_backquotes("[-+]?[0-9]+\\.[0-9]+ ?\\*") |> 
+    
+    str_split_ignoring_if_inside_backquotes("\\+|-|\\*") |> 
+    unlist() |> 
+    str_remove_all_ignoring_if_inside_backquotes("[\\(\\) ]") 
+  
+  if(drop_back_quotes)
+    contrast_list = 
+      contrast_list |> 
+      str_remove_all("`") 
+  
+  contrast_list |> unique()
+}
+
 #' Mutate Data Frame Based on Expression List
 #'
 #' @description
@@ -2454,28 +2480,12 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   if(formula_expr |> names() |> is.null())
     names(formula_expr) = formula_expr
   
-  
-  
-  # Check if all elements of contrasts are in the parameter
-  parameter_names = x |> colnames()
-  
   # Creating a named vector where the names are the strings to be replaced
   # and the values are empty strings
-  
-  # Using str_replace_all to replace each instance of the strings in A with an empty string in B
-  contrasts_elements <- 
-    formula_expr |> 
-    
-    # Remove fractions
-    str_remove_all_ignoring_if_inside_backquotes("[0-9]+/[0-9]+ ?\\*") |>  
-    
-    # Remove decimals
-    str_remove_all_ignoring_if_inside_backquotes("[-+]?[0-9]+\\.[0-9]+ ?\\*") |> 
-    
-    str_split_ignoring_if_inside_backquotes("\\+|-|\\*") |> 
-    unlist() |> 
-    str_remove_all_ignoring_if_inside_backquotes("[\\(\\) ]") 
-  
+  contrasts_elements = contrasts_to_parameter_list(formula_expr, drop_back_quotes = FALSE)
+
+  # Check if all elements of contrasts are in the parameter
+  parameter_names = x |> colnames()
   
   # Check is backquoted are not used
   require_back_quotes = !contrasts_elements |>  str_remove_all("`") |> contains_only_valid_chars_for_column() 
@@ -2564,15 +2574,40 @@ get_abundance_contrast_draws = function(.data, contrasts){
   
   # Beta
   beta_factor_of_interest = .data |> attr("model_input") %$% X |> colnames()
-  beta =
+  # beta =
+  #   .data |>
+  #   attr("fit") %>%
+  #   draws_to_tibble_x_y("beta", "C", "M") |>
+  #   pivot_wider(names_from = C, values_from = .value) %>%
+  #   setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
+  
+  draws =
     .data |>
     attr("fit") %>%
-    draws_to_tibble_x_y("beta", "C", "M") |>
-    pivot_wider(names_from = C, values_from = .value) %>%
-    setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
+    draws_to_tibble_x_y("beta", "C", "M") 
+  
+  # Reshape
+  # Speed up if I have contrasts
+  if(!contrasts |> is.null())
+    draws = 
+      draws |> 
+      left_join(
+        beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+        by = "C"
+      )  |> 
+      filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+      select(-C) |> 
+      pivot_wider(names_from = parameters_name, values_from = .value)
+
+  else
+    draws =
+      draws |>  
+      pivot_wider(names_from = C, values_from = .value) %>%
+      setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
+    
   
   # Abundance
-  draws = select(beta, -.variable)
+  draws = draws |> select(-.variable)
   
   # Random effect
   if(.data |> attr("model_input") %$% n_random_eff > 0){
@@ -2591,11 +2626,26 @@ get_abundance_contrast_draws = function(.data, contrasts){
           mutate(.value = -.value, M = beta_random_effect |> pull(M) |> max() + 1)
       )
     
+    # I HAVE TO REGULARISE THE LAST COMPONENT
+    
     # Reshape
-    beta_random_effect = 
-      beta_random_effect |>
-      pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest))
+    # Speed up if I have contrasts
+    if(!contrasts |> is.null())
+      beta_random_effect = 
+        beta_random_effect |> 
+        left_join(
+          beta_random_effect_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+          by = "C"
+        )  |> 
+        filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+        select(-C) |> 
+        pivot_wider(names_from = parameters_name, values_from = .value)
+    
+    else
+      beta_random_effect = 
+        beta_random_effect |>
+        pivot_wider(names_from = C, values_from = .value) %>%
+        setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest))
     
     draws = draws |> 
       left_join(select(beta_random_effect, -.variable),
@@ -2622,8 +2672,23 @@ get_abundance_contrast_draws = function(.data, contrasts){
           mutate(.value = -.value, M = beta_random_effect_2 |> pull(M) |> max() + 1)
       )
     
+    # I HAVE TO REGULARISE THE LAST COMPONENT
+    
     # Reshape
-    beta_random_effect_2 = 
+    # Speed up if I have contrasts
+    if(!contrasts |> is.null())
+      beta_random_effect_2 = 
+      beta_random_effect_2 |> 
+      left_join(
+        beta_random_effect_factor_of_interest_2 |> enframe(name = "C", value = "parameters_name"),
+        by = "C"
+      )  |> 
+      filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+      select(-C) |> 
+      pivot_wider(names_from = parameters_name, values_from = .value)
+    
+    else
+      beta_random_effect_2 = 
       beta_random_effect_2 |>
       pivot_wider(names_from = C, values_from = .value) %>%
       setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest_2))
@@ -2733,11 +2798,27 @@ get_variability_contrast_draws = function(.data, contrasts){
     draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
     
     # We want variability, not concentration
-    mutate(.value = -.value) |>
-    
+    mutate(.value = -.value) 
+  
+  # Reshape
+  # Speed up if I have contrasts
+  if(!contrasts |> is.null())
+    draws = 
+    draws |> 
+    left_join(
+      variability_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+      by = "C"
+    )  |> 
+    filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+    select(-C) |> 
+    pivot_wider(names_from = parameters_name, values_from = .value) |> 
+    select( -.variable) 
+  
+  else
+    draws =
+    draws |>  
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
-    
     select( -.variable) 
   
   # If I have constrasts calculate

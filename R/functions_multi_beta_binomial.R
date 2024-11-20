@@ -384,6 +384,9 @@ get_mean_precision = function(fit, data_for_model){
 }
 
 get_mean_precision_association = function(fit){
+  
+  # fit$summary(variables = "prec_coeff", "mean", ~quantile(.x, probs = c(0.05, 0.95),  na.rm=TRUE))
+  
   c(
     fit$summary("prec_coeff")[,2] |> set_names("prec_coeff") ,
     fit$summary("prec_sd")[,2] |> set_names("prec_sd")

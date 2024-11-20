@@ -1104,14 +1104,14 @@ sccomp_test.sccomp_tbl = function(.data,
       by = quo_name(.cell_group)
     )
 
-  result =
-    result |>
-
-    # Add back attributes
-    add_attr(
-      .data |> attr("fit") |> get_mean_precision_association(),
-      "mean_concentration_association"
-    )
+  # result =
+  #   result |>
+  # 
+  #   # Add back attributes
+  #   add_attr(
+  #     .data |> attr("fit") |> get_mean_precision_association(),
+  #     "mean_concentration_association"
+  #   )
 
   if(pass_fit)
     result =
