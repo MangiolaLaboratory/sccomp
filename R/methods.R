@@ -1567,29 +1567,41 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
   .grouping_for_random_effect = attr(.data, ".grouping_for_random_effect")
   .count = attr(.data, ".count")
 
-  # Residuals
-  message("sccomp says: calculating residuals")
-  residuals = .data |> sccomp_calculate_residuals()
-
+  # # Residuals
+  # message("sccomp says: calculating residuals")
+  # residuals = .data |> sccomp_calculate_residuals()
 
   message("sccomp says: regressing out unwanted factors")
 
 
   # Generate quantities
-  .data |>
+  component_to_remove = 
+    .data |>
     sccomp_predict(
       formula_composition = formula_composition_keep,
       number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
 
     ) |>
-    distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    # mutate(proportion_mean =
-    #          proportion_mean |>
-    #          # compress_zero_one() |>
-    #          boot::logit()
-    # ) |>
-    left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
-    mutate(adjusted_proportion = proportion_mean + residuals) |>
+    distinct(!!.sample, !!.cell_group, proportion_mean) 
+  
+  
+  if(.data |> attr("model_input") %$% is_proportion)
+    y = .data |> attr("model_input") %$% y_proportion
+  else
+    y = .data |> attr("model_input") %$% y
+  
+  y = 
+    y |> 
+    as_tibble(rownames = quo_name(.sample)) |>
+    pivot_longer(-!!.sample, names_to = quo_name(.cell_group), values_to = quo_name(.count)) |>
+    with_groups(!!.sample,  ~ .x |> mutate(observed_proportion := !!.count / sum(!!.count ))) |>
+    with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  )
+  
+  
+
+  component_to_remove |>
+    left_join(y,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
+    mutate(adjusted_proportion = observed_proportion - proportion_mean) |>
   	mutate(adjusted_proportion = adjusted_proportion |> pmax(0)) |> 
     # mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
     # with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
@@ -1597,9 +1609,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
     # Recostituite counts
     mutate(adjusted_counts = adjusted_proportion * exposure) |>
 
-    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, residuals)
-
-
+    select(!!.sample, !!.cell_group, observed_proportion, adjusted_proportion, adjusted_counts)
 
 }
 
