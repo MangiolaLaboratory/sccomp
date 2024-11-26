@@ -14,37 +14,47 @@ sccomp_boxplot(
 )
 }
 \arguments{
-\item{.data}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
+\item{.data}{A tibble containing the results from \code{sccomp_estimate} and \code{sccomp_test}, including the columns: cell_group name, sample name, read counts, factor(s), p-values, and significance indicators.}
 
-\item{factor}{A character string for a factor of interest included in the model}
+\item{factor}{A character string specifying the factor of interest included in the model for stratifying the boxplot.}
 
-\item{significance_threshold}{A real. FDR threshold for labelling significant cell-groups.}
+\item{significance_threshold}{A numeric value indicating the False Discovery Rate (FDR) threshold for labeling significant cell-groups. Defaults to 0.05.}
 
-\item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
+\item{test_composition_above_logit_fold_change}{A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10\% for a cell type with a baseline proportion of 50\% (e.g., from 45\% to 55\%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.}
+
+\item{remove_unwanted_effects}{A logical value indicating whether to remove unwanted variation from the data before plotting. Defaults to \code{FALSE}.}
 }
 \value{
-A \code{ggplot}
+A \code{ggplot} object representing the boxplot of cell proportions across samples, stratified by the specified factor.
 }
 \description{
-This function plots a boxplot of the results of the model.
+Creates a boxplot visualization of the model results from \code{sccomp}. This function plots the estimated cell proportions across samples, highlighting significant changes in cell composition according to a specified factor.
 }
 \examples{
-
-message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+# Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+# install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 
 \donttest{
-  if (instantiate::stan_cmdstan_exists()) {
+if (instantiate::stan_cmdstan_exists()) {
     data("counts_obj")
 
-    estimate = sccomp_estimate(
+    estimate <- sccomp_estimate(
       counts_obj,
-      ~ type, ~1, sample, cell_group, count,
+      formula_composition = ~ type,
+      formula_variability = ~ 1,
+      .sample = sample,
+      .cell_group = cell_group,
+      .count = count,
       cores = 1
-    ) |>
+    ) \%>\%
     sccomp_test()
 
-    # estimate |> sccomp_boxplot()
-  }
+    # Plot the boxplot of estimated cell proportions
+    sccomp_boxplot(
+        .data = estimate,
+        factor = "type",
+        significance_threshold = 0.05
+    )
 }
-
+}
 }
