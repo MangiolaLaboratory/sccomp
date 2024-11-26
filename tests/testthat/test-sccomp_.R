@@ -509,6 +509,12 @@ test_that("plot_boxplot function works correctly", {
     sccomp_test() |> 
     sccomp_boxplot("type", significance_threshold = 0.025) |> 
   expect_s3_class( "ggplot")
+  
+  # With removal unwanted variation
+  my_estimate |> 
+    sccomp_test() |> 
+    sccomp_boxplot("type", significance_threshold = 0.025, remove_unwanted_effects = TRUE) |> 
+    expect_s3_class( "ggplot")
 })
 
 # Test for plot_1d_intervals function

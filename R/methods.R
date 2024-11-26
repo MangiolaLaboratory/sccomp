@@ -1783,44 +1783,58 @@ simulate_data.tbl = function(.data,
 
 #' sccomp_boxplot
 #'
-#' @description This function plots a boxplot of the results of the model.
+#' @description
+#' Creates a boxplot visualization of the model results from `sccomp`. This function plots the estimated cell proportions across samples, highlighting significant changes in cell composition according to a specified factor.
 #'
-#' @importFrom ggrepel geom_text_repel
-#' @importFrom tidyr pivot_longer
 #' @import ggplot2
-#' @importFrom tidyr unite
-#' @importFrom tidyr pivot_longer
-#' @importFrom dplyr with_groups
+#' @importFrom ggrepel geom_text_repel
+#' @importFrom tidyr pivot_longer pivot_wider unite unnest
+#' @importFrom dplyr select with_groups mutate left_join rename
 #'
-#' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
-#' @param factor A character string for a factor of interest included in the model
-#' @param significance_threshold A real. FDR threshold for labelling significant cell-groups.
-#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param .data A tibble containing the results from `sccomp_estimate` and `sccomp_test`, including the columns: cell_group name, sample name, read counts, factor(s), p-values, and significance indicators.
+#' @param factor A character string specifying the factor of interest included in the model for stratifying the boxplot.
+#' @param significance_threshold A numeric value indicating the False Discovery Rate (FDR) threshold for labeling significant cell-groups. Defaults to 0.05.
+#' @param test_composition_above_logit_fold_change A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10% for a cell type with a baseline proportion of 50% (e.g., from 45% to 55%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.
+#' @param remove_unwanted_effects A logical value indicating whether to remove unwanted variation from the data before plotting. Defaults to `FALSE`.
 #'
-#' @return A `ggplot`
+#' @return A `ggplot` object representing the boxplot of cell proportions across samples, stratified by the specified factor.
 #'
 #' @export
 #'
 #' @examples
-#'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
-#'   if (instantiate::stan_cmdstan_exists()) {
+#' if (instantiate::stan_cmdstan_exists()) {
 #'     data("counts_obj")
 #'
-#'     estimate = sccomp_estimate(
+#'     estimate <- sccomp_estimate(
 #'       counts_obj,
-#'       ~ type, ~1, sample, cell_group, count,
+#'       formula_composition = ~ type,
+#'       formula_variability = ~ 1,
+#'       .sample = sample,
+#'       .cell_group = cell_group,
+#'       .count = count,
 #'       cores = 1
-#'     ) |>
+#'     ) %>%
 #'     sccomp_test()
 #'
-#'     # estimate |> sccomp_boxplot()
-#'   }
+#'     # Plot the boxplot of estimated cell proportions
+#'     sccomp_boxplot(
+#'         .data = estimate,
+#'         factor = "type",
+#'         significance_threshold = 0.05
+#'     )
 #' }
-#' 
-sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+#' }
+sccomp_boxplot = function(
+    .data, 
+    factor, 
+    significance_threshold = 0.05, 
+    test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"),
+    remove_unwanted_effects = FALSE
+  ){
 
 
   .cell_group = attr(.data, ".cell_group")
@@ -1831,16 +1845,29 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_com
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
+
+    data_proportion =
+      .data %>%
   
-  data_proportion =
-    .data %>%
-
-    # Otherwise does not work
-    select(-`factor`) %>%
-
-    pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
-    unnest(count_data) %>%
-    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) 
+      # Otherwise does not work
+      select(-`factor`) %>%
+  
+      pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
+      unnest(count_data) %>%
+      with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) 
+  
+  if(remove_unwanted_effects){
+    .data_adjusted = 
+      .data |> 
+      sccomp_remove_unwanted_variation(formula_composition_keep = as.formula("~ " |> paste(factor))) |> 
+      rename(proportion = adjusted_proportion)
+    
+    data_proportion = 
+      data_proportion |> 
+      select(-proportion) |> 
+      left_join(.data_adjusted, by = join_by(!!.cell_group, !!.sample))
+  }
+   
   
   # If I don't have outliers add them
   if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
@@ -1852,7 +1879,8 @@ sccomp_boxplot = function(.data, factor, significance_threshold = 0.05, test_com
         !!.cell_group,
         !!.sample,
         significance_threshold = significance_threshold,
-        multipanel_theme
+        multipanel_theme,
+        remove_unwanted_effects = remove_unwanted_effects
       ) +
     ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", factor))
 

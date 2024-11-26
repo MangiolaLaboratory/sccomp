@@ -11,7 +11,8 @@ plot_boxplot(
   .cell_group,
   .sample,
   significance_threshold = 0.05,
-  my_theme
+  my_theme,
+  remove_unwanted_effects = FALSE
 )
 }
 \arguments{

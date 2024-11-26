@@ -9,7 +9,8 @@ sccomp_boxplot(
   factor,
   significance_threshold = 0.05,
   test_composition_above_logit_fold_change = attr(.data,
-    "test_composition_above_logit_fold_change")
+    "test_composition_above_logit_fold_change"),
+  remove_unwanted_effects = FALSE
 )
 }
 \arguments{
