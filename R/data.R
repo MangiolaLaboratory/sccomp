@@ -74,3 +74,28 @@
 #' }
 #' @usage data(multipanel_theme)
 "multipanel_theme"
+
+
+#' no_significance_df
+#'
+#' @description
+#' A small example dataset containing cell counts across samples, conditions, and cell groups. This dataset is used to demonstrate the use of `sccomp` functions in scenarios where there is no significant difference in cell composition between conditions.
+#'
+#' @return A tibble with 34 rows and 4 columns: \code{sample}, \code{condition}, \code{cell_group}, and \code{count}.
+#'
+#' @format A tibble with the following columns:
+#' \itemize{
+#'   \item \strong{sample}: Character. Identifier for each sample.
+#'   \item \strong{condition}: Character. Experimental condition or group (e.g., "X" or "Y").
+#'   \item \strong{cell_group}: Character. Cell group or cell type (e.g., "A", "B").
+#'   \item \strong{count}: Numeric. Count of cells in the given sample, condition, and cell group.
+#' }
+#'
+#' @usage data(no_significance_df)
+#'
+#' @examples
+#' data(no_significance_df)
+#' head(no_significance_df)
+#'
+#' @importFrom utils data
+"no_significance_df"
