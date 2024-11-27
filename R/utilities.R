@@ -1321,11 +1321,6 @@ data_spread_to_model_input =
       y_proportion = y[0,,drop = FALSE]
     }
     
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> 2eeffe6 (some updates and fixes)
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
