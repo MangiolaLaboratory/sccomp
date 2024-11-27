@@ -2609,6 +2609,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   # Abundance
   draws = draws |> select(-.variable)
   
+
   # Random effect
   if(.data |> attr("model_input") %$% n_random_eff > 0){
     beta_random_effect_factor_of_interest = .data |> attr("model_input") %$% X_random_effect |> colnames()
@@ -2618,15 +2619,55 @@ get_abundance_contrast_draws = function(.data, contrasts){
       draws_to_tibble_x_y("random_effect", "C", "M") 
     
     # Add last component
-    beta_random_effect = 
+    other_group_random_effect = 
       beta_random_effect |> 
-      bind_rows(
-        beta_random_effect |> 
-          with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
-          mutate(.value = -.value, M = beta_random_effect |> pull(M) |> max() + 1)
-      )
+      with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
+      mutate(.value = -.value, M = beta_random_effect |> pull(M) |> max() + 1)
     
     # I HAVE TO REGULARISE THE LAST COMPONENT
+    mean_of_the_sd_of_the_point_estimates = 
+      beta_random_effect |> 
+      
+      # Filter the intercept out
+      filter(C != 1) |>  
+      group_by(M, C) |> 
+      summarise(point_estimate = mean(.value)) |> 
+      group_by(M) |> 
+      summarise(sd_of_point_estimates = sd(point_estimate)) |> 
+      pull(sd_of_point_estimates) |> 
+      mean()
+    
+    other_sd_of_the_point_estimates = 
+      other_group_random_effect |> 
+      
+      # Filter the intercept out
+      filter(C != 1) |>  
+      group_by(M, C) |> 
+      summarise(point_estimate = mean(.value)) |> 
+      group_by(M) |> 
+      summarise(sd_of_point_estimates = sd(point_estimate)) |> 
+      pull(sd_of_point_estimates)
+    
+    other_group_random_effect = 
+      other_group_random_effect |> 
+      mutate(.value = .value / (other_sd_of_the_point_estimates / mean_of_the_sd_of_the_point_estimates))
+    
+    
+    beta_random_effect = 
+      beta_random_effect |> 
+      bind_rows( other_group_random_effect )
+    
+    # mutate(is_treg = cell_type =="treg") |>
+    #   nest(data = -is_treg) |>
+    #   mutate(data = map2(
+    #     data, is_treg,
+    #     ~ {
+    #       if(.y) .x |> mutate(c_effect = c_effect/5 )
+    #       else(.x)
+    #     }
+    #   )) |>
+    #   unnest(data) |>
+    
     
     # Reshape
     # Speed up if I have contrasts
@@ -2664,15 +2705,43 @@ get_abundance_contrast_draws = function(.data, contrasts){
       draws_to_tibble_x_y("random_effect_2", "C", "M") 
     
     # Add last component
-    beta_random_effect_2 = 
+    other_group_random_effect = 
       beta_random_effect_2 |> 
-      bind_rows(
-        beta_random_effect_2 |> 
-          with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
-          mutate(.value = -.value, M = beta_random_effect_2 |> pull(M) |> max() + 1)
-      )
+      with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
+      mutate(.value = -.value, M = beta_random_effect_2 |> pull(M) |> max() + 1)
     
     # I HAVE TO REGULARISE THE LAST COMPONENT
+    mean_of_the_sd_of_the_point_estimates = 
+      beta_random_effect_2 |> 
+      
+      # Filter the intercept out
+      filter(C != 1) |>  
+      group_by(M, C) |> 
+      summarise(point_estimate = mean(.value)) |> 
+      group_by(M) |> 
+      summarise(sd_of_point_estimates = sd(point_estimate)) |> 
+      pull(sd_of_point_estimates) |> 
+      mean()
+    
+    other_sd_of_the_point_estimates = 
+      other_group_random_effect |> 
+      
+      # Filter the intercept out
+      filter(C != 1) |>  
+      group_by(M, C) |> 
+      summarise(point_estimate = mean(.value)) |> 
+      group_by(M) |> 
+      summarise(sd_of_point_estimates = sd(point_estimate)) |> 
+      pull(sd_of_point_estimates)
+    
+    other_group_random_effect = 
+      other_group_random_effect |> 
+      mutate(.value = .value / (other_sd_of_the_point_estimates / mean_of_the_sd_of_the_point_estimates))
+    
+    
+    beta_random_effect_2 = 
+      beta_random_effect_2 |> 
+      bind_rows( other_group_random_effect )
     
     # Reshape
     # Speed up if I have contrasts
