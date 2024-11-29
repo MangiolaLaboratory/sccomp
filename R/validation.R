@@ -47,6 +47,7 @@ check_if_any_NA = function(.data, ...){
 
 
   if(
+
     .data |>
     drop_na(...) |>
     nrow() |> st(      .data |> nrow()    )
