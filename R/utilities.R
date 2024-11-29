@@ -1798,6 +1798,7 @@ class_list_to_counts = function(.data, .sample, .cell_group){
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   
+
   .data %>%
     count(!!.sample,
           !!.cell_group,
