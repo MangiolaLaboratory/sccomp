@@ -39,16 +39,16 @@ sccomp_glm_data_frame_raw = function(.data,
   
   # Check if columns exist
   check_columns_exist(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    parse_formula(formula_composition)
+    !!.sample,
+    !!.cell_group,
+    all_of(parse_formula(formula_composition))
   ))
   
   # Check if any column is NA or null
   check_if_any_NA(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    parse_formula(formula_composition)
+    !!.sample,
+    !!.cell_group,
+    all_of(parse_formula(formula_composition))
   ))
   
   .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
@@ -150,10 +150,11 @@ sccomp_glm_data_frame_counts = function(.data,
   
   # Check if columns exist
   check_columns_exist(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    quo_name(.count),
-    parse_formula(formula_composition)
+    !!.sample,
+    !!.cell_group,
+    !!.count,
+    all_of(parse_formula(formula_composition))
+    
   ))
   
   # Check that I have rectangular data frame
