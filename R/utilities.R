@@ -1780,12 +1780,13 @@ design_matrix_and_coefficients_to_simulation = function(
 #' @noRd
 class_list_to_counts = function(.data, .sample, .cell_group){
 
-  .sample_for_tidyr = ensym(.sample)
-  .cell_group_for_tidyr = ensym(.cell_group)
-  
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   
+  
+  .sample_for_tidyr = ensym(.sample)
+  .cell_group_for_tidyr = ensym(.cell_group)
+
   .data %>%
     count(!!.sample,
           !!.cell_group,
