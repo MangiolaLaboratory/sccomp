@@ -367,9 +367,9 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
     
   }
 
-
   .data |>
     colData() |>
+
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
@@ -496,8 +496,8 @@ sccomp_estimate.DFrame <- function(.data,
     
   }
   
-  .data |>
-    as.data.frame() |>
+  .data %>%
+    as.data.frame() %>%
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
