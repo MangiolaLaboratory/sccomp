@@ -351,7 +351,6 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
     inference_method <- ifelse(variational_inference, "variational", "hmc")
   }
   
-
   # DEPRECATION OF .sample
   if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
     lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
@@ -522,9 +521,7 @@ sccomp_estimate.DFrame <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit,
-      sig_figs = sig_figs,
-      ...
+      pass_fit = pass_fit, ...
     )
 }
 
