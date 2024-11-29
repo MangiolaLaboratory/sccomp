@@ -2011,7 +2011,7 @@ plot_2D_intervals = function(.data, significance_threshold = 0.05, test_composit
 #' # plot_boxplot(.data, data_proportion, "condition", "cell_group", "sample", 0.025, theme_minimal())
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.05, my_theme
+    .sample, significance_threshold = 0.05, my_theme, remove_unwanted_effects = FALSE
 ){
   
   # Define the variables as NULL to avoid CRAN NOTES
@@ -2099,10 +2099,14 @@ plot_boxplot = function(
   
   if("fit" %in% names(attributes(.data))){
     
-    simulated_proportion =
-      .data |>
-      sccomp_replicate(number_of_draws = 100) |>
-      left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
+    # Remove unwanted effects?
+    if(remove_unwanted_effects) formula_composition = as.formula("~ " |> paste(factor_of_interest))
+    else formula_composition = NULL
+    
+      simulated_proportion =
+        .data |>
+        sccomp_replicate(formula_composition = formula_composition, number_of_draws = 100) |>
+        left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
     
     my_boxplot = my_boxplot +
       
