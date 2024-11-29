@@ -2581,38 +2581,48 @@ get_abundance_contrast_draws = function(.data, contrasts){
   #   pivot_wider(names_from = C, values_from = .value) %>%
   #   setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
   
+  if(contrasts |> is.null())
+    draws = 
+    .data |>
+    attr("fit") %>%
+    draws_to_tibble_x_y("beta", "C", "M") |> 
+    pivot_wider(names_from = C, values_from = .value) %>%
+    setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
+  
+  else if(
+    (beta_factor_of_interest %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
+  )
+    
   draws =
     .data |>
     attr("fit") %>%
-    draws_to_tibble_x_y("beta", "C", "M") 
+    draws_to_tibble_x_y("beta", "C", "M") |> 
+    left_join(
+      beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+      by = "C"
+    )  |> 
+    filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+    select(-C) |> 
+    pivot_wider(names_from = parameters_name, values_from = .value)
   
-  # Reshape
-  # Speed up if I have contrasts
-  if(!contrasts |> is.null())
-    draws = 
-      draws |> 
-      left_join(
-        beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
-        by = "C"
-      )  |> 
-      filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
-      select(-C) |> 
-      pivot_wider(names_from = parameters_name, values_from = .value)
+  else 
+    draws = tibble()
+  
 
-  else
-    draws =
-      draws |>  
-      pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
-    
-  
   # Abundance
   draws = draws |> select(-.variable)
   
 
   # Random effect
-  if(.data |> attr("model_input") %$% n_random_eff > 0){
-    beta_random_effect_factor_of_interest = .data |> attr("model_input") %$% X_random_effect |> colnames()
+  
+  beta_random_effect_factor_of_interest = .data |> attr("model_input") %$% X_random_effect |> colnames()
+  
+  if(
+    .data |> attr("model_input") %$% n_random_eff > 0 &&
+    (beta_random_effect_factor_of_interest %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
+  ){
+    
+    
     beta_random_effect =
       .data |>
       attr("fit") %>%
@@ -2688,17 +2698,27 @@ get_abundance_contrast_draws = function(.data, contrasts){
         pivot_wider(names_from = C, values_from = .value) %>%
         setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest))
     
-    draws = draws |> 
+    # If I don't have fix nor 1st level random effect
+    if(draws |> nrow() == 0)
+      draws = select(beta_random_effect, -.variable)
+    else 
+      draws = draws |> 
       left_join(select(beta_random_effect, -.variable),
                 by = c("M", ".chain", ".iteration", ".draw")
       )
+    
   }  else {
     beta_random_effect_factor_of_interest = ""
   }
   
   # Second random effect. IN THE FUTURE THIS WILL BE VECTORISED TO ARBUTRARY GRI+OUING
-  if(.data |> attr("model_input") %$% n_random_eff > 1){
-    beta_random_effect_factor_of_interest_2 = .data |> attr("model_input") %$% X_random_effect_2 |> colnames()
+  beta_random_effect_factor_of_interest_2 = .data |> attr("model_input") %$% X_random_effect_2 |> colnames()
+  
+  if(
+    .data |> attr("model_input") %$% n_random_eff > 1 &&
+    (beta_random_effect_factor_of_interest_2 %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
+  ){
+    
     beta_random_effect_2 =
       .data |>
       attr("fit") %>%
@@ -2762,7 +2782,10 @@ get_abundance_contrast_draws = function(.data, contrasts){
       pivot_wider(names_from = C, values_from = .value) %>%
       setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest_2))
     
-    
+    # If I don't have fix nor 1st level random effect
+    if(draws |> nrow() == 0)
+      draws = select(beta_random_effect_2, -.variable)
+    else 
     draws = draws |> 
       left_join(select(beta_random_effect_2, -.variable),
                 by = c("M", ".chain", ".iteration", ".draw")
