@@ -918,6 +918,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       ...
     )
   
+  # # Make the fit standalone
+  # temp_rds_file <- tempfile(fileext = ".rds")
+  # fit3$save_object(file = temp_rds_file) 
+  # fit3 = readRDS(temp_rds_file)
+  # file.remove(temp_rds_file)
+  
   # Create a dummy tibble
   tibble() |>
     # Attach association mean concentration

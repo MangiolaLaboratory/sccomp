@@ -301,7 +301,11 @@ sccomp_glm_data_frame_counts = function(.data,
       ...
     )
   
-
+  # # Make the fit standalone
+  # temp_rds_file <- tempfile(fileext = ".rds")
+  # fit$save_object(file = temp_rds_file) 
+  # fit = readRDS(temp_rds_file)
+  # file.remove(temp_rds_file)
   
   estimate_tibble = 
     # Create a dummy tibble
