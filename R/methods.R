@@ -451,6 +451,7 @@ sccomp_estimate.DFrame <- function(.data,
   .abundance <- enquo(.abundance)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
+
   # Deprecation of .count
   if (rlang::quo_is_symbolic(.count)) {
     rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
@@ -524,6 +525,7 @@ sccomp_estimate.DFrame <- function(.data,
       pass_fit = pass_fit, ...
     )
 }
+
 
 #' @importFrom purrr when
 #' @importFrom rlang is_symbolic
@@ -620,6 +622,8 @@ sccomp_estimate.data.frame <- function(.data,
     
   }
   
+=======
+>>>>>>> 3aa1d3b (use characters as column names)
   if (abundance_column |> is.null())
     res <- sccomp_glm_data_frame_raw(
       .data,
