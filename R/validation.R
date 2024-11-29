@@ -1,12 +1,21 @@
-check_columns_exist = function(.data, columns){
+check_columns_exist = function(.data, ...){
 
-  if((!columns %in% (.data %>% colnames)) %>% any)
-    stop(
-      sprintf(
-        "The columns %s are not present in your tibble",
-        paste(columns[(!columns %in% (.data %>% colnames))], collapse=" ")
-      )
+  tryCatch({
+    .data |> select(...)   # Try selecting the column
+    TRUE  # If successful, the column exists
+  }, error = function(e) {
+    # Print a warning with additional context
+    warning(
+      "sccomp says: please check typos in your formula_composition, formula_variability (if applicable), \n",
+      "and your .sample, .cell_group, .count (if applicable) arguments \n",
+      e$message
     )
+   
+    .data |> select(...)
+  })
+  
+  
+
 }
 
 check_if_count_integer = function(.data, .count){
@@ -34,12 +43,12 @@ check_if_count_integer = function(.data, .count){
 #'
 #' @keywords internal
 #' @noRd
-check_if_any_NA = function(.data, columns){
+check_if_any_NA = function(.data, ...){
 
 
   if(
     .data %>%
-    drop_na(all_of(columns)) %>%
+    drop_na(...) %>%
     nrow %>% st(      .data %>% nrow    )
   )
     stop(sprintf("There are NA values in you tibble for any of the column %s", paste(columns, collapse=", ")))
