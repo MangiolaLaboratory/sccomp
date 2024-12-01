@@ -1995,20 +1995,29 @@ plot_2D_intervals = function(.data, significance_threshold = 0.05, test_composit
 #'
 #' @param .data Data frame containing the main data.
 #' @param data_proportion Data frame containing proportions of cell groups.
-#' @param factor_of_interest A factor indicating the biological condition of interest.
-#' @param .cell_group The cell group to be analysed.
-#' @param .sample The sample identifier.
-#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param factor_of_interest Character string specifying the biological condition of interest.
+#' @param .cell_group Character string specifying the cell group to be analyzed.
+#' @param .sample Character string specifying the sample identifier.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.
 #' @param my_theme A ggplot2 theme object to be applied to the plot.
+#' @param remove_unwanted_effects Logical value indicating whether to remove unwanted effects. Default is FALSE.
+#' 
 #' @importFrom scales trans_new
 #' @importFrom stringr str_replace
 #' @importFrom stats quantile
-#' 
-#' 
+#'
 #' @return A ggplot object representing the boxplot.
+#' 
 #' @examples
 #' # Example usage:
-#' # plot_boxplot(.data, data_proportion, "condition", "cell_group", "sample", 0.025, theme_minimal())
+#' # plot_boxplot(
+#' #   .data, data_proportion, factor_of_interest = "condition",
+#' #   .cell_group = "cell_group", .sample = "sample",
+#' #   significance_threshold = 0.05, my_theme = theme_minimal(),
+#' #   remove_unwanted_effects = FALSE
+#' # )
+#' 
+#' @noRd
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
     .sample, significance_threshold = 0.05, my_theme, remove_unwanted_effects = FALSE
