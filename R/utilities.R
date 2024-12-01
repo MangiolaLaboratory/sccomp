@@ -2423,30 +2423,43 @@ contrasts_to_enquos = function(contrasts){
 
 contrasts_to_parameter_list = function(contrasts, drop_back_quotes = TRUE){
   
-  if(contrasts |> names() |> is.null())
-    names(contrasts) = contrasts
+  if(is.null(names(contrasts)))
+    names(contrasts) <- contrasts
   
-  # Using str_replace_all to replace each instance of the strings in A with an empty string in B
-  contrast_list = 
-    contrasts |> 
+  contrast_list <-
+    contrasts |>
     
-    # Remove fractions
-    str_remove_all_ignoring_if_inside_backquotes("[0-9]+/[0-9]+ ?\\*") |>  
+    # Remove fractions used in multiplication before or after '*'
+    str_remove_all_ignoring_if_inside_backquotes("([0-9]+/[0-9]+ ?\\* ?)|(\\* ?[0-9]+/[0-9]+)") |>
     
-    # Remove decimals
-    str_remove_all_ignoring_if_inside_backquotes("[-+]?[0-9]+\\.[0-9]+ ?\\*") |> 
+    # Remove decimals used in multiplication before or after '*'
+    str_remove_all_ignoring_if_inside_backquotes("([-+]?[0-9]+\\.[0-9]+ ?\\* ?)|(\\* ?[-+]?[0-9]+\\.[0-9]+)") |>
     
-    str_split_ignoring_if_inside_backquotes("\\+|-|\\*") |> 
-    unlist() |> 
-    str_remove_all_ignoring_if_inside_backquotes("[\\(\\) ]") 
+    # Remove fractions used in divisions
+    str_remove_all_ignoring_if_inside_backquotes("/ ?[0-9]+") |>
+    
+    # Remove standalone numerical constants not inside backquotes
+    str_remove_all_ignoring_if_inside_backquotes("\\b[0-9]+\\b") |>
+    
+    # Split by "+", "-", "*", "/"
+    str_split_ignoring_if_inside_backquotes("\\+|-|\\*|/") |>
+    unlist() |>
+    
+    # Remove parentheses and spaces
+    str_remove_all_ignoring_if_inside_backquotes("[\\(\\) ]") |>
+    
+    # Remove empty strings
+    {\(x) x[x != ""]}()
   
   if(drop_back_quotes)
-    contrast_list = 
-      contrast_list |> 
-      str_remove_all("`") 
+    contrast_list <-
+    contrast_list |>
+    str_remove_all("`")
   
   contrast_list |> unique()
 }
+
+
 
 #' Mutate Data Frame Based on Expression List
 #'
