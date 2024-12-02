@@ -918,6 +918,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       ...
     )
   
+  # # Make the fit standalone
+  # temp_rds_file <- tempfile(fileext = ".rds")
+  # fit3$save_object(file = temp_rds_file) 
+  # fit3 = readRDS(temp_rds_file)
+  # file.remove(temp_rds_file)
+  
   # Create a dummy tibble
   tibble() |>
     # Attach association mean concentration
@@ -1104,14 +1110,14 @@ sccomp_test.sccomp_tbl = function(.data,
       by = quo_name(.cell_group)
     )
 
-  result =
-    result |>
-
-    # Add back attributes
-    add_attr(
-      .data |> attr("fit") |> get_mean_precision_association(),
-      "mean_concentration_association"
-    )
+  # result =
+  #   result |>
+  # 
+  #   # Add back attributes
+  #   add_attr(
+  #     .data |> attr("fit") |> get_mean_precision_association(),
+  #     "mean_concentration_association"
+  #   )
 
   if(pass_fit)
     result =
@@ -1121,7 +1127,7 @@ sccomp_test.sccomp_tbl = function(.data,
   result |>
     
     # TEMPORARILY DROPPING KHAT
-    select(-contains("n_eff"), -contains("_hat")) |> 
+    # select(-contains("n_eff"), -contains("_hat")) |> 
     
     add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
     

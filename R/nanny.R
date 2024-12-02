@@ -7,7 +7,7 @@
 
   # Check if column present
   if(quo_names(.column) %in% colnames(.data) %>% all %>% `!`)
-    stop("nanny says: some of the .column specified do not exist in the input data frame.")
+    stop("sccomp says: some of the .column specified do not exist in the input data frame.")
 
   .data %>%
 
@@ -121,7 +121,7 @@ strip_names <- function(df, base, names_sep) {
 
   # Check if column present
   if(asis %in% colnames(.data) %>% all %>% `!`)
-    stop("nanny says: some of the .column specified do not exist in the input data frame.")
+    stop("sccomp says: some of the .column specified do not exist in the input data frame.")
 
   # Get my subset columns
   asis_subset <- asis %>%
