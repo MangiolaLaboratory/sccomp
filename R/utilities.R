@@ -1319,7 +1319,6 @@ data_spread_to_model_input =
       y_proportion = y[0,,drop = FALSE]
     }
     
-
     data_for_model =
       list(
         N = .data_spread %>% nrow(),
@@ -2636,7 +2635,6 @@ get_abundance_contrast_draws = function(.data, contrasts){
     draws = tibble()
   
 
-
   # Abundance
   draws = draws |> select(-.variable)
   
@@ -2939,7 +2937,6 @@ get_variability_contrast_draws = function(.data, contrasts){
     draws |>  
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
-
     select( -.variable) 
   
   # If I have constrasts calculate
