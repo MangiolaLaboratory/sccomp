@@ -707,13 +707,15 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
         XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
         
-        # Random intercept
+        # Random intercept common variable between grouping 1 and 2
         ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
         length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+        
+        # Grouping 1
         X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
         
-        # Random intercept DUPLICATED
-        X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
+        # Grouping 2 - Random intercept DUPLICATED
+        X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
         
         create_intercept = FALSE
       )),
@@ -823,13 +825,15 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
       XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
       
-      # Random intercept
+      # Random intercept common variable between grouping 1 and 2
       ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
       length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+     
+      # Grouping 1
       X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
       
-      # Random intercept DUPLICATED
-      X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
+      # Grouping 2 - Random intercept DUPLICATED
+      X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
       
       create_intercept = FALSE
       
