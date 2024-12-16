@@ -51,6 +51,7 @@ check_if_any_NA = function(.data, ...){
     drop_na(...) |>
     nrow() |> st(      .data |> nrow()    )
 
+
   )
     stop(sprintf("There are NA values in you tibble for any of the column %s", paste(columns, collapse=", ")))
 }
