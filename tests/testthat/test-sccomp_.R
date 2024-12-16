@@ -682,15 +682,83 @@ test_that("plotting for no significance",{
   
 })
 
-# fit = 
-# 	seurat_obj |> 
-# 	dplyr::count(sample, cell_group, continuous_covariate, type, group__) |> 
-# 	with_groups(sample, ~ .x |> mutate(tot = sum(n))) |> 
-# 	rename(group = group__) |> 
-# 	filter(cell_group=="B mem") |> 
-# 	brm(
-# 		n | trials(tot) ~ type + (1 + type| group),
-# 		data = _,
-# 		family=beta_binomial(),
-# 		cores = 4
-# 	)
+# Load necessary libraries
+library(testthat)
+library(stringr)
+
+# Define helper functions (assuming they are already defined as before)
+
+# Begin unit tests
+test_that("contrasts_to_parameter_list handles various contrasts correctly", {
+  
+  # Define a variety of contrasts
+  contrasts <- c(
+    # Simple contrast without special characters
+    "GroupA - GroupB",
+    
+    # Contrast with variable names containing spaces (requires backquotes)
+    "`Variable with spaces` - `Another variable`",
+    
+    # Contrast with special characters in variable names
+    "`Variable#1` + `Variable-2` - `Variable.3`",
+    
+    # Contrast with multiplication and division
+    "0.5 * Treatment / Control",
+    
+    # Contrast with fractions
+    "(1/2) * (`Var1` + `Var2`) - (`Var3` / 2)",
+    
+    # Contrast with fractions used in multiplication after '*'
+    "(`Variable1` + `Variable2`) * 1/2",
+    
+    # Contrast with nested backquotes and special characters
+    "`age_bin_sex_specificSenior___adipose tissue` + `age_bin_sex_specificSenior:sexmale___adipose tissue`",
+    
+    # Complex contrast provided earlier
+    "((`age_bin_sex_specificSenior___adipose tissue` + `age_bin_sex_specificSenior:sexmale___adipose tissue` + `age_bin_sex_specificMiddle Age___adipose tissue` + `age_bin_sex_specificMiddle Age:sexmale___adipose tissue`) / 2) - ((`age_bin_sex_specificYoung Adulthood___adipose tissue` + `age_bin_sex_specificYoung Adulthood:sexmale___adipose tissue`) / 1)"
+  )
+  
+  # Apply the function to extract parameters
+  extracted_params <- contrasts_to_parameter_list(contrasts, drop_back_quotes = FALSE)
+  
+  # Expected parameters after extraction
+  expected_params <- c(
+    "GroupA", "GroupB",
+    "`Variable with spaces`", "`Another variable`",
+    "`Variable#1`", "`Variable-2`", "`Variable.3`",
+    "Treatment", "Control",
+    "`Var1`", "`Var2`", "`Var3`",
+    "`Variable1`", "`Variable2`",
+    "`age_bin_sex_specificSenior___adipose tissue`", "`age_bin_sex_specificSenior:sexmale___adipose tissue`",
+    "`age_bin_sex_specificMiddle Age___adipose tissue`", "`age_bin_sex_specificMiddle Age:sexmale___adipose tissue`",
+    "`age_bin_sex_specificYoung Adulthood___adipose tissue`", "`age_bin_sex_specificYoung Adulthood:sexmale___adipose tissue`"
+  )
+  
+  # Remove duplicates from expected_params
+  expected_params <- unique(expected_params)
+  
+  # Check if the extracted parameters match the expected parameters
+  expect_equal(sort(extracted_params), sort(expected_params))
+  
+  # Now, check if backquotes are correctly applied where necessary
+  contrasts_elements <- extracted_params
+  
+  # Function to check for valid column characters
+  contains_only_valid_chars_for_column <- function(string){
+    return(all(str_detect(string, "^[A-Za-z\\.][A-Za-z0-9\\._]*$")))
+  }
+  
+  # # Check if backquotes are required
+  # require_back_quotes <- !str_remove_all(contrasts_elements, "`") |> contains_only_valid_chars_for_column()
+  # 
+  # # Check if backquotes are correctly placed
+  # has_left_back_quotes <- str_detect(contrasts_elements, "^`")
+  # has_right_back_quotes <- str_detect(contrasts_elements, "`$")
+  # 
+  # # Identify elements that require backquotes but don't have them correctly
+  # if_true_not_good <- require_back_quotes & !(has_left_back_quotes & has_right_back_quotes)
+  # 
+  # # Expect that all elements either don't require backquotes or have them correctly placed
+  # expect_true(all(!if_true_not_good))
+  
+})

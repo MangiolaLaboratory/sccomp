@@ -843,13 +843,15 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
         XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
         
-        # Random intercept
+        # Random intercept common variable between grouping 1 and 2
         ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
         length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+        
+        # Grouping 1
         X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
         
-        # Random intercept DUPLICATED
-        X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
+        # Grouping 2 - Random intercept DUPLICATED
+        X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
         
         create_intercept = FALSE
       )),
@@ -959,13 +961,15 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
       XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
       
-      # Random intercept
+      # Random intercept common variable between grouping 1 and 2
       ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
       length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
+     
+      # Grouping 1
       X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
       
-      # Random intercept DUPLICATED
-      X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
+      # Grouping 2 - Random intercept DUPLICATED
+      X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
       
       create_intercept = FALSE
       
@@ -1053,6 +1057,12 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
       ...
     )
+  
+  # # Make the fit standalone
+  # temp_rds_file <- tempfile(fileext = ".rds")
+  # fit3$save_object(file = temp_rds_file) 
+  # fit3 = readRDS(temp_rds_file)
+  # file.remove(temp_rds_file)
   
   # Create a dummy tibble
   tibble() |>
@@ -1240,14 +1250,14 @@ sccomp_test.sccomp_tbl = function(.data,
       by = quo_name(.cell_group)
     )
 
-  result =
-    result |>
-
-    # Add back attributes
-    add_attr(
-      .data |> attr("fit") |> get_mean_precision_association(),
-      "mean_concentration_association"
-    )
+  # result =
+  #   result |>
+  # 
+  #   # Add back attributes
+  #   add_attr(
+  #     .data |> attr("fit") |> get_mean_precision_association(),
+  #     "mean_concentration_association"
+  #   )
 
   if(pass_fit)
     result =
@@ -1257,7 +1267,7 @@ sccomp_test.sccomp_tbl = function(.data,
   result |>
     
     # TEMPORARILY DROPPING KHAT
-    select(-contains("n_eff"), -contains("_hat")) |> 
+    # select(-contains("n_eff"), -contains("_hat")) |> 
     
     add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
     

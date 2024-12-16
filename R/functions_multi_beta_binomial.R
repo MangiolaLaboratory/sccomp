@@ -307,7 +307,11 @@ sccomp_glm_data_frame_counts = function(.data,
       ...
     )
   
-
+  # # Make the fit standalone
+  # temp_rds_file <- tempfile(fileext = ".rds")
+  # fit$save_object(file = temp_rds_file) 
+  # fit = readRDS(temp_rds_file)
+  # file.remove(temp_rds_file)
   
   estimate_tibble = 
     # Create a dummy tibble
@@ -390,6 +394,9 @@ get_mean_precision = function(fit, data_for_model){
 }
 
 get_mean_precision_association = function(fit){
+  
+  # fit$summary(variables = "prec_coeff", "mean", ~quantile(.x, probs = c(0.05, 0.95),  na.rm=TRUE))
+  
   c(
     fit$summary("prec_coeff")[,2] |> set_names("prec_coeff") ,
     fit$summary("prec_sd")[,2] |> set_names("prec_sd")
