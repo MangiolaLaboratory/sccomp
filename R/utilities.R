@@ -2645,8 +2645,11 @@ get_abundance_contrast_draws = function(.data, contrasts){
   
   if(
     .data |> attr("model_input") %$% n_random_eff > 0 &&
+    (
+      contrasts |> is.null() || 
     (beta_random_effect_factor_of_interest %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
-  ){
+    )  
+ ){
     
     
     beta_random_effect =
@@ -2742,7 +2745,10 @@ get_abundance_contrast_draws = function(.data, contrasts){
   
   if(
     .data |> attr("model_input") %$% n_random_eff > 1 &&
-    (beta_random_effect_factor_of_interest_2 %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
+    (
+      contrasts |> is.null() || 
+      (beta_random_effect_factor_of_interest_2 %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
+    )
   ){
     
     beta_random_effect_2 =
