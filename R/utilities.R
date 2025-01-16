@@ -2666,9 +2666,6 @@ get_abundance_contrast_draws = function(.data, contrasts){
     # I HAVE TO REGULARISE THE LAST COMPONENT
     mean_of_the_sd_of_the_point_estimates = 
       beta_random_effect |> 
-      
-      # Filter the intercept out
-      filter(C != 1) |>  
       group_by(M, C) |> 
       summarise(point_estimate = mean(.value)) |> 
       group_by(M) |> 
@@ -2678,9 +2675,6 @@ get_abundance_contrast_draws = function(.data, contrasts){
     
     other_sd_of_the_point_estimates = 
       other_group_random_effect |> 
-      
-      # Filter the intercept out
-      filter(C != 1) |>  
       group_by(M, C) |> 
       summarise(point_estimate = mean(.value)) |> 
       group_by(M) |> 
@@ -2765,9 +2759,6 @@ get_abundance_contrast_draws = function(.data, contrasts){
     # I HAVE TO REGULARISE THE LAST COMPONENT
     mean_of_the_sd_of_the_point_estimates = 
       beta_random_effect_2 |> 
-      
-      # Filter the intercept out
-      filter(C != 1) |>  
       group_by(M, C) |> 
       summarise(point_estimate = mean(.value)) |> 
       group_by(M) |> 
@@ -2777,9 +2768,6 @@ get_abundance_contrast_draws = function(.data, contrasts){
     
     other_sd_of_the_point_estimates = 
       other_group_random_effect |> 
-      
-      # Filter the intercept out
-      filter(C != 1) |>  
       group_by(M, C) |> 
       summarise(point_estimate = mean(.value)) |> 
       group_by(M) |> 
