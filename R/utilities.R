@@ -1921,7 +1921,6 @@ plot_2D_intervals = function(
   v_upper <- NULL
   v_FDR <- NULL
   cell_type_label <- NULL
-  multipanel_theme <- NULL
   
   
   .cell_group = attr(.data, ".cell_group")
