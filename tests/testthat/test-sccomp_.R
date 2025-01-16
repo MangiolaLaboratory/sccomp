@@ -584,6 +584,7 @@ test_that("test constrasts",{
   # Wrong interaction
   my_estimate |> 
     sccomp_test(contrasts = c("(1/2*continuous_covariate:typehealthy + 1/2*`continuous_covariate:typehealthy`) -  `continuous_covariate:typehealthy`") ) |> 
+    expect_error() |> 
     expect_warning("sccomp says: for columns which have special characters") 
   
 

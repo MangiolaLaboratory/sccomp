@@ -21,9 +21,30 @@ For cellular omic data, no method for differential variability analysis exists, 
 
 **sccomp** is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. We demonstrate that mean-variability association is ubiquitous across technologies, highlighting the inadequacy of the very popular Dirichlet-multinomial modeling and providing essential principles for differential variability analysis.
 
-<a href="https://www.youtube.com/watch?v=R_lt58We9nA&ab_channel=RConsortium" target="_blank">
- <img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10" />
-</a>
+<img src="inst/cartoon_methods.jpg" width="100%"/>
+
+### Comparison with other methods
+
+- **I**: Data are modelled as counts.
+- **II**: Group proportions are modelled as compositional.
+- **III**: The proportion variability is modelled as cell-type specific.
+- **IV**: Information sharing across cell types, mean–variability association.
+- **V**: Outlier detection or robustness.
+- **VI**: Differential variability analysis.
+
+| Method       | Year | Model                        | I | II | III | IV | V | VI |
+|--------------|------|------------------------------|---|----|-----|----|---|----|
+| **sccomp**   | 2023 | Sum-constrained Beta-binomial | ● | ●  | ●   | ●  | ● | ●  |
+| **scCODA**   | 2021 | Dirichlet-multinomial         | ● | ●  |     |    |   |    |
+| **quasi-binom.** | 2021 | Quasi-binomial            | ● |    | ●   |    |   |    |
+| **rlm**      | 2021 | Robust-log-linear            |   | ●  |     |    | ● |    |
+| **propeller** | 2021 | Logit-linear + limma        |   | ●  | ●   | ●  |   |    |
+| **ANCOM-BC** | 2020 | Log-linear                   |   | ●  | ●   |    |   |    |
+| **corncob**  | 2020 | Beta-binomial                | ● |    | ●   |    |   |    |
+| **scDC**     | 2019 | Log-linear                   |   | ●  | ●   |    |   |    |
+| **dmbvs**    | 2017 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |
+| **MixMC**    | 2016 | Zero-inflated Log-linear     |   | ●  | ●   |    |   |    |
+| **ALDEx2**   | 2014 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |
 
 ```{r echo=FALSE}
 knitr::opts_chunk$set( fig.path = "inst/figures/")
@@ -33,6 +54,12 @@ knitr::opts_chunk$set( fig.path = "inst/figures/")
 
 Mangiola, Stefano, Alexandra J. Roth-Schulze, Marie Trussart, Enrique Zozaya-Valdés, Mengyao Ma, Zijie Gao, Alan F. Rubin, Terence P. Speed, Heejung Shim, and Anthony T. Papenfuss. 2023. “Sccomp: Robust Differential Composition and Variability Analysis for Single-Cell Data.” Proceedings of the National Academy of Sciences of the United States of America 120 (33): e2203828120. https://doi.org/10.1073/pnas.2203828120
 [PNAS - sccomp: Robust differential composition and variability analysis for single-cell data](https://www.pnas.org/doi/full/10.1073/pnas.2203828120)
+
+### Talk
+
+<a href="https://www.youtube.com/watch?v=R_lt58We9nA&ab_channel=RConsortium" target="_blank">
+ <img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10" />
+</a>
 
 ```{r child="man/fragments/intro.Rmd"}
 ```
