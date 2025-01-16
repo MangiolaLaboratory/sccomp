@@ -1841,7 +1841,7 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
     filter(parameter != "(Intercept)") |>
     
     # Reshape data
-    select(-contains("n_eff"), -contains("R_k_hat")) |> 
+    select(-contains("n_eff"), -contains("R_k_hat"), -contains("_ess"), -contains("_rhat")) |> 
     pivot_longer(c(contains("c_"), contains("v_")), names_sep = "_", names_to = c("which", "estimate")) |>
     pivot_wider(names_from = estimate, values_from = value) |>
     
