@@ -3051,9 +3051,7 @@ replicate_data = function(.data,
   
   # Update data, merge with old data because
   # I need the same ordering of the design matrix
-  new_data =
-    
-    # Old data
+  old_data = 
     .data |>
     select(count_data) |>
     unnest(count_data) |>
@@ -3063,11 +3061,14 @@ replicate_data = function(.data,
     
     # Change sample names to make unique
     mutate(dummy = "OLD") |>
-    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___") |>
+    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___")
+    
+    new_data = 
+      old_data |>
     
     # New data
     bind_rows(
-      new_data |> as_tibble()
+      new_data |> as_tibble() |> harmonise_factor_levels(old_data)
     )
   
   new_X =
@@ -3788,4 +3789,27 @@ check_missing_parameters <- function(effects, model_effects) {
       if (length(missing_parameters) > 3) "\n..."
     )
   }
+}
+
+library(dplyr)
+
+library(dplyr)
+
+harmonise_factor_levels <- function(dataframe_query, dataframe_reference) {
+  # 1. Identify factor columns in the reference
+  factor_cols <- names(dataframe_reference)[sapply(dataframe_reference, is.factor)]
+  
+  # 2. For each reference factor column, if the query has that column, coerce it to factor
+  for (col in factor_cols) {
+    if (col %in% names(dataframe_query)) {
+      # Use the reference's levels
+      ref_levels <- levels(dataframe_reference[[col]])
+      
+      # Force the query to adopt these levels, whether or not it was originally a factor
+      dataframe_query[[col]] <- factor(dataframe_query[[col]], levels = ref_levels)
+    }
+  }
+  
+  # 3. Return ONLY the updated query
+  dataframe_query
 }
