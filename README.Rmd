@@ -21,7 +21,7 @@ For cellular omic data, no method for differential variability analysis exists, 
 
 **sccomp** is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. We demonstrate that mean-variability association is ubiquitous across technologies, highlighting the inadequacy of the very popular Dirichlet-multinomial modeling and providing essential principles for differential variability analysis.
 
-<img src="inst/cartoon_methods.jpg" width="100%"/>
+<img src="inst/cartoon_methods.png" width="100%"/>
 
 ### Comparison with other methods
 
