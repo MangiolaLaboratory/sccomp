@@ -327,7 +327,7 @@ From your estimates, you can specify which effects you are interested in (this c
 In the case of a categorical variable, the starting and ending points are categories.
 
 ```{r, eval = instantiate::stan_cmdstan_exists()}
-sccomp_result |> 
+res |> 
    sccomp_proportional_fold_change(
      formula_composition = ~  type,
      from =  "healthy", 
