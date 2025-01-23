@@ -3063,13 +3063,20 @@ replicate_data = function(.data,
     mutate(dummy = "OLD") |>
     tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___")
     
-    new_data = 
-      old_data |>
-    
-    # New data
-    bind_rows(
-      new_data |> as_tibble() |> harmonise_factor_levels(old_data)
-    )
+  # Harmonise factors
+  new_data = new_data |> as_tibble() |> harmonise_factor_levels(old_data)
+  
+  # Check if some values were not present in the original data
+  if(
+    new_data |> nrow() > 
+    new_data |> select(-!!.sample) |> drop_na() |> nrow()
+  )
+    stop(
+      "sccomp says: some factor values were not present in the original training data. \n",
+      new_data
+      )
+
+  new_data =  old_data |> bind_rows( new_data )
   
   new_X =
     new_data |>
