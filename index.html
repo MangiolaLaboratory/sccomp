@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.9.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.7</span>
       </span>
     </div>
 
@@ -82,11 +82,181 @@
 <p>Cellular omics such as single-cell genomics, proteomics, and microbiomics allow the characterization of tissue and microbial community composition, which can be compared between conditions to identify biological drivers. This strategy has been critical to unveiling markers of disease progression in conditions such as cancer and pathogen infections.</p>
 <p>For cellular omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce <strong>sccomp</strong>, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, while being robust to outliers.</p>
 <p><strong>sccomp</strong> is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. We demonstrate that mean-variability association is ubiquitous across technologies, highlighting the inadequacy of the very popular Dirichlet-multinomial modeling and providing essential principles for differential variability analysis.</p>
-<p><a href="https://www.youtube.com/watch?v=R_lt58We9nA&amp;ab_channel=RConsortium" target="_blank" class="external-link"> <img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10"></a></p>
+<p><img src="inst/cartoon_methods.png" width="100%"></p>
+<div class="section level3">
+<h3 id="comparison-with-other-methods">Comparison with other methods<a class="anchor" aria-label="anchor" href="#comparison-with-other-methods"></a>
+</h3>
+<ul>
+<li>
+<strong>I</strong>: Data are modelled as counts.</li>
+<li>
+<strong>II</strong>: Group proportions are modelled as compositional.</li>
+<li>
+<strong>III</strong>: The proportion variability is modelled as cell-type specific.</li>
+<li>
+<strong>IV</strong>: Information sharing across cell types, mean–variability association.</li>
+<li>
+<strong>V</strong>: Outlier detection or robustness.</li>
+<li>
+<strong>VI</strong>: Differential variability analysis.</li>
+</ul>
+<table class="table">
+<colgroup>
+<col width="21%">
+<col width="7%">
+<col width="36%">
+<col width="5%">
+<col width="5%">
+<col width="5%">
+<col width="5%">
+<col width="5%">
+<col width="5%">
+</colgroup>
+<thead><tr>
+<th>Method</th>
+<th>Year</th>
+<th>Model</th>
+<th>I</th>
+<th>II</th>
+<th>III</th>
+<th>IV</th>
+<th>V</th>
+<th>VI</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>sccomp</strong></td>
+<td>2023</td>
+<td>Sum-constrained Beta-binomial</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+</tr>
+<tr>
+<td><strong>scCODA</strong></td>
+<td>2021</td>
+<td>Dirichlet-multinomial</td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>quasi-binom.</strong></td>
+<td>2021</td>
+<td>Quasi-binomial</td>
+<td>●</td>
+<td></td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>rlm</strong></td>
+<td>2021</td>
+<td>Robust-log-linear</td>
+<td></td>
+<td>●</td>
+<td></td>
+<td></td>
+<td>●</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>propeller</strong></td>
+<td>2021</td>
+<td>Logit-linear + limma</td>
+<td></td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>ANCOM-BC</strong></td>
+<td>2020</td>
+<td>Log-linear</td>
+<td></td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>corncob</strong></td>
+<td>2020</td>
+<td>Beta-binomial</td>
+<td>●</td>
+<td></td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>scDC</strong></td>
+<td>2019</td>
+<td>Log-linear</td>
+<td></td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>dmbvs</strong></td>
+<td>2017</td>
+<td>Dirichlet-multinomial</td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>MixMC</strong></td>
+<td>2016</td>
+<td>Zero-inflated Log-linear</td>
+<td></td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>ALDEx2</strong></td>
+<td>2014</td>
+<td>Dirichlet-multinomial</td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section level3">
 <h3 id="cite">Cite<a class="anchor" aria-label="anchor" href="#cite"></a>
 </h3>
 <p>Mangiola, Stefano, Alexandra J. Roth-Schulze, Marie Trussart, Enrique Zozaya-Valdés, Mengyao Ma, Zijie Gao, Alan F. Rubin, Terence P. Speed, Heejung Shim, and Anthony T. Papenfuss. 2023. “Sccomp: Robust Differential Composition and Variability Analysis for Single-Cell Data.” Proceedings of the National Academy of Sciences of the United States of America 120 (33): e2203828120. <a href="https://doi.org/10.1073/pnas.2203828120" class="external-link uri">https://doi.org/10.1073/pnas.2203828120</a> <a href="https://www.pnas.org/doi/full/10.1073/pnas.2203828120" class="external-link">PNAS - sccomp: Robust differential composition and variability analysis for single-cell data</a></p>
+</div>
+<div class="section level3">
+<h3 id="talk">Talk<a class="anchor" aria-label="anchor" href="#talk"></a>
+</h3>
+<p><a href="https://www.youtube.com/watch?v=R_lt58We9nA&amp;ab_channel=RConsortium" target="_blank" class="external-link"> <img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10"></a></p>
 </div>
 <div class="section level1">
 <div class="page-header"><h1 id="section">
@@ -132,8 +302,8 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"cmdstanr"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://stan-dev.r-universe.dev/"</span>, <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"repos"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Step 3</span></span>
-<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">check_cmdstan_toolchain</a></span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
-<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">install_cmdstan</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu">check_cmdstan_toolchain</span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
+<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu">install_cmdstan</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Github</strong></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Step 1</span></span>
@@ -143,8 +313,8 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"cmdstanr"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://stan-dev.r-universe.dev/"</span>, <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"repos"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Step 3</span></span>
-<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">check_cmdstan_toolchain</a></span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
-<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">install_cmdstan</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu">check_cmdstan_toolchain</span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
+<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu">install_cmdstan</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -321,36 +491,23 @@
 <p>Here is the input data</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="do">## Loading required package: SeuratObject</span></span>
+<div class="sourceCode" id="cb13"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="do">## Loading required namespace: SeuratObject</span></span>
 <span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a></span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="do">## Loading required package: sp</span></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a></span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="do">## 'SeuratObject' was built under R 4.4.0 but the current version is</span></span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="do">## 4.4.1; it is recomended that you reinstall 'SeuratObject' as the ABI</span></span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="do">## for R may have changed</span></span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a></span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="do">## Attaching package: 'SeuratObject'</span></span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a></span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="do">## The following objects are masked from 'package:base':</span></span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="do">##     intersect, t</span></span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a></span>
-<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="do">## [90m# A tibble: 106,297 × 9[39m</span></span>
-<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="do">##    cell_group nCount_RNA nFeature_RNA group__ group__wrong sample type  group2__</span></span>
-<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a><span class="do">##    [3m[90m&lt;chr&gt;[39m[23m           [3m[90m&lt;dbl&gt;[39m[23m        [3m[90m&lt;int&gt;[39m[23m [3m[90m&lt;chr&gt;[39m[23m   [3m[90m&lt;chr&gt;[39m[23m        [3m[90m&lt;chr&gt;[39m[23m  [3m[90m&lt;chr&gt;[39m[23m [3m[90m&lt;chr&gt;[39m[23m   </span></span>
-<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="do">## [90m 1[39m CD4 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="do">## [90m 2[39m Mono clas…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a><span class="do">## [90m 3[39m CD4 cm S1…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a><span class="do">## [90m 4[39m B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a><span class="do">## [90m 5[39m CD8 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a><span class="do">## [90m 6[39m CD4 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a><span class="do">## [90m 7[39m Mono clas…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a><span class="do">## [90m 8[39m CD4 cm S1…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a><span class="do">## [90m 9[39m CD4 cm hi…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a><span class="do">## [90m10[39m B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a><span class="do">## [90m# ℹ 106,287 more rows[39m</span></span>
-<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a><span class="do">## [90m# ℹ 1 more variable: continuous_covariate &lt;dbl&gt;[39m</span></span></code></pre></div>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="do">## [90m# A tibble: 106,297 × 9[39m</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="do">##    cell_group nCount_RNA nFeature_RNA group__ group__wrong sample type  group2__</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="do">##    [3m[90m&lt;chr&gt;[39m[23m           [3m[90m&lt;dbl&gt;[39m[23m        [3m[90m&lt;int&gt;[39m[23m [3m[90m&lt;chr&gt;[39m[23m   [3m[90m&lt;chr&gt;[39m[23m        [3m[90m&lt;chr&gt;[39m[23m  [3m[90m&lt;chr&gt;[39m[23m [3m[90m&lt;chr&gt;[39m[23m   </span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="do">## [90m 1[39m CD4 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="do">## [90m 2[39m Mono clas…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="do">## [90m 3[39m CD4 cm S1…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="do">## [90m 4[39m B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="do">## [90m 5[39m CD8 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="do">## [90m 6[39m CD4 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="do">## [90m 7[39m Mono clas…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="do">## [90m 8[39m CD4 cm S1…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="do">## [90m 9[39m CD4 cm hi…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="do">## [90m10[39m B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="do">## [90m# ℹ 106,287 more rows[39m</span></span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="do">## [90m# ℹ 1 more variable: continuous_covariate &lt;dbl&gt;[39m</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
@@ -509,7 +666,7 @@
 </h2>
 <p>It is possible to directly evaluate the posterior distribution. In this example, we plot the Monte Carlo chain for the slope parameter of the first cell type. We can see that it has converged and is negative with probability 1.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">cmdstanr</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/posterior/" class="external-link">posterior</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span></span>
 <span></span>
@@ -544,7 +701,8 @@
 <div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://www.r-project.org/Licenses/GPL-3" class="external-link">GPL-3</a></li>
+<li><a href="LICENSE.html">Full license</a></li>
+<li><small><a href="https://www.r-project.org/Licenses/GPL-3" class="external-link">GPL-3</a></small></li>
 </ul>
 </div>
 

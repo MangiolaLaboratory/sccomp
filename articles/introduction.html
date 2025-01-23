@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.9.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.7</span>
       </span>
     </div>
 
@@ -78,9 +78,9 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2024-10-15</h4>
+            <h4 data-toc-skip class="date">2025-01-23</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/fix-cmdstanr-depedency-2/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="hidden name"><code>introduction.Rmd</code></div>
 
     </div>
@@ -96,29 +96,207 @@ Mangiola</h4>
     </div>
     
 <!-- badges: start -->
-<p><a href="https://www.tidyverse.org/lifecycle/#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a> <a href="https://github.com/stemangiola/tidyseurat/actions/" class="external-link"><img src="https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg" alt="R build status"></a> <!-- badges: end --> <code>sccomp</code>
-tests differences in cell type proportions from single-cell data. It is
-robust against outliers, it models continuous and discrete factors, and
-capable of random-effect/intercept modelling.</p>
-<p>Please cite <a href="https://www.pnas.org/doi/full/10.1073/pnas.2203828120" class="external-link">PNAS -
+<p><a href="https://www.tidyverse.org/lifecycle/#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a> <a href="https://github.com/stemangiola/tidyseurat/actions/" class="external-link"><img src="https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg" alt="R build status"></a> <!-- badges: end --></p>
+<p>Cellular omics such as single-cell genomics, proteomics, and
+microbiomics allow the characterization of tissue and microbial
+community composition, which can be compared between conditions to
+identify biological drivers. This strategy has been critical to
+unveiling markers of disease progression in conditions such as cancer
+and pathogen infections.</p>
+<p>For cellular omic data, no method for differential variability
+analysis exists, and methods for differential composition analysis only
+take a few fundamental data properties into account. Here we introduce
+<strong>sccomp</strong>, a generalised method for differential
+composition and variability analyses capable of jointly modelling data
+count distribution, compositionality, group-specific variability, and
+proportion mean-variability association, while being robust to
+outliers.</p>
+<p><strong>sccomp</strong> is an extensive analysis framework that
+allows realistic data simulation and cross-study knowledge transfer. We
+demonstrate that mean-variability association is ubiquitous across
+technologies, highlighting the inadequacy of the very popular
+Dirichlet-multinomial modeling and providing essential principles for
+differential variability analysis.</p>
+<p><img src="../inst/cartoon_methods.png" width="100%"></p>
+<div class="section level4">
+<h4 id="comparison-with-other-methods">Comparison with other methods<a class="anchor" aria-label="anchor" href="#comparison-with-other-methods"></a>
+</h4>
+<ul>
+<li>
+<strong>I</strong>: Data are modelled as counts.</li>
+<li>
+<strong>II</strong>: Group proportions are modelled as
+compositional.</li>
+<li>
+<strong>III</strong>: The proportion variability is modelled as
+cell-type specific.</li>
+<li>
+<strong>IV</strong>: Information sharing across cell types,
+mean–variability association.</li>
+<li>
+<strong>V</strong>: Outlier detection or robustness.</li>
+<li>
+<strong>VI</strong>: Differential variability analysis.</li>
+</ul>
+<table class="table">
+<colgroup>
+<col width="19%">
+<col width="8%">
+<col width="41%">
+<col width="4%">
+<col width="5%">
+<col width="6%">
+<col width="5%">
+<col width="4%">
+<col width="5%">
+</colgroup>
+<thead><tr class="header">
+<th>Method</th>
+<th>Year</th>
+<th>Model</th>
+<th>I</th>
+<th>II</th>
+<th>III</th>
+<th>IV</th>
+<th>V</th>
+<th>VI</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>sccomp</strong></td>
+<td>2023</td>
+<td>Sum-constrained Beta-binomial</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+</tr>
+<tr class="even">
+<td><strong>scCODA</strong></td>
+<td>2021</td>
+<td>Dirichlet-multinomial</td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>quasi-binom.</strong></td>
+<td>2021</td>
+<td>Quasi-binomial</td>
+<td>●</td>
+<td></td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>rlm</strong></td>
+<td>2021</td>
+<td>Robust-log-linear</td>
+<td></td>
+<td>●</td>
+<td></td>
+<td></td>
+<td>●</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>propeller</strong></td>
+<td>2021</td>
+<td>Logit-linear + limma</td>
+<td></td>
+<td>●</td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>ANCOM-BC</strong></td>
+<td>2020</td>
+<td>Log-linear</td>
+<td></td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>corncob</strong></td>
+<td>2020</td>
+<td>Beta-binomial</td>
+<td>●</td>
+<td></td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>scDC</strong></td>
+<td>2019</td>
+<td>Log-linear</td>
+<td></td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>dmbvs</strong></td>
+<td>2017</td>
+<td>Dirichlet-multinomial</td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>MixMC</strong></td>
+<td>2016</td>
+<td>Zero-inflated Log-linear</td>
+<td></td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>ALDEx2</strong></td>
+<td>2014</td>
+<td>Dirichlet-multinomial</td>
+<td>●</td>
+<td>●</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level4">
+<h4 id="cite">Cite<a class="anchor" aria-label="anchor" href="#cite"></a>
+</h4>
+<p>Mangiola, Stefano, Alexandra J. Roth-Schulze, Marie Trussart, Enrique
+Zozaya-Valdés, Mengyao Ma, Zijie Gao, Alan F. Rubin, Terence P. Speed,
+Heejung Shim, and Anthony T. Papenfuss. 2023. “Sccomp: Robust
+Differential Composition and Variability Analysis for Single-Cell Data.”
+Proceedings of the National Academy of Sciences of the United States of
+America 120 (33): e2203828120. <a href="https://doi.org/10.1073/pnas.2203828120" class="external-link uri">https://doi.org/10.1073/pnas.2203828120</a> <a href="https://www.pnas.org/doi/full/10.1073/pnas.2203828120" class="external-link">PNAS -
 sccomp: Robust differential composition and variability analysis for
 single-cell data</a></p>
-<div class="section level3">
-<h3 id="characteristics">Characteristics<a class="anchor" aria-label="anchor" href="#characteristics"></a>
-</h3>
-<ul>
-<li>Complex linear models with continuous and categorical
-covariates</li>
-<li>Multilevel modelling, with population fixed and random
-effects/intercept</li>
-<li>Modelling data from counts</li>
-<li>Testing differences in cell-type proportionality</li>
-<li>Testing differences in cell-type specific variability</li>
-<li>Cell-type information share for variability adaptive shrinkage</li>
-<li>Testing differential variability</li>
-<li>Probabilistic outlier identification</li>
-<li>Cross-dataset learning (hyperpriors).</li>
-</ul>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -146,8 +324,8 @@ process (that will be prompted to the user is forgot).</p>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"cmdstanr"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://stan-dev.r-universe.dev/"</span>, <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"repos"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Step 3</span></span>
-<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">check_cmdstan_toolchain</a></span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
-<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">install_cmdstan</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu">check_cmdstan_toolchain</span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
+<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu">install_cmdstan</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Github</strong></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Step 1</span></span>
@@ -157,8 +335,8 @@ process (that will be prompted to the user is forgot).</p>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"cmdstanr"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://stan-dev.r-universe.dev/"</span>, <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"repos"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Step 3</span></span>
-<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">check_cmdstan_toolchain</a></span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
-<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">install_cmdstan</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu">check_cmdstan_toolchain</span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
+<span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu">install_cmdstan</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
 <col width="48%">
@@ -393,16 +571,7 @@ variability).</p>
 <p>Here is the input data</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Loading required package: SeuratObject</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: sp</span></span></code></pre>
-<pre><code><span><span class="co">## 'SeuratObject' was built under R 4.4.0 but the current version is</span></span>
-<span><span class="co">## 4.4.1; it is recomended that you reinstall 'SeuratObject' as the ABI</span></span>
-<span><span class="co">## for R may have changed</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'SeuratObject'</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:base':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     intersect, t</span></span></code></pre>
+<pre><code><span><span class="co">## Loading required namespace: SeuratObject</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 106,297 × 9</span></span></span>
 <span><span class="co">##    cell_group nCount_RNA nFeature_RNA group__ group__wrong sample type  group2__</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span></span>
@@ -418,7 +587,7 @@ variability).</p>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 106,287 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: continuous_covariate &lt;dbl&gt;</span></span></span></code></pre>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -436,7 +605,7 @@ variability).</p>
 </h4>
 <p><code>sccomp</code> can model random slopes. We providean example
 below.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -456,7 +625,7 @@ below.</p>
 within subjects and subjects nested within batches, you can include
 multiple grouping variables. Here <code>group2__</code> is nested within
 <code>group__</code>.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -489,8 +658,8 @@ in (this can be a subset of the full model if you wish to exclude
 unwanted effects), and the two points you would like to compare.</p>
 <p>In the case of a categorical variable, the starting and ending points
 are categories.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">|&gt;</span> </span>
 <span>   <span class="fu"><a href="../reference/sccomp_proportional_fold_change.html">sccomp_proportional_fold_change</a></span><span class="op">(</span></span>
 <span>     formula_composition <span class="op">=</span> <span class="op">~</span>  <span class="va">type</span>,</span>
 <span>     from <span class="op">=</span>  <span class="st">"healthy"</span>, </span>
@@ -501,7 +670,7 @@ are categories.</p>
 <div class="section level3">
 <h3 id="contrasts">Contrasts<a class="anchor" aria-label="anchor" href="#contrasts"></a>
 </h3>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">type</span>, </span>
@@ -525,7 +694,7 @@ elimination does not guarantee it.</p>
 better than the other <a href="https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola" class="external-link">reference</a>.
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model
 one, the one with factor association, is better than model two.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/loo/" class="external-link">loo</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fit first model</span></span>
@@ -561,7 +730,7 @@ one, the one with factor association, is better than model two.</p>
 </h3>
 <p>We can model the cell-group variability also dependent on the type,
 and so test differences in variability</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -574,7 +743,7 @@ and so test differences in variability</p>
 <span></span>
 <span><span class="va">res</span></span></code></pre></div>
 <p><strong>Plot 1D significance plot</strong></p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
@@ -590,7 +759,7 @@ linear association between mean and variability for
 scatterplot (besides the Intercept) is provided for each category of
 interest. For each category of interest, the composition and variability
 effects should be generally uncorrelated.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
 </div>
 </div>
@@ -620,8 +789,8 @@ distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mc
 this example, we plot the Monte Carlo chain for the slope parameter of
 the first cell type. We can see that it has converged and is negative
 with probability 1.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a></span><span class="op">)</span></span>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">cmdstanr</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/posterior/" class="external-link">posterior</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span></span>
 <span></span>
@@ -633,15 +802,15 @@ with probability 1.</p>
 <span></span>
 <span><span class="co"># Create a traceplot for 'beta[2,1]'</span></span>
 <span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/MCMC-traces.html" class="external-link">mcmc_trace</a></span><span class="op">(</span><span class="va">draws</span>, pars <span class="op">=</span> <span class="st">"beta[2,1]"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.4.1 (2024-06-14)</span></span>
+<pre><code><span><span class="co">## R Under development (unstable) (2025-01-11 r87563)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 22.04.5 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.1 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
-<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0</span></span>
+<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## locale:</span></span>
 <span><span class="co">##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              </span></span>
@@ -658,58 +827,54 @@ with probability 1.</p>
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] SeuratObject_5.0.2 sp_2.1-4           tidyr_1.3.1        forcats_1.0.0     </span></span>
-<span><span class="co">## [5] ggplot2_3.5.1      sccomp_1.9.2       dplyr_1.1.4       </span></span>
+<span><span class="co">## [1] tidyr_1.3.1   forcats_1.0.0 ggplot2_3.5.1 sccomp_2.1.7  dplyr_1.1.4  </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] rlang_1.1.4                 magrittr_2.0.3             </span></span>
-<span><span class="co">##  [3] matrixStats_1.4.1           compiler_4.4.1             </span></span>
-<span><span class="co">##  [5] systemfonts_1.1.0           callr_3.7.6                </span></span>
-<span><span class="co">##  [7] vctrs_0.6.5                 stringr_1.5.1              </span></span>
-<span><span class="co">##  [9] pkgconfig_2.0.3             crayon_1.5.3               </span></span>
-<span><span class="co">## [11] fastmap_1.2.0               backports_1.5.0            </span></span>
-<span><span class="co">## [13] XVector_0.45.0              utf8_1.2.4                 </span></span>
-<span><span class="co">## [15] cmdstanr_0.8.0              rmarkdown_2.28             </span></span>
-<span><span class="co">## [17] tzdb_0.4.0                  UCSC.utils_1.1.0           </span></span>
-<span><span class="co">## [19] ps_1.8.0                    ragg_1.3.3                 </span></span>
-<span><span class="co">## [21] purrr_1.0.2                 xfun_0.48                  </span></span>
-<span><span class="co">## [23] zlibbioc_1.51.1             cachem_1.1.0               </span></span>
-<span><span class="co">## [25] GenomeInfoDb_1.41.2         jsonlite_1.8.9             </span></span>
-<span><span class="co">## [27] DelayedArray_0.31.14        parallel_4.4.1             </span></span>
-<span><span class="co">## [29] R6_2.5.1                    bslib_0.8.0                </span></span>
-<span><span class="co">## [31] stringi_1.8.4               parallelly_1.38.0          </span></span>
-<span><span class="co">## [33] GenomicRanges_1.57.2        jquerylib_0.1.4            </span></span>
-<span><span class="co">## [35] Rcpp_1.0.13                 SummarizedExperiment_1.35.4</span></span>
-<span><span class="co">## [37] knitr_1.48                  future.apply_1.11.2        </span></span>
-<span><span class="co">## [39] readr_2.1.5                 IRanges_2.39.2             </span></span>
-<span><span class="co">## [41] Matrix_1.7-0                tidyselect_1.2.1           </span></span>
-<span><span class="co">## [43] abind_1.4-8                 yaml_2.3.10                </span></span>
-<span><span class="co">## [45] codetools_0.2-20            processx_3.8.4             </span></span>
-<span><span class="co">## [47] listenv_0.9.1               lattice_0.22-6             </span></span>
-<span><span class="co">## [49] tibble_3.2.1                Biobase_2.65.1             </span></span>
-<span><span class="co">## [51] withr_3.0.1                 posterior_1.6.0            </span></span>
-<span><span class="co">## [53] evaluate_1.0.1              future_1.34.0              </span></span>
-<span><span class="co">## [55] desc_1.4.3                  pillar_1.9.0               </span></span>
-<span><span class="co">## [57] MatrixGenerics_1.17.0       tensorA_0.36.2.1           </span></span>
-<span><span class="co">## [59] checkmate_2.3.2             stats4_4.4.1               </span></span>
-<span><span class="co">## [61] distributional_0.5.0        generics_0.1.3             </span></span>
-<span><span class="co">## [63] S4Vectors_0.43.2            hms_1.1.3                  </span></span>
-<span><span class="co">## [65] munsell_0.5.1               scales_1.3.0               </span></span>
-<span><span class="co">## [67] globals_0.16.3              glue_1.8.0                 </span></span>
-<span><span class="co">## [69] tools_4.4.1                 dotCall64_1.2              </span></span>
-<span><span class="co">## [71] fs_1.6.4                    grid_4.4.1                 </span></span>
-<span><span class="co">## [73] instantiate_0.2.3.9000      colorspace_2.1-1           </span></span>
-<span><span class="co">## [75] SingleCellExperiment_1.27.2 GenomeInfoDbData_1.2.13    </span></span>
-<span><span class="co">## [77] patchwork_1.3.0             cli_3.6.3                  </span></span>
-<span><span class="co">## [79] textshaping_0.4.0           spam_2.11-0                </span></span>
-<span><span class="co">## [81] fansi_1.0.6                 S4Arrays_1.5.10            </span></span>
-<span><span class="co">## [83] gtable_0.3.5                sass_0.4.9                 </span></span>
-<span><span class="co">## [85] digest_0.6.37               progressr_0.14.0           </span></span>
-<span><span class="co">## [87] BiocGenerics_0.51.3         SparseArray_1.5.44         </span></span>
-<span><span class="co">## [89] ggrepel_0.9.6               htmlwidgets_1.6.4          </span></span>
-<span><span class="co">## [91] farver_2.1.2                htmltools_0.5.8.1          </span></span>
-<span><span class="co">## [93] pkgdown_2.1.1               lifecycle_1.0.4            </span></span>
-<span><span class="co">## [95] prettydoc_0.4.1             httr_1.4.7</span></span></code></pre>
+<span><span class="co">##  [1] tidyselect_1.2.1            farver_2.1.2               </span></span>
+<span><span class="co">##  [3] fastmap_1.2.0               SingleCellExperiment_1.29.1</span></span>
+<span><span class="co">##  [5] dotCall64_1.2               digest_0.6.37              </span></span>
+<span><span class="co">##  [7] lifecycle_1.0.4             SeuratObject_5.0.2         </span></span>
+<span><span class="co">##  [9] processx_3.8.5              magrittr_2.0.3             </span></span>
+<span><span class="co">## [11] compiler_4.5.0              rlang_1.1.5                </span></span>
+<span><span class="co">## [13] sass_0.4.9                  tools_4.5.0                </span></span>
+<span><span class="co">## [15] utf8_1.2.4                  yaml_2.3.10                </span></span>
+<span><span class="co">## [17] knitr_1.49                  S4Arrays_1.7.1             </span></span>
+<span><span class="co">## [19] htmlwidgets_1.6.4           sp_2.1-4                   </span></span>
+<span><span class="co">## [21] DelayedArray_0.33.4         abind_1.4-8                </span></span>
+<span><span class="co">## [23] withr_3.0.2                 purrr_1.0.2                </span></span>
+<span><span class="co">## [25] BiocGenerics_0.53.3         desc_1.4.3                 </span></span>
+<span><span class="co">## [27] grid_4.5.0                  stats4_4.5.0               </span></span>
+<span><span class="co">## [29] colorspace_2.1-1            future_1.34.0              </span></span>
+<span><span class="co">## [31] progressr_0.15.1            globals_0.16.3             </span></span>
+<span><span class="co">## [33] scales_1.3.0                SummarizedExperiment_1.37.0</span></span>
+<span><span class="co">## [35] cli_3.6.3                   rmarkdown_2.29             </span></span>
+<span><span class="co">## [37] crayon_1.5.3                ragg_1.3.3                 </span></span>
+<span><span class="co">## [39] generics_0.1.3              future.apply_1.11.3        </span></span>
+<span><span class="co">## [41] httr_1.4.7                  tzdb_0.4.0                 </span></span>
+<span><span class="co">## [43] cachem_1.1.0                stringr_1.5.1              </span></span>
+<span><span class="co">## [45] parallel_4.5.0              XVector_0.47.2             </span></span>
+<span><span class="co">## [47] matrixStats_1.5.0           vctrs_0.6.5                </span></span>
+<span><span class="co">## [49] Matrix_1.7-1                jsonlite_1.8.9             </span></span>
+<span><span class="co">## [51] callr_3.7.6                 IRanges_2.41.2             </span></span>
+<span><span class="co">## [53] hms_1.1.3                   patchwork_1.3.0            </span></span>
+<span><span class="co">## [55] S4Vectors_0.45.2            ggrepel_0.9.6              </span></span>
+<span><span class="co">## [57] listenv_0.9.1               systemfonts_1.2.0          </span></span>
+<span><span class="co">## [59] jquerylib_0.1.4             spam_2.11-1                </span></span>
+<span><span class="co">## [61] glue_1.8.0                  parallelly_1.41.0          </span></span>
+<span><span class="co">## [63] pkgdown_2.1.1               codetools_0.2-20           </span></span>
+<span><span class="co">## [65] ps_1.8.1                    stringi_1.8.4              </span></span>
+<span><span class="co">## [67] gtable_0.3.6                GenomeInfoDb_1.43.2        </span></span>
+<span><span class="co">## [69] GenomicRanges_1.59.1        UCSC.utils_1.3.1           </span></span>
+<span><span class="co">## [71] munsell_0.5.1               instantiate_0.2.3          </span></span>
+<span><span class="co">## [73] tibble_3.2.1                pillar_1.10.1              </span></span>
+<span><span class="co">## [75] htmltools_0.5.8.1           GenomeInfoDbData_1.2.13    </span></span>
+<span><span class="co">## [77] R6_2.5.1                    textshaping_0.4.1          </span></span>
+<span><span class="co">## [79] evaluate_1.0.3              lattice_0.22-6             </span></span>
+<span><span class="co">## [81] Biobase_2.67.0              readr_2.1.5                </span></span>
+<span><span class="co">## [83] bslib_0.8.0                 Rcpp_1.0.14                </span></span>
+<span><span class="co">## [85] SparseArray_1.7.4           xfun_0.50                  </span></span>
+<span><span class="co">## [87] fs_1.6.5                    MatrixGenerics_1.19.1      </span></span>
+<span><span class="co">## [89] prettydoc_0.4.1             pkgconfig_2.0.3</span></span></code></pre>
 </div>
 </div>
   </div>

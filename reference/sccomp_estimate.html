@@ -22,7 +22,7 @@ group-size) and derives the count data from cell metadata."><!-- mathjax --><scr
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.9.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.7</span>
       </span>
     </div>
 
@@ -56,7 +56,7 @@ group-size) and derives the count data from cell metadata."><!-- mathjax --><scr
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Main Function for SCCOMP Estimate</h1>
-    <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/fix-cmdstanr-depedency-2/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
     <div class="hidden name"><code>sccomp_estimate.Rd</code></div>
     </div>
 
@@ -195,7 +195,7 @@ abundance column (counts or proportions), and factor columns.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to the <code><a href="https://mc-stan.org/cmdstanr/reference/model-method-sample.html" class="external-link">cmdstanr::sample</a></code> function.</p></dd>
+<dd><p>Additional arguments passed to the <code>cmdstanr::sample</code> function.</p></dd>
 
 
 <dt id="arg--count">.count<a class="anchor" aria-label="anchor" href="#arg--count"></a></dt>
@@ -248,9 +248,24 @@ abundance column (counts or proportions), and factor columns.</p></dd>
 <span class="r-in"><span>      <span class="op">~</span><span class="fl">1</span>,</span></span>
 <span class="r-in"><span>      <span class="va">sample</span>,</span></span>
 <span class="r-in"><span>      <span class="va">cell_group</span>,</span></span>
-<span class="r-in"><span>      <span class="va">abundance</span>,</span></span>
+<span class="r-in"><span>      <span class="va">count</span>,</span></span>
 <span class="r-in"><span>      cores <span class="op">=</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>    </span></span>
+<span class="r-in"><span>   <span class="co"># Note! </span></span></span>
+<span class="r-in"><span>   <span class="co"># If counts are available, do not use proportion.</span></span></span>
+<span class="r-in"><span>   <span class="co"># Using proportion ignores the high uncertainty of low counts</span></span></span>
+<span class="r-in"><span>   </span></span>
+<span class="r-in"><span>   <span class="va">estimate_proportion</span> <span class="op">&lt;-</span> <span class="fu">sccomp_estimate</span><span class="op">(</span></span></span>
+<span class="r-in"><span>      <span class="va">counts_obj</span>,</span></span>
+<span class="r-in"><span>      <span class="op">~</span> <span class="va">type</span>,</span></span>
+<span class="r-in"><span>      <span class="op">~</span><span class="fl">1</span>,</span></span>
+<span class="r-in"><span>      <span class="va">sample</span>,</span></span>
+<span class="r-in"><span>      <span class="va">cell_group</span>,</span></span>
+<span class="r-in"><span>      <span class="va">proportion</span>,</span></span>
+<span class="r-in"><span>      cores <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span>    </span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
