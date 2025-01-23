@@ -46,7 +46,7 @@ if (instantiate::stan_cmdstan_exists()) {
       .cell_group = cell_group,
       .count = count,
       cores = 1
-    ) \%>\%
+    ) |>
     sccomp_test()
 
     # Plot the boxplot of estimated cell proportions

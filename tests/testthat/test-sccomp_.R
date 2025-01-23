@@ -27,6 +27,20 @@ if (instantiate::stan_cmdstan_exists()){
       max_sampling_iterations = 1000, verbose=FALSE
     )
   
+  my_estimate_inverse_factor = 
+    seurat_obj[[]] |>
+    mutate(type = type |> forcats::fct_relevel("healthy")) |> 
+    sccomp_estimate(
+      formula_composition = ~ continuous_covariate * type ,
+      formula_variability = ~ 1,
+      sample, cell_group,
+      
+      cores = 1, 
+      inference_method = "pathfinder",
+      # mcmc_seed = 42,
+      max_sampling_iterations = 1000, verbose=FALSE
+    )
+  
   my_estimate_full_bayes = 
     seurat_obj |>
     sccomp_estimate(
@@ -631,8 +645,13 @@ test_that("sccomp_proportional_fold_change",{
     sccomp_proportional_fold_change(formula_composition = ~  type, from =  "healthy", to = "cancer") |> 
     expect_no_error()
   
- 
   
+  my_estimate_inverse_factor |> 
+    sccomp_proportional_fold_change(formula_composition = ~  type, from =  "healthy", to = "cancer") |> 
+    pull(proportion_fold_change) |> 
+    unique() |> 
+    length() |> 
+    expect_gt(1)
   
 })
 
