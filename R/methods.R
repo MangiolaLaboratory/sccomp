@@ -86,9 +86,24 @@
 #'       ~1,
 #'       sample,
 #'       cell_group,
-#'       abundance,
+#'       count,
 #'       cores = 1
 #'     )
+#'     
+#'    # Note! 
+#'    # If counts are available, do not use proportion.
+#'    # Using proportion ignores the high uncertainty of low counts
+#'    
+#'    estimate_proportion <- sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       proportion,
+#'       cores = 1
+#'     )
+#'     
 #'   }
 #' }
 #'
@@ -204,7 +219,7 @@ sccomp_estimate.Seurat <- function(.data,
   .cell_group <- enquo(.cell_group)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
-  .data[[]] %>%
+  .data[[]] |>
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
@@ -292,8 +307,8 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
   .cell_group <- enquo(.cell_group)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
-  .data %>%
-    colData() %>%
+  .data |>
+    colData() |>
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
@@ -368,8 +383,8 @@ sccomp_estimate.DFrame <- function(.data,
   .abundance <- enquo(.abundance)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
-  .data %>%
-    as.data.frame() %>%
+  .data |>
+    as.data.frame() |>
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
@@ -521,7 +536,7 @@ sccomp_estimate.data.frame <- function(.data,
   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).")
   
-  res %>%
+  res |>
     
     # Track input parameters
     add_attr(noise_model, "noise_model")
@@ -729,27 +744,27 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   # Detect outliers
   truncation_df =
-    .data %>%
+    .data |>
     left_join(
-      summary_to_tibble(rng, "counts", "N", "M", probs = c(0.05, 0.95)) %>%
-        nest(data = -N) %>%
-        mutate(!!.sample := rownames(data_for_model$X)) %>%
-        unnest(data) %>%
-        nest(data = -M) %>%
-        mutate(!!.cell_group := colnames(data_for_model$y)) %>%
+      summary_to_tibble(rng, "counts", "N", "M", probs = c(0.05, 0.95)) |>
+        nest(data = -N) |>
+        mutate(!!.sample := rownames(data_for_model$X)) |>
+        unnest(data) |>
+        nest(data = -M) |>
+        mutate(!!.cell_group := colnames(data_for_model$y)) |>
         unnest(data) ,
       
       by = c(quo_name(.sample), quo_name(.cell_group))
-    ) %>%
+    ) |>
     
     # Add truncation
-    mutate(   truncation_down = `5%`,   truncation_up =  `95%`) %>%
+    mutate(   truncation_down = `5%`,   truncation_up =  `95%`) |>
     
     # Add outlier stats
-    mutate( outlier = !(!!.count >= `5%` & !!.count <= `95%`) ) %>%
-    nest(data = -M) %>%
-    mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
-    unnest(data) %>%
+    mutate( outlier = !(!!.count >= `5%` & !!.count <= `95%`) ) |>
+    nest(data = -M) |>
+    mutate(contains_outliers = map_lgl(data, ~ .x |> filter(outlier) |> nrow() > 0)) |>
+    unnest(data) |>
     
     mutate(
       truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
@@ -758,29 +773,29 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   # Add censoring
   data_for_model$is_truncated = 1
-  data_for_model$truncation_up = truncation_df %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-  data_for_model$truncation_down = truncation_df %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+  data_for_model$truncation_up = truncation_df |> select(N, M, truncation_up) |> spread(M, truncation_up) |> as_matrix(rownames = "N") |> apply(2, as.integer)
+  data_for_model$truncation_down = truncation_df |> select(N, M, truncation_down) |> spread(M, truncation_down) |> as_matrix(rownames = "N") |> apply(2, as.integer)
   data_for_model$truncation_not_idx = 
-    (data_for_model$truncation_down >= 0) %>% 
-    t() %>% 
-    as.vector()  %>% 
+    (data_for_model$truncation_down >= 0) |> 
+    t() |> 
+    as.vector()  |> 
     which() |>
     intersect(data_for_model$user_forced_truncation_not_idx) |>
     sort()
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
   
   data_for_model$truncation_not_idx_minimal = 
-    truncation_df %>% 
-    select(N, M, truncation_down) %>% 
-    spread(M, truncation_down) %>%
-    mutate(row = row_number()) %>%
+    truncation_df |> 
+    select(N, M, truncation_down) |> 
+    spread(M, truncation_down) |>
+    mutate(row = row_number()) |>
     pivot_longer(
       cols = -c(N, row),
       names_to = "columns",
       values_to = "value"
-    ) %>%
-    filter(value == -1) %>%
-    select(row, columns) %>%
+    ) |>
+    filter(value == -1) |>
+    select(row, columns) |>
     mutate(columns = as.integer(columns)) |> 
     as.matrix()
   
@@ -795,7 +810,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   CI_step_2 = (1-my_quantile_step_2) / 2 * 2
   
   fit2 =
-    data_for_model %>%
+    data_for_model |>
     fit_model(
       "glm_multi_beta_binomial",
       cores = cores,
@@ -849,7 +864,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   column_quantile_names = rng2_summary |> colnames() |> str_subset("\\%") |> _[c(1,3)]
   
   rng2_summary = 
-    rng2_summary %>%
+    rng2_summary |>
     
     # !!! THIS COMMAND RELIES ON POSITION BECAUSE IT'S NOT TRIVIAL TO MATCH
     # !!! COLUMN NAMES BASED ON LIMITED PRECISION AND/OR PERIODICAL QUANTILES
@@ -857,41 +872,41 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       .lower := !!as.symbol(column_quantile_names[1]) ,
       .median = `50%`,
       .upper := !!as.symbol(column_quantile_names[2])
-    ) %>%
-    nest(data = -N) %>%
-    mutate(!!.sample := rownames(data_for_model$X)) %>%
-    unnest(data) %>%
-    nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(data_for_model$y)) %>%
+    ) |>
+    nest(data = -N) |>
+    mutate(!!.sample := rownames(data_for_model$X)) |>
+    unnest(data) |>
+    nest(data = -M) |>
+    mutate(!!.cell_group := colnames(data_for_model$y)) |>
     unnest(data) 
   
   # Detect outliers
   truncation_df2 =
-    .data %>%
+    .data |>
     left_join(rng2_summary,
       by = c(quo_name(.sample), quo_name(.cell_group))
-    ) %>%
+    ) |>
     
     # Add truncation
-    mutate(   truncation_down = .lower,   truncation_up =  .upper) %>%
+    mutate(   truncation_down = .lower,   truncation_up =  .upper) |>
     
     # Add outlier stats
-    mutate( outlier = !(!!.count >= .lower & !!.count <= .upper) ) %>%
-    nest(data = -M) %>%
-    mutate(contains_outliers = map_lgl(data, ~ .x %>% filter(outlier) %>% nrow() %>% `>` (0))) %>%
-    unnest(data) %>%
+    mutate( outlier = !(!!.count >= .lower & !!.count <= .upper) ) |>
+    nest(data = -M) |>
+    mutate(contains_outliers = map_lgl(data, ~ .x |> filter(outlier) |> nrow() > 0)) |>
+    unnest(data) |>
     
     mutate(
       truncation_down = case_when( outlier ~ -1, TRUE ~ truncation_down),
       truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up)
     )
   
-  data_for_model$truncation_up = truncation_df2 %>% select(N, M, truncation_up) %>% spread(M, truncation_up) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
-  data_for_model$truncation_down = truncation_df2 %>% select(N, M, truncation_down) %>% spread(M, truncation_down) %>% as_matrix(rownames = "N") %>% apply(2, as.integer)
+  data_for_model$truncation_up = truncation_df2 |> select(N, M, truncation_up) |> spread(M, truncation_up) |> as_matrix(rownames = "N") |> apply(2, as.integer)
+  data_for_model$truncation_down = truncation_df2 |> select(N, M, truncation_down) |> spread(M, truncation_down) |> as_matrix(rownames = "N") |> apply(2, as.integer)
   data_for_model$truncation_not_idx = 
-    (data_for_model$truncation_down >= 0) %>% 
-    t() %>% 
-    as.vector()  %>% 
+    (data_for_model$truncation_down >= 0) |> 
+    t() |> 
+    as.vector()  |> 
     which() |>
     intersect(data_for_model$user_forced_truncation_not_idx) |>
     sort()
@@ -903,11 +918,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   message("sccomp says: outlier-free model fitting - step 2/2")
   
   # Print design matrix
-  message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
-  message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
+  message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X |> colnames() |> paste(collapse=", ")))
+  message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa |> colnames() |> paste(collapse=", ")))
   
   fit3 =
-    data_for_model %>%
+    data_for_model |>
     # Run the first discovery phase with permissive false discovery rate
     fit_model(
       "glm_multi_beta_binomial",
@@ -931,7 +946,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   # Create a dummy tibble
   tibble() |>
     # Attach association mean concentration
-    add_attr(fit3, "fit") %>%
+    add_attr(fit3, "fit") |>
     add_attr(data_for_model, "model_input") |>
     add_attr(truncation_df2, "truncation_df2") |>
     add_attr(.sample, ".sample") |>
@@ -1087,8 +1102,8 @@ sccomp_test.sccomp_tbl = function(.data,
 
     # Add easy to understand factor labels
     left_join(factor_parameter_dictionary,
-              by = c("parameter" = "design_matrix_col")) %>%
-    select(parameter, `factor`, everything()) %>%
+              by = c("parameter" = "design_matrix_col")) |>
+    select(parameter, `factor`, everything()) |>
 
     select(!!.cell_group, everything(),-M)
 
@@ -1237,18 +1252,18 @@ sccomp_replicate.sccomp_tbl = function(fit,
   rng |>
 
     # Parse
-    parse_generated_quantities(number_of_draws = number_of_draws) %>%
+    parse_generated_quantities(number_of_draws = number_of_draws) |>
 
     # Get sample name
-    nest(data = -N) %>%
-    arrange(N) %>%
-    mutate(!!.sample := sample_names) %>%
-    unnest(data) %>%
+    nest(data = -N) |>
+    arrange(N) |>
+    mutate(!!.sample := sample_names) |>
+    unnest(data) |>
 
     # get cell type name
-    nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(model_input$y)) %>%
-    unnest(data) %>%
+    nest(data = -M) |>
+    mutate(!!.cell_group := colnames(model_input$y)) |>
+    unnest(data) |>
 
     select(-N, -M) |>
     select(!!.cell_group, !!.sample, everything())
@@ -1370,15 +1385,15 @@ sccomp_predict.sccomp_tbl = function(fit,
   	prediction_df |>
 
     # Get sample name
-    nest(data = -N) %>%
-    arrange(N) %>%
-    mutate(!!.sample := sample_names) %>%
-    unnest(data) %>%
+    nest(data = -N) |>
+    arrange(N) |>
+    mutate(!!.sample := sample_names) |>
+    unnest(data) |>
 
     # get cell type name
-    nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(model_input$y)) %>%
-    unnest(data) %>%
+    nest(data = -M) |>
+    mutate(!!.cell_group := colnames(model_input$y)) |>
+    unnest(data) |>
 
     select(-N, -M) |>
     select(!!.cell_group, !!.sample, everything())
@@ -1411,7 +1426,6 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'   \item Returns a tibble containing the sample, cell group, residuals, and exposure (total counts per sample).
 #' }
 #'
-#' @importFrom dplyr %>%
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate
 #' @importFrom dplyr left_join
@@ -1733,10 +1747,10 @@ simulate_data.tbl = function(.data,
 
 
   data_for_model =
-    .data %>%
-    nest(data___ = -!!.sample) %>%
-    mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) %>%
-    unnest(data___) %>%
+    .data |>
+    nest(data___ = -!!.sample) |>
+    mutate(.exposure = sample(model_data$exposure, size = n(), replace = TRUE )) |>
+    unnest(data___) |>
     data_simulation_to_model_input(
       formula_composition,
       #formula_variability,
@@ -1758,7 +1772,7 @@ simulate_data.tbl = function(.data,
     attr(.estimate_object , "fit")$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
-    data = data_for_model %>% c(original_data) |> c(list(variability_multiplier = variability_multiplier)),
+    data = data_for_model |> c(original_data) |> c(list(variability_multiplier = variability_multiplier)),
     seed = mcmc_seed,
     parallel_chains = attr(.estimate_object , "fit")$metadata()$threads_per_chain, 
     threads_per_chain = cores
@@ -1766,23 +1780,23 @@ simulate_data.tbl = function(.data,
   )
 
   parsed_fit =
-    fit %>%
-    parse_generated_quantities(number_of_draws = number_of_draws) %>%
+    fit |>
+    parse_generated_quantities(number_of_draws = number_of_draws) |>
 
     # Get sample name
-    nest(data = -N) %>%
-    arrange(N) %>%
-    mutate(!!.sample := rownames(data_for_model$X_simulated)) %>%
-    unnest(data) %>%
+    nest(data = -N) |>
+    arrange(N) |>
+    mutate(!!.sample := rownames(data_for_model$X_simulated)) |>
+    unnest(data) |>
 
     # get cell type name
-    nest(data = -M) %>%
-    mutate(!!.cell_group := colnames(data_for_model$beta_simulated)) %>%
-    unnest(data) %>%
+    nest(data = -M) |>
+    mutate(!!.cell_group := colnames(data_for_model$beta_simulated)) |>
+    unnest(data) |>
 
     select(-N, -M)
 
-  .data %>%
+  .data |>
     left_join(
       parsed_fit,
       by = c(quo_name(.sample), quo_name(.cell_group))
@@ -1827,7 +1841,7 @@ simulate_data.tbl = function(.data,
 #'       .cell_group = cell_group,
 #'       .count = count,
 #'       cores = 1
-#'     ) %>%
+#'     ) |>
 #'     sccomp_test()
 #'
 #'     # Plot the boxplot of estimated cell proportions
@@ -1857,13 +1871,13 @@ sccomp_boxplot = function(
   
 
     data_proportion =
-      .data %>%
+      .data |>
   
       # Otherwise does not work
-      select(-`factor`) %>%
+      select(-`factor`) |>
   
-      pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
-      unnest(count_data) %>%
+      pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) |>
+      unnest(count_data) |>
       with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) 
   
   if(remove_unwanted_effects){
@@ -1954,13 +1968,13 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
 
   data_proportion =
-    x %>%
+    x |>
   
     # Otherwise does not work
-    select(-`factor`) %>%
+    select(-`factor`) |>
   
-    pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) %>%
-    unnest(count_data) %>%
+    pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) |>
+    unnest(count_data) |>
     with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) )
   
   
@@ -1969,9 +1983,9 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
 
 # Select the factors to plot  
 my_factors =
-  x %>%
+  x |>
   filter(!is.na(`factor`)) |>
-  distinct(`factor`) %>%
+  distinct(`factor`) |>
   pull(`factor`) 
 
 if(length(my_factors)==0)

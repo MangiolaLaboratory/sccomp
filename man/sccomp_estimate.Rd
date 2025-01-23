@@ -133,9 +133,24 @@ message("Use the following example after having installed cmdstanr with install.
       ~1,
       sample,
       cell_group,
-      abundance,
+      count,
       cores = 1
     )
+    
+   # Note! 
+   # If counts are available, do not use proportion.
+   # Using proportion ignores the high uncertainty of low counts
+   
+   estimate_proportion <- sccomp_estimate(
+      counts_obj,
+      ~ type,
+      ~1,
+      sample,
+      cell_group,
+      proportion,
+      cores = 1
+    )
+    
   }
 }
 
