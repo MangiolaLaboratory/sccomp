@@ -3732,30 +3732,29 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 #' or asks for permission to install them in interactive sessions.
 #'
 #' @importFrom instantiate stan_cmdstan_exists
-#' @importFrom utils install.packages
+#' @importFrom rlang check_installed
 #' @importFrom utils menu
 #' @return NULL
 #' 
 #' @noRd
 check_and_install_cmdstanr <- function() {
+  
   # Check if cmdstanr is installed
-  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    
-    clear_stan_model_cache()
-    
-    stop(
-      "cmdstanr is required to proceed.\n\n",
-      "Step 1: Please install the R package 'cmdstanr' using the following command:\n",
-      "install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))\n",
-      "Note: 'cmdstanr' is not available on CRAN.\n\n",
-      
-      "Step 2: After installing 'cmdstanr', you can install CmdStan by running the following commands:\n",
-      "cmdstanr::check_cmdstan_toolchain(fix = TRUE)\n",
-      "cmdstanr::install_cmdstan()\n",
-      "This will install the latest version of CmdStan. For more information, visit:\n",
-      "https://mc-stan.org/users/interfaces/cmdstan"
-    )
-  }
+  # from https://github.com/wlandau/instantiate/blob/33989d74c26f349e292e5efc11c267b3a1b71d3f/R/utils_assert.R#L114
+  tryCatch(
+    rlang::check_installed(
+      pkg = "cmdstanr",
+      reason = paste(
+        "The {cmdstanr} package is required in order to install",
+        "CmdStan and run Stan models. Please install it manually using",
+        "install.packages(pkgs = \"cmdstanr\",",
+        "repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\"))"
+      )
+    ),
+    error = function(e) {
+      stan_error(conditionMessage(e))
+    }
+  )
   
   # Check if CmdStan is installed
   if (!instantiate::stan_cmdstan_exists()) {
