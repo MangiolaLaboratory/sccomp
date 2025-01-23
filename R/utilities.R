@@ -3752,6 +3752,7 @@ check_and_install_cmdstanr <- function() {
       )
     ),
     error = function(e) {
+      clear_stan_model_cache()
       stan_error(conditionMessage(e))
     }
   )
