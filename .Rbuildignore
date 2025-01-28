@@ -21,8 +21,6 @@ src/Rcpp*
 model_glm_dirichlet_multinomial.rds
 model_glm_dirichlet_multinomial_generate_quantities.rds
 model_glm_dirichlet_multinomial_imputation.rds
-inst/stan/glm_multi_beta_binomial
-inst/stan/glm_multi_beta_binomial_generate_data
 ^doc$
 ^Meta$
 sccomp_draws_files
