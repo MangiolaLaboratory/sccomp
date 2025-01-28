@@ -18,6 +18,7 @@ src/Rcpp*
 ^README*
 ^dev
 ^rsconnect
+# DO NOT ADD ANY INST FILES HERE AS THE INST DIRECTORY WILL NOT BE INSTALLED
 model_glm_dirichlet_multinomial.rds
 model_glm_dirichlet_multinomial_generate_quantities.rds
 model_glm_dirichlet_multinomial_imputation.rds
