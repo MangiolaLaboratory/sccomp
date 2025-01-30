@@ -614,12 +614,12 @@ test_that("proportions",{
       formula_composition = ~ type , 
       .sample = sample,  
       .cell_group = cell_group, 
-      .count = proportion,
+      .abundance = proportion,
       cores = 1,
       mcmc_seed = 42,
       max_sampling_iterations = 1000
     ) |> 
-      expect_warning("The argument '.count' is deprecated")
+      expect_warning("The argument '.abundance' is deprecated")
  
   counts_obj |>
     sccomp_estimate(
@@ -756,4 +756,20 @@ test_that("contrasts_to_parameter_list handles various contrasts correctly", {
   # # Expect that all elements either don't require backquotes or have them correctly placed
   # expect_true(all(!if_true_not_good))
   
+})
+
+test_that("sample ID malformed", {
+  
+
+counts_obj |>
+  mutate(sample = if_else(sample %in% c("SCP424_pbmc1", "SCP424_pbmc2", "SCP345_860"), "SCP424_pbmc1", sample)) |> 
+  sccomp_estimate(
+    formula_composition = ~ type , 
+    .sample = sample,  
+    .cell_group = cell_group, 
+    .abundance = count,
+    cores = 1
+  ) |> 
+    expect_error("You have duplicated .sample IDs")
+
 })
