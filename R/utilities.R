@@ -3743,7 +3743,8 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 #'
 #' @importFrom instantiate stan_cmdstan_exists
 #' @importFrom rlang check_installed
-#' @importFrom utils menu
+#' @importFrom rlang abort
+#' @importFrom rlang check_installed
 #' @return NULL
 #' 
 #' @noRd
@@ -3751,6 +3752,21 @@ check_and_install_cmdstanr <- function() {
   
   # Check if cmdstanr is installed
   # from https://github.com/wlandau/instantiate/blob/33989d74c26f349e292e5efc11c267b3a1b71d3f/R/utils_assert.R#L114
+  
+  stan_error <- function(message = NULL) {
+    stan_stop(
+      message = message,
+      class = c("stan_error", "stan")
+    )
+  }
+  
+  stan_stop <- function(message, class) {
+    old <- getOption("rlang_backtrace_on_error")
+    on.exit(options(rlang_backtrace_on_error = old))
+    options(rlang_backtrace_on_error = "none")
+    abort(message = message, class = class, call = emptyenv())
+  }
+  
   tryCatch(
     rlang::check_installed(
       pkg = "cmdstanr",
@@ -3768,7 +3784,7 @@ check_and_install_cmdstanr <- function() {
   )
   
   # Check if CmdStan is installed
-  if (!instantiate::stan_cmdstan_exists()) {
+  if (!stan_cmdstan_exists()) {
     
     clear_stan_model_cache()
     
