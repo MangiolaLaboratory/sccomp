@@ -3841,7 +3841,7 @@ harmonise_factor_levels <- function(dataframe_query, dataframe_reference) {
 #' @return A character string containing the coloured tibble output.
 #'
 #' @importFrom crayon red
-#' @export
+#' @noRd
 print_red_tibble <- function(tbl) {
   # Capture the console output of printing the tibble
   example_text <- capture.output(print(tbl))
@@ -3870,7 +3870,7 @@ print_red_tibble <- function(tbl) {
 #' @importFrom dplyr pull
 #' @importFrom dplyr select
 #' @importFrom glue glue
-#' @export
+#' @noRd
 check_if_sample_is_a_unique_identifier <- function(data_wide, .sample) {
   .sample <- enquo(.sample)
   
