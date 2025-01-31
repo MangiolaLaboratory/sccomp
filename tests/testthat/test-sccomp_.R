@@ -102,6 +102,31 @@ if (instantiate::stan_cmdstan_exists()){
   
 }
 
+test_that("correct columns",{
+  skip_cmdstan()
+  
+  my_estimate = 
+    seurat_obj |>
+    sccomp_estimate(
+      .sample = sampleX, 
+      .cell_group = cell_group
+    ) |> 
+    expect_error("Can't select columns that don't exist") |> 
+    expect_warning("please check typos in your")
+  
+  my_estimate = 
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ typeX,
+      .sample = sample, 
+      .cell_group = cell_group
+    ) |> 
+    expect_error("Can't subset elements that don't exist") |> 
+    expect_warning("please check typos in your")
+  
+  
+})
+
 
 test_that("Generate data",{
   skip_cmdstan()
