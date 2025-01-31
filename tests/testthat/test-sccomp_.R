@@ -757,3 +757,21 @@ test_that("contrasts_to_parameter_list handles various contrasts correctly", {
   # expect_true(all(!if_true_not_good))
   
 })
+
+test_that("sample ID malformed", {
+  
+  skip_cmdstan()
+
+counts_obj |>
+  mutate(sample = if_else(sample %in% c("SCP424_pbmc1", "SCP424_pbmc2", "SCP345_860"), "SCP424_pbmc1", sample)) |> 
+  sccomp_estimate(
+    formula_composition = ~ type , 
+    .sample = sample,  
+    .cell_group = cell_group, 
+    .abundance = count,
+    cores = 1
+  ) |> 
+  expect_warning("sccomp says: the input data frame does not have the same number") |> 
+    expect_error("sccomp says: You have duplicated")
+
+})

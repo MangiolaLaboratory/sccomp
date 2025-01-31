@@ -789,9 +789,10 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
           left_join(
             
             mydesign |>
+              as.data.frame() |> 
+              mutate_all(as.character) |> 
+              readr::type_convert(guess_integer = TRUE ) |> 
               as_tibble(rownames = quo_name(.sample)) |>
-              mutate_all(as.character) |>
-              readr::type_convert(guess_integer = TRUE ) |>
               suppressMessages() |>
               mutate_if(is.integer, ~1) |>
               pivot_longer(-!!.sample, names_to = "factor"),
@@ -1462,9 +1463,18 @@ data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping
     .data |>
     mutate(exposure = map_int(data, ~ .x |> pull(!!.count) |> sum() )) 
   
-  .data |>
+  .data_to_spread = 
+    .data |>
     unnest(data) |>
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) |>
+    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) 
+  
+  # Check if duplicated samples
+  if(
+    .data_to_spread |> distinct(!!.sample, !!.cell_type) |> nrow() <
+    .data_to_spread |> nrow()
+  ) stop("sccomp says: You have duplicated .sample IDs in your input dataset. A .sample .cell_group combination must be unique")
+  
+  .data_to_spread |>
     spread(!!.cell_type, !!.count)
   
   
@@ -3733,7 +3743,8 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 #'
 #' @importFrom instantiate stan_cmdstan_exists
 #' @importFrom rlang check_installed
-#' @importFrom utils menu
+#' @importFrom rlang abort
+#' @importFrom rlang check_installed
 #' @return NULL
 #' 
 #' @noRd
@@ -3741,6 +3752,21 @@ check_and_install_cmdstanr <- function() {
   
   # Check if cmdstanr is installed
   # from https://github.com/wlandau/instantiate/blob/33989d74c26f349e292e5efc11c267b3a1b71d3f/R/utils_assert.R#L114
+  
+  stan_error <- function(message = NULL) {
+    stan_stop(
+      message = message,
+      class = c("stan_error", "stan")
+    )
+  }
+  
+  stan_stop <- function(message, class) {
+    old <- getOption("rlang_backtrace_on_error")
+    on.exit(options(rlang_backtrace_on_error = old))
+    options(rlang_backtrace_on_error = "none")
+    abort(message = message, class = class, call = emptyenv())
+  }
+  
   tryCatch(
     rlang::check_installed(
       pkg = "cmdstanr",
@@ -3758,7 +3784,7 @@ check_and_install_cmdstanr <- function() {
   )
   
   # Check if CmdStan is installed
-  if (!instantiate::stan_cmdstan_exists()) {
+  if (!stan_cmdstan_exists()) {
     
     clear_stan_model_cache()
     
@@ -3819,4 +3845,69 @@ harmonise_factor_levels <- function(dataframe_query, dataframe_reference) {
   
   # 3. Return ONLY the updated query
   dataframe_query
+}
+
+#' Print Tibble in Red
+#'
+#' This function captures the console output of printing a tibble,
+#' colours it in red and returns the coloured text.
+#'
+#' @param tbl A data frame or tibble to be printed and coloured in red.
+#'
+#' @return A character string containing the coloured tibble output.
+#'
+#' @importFrom crayon red
+#' @noRd
+print_red_tibble <- function(tbl) {
+  # Capture the console output of printing the tibble
+  example_text <- capture.output(print(tbl))
+  
+  # Combine all lines into one block and colour it in red
+  red(paste(example_text, collapse = "\n"))
+}
+
+#' Check if a Sample Column is a Unique Identifier
+#'
+#' This function checks if the `.sample` column in a wide dataset is truly
+#' a unique identifier. If not, it throws an error containing the problematic
+#' rows in red text.
+#'
+#' @param data_wide A data frame or tibble in wide format.
+#' @param .sample   An unquoted column name indicating the sample column to check.
+#'
+#' @return Returns the original `data_wide` if `.sample` is unique. Otherwise,
+#'   throws an error showing the problematic rows in red.
+#'
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_name
+#' @importFrom dplyr count
+#' @importFrom dplyr add_count
+#' @importFrom dplyr filter
+#' @importFrom dplyr pull
+#' @importFrom dplyr select
+#' @importFrom glue glue
+#' @noRd
+check_if_sample_is_a_unique_identifier <- function(data_wide, .sample) {
+  .sample <- enquo(.sample)
+  
+  if (
+    data_wide |>
+    count(!!.sample) |>
+    pull(n) |>
+    max() > 1
+  ) {
+    stop(
+      paste(
+        glue("sccomp says: .sample column `{quo_name(.sample)}` should be a unique identifier, with a unique combination of factors. For example Sample_A cannot have both treated and untreated conditions in your input"),
+        data_wide |>
+          add_count(!!.sample, name = "n___") |>
+          filter(n___ > 1) |>
+          select(-n___) |>
+          print_red_tibble(),
+        sep = "\n\n"
+      )
+    )
+  } else {
+    return(data_wide)
+  }
 }
