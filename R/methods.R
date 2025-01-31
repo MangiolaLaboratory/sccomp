@@ -466,7 +466,6 @@ sccomp_estimate.data.frame <- function(.data,
     .abundance <- .count
   }
   
-  
   # DEPRECATION OF approximate_posterior_inference
   if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
     lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
