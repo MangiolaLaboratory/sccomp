@@ -457,12 +457,14 @@ sccomp_estimate.data.frame <- function(.data,
   .count <- enquo(.count)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
+  # Check Sample Consistency of Factors
+  check_sample_consistency_of_factors(.data, formula_composition, !!.sample)
+  
   # Deprecation of .count
   if (rlang::quo_is_symbolic(.count)) {
     rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
     .abundance <- .count
   }
-  
   
   # DEPRECATION OF approximate_posterior_inference
   if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
