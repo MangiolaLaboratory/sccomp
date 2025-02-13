@@ -139,6 +139,8 @@ sccomp_glm_data_frame_counts = function(.data,
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   #.grouping_for_random_effect = enquo(.grouping_for_random_effect)
   
+  # Check Sample Consistency of Factors
+  check_sample_consistency_of_factors(.data, formula_composition, !!.sample, !!.cell_group)
   
   #Check column class
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)

@@ -728,50 +728,89 @@ test_that("contrasts_to_parameter_list handles various contrasts correctly", {
     "`age_bin_sex_specificMiddle Age___adipose tissue`", "`age_bin_sex_specificMiddle Age:sexmale___adipose tissue`",
     "`age_bin_sex_specificYoung Adulthood___adipose tissue`", "`age_bin_sex_specificYoung Adulthood:sexmale___adipose tissue`"
   )
-  
+
   # Remove duplicates from expected_params
   expected_params <- unique(expected_params)
-  
+
   # Check if the extracted parameters match the expected parameters
   expect_equal(sort(extracted_params), sort(expected_params))
-  
+
   # Now, check if backquotes are correctly applied where necessary
   contrasts_elements <- extracted_params
-  
+
   # Function to check for valid column characters
   contains_only_valid_chars_for_column <- function(string){
     return(all(str_detect(string, "^[A-Za-z\\.][A-Za-z0-9\\._]*$")))
   }
-  
+
   # # Check if backquotes are required
   # require_back_quotes <- !str_remove_all(contrasts_elements, "`") |> contains_only_valid_chars_for_column()
-  # 
+  #
   # # Check if backquotes are correctly placed
   # has_left_back_quotes <- str_detect(contrasts_elements, "^`")
   # has_right_back_quotes <- str_detect(contrasts_elements, "`$")
-  # 
+  #
   # # Identify elements that require backquotes but don't have them correctly
   # if_true_not_good <- require_back_quotes & !(has_left_back_quotes & has_right_back_quotes)
-  # 
+  #
   # # Expect that all elements either don't require backquotes or have them correctly placed
   # expect_true(all(!if_true_not_good))
-  
+
 })
 
 test_that("sample ID malformed", {
   
   skip_cmdstan()
 
-counts_obj |>
-  mutate(sample = if_else(sample %in% c("SCP424_pbmc1", "SCP424_pbmc2", "SCP345_860"), "SCP424_pbmc1", sample)) |> 
+  counts_obj |>
+  mutate(sample = if_else(sample %in% c("SCP424_pbmc1", "SCP424_pbmc2", "SCP345_860"), "SCP424_pbmc1", sample)) |>
+    mutate(count = count |> as.integer()) |> 
   sccomp_estimate(
-    formula_composition = ~ type , 
-    .sample = sample,  
-    .cell_group = cell_group, 
+    formula_composition = ~ type ,
+    .sample = sample,
+    .cell_group = cell_group,
     .abundance = count,
     cores = 1
-  ) |> 
-  expect_warning("sccomp says: the input data frame does not have the same number") |> 
+  ) |>
+  expect_warning("sccomp says: the input data frame does not have the same number") |>
     expect_error("sccomp says: You have duplicated")
 
+
+  # Generate counts from negative binomial
+  # From https://github.com/MangiolaLaboratory/sccomp/issues/178
+  n_samples <- 100
+  n_taxa <- 5
+  dispersion = 0.3
+  base_means <- rexp(n_taxa, rate = 1/100)
+  counts <- matrix(
+    rnbinom(
+      n = n_samples * n_taxa,
+      mu = rep(base_means, each = n_samples),
+      size = 1 / 0.3
+    ),
+    nrow = n_samples
+  )
+  colnames(counts) <- paste0("taxon_", 1:n_taxa)
+  
+  counts_df <- as.data.frame(counts) %>%
+    mutate(
+      condition = rep(c("control", "treatment"), each = n_samples/2),
+      sample = paste0("s", 1:n())
+    ) %>%
+    pivot_longer(
+      -c(sample, condition),
+      names_to = "taxon", values_to = "count")
+  
+  counts_df |> 
+    mutate(count = count |> as.integer()) |> 
+    sccomp_estimate(
+      formula_composition = ~ condition,
+      .cell_group = taxon,
+      .sample = sample,
+      .abundance = count
+    ) |> 
+    expect_no_error()
+
 })
+
+
