@@ -3540,15 +3540,19 @@ contains_only_valid_chars_for_column <- function(column_names) {
 #'
 #' @noRd
 #' @keywords internal
-check_sample_consistency_of_factors = function(.data, my_formula, .sample){
+check_sample_consistency_of_factors = function(.data, my_formula, .sample, .cell_group){
   
   .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
   
   # Check that I have one set of covariates per sample
+  first_cell_group = .data |> pull(!!.cell_group) |> _[[1]]
+  
   any_covariate_not_matching_sample_size = 
     .data |> 
+    filter(!!.cell_group == first_cell_group) |> 
     select(!!.sample, parse_formula(my_formula)) |> 
-    pivot_longer(-!!.sample) |> 
+    pivot_longer(-!!.sample, values_transform = as.character) |> 
     nest(data = -name) |> 
     mutate(correct_size = map_lgl(data,
                                   ~ 
