@@ -22,7 +22,7 @@ group-size) and derives the count data from cell metadata."><!-- mathjax --><scr
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sccomp</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.99.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.99.14</span>
       </span>
     </div>
 
@@ -56,7 +56,7 @@ group-size) and derives the count data from cell metadata."><!-- mathjax --><scr
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Main Function for SCCOMP Estimate</h1>
-    <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/increase-significant-figures/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/check-columns-of-tidy-eval/R/methods.R" class="external-link"><code>R/methods.R</code></a></small>
     <div class="hidden name"><code>sccomp_estimate.Rd</code></div>
     </div>
 
@@ -74,9 +74,9 @@ group-size) and derives the count data from cell metadata.</p>
 <span>  <span class="va">.data</span>,</span>
 <span>  formula_composition <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,</span>
 <span>  formula_variability <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,</span>
-<span>  <span class="va">.sample</span>,</span>
-<span>  <span class="va">.cell_group</span>,</span>
-<span>  .abundance <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">sample_column</span>,</span>
+<span>  <span class="va">cell_group_column</span>,</span>
+<span>  abundance_column <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  bimodal_mean_variability_association <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  percent_false_positive <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -97,7 +97,10 @@ group-size) and derives the count data from cell metadata.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  .count <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  approximate_posterior_inference <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  variational_inference <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  variational_inference <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  .sample <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  .cell_group <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  .abundance <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -118,16 +121,16 @@ abundance column (counts or proportions), and factor columns.</p></dd>
 <dd><p>A formula describing the model for differential variability.</p></dd>
 
 
-<dt id="arg--sample">.sample<a class="anchor" aria-label="anchor" href="#arg--sample"></a></dt>
-<dd><p>A column name as a symbol for the sample identifier.</p></dd>
+<dt id="arg-sample-column">sample_column<a class="anchor" aria-label="anchor" href="#arg-sample-column"></a></dt>
+<dd><p>A column name as a character string for the sample identifier. Replaces the deprecated <code>.sample</code>.</p></dd>
 
 
-<dt id="arg--cell-group">.cell_group<a class="anchor" aria-label="anchor" href="#arg--cell-group"></a></dt>
-<dd><p>A column name as a symbol for the cell-group identifier.</p></dd>
+<dt id="arg-cell-group-column">cell_group_column<a class="anchor" aria-label="anchor" href="#arg-cell-group-column"></a></dt>
+<dd><p>A column name as a character string for the cell-group identifier. Replaces the deprecated <code>.cell_group</code>.</p></dd>
 
 
-<dt id="arg--abundance">.abundance<a class="anchor" aria-label="anchor" href="#arg--abundance"></a></dt>
-<dd><p>A column name as a symbol for the cell-group abundance, which can be counts (&gt; 0) or proportions (between 0 and 1, summing to 1 across <code>.cell_group</code>).</p></dd>
+<dt id="arg-abundance-column">abundance_column<a class="anchor" aria-label="anchor" href="#arg-abundance-column"></a></dt>
+<dd><p>A column name as a character string for the cell-group abundance, which can be counts (&gt; 0) or proportions (between 0 and 1, summing to 1 across <code>cell_group_column</code>). Replaces the deprecated <code>.abundance</code> and <code>.count</code>.</p></dd>
 
 
 <dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
@@ -143,7 +146,7 @@ abundance column (counts or proportions), and factor columns.</p></dd>
 
 
 <dt id="arg-inference-method">inference_method<a class="anchor" aria-label="anchor" href="#arg-inference-method"></a></dt>
-<dd><p>Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').</p></dd>
+<dd><p>Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational'). Replaces the deprecated <code>approximate_posterior_inference</code> and <code>variational_inference</code>.</p></dd>
 
 
 <dt id="arg-prior-mean">prior_mean<a class="anchor" aria-label="anchor" href="#arg-prior-mean"></a></dt>
@@ -199,7 +202,7 @@ abundance column (counts or proportions), and factor columns.</p></dd>
 
 
 <dt id="arg--count">.count<a class="anchor" aria-label="anchor" href="#arg--count"></a></dt>
-<dd><p><strong>DEPRECATED</strong>. Use <code>.abundance</code> instead.</p></dd>
+<dd><p><strong>DEPRECATED</strong>. Use <code>abundance_column</code> instead.</p></dd>
 
 
 <dt id="arg-approximate-posterior-inference">approximate_posterior_inference<a class="anchor" aria-label="anchor" href="#arg-approximate-posterior-inference"></a></dt>
@@ -208,6 +211,18 @@ abundance column (counts or proportions), and factor columns.</p></dd>
 
 <dt id="arg-variational-inference">variational_inference<a class="anchor" aria-label="anchor" href="#arg-variational-inference"></a></dt>
 <dd><p><strong>DEPRECATED</strong>. Use <code>inference_method</code> instead.</p></dd>
+
+
+<dt id="arg--sample">.sample<a class="anchor" aria-label="anchor" href="#arg--sample"></a></dt>
+<dd><p><strong>DEPRECATED</strong>. Use <code>sample_column</code> instead.</p></dd>
+
+
+<dt id="arg--cell-group">.cell_group<a class="anchor" aria-label="anchor" href="#arg--cell-group"></a></dt>
+<dd><p><strong>DEPRECATED</strong>. Use <code>cell_group_column</code> instead.</p></dd>
+
+
+<dt id="arg--abundance">.abundance<a class="anchor" aria-label="anchor" href="#arg--abundance"></a></dt>
+<dd><p><strong>DEPRECATED</strong>. Use <code>abundance_column</code> instead.</p></dd>
 
 </dl></div>
     <div id="value">
