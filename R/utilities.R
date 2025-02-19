@@ -3548,6 +3548,10 @@ check_sample_consistency_of_factors = function(.data, my_formula, .sample, .cell
   # Check that I have one set of covariates per sample
   first_cell_group = .data |> pull(!!.cell_group) |> _[[1]]
   
+  # If the formula is intercept only -> ~ 1 this test does not apply
+  if(my_formula |> parse_formula() |> length() == 0)
+    return(TRUE)
+  
   any_covariate_not_matching_sample_size = 
     .data |> 
     filter(!!.cell_group == first_cell_group) |> 
