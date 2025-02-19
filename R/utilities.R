@@ -2028,7 +2028,10 @@ plot_2D_intervals = function(
 #' @noRd
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.05, my_theme, remove_unwanted_effects = FALSE
+    .sample, 
+    significance_threshold = 0.05, 
+    my_theme, 
+    remove_unwanted_effects = FALSE
 ){
   
   # Define the variables as NULL to avoid CRAN NOTES
@@ -2123,7 +2126,7 @@ plot_boxplot = function(
       simulated_proportion =
         .data |>
         sccomp_replicate(formula_composition = formula_composition, number_of_draws = 100) |>
-        left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
+        left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group, is_zero))
     
     my_boxplot = my_boxplot +
       
@@ -2131,7 +2134,7 @@ plot_boxplot = function(
       stat_summary(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
         fun.data = calc_boxplot_stat, geom="boxplot",
-        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        outlier.shape = NA, outlier.color = NA, outlier.size = 0,
         fatten = 0.5, lwd=0.2,
         data =
           simulated_proportion %>%
@@ -2180,7 +2183,7 @@ plot_boxplot = function(
     
     # Add jittered points for individual data
     geom_jitter(
-      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
+      aes(!!as.symbol(factor_of_interest), proportion, shape=is_zero, color=outlier,  group=!!as.symbol(factor_of_interest)),
       data = data_proportion,
       position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
       size = 0.5
@@ -2193,13 +2196,13 @@ plot_boxplot = function(
       nrow = 4
     ) +
     scale_color_manual(values = c("black", "#e11f28")) +
+    scale_shape_manual(values = c(16, 21)) +
     scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
     scale_fill_discrete(na.value = "white") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
     guides(color="none", alpha="none", size="none") +
     labs(fill="Significant difference") +
-    ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
     my_theme +
     theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
 }
