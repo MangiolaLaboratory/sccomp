@@ -810,6 +810,16 @@ test_that("sample ID malformed", {
       .abundance = count
     ) |> 
     expect_no_error()
+  
+  # For ~ 1 formula do not expect error
+  model_without_association = 
+    seurat_obj |>
+    sccomp_estimate( 
+      formula_composition = ~ 1, 
+      .sample =  sample, 
+      .cell_group = cell_group
+    ) |> 
+    expect_no_error()
 
 })
 
