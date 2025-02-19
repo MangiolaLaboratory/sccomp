@@ -563,6 +563,7 @@ fit_model = function(
         init = init,
         output_dir = output_directory,
         show_messages = verbose,
+        sig_figs = 9,
         ...
       ) |> 
         suppressWarnings()
@@ -595,7 +596,8 @@ fit_model = function(
       inference_method = inference_method, 
       cores = cores,
       psis_resample = FALSE, 
-      verbose = verbose
+      verbose = verbose,
+      sig_figs = 9
     ) %>%
       suppressWarnings()
     
