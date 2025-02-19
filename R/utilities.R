@@ -563,6 +563,7 @@ fit_model = function(
         init = init,
         output_dir = output_directory,
         show_messages = verbose,
+        sig_figs = 9,
         ...
       ) |> 
         suppressWarnings()
@@ -595,7 +596,8 @@ fit_model = function(
       inference_method = inference_method, 
       cores = cores,
       psis_resample = FALSE, 
-      verbose = verbose
+      verbose = verbose,
+      sig_figs = 9
     ) %>%
       suppressWarnings()
     
@@ -1779,13 +1781,14 @@ design_matrix_and_coefficients_to_simulation = function(
 #' @importFrom rlang ensym
 #' @noRd
 class_list_to_counts = function(.data, .sample, .cell_group){
-  
+
   .sample_for_tidyr = ensym(.sample)
   .cell_group_for_tidyr = ensym(.cell_group)
   
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   
+
   .data %>%
     count(!!.sample,
           !!.cell_group,
