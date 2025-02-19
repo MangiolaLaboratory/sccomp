@@ -147,7 +147,6 @@ sccomp_result =
     .cell_group = cell_group, 
     cores = 1 
   ) |> 
-  sccomp_remove_outliers(cores = 1) |> # Optional
   sccomp_test()
 
 ```
@@ -165,7 +164,6 @@ sccomp_result =
     .count = count, 
     cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
   sccomp_test()
 ```
 
@@ -193,6 +191,24 @@ The output is a tibble containing the **Following columns**
 sccomp_result
 ```
 
+## Outlier identification
+
+`sccomp` can identify outliers probabilistically and exclude them from the estimation. 
+
+```{r, message=FALSE, warning=FALSE, eval = instantiate::stan_cmdstan_exists()}
+
+sccomp_result = 
+  counts_obj |>
+  sccomp_estimate( 
+    formula_composition = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    .count = count, 
+    cores = 1, verbose = FALSE
+  ) |> 
+  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
+  sccomp_test()
+```
 
 ## Summary plots
 
@@ -234,6 +250,20 @@ The use of proportions is better suited for modelling deconvolution results (e.g
 
 Proportions should be greater than 0. Assuming that zeros derive from a precision threshold (e.g., deconvolution), zeros are converted to the smallest non-zero value.
 
+```{r, message=FALSE, warning=FALSE, eval = instantiate::stan_cmdstan_exists()}
+
+sccomp_result = 
+  counts_obj |>
+  sccomp_estimate( 
+    formula_composition = ~ type, 
+    .sample = sample,
+    .cell_group = cell_group,
+    .count = proportion, 
+    cores = 1, verbose = FALSE
+  ) |> 
+  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
+  sccomp_test()
+```
 
 ## Continuous factor 
 
@@ -330,7 +360,7 @@ In the case of a categorical variable, the starting and ending points are catego
 res |> 
    sccomp_proportional_fold_change(
      formula_composition = ~  type,
-     from =  "healthy", 
+     from =  "benign", 
      to = "cancer"
     ) |> 
   select(cell_group, statement)
@@ -356,7 +386,7 @@ seurat_obj |>
 
 ## Categorical factor (e.g. Bayesian ANOVA)
 
-This is achieved through model comparison with `loo`. In the following example, the model with association with factors better fits the data compared to the baseline model with no factor association. For comparisons `check_outliers` must be set to FALSE as the leave-one-out must work with the same amount of data, while outlier elimination does not guarantee it.
+This is achieved through model comparison with `loo`. In the following example, the model with association with factors better fits the data compared to the baseline model with no factor association. For model comparisons `sccomp_remove_outliers()` must not be executed as the leave-one-out must work with the same amount of data, while outlier elimination does not guarantee it.
 
 If `elpd_diff` is away from zero of \> 5 `se_diff` difference of 5, we are confident that a model is better than the other [reference](https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola).
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model one, the one with factor association, is better than model two.
