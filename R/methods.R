@@ -442,6 +442,7 @@ sccomp_estimate.DFrame <- function(.data,
   .cell_group <- enquo(.cell_group)
   .abundance <- enquo(.abundance)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  .count = enquo(.count)
   
   # Deprecation of .count
   if (rlang::quo_is_symbolic(.count)) {
