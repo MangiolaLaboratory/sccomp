@@ -203,6 +203,13 @@ sccomp_result |>
   sccomp_boxplot(factor = "type")
 ```
 
+You can plot proportions adjusted for unwanted effects. This is helpful especially for complex models, where multiple factors can significantly impact the proportions.
+
+```{r, eval = instantiate::stan_cmdstan_exists()}
+sccomp_result |> 
+  sccomp_boxplot(factor = "type", remove_unwanted_effects = TRUE)
+```
+
 A plot of estimates of differential composition (c_) on the x-axis and differential variability (v_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if it exceeds the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
 
 ```{r, eval = instantiate::stan_cmdstan_exists()}
