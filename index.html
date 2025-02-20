@@ -461,16 +461,20 @@
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span></span></code></pre></div>
-<p>A plot of estimates of differential composition (c_) on the x-axis and differential variability (v_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if it exceeds the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.</p>
+<p>You can plot proportions adjusted for unwanted effects. This is helpful especially for complex models, where multiple factors can significantly impact the proportions.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span>, remove_unwanted_effects <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>A plot of estimates of differential composition (c_) on the x-axis and differential variability (v_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if it exceeds the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="reference/plot_1D_intervals.html">plot_1D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>We can plot the relationship between abundance and variability. As we can see below, they are positively correlated. sccomp models this relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks to Bayesian inference.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="reference/plot_2D_intervals.html">plot_2D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>You can produce the series of plots calling the <code>plot</code> method.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
 </div>
 <div class="section level2">
@@ -479,7 +483,7 @@
 <p><strong>Note:</strong> If counts are available, we strongly discourage the use of proportions, as an important source of uncertainty (i.e., for rare groups/cell types) is not modeled.</p>
 <p>The use of proportions is better suited for modelling deconvolution results (e.g., of bulk RNA data), in which case counts are not available.</p>
 <p>Proportions should be greater than 0. Assuming that zeros derive from a precision threshold (e.g., deconvolution), zeros are converted to the smallest non-zero value.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">=</span> </span>
 <span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -496,7 +500,7 @@
 <h2 id="continuous-factor">Continuous factor<a class="anchor" aria-label="anchor" href="#continuous-factor"></a>
 </h2>
 <p><code>sccomp</code> is able to fit erbitrary complex models. In this example we have a continuous and binary covariate.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span></span>
 <span>    <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -516,26 +520,26 @@
 </h3>
 <p>In this example, we demonstrate how to fit a random intercept model using sccomp. We’ll model the cell-type proportions with both fixed effects (e.g., treatment) and random effects (e.g., subject-specific variability).</p>
 <p>Here is the input data</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb15"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="do">## Loading required namespace: SeuratObject</span></span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="do">## [90m# A tibble: 106,297 × 9[39m</span></span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="do">##    cell_group nCount_RNA nFeature_RNA group__ group__wrong sample type  group2__</span></span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="do">##    [3m[90m&lt;chr&gt;[39m[23m           [3m[90m&lt;dbl&gt;[39m[23m        [3m[90m&lt;int&gt;[39m[23m [3m[90m&lt;chr&gt;[39m[23m   [3m[90m&lt;chr&gt;[39m[23m        [3m[90m&lt;chr&gt;[39m[23m  [3m[90m&lt;chr&gt;[39m[23m [3m[90m&lt;chr&gt;[39m[23m   </span></span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="do">## [90m 1[39m CD4 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="do">## [90m 2[39m Mono clas…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="do">## [90m 3[39m CD4 cm S1…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="do">## [90m 4[39m B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="do">## [90m 5[39m CD8 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="do">## [90m 6[39m CD4 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="do">## [90m 7[39m Mono clas…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="do">## [90m 8[39m CD4 cm S1…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="do">## [90m 9[39m CD4 cm hi…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="do">## [90m10[39m B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="do">## [90m# ℹ 106,287 more rows[39m</span></span>
-<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="do">## [90m# ℹ 1 more variable: continuous_covariate &lt;dbl&gt;[39m</span></span></code></pre></div>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="do">## Loading required namespace: SeuratObject</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="do">## [90m# A tibble: 106,297 × 9[39m</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="do">##    cell_group nCount_RNA nFeature_RNA group__ group__wrong sample type  group2__</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="do">##    [3m[90m&lt;chr&gt;[39m[23m           [3m[90m&lt;dbl&gt;[39m[23m        [3m[90m&lt;int&gt;[39m[23m [3m[90m&lt;chr&gt;[39m[23m   [3m[90m&lt;chr&gt;[39m[23m        [3m[90m&lt;chr&gt;[39m[23m  [3m[90m&lt;chr&gt;[39m[23m [3m[90m&lt;chr&gt;[39m[23m   </span></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="do">## [90m 1[39m CD4 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a><span class="do">## [90m 2[39m Mono clas…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a><span class="do">## [90m 3[39m CD4 cm S1…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="do">## [90m 4[39m B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="do">## [90m 5[39m CD8 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a><span class="do">## [90m 6[39m CD4 naive           0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="do">## [90m 7[39m Mono clas…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a><span class="do">## [90m 8[39m CD4 cm S1…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a><span class="do">## [90m 9[39m CD4 cm hi…          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a><span class="do">## [90m10[39m B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
+<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a><span class="do">## [90m# ℹ 106,287 more rows[39m</span></span>
+<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a><span class="do">## [90m# ℹ 1 more variable: continuous_covariate &lt;dbl&gt;[39m</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -552,7 +556,7 @@
 <h3 id="random-effect-model-random-slopes">Random Effect Model (random slopes)<a class="anchor" aria-label="anchor" href="#random-effect-model-random-slopes"></a>
 </h3>
 <p><code>sccomp</code> can model random slopes. We providean example below.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -569,7 +573,7 @@
 <h3 id="nested-random-effects">Nested Random Effects<a class="anchor" aria-label="anchor" href="#nested-random-effects"></a>
 </h3>
 <p>If you have a more complex hierarchy, such as measurements nested within subjects and subjects nested within batches, you can include multiple grouping variables. Here <code>group2__</code> is nested within <code>group__</code>.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -590,7 +594,7 @@
 <p>Therefore, we provide a more intuitive proportional fold change that can be more easily understood. However, these cannot be used to infer significance (use sccomp_test() instead), and a lot of care must be taken given the nonlinearity of these measures (a 1-fold increase from 0.0001 to 0.0002 carries a different weight than a 1-fold increase from 0.4 to 0.8).</p>
 <p>From your estimates, you can specify which effects you are interested in (this can be a subset of the full model if you wish to exclude unwanted effects), and the two points you would like to compare.</p>
 <p>In the case of a categorical variable, the starting and ending points are categories.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>   <span class="fu"><a href="reference/sccomp_proportional_fold_change.html">sccomp_proportional_fold_change</a></span><span class="op">(</span></span>
 <span>     formula_composition <span class="op">=</span> <span class="op">~</span>  <span class="va">type</span>,</span>
@@ -602,7 +606,7 @@
 <div class="section level2">
 <h2 id="contrasts">Contrasts<a class="anchor" aria-label="anchor" href="#contrasts"></a>
 </h2>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">type</span>, </span>
@@ -617,7 +621,7 @@
 </h2>
 <p>This is achieved through model comparison with <code>loo</code>. In the following example, the model with association with factors better fits the data compared to the baseline model with no factor association. For model comparisons <code><a href="reference/sccomp_remove_outliers.html">sccomp_remove_outliers()</a></code> must not be executed as the leave-one-out must work with the same amount of data, while outlier elimination does not guarantee it.</p>
 <p>If <code>elpd_diff</code> is away from zero of &gt; 5 <code>se_diff</code> difference of 5, we are confident that a model is better than the other <a href="https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola" class="external-link">reference</a>. In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model one, the one with factor association, is better than model two.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/loo/" class="external-link">loo</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fit first model</span></span>
@@ -652,7 +656,7 @@
 <h2 id="differential-variability-binary-factor">Differential variability, binary factor<a class="anchor" aria-label="anchor" href="#differential-variability-binary-factor"></a>
 </h2>
 <p>We can model the cell-group variability also dependent on the type, and so test differences in variability</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -665,13 +669,13 @@
 <span></span>
 <span><span class="va">res</span></span></code></pre></div>
 <p><strong>Plot 1D significance plot</strong></p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
 <p><strong>Plot 2D significance plot</strong> Data points are cell groups. Error bars are the 95% credible interval. The dashed lines represent the default threshold fold change for which the probabilities (c_pH0, v_pH0) are calculated. pH0 of 0 represent the rejection of the null hypothesis that no effect is observed.</p>
 <p>This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for <code>(intercept)</code> (left-hand side facet) is satisfied. A scatterplot (besides the Intercept) is provided for each category of interest. For each category of interest, the composition and variability effects should be generally uncorrelated.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
 </div>
 </div>
@@ -692,7 +696,7 @@
 <h2 id="visualisation-of-the-mcmc-chains-from-the-posterior-distribution">Visualisation of the MCMC chains from the posterior distribution<a class="anchor" aria-label="anchor" href="#visualisation-of-the-mcmc-chains-from-the-posterior-distribution"></a>
 </h2>
 <p>It is possible to directly evaluate the posterior distribution. In this example, we plot the Monte Carlo chain for the slope parameter of the first cell type. We can see that it has converged and is negative with probability 1.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">cmdstanr</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/posterior/" class="external-link">posterior</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span></span>
