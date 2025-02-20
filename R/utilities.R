@@ -2201,7 +2201,7 @@ plot_boxplot = function(
     scale_fill_discrete(na.value = "white") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
-    guides(color="none", alpha="none", size="none") +
+    guides( alpha="none", size="none") +
     labs(fill="Significant difference") +
     my_theme +
     theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))

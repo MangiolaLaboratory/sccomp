@@ -2015,13 +2015,9 @@ else {
         # If discrete
         else 
           my_plot = 
-            plot_boxplot(
+            sccomp_boxplot(
               .data = x,
-              data_proportion = data_proportion,
-              factor_of_interest = .x,
-              .cell_group = !!.cell_group,
-              .sample =  !!.sample,
-              my_theme = multipanel_theme,
+              factor = .x,
               significance_threshold = significance_threshold
             ) 
         
