@@ -139,6 +139,8 @@ sccomp_glm_data_frame_counts = function(.data,
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   #.grouping_for_random_effect = enquo(.grouping_for_random_effect)
   
+  # Check Sample Consistency of Factors
+  check_sample_consistency_of_factors(.data, formula_composition, !!.sample, !!.cell_group)
   
   #Check column class
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)
@@ -146,7 +148,7 @@ sccomp_glm_data_frame_counts = function(.data,
   # Check that count is integer
   if(.data %>% pull(!!.count) %>% is("integer")) message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))
   else if(.data %>% pull(!!.count) %>% is("integer") |> not() & .data %>% pull(!!.count) |> dplyr::between(0, 1) |> all()) message(sprintf("sccomp says: %s column is a proportion. The sum-constrained beta model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).", quo_name(.count)))
-  else stop(sprintf("sccomp: %s column must be an integer or a proportion", quo_name(.count)))
+  else stop(sprintf("sccomp: `%s` column must be an integer or a proportion", quo_name(.count)))
   
   # Check if columns exist
   check_columns_exist(.data, c(
@@ -240,7 +242,13 @@ sccomp_glm_data_frame_counts = function(.data,
   
   data_for_model =
     .data %>%
-    data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_effect) %>%
+    data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_effect) |>
+    
+    # This emerged with
+    # https://github.com/MangiolaLaboratory/sccomp/issues/175#issuecomment-2622749180
+    check_if_sample_is_a_unique_identifier(!!.sample) |> 
+    
+    # Create input for Stan
     data_spread_to_model_input(
       formula_composition, !!.sample, !!.cell_group, !!.count,
       truncation_ajustment = 1.1,

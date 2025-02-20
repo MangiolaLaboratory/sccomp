@@ -463,7 +463,6 @@ sccomp_estimate.data.frame <- function(.data,
     .abundance <- .count
   }
   
-  
   # DEPRECATION OF approximate_posterior_inference
   if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
     lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
@@ -1878,7 +1877,8 @@ sccomp_boxplot = function(
   
       pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) |>
       unnest(count_data) |>
-      with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) 
+      with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |> 
+      mutate(is_zero = proportion==0) 
   
   if(remove_unwanted_effects){
     .data_adjusted = 
@@ -1891,7 +1891,8 @@ sccomp_boxplot = function(
       select(-proportion) |> 
       left_join(.data_adjusted, by = join_by(!!.cell_group, !!.sample))
   }
-   
+  else 
+    message( "sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.")
   
   # If I don't have outliers add them
   if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
@@ -2014,13 +2015,9 @@ else {
         # If discrete
         else 
           my_plot = 
-            plot_boxplot(
+            sccomp_boxplot(
               .data = x,
-              data_proportion = data_proportion,
-              factor_of_interest = .x,
-              .cell_group = !!.cell_group,
-              .sample =  !!.sample,
-              my_theme = multipanel_theme,
+              factor = .x,
               significance_threshold = significance_threshold
             ) 
         
