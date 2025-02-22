@@ -157,7 +157,10 @@ sccomp_result =
     .count = count, 
     cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
+  
+  # max_sampling_iterations is used her to not exceed the maximum file size for GitHub action of 100Mb
+  sccomp_remove_outliers(cores = 1, verbose = FALSE, max_sampling_iterations = 2000) |> # Optional
+  
   sccomp_test()
 ```
 
@@ -219,7 +222,6 @@ sccomp_result =
     .count = proportion, 
     cores = 1, verbose = FALSE
   ) |> 
-  sccomp_remove_outliers(cores = 1, verbose = FALSE) |> # Optional
   sccomp_test()
 ```
 
