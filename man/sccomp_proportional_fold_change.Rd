@@ -2,35 +2,65 @@
 % Please edit documentation in R/methods.R
 \name{sccomp_proportional_fold_change}
 \alias{sccomp_proportional_fold_change}
-\title{Calculate Proportional Fold Change for sccomp Data}
+\title{Calculate Proportional Fold Change from sccomp Estimated Effects}
 \usage{
 sccomp_proportional_fold_change(.data, formula_composition, from, to)
 }
 \arguments{
-\item{.data}{A \code{sccomp_tbl} object containing single-cell composition data.}
+\item{.data}{A sccomp estimate object (of class 'sccomp_tbl') obtained from running sccomp_estimate().
+This object contains the fitted model and estimated effects.}
 
-\item{formula_composition}{The formula for the composition model.}
+\item{formula_composition}{The formula specifying which model effects to use for calculating fold changes.
+This should match or be a subset of the formula used in the original sccomp_estimate() call.}
 
-\item{from}{The label for the control group (e.g., "healthy").}
+\item{from}{Character string specifying the reference/control condition (e.g., "benign").}
 
-\item{to}{The label for the treatment group (e.g., "cancer").}
+\item{to}{Character string specifying the comparison condition (e.g., "cancer").}
 }
 \value{
-A tibble with cell groups and their respective proportional fold change.
+A tibble with the following columns:
+\itemize{
+\item cell_group - The cell group identifier
+\item proportion_fold_change - The estimated fold change in proportions between conditions.
+Positive values indicate increases, negative values indicate decreases.
+\item average_uncertainty - The average uncertainty in the fold change estimate, derived from the credible intervals
+\item statement - A text description of the fold change, including the direction and the estimated proportions
+}
 }
 \description{
-This function calculates the proportional fold change for single-cell composition data
-from sccomp analysis, comparing two conditions.
-}
-\details{
-Note! This statistic is just descriptive and should not be used to define significance. Use sccomp_test() for that.
-This statistics is just meant to help interpretation. While fold increase in proportion is easier to understand than
-fold change in logit space, the first is not linear (the same change for rare cell types does not necessarily have the same weight
-that for abundant cell types), while the latter is linear, and used to infer probabilities.
+This function calculates the proportional fold change between two conditions using the estimated effects from a sccomp model.
+The fold changes are derived from the model's posterior predictions rather than raw counts, providing a more robust estimate
+that accounts for the model's uncertainty and covariate effects.
+
+Note! This statistic is descriptive and should not be used to define significance - use sccomp_test() for that.
+While fold changes in proportions are easier to interpret than changes in logit space, they are not linear
+(the same proportional change has different meaning for rare vs abundant cell types). In contrast,
+the logit scale used internally by sccomp provides linear effects that are more appropriate for statistical inference.
 }
 \examples{
-\dontrun{
-# Example usage
-result <- sccomp_proportional_fold_change(sccomp_data, formula_composition, "healthy", "cancer")
+\donttest{
+if (instantiate::stan_cmdstan_exists()) {
+  # Load example data
+  data("counts_obj")
+
+  # First estimate the composition effects
+  estimate <- sccomp_estimate(
+      counts_obj,
+      ~ type,
+      ~1,
+      sample,
+      cell_group,
+      count,
+      cores = 1
+  )
+ 
+  # Calculate proportional fold changes from the estimated effects
+  estimate |> 
+  sccomp_proportional_fold_change(
+    formula_composition = ~  type, 
+    from = "benign", 
+    to = "cancer"
+  ) 
+}
 }
 }
