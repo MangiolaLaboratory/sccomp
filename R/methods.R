@@ -609,7 +609,7 @@ sccomp_estimate.data.frame <- function(.data,
 sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
-                                   inference_method = "pathfinder",
+                                   inference_method = .estimate |> attr("inference_method"),
                                    output_directory = "sccomp_draws_files",
                                    verbose = TRUE,
                                    mcmc_seed = sample(1e5, 1),
@@ -955,6 +955,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     add_attr(formula_composition, "formula_composition") |>
     add_attr(formula_variability, "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
+    add_attr(inference_method, "inference_method" ) |> 
     
     # Add class to the tbl
     add_class("sccomp_tbl") |> 
@@ -1053,7 +1054,8 @@ sccomp_test.sccomp_tbl = function(.data,
   .count = .data |>  attr(".count")
   model_input = .data |> attr("model_input")
   truncation_df2 =  .data |>  attr("truncation_df2")
-
+  inference_method = .data |>  attr("inference_method")
+  
   # Abundance
   abundance_CI =
     get_abundance_contrast_draws(.data, contrasts)
@@ -1160,7 +1162,8 @@ sccomp_test.sccomp_tbl = function(.data,
 
     add_attr(.data |> attr("formula_composition"), "formula_composition") |>
     add_attr(.data |> attr("formula_variability"), "formula_variability") |>
-    
+    add_attr(inference_method, "inference_method" ) |> 
+
     # Add class to the tbl
     add_class("sccomp_tbl") 
 }

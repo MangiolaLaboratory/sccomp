@@ -329,6 +329,7 @@ sccomp_glm_data_frame_counts = function(.data,
     add_attr(formula_composition |> drop_environment(), "formula_composition") |>
     add_attr(formula_variability |> drop_environment(), "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
+    add_attr(inference_method, "inference_method" ) |> 
     
     # Add class to the tbl
     add_class("sccomp_tbl") |> 
