@@ -733,11 +733,16 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         
         create_intercept = FALSE
       )),
-    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains()), 
+    parallel_chains = ifelse(
+      inference_method %in% c("variational", "pathfinder") | 
+        attr(.estimate , "fit") |> is("CmdStanPathfinder"),
+        1, 
+       attr(.estimate , "fit")$num_chains()
+      ), 
     threads_per_chain = cores
     
   )
-  
+
   # Free memory
   rm(.estimate)
   
@@ -823,7 +828,6 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       ...
     )
 
-  
   rng2 =  mod_rng |> sample_safe(
     generate_quantities_fx,
     fit2$draws(format = "matrix"),
@@ -852,7 +856,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       create_intercept = FALSE
       
     )),
-    parallel_chains = ifelse(data_for_model$is_vb, 1, fit2$num_chains()), 
+    parallel_chains = ifelse(inference_method %in% c("variational", "pathfinder"), 1, fit2$num_chains()), 
     threads_per_chain = cores
     
   )
