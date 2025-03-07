@@ -1830,9 +1830,33 @@ get_FDR = function(x){
 #' 
 #' @return A combined plot of 1D interval plots.
 #' @examples
-#' # Example usage:
-#' # plot_1D_intervals(.data, "cell_group", 0.025, theme_minimal())
+#' 
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'
+#'     estimate <- sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'     ) |> 
+#'     sccomp_test()
+#'     
+#'   # Example usage:
+#'   plot_1D_intervals(estimate)
+#'     
+#'   }
+#' }
+#'
+#' 
+
 plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+  
+  message("sccomp says: Some FDR-significant populations may cross the fold change threshold. \n This because, as sccomp is a Bayesian method, the FDR is calculated according to Stephens (doi: 10.1093/biostatistics/kxw041), \n by sorting the probability of the null hypothesis in ascending order and calculating the cumulative average.")
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
