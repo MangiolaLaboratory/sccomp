@@ -824,6 +824,8 @@ test_that("sample ID malformed", {
 })
 
 test_that("LOO", {
+  skip_cmdstan()
+  
   library(loo)
   
   # Fit first model
@@ -862,6 +864,8 @@ test_that("LOO", {
 
 
 test_that("use two methods", {
+
+  skip_cmdstan()
 
     seurat_obj |>
     sccomp_estimate( 
