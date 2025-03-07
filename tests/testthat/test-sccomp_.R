@@ -823,4 +823,59 @@ test_that("sample ID malformed", {
 
 })
 
+test_that("LOO", {
+  skip_cmdstan()
+  
+  library(loo)
+  
+  # Fit first model
+  model_with_factor_association = 
+    seurat_obj |>
+    sccomp_estimate( 
+      formula_composition = ~ type, 
+      .sample =  sample, 
+      .cell_group = cell_group, 
+      inference_method = "hmc",
+      enable_loo = TRUE
+    ) |> 
+    expect_no_error()
+  
+  # Fit second model
+  model_without_association = 
+    seurat_obj |>
+    sccomp_estimate( 
+      formula_composition = ~ 1, 
+      .sample =  sample, 
+      .cell_group = cell_group, 
+      inference_method = "hmc",
+      enable_loo = TRUE
+    ) |> 
+    expect_no_error()
+  
+  # Compare models
+  loo_compare(
+    attr(model_with_factor_association, "fit")$loo(),
+    attr(model_without_association, "fit")$loo()
+  ) |> 
+    suppressWarnings() |> 
+    expect_no_error()
+  
+})
+
+
+test_that("use two methods", {
+
+  skip_cmdstan()
+
+    seurat_obj |>
+    sccomp_estimate( 
+      formula_composition = ~ 1, 
+      .sample =  sample, 
+      .cell_group = cell_group, 
+      inference_method = "hmc"
+    ) |> 
+    sccomp_remove_outliers(inference_method = "pathfinder") |> 
+    expect_no_error()
+  
+})
 
