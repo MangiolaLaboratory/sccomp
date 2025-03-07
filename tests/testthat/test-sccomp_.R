@@ -836,6 +836,7 @@ test_that("LOO", {
       .sample =  sample, 
       .cell_group = cell_group, 
       inference_method = "hmc",
+      cores = 1, 
       enable_loo = TRUE
     ) |> 
     expect_no_error()
@@ -848,6 +849,7 @@ test_that("LOO", {
       .sample =  sample, 
       .cell_group = cell_group, 
       inference_method = "hmc",
+      cores = 1, 
       enable_loo = TRUE
     ) |> 
     expect_no_error()
@@ -872,9 +874,10 @@ test_that("use two methods", {
       formula_composition = ~ 1, 
       .sample =  sample, 
       .cell_group = cell_group, 
-      inference_method = "hmc"
+      inference_method = "hmc",
+      cores = 1
     ) |> 
-    sccomp_remove_outliers(inference_method = "pathfinder") |> 
+    sccomp_remove_outliers(inference_method = "pathfinder", cores = 1) |> 
     expect_no_error()
   
 })
