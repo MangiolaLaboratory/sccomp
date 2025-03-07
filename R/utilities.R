@@ -1820,7 +1820,7 @@ get_FDR = function(x){
 #' This function creates a series of 1D interval plots for cell-group effects, highlighting significant differences based on a given significance threshold.
 #'
 #' @param .data Data frame containing the main data.
-#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. 
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
@@ -1830,9 +1830,33 @@ get_FDR = function(x){
 #' 
 #' @return A combined plot of 1D interval plots.
 #' @examples
-#' # Example usage:
-#' # plot_1D_intervals(.data, "cell_group", 0.025, theme_minimal())
+#' 
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'
+#'     estimate <- sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'     ) |> 
+#'     sccomp_test()
+#'     
+#'   # Example usage:
+#'   my_plot = plot_1D_intervals(estimate)
+#'     
+#'   }
+#' }
+#'
+#' 
+
 plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+  
+  message("sccomp says: Some FDR-significant populations may cross the fold change threshold. \n This because, as sccomp is a Bayesian method, the FDR is calculated according to Stephens (doi: 10.1093/biostatistics/kxw041), \n by sorting the probability of the null hypothesis in ascending order and calculating the cumulative average.")
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
