@@ -1820,7 +1820,7 @@ get_FDR = function(x){
 #' This function creates a series of 1D interval plots for cell-group effects, highlighting significant differences based on a given significance threshold.
 #'
 #' @param .data Data frame containing the main data.
-#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. 
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
@@ -1847,7 +1847,7 @@ get_FDR = function(x){
 #'     sccomp_test()
 #'     
 #'   # Example usage:
-#'   plot_1D_intervals(estimate)
+#'   my_plot = plot_1D_intervals(estimate)
 #'     
 #'   }
 #' }
