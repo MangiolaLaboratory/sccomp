@@ -44,6 +44,9 @@
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
 #' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
+#' @param .count DEPRECATED. Use .abundance instead.
+#' @param approximate_posterior_inference DEPRECATED. Use inference_method instead.
+#' @param variational_inference DEPRECATED. Use inference_method instead.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #'
 #' @return A tibble (`tbl`) with the following columns:
