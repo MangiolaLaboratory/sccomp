@@ -15,7 +15,8 @@ simulate_data(
   variability_multiplier = 5,
   number_of_draws = 1,
   mcmc_seed = sample(1e+05, 1),
-  cores = detectCores()
+  cores = detectCores(),
+  sig_figs = 9
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ simulate_data(
 \item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.}
 
 \item{cores}{Integer, the number of cores to be used for parallel calculations.}
+
+\item{sig_figs}{Number of significant figures to use for Stan model output. Default is 9.}
 }
 \value{
 A tibble (\code{tbl}) with the following columns:

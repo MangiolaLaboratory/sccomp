@@ -14,6 +14,7 @@ sccomp_remove_outliers(
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   enable_loo = FALSE,
+  sig_figs = 9,
   approximate_posterior_inference = NULL,
   variational_inference = NULL,
   ...
@@ -38,9 +39,11 @@ sccomp_remove_outliers(
 
 \item{enable_loo}{Logical, whether to enable model comparison using the R package LOO. This is useful for comparing fits between models, similar to ANOVA.}
 
+\item{sig_figs}{Number of significant figures to use for Stan model output. Default is 9.}
+
 \item{approximate_posterior_inference}{DEPRECATED, use the \code{variational_inference} argument.}
 
-\item{variational_inference}{Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to \code{FALSE} runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.}
+\item{variational_inference}{DEPRECATED Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to \code{FALSE} runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.}
 
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 }
