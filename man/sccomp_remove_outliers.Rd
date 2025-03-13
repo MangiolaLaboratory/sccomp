@@ -8,7 +8,7 @@ sccomp_remove_outliers(
   .estimate,
   percent_false_positive = 5,
   cores = detectCores(),
-  inference_method = "pathfinder",
+  inference_method = attr(.estimate, "inference_method"),
   output_directory = "sccomp_draws_files",
   verbose = TRUE,
   mcmc_seed = sample(1e+05, 1),
