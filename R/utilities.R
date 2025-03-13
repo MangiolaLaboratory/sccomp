@@ -1828,7 +1828,7 @@ get_FDR = function(x){
 #' This function creates a series of 1D interval plots for cell-group effects, highlighting significant differences based on a given significance threshold.
 #'
 #' @param .data Data frame containing the main data.
-#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
+#' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. 
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
@@ -1838,9 +1838,33 @@ get_FDR = function(x){
 #' 
 #' @return A combined plot of 1D interval plots.
 #' @examples
-#' # Example usage:
-#' # plot_1D_intervals(.data, "cell_group", 0.025, theme_minimal())
+#' 
+#' \donttest{
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     data("counts_obj")
+#'
+#'     estimate <- sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'     ) |> 
+#'     sccomp_test()
+#'     
+#'   # Example usage:
+#'   my_plot = plot_1D_intervals(estimate)
+#'     
+#'   }
+#' }
+#'
+#' 
+
 plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
+  
+  message("sccomp says: Some FDR-significant populations may cross the fold change threshold. \n This because, as sccomp is a Bayesian method, the FDR is calculated according to Stephens (doi: 10.1093/biostatistics/kxw041), \n by sorting the probability of the null hypothesis in ascending order and calculating the cumulative average.")
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
@@ -2036,7 +2060,10 @@ plot_2D_intervals = function(
 #' @noRd
 plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
-    .sample, significance_threshold = 0.05, my_theme, remove_unwanted_effects = FALSE
+    .sample, 
+    significance_threshold = 0.05, 
+    my_theme, 
+    remove_unwanted_effects = FALSE
 ){
   
   # Define the variables as NULL to avoid CRAN NOTES
@@ -2131,7 +2158,7 @@ plot_boxplot = function(
       simulated_proportion =
         .data |>
         sccomp_replicate(formula_composition = formula_composition, number_of_draws = 100) |>
-        left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group))
+        left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group, is_zero))
     
     my_boxplot = my_boxplot +
       
@@ -2139,7 +2166,7 @@ plot_boxplot = function(
       stat_summary(
         aes(!!as.symbol(factor_of_interest), (generated_proportions)),
         fun.data = calc_boxplot_stat, geom="boxplot",
-        outlier.shape = NA, outlier.color = NA,outlier.size = 0,
+        outlier.shape = NA, outlier.color = NA, outlier.size = 0,
         fatten = 0.5, lwd=0.2,
         data =
           simulated_proportion %>%
@@ -2188,7 +2215,7 @@ plot_boxplot = function(
     
     # Add jittered points for individual data
     geom_jitter(
-      aes(!!as.symbol(factor_of_interest), proportion, shape=outlier, color=outlier,  group=!!as.symbol(factor_of_interest)),
+      aes(!!as.symbol(factor_of_interest), proportion, shape=is_zero, color=outlier,  group=!!as.symbol(factor_of_interest)),
       data = data_proportion,
       position=position_jitterdodge(jitter.height = 0, jitter.width = 0.2),
       size = 0.5
@@ -2201,13 +2228,13 @@ plot_boxplot = function(
       nrow = 4
     ) +
     scale_color_manual(values = c("black", "#e11f28")) +
+    scale_shape_manual(values = c(16, 21)) +
     scale_y_continuous(trans=S_sqrt_trans(), labels = dropLeadingZero) +
     scale_fill_discrete(na.value = "white") +
     xlab("Biological condition") +
     ylab("Cell-group proportion") +
-    guides(color="none", alpha="none", size="none") +
+    guides( alpha="none", size="none") +
     labs(fill="Significant difference") +
-    ggtitle("Note: Be careful judging significance (or outliers) visually for lowly abundant cell groups. \nVisualising proportion hides the uncertainty characteristic of count data, that a count-based statistical model can estimate.") +
     my_theme +
     theme(axis.text.x =  element_text(angle=20, hjust = 1), title = element_text(size = 3))
 }

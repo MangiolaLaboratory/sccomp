@@ -620,7 +620,7 @@ sccomp_estimate.data.frame <- function(.data,
 sccomp_remove_outliers <- function(.estimate,
                                    percent_false_positive = 5,
                                    cores = detectCores(),
-                                   inference_method = "pathfinder",
+                                   inference_method = .estimate |> attr("inference_method"),
                                    output_directory = "sccomp_draws_files",
                                    verbose = TRUE,
                                    mcmc_seed = sample(1e5, 1),
@@ -651,7 +651,7 @@ sccomp_remove_outliers <- function(.estimate,
 sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              percent_false_positive = 5,
                                              cores = detectCores(),
-                                             inference_method = "pathfinder",
+                                             inference_method = .estimate |> attr("inference_method"),
                                              output_directory = "sccomp_draws_files",
                                              verbose = TRUE,
                                              mcmc_seed = sample(1e5, 1),
@@ -746,11 +746,19 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         
         create_intercept = FALSE
       )),
-    parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains()), 
+
+    parallel_chains = ifelse(
+      inference_method %in% c("variational", "pathfinder") | 
+        attr(.estimate , "fit") |> is("CmdStanPathfinder"),
+        1, 
+       attr(.estimate , "fit")$num_chains()
+      ), 
     threads_per_chain = cores,
     sig_figs = sig_figs
+    
+
   )
-  
+
   # Free memory
   rm(.estimate)
   
@@ -836,9 +844,9 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       sig_figs = sig_figs,
       ...
     )
-
   
   rng2 = mod_rng |> sample_safe(
+
     generate_quantities_fx,
     fit2$draws(format = "matrix"),
     
@@ -866,9 +874,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       create_intercept = FALSE
       
     )),
-    parallel_chains = ifelse(data_for_model$is_vb, 1, fit2$num_chains()), 
+
+    parallel_chains = ifelse(inference_method %in% c("variational", "pathfinder"), 1, fit2$num_chains()), 
     threads_per_chain = cores,
     sig_figs = sig_figs
+    
   )
   
   rng2_summary = 
@@ -969,6 +979,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     add_attr(formula_composition, "formula_composition") |>
     add_attr(formula_variability, "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
+    add_attr(inference_method, "inference_method" ) |> 
     
     # Add class to the tbl
     add_class("sccomp_tbl") |> 
@@ -1067,7 +1078,8 @@ sccomp_test.sccomp_tbl = function(.data,
   .count = .data |>  attr(".count")
   model_input = .data |> attr("model_input")
   truncation_df2 =  .data |>  attr("truncation_df2")
-
+  inference_method = .data |>  attr("inference_method")
+  
   # Abundance
   abundance_CI =
     get_abundance_contrast_draws(.data, contrasts)
@@ -1174,7 +1186,8 @@ sccomp_test.sccomp_tbl = function(.data,
 
     add_attr(.data |> attr("formula_composition"), "formula_composition") |>
     add_attr(.data |> attr("formula_variability"), "formula_variability") |>
-    
+    add_attr(inference_method, "inference_method" ) |> 
+
     # Add class to the tbl
     add_class("sccomp_tbl") 
 }
@@ -1892,7 +1905,8 @@ sccomp_boxplot = function(
   
       pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) |>
       unnest(count_data) |>
-      with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) 
+      with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |> 
+      mutate(is_zero = proportion==0) 
   
   if(remove_unwanted_effects){
     .data_adjusted = 
@@ -1905,7 +1919,8 @@ sccomp_boxplot = function(
       select(-proportion) |> 
       left_join(.data_adjusted, by = join_by(!!.cell_group, !!.sample))
   }
-   
+  else 
+    message( "sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.")
   
   # If I don't have outliers add them
   if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
@@ -2028,13 +2043,9 @@ else {
         # If discrete
         else 
           my_plot = 
-            plot_boxplot(
+            sccomp_boxplot(
               .data = x,
-              data_proportion = data_proportion,
-              factor_of_interest = .x,
-              .cell_group = !!.cell_group,
-              .sample =  !!.sample,
-              my_theme = multipanel_theme,
+              factor = .x,
               significance_threshold = significance_threshold
             ) 
         
@@ -2085,26 +2096,59 @@ clear_stan_model_cache <- function(cache_dir = sccomp_stan_models_cache_dir) {
   }
 }
 
-#' Calculate Proportional Fold Change for sccomp Data
+#' Calculate Proportional Fold Change from sccomp Estimated Effects
 #'
-#' This function calculates the proportional fold change for single-cell composition data
-#' from sccomp analysis, comparing two conditions.
+#' @description 
+#' This function calculates the proportional fold change between two conditions using the estimated effects from a sccomp model.
+#' The fold changes are derived from the model's posterior predictions rather than raw counts, providing a more robust estimate
+#' that accounts for the model's uncertainty and covariate effects.
 #' 
-#' Note! This statistic is just descriptive and should not be used to define significance. Use sccomp_test() for that. 
-#' This statistics is just meant to help interpretation. While fold increase in proportion is easier to understand than
-#' fold change in logit space, the first is not linear (the same change for rare cell types does not necessarily have the same weight 
-#' that for abundant cell types), while the latter is linear, and used to infer probabilities.
-#' 
+#' Note! This statistic is descriptive and should not be used to define significance - use sccomp_test() for that. 
+#' While fold changes in proportions are easier to interpret than changes in logit space, they are not linear 
+#' (the same proportional change has different meaning for rare vs abundant cell types). In contrast, 
+#' the logit scale used internally by sccomp provides linear effects that are more appropriate for statistical inference.
 #'
-#' @param .data A `sccomp_tbl` object containing single-cell composition data.
-#' @param formula_composition The formula for the composition model.
-#' @param from The label for the control group (e.g., "healthy").
-#' @param to The label for the treatment group (e.g., "cancer").
-#' @return A tibble with cell groups and their respective proportional fold change.
+#' @param .data A sccomp estimate object (of class 'sccomp_tbl') obtained from running sccomp_estimate().
+#'              This object contains the fitted model and estimated effects.
+#' @param formula_composition The formula specifying which model effects to use for calculating fold changes.
+#'                          This should match or be a subset of the formula used in the original sccomp_estimate() call.
+#' @param from Character string specifying the reference/control condition (e.g., "benign").
+#' @param to Character string specifying the comparison condition (e.g., "cancer").
+#'
+#' @return A tibble with the following columns:
+#' \itemize{
+#'   \item cell_group - The cell group identifier
+#'   \item proportion_fold_change - The estimated fold change in proportions between conditions.
+#'                                 Positive values indicate increases, negative values indicate decreases.
+#'   \item average_uncertainty - The average uncertainty in the fold change estimate, derived from the credible intervals
+#'   \item statement - A text description of the fold change, including the direction and the estimated proportions
+#' }
+#'
 #' @examples
-#' \dontrun{
-#' # Example usage
-#' result <- sccomp_proportional_fold_change(sccomp_data, formula_composition, "healthy", "cancer")
+#' \donttest{
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   # Load example data
+#'   data("counts_obj")
+#'
+#'   # First estimate the composition effects
+#'   estimate <- sccomp_estimate(
+#'       counts_obj,
+#'       ~ type,
+#'       ~1,
+#'       sample,
+#'       cell_group,
+#'       count,
+#'       cores = 1
+#'   )
+#'  
+#'   # Calculate proportional fold changes from the estimated effects
+#'   estimate |> 
+#'   sccomp_proportional_fold_change(
+#'     formula_composition = ~  type, 
+#'     from = "benign", 
+#'     to = "cancer"
+#'   ) 
+#' }
 #' }
 #' @export
 sccomp_proportional_fold_change <- function(.data, formula_composition, from, to) {
