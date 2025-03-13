@@ -1664,6 +1664,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
 #' 
 #' @return A tibble (`tbl`) with the following columns:
 #' \itemize{
@@ -1715,7 +1716,8 @@ simulate_data <- function(.data,
                        variability_multiplier = 5,
                        number_of_draws = 1,
                        mcmc_seed = sample(1e5, 1),
-                       cores = detectCores()) {
+                       cores = detectCores(),
+                       sig_figs = 9) {
   
   # Run the function
   check_and_install_cmdstanr()
