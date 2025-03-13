@@ -84,6 +84,12 @@ abundance column (counts or proportions), and factor columns.}
 \item{sig_figs}{Number of significant figures to use for Stan model output. Default is 9.}
 
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
+
+\item{.count}{DEPRECATED. Use .abundance instead.}
+
+\item{approximate_posterior_inference}{DEPRECATED. Use inference_method instead.}
+
+\item{variational_inference}{DEPRECATED. Use inference_method instead.}
 }
 \value{
 A tibble (\code{tbl}) with the following columns:
