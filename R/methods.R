@@ -310,7 +310,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
   .sample <- enquo(.sample)
   .cell_group <- enquo(.cell_group)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
-  
+
   .data |>
     colData() |>
     sccomp_estimate(
@@ -370,6 +370,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE,
+                                   sig_figs = 9,
                                    ...,
                                    
                                    # DEPRECATED
@@ -415,7 +416,7 @@ sccomp_estimate.DFrame <- function(.data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
-      sig_figs = 9,
+      sig_figs = sig_figs,
       ...
     )
 }
