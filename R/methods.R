@@ -184,6 +184,7 @@ sccomp_estimate.Seurat <- function(.data,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE,
+                                   sig_figs = 9,
                                    ...,
                                    
                                    # DEPRECATED
@@ -239,7 +240,9 @@ sccomp_estimate.Seurat <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, ...
+      pass_fit = pass_fit,
+      sig_figs = sig_figs,
+      ...
     )
 }
 
@@ -272,6 +275,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  mcmc_seed = sample(1e5, 1),
                                                  max_sampling_iterations = 20000,
                                                  pass_fit = TRUE,
+                                                 sig_figs = 9,
                                                  ...,
                                                  
                                                  # DEPRECATED
@@ -328,7 +332,9 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, ...
+      pass_fit = pass_fit,
+      sig_figs = sig_figs,
+      ...
     )
 }
 
@@ -405,7 +411,9 @@ sccomp_estimate.DFrame <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, ...
+      pass_fit = pass_fit,
+      sig_figs = 9,
+      ...
     )
 }
 
@@ -439,6 +447,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        mcmc_seed = sample(1e5, 1),
                                        max_sampling_iterations = 20000,
                                        pass_fit = TRUE,
+                                       sig_figs = 9,
                                        ...,
                                        
                                        # DEPRECATED
@@ -497,7 +506,9 @@ sccomp_estimate.data.frame <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, ...
+      pass_fit = pass_fit,
+      sig_figs = sig_figs,
+      ...
     )
   
   else 
@@ -524,7 +535,9 @@ sccomp_estimate.data.frame <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, ...
+      pass_fit = pass_fit,
+      sig_figs = sig_figs,
+      ...
     )
   
   message("sccomp says: to do hypothesis testing run `sccomp_test()`,
@@ -559,8 +572,9 @@ sccomp_estimate.data.frame <- function(.data,
 #' @param mcmc_seed Integer, used for Markov-chain Monte Carlo reproducibility. By default, a random number is sampled from 1 to 999999.
 #' @param max_sampling_iterations Integer, limits the maximum number of iterations in case a large dataset is used, to limit computation time.
 #' @param enable_loo Logical, whether to enable model comparison using the R package LOO. This is useful for comparing fits between models, similar to ANOVA.
+#' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
 #' @param approximate_posterior_inference DEPRECATED, use the `variational_inference` argument.
-#' @param variational_inference Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
+#' @param variational_inference DEPRECATED Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #' 
 #' @return A tibble (`tbl`), with the following columns:
@@ -612,6 +626,7 @@ sccomp_remove_outliers <- function(.estimate,
                                    mcmc_seed = sample(1e5, 1),
                                    max_sampling_iterations = 20000,
                                    enable_loo = FALSE,
+                                   sig_figs = 9,
                                    
                                    # DEPRECATED
                                    approximate_posterior_inference = NULL,
@@ -642,6 +657,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              mcmc_seed = sample(1e5, 1),
                                              max_sampling_iterations = 20000,
                                              enable_loo = FALSE,
+                                             sig_figs = 9,
                                              
                                              # DEPRECATED
                                              approximate_posterior_inference = NULL,
@@ -731,8 +747,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         create_intercept = FALSE
       )),
     parallel_chains = ifelse(data_for_model$is_vb, 1, attr(.estimate , "fit")$num_chains()), 
-    threads_per_chain = cores
-    
+    threads_per_chain = cores,
+    sig_figs = sig_figs
   )
   
   # Free memory
@@ -816,12 +832,13 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff", "prec_sd",   "alpha_normalised", "random_effect", "random_effect_2"),
+      pars = c("beta", "alpha", "prec_coeff", "prec_sd", "alpha_normalised", "random_effect", "random_effect_2"),
+      sig_figs = sig_figs,
       ...
     )
 
   
-  rng2 =  mod_rng |> sample_safe(
+  rng2 = mod_rng |> sample_safe(
     generate_quantities_fx,
     fit2$draws(format = "matrix"),
     
@@ -850,8 +867,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       
     )),
     parallel_chains = ifelse(data_for_model$is_vb, 1, fit2$num_chains()), 
-    threads_per_chain = cores
-    
+    threads_per_chain = cores,
+    sig_figs = sig_figs
   )
   
   rng2_summary = 
@@ -1724,7 +1741,8 @@ simulate_data.tbl = function(.data,
                                     variability_multiplier = 5,
                                     number_of_draws = 1,
                                     mcmc_seed = sample(1e5, 1),
-                             cores = detectCores()){
+                             cores = detectCores(),
+                             sig_figs = 9) {
 
 
   .sample = enquo(.sample)
@@ -1771,8 +1789,8 @@ simulate_data.tbl = function(.data,
     data = data_for_model |> c(original_data) |> c(list(variability_multiplier = variability_multiplier)),
     seed = mcmc_seed,
     parallel_chains = attr(.estimate_object , "fit")$metadata()$threads_per_chain, 
-    threads_per_chain = cores
-    
+    threads_per_chain = cores,
+    sig_figs = sig_figs
   )
 
   parsed_fit =
