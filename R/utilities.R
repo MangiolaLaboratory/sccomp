@@ -250,6 +250,7 @@ as_matrix <- function(tbl, rownames = NULL) {
 #' @param additional_parameters_to_save A character vector
 #' @param data A data frame
 #' @param seed An integer
+#' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
 #' @param ... List of paramaters for vb function of Stan
 #'
 #' @return A Stan fit object
@@ -267,6 +268,7 @@ vb_iterative = function(model,
                         cores = 1, 
                         verbose = TRUE,
                         psis_resample = FALSE,
+                        sig_figs = 9,
                         ...) {
   res = NULL
   i = 0
@@ -289,6 +291,7 @@ vb_iterative = function(model,
             history_size = 100, 
             show_messages = verbose,
             psis_resample = psis_resample,
+            sig_figs = sig_figs,
             ...
           )
       
@@ -305,6 +308,7 @@ vb_iterative = function(model,
             init = init,
             show_messages = verbose,
             threads = cores,
+            sig_figs = sig_figs,
             ...
           )
       
@@ -459,6 +463,7 @@ fit_model = function(
     warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
     seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000, 
     output_directory = "sccomp_draws_files",
+    sig_figs = 9,
     ...
 )
 {
@@ -563,7 +568,7 @@ fit_model = function(
         init = init,
         output_dir = output_directory,
         show_messages = verbose,
-        sig_figs = 9,
+        sig_figs = sig_figs,
         ...
       ) |> 
         suppressWarnings()
@@ -597,7 +602,8 @@ fit_model = function(
       cores = cores,
       psis_resample = FALSE, 
       verbose = verbose,
-      sig_figs = 9
+      sig_figs = sig_figs,
+      ...
     ) %>%
       suppressWarnings()
     

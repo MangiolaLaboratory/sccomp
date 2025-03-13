@@ -26,7 +26,9 @@ sccomp_glm_data_frame_raw = function(.data,
                                      cores = 4,
                                      mcmc_seed = sample(1e5, 1),
                                      max_sampling_iterations = 20000,
-                                     pass_fit = TRUE , ...) {
+                                     pass_fit = TRUE,
+                                     sig_figs = 9,
+                                     ...) {
   
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
@@ -99,7 +101,9 @@ sccomp_glm_data_frame_raw = function(.data,
       output_directory = output_directory,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, ...
+      pass_fit = pass_fit,
+      sig_figs = sig_figs,
+      ...
     )
 }
 
@@ -130,6 +134,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         mcmc_seed = sample(1e5, 1),
                                         max_sampling_iterations = 20000,
                                         pass_fit = TRUE,
+                                        sig_figs = 9,
                                         ...) {
   
   # Prepare column same enquo
@@ -306,6 +311,7 @@ sccomp_glm_data_frame_counts = function(.data,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
+      sig_figs = sig_figs,
       ...
     )
   

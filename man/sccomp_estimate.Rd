@@ -28,6 +28,7 @@ sccomp_estimate(
   mcmc_seed = sample(1e+05, 1),
   max_sampling_iterations = 20000,
   pass_fit = TRUE,
+  sig_figs = 9,
   ...,
   .count = NULL,
   approximate_posterior_inference = NULL,
@@ -80,13 +81,9 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{pass_fit}{Logical, whether to include the Stan fit as an attribute in the output.}
 
+\item{sig_figs}{Number of significant figures to use for Stan model output. Default is 9.}
+
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
-
-\item{.count}{\strong{DEPRECATED}. Use \code{.abundance} instead.}
-
-\item{approximate_posterior_inference}{\strong{DEPRECATED}. Use \code{inference_method} instead.}
-
-\item{variational_inference}{\strong{DEPRECATED}. Use \code{inference_method} instead.}
 }
 \value{
 A tibble (\code{tbl}) with the following columns:

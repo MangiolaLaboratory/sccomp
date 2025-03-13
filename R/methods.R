@@ -1,5 +1,3 @@
-
-
 #' Main Function for SCCOMP Estimate
 #'
 #' @description
@@ -45,9 +43,7 @@
 #' @param mcmc_seed An integer seed for MCMC reproducibility.
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
 #' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
-#' @param .count **DEPRECATED**. Use `.abundance` instead.
-#' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
-#' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
+#' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #'
 #' @return A tibble (`tbl`) with the following columns:
@@ -136,6 +132,7 @@ sccomp_estimate <- function(.data,
                             mcmc_seed = sample(1e5, 1),
                             max_sampling_iterations = 20000,
                             pass_fit = TRUE,
+                            sig_figs = 9,
                             ...,
                             
                             # DEPRECATED
