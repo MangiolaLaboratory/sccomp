@@ -38,6 +38,12 @@ While fold changes in proportions are easier to interpret than changes in logit 
 the logit scale used internally by sccomp provides linear effects that are more appropriate for statistical inference.
 }
 \examples{
+
+print("cmdstanr is needed to run this example.")
+# Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+# install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+
+
 \donttest{
 if (instantiate::stan_cmdstan_exists()) {
   # Load example data

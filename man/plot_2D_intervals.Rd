@@ -25,6 +25,28 @@ A ggplot object representing the 2D interval plot.
 This function creates a 2D interval plot for mean-variance association, highlighting significant differences based on a given significance threshold.
 }
 \examples{
-# Example usage:
-# plot_2D_intervals(.data, "cell_group", theme_minimal(), 0.025)
+
+print("cmdstanr is needed to run this example.")
+
+\donttest{
+  if (instantiate::stan_cmdstan_exists()) {
+    data("counts_obj")
+
+    estimate <- sccomp_estimate(
+      counts_obj,
+      ~ type,
+      ~type,
+      sample,
+      cell_group,
+      count,
+      cores = 1
+    ) |> 
+    sccomp_test()
+    
+  # Example usage:
+  my_plot = plot_2D_intervals(estimate)
+    
+  }
+}
+
 }

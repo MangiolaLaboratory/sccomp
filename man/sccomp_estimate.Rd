@@ -124,7 +124,9 @@ group-size) and derives the count data from cell metadata.
 }
 \examples{
 
-message("Use the following example after having installed cmdstanr with install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+print("cmdstanr is needed to run this example.")
+# Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+# install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 
 \donttest{
   if (instantiate::stan_cmdstan_exists()) {

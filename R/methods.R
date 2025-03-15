@@ -73,7 +73,9 @@
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed cmdstanr with install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -601,7 +603,9 @@ sccomp_estimate.data.frame <- function(.data,
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1036,7 +1040,9 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1223,7 +1229,9 @@ sccomp_test.sccomp_tbl = function(.data,
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
@@ -1325,7 +1333,9 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
@@ -1468,6 +1478,11 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 #' @export
 #'
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+#'
+#'
 #' @examples
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
@@ -1568,7 +1583,9 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed cmdstanr with install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1702,7 +1719,9 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -1859,6 +1878,8 @@ simulate_data.tbl = function(.data,
 #' @export
 #'
 #' @examples
+#' 
+#' print("cmdstanr is needed to run this example.")
 #' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
 #' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
@@ -1969,7 +1990,9 @@ sccomp_boxplot = function(
 #'
 #' @examples
 #'
-#' message("Use the following example after having installed install.packages(\"cmdstanr\", repos = c(\"https://stan-dev.r-universe.dev/\", getOption(\"repos\")))")
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
@@ -2131,6 +2154,12 @@ clear_stan_model_cache <- function(cache_dir = sccomp_stan_models_cache_dir) {
 #' }
 #'
 #' @examples
+#' 
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+#'
+#'
 #' \donttest{
 #' if (instantiate::stan_cmdstan_exists()) {
 #'   # Load example data

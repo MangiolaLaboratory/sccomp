@@ -26,6 +26,8 @@ This function creates a series of 1D interval plots for cell-group effects, high
 }
 \examples{
 
+print("cmdstanr is needed to run this example.")
+
 \donttest{
   if (instantiate::stan_cmdstan_exists()) {
     data("counts_obj")

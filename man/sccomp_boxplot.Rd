@@ -31,6 +31,8 @@ A \code{ggplot} object representing the boxplot of cell proportions across sampl
 Creates a boxplot visualization of the model results from \code{sccomp}. This function plots the estimated cell proportions across samples, highlighting significant changes in cell composition according to a specified factor.
 }
 \examples{
+
+print("cmdstanr is needed to run this example.")
 # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
 # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 
