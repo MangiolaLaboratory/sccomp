@@ -51,6 +51,6 @@ Suggests:
 Additional_repositories:
     https://mc-stan.org/r-packages/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
-biocViews: Bayesian, Regression, DifferentialExpression, SingleCell
+biocViews: Bayesian, Regression, DifferentialExpression, SingleCell, Metagenomics, FlowCytometry, Spatial
 LazyData: true
 VignetteBuilder: knitr
