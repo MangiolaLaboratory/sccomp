@@ -66,4 +66,4 @@ Mangiola, Stefano, Alexandra J. Roth-Schulze, Marie Trussart, Enrique Zozaya-Val
 
 ## The old framework
 
-The new tidy framework was introduced in 2024, two, understand the differences and improvements. Compared to the old framework, please read this [blog post](https://tidyomics.github.io/tidyomicsBlog/post/2023-12-07-tidy-sccomp/).
+The new tidy framework was introduced in 2024. To understand the differences and improvements compared to the old framework, please read this [blog post](https://tidyomics.github.io/tidyomicsBlog/post/2023-12-07-tidy-sccomp/).

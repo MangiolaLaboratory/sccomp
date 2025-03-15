@@ -241,16 +241,16 @@ sccomp_result
     ## # A tibble: 72 × 20
     ##    cell_group parameter   factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
     ##    <chr>      <chr>       <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B1         (Intercept) <NA>    0.892     1.17   1.46   0       0         1.00
-    ##  2 B1         typecancer  type   -1.09     -0.660 -0.259  0.00300 4.50e-4   1.00
-    ##  3 B2         (Intercept) <NA>    0.426     0.746  1.06   0       0         1.00
-    ##  4 B2         typecancer  type   -1.19     -0.718 -0.263  0.00400 7.73e-4   1.00
-    ##  5 B3         (Intercept) <NA>   -0.684    -0.352 -0.0351 0.0623  8.31e-3   1.00
-    ##  6 B3         typecancer  type   -0.775    -0.307  0.154  0.185   4.92e-2   1.00
-    ##  7 BM         (Intercept) <NA>   -1.31     -0.989 -0.661  0       0         1.00
-    ##  8 BM         typecancer  type   -0.773    -0.313  0.141  0.192   5.54e-2   1.00
-    ##  9 CD4 1      (Intercept) <NA>    0.148     0.338  0.524  0.00750 1.02e-3   1.00
-    ## 10 CD4 1      typecancer  type   -0.0756    0.167  0.425  0.291   7.17e-2   1.00
+    ##  1 B1         (Intercept) <NA>    0.890     1.17   1.46   0       0         1.00
+    ##  2 B1         typecancer  type   -1.08     -0.668 -0.256  3.75e-3 6.75e-4   1.00
+    ##  3 B2         (Intercept) <NA>    0.420     0.749  1.07   2.50e-4 1.19e-5   1.00
+    ##  4 B2         typecancer  type   -1.19     -0.729 -0.254  3.75e-3 9.55e-4   1.00
+    ##  5 B3         (Intercept) <NA>   -0.677    -0.352 -0.0364 5.53e-2 4.78e-3   1.00
+    ##  6 B3         typecancer  type   -0.757    -0.314  0.162  1.82e-1 4.96e-2   1.00
+    ##  7 BM         (Intercept) <NA>   -1.31     -0.989 -0.666  0       0         1.00
+    ##  8 BM         typecancer  type   -0.771    -0.308  0.152  1.88e-1 5.56e-2   1.00
+    ##  9 CD4 1      (Intercept) <NA>    0.154     0.338  0.532  6.75e-3 1.00e-3   1.00
+    ## 10 CD4 1      typecancer  type   -0.0763    0.168  0.414  2.88e-1 7.20e-2   1.00
     ## # ℹ 62 more rows
     ## # ℹ 11 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_rhat <dbl>,
@@ -465,18 +465,18 @@ res
 ```
 
     ## # A tibble: 90 × 16
-    ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
-    ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… <NA>    0.391    0.761   1.12     1.00      3993.
-    ##  2 B immature        typeheal… type    0.867    1.35    1.87     1.00      4069.
-    ##  3 B immature        continuo… conti… -0.239    0.0614  0.364    1.00      4222.
-    ##  4 B mem             (Interce… <NA>   -1.26    -0.806  -0.368    1.00      3775.
-    ##  5 B mem             typeheal… type    1.07     1.67    2.28     1.00      3974.
-    ##  6 B mem             continuo… conti… -0.235    0.0870  0.408    1.00      4073.
-    ##  7 CD4 cm S100A4     (Interce… <NA>    1.17     1.50    1.82     1.00      3855.
-    ##  8 CD4 cm S100A4     typeheal… type    0.680    1.11    1.57     1.00      3971.
-    ##  9 CD4 cm S100A4     continuo… conti… -0.0639   0.188   0.433    1.00      3851.
-    ## 10 CD4 cm high cyto… (Interce… <NA>   -0.919   -0.460   0.0124   1.00      3756.
+    ##    cell_group       parameter factor c_lower c_effect  c_upper c_rhat c_ess_bulk
+    ##    <chr>            <chr>     <chr>    <dbl>    <dbl>    <dbl>  <dbl>      <dbl>
+    ##  1 B immature       (Interce… <NA>    0.390    0.753   1.12      1.00      4271.
+    ##  2 B immature       typeheal… type    0.869    1.36    1.88      1.00      4118.
+    ##  3 B immature       continuo… conti… -0.232    0.0614  0.371     1.00      3977.
+    ##  4 B mem            (Interce… <NA>   -1.26    -0.815  -0.370     1.00      3889.
+    ##  5 B mem            typeheal… type    1.05     1.68    2.29      1.00      3923.
+    ##  6 B mem            continuo… conti… -0.216    0.0890  0.408     1.00      3938.
+    ##  7 CD4 cm S100A4    (Interce… <NA>    1.18     1.50    1.81      1.00      3825.
+    ##  8 CD4 cm S100A4    typeheal… type    0.690    1.12    1.55      1.00      3664.
+    ##  9 CD4 cm S100A4    continuo… conti… -0.0722   0.185   0.443     1.00      4024.
+    ## 10 CD4 cm high cyt… (Interce… <NA>   -0.909   -0.458  -0.00205   1.00      3541.
     ## # ℹ 80 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -553,18 +553,18 @@ res
 ```
 
     ## # A tibble: 180 × 16
-    ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
-    ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.478    0.832   1.15     1.00      162. 
-    ##  2 B immature typehealthy      type    0.682    1.09    1.51     1.00       96.8
-    ##  3 B immature (Intercept)___G… <NA>   -0.262    0.107   0.616   NA          NA  
-    ##  4 B immature (Intercept)___G… <NA>   -0.0284   0.299   0.751   NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.0903   0.245   0.671   NA          NA  
-    ##  6 B immature (Intercept)___G… <NA>   -0.800   -0.335  -0.0261  NA          NA  
-    ##  7 B mem      (Intercept)      <NA>   -0.801   -0.347   0.0668   1.00      105. 
-    ##  8 B mem      typehealthy      type    0.472    0.987   1.54     1.00       88.4
-    ##  9 B mem      (Intercept)___G… <NA>   -0.321    0.0852  0.617   NA          NA  
-    ## 10 B mem      (Intercept)___G… <NA>    0.0166   0.381   0.910   NA          NA  
+    ##    cell_group parameter       factor c_lower c_effect  c_upper c_rhat c_ess_bulk
+    ##    <chr>      <chr>           <chr>    <dbl>    <dbl>    <dbl>  <dbl>      <dbl>
+    ##  1 B immature (Intercept)     <NA>    0.552     0.853  1.16      1.03      116. 
+    ##  2 B immature typehealthy     type    0.551     1.03   1.45      1.00       91.4
+    ##  3 B immature (Intercept)___… <NA>   -0.245     0.171  0.851    NA          NA  
+    ##  4 B immature (Intercept)___… <NA>   -0.0440    0.315  0.851    NA          NA  
+    ##  5 B immature (Intercept)___… <NA>   -0.101     0.243  0.705    NA          NA  
+    ##  6 B immature (Intercept)___… <NA>   -0.797    -0.348 -0.00387  NA          NA  
+    ##  7 B mem      (Intercept)     <NA>   -0.772    -0.292  0.0913    1.01      135. 
+    ##  8 B mem      typehealthy     type    0.264     0.930  1.52      1.02       98.5
+    ##  9 B mem      (Intercept)___… <NA>   -0.275     0.127  0.845    NA          NA  
+    ## 10 B mem      (Intercept)___… <NA>   -0.0196    0.366  0.948    NA          NA  
     ## # ℹ 170 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -608,16 +608,16 @@ res
     ## # A tibble: 240 × 16
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.405    0.831  1.24      1.00      114. 
-    ##  2 B immature typehealthy      type    0.556    1.08   1.74      1.03       71.7
-    ##  3 B immature (Intercept)___G… <NA>   -0.322    0.0409 0.454    NA          NA  
-    ##  4 B immature typehealthy___G… <NA>   -0.183    0.0385 0.447    NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.178    0.127  0.521    NA          NA  
-    ##  6 B immature typehealthy___G… <NA>   -0.0990   0.131  0.474    NA          NA  
-    ##  7 B immature (Intercept)___G… <NA>   -0.123    0.151  0.590    NA          NA  
-    ##  8 B immature (Intercept)___G… <NA>   -0.656   -0.212  0.0107   NA          NA  
-    ##  9 B mem      (Intercept)      <NA>   -0.905   -0.400  0.00637   1.03      127. 
-    ## 10 B mem      typehealthy      type    0.363    1.09   1.70      1.01       90.8
+    ##  1 B immature (Intercept)      <NA>    0.417    0.831   1.20     1.02       77.7
+    ##  2 B immature typehealthy      type    0.484    1.00    1.54     1.00       70.3
+    ##  3 B immature (Intercept)___G… <NA>   -0.149    0.116   0.581   NA          NA  
+    ##  4 B immature typehealthy___G… <NA>   -0.168    0.0909  0.621   NA          NA  
+    ##  5 B immature (Intercept)___G… <NA>   -0.0589   0.192   0.639   NA          NA  
+    ##  6 B immature typehealthy___G… <NA>   -0.0795   0.162   0.638   NA          NA  
+    ##  7 B immature (Intercept)___G… <NA>   -0.0763   0.199   0.604   NA          NA  
+    ##  8 B immature (Intercept)___G… <NA>   -0.727   -0.266   0.0548  NA          NA  
+    ##  9 B mem      (Intercept)      <NA>   -0.868   -0.386   0.0415   1.00      117. 
+    ## 10 B mem      typehealthy      type    0.250    1.00    1.63     1.01       80.0
     ## # ℹ 230 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -663,16 +663,16 @@ res
     ## # A tibble: 300 × 16
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.377    0.822   1.28     1.01       83.5
-    ##  2 B immature typehealthy      type    0.734    1.19    1.66     1.04       80.6
-    ##  3 B immature (Intercept)___G… <NA>   -0.198    0.0313  0.380   NA          NA  
-    ##  4 B immature typehealthy___G… <NA>   -0.170    0.0242  0.391   NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.173    0.0778  0.384   NA          NA  
-    ##  6 B immature typehealthy___G… <NA>   -0.110    0.0704  0.386   NA          NA  
-    ##  7 B immature (Intercept)___G… <NA>   -0.0767   0.0941  0.541   NA          NA  
-    ##  8 B immature (Intercept)___G… <NA>   -0.702   -0.126   0.0359  NA          NA  
-    ##  9 B immature (Intercept)___G… <NA>   -0.390   -0.0626  0.119   NA          NA  
-    ## 10 B immature (Intercept)___G… <NA>   -0.0473   0.138   0.521   NA          NA  
+    ##  1 B immature (Intercept)      <NA>    0.441    0.807   1.26     1.00      106. 
+    ##  2 B immature typehealthy      type    0.714    1.17    1.62     1.06       63.2
+    ##  3 B immature (Intercept)___G… <NA>   -0.182    0.0159  0.386   NA          NA  
+    ##  4 B immature typehealthy___G… <NA>   -0.158    0.0200  0.343   NA          NA  
+    ##  5 B immature (Intercept)___G… <NA>   -0.233    0.0634  0.392   NA          NA  
+    ##  6 B immature typehealthy___G… <NA>   -0.116    0.0595  0.314   NA          NA  
+    ##  7 B immature (Intercept)___G… <NA>   -0.0516   0.119   0.588   NA          NA  
+    ##  8 B immature (Intercept)___G… <NA>   -0.651   -0.149   0.0318  NA          NA  
+    ##  9 B immature (Intercept)___G… <NA>   -0.364   -0.0654  0.0941  NA          NA  
+    ## 10 B immature (Intercept)___G… <NA>   -0.0522   0.132   0.508   NA          NA  
     ## # ℹ 290 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -719,16 +719,16 @@ sccomp_result |>
     ## # A tibble: 36 × 2
     ##    cell_group statement                                
     ##    <chr>      <glue>                                   
-    ##  1 B1         2-fold decrease (from 0.0583 to 0.0298)  
-    ##  2 B2         2.1-fold decrease (from 0.0386 to 0.0181)
-    ##  3 B3         1.4-fold decrease (from 0.0128 to 0.0092)
-    ##  4 BM         1.3-fold decrease (from 0.0066 to 0.0049)
-    ##  5 CD4 1      1.2-fold increase (from 0.025 to 0.0299) 
-    ##  6 CD4 2      1.4-fold increase (from 0.0511 to 0.0721)
-    ##  7 CD4 3      2.6-fold decrease (from 0.084 to 0.0322) 
-    ##  8 CD4 4      1-fold increase (from 0.0018 to 0.0018)  
-    ##  9 CD4 5      1-fold increase (from 0.0306 to 0.0315)  
-    ## 10 CD8 1      1.1-fold increase (from 0.1107 to 0.1211)
+    ##  1 B1         2-fold decrease (from 0.0591 to 0.0293)  
+    ##  2 B2         2.2-fold decrease (from 0.0388 to 0.0181)
+    ##  3 B3         1.4-fold decrease (from 0.013 to 0.0091) 
+    ##  4 BM         1.4-fold decrease (from 0.0066 to 0.0048)
+    ##  5 CD4 1      1.2-fold increase (from 0.0248 to 0.0299)
+    ##  6 CD4 2      1.4-fold increase (from 0.0516 to 0.0738)
+    ##  7 CD4 3      2.6-fold decrease (from 0.0849 to 0.0327)
+    ##  8 CD4 4      1-fold increase (from 0.0017 to 0.0018)  
+    ##  9 CD4 5      1.1-fold increase (from 0.03 to 0.0316)  
+    ## 10 CD8 1      1.1-fold increase (from 0.111 to 0.1207) 
     ## # ℹ 26 more rows
 
 ## Contrasts
@@ -747,16 +747,16 @@ seurat_obj |>
     ## # A tibble: 60 × 12
     ##    cell_group   parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
     ##    <chr>        <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B immature   typecanc… <NA>    -1.89    -1.35   -0.791 0       0           NA
-    ##  2 B immature   typeheal… <NA>     0.791    1.35    1.89  0       0           NA
-    ##  3 B mem        typecanc… <NA>    -2.24    -1.64   -1.01  0       0           NA
-    ##  4 B mem        typeheal… <NA>     1.01     1.64    2.24  0       0           NA
-    ##  5 CD4 cm S100… typecanc… <NA>    -1.46    -0.986  -0.529 0       0           NA
-    ##  6 CD4 cm S100… typeheal… <NA>     0.529    0.986   1.46  0       0           NA
-    ##  7 CD4 cm high… typecanc… <NA>     0.835    1.55    2.28  0       0           NA
-    ##  8 CD4 cm high… typeheal… <NA>    -2.28    -1.55   -0.835 0       0           NA
-    ##  9 CD4 cm ribo… typecanc… <NA>     0.297    0.930   1.57  0.00675 0.00186     NA
-    ## 10 CD4 cm ribo… typeheal… <NA>    -1.57    -0.930  -0.297 0.00675 0.00186     NA
+    ##  1 B immature   typecanc… <NA>    -1.89    -1.34   -0.799 0       0           NA
+    ##  2 B immature   typeheal… <NA>     0.799    1.34    1.89  0       0           NA
+    ##  3 B mem        typecanc… <NA>    -2.26    -1.65   -1.02  0       0           NA
+    ##  4 B mem        typeheal… <NA>     1.02     1.65    2.26  0       0           NA
+    ##  5 CD4 cm S100… typecanc… <NA>    -1.46    -0.983  -0.513 5.00e-4 1.25e-4     NA
+    ##  6 CD4 cm S100… typeheal… <NA>     0.513    0.983   1.46  5.00e-4 1.25e-4     NA
+    ##  7 CD4 cm high… typecanc… <NA>     0.842    1.53    2.26  0       0           NA
+    ##  8 CD4 cm high… typeheal… <NA>    -2.26    -1.53   -0.842 0       0           NA
+    ##  9 CD4 cm ribo… typecanc… <NA>     0.281    0.943   1.57  6.50e-3 1.80e-3     NA
+    ## 10 CD4 cm ribo… typeheal… <NA>    -1.57    -0.943  -0.281 6.50e-3 1.80e-3     NA
     ## # ℹ 50 more rows
     ## # ℹ 3 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, count_data <list>
 
@@ -798,7 +798,8 @@ model_with_factor_association =
     ## Chain 2 Iteration:   1 / 966 [  0%]  (Warmup) 
     ## Chain 2 Iteration: 100 / 966 [ 10%]  (Warmup)
 
-    ## Chain 3 Iteration:   1 / 966 [  0%]  (Warmup)
+    ## Chain 3 Iteration:   1 / 966 [  0%]  (Warmup) 
+    ## Chain 3 Iteration: 100 / 966 [ 10%]  (Warmup)
 
     ## Chain 4 Iteration:   1 / 966 [  0%]  (Warmup)
 
@@ -807,79 +808,78 @@ model_with_factor_association =
     ## Chain 6 Iteration:   1 / 966 [  0%]  (Warmup)
 
     ## Chain 1 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 3 Iteration: 100 / 966 [ 10%]  (Warmup) 
     ## Chain 4 Iteration: 100 / 966 [ 10%]  (Warmup) 
     ## Chain 2 Iteration: 200 / 966 [ 20%]  (Warmup) 
     ## Chain 5 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 6 Iteration: 100 / 966 [ 10%]  (Warmup) 
     ## Chain 1 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 1 Iteration: 301 / 966 [ 31%]  (Sampling) 
     ## Chain 3 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 4 Iteration: 200 / 966 [ 20%]  (Warmup) 
+    ## Chain 6 Iteration: 100 / 966 [ 10%]  (Warmup) 
     ## Chain 2 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 2 Iteration: 301 / 966 [ 31%]  (Sampling) 
+    ## Chain 4 Iteration: 200 / 966 [ 20%]  (Warmup) 
     ## Chain 5 Iteration: 200 / 966 [ 20%]  (Warmup) 
     ## Chain 1 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 3 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 3 Iteration: 301 / 966 [ 31%]  (Sampling) 
+    ## Chain 6 Iteration: 200 / 966 [ 20%]  (Warmup) 
     ## Chain 4 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 4 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 6 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 2 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 5 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 5 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 6 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 1 Iteration: 500 / 966 [ 51%]  (Sampling) 
+    ## Chain 2 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 3 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 4 Iteration: 400 / 966 [ 41%]  (Sampling) 
+    ## Chain 6 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 6 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 2 Iteration: 500 / 966 [ 51%]  (Sampling) 
+    ## Chain 4 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 5 Iteration: 400 / 966 [ 41%]  (Sampling) 
+    ## Chain 2 Iteration: 500 / 966 [ 51%]  (Sampling) 
+    ## Chain 3 Iteration: 500 / 966 [ 51%]  (Sampling) 
+    ## Chain 6 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 1 Iteration: 600 / 966 [ 62%]  (Sampling) 
     ## Chain 4 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 6 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 2 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 3 Iteration: 500 / 966 [ 51%]  (Sampling) 
     ## Chain 5 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 6 Iteration: 500 / 966 [ 51%]  (Sampling) 
     ## Chain 1 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 2 Iteration: 700 / 966 [ 72%]  (Sampling) 
     ## Chain 3 Iteration: 600 / 966 [ 62%]  (Sampling) 
+    ## Chain 6 Iteration: 500 / 966 [ 51%]  (Sampling) 
     ## Chain 4 Iteration: 600 / 966 [ 62%]  (Sampling) 
     ## Chain 5 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 6 Iteration: 600 / 966 [ 62%]  (Sampling) 
     ## Chain 1 Iteration: 800 / 966 [ 82%]  (Sampling) 
+    ## Chain 2 Iteration: 700 / 966 [ 72%]  (Sampling) 
     ## Chain 3 Iteration: 700 / 966 [ 72%]  (Sampling) 
+    ## Chain 6 Iteration: 600 / 966 [ 62%]  (Sampling) 
     ## Chain 4 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 2 Iteration: 800 / 966 [ 82%]  (Sampling) 
     ## Chain 5 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 1 Iteration: 900 / 966 [ 93%]  (Sampling) 
+    ## Chain 2 Iteration: 800 / 966 [ 82%]  (Sampling) 
     ## Chain 3 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 4 Iteration: 800 / 966 [ 82%]  (Sampling) 
     ## Chain 6 Iteration: 700 / 966 [ 72%]  (Sampling) 
+    ## Chain 1 Iteration: 900 / 966 [ 93%]  (Sampling) 
+    ## Chain 4 Iteration: 800 / 966 [ 82%]  (Sampling) 
     ## Chain 2 Iteration: 900 / 966 [ 93%]  (Sampling) 
     ## Chain 5 Iteration: 800 / 966 [ 82%]  (Sampling) 
     ## Chain 1 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 2 Iteration: 966 / 966 [100%]  (Sampling) 
     ## Chain 3 Iteration: 900 / 966 [ 93%]  (Sampling) 
     ## Chain 6 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 1 finished in 2.3 seconds.
-    ## Chain 2 finished in 2.3 seconds.
+    ## Chain 1 finished in 2.5 seconds.
+    ## Chain 2 Iteration: 966 / 966 [100%]  (Sampling) 
+    ## Chain 3 Iteration: 966 / 966 [100%]  (Sampling) 
     ## Chain 4 Iteration: 900 / 966 [ 93%]  (Sampling) 
     ## Chain 5 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 3 Iteration: 966 / 966 [100%]  (Sampling) 
+    ## Chain 2 finished in 2.5 seconds.
+    ## Chain 3 finished in 2.5 seconds.
     ## Chain 4 Iteration: 966 / 966 [100%]  (Sampling) 
     ## Chain 5 Iteration: 966 / 966 [100%]  (Sampling) 
     ## Chain 6 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 3 finished in 2.4 seconds.
-    ## Chain 4 finished in 2.4 seconds.
-    ## Chain 5 finished in 2.4 seconds.
+    ## Chain 4 finished in 2.5 seconds.
+    ## Chain 5 finished in 2.5 seconds.
     ## Chain 6 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 6 finished in 2.4 seconds.
+    ## Chain 6 finished in 2.5 seconds.
     ## 
     ## All 6 chains finished successfully.
-    ## Mean chain execution time: 2.4 seconds.
-    ## Total execution time: 2.8 seconds.
+    ## Mean chain execution time: 2.5 seconds.
+    ## Total execution time: 3.0 seconds.
 
 ``` r
 # Fit second model
@@ -912,78 +912,78 @@ model_without_association =
     ## Chain 6 Iteration:   1 / 966 [  0%]  (Warmup)
 
     ## Chain 1 Iteration: 200 / 966 [ 20%]  (Warmup) 
+    ## Chain 2 Iteration: 200 / 966 [ 20%]  (Warmup) 
     ## Chain 4 Iteration: 100 / 966 [ 10%]  (Warmup) 
     ## Chain 1 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 1 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 2 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 5 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 6 Iteration: 100 / 966 [ 10%]  (Warmup) 
     ## Chain 3 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 4 Iteration: 200 / 966 [ 20%]  (Warmup) 
+    ## Chain 5 Iteration: 100 / 966 [ 10%]  (Warmup) 
     ## Chain 2 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 2 Iteration: 301 / 966 [ 31%]  (Sampling) 
+    ## Chain 4 Iteration: 200 / 966 [ 20%]  (Warmup) 
+    ## Chain 6 Iteration: 100 / 966 [ 10%]  (Warmup) 
     ## Chain 3 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 3 Iteration: 301 / 966 [ 31%]  (Sampling) 
     ## Chain 5 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 6 Iteration: 200 / 966 [ 20%]  (Warmup) 
     ## Chain 1 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 4 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 4 Iteration: 301 / 966 [ 31%]  (Sampling) 
+    ## Chain 6 Iteration: 200 / 966 [ 20%]  (Warmup) 
     ## Chain 2 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 5 Iteration: 300 / 966 [ 31%]  (Warmup) 
     ## Chain 5 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 6 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 6 Iteration: 301 / 966 [ 31%]  (Sampling) 
     ## Chain 1 Iteration: 500 / 966 [ 51%]  (Sampling) 
     ## Chain 3 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 4 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 6 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 1 Iteration: 600 / 966 [ 62%]  (Sampling) 
+    ## Chain 6 Iteration: 300 / 966 [ 31%]  (Warmup) 
+    ## Chain 6 Iteration: 301 / 966 [ 31%]  (Sampling) 
     ## Chain 2 Iteration: 500 / 966 [ 51%]  (Sampling) 
+    ## Chain 5 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 3 Iteration: 500 / 966 [ 51%]  (Sampling) 
     ## Chain 4 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 5 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 6 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 1 Iteration: 700 / 966 [ 72%]  (Sampling) 
+    ## Chain 1 Iteration: 600 / 966 [ 62%]  (Sampling) 
+    ## Chain 6 Iteration: 400 / 966 [ 41%]  (Sampling) 
     ## Chain 2 Iteration: 600 / 966 [ 62%]  (Sampling) 
+    ## Chain 5 Iteration: 500 / 966 [ 51%]  (Sampling) 
+    ## Chain 1 Iteration: 700 / 966 [ 72%]  (Sampling) 
     ## Chain 3 Iteration: 600 / 966 [ 62%]  (Sampling) 
     ## Chain 4 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 5 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 6 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 1 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 4 Iteration: 700 / 966 [ 72%]  (Sampling) 
+    ## Chain 6 Iteration: 500 / 966 [ 51%]  (Sampling) 
     ## Chain 2 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 3 Iteration: 700 / 966 [ 72%]  (Sampling) 
     ## Chain 5 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 6 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 1 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 1 Iteration: 966 / 966 [100%]  (Sampling) 
+    ## Chain 1 Iteration: 800 / 966 [ 82%]  (Sampling) 
+    ## Chain 3 Iteration: 700 / 966 [ 72%]  (Sampling) 
+    ## Chain 4 Iteration: 700 / 966 [ 72%]  (Sampling) 
+    ## Chain 6 Iteration: 600 / 966 [ 62%]  (Sampling) 
     ## Chain 2 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 3 Iteration: 800 / 966 [ 82%]  (Sampling) 
     ## Chain 4 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 1 finished in 2.2 seconds.
     ## Chain 5 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 6 Iteration: 800 / 966 [ 82%]  (Sampling) 
+    ## Chain 1 Iteration: 900 / 966 [ 93%]  (Sampling) 
+    ## Chain 3 Iteration: 800 / 966 [ 82%]  (Sampling) 
+    ## Chain 6 Iteration: 700 / 966 [ 72%]  (Sampling) 
+    ## Chain 1 Iteration: 966 / 966 [100%]  (Sampling) 
+    ## Chain 2 Iteration: 900 / 966 [ 93%]  (Sampling) 
+    ## Chain 5 Iteration: 800 / 966 [ 82%]  (Sampling) 
+    ## Chain 1 finished in 2.4 seconds.
     ## Chain 3 Iteration: 900 / 966 [ 93%]  (Sampling) 
     ## Chain 4 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 2 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 3 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 4 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 5 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 6 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 3 finished in 2.4 seconds.
-    ## Chain 4 finished in 2.3 seconds.
     ## Chain 2 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 6 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 2 finished in 2.5 seconds.
-    ## Chain 6 finished in 2.2 seconds.
+    ## Chain 4 Iteration: 966 / 966 [100%]  (Sampling) 
     ## Chain 5 Iteration: 900 / 966 [ 93%]  (Sampling) 
+    ## Chain 6 Iteration: 800 / 966 [ 82%]  (Sampling) 
+    ## Chain 2 finished in 2.5 seconds.
+    ## Chain 4 finished in 2.4 seconds.
+    ## Chain 3 Iteration: 966 / 966 [100%]  (Sampling) 
+    ## Chain 3 finished in 2.5 seconds.
     ## Chain 5 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 5 finished in 2.6 seconds.
+    ## Chain 6 Iteration: 900 / 966 [ 93%]  (Sampling) 
+    ## Chain 5 finished in 2.5 seconds.
+    ## Chain 6 Iteration: 966 / 966 [100%]  (Sampling) 
+    ## Chain 6 finished in 2.5 seconds.
     ## 
     ## All 6 chains finished successfully.
-    ## Mean chain execution time: 2.3 seconds.
-    ## Total execution time: 3.0 seconds.
+    ## Mean chain execution time: 2.5 seconds.
+    ## Total execution time: 3.1 seconds.
 
 ``` r
 # Compare models
@@ -995,7 +995,7 @@ loo_compare(
 
     ##        elpd_diff se_diff
     ## model1   0.0       0.0  
-    ## model2 -80.1      10.8
+    ## model2 -81.2      10.7
 
 ## Differential variability, binary factor
 
@@ -1019,16 +1019,16 @@ res
     ## # A tibble: 60 × 16
     ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… <NA>     0.311    0.743  1.16     1.00      1409.
-    ##  2 B immature        typeheal… type     0.790    1.37   1.92     1.00      1095.
-    ##  3 B mem             (Interce… <NA>    -1.37    -0.854 -0.354    1.01       241.
-    ##  4 B mem             typeheal… type     1.05     1.70   2.36     1.01       328.
-    ##  5 CD4 cm S100A4     (Interce… <NA>     1.31     1.66   2.01     1.00       884.
-    ##  6 CD4 cm S100A4     typeheal… type     0.378    0.836  1.28     1.00       557.
-    ##  7 CD4 cm high cyto… (Interce… <NA>    -1.02    -0.515  0.0248   1.00      2883.
-    ##  8 CD4 cm high cyto… typeheal… type    -1.95    -1.00  -0.0656   1.00       108.
-    ##  9 CD4 cm ribosome   (Interce… <NA>    -0.163    0.322  0.807    1.00       898.
-    ## 10 CD4 cm ribosome   typeheal… type    -1.77    -1.07  -0.326    1.00      1340.
+    ##  1 B immature        (Interce… <NA>     0.341    0.752  1.16     1.00     1372. 
+    ##  2 B immature        typeheal… type     0.829    1.36   1.90     1.00     1759. 
+    ##  3 B mem             (Interce… <NA>    -1.33    -0.831 -0.293    1.01      215. 
+    ##  4 B mem             typeheal… type     1.01     1.68   2.34     1.01      275. 
+    ##  5 CD4 cm S100A4     (Interce… <NA>     1.32     1.66   2.01     1.00      674. 
+    ##  6 CD4 cm S100A4     typeheal… type     0.406    0.854  1.28     1.00      799. 
+    ##  7 CD4 cm high cyto… (Interce… <NA>    -1.02    -0.537 -0.0142   1.00     1572. 
+    ##  8 CD4 cm high cyto… typeheal… type    -2.01    -1.15  -0.207    1.00       88.6
+    ##  9 CD4 cm ribosome   (Interce… <NA>    -0.155    0.337  0.820    1.00      601. 
+    ## 10 CD4 cm ribosome   typeheal… type    -1.72    -1.05  -0.379    1.00     1182. 
     ## # ℹ 50 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -1172,7 +1172,7 @@ mcmc_trace(draws, pars = "beta[2,1]")
 
 ## The old framework
 
-The new tidy framework was introduced in 2024, two, understand the
-differences and improvements. Compared to the old framework, please read
+The new tidy framework was introduced in 2024. To understand the
+differences and improvements compared to the old framework, please read
 this [blog
 post](https://tidyomics.github.io/tidyomicsBlog/post/2023-12-07-tidy-sccomp/).
