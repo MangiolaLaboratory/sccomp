@@ -316,8 +316,11 @@ vb_iterative = function(model,
       return(my_res)
     },
     error = function(e) {
-      
-      writeLines(sprintf("Further attempt with Variational Bayes: %s", e))     
+      if(e$message |> str_detect("The Stan file used to create the `CmdStanModel` object does not exist\\.")) {
+        clear_stan_model_cache()
+        model <<-  load_model(model_name, force=TRUE, threads = cores)
+      }
+      else writeLines(sprintf("Further attempt with Variational Bayes: %s", e))     
       
       return(NULL)
     },
@@ -586,6 +589,7 @@ fit_model = function(
     
     
   } else{
+    
     if(inference_method=="pathfinder") init = pf
     else if(inference_method=="variational") init = list(init_list)
     
