@@ -242,7 +242,7 @@ res =
 res
 ```
 
-## Random Effect Modeling
+## Random Effect Modeling (mixed-effect modeling, multilevel-modeling, hierarchical modeling)
 
 `sccomp` supports multilevel modeling by allowing the inclusion of random effects in the compositional and variability formulas. This is particularly useful when your data has hierarchical or grouped structures, such as measurements nested within subjects, batches, or experimental units. By incorporating random effects, sccomp can account for variability at different levels of your data, improving model fit and inference accuracy.
 
