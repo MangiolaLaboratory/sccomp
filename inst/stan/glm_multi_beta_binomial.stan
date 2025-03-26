@@ -544,8 +544,9 @@ parameters{
   
   // Random intercept // matrix with ncol_X_random_effs rows and number of cells (-1) columns
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect_raw;
-  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_raw_2;
-  
+  matrix[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0), M-1] random_effect_raw_2;
+  array[is_random_effect>0] real<lower=0> random_effect_raw_sd;
+  array[ncol_X_random_eff[2]>0] real<lower=0> random_effect_raw_sd_2;
   
   // sd of random intercept
   array[is_random_effect>0] real random_effect_sigma_mu;
@@ -757,19 +758,23 @@ model{
   
   // Random intercept
   if(is_random_effect>0){
-    for(m in 1:(M-1)) random_effect_raw[,m] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2]); 
+    for(m in 1:(M-1)) random_effect_raw[,m] ~ normal( 0, random_effect_raw_sd[1]); 
+    random_effect_raw_sd ~ normal( 0, prior_mean_coefficients[2]);
     for(m in 1:(M-1)) random_effect_sigma_raw[m] ~ std_normal();
     for(m in 1:(M-1)) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
-    
-    for(m in 1:(M-1)) random_effect_raw_2[,m] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2]);
-    for(m in 1:(M-1)) random_effect_sigma_raw_2[m] ~ std_normal();
-    if(is_random_effect>1) for(m in 1:(M-1)) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
     random_effect_sigma_mu ~ std_normal();
     random_effect_sigma_sigma ~ std_normal();
     
     // If I have just one group
     zero_random_effect ~ std_normal();
+  }
+  if(ncol_X_random_eff[2]>0){
+    for(m in 1:(M-1)) random_effect_raw_2[,m] ~ normal( 0, random_effect_raw_sd_2[1]);
+    random_effect_raw_sd_2 ~ normal( 0, prior_mean_coefficients[2]);
+    for(m in 1:(M-1)) random_effect_sigma_raw_2[m] ~ std_normal();
+    for(m in 1:(M-1)) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+    
   }
 }
 generated quantities {

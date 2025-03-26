@@ -169,7 +169,9 @@ parameters {
   
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect_raw;
-  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_raw_2;
+  matrix[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0), M-1] random_effect_raw_2;
+  array[is_random_effect>0] real<lower=0> random_effect_raw_sd;
+  array[ncol_X_random_eff[2]>0] real<lower=0> random_effect_raw_sd_2;
   
   // sd of random intercept
   array[is_random_effect>0] real random_effect_sigma_mu;
