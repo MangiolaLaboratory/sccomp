@@ -129,7 +129,7 @@ data {
   array[how_many_factors_in_random_design[1], n_groups[1]] int group_factor_indexes_for_covariance;
   array[how_many_factors_in_random_design[2], n_groups[2]] int group_factor_indexes_for_covariance_2;
 
-
+  array[2] int<lower=0, upper = 1> unknown_grouping;
 }
 transformed data{
   matrix[C, C] R_ast_inverse;
@@ -170,8 +170,6 @@ parameters {
   // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect_raw;
   matrix[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0), M-1] random_effect_raw_2;
-  array[is_random_effect>0] real<lower=0> random_effect_raw_sd;
-  array[ncol_X_random_eff[2]>0] real<lower=0> random_effect_raw_sd_2;
   
   // sd of random intercept
   array[is_random_effect>0] real random_effect_sigma_mu;
@@ -274,6 +272,17 @@ generated quantities{
 
   }
 
+  // Non centered parameterisation SD of random effects
+  array[M-1 * (ncol_X_random_eff[1]> 0)] vector[how_many_factors_in_random_design[1]] random_effect_sigma;
+  if(ncol_X_random_eff[1]> 0) for(m in 1:(M-1)) random_effect_sigma[m] = random_effect_sigma_mu[1] + random_effect_sigma_sigma[1] * random_effect_sigma_raw[m];
+  if(ncol_X_random_eff[1]> 0) for(m in 1:(M-1)) random_effect_sigma[m] = exp(random_effect_sigma[m]/3.0);
+  
+  // Non centered parameterisation SD of random effects 2
+  array[M-1 * (ncol_X_random_eff[2]> 0)] vector[how_many_factors_in_random_design[2]] random_effect_sigma_2;
+  if(ncol_X_random_eff[2]> 0) for(m in 1:(M-1)) random_effect_sigma_2[m] = random_effect_sigma_mu[2] + random_effect_sigma_sigma[2] * random_effect_sigma_raw_2[m];
+  if(ncol_X_random_eff[2]> 0) for(m in 1:(M-1)) random_effect_sigma_2[m] = exp(random_effect_sigma_2[m]/3.0);
+    
+    
 // Random intercept
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect; 
   matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2; 
@@ -303,7 +312,10 @@ generated quantities{
 
   }
   
-    // Random intercept 2
+  // Unknown random grouping
+  else if (unknown_grouping[1]>0) for(m in 1:(M-1)) mu[m,] += rep_row_vector(normal_rng(0, random_effect_sigma[m,1]), N);
+  
+  // Random intercept 2
   if(length_X_random_effect_which[2]>0){
     
      // Covariate setup 
@@ -329,6 +341,9 @@ generated quantities{
 
 
   }
+
+  // Unknown random grouping 2
+  else if (unknown_grouping[2]>0) for(m in 1:(M-1)) mu[m,] +=  rep_row_vector(normal_rng(0, random_effect_sigma_2[m,1]), N);
 
 
   // Calculate proportions

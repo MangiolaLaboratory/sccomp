@@ -97,9 +97,10 @@ functions{
       
       matrix random_effect_raw,
       
-      array[] vector random_effect_sigma_raw,
-      array[] real random_effect_sigma_mu,
-      array[] real random_effect_sigma_sigma,
+      // array[] vector random_effect_sigma_raw,
+      // array[] real random_effect_sigma_mu,
+      // array[] real random_effect_sigma_sigma,
+      array[] vector random_effect_sigma,
       array[] matrix sigma_correlation_factor
       ){
         
@@ -122,12 +123,6 @@ functions{
         // Design L
         array[M-1] matrix[how_many_factors_in_random_design, how_many_factors_in_random_design] L;
         array[M-1] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects;
-        
-        // Non centered parameterisation
-        array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design] random_effect_sigma;
-        for(m in 1:(M-1)) random_effect_sigma[m] = random_effect_sigma_mu[1] + random_effect_sigma_sigma[1] * random_effect_sigma_raw[m];
-        for(m in 1:(M-1)) random_effect_sigma[m] = exp(random_effect_sigma[m]/3.0);
-        
         
         for(m in 1:(M-1)) L[m] = diag_pre_multiply(random_effect_sigma[m], sigma_correlation_factor[m]) ;
         for(m in 1:(M-1)) matrix_of_random_effects[m] = L[m] * matrix_of_random_effects_raw[m];
@@ -545,8 +540,6 @@ parameters{
   // Random intercept // matrix with ncol_X_random_effs rows and number of cells (-1) columns
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect_raw;
   matrix[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0), M-1] random_effect_raw_2;
-  array[is_random_effect>0] real<lower=0> random_effect_raw_sd;
-  array[ncol_X_random_eff[2]>0] real<lower=0> random_effect_raw_sd_2;
   
   // sd of random intercept
   array[is_random_effect>0] real random_effect_sigma_mu;
@@ -585,6 +578,17 @@ transformed parameters{
   // // JUST FOR SANITY CHECK
   //  mu = (Q_ast * beta_raw)';
   
+  // Non centered parameterisation SD of random effects
+  array[M-1 * (ncol_X_random_eff[1]> 0)] vector[how_many_factors_in_random_design[1]] random_effect_sigma;
+  if(ncol_X_random_eff[1]> 0) for(m in 1:(M-1)) random_effect_sigma[m] = random_effect_sigma_mu[1] + random_effect_sigma_sigma[1] * random_effect_sigma_raw[m];
+  if(ncol_X_random_eff[1]> 0) for(m in 1:(M-1)) random_effect_sigma[m] = exp(random_effect_sigma[m]/3.0);
+  
+  // Non centered parameterisation SD of random effects 2
+  array[M-1 * (ncol_X_random_eff[2]> 0)] vector[how_many_factors_in_random_design[2]] random_effect_sigma_2;
+  if(ncol_X_random_eff[2]> 0) for(m in 1:(M-1)) random_effect_sigma_2[m] = random_effect_sigma_mu[2] + random_effect_sigma_sigma[2] * random_effect_sigma_raw_2[m];
+  if(ncol_X_random_eff[2]> 0) for(m in 1:(M-1)) random_effect_sigma_2[m] = exp(random_effect_sigma_2[m]/3.0);
+    
+  
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect;
   matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2;
   
@@ -602,19 +606,15 @@ transformed parameters{
       group_factor_indexes_for_covariance,
       
       random_effect_raw,
-      random_effect_sigma_raw,
-      random_effect_sigma_mu,
-      random_effect_sigma_sigma,
+      random_effect_sigma,
       sigma_correlation_factor
       );
       
-      // // Update with summing mu_random_effect
-      // mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
   }
   
   // random intercept
   if(ncol_X_random_eff[2]>0 ){
-    
+
     // Covariate setup
     random_effect_2 =
     get_random_effect_matrix(
@@ -624,25 +624,13 @@ transformed parameters{
       is_random_effect,
       ncol_X_random_eff[2],
       group_factor_indexes_for_covariance_2,
-      
+
       random_effect_raw_2,
-      random_effect_sigma_raw_2,
-      random_effect_sigma_mu,
-      random_effect_sigma_sigma,
+      random_effect_sigma_2,
       sigma_correlation_factor_2
       );
-      
-      // // Update with summing mu_random_effect
-      // mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
+
   }
-  
-  // // Calculate proportions
-  // for(n in 1:N)  mu[,n] = softmax(mu[,n]);
-  // 
-  // // Convert the matrix m to a column vector in column-major order.
-  // mu_array = to_vector(mu);
-  // precision_array = to_vector(exp(precision));
-  // 
   
 }
 model{
@@ -752,14 +740,12 @@ model{
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
   prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
   prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
-  prec_sd ~ std_normal();
   prec_coeff ~ std_normal();
   to_vector(beta_raw_raw) ~ std_normal();
   
   // Random intercept
   if(is_random_effect>0){
-    for(m in 1:(M-1)) random_effect_raw[,m] ~ normal( 0, random_effect_raw_sd[1]); 
-    random_effect_raw_sd ~ normal( 0, prior_mean_coefficients[2]);
+    for(m in 1:(M-1)) random_effect_raw[,m] ~ std_normal(); 
     for(m in 1:(M-1)) random_effect_sigma_raw[m] ~ std_normal();
     for(m in 1:(M-1)) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
@@ -770,8 +756,7 @@ model{
     zero_random_effect ~ std_normal();
   }
   if(ncol_X_random_eff[2]>0){
-    for(m in 1:(M-1)) random_effect_raw_2[,m] ~ normal( 0, random_effect_raw_sd_2[1]);
-    random_effect_raw_sd_2 ~ normal( 0, prior_mean_coefficients[2]);
+    for(m in 1:(M-1)) random_effect_raw_2[,m] ~ std_normal();
     for(m in 1:(M-1)) random_effect_sigma_raw_2[m] ~ std_normal();
     for(m in 1:(M-1)) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     

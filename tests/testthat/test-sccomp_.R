@@ -128,7 +128,7 @@ test_that("Predict data",{
   
   new_data_seurat = seurat_obj[, seurat_obj[[]]$sample %in% c("10x_8K", "SI-GA-E5")] 
   new_data_seurat[[]]$sample = new_data_seurat[[]]$sample |> str_replace("SI", "AB") |>  str_replace("10x", "9x") 
-  new_data_tibble = new_data_seurat[[]] |> distinct(sample, type, continuous_covariate)
+  new_data_tibble = new_data_seurat[[]] |> distinct(sample, type, continuous_covariate, group__)
   
   # With new tibble data
   my_estimate |>
@@ -169,6 +169,16 @@ test_that("Predict data",{
     ) |>
     nrow() |>
     expect_equal(60)
+  
+  
+  # Predict random
+  
+  my_estimate_random |> 
+    sccomp_predict(
+      formula_composition = ~ type + (1 | group__),
+      new_data = new_data_tibble, 
+      number_of_draws = 1
+    )
   
 })
 

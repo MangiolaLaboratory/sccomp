@@ -471,7 +471,6 @@ fit_model = function(
 )
 {
   
-  
   # # if analysis approximated
   # # If posterior analysis is approximated I just need enough
   # how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
@@ -761,11 +760,11 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
   
   # Define the variables as NULL to avoid CRAN NOTES
   formula <- NULL
-  
+   
   .sample = enquo(.sample)
   
-  grouping_table =
-    formula_composition |>
+
+  formula_composition |>
     formula_to_random_effect_formulae() |>
     
     mutate(design = map2(
@@ -782,7 +781,8 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
         mydesigncol_X_random_eff |>
           as_tibble(rownames = quo_name(.sample)) |>
           pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
-          filter(!is.na(grouping)) |>
+          
+          # filter(!is.na(grouping)) |>
           
           mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() )|>
           with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
@@ -3284,7 +3284,6 @@ replicate_data = function(.data,
   
   new_data =  old_data |> bind_rows( new_data ) 
 
-  browser()
   new_X =
     new_data |>
     get_design_matrix(
@@ -3295,7 +3294,8 @@ replicate_data = function(.data,
         str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
         paste(collapse="") |>
         as.formula(),
-      !!.sample
+      !!.sample, 
+      accept_NA_as_average_effect = TRUE
     ) |>
     tail(nrow_new_data) %>%
     
@@ -3367,11 +3367,26 @@ replicate_data = function(.data,
       formula_composition
     )
   
+  # Set default random intercept
+  X_random_effect_which = array()[0]
+  new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
   
-  # if(random_effect_elements |> nrow() |> equals(0)) {
-  #   
-  # }
-  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any()) {
+  # setup default unknown_grouping variable for generated quantities
+  unknown_grouping = c(FALSE, FALSE)
+  
+  unknown_grouping[1] =
+    (random_effect_grouping$grouping %in% original_grouping_names[1]) |> any() &&
+    random_effect_grouping |>
+    filter(grouping==original_grouping_names[1]) |> 
+    pull(design) |> 
+    _[[1]] |> 
+    tail(nrow_new_data) |> 
+    pull(grouping) |> 
+    unique() |> 
+    is.na() |> 
+    all()
+  
+  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any() && !unknown_grouping[1]) {
     
     # HAVE TO DEBUG
     new_X_random_effect =
@@ -3398,7 +3413,7 @@ replicate_data = function(.data,
     ) 
     
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
-    X_random_effect_which =
+     X_random_effect_which =
       colnames(new_X_random_effect) |>
       match(
         model_input %$%
@@ -3407,17 +3422,31 @@ replicate_data = function(.data,
       ) |>
       as.array()
     
-    # Check if I have column in the new design that are not in the old one
-    missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
-    if(missing_columns |> length() > 0)
-      stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
-    
+    # # Check if I have column in the new design that are not in the old one
+    # missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
+    # if(missing_columns |> length() > 0 && !unknown_grouping[1])
+    #   stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
+    # 
   }
-  else{
-    X_random_effect_which = array()[0]
-    new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-    
-  }
+
+
+  
+  # Set default X random intercept
+  X_random_effect_which_2 = array()[0]
+  new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  
+  unknown_grouping[2] =
+    (random_effect_grouping$grouping %in% original_grouping_names[2]) |> any() &&
+    random_effect_grouping |>
+    filter(grouping==original_grouping_names[2]) |> 
+    pull(design) |> 
+    _[[1]] |> 
+    tail(nrow_new_data) |> 
+    pull(grouping) |> 
+    unique() |> 
+    is.na() |> 
+    all()
+  
   if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()){
     # HAVE TO DEBUG
     new_X_random_effect_2 =
@@ -3440,9 +3469,9 @@ replicate_data = function(.data,
     
     # Check that all effect combination were present when the model was fitted
     check_missing_parameters(
-      new_X_random_effect_2 |> colnames(), 
-      model_input %$% X_random_effect_2 |> colnames()
-    ) 
+        new_X_random_effect_2 |> colnames(), 
+        model_input %$% X_random_effect_2 |> colnames()
+      )
       
     # DUPLICATE
     X_random_effect_which_2 =
@@ -3455,10 +3484,7 @@ replicate_data = function(.data,
       as.array()
     
   }
-  else{
-    X_random_effect_which_2 = array()[0]
-    new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  }
+ 
   
   # New X
   model_input$X_original = model_input$X
@@ -3473,7 +3499,7 @@ replicate_data = function(.data,
   
   model_input$ncol_X_random_eff_new = ncol(new_X_random_effect) |> c(ncol(new_X_random_effect_2))
   
-  
+  model_input$unknown_grouping = unknown_grouping
   
   number_of_draws_in_the_fit = attr(.data, "fit") |>  get_output_samples()
   
@@ -3483,7 +3509,7 @@ replicate_data = function(.data,
   # Load model
   mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
   
-  
+
   # Generate quantities
   mod_rng |> sample_safe(
     generate_quantities_fx,
@@ -4069,6 +4095,7 @@ drop_environment <- function(obj) {
 
 check_missing_parameters <- function(effects, model_effects) {
   # Find missing parameters
+
   missing_parameters <- 
     effects |> 
     setdiff(model_effects)
@@ -4081,6 +4108,7 @@ check_missing_parameters <- function(effects, model_effects) {
       if (length(missing_parameters) > 3) "\n..."
     )
   }
+
 }
 
 harmonise_factor_levels <- function(dataframe_query, dataframe_reference) {
