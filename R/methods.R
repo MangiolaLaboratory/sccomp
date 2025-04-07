@@ -19,20 +19,21 @@
 #' @importFrom rlang inform
 #' @importFrom lifecycle is_present
 #' @importFrom lifecycle deprecate_warn
+#' @importFrom rlang is_symbolic
 #'
 #' @param .data A tibble including cell_group name column, sample name column,
 #'              abundance column (counts or proportions), and factor columns.
 #' @param formula_composition A formula describing the model for differential abundance.
 #' @param formula_variability A formula describing the model for differential variability.
-#' @param .sample A column name as a symbol for the sample identifier.
-#' @param .cell_group A column name as a symbol for the cell-group identifier.
-#' @param .abundance A column name as a symbol for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across `.cell_group`).
+#' @param sample_column A column name as a character string for the sample identifier. Replaces the deprecated `.sample`.
+#' @param cell_group_column A column name as a character string for the cell-group identifier. Replaces the deprecated `.cell_group`.
+#' @param abundance_column A column name as a character string for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across `cell_group_column`). Replaces the deprecated `.abundance` and `.count`.
 #' @param cores Number of cores to use for parallel calculations.
 #' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
 #' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
 #' @param prior_overdispersion_mean_association A list specifying prior knowledge about mean/variability association.
 #' @param percent_false_positive A real number between 0 and 100 for outlier identification.
-#' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational').
+#' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational'). Replaces the deprecated `approximate_posterior_inference` and `variational_inference`.
 #' @param .sample_cell_group_pairs_to_exclude A column name indicating sample/cell-group pairs to exclude.
 #' @param output_directory A character string specifying the output directory for Stan draws.
 #' @param verbose Logical, whether to print progression details.
@@ -44,9 +45,12 @@
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
 #' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
-#' @param .count DEPRECATED. Use .abundance instead.
-#' @param approximate_posterior_inference DEPRECATED. Use inference_method instead.
-#' @param variational_inference DEPRECATED. Use inference_method instead.
+#' @param .count **DEPRECATED**. Use `abundance_column` instead.
+#' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
+#' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
+#' @param .sample **DEPRECATED**. Use `sample_column` instead.
+#' @param .cell_group **DEPRECATED**. Use `cell_group_column` instead.
+#' @param .abundance **DEPRECATED**. Use `abundance_column` instead.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #'
 #' @return A tibble (`tbl`) with the following columns:
@@ -112,9 +116,10 @@
 sccomp_estimate <- function(.data,
                             formula_composition = ~1,
                             formula_variability = ~1,
-                            .sample,
-                            .cell_group,
-                            .abundance = NULL,
+                            
+                            sample_column,
+                            cell_group_column,
+                            abundance_column = NULL,
 
                             # Secondary arguments
                             cores = detectCores(),
@@ -143,7 +148,10 @@ sccomp_estimate <- function(.data,
                             # DEPRECATED
                             .count = NULL,
                             approximate_posterior_inference = NULL,
-                            variational_inference = NULL) {
+                            variational_inference = NULL,
+                            .sample = NULL,
+                            .cell_group = NULL,
+                            .abundance = NULL) {
   
 
   
@@ -160,14 +168,16 @@ sccomp_estimate <- function(.data,
   UseMethod("sccomp_estimate", .data)
 }
 
+#' @importFrom rlang is_symbolic
 #' @export
 sccomp_estimate.Seurat <- function(.data,
                                    formula_composition = ~1,
                                    formula_variability = ~1,
-                                   .sample,
-                                   .cell_group,
-                                   .abundance = NULL,
-
+                                   
+                                   sample_column,
+                                   cell_group_column,
+                                   abundance_column = NULL,
+                                   
                                    # Secondary arguments
                                    cores = detectCores(),
                                    bimodal_mean_variability_association = FALSE,
@@ -195,7 +205,13 @@ sccomp_estimate.Seurat <- function(.data,
                                    # DEPRECATED
                                    .count = NULL,
                                    approximate_posterior_inference = NULL,
-                                   variational_inference = NULL) {
+                                   variational_inference = NULL,
+                                   .sample = NULL,
+                                   .cell_group = NULL,
+                                   .abundance = NULL) {
+  
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
   
   if (!is.null(.abundance))
     stop("sccomp says: .abundance argument can be used only for data frame input")
@@ -217,17 +233,34 @@ sccomp_estimate.Seurat <- function(.data,
     inference_method <- ifelse(variational_inference, "variational", "hmc")
   }
   
+  # DEPRECATION OF .sample
+  if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
+    
+    sample_column = quo_name(.sample)
+    
+  }
+  
+  # DEPRECATION OF .cell_group
+  if (lifecycle::is_present(.cell_group) & !quo_is_null(.cell_group)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
+    
+    cell_group_column = quo_name(.cell_group)
+    
+  }
+
+  
   # Prepare column names
-  .sample <- enquo(.sample)
-  .cell_group <- enquo(.cell_group)
+
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
   .data[[]] |>
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-      !!.sample,
-      !!.cell_group,
+      
+      sample_column = sample_column,
+      cell_group_column = cell_group_column,
       
       # Secondary arguments
       cores = cores,
@@ -251,14 +284,15 @@ sccomp_estimate.Seurat <- function(.data,
     )
 }
 
+#' @importFrom rlang is_symbolic
 #' @export
 sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  formula_composition = ~1,
                                                  formula_variability = ~1,
-                                                 .sample,
-                                                 .cell_group,
-                                                 .abundance = NULL,
-
+                                                 sample_column,
+                                                 cell_group_column,
+                                                 abundance_column = NULL,
+                                                 
                                                  # Secondary arguments
                                                  cores = detectCores(),
                                                  bimodal_mean_variability_association = FALSE,
@@ -286,7 +320,16 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  # DEPRECATED
                                                  .count = NULL,
                                                  approximate_posterior_inference = NULL,
-                                                 variational_inference = NULL) {
+                                                 variational_inference = NULL,
+                                                 .sample = NULL,
+                                                 .cell_group = NULL,
+                                                 .abundance = NULL) {
+  
+  # Prepare column names
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  
   
   if (!is.null(.abundance))
     stop("sccomp says: .abundance argument can be used only for data frame input")
@@ -308,18 +351,30 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
     inference_method <- ifelse(variational_inference, "variational", "hmc")
   }
   
-  # Prepare column names
-  .sample <- enquo(.sample)
-  .cell_group <- enquo(.cell_group)
-  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  # DEPRECATION OF .sample
+  if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
+    
+    sample_column = quo_name(.sample)
+    
+  }
+  
+  # DEPRECATION OF .cell_group
+  if (lifecycle::is_present(.cell_group) & !quo_is_null(.cell_group)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
+    
+    cell_group_column = quo_name(.cell_group)
+    
+  }
 
   .data |>
     colData() |>
+
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-      !!.sample,
-      !!.cell_group,
+      sample_column = sample_column,
+      cell_group_column = cell_group_column,
       
       # Secondary arguments
       cores = cores,
@@ -343,13 +398,14 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
     )
 }
 
+#' @importFrom rlang is_symbolic
 #' @export
 sccomp_estimate.DFrame <- function(.data,
                                    formula_composition = ~1,
                                    formula_variability = ~1,
-                                   .sample,
-                                   .cell_group,
-                                   .abundance = NULL,
+                                   sample_column,
+                                   cell_group_column,
+                                   abundance_column = NULL,
                                    
                                    # Secondary arguments
                                    cores = detectCores(),
@@ -378,7 +434,10 @@ sccomp_estimate.DFrame <- function(.data,
                                    # DEPRECATED
                                    .count = NULL,
                                    approximate_posterior_inference = NULL,
-                                   variational_inference = NULL) {
+                                   variational_inference = NULL,
+                                   .sample = NULL,
+                                   .cell_group = NULL,
+                                   .abundance = NULL) {
   
   if (!is.null(.abundance))
     stop("sccomp says: .abundance argument can be used only for data frame input")
@@ -391,15 +450,62 @@ sccomp_estimate.DFrame <- function(.data,
   .cell_group <- enquo(.cell_group)
   .abundance <- enquo(.abundance)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  .count = enquo(.count)
   
-  .data |>
-    as.data.frame() |>
+
+  # Deprecation of .count
+  if (rlang::quo_is_symbolic(.count)) {
+    rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
+    .abundance <- .count
+  }
+  
+  
+  # DEPRECATION OF approximate_posterior_inference
+  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
+    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
+    
+    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
+  }
+  
+  # DEPRECATION OF variational_inference
+  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
+    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
+    
+    inference_method <- ifelse(variational_inference, "variational", "hmc")
+  }
+  
+  # DEPRECATION OF .sample
+  if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
+    
+    sample_column = quo_name(.sample)
+    
+  }
+  
+  # DEPRECATION OF .cell_group
+  if (lifecycle::is_present(.cell_group) & !quo_is_null(.cell_group)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
+    
+    cell_group_column = quo_name(.cell_group)
+    
+  }
+  
+  # DEPRECATION OF .abundance
+  if (lifecycle::is_present(.abundance) & !quo_is_null(.abundance)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.abundance)", details = ".abundance argument (which were tidy evaluations, i.e. .abundance = my_abundance) have been deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
+    
+    abundance_column = quo_name(.abundance)
+    
+  }
+  
+  .data %>%
+    as.data.frame() %>%
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-      !!.sample,
-      !!.cell_group,
-      .abundance = !!.abundance,
+      sample_column = sample_column,
+      cell_group_column = cell_group_column,
+      abundance_column = abundance_column,
       
       # Secondary arguments
       cores = cores,
@@ -417,20 +523,21 @@ sccomp_estimate.DFrame <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit,
-      sig_figs = sig_figs,
-      ...
+      pass_fit = pass_fit, ...
     )
 }
 
+
 #' @importFrom purrr when
+#' @importFrom rlang is_symbolic
 #' @export
 sccomp_estimate.data.frame <- function(.data,
                                        formula_composition = ~1,
                                        formula_variability = ~1,
-                                       .sample,
-                                       .cell_group,
-                                       .abundance = NULL,
+                                       
+                                       sample_column,
+                                       cell_group_column,
+                                       abundance_column = NULL,
                                        
                                        # Secondary arguments
                                        cores = detectCores(),
@@ -459,7 +566,10 @@ sccomp_estimate.data.frame <- function(.data,
                                        # DEPRECATED
                                        .count = NULL,
                                        approximate_posterior_inference = NULL,
-                                       variational_inference = NULL) {
+                                       variational_inference = NULL,
+                                       .sample = NULL,
+                                       .cell_group = NULL,
+                                       .abundance = NULL) {
   
 
   # Prepare column names
@@ -468,7 +578,7 @@ sccomp_estimate.data.frame <- function(.data,
   .abundance <- enquo(.abundance)
   .count <- enquo(.count)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
-  
+
   # Deprecation of .count
   if (rlang::quo_is_symbolic(.count)) {
     rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
@@ -489,14 +599,40 @@ sccomp_estimate.data.frame <- function(.data,
     inference_method <- ifelse(variational_inference, "variational", "hmc")
   }
   
-  if (quo_is_null(.abundance))
+  # DEPRECATION OF .sample
+  if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
+    
+    sample_column = quo_name(.sample)
+    
+  }
+  
+  # DEPRECATION OF .cell_group
+  if (lifecycle::is_present(.cell_group) & !quo_is_null(.cell_group)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
+    
+    cell_group_column = quo_name(.cell_group)
+    
+  }
+  
+  # DEPRECATION OF .abundance
+  if (lifecycle::is_present(.abundance) & !quo_is_null(.abundance)) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.abundance)", details = ".abundance argument (which were tidy evaluations, i.e. .abundance = my_abundance) have been deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
+    
+    abundance_column = quo_name(.abundance)
+    
+  }
+  
+
+  if (abundance_column |> is.null())
     res <- sccomp_glm_data_frame_raw(
       .data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-      !!.sample,
-      !!.cell_group,
       
+      sample_column = sample_column,
+      cell_group_column = cell_group_column,
+
       # Secondary arguments
       cores = cores,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
@@ -522,9 +658,10 @@ sccomp_estimate.data.frame <- function(.data,
       .data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-      !!.sample,
-      !!.cell_group,
-      .count = !!.abundance,
+      
+      sample_column = sample_column,
+      cell_group_column = cell_group_column,
+      abundance_column = abundance_column,
       
       # Secondary arguments
       cores = cores,
