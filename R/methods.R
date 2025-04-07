@@ -623,8 +623,7 @@ sccomp_estimate.data.frame <- function(.data,
     
   }
   
-=======
->>>>>>> 3aa1d3b (use characters as column names)
+
   if (abundance_column |> is.null())
     res <- sccomp_glm_data_frame_raw(
       .data,
