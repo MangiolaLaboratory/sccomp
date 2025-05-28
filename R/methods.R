@@ -2262,3 +2262,71 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     
 
 }
+
+#' harmonise_factor_levels
+#'
+#' @description
+#' A helper function to make sure that factor levels in new data match the old data
+#'
+#' @param new_data A data frame containing potential factor variables
+#' @param old_data A data frame containing the reference factor levels
+#'
+#' @return A data frame with the same dimensions as `new_data`
+#' @export
+#'
+harmonise_factor_levels <- function(new_data, old_data) {
+  if (!is.data.frame(new_data) || !is.data.frame(old_data)) {
+    stop("Both new_data and old_data must be data frames")
+  }
+  
+  # Ensure arguments are in the correct order
+  if (!identical(names(formals(harmonise_factor_levels))[1:2], c("new_data", "old_data"))) {
+    warning("Arguments appear to be in the wrong order. 'new_data' should be the data to be harmonized, 'old_data' is the reference.")
+  }
+  
+  # Original implementation follows
+  f_old <- sapply(old_data, is.factor)
+  f_new <- sapply(new_data, is.factor)
+  
+  # Get the common factor column names
+  common_f <- intersect(names(old_data)[f_old], names(new_data)[f_new])
+  
+  # If there are no common factor columns, return the new_data as is
+  if (length(common_f) == 0) {
+    return(new_data)
+  }
+  
+  # For each common factor column
+  for (col in common_f) {
+    # Get all unique levels from both datasets
+    all_levels <- unique(c(levels(old_data[[col]]), levels(new_data[[col]])))
+    
+    # Check if there are new levels in new_data that don't exist in old_data
+    new_levels <- setdiff(levels(new_data[[col]]), levels(old_data[[col]]))
+    if (length(new_levels) > 0) {
+      warning(paste("New levels found in column", col, ":", paste(new_levels, collapse = ", ")))
+    }
+    
+    # Set levels of new_data to match old_data, adding any missing levels
+    new_data[[col]] <- factor(new_data[[col]], levels = levels(old_data[[col]]))
+  }
+  
+  # Also check for character columns in new_data that are factors in old_data
+  char_new <- sapply(new_data, is.character)
+  factor_cols_in_old <- names(old_data)[f_old]
+  
+  char_to_factor <- intersect(names(new_data)[char_new], factor_cols_in_old)
+  
+  for (col in char_to_factor) {
+    # Convert character to factor with the same levels as in old_data
+    new_data[[col]] <- factor(new_data[[col]], levels = levels(old_data[[col]]))
+    
+    # Check if there are values in new_data that don't exist in old_data's levels
+    invalid_values <- setdiff(unique(as.character(new_data[[col]])), levels(old_data[[col]]))
+    if (length(invalid_values) > 0 && !all(is.na(invalid_values))) {
+      warning(paste("Values in column", col, "not found in reference levels:", paste(invalid_values[!is.na(invalid_values)], collapse = ", ")))
+    }
+  }
+  
+  return(new_data)
+}
