@@ -471,7 +471,6 @@ fit_model = function(
 )
 {
   
-  
   # # if analysis approximated
   # # If posterior analysis is approximated I just need enough
   # how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
@@ -761,11 +760,11 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
   
   # Define the variables as NULL to avoid CRAN NOTES
   formula <- NULL
-  
+   
   .sample = enquo(.sample)
   
-  grouping_table =
-    formula_composition |>
+
+  formula_composition |>
     formula_to_random_effect_formulae() |>
     
     mutate(design = map2(
@@ -782,7 +781,8 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
         mydesigncol_X_random_eff |>
           as_tibble(rownames = quo_name(.sample)) |>
           pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
-          filter(!is.na(grouping)) |>
+          
+          # filter(!is.na(grouping)) |>
           
           mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() )|>
           with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
@@ -973,17 +973,138 @@ get_random_effect_design = function(.data_, .sample, random_effect_elements ){
 }
 
 #' @importFrom glue glue
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate
+#' @importFrom dplyr across
+#' @importFrom dplyr pull
+#' @importFrom tidyr where
+#' @importFrom rlang enquo
 #' @noRd
-get_design_matrix = function(.data_spread, formula, .sample){
+get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE){
   
   .sample = enquo(.sample)
   
-  design_matrix =
-    .data_spread %>%
+  .data_spread = .data_spread %>%
     
     select(!!.sample, parse_formula(formula)) |>
-    mutate(across(where(is.numeric),  scale)) |>
+    mutate(across(where(is.numeric),  scale)) 
+
+  # Check if we should handle NAs as average effects
+  if(accept_NA_as_average_effect && any(is.na(.data_spread |> select(parse_formula(formula))))){
+    return(get_design_matrix_with_na_handling(.data_spread, formula, !!.sample))
+  }
+  
+  design_matrix =
+    .data_spread |>
     model.matrix(formula, data=_)
+  
+  rownames(design_matrix) = .data_spread |> pull(!!.sample)
+  
+  design_matrix
+}
+
+#' @description
+#' This function handles NA values in a special way for design matrices.
+#' When NA values are present in categorical variables (factors or characters), they are treated as a separate
+#' level "NA" initially, but then this level is removed from the design matrix. For rows with NA values,
+#' the function sets equal weights (0.5) across all remaining factor levels. This approach allows for modeling
+#' the average effect across all levels of a factor when the specific level is unknown or missing, rather than
+#' excluding these observations or treating NA as its own distinct category. This is particularly useful when
+#' you want to include observations with missing factor values but don't want to bias the model toward any
+#' particular level of that factor.
+#' 
+#' @param .data_spread A data frame containing the data.
+#' @param formula The formula to use for creating the design matrix.
+#' @param .sample A quosure representing the sample variable.
+#' 
+#' @return A design matrix with rows named by the sample variable.
+#' 
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate
+#' @importFrom dplyr across
+#' @importFrom dplyr pull
+#' @importFrom tidyr where
+#' @importFrom rlang enquo
+#' @noRd
+get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
+  
+  .sample = enquo(.sample)
+  
+  # Convert NA to a factor level "NA" for categorical variables
+  data_with_na = .data_spread %>%
+    mutate(across(
+      where(function(x) is.factor(x) || is.character(x)), 
+      ~{
+        if(any(is.na(.x))) {
+          # First convert to character
+          x_char <- as.character(.x)
+          # Replace NA values with the string "NA"
+          x_char[is.na(x_char)] <- "NA"
+          # Convert back to factor with the "NA" level included
+          factor(x_char)
+        } else {
+          .x
+        }
+      }
+    ))
+  
+  # Create design matrix
+  design_matrix = model.matrix(formula, data = data_with_na, na.action = NULL)
+  
+  # Process rows that had NA values and remove the "NA" columns
+  for(col_name in names(data_with_na)) {
+    if(is.factor(data_with_na[[col_name]]) || is.character(data_with_na[[col_name]])) {
+      # Get unique levels of this factor (excluding NA)
+      factor_levels = levels(factor(data_with_na[[col_name]]))
+      factor_levels = factor_levels[factor_levels != "NA"]
+      
+      # Find the "NA" column for this factor
+      na_col_pattern = paste0(col_name, "NA$")
+      na_col = grep(na_col_pattern, colnames(design_matrix))
+      
+      if(length(na_col) > 0) {
+        # Find rows with NA values using the design matrix
+        na_rows = which(design_matrix[, na_col] == 1)
+        
+        if(length(na_rows) > 0) {
+          # Find all columns related to this factor in the design matrix
+          factor_cols = c()
+          for(level in factor_levels) {
+            # Skip the reference level which won't appear in the design matrix
+            level_col = grep(paste0("^", col_name, level, "$"), colnames(design_matrix))
+            if(length(level_col) > 0) {
+              factor_cols = c(factor_cols, level_col)
+            }
+          }
+          
+          # If we can't find factor columns by level names, try the generic pattern
+          if(length(factor_cols) == 0) {
+            factor_pattern = paste0("^", col_name)
+            factor_cols = grep(factor_pattern, colnames(design_matrix))
+            factor_cols = setdiff(factor_cols, na_col)
+          }
+          
+          # Remove NA column from design matrix
+          design_matrix = design_matrix[, -na_col, drop = FALSE]
+          
+          # Number of visible levels in design matrix (accounting for reference level)
+          n_levels = length(factor_cols)
+          
+          # For multi-level factors, we need to consider the reference level too
+          # The reference level is implied when all other level columns are 0
+          # So we distribute 1/(n_levels+1) to each visible level
+          # Base level gets effect of 1 - sum(other_effects)
+          
+          if(n_levels > 0) {
+            for(row in na_rows) {
+              # Equal weight for each level
+              design_matrix[row, factor_cols] = 1/(n_levels + 1)
+            }
+          }
+        }
+      }
+    }
+  }
   
   rownames(design_matrix) = .data_spread |> pull(!!.sample)
   
@@ -3140,18 +3261,30 @@ replicate_data = function(.data,
   # Harmonise factors
   new_data = new_data |> as_tibble() |> harmonise_factor_levels(old_data)
   
-  # Check if some values were not present in the original data
-  if(
-    new_data |> nrow() > 
-    new_data |> select(-!!.sample) |> drop_na() |> nrow()
-  )
-    stop(
-      "sccomp says: some factor values were not present in the original training data. \n",
-      new_data
-      )
+  # # Check if some values were not present in the original data
+  # if(
+  #   new_data |> nrow() > 
+  #   new_data |> select(-!!.sample) |> drop_na() |> nrow()
+  # )
+  #   stop(
+  #     "sccomp says: some factor values were not present in the original training data. \n",
+  #     new_data
+  #     )
 
-  new_data =  old_data |> bind_rows( new_data )
+  # check that for each column of the old data. The new data has values that are found in the old data, omit NA , ignore !!.sample column
+  map(
+    colnames(old_data) |> setdiff(quo_name(.sample)),
+    ~ if (any(!new_data[[.x]][!is.na(new_data[[.x]])] %in% old_data[[.x]])) {
+      stop(
+        paste(
+          "sccomp says: The values for column `", .x, "` in the new data must be among the factor levels in the original data. Please ensure that the factor levels are consistent between the two datasets."
+        )
+      )
+    }
+  )
   
+  new_data =  old_data |> bind_rows( new_data ) 
+
   new_X =
     new_data |>
     get_design_matrix(
@@ -3162,7 +3295,8 @@ replicate_data = function(.data,
         str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
         paste(collapse="") |>
         as.formula(),
-      !!.sample
+      !!.sample, 
+      accept_NA_as_average_effect = TRUE
     ) |>
     tail(nrow_new_data) %>%
     
@@ -3234,11 +3368,26 @@ replicate_data = function(.data,
       formula_composition
     )
   
+  # Set default random intercept
+  X_random_effect_which = array()[0]
+  new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
   
-  # if(random_effect_elements |> nrow() |> equals(0)) {
-  #   
-  # }
-  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any()) {
+  # setup default unknown_grouping variable for generated quantities
+  unknown_grouping = c(FALSE, FALSE)
+  
+  unknown_grouping[1] =
+    (random_effect_grouping$grouping %in% original_grouping_names[1]) |> any() &&
+    random_effect_grouping |>
+    filter(grouping==original_grouping_names[1]) |> 
+    pull(design) |> 
+    _[[1]] |> 
+    tail(nrow_new_data) |> 
+    pull(grouping) |> 
+    unique() |> 
+    is.na() |> 
+    all()
+  
+  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any() && !unknown_grouping[1]) {
     
     # HAVE TO DEBUG
     new_X_random_effect =
@@ -3265,7 +3414,7 @@ replicate_data = function(.data,
     ) 
     
     # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
-    X_random_effect_which =
+     X_random_effect_which =
       colnames(new_X_random_effect) |>
       match(
         model_input %$%
@@ -3274,17 +3423,31 @@ replicate_data = function(.data,
       ) |>
       as.array()
     
-    # Check if I have column in the new design that are not in the old one
-    missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
-    if(missing_columns |> length() > 0)
-      stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
-    
+    # # Check if I have column in the new design that are not in the old one
+    # missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
+    # if(missing_columns |> length() > 0 && !unknown_grouping[1])
+    #   stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
+    # 
   }
-  else{
-    X_random_effect_which = array()[0]
-    new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-    
-  }
+
+
+  
+  # Set default X random intercept
+  X_random_effect_which_2 = array()[0]
+  new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  
+  unknown_grouping[2] =
+    (random_effect_grouping$grouping %in% original_grouping_names[2]) |> any() &&
+    random_effect_grouping |>
+    filter(grouping==original_grouping_names[2]) |> 
+    pull(design) |> 
+    _[[1]] |> 
+    tail(nrow_new_data) |> 
+    pull(grouping) |> 
+    unique() |> 
+    is.na() |> 
+    all()
+  
   if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()){
     # HAVE TO DEBUG
     new_X_random_effect_2 =
@@ -3307,9 +3470,9 @@ replicate_data = function(.data,
     
     # Check that all effect combination were present when the model was fitted
     check_missing_parameters(
-      new_X_random_effect_2 |> colnames(), 
-      model_input %$% X_random_effect_2 |> colnames()
-    ) 
+        new_X_random_effect_2 |> colnames(), 
+        model_input %$% X_random_effect_2 |> colnames()
+      )
       
     # DUPLICATE
     X_random_effect_which_2 =
@@ -3322,10 +3485,7 @@ replicate_data = function(.data,
       as.array()
     
   }
-  else{
-    X_random_effect_which_2 = array()[0]
-    new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  }
+ 
   
   # New X
   model_input$X_original = model_input$X
@@ -3340,7 +3500,7 @@ replicate_data = function(.data,
   
   model_input$ncol_X_random_eff_new = ncol(new_X_random_effect) |> c(ncol(new_X_random_effect_2))
   
-  
+  model_input$unknown_grouping = unknown_grouping
   
   number_of_draws_in_the_fit = attr(.data, "fit") |>  get_output_samples()
   
@@ -3350,7 +3510,7 @@ replicate_data = function(.data,
   # Load model
   mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
   
-  
+
   # Generate quantities
   mod_rng |> sample_safe(
     generate_quantities_fx,
@@ -3936,6 +4096,7 @@ drop_environment <- function(obj) {
 
 check_missing_parameters <- function(effects, model_effects) {
   # Find missing parameters
+
   missing_parameters <- 
     effects |> 
     setdiff(model_effects)
@@ -3948,14 +4109,18 @@ check_missing_parameters <- function(effects, model_effects) {
       if (length(missing_parameters) > 3) "\n..."
     )
   }
+
 }
 
 harmonise_factor_levels <- function(dataframe_query, dataframe_reference) {
   # 1. Identify factor columns in the reference
   factor_cols <- names(dataframe_reference)[sapply(dataframe_reference, is.factor)]
   
+
   # 2. For each reference factor column, if the query has that column, coerce it to factor
   for (col in factor_cols) {
+
+
     if (col %in% names(dataframe_query)) {
       # Use the reference's levels
       ref_levels <- levels(dataframe_reference[[col]])
