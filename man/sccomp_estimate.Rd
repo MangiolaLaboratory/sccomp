@@ -90,7 +90,7 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{.count}{\strong{DEPRECATED}. Use \code{abundance_column} instead.}
 
-\item{approximate_posterior_inference}{DEPRECATED. Use inference_method instead.}
+\item{approximate_posterior_inference}{\strong{DEPRECATED}. Use \code{inference_method} instead.}
 
 \item{variational_inference}{\strong{DEPRECATED}. Use \code{inference_method} instead.}
 
