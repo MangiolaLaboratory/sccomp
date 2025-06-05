@@ -520,8 +520,8 @@ fit_model = function(
       data_for_model$how_many_factors_in_random_design[1]
     ))
     
-    init_list$random_effect_sigma_mu = 0.5 |> as.array()
-    init_list$random_effect_sigma_sigma = 0.2 |> as.array()
+    # init_list$random_effect_sigma_mu = 0.5 |> as.array()
+    # init_list$random_effect_sigma_sigma = 0.2 |> as.array()
     init_list$zero_random_effect = rep(0, size = 1) |> as.array()
     
   } 
@@ -1031,22 +1031,37 @@ get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
   .sample = enquo(.sample)
   
   # Convert NA to a factor level "NA" for categorical variables
-  data_with_na = .data_spread %>%
-    mutate(across(
-      where(function(x) is.factor(x) || is.character(x)), 
-      ~{
-        if(any(is.na(.x))) {
-          # First convert to character
-          x_char <- as.character(.x)
-          # Replace NA values with the string "NA"
-          x_char[is.na(x_char)] <- "NA"
-          # Convert back to factor with the "NA" level included
-          factor(x_char)
-        } else {
-          .x
+  data_with_na <- .data_spread %>%
+    mutate(
+      # 1) Handle factor/character: turn NA into a real “NA” level, last in the ordering
+      across(
+        where(~ is.factor(.x) || is.character(.x)),
+        ~{
+          if (any(is.na(.x))) {
+            x_char <- as.character(.x)
+            x_char[is.na(x_char)] <- "NA"
+            f <- factor(x_char)
+            non_na_levels <- setdiff(levels(f), "NA")
+            new_levels <- c(non_na_levels, "NA")
+            factor(f, levels = new_levels)
+          } else {
+            .x
+          }
         }
-      }
-    ))
+      ),
+      # 2) Handle numeric: replace NA by the (non-NA) mean of that column
+      across(
+        where(is.numeric),
+        ~{
+          if (any(is.na(.x))) {
+            mean_val <- mean(.x, na.rm = TRUE)
+            replace(.x, is.na(.x), mean_val)
+          } else {
+            .x
+          }
+        }
+      )
+    )
   
   # Create design matrix
   design_matrix = model.matrix(formula, data = data_with_na, na.action = NULL)
@@ -1105,7 +1120,7 @@ get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
       }
     }
   }
-  
+
   rownames(design_matrix) = .data_spread |> pull(!!.sample)
   
   design_matrix
@@ -1571,6 +1586,10 @@ data_spread_to_model_input =
         distinct() |> 
         nrow()
     }
+    
+    # Default all grouping known. This is used for data generation to estimate unknown groupings.
+    data_for_model$unknown_grouping = c(FALSE, FALSE)
+    
     
     # Return
     data_for_model
@@ -3272,11 +3291,16 @@ replicate_data = function(.data,
 
   # check that for each column of the old data. The new data has values that are found in the old data, omit NA , ignore !!.sample column
   map(
-    colnames(old_data) |> setdiff(quo_name(.sample)),
+    old_data %>%
+      
+      # Just apply to categorical
+      select(where(~ is.factor(.) || is.character(.))) %>%
+      names() %>%
+      setdiff(quo_name(.sample)),
     ~ if (any(!new_data[[.x]][!is.na(new_data[[.x]])] %in% old_data[[.x]])) {
       stop(
         paste(
-          "sccomp says: The values for column `", .x, "` in the new data must be among the factor levels in the original data. Please ensure that the factor levels are consistent between the two datasets."
+          "sccomp says: The values for column `",.x,"` in the new data must be among the factor levels in the original data. Please ensure that the factor levels are consistent between the two datasets."
         )
       )
     }
