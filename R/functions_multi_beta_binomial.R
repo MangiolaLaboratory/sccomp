@@ -310,7 +310,12 @@ sccomp_glm_data_frame_counts = function(.data,
       output_directory = output_directory,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "random_effect_sigma", "random_effect_sigma_2", "log_lik"),
+      pars = c(
+        "beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", 
+        "random_effect", "random_effect_2", 
+        "random_effect_sigma", "random_effect_sigma_2", 
+        "log_lik"
+      ),
       sig_figs = sig_figs,
       ...
     )

@@ -249,7 +249,7 @@ test_that("multilevel nested",{
   
   library(tidyseurat)
   library(sccomp)
-  #debugonce(sccomp:::fit_model)
+
   res =
     seurat_obj |>
     dplyr::left_join(
