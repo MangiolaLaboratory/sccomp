@@ -274,7 +274,7 @@ test_that("multilevel nested",{
   
   library(tidyseurat)
   library(sccomp)
-  #debugonce(sccomp:::fit_model)
+
   res =
     seurat_obj |>
     dplyr::left_join(
@@ -405,7 +405,7 @@ test_that("calculate residuals",{
   library(dplyr)
   
   my_estimate_random |> 
-    sccomp_calculate_residuals() |> 
+    sccomp:::sccomp_calculate_residuals() |> 
     pull(residuals) |> 
     max() |> 
     expect_lt(1)
