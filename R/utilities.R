@@ -773,19 +773,28 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
     
         mydesign = .data_ |> get_design_matrix(.x, !!.sample)
         
-        mydesigncol_X_random_eff = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
+        # Create a matrix of group assignments
+        group_matrix = .data_ |> 
+          select(all_of(.y)) |> 
+          pull(1) |> 
+          rep(ncol(mydesign)) |> 
+          matrix(ncol = ncol(mydesign))
         
-        # This is here to get a correct random effect matrix where a cancer
-        # sample does not have 1 to it's group for healthy label
-        mydesigncol_X_random_eff[mydesign==0L] = NA
-        colnames(mydesigncol_X_random_eff) = colnames(mydesign)
-        rownames(mydesigncol_X_random_eff) = rownames(mydesign)
+        # Create a mask where design matrix has 1
+        mask = mydesign == 1L
         
-        mydesigncol_X_random_eff |>
+        # Apply mask to group matrix (setting non-masked values to "")
+        group_matrix[!mask] = ""
+        
+        colnames(group_matrix) = colnames(mydesign)
+        rownames(group_matrix) = rownames(mydesign)
+        
+        group_matrix |>
           as_tibble(rownames = quo_name(.sample)) |>
           pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
           
-          filter(!is.na(grouping)) |>
+          # Only keep rows where grouping is not empty
+          filter(grouping != "") |>
           
           mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() ) |>
           with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
@@ -819,8 +828,6 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
           mutate(group___label = glue("{factor}___{grouping}")) |>
           mutate(group___numeric = group___label |> as.factor() |> as.integer()) |>
           mutate(factor___numeric = `factor` |> as.factor() |> as.integer())
-        
-        
         
       }))
   
@@ -1035,7 +1042,7 @@ get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
   # Convert NA to a factor level "NA" for categorical variables
   data_with_na <- .data_spread %>%
     mutate(
-      # 1) Handle factor/character: turn NA into a real “NA” level, last in the ordering
+      # 1) Handle factor/character: turn NA into a real "NA" level, last in the ordering
       across(
         where(~ is.factor(.x) || is.character(.x)),
         ~{
