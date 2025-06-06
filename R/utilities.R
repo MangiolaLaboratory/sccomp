@@ -770,10 +770,13 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
     mutate(design = map2(
       formula, grouping,
       ~ {
-        
+    
         mydesign = .data_ |> get_design_matrix(.x, !!.sample)
         
         mydesigncol_X_random_eff = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
+        
+        # This is here to get a correct random effect matrix where a cancer
+        # sample does not have 1 to it's group for healthy label
         mydesigncol_X_random_eff[mydesign==0L] = NA
         colnames(mydesigncol_X_random_eff) = colnames(mydesign)
         rownames(mydesigncol_X_random_eff) = rownames(mydesign)
@@ -782,9 +785,9 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
           as_tibble(rownames = quo_name(.sample)) |>
           pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
           
-          # filter(!is.na(grouping)) |>
+          filter(!is.na(grouping)) |>
           
-          mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() )|>
+          mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() ) |>
           with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
           mutate(minus_sum = if_else(mean_idx==0, factor |> as.factor() |> as.integer(), 0L)) |>
           
@@ -822,7 +825,6 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
       }))
   
 }
-
 
 #' Get Random Intercept Design
 #'
