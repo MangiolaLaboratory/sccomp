@@ -794,20 +794,13 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
           pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
           
           # Only keep rows where grouping is not empty
-          filter(grouping != "") |>
+          filter(grouping |> is.na() | grouping != "") |>
           
           mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() ) |>
           with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
-          mutate(minus_sum = if_else(mean_idx==0, factor |> as.factor() |> as.integer(), 0L)) |>
           
           # Make right rank
           mutate(mean_idx = mean_idx |> as.factor() |> as.integer() |> subtract(1)) |>
-          
-          # drop minus_sum if we just have one grouping per factor
-          with_groups(factor, ~ {
-            if(length(unique(..1$grouping)) == 1) ..1 |> mutate(., minus_sum = 0)
-            else ..1
-          }) |>
           
           # Add value
           left_join(
