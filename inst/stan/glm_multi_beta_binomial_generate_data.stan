@@ -293,12 +293,6 @@ generated quantities{
   if(length_X_random_effect_which[1]>0) {
 
     // Generate random effects matrix - either from fitted effects or random draws
-    matrix[ncol_X_random_eff[1], M-1] my_random_effect_raw = 
-      unknown_grouping[1]>0 ? 
-        // If unknown grouping, generate random draws
-        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff[1] * (M-1)), ncol_X_random_eff[1], M-1) :
-        // Otherwise use fitted effects
-        random_effect_raw;
     
     // Get transformed random effects
     random_effect = get_random_effect_matrix(
@@ -308,25 +302,26 @@ generated quantities{
       is_random_effect,
       ncol_X_random_eff[1],
       group_factor_indexes_for_covariance,
-      my_random_effect_raw,
+      random_effect_raw,
       random_effect_sigma,
       sigma_correlation_factor
     );
     
     // Apply random effects
     mu = mu + append_row((X_random_effect * random_effect[X_random_effect_which,])', rep_row_vector(0, N));
+    
+    // Add random effects for unseen groups if they exist
+    if(ncol(X_random_effect_unseen) > 0) {
+      matrix[ncol(X_random_effect_unseen), M-1] unseen_random_effect = 
+        to_matrix(rep_vector(std_normal_rng(), ncol(X_random_effect_unseen) * (M-1)), ncol(X_random_effect_unseen), M-1);
+      mu = mu + append_row((X_random_effect_unseen * unseen_random_effect)', rep_row_vector(0, N));
+    }
   }
   
   // For second random effect
   if(length_X_random_effect_which[2]>0) {
 
     // Generate random effects matrix - either from fitted effects or random draws
-    matrix[ncol_X_random_eff[2], M-1] my_random_effect_raw_2 = 
-      unknown_grouping[2]>0 ? 
-        // If unknown grouping, generate random draws
-        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff[2] * (M-1)), ncol_X_random_eff[2], M-1) :
-        // Otherwise use fitted effects
-        random_effect_raw_2;
     
     // Get transformed random effects
     random_effect_2 = get_random_effect_matrix(
@@ -336,13 +331,20 @@ generated quantities{
       is_random_effect,
       ncol_X_random_eff[2],
       group_factor_indexes_for_covariance_2,
-      my_random_effect_raw_2,
+      random_effect_raw_2,
       random_effect_sigma_2,
       sigma_correlation_factor_2
     );
     
     // Apply random effects
     mu = mu + append_row((X_random_effect_2 * random_effect_2[X_random_effect_which_2,])', rep_row_vector(0, N));
+    
+    // Add random effects for unseen groups if they exist
+    if(ncol(X_random_effect_2_unseen) > 0) {
+      matrix[ncol(X_random_effect_2_unseen), M-1] unseen_random_effect_2 = 
+        to_matrix(rep_vector(std_normal_rng(), ncol(X_random_effect_2_unseen) * (M-1)), ncol(X_random_effect_2_unseen), M-1);
+      mu = mu + append_row((X_random_effect_2_unseen * unseen_random_effect_2)', rep_row_vector(0, N));
+    }
   }
 
   // Calculate proportions
