@@ -757,7 +757,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom tidyselect all_of
 #' @importFrom readr type_convert
 #' @noRd
-get_random_effect_design2 = function(.data_, .sample, formula_composition ){
+get_random_effect_design2 = function(.data_, .sample, formula_composition, accept_NA_as_average_effect = FALSE ){
   
   # Define the variables as NULL to avoid CRAN NOTES
   formula <- NULL
@@ -771,8 +771,8 @@ get_random_effect_design2 = function(.data_, .sample, formula_composition ){
     mutate(design = map2(
       formula, grouping,
       ~ {
-    
-        mydesign = .data_ |> get_design_matrix(.x, !!.sample)
+   
+        mydesign = .data_ |> get_design_matrix(.x, !!.sample, accept_NA_as_average_effect = accept_NA_as_average_effect)
         
         # Create a matrix of group assignments
         group_matrix = .data_ |> 
@@ -4033,7 +4033,8 @@ prepare_replicate_data = function(X,
         str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
         paste(collapse="") |>
         as.formula(),
-      !!.sample
+      !!.sample, 
+      accept_NA_as_average_effect = TRUE
     ) |>
     tail(nrow_new_data) %>%
     # Remove columns that are not in the original design matrix
@@ -4071,7 +4072,8 @@ prepare_replicate_data = function(X,
     new_data |> 
     get_random_effect_design2(
       !!.sample,
-      formula_composition
+      formula_composition,
+      accept_NA_as_average_effect = TRUE
     )
   
   if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any() && !unknown_grouping[1]) {
@@ -4090,7 +4092,7 @@ prepare_replicate_data = function(X,
       _[[1]] |> 
       as_matrix(rownames = quo_name(.sample))  |>
       tail(nrow_new_data)
-    
+   
     # Separate NA group column into new_X_random_effect_unseen
     new_X_random_effect_unseen = new_X_random_effect[, colnames(new_X_random_effect) |> str_detect("___NA$"), drop = FALSE]
     new_X_random_effect = new_X_random_effect[, !colnames(new_X_random_effect) |> str_detect("___NA$"), drop = FALSE]
