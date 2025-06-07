@@ -4151,7 +4151,7 @@ prepare_replicate_data = function(X,
   }
   
   # Prepare the list of inputs to the model
-  new_model_input = list(
+  list(
     X = new_X,
     Xa = new_Xa,
     N = nrow_new_data,  
@@ -4161,17 +4161,16 @@ prepare_replicate_data = function(X,
     X_random_effect_unseen = new_X_random_effect_unseen,
     X_random_effect_2_unseen = new_X_random_effect_2_unseen,
     ncol_X_random_eff_new = c(ncol(new_X_random_effect), ncol(new_X_random_effect_2)),  
-    unknown_grouping = unknown_grouping
-  )
-  
-  list(
-    model_input = new_model_input,
+    unknown_grouping = unknown_grouping,
+    ncol_X_random_eff_unseen = c(ncol(new_X_random_effect_unseen), ncol(new_X_random_effect_2_unseen)),
+
     X_which = X_which,
     XA_which = XA_which,
     X_random_effect_which = X_random_effect_which,
     X_random_effect_which_2 = X_random_effect_which_2,
     create_intercept = create_intercept
   )
+ 
 }
 
 #' Generate replicated data from a fitted sccomp model
@@ -4220,6 +4219,9 @@ replicate_data = function(.data,
   # Get original count data
   original_count_data = .data |> select(count_data) |> unnest(count_data)
   
+  # create model input 
+  model_input = attr(.data, "model_input")
+
   # Prepare data
   prepared_data = prepare_replicate_data(
     X = model_input$X,
@@ -4238,22 +4240,40 @@ replicate_data = function(.data,
   )
   
   # Original input 
-  model_input = attr(.data, "model_input")
   model_input$X_original = model_input$X
   model_input$N_original = model_input$N
   
   # New input
-  model_input$X = prepared_data$model_input$X
-  model_input$Xa = prepared_data$model_input$Xa 
-  model_input$N = prepared_data$model_input$N
-  model_input$exposure = prepared_data$model_input$exposure
-  model_input$X_random_effect = prepared_data$model_input$X_random_effect
-  model_input$X_random_effect_2 = prepared_data$model_input$X_random_effect_2
-  model_input$X_random_effect_unseen = prepared_data$model_input$X_random_effect_unseen
-  model_input$X_random_effect_2_unseen = prepared_data$model_input$X_random_effect_2_unseen
-  model_input$ncol_X_random_eff_new = prepared_data$model_input$ncol_X_random_eff_new
-  model_input$unknown_grouping = prepared_data$model_input$unknown_grouping
+  model_input$X = prepared_data$X
+  model_input$Xa = prepared_data$Xa 
+  model_input$N = prepared_data$N
+  model_input$exposure = prepared_data$exposure
+  model_input$X_random_effect = prepared_data$X_random_effect
+  model_input$X_random_effect_2 = prepared_data$X_random_effect_2
+  model_input$X_random_effect_unseen = prepared_data$X_random_effect_unseen
+  model_input$X_random_effect_2_unseen = prepared_data$X_random_effect_2_unseen
+  model_input$ncol_X_random_eff_new = prepared_data$ncol_X_random_eff_new
+  model_input$unknown_grouping = prepared_data$unknown_grouping
+  model_input$ncol_X_random_eff_unseen = prepared_data$ncol_X_random_eff_unseen
+
+  # Add subset of coefficients
+  # Add subset of coefficients
+  model_input$length_X_which = length(prepared_data$X_which)
+  model_input$length_XA_which = length(prepared_data$XA_which)
+  model_input$X_which = prepared_data$X_which
+  model_input$XA_which = prepared_data$XA_which
   
+  # Add random effect coefficients
+  model_input$X_random_effect_which = prepared_data$X_random_effect_which
+  model_input$X_random_effect_which_2 = prepared_data$X_random_effect_which_2
+  model_input$length_X_random_effect_which = c(
+    length(prepared_data$X_random_effect_which),
+    length(prepared_data$X_random_effect_which_2)
+  )
+
+  # Should I create an intercept for generate quantities?
+  model_input$create_intercept = prepared_data$create_intercept
+      
   number_of_draws_in_the_fit = attr(.data, "fit") |>  get_output_samples()
   
   # To avoid error in case of a NULL posterior sample
@@ -4268,21 +4288,7 @@ replicate_data = function(.data,
     attr(.data, "fit")$draws(format = "matrix")[
       sample(seq_len(number_of_draws_in_the_fit), size=number_of_draws),, drop=FALSE
     ],
-    data = model_input |> c(list(
-      # Add subset of coefficients
-      length_X_which = length(prepared_data$X_which),
-      length_XA_which = length(prepared_data$XA_which),
-      X_which = prepared_data$X_which,
-      XA_which = prepared_data$XA_which,
-      
-      # Random intercept
-      X_random_effect_which = prepared_data$X_random_effect_which,
-      X_random_effect_which_2 = prepared_data$X_random_effect_which_2,
-      length_X_random_effect_which = length(prepared_data$X_random_effect_which) |> c(length(prepared_data$X_random_effect_which_2)),
-      
-      # Should I create an intercept for generate quantities?
-      create_intercept = prepared_data$create_intercept
-    )),
+    data = model_input,
     seed = mcmc_seed, 
     threads_per_chain = 1
   )

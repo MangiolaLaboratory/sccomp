@@ -160,6 +160,13 @@ data {
   array[how_many_factors_in_random_design[2], n_groups[2]] int group_factor_indexes_for_covariance_2;
 
   array[2] int<lower=0, upper = 1> unknown_grouping;
+  
+  // Dimensions for unseen random effects
+  array[2] int ncol_X_random_eff_unseen;
+  
+  // Matrix for unseen random effects
+  matrix[N, ncol_X_random_eff_unseen[1]] X_random_effect_unseen;
+  matrix[N, ncol_X_random_eff_unseen[2]] X_random_effect_2_unseen;
 }
 transformed data{
   matrix[C, C] R_ast_inverse;
@@ -311,9 +318,9 @@ generated quantities{
     mu = mu + append_row((X_random_effect * random_effect[X_random_effect_which,])', rep_row_vector(0, N));
     
     // Add random effects for unseen groups if they exist
-    if(ncol(X_random_effect_unseen) > 0) {
-      matrix[ncol(X_random_effect_unseen), M-1] unseen_random_effect = 
-        to_matrix(rep_vector(std_normal_rng(), ncol(X_random_effect_unseen) * (M-1)), ncol(X_random_effect_unseen), M-1);
+    if(ncol_X_random_eff_unseen[1] > 0) {
+      matrix[ncol_X_random_eff_unseen[1], M-1] unseen_random_effect = 
+        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[1] * (M-1)), ncol_X_random_eff_unseen[1], M-1);
       mu = mu + append_row((X_random_effect_unseen * unseen_random_effect)', rep_row_vector(0, N));
     }
   }
@@ -340,9 +347,9 @@ generated quantities{
     mu = mu + append_row((X_random_effect_2 * random_effect_2[X_random_effect_which_2,])', rep_row_vector(0, N));
     
     // Add random effects for unseen groups if they exist
-    if(ncol(X_random_effect_2_unseen) > 0) {
-      matrix[ncol(X_random_effect_2_unseen), M-1] unseen_random_effect_2 = 
-        to_matrix(rep_vector(std_normal_rng(), ncol(X_random_effect_2_unseen) * (M-1)), ncol(X_random_effect_2_unseen), M-1);
+    if(ncol_X_random_eff_unseen[2] > 0) {
+      matrix[ncol_X_random_eff_unseen[2], M-1] unseen_random_effect_2 = 
+        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[2] * (M-1)), ncol_X_random_eff_unseen[2], M-1);
       mu = mu + append_row((X_random_effect_2_unseen * unseen_random_effect_2)', rep_row_vector(0, N));
     }
   }
