@@ -728,8 +728,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
   
 }
 
-
-#' Get Random Intercept Design 2
+#' Get Random Intercept Design 3
 #'
 #' This function processes the formula composition elements in the data and creates design matrices
 #' for random intercept models.
@@ -757,222 +756,61 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom tidyselect all_of
 #' @importFrom readr type_convert
 #' @noRd
-get_random_effect_design2 = function(.data_, .sample, formula_composition, accept_NA_as_average_effect = FALSE ){
+get_random_effect_design3 = function(
+  .data_, formula, grouping, .sample, 
+  accept_NA_as_average_effect = FALSE 
+){
   
   # Define the variables as NULL to avoid CRAN NOTES
-  formula <- NULL
-   
   .sample = enquo(.sample)
   
-
-  formula_composition |>
-    formula_to_random_effect_formulae() |>
-    
-    mutate(design = map2(
-      formula, grouping,
-      ~ {
-   
-        mydesign = .data_ |> get_design_matrix(.x, !!.sample, accept_NA_as_average_effect = accept_NA_as_average_effect)
-        
-        # Create a matrix of group assignments
-        group_matrix = .data_ |> 
-          select(all_of(.y)) |> 
-          pull(1) |> 
-          rep(ncol(mydesign)) |> 
-          matrix(ncol = ncol(mydesign))
-        
-        # Create a mask where design matrix has 1
-        mask = mydesign == 1L
-        
-        # Apply mask to group matrix (setting non-masked values to "")
-        group_matrix[!mask] = ""
-        
-        colnames(group_matrix) = colnames(mydesign)
-        rownames(group_matrix) = rownames(mydesign)
-        
-        group_matrix |>
-          as_tibble(rownames = quo_name(.sample)) |>
-          pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
-          
-          # Only keep rows where grouping is not empty
-          filter(grouping |> is.na() | grouping != "") |>
-          
-          mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() ) |>
-          with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
-          
-          # Make right rank
-          mutate(mean_idx = mean_idx |> as.factor() |> as.integer() |> subtract(1)) |>
-          
-          # Add value
-          left_join(
-            
-            mydesign |>
-              as.data.frame() |> 
-              mutate_all(as.character) |> 
-              readr::type_convert(guess_integer = TRUE ) |> 
-              as_tibble(rownames = quo_name(.sample)) |>
-              suppressMessages() |>
-              mutate_if(is.integer, ~1) |>
-              pivot_longer(-!!.sample, names_to = "factor"),
-            
-            by = join_by(!!.sample, factor)
-          ) |>
-          
-          # Create unique name
-          mutate(group___label = glue("{factor}___{grouping}")) |>
-          mutate(group___numeric = group___label |> as.factor() |> as.integer()) |>
-          mutate(factor___numeric = `factor` |> as.factor() |> as.integer())
-        
-      }))
+  mydesign = .data_ |> get_design_matrix(formula, !!.sample, accept_NA_as_average_effect = accept_NA_as_average_effect)
   
-}
-
-#' Get Random Intercept Design
-#'
-#' This function processes random intercept elements in the data and creates design matrices
-#' for random intercept models.
-#'
-#' @param .data_ A data frame containing the data.
-#' @param .sample A quosure representing the sample variable.
-#' @param random_effect_elements A data frame containing the random intercept elements.
-#' 
-#' @return A data frame with the processed design matrices for random intercept models.
-#' 
-#' @importFrom glue glue
-#' @importFrom magrittr subtract
-#' @importFrom dplyr select
-#' @importFrom dplyr mutate
-#' @importFrom dplyr pull
-#' @importFrom dplyr if_else
-#' @importFrom dplyr distinct
-#' @importFrom dplyr group_by
-#' @importFrom dplyr summarise
-#' @importFrom rlang set_names
-#' @importFrom purrr map_lgl
-#' @importFrom purrr pmap
-#' @importFrom purrr map_int
-#' @importFrom dplyr with_groups
-#' @importFrom rlang enquo
-#' @importFrom rlang quo_name
-#' @importFrom tidyselect all_of
-#' @noRd
-get_random_effect_design = function(.data_, .sample, random_effect_elements ){
+  # Create a matrix of group assignments
+  group_matrix = .data_ |> 
+    select(all_of(grouping)) |> 
+    pull(1) |> 
+    rep(ncol(mydesign)) |> 
+    matrix(ncol = ncol(mydesign))
   
-  # Define the variables as NULL to avoid CRAN NOTES
-  is_factor_continuous <- NULL
-  design <- NULL
-  max_mean_idx <- NULL
-  max_minus_sum <- NULL
-  max_factor_numeric <- NULL
-  max_group_numeric <- NULL
-  min_mean_idx <- NULL
-  min_minus_sum <- NULL
+  # Create a mask where design matrix has non-zero values
+  mask = mydesign != 0
   
-  .sample = enquo(.sample)
+  # Apply mask to group matrix (setting non-masked values to "")
+  group_matrix[!mask] = ""
   
-  # If intercept is not defined create it
-  if(nrow(random_effect_elements) == 0 )
-    return(
-      random_effect_elements |>
-        mutate(
-          design = list(),
-          is_factor_continuous = logical()
-        )
-    )
+  colnames(group_matrix) = colnames(mydesign)
+  rownames(group_matrix) = rownames(mydesign)
   
-  # Otherwise process
-  random_effect_elements |>
-    mutate(is_factor_continuous = map_lgl(
-      `factor`,
-      ~ .x != "(Intercept)" && .data_ |> select(all_of(.x)) |> pull(1) |> is("numeric")
-    )) |>
-    mutate(design = pmap(
-      list(grouping, `factor`, is_factor_continuous),
-      ~ {
-        
-        # Make exception for random intercept
-        if(..2 == "(Intercept)")
-          .data_ = .data_ |> mutate(`(Intercept)` = 1)
-        
-        .data_ =
-          .data_ |>
-          select(!!.sample, ..1, ..2) |>
-          set_names(c(quo_name(.sample), "group___", "factor___")) |>
-          mutate(group___numeric = group___, factor___numeric = factor___) |>
-          
-          mutate(group___label := glue("{group___}___{.y}")) |>
-          mutate(factor___ = ..2)
-        
-        
-        # If factor is continuous
-        if(..3)
-          .data_ %>%
-          
-          # Mutate random intercept grouping to number
-          mutate(group___numeric = factor(group___numeric) |> as.integer()) |>
-          
-          # If intercept is not defined create it
-          mutate(., factor___numeric = 1L) |>
-          
-          # If categorical make sure the group is independent for factors
-          mutate(mean_idx = glue("{group___numeric}") |> as.factor() |> as.integer()) |>
-          mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx)) |>
-          mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
-          mutate(minus_sum = if_else(mean_idx==0, 1L, 0L))
-        
-        #|>
-        #  distinct()
-        
-        # If factor is discrete
-        else
-          .data_ %>%
-          
-          # Mutate random intercept grouping to number
-          mutate(group___numeric = factor(group___numeric) |> as.integer()) |>
-          
-          # If categorical make sure the group is independent for factors
-          mutate(mean_idx = glue("{factor___numeric}{group___numeric}") |> as.factor() |> as.integer()) |>
-          with_groups(factor___numeric, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
-          mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
-          mutate(minus_sum = if_else(mean_idx==0, as.factor(factor___numeric) |> as.integer(), 0L)) |>
-          
-          # drop minus_sum if we just have one group___numeric per factor
-          with_groups(factor___numeric, ~ {
-            if(length(unique(..1$group___numeric)) == 1) ..1 |> mutate(., minus_sum = 0)
-            else ..1
-          }) |>
-          mutate(factor___numeric = as.factor(factor___numeric) |> as.integer())
-        
-        #|>
-        #  distinct()
-      }
-    )) |>
-    
-    # Make indexes unique across parameters
+  # Create the result matrix
+  result = matrix(0, nrow = nrow(mydesign), ncol = ncol(mydesign))
+  rownames(result) = rownames(mydesign)
+  colnames(result) = colnames(mydesign)
+  
+  # For each column in the design matrix
+  for(col in seq_len(ncol(mydesign))) {
+    # Get the non-zero values and their corresponding groups
+    non_zero = mydesign[, col] != 0
+    if(any(non_zero)) {
+      # Set the values in the result matrix
+      result[non_zero, col] = mydesign[non_zero, col]
+    }
+  }
+  
+  # Convert to long format with the correct column names
+  result_long = result |>
+    as.data.frame() |>
+    rownames_to_column("sample") |>
+    pivot_longer(-sample, names_to = "factor", values_to = "value") |>
+    filter(value != 0) |>
     mutate(
-      max_mean_idx = map_int(design, ~ ..1 |> pull(mean_idx) |> max()),
-      max_minus_sum = map_int(design, ~ ..1 |> pull(minus_sum) |> max()),
-      max_factor_numeric = map_int(design, ~ ..1 |> pull(factor___numeric) |> max()),
-      max_group_numeric = map_int(design, ~ ..1 |> pull(group___numeric) |> max())
+      group___label = paste0(factor, "___", group_matrix[cbind(sample, factor)]),
+      group___numeric = as.integer(factor(group___label)),
+      factor___numeric = as.integer(factor(factor))
     ) |>
-    mutate(
-      min_mean_idx = cumsum(max_mean_idx) - max_mean_idx ,
-      min_minus_sum = cumsum(max_minus_sum) - max_minus_sum,
-      max_factor_numeric = cumsum(max_factor_numeric) - max_factor_numeric,
-      max_group_numeric = cumsum(max_group_numeric) - max_group_numeric
-    ) |>
-    mutate(design = pmap(
-      list(design, min_mean_idx, min_minus_sum, max_factor_numeric, max_group_numeric),
-      ~ ..1 |>
-        mutate(
-          mean_idx = if_else(mean_idx>0, mean_idx + ..2, mean_idx),
-          minus_sum = if_else(minus_sum>0, minus_sum + ..3, minus_sum),
-          factor___numeric = factor___numeric + ..4,
-          group___numeric = group___numeric + ..5
-          
-        )
-    ))
+    select(sample, group___label, value)
   
+  result_long
 }
 
 #' @importFrom glue glue
@@ -992,8 +830,16 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
     select(!!.sample, parse_formula(formula)) |>
     mutate(across(where(is.numeric),  scale)) 
 
+  # Check for NAs in the data
+  has_na = any(is.na(.data_spread |> select(parse_formula(formula))))
+  
+  # If NAs are present and we don't accept them as average effects, throw an error
+  if(has_na && !accept_NA_as_average_effect){
+    stop("sccomp says: NA values are present in the design matrix factors. Set accept_NA_as_average_effect = TRUE to handle NAs as average effects across factor levels.")
+  }
+
   # Check if we should handle NAs as average effects
-  if(accept_NA_as_average_effect && any(is.na(.data_spread |> select(parse_formula(formula))))){
+  if(accept_NA_as_average_effect && has_na){
     return(get_design_matrix_with_na_handling(.data_spread, formula, !!.sample))
   }
   
@@ -1058,7 +904,7 @@ get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
         ~{
           if (any(is.na(.x))) {
             mean_val <- mean(.x, na.rm = TRUE)
-            replace(.x, is.na(.x), mean_val)
+            ifelse(is.na(.x), mean_val, .x)  # Only replace NAs, keep original values
           } else {
             .x
           }
@@ -1371,8 +1217,15 @@ data_spread_to_model_input =
     # Random intercept
     if(nrow(random_effect_elements)>0 ) {
       
+  
       #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
-      random_effect_grouping = get_random_effect_design2(.data_spread, !!.sample,  formula )
+      random_effect_grouping = formula |>
+        formula_to_random_effect_formulae() |>
+        mutate(design = map2(
+          formula, grouping,
+          ~ {
+            get_random_effect_design3(.data_spread, .x, .y, !!.sample )
+          }))
       
       # Actual parameters, excluding for the sum to one parameters
       is_random_effect = 1
@@ -4068,13 +3921,17 @@ prepare_replicate_data = function(X,
   # setup default unknown_grouping variable for generated quantities
   unknown_grouping = c(FALSE, FALSE)
   
-  random_effect_grouping =
-    new_data |> 
-    get_random_effect_design2(
-      !!.sample,
-      formula_composition,
-      accept_NA_as_average_effect = TRUE
-    )
+      #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
+      random_effect_grouping = 
+        formula_composition |>
+        formula_to_random_effect_formulae() |>
+        mutate(design = map2(
+          formula, grouping,
+          ~  get_random_effect_design3(new_data, .x, .y, !!.sample,
+      accept_NA_as_average_effect = TRUE )
+          ))
+
+
   
   if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any() && !unknown_grouping[1]) {
     new_X_random_effect =
@@ -4083,9 +3940,9 @@ prepare_replicate_data = function(X,
       mutate(design_matrix = map(
         design,
         ~ ..1 |>
-          select(!!.sample, group___label, value) |>
-          pivot_wider(names_from = group___label, values_from = value) |>
-          mutate(across(everything(), ~ .x |> replace_na(0)))
+            select(!!.sample, group___label, value) |>
+            pivot_wider(names_from = group___label, values_from = value) |>
+            mutate(across(everything(), ~ .x |> replace_na(0)))
       )) |>
       # Merge
       pull(design_matrix) |> 

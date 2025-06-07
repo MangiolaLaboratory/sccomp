@@ -263,6 +263,125 @@ test_that("replicate_data works with random slope model", {
   print(result$X_random_effect_unseen)
 })
 
+test_that("replicate_data works with random slope model and type NA", {
+  # Load test data
+  data("counts_obj")
+  
+  # Create formulas with random slope
+  formula_composition = ~ type + (type | group__)
+  formula_variability = ~ type
+
+  # test data 
+  test_data = 
+    counts_obj |> 
+    left_join(
+      tibble(
+        sample = unique(counts_obj$sample),
+        group__ = case_when(
+          sample %in% unique(sample)[1:10] ~ "GROUP1",
+          TRUE ~ "GROUP2"
+        )
+      )
+    )
+
+
+  # Create test data with group information and type NA
+  new_data = 
+    test_data |> 
+    mutate(type = NA_character_)
+
+
+
+  # Create .data object
+  model_input = 
+    test_data |> 
+    sccomp:::data_to_spread(
+      formula = formula_composition,
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "group__"
+    ) |>
+    sccomp:::data_spread_to_model_input(
+      formula = formula_composition,
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      truncation_ajustment = 1.1,
+      approximate_posterior_inference = FALSE,
+      formula_variability = formula_variability,
+      contrasts = NULL,
+      bimodal_mean_variability_association = FALSE,
+      use_data = TRUE,
+      random_effect_elements = tibble(
+        factor = c("(Intercept)", "type"),
+        grouping = c("group__", "group__")
+      )
+    )
+
+  # Prepare replicate data
+  result = sccomp:::prepare_replicate_data(
+    X = model_input$X,
+    Xa = model_input$Xa,
+    N = model_input$N,
+    intercept_in_design = model_input$intercept_in_design,
+    X_random_effect = model_input$X_random_effect,
+    X_random_effect_2 = model_input$X_random_effect_2,
+    .sample = rlang::quo(sample),
+    .cell_group = rlang::quo(cell_group),
+    .count = rlang::quo(count),
+    formula_composition = formula_composition,
+    formula_variability = formula_variability,
+    new_data = new_data,
+    original_count_data = test_data
+  )
+
+  # Check structure
+  print("names(result):"); print(names(result))
+  expect_type(result, "list")
+  print('"model_input" %in% names(result):'); print("model_input" %in% names(result))
+  print('"X_which" %in% names(result):'); print("X_which" %in% names(result))
+  expect_true("X_which" %in% names(result))
+  print('"XA_which" %in% names(result):'); print("XA_which" %in% names(result))
+  expect_true("XA_which" %in% names(result))
+  print('"create_intercept" %in% names(result):'); print("create_intercept" %in% names(result))
+  expect_true("create_intercept" %in% names(result))
+  
+  # Check random effect design matrix
+  print('is.null(result$X_random_effect):'); print(is.null(result$X_random_effect))
+  expect_true(!is.null(result$X_random_effect))
+
+  # Check that I have 0.5 both in fixed and random effect design matrix
+  print('result$X_random_effect[1, "type"]:'); print(result$X_random_effect[1, "type"])
+  expect_equal(result$X_random_effect[1, "type"], 0.5)
+  print('result$X_random_effect[1, "(Intercept)"]:'); print(result$X_random_effect[1, "(Intercept)"])
+  expect_equal(result$X_random_effect[1, "(Intercept)"], 0.5)
+
+  # Check that X_random_effect_unseen has the expected structure
+  print('result$X_random_effect_unseen[1, "type"]:'); print(result$X_random_effect_unseen[1, "type"])
+  expect_equal(result$X_random_effect_unseen[1, "type"], 0.5)
+  print('result$X_random_effect_unseen[1, "(Intercept)"]:'); print(result$X_random_effect_unseen[1, "(Intercept)"])
+  expect_equal(result$X_random_effect_unseen[1, "(Intercept)"], 0.5)
+
+  # Check that X_random_effect_unseen has the expected structure
+  print('result$X_random_effect_unseen[1, "type"]:'); print(result$X_random_effect_unseen[1, "type"])
+  expect_equal(result$X_random_effect_unseen[1, "type"], 0.5)
+  print('result$X_random_effect_unseen[1, "(Intercept)"]:'); print(result$X_random_effect_unseen[1, "(Intercept)"])
+  expect_equal(result$X_random_effect_unseen[1, "(Intercept)"], 0.5)
+
+  # Check that X_random_effect_unseen has the expected structure
+  print('result$X_random_effect_unseen[1, "type"]:'); print(result$X_random_effect_unseen[1, "type"])
+
+  # Check that X_random_effect_unseen has the expected structure
+  print('result$X_random_effect_unseen[1, "type"]:'); print(result$X_random_effect_unseen[1, "type"])
+  expect_equal(result$X_random_effect_unseen[1, "type"], 0.5)
+  print('result$X_random_effect_unseen[1, "(Intercept)"]:'); print(result$X_random_effect_unseen[1, "(Intercept)"])
+  expect_equal(result$X_random_effect_unseen[1, "(Intercept)"], 0.5)
+
+
+})
+
+
 test_that("replicate_data works with nested random effects", {
   # Load test data
   data("counts_obj")
@@ -656,6 +775,104 @@ test_that("replicate_data works with NA values in grouping and random effects", 
   print(result$X_random_effect_unseen)
 }) 
 
+test_that("replicate_data works with type NA and group__ NA", {
+  # Load test data
+  data("counts_obj")
+  
+  # Create formulas with random intercept and slope
+  formula_composition = ~ type + (type | group__)
+  formula_variability = ~ type
+
+  # Create original data with group information and type NA
+  test_data = 
+    counts_obj |> 
+    left_join(
+      tibble(
+        sample = unique(counts_obj$sample),
+        group__ = case_when(
+          sample %in% unique(sample)[1:10] ~ "GROUP1",
+          TRUE ~ "GROUP2"
+        )
+      )
+    )   
+
+  # New data is the same as test data but with type = NA and group__ = NA
+  new_data = 
+    test_data |>
+    mutate(
+      type = NA_character_,
+      group__ = NA_character_,
+      sample = paste0("new_", sample)  # Give new samples unique names
+    )
+
+  # Use parse_formula_random_effect for random_effect_elements
+  random_effect_elements = sccomp:::parse_formula_random_effect(formula_composition)
+
+  # Create .data object
+  model_input =   
+    test_data |> 
+    sccomp:::data_to_spread(
+      formula = formula_composition,
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "group__"
+    ) |>
+    sccomp:::data_spread_to_model_input(
+      formula = formula_composition,
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      truncation_ajustment = 1.1,
+      approximate_posterior_inference = FALSE,
+      formula_variability = formula_variability,
+      contrasts = NULL,
+      bimodal_mean_variability_association = FALSE,
+      use_data = TRUE,
+      random_effect_elements = random_effect_elements
+    )
+
+  # Prepare replicate data
+  result = sccomp:::prepare_replicate_data(
+    X = model_input$X,
+    Xa = model_input$Xa,
+    N = model_input$N,
+    intercept_in_design = model_input$intercept_in_design,
+    X_random_effect = model_input$X_random_effect,
+    X_random_effect_2 = model_input$X_random_effect_2,
+    .sample = rlang::quo(sample),
+    .cell_group = rlang::quo(cell_group),
+    .count = rlang::quo(count),
+    formula_composition = formula_composition,
+    formula_variability = formula_variability,
+    new_data = new_data,
+    original_count_data = test_data
+  )
+
+  # Check structure
+  print("names(result):"); print(names(result))
+  expect_type(result, "list")
+  expect_true("X_which" %in% names(result))
+  expect_true("XA_which" %in% names(result))
+  expect_true("create_intercept" %in% names(result))
+  
+  # Check random effect design matrix
+  expect_true(!is.null(result$X_random_effect))
+  expect_true(ncol(result$X_random_effect) > 0)
+  
+  # Check that NA values are handled correctly
+  expect_true(all(!is.na(result$X_random_effect)))
+  
+  # Check that the design matrix dimensions are correct
+  expect_equal(nrow(result$X_random_effect), nrow(new_data |> distinct(sample)))
+  
+  # Check that X_random_effect_unseen has the expected structure
+  expect_true(!is.null(result$X_random_effect_unseen))
+  expect_true(all(!is.na(result$X_random_effect_unseen)))
+  expect_equal(nrow(result$X_random_effect_unseen), nrow(new_data |> distinct(sample)))
+  expect_true(all(grepl("___NA$", colnames(result$X_random_effect_unseen))))
+}) 
+
 test_that("replicate_data works with new data containing only NA groups", {
   # Load test data
   data("counts_obj")
@@ -667,14 +884,15 @@ test_that("replicate_data works with new data containing only NA groups", {
   # Create original data with group information
   original_data = 
     counts_obj |> 
-    group_by(sample) |>
-    mutate(
-      group__ = case_when(
-        sample %in% unique(sample)[1:5] ~ "GROUP1",
-        TRUE ~ "GROUP2"
+    left_join(
+      tibble(
+        sample = unique(counts_obj$sample),
+        group__ = case_when(
+          sample %in% unique(sample)[1:10] ~ "GROUP1",
+          TRUE ~ "GROUP2"
+        )
       )
-    ) |>
-    ungroup()
+    ) 
   
   # Create new data with only NA groups
   new_data = 
