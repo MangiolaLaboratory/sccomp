@@ -195,6 +195,7 @@ ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
 
 #' @importFrom tidyr gather
 #' @importFrom magrittr set_rownames
+#' @importFrom tibble deframe
 #'
 #' @keywords internal
 #' @noRd
