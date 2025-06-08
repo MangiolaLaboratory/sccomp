@@ -4,6 +4,7 @@ library(tidyr)
 library(sccomp)
 
 test_that("replicate_data works correctly", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -86,6 +87,7 @@ test_that("replicate_data works correctly", {
 })
 
 test_that("replicate_data works with random intercept model", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -173,6 +175,7 @@ test_that("replicate_data works with random intercept model", {
 })
 
 test_that("replicate_data works with random slope model", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -266,6 +269,7 @@ test_that("replicate_data works with random slope model", {
 })
 
 test_that("replicate_data works with random slope model and type NA", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -370,6 +374,7 @@ new_data =
 })
 
 test_that("replicate_data works with nested random effects", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -467,6 +472,7 @@ test_that("replicate_data works with nested random effects", {
 })
 
 test_that("replicate_data works with NA values in grouping", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -596,6 +602,7 @@ test_that("replicate_data works with NA values in grouping", {
 })
 
 test_that("replicate_data works with NA values in grouping and random effects", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -766,6 +773,7 @@ test_that("replicate_data works with NA values in grouping and random effects", 
 }) 
 
 test_that("replicate_data works with type NA and group__ NA", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -866,6 +874,7 @@ test_that("replicate_data works with type NA and group__ NA", {
 }) 
 
 test_that("replicate_data works with new data containing only NA groups", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   
@@ -926,6 +935,7 @@ test_that("replicate_data works with new data containing only NA groups", {
 }) 
 
 test_that("prepare_replicate_data handles complex design with NAs and prints new X and random effect design matrices", {
+  skip_cmdstan()
   # Create test data with complex factors and NAs
   age_raw <- c(25, 20, 35, 40, 45)
   age_scaled <- as.numeric(scale(age_raw, center = TRUE, scale = TRUE))
@@ -1028,6 +1038,7 @@ test_that("prepare_replicate_data handles complex design with NAs and prints new
 })
 
 test_that("prepare_replicate_data throws error for duplicate sample names", {
+  skip_cmdstan()
   # Load test data
   data("counts_obj")
   

@@ -6,6 +6,7 @@ library(rlang)
 library(sccomp)
 
 test_that("get_random_effect_design3 with new NA groups", {
+  skip_cmdstan()
   # Create test input data
   test_data <- tibble(
     sample = c("sample1", "sample2", "sample3", "sample4"),
@@ -24,6 +25,7 @@ test_that("get_random_effect_design3 with new NA groups", {
 })
 
 test_that("get_random_effect_design3 handles NA values in design matrix correctly", {
+  skip_cmdstan()
   test_data <- tibble(
     sample = c("sample1", "sample2", "sample3", "sample4", "sample5"),
     type = c("healthy", "healthy", "cancer", "cancer", NA),
@@ -58,6 +60,7 @@ test_that("get_random_effect_design3 handles NA values in design matrix correctl
 })
 
 test_that("get_random_effect_design3 throws error when NAs present and accept_NA_as_average_effect is FALSE", {
+  skip_cmdstan()
   test_data <- tibble(
     sample = c("sample1", "sample2", "sample3", "sample4", "sample5"),
     type = c("healthy", "healthy", "cancer", "cancer", NA),
@@ -81,6 +84,7 @@ test_that("get_random_effect_design3 throws error when NAs present and accept_NA
 })
 
 test_that("get_random_effect_design3 handles complex formulas with multiple factors", {
+  skip_cmdstan()
   # Create test data with multiple factors (scaled continuous variables)
   age_raw <- c(25, 30, NA, 35, 40, 45)
   age_scaled <- as.numeric(scale(age_raw, center = TRUE, scale = TRUE))
@@ -126,6 +130,7 @@ test_that("get_random_effect_design3 handles complex formulas with multiple fact
 })
 
 test_that("get_random_effect_design3 handles continuous variables with NAs", {
+  skip_cmdstan()
   age_raw <- c(25, NA, 35, 40)
   age_scaled <- as.numeric(scale(age_raw, center = TRUE, scale = TRUE))
   weight_raw <- c(70, 75, NA, 80)
@@ -163,6 +168,7 @@ test_that("get_random_effect_design3 handles continuous variables with NAs", {
 })
 
 test_that("get_random_effect_design3 handles complex interactions with NAs", {
+  skip_cmdstan()
   age_raw <- c(25, NA, 35, 40, 45)
   age_scaled <- as.numeric(scale(age_raw, center = TRUE, scale = TRUE))
   test_data <- tibble(
@@ -201,6 +207,7 @@ test_that("get_random_effect_design3 handles complex interactions with NAs", {
 })
 
 test_that("get_random_effect_design3 handles multiple groups with complex factors", {
+  skip_cmdstan()
   age_raw <- c(25, 30, 35, 40, 45, 50)
   age_scaled <- as.numeric(scale(age_raw, center = TRUE, scale = TRUE))
   test_data <- tibble(

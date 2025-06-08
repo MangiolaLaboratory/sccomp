@@ -695,7 +695,7 @@ library(stringr)
 
 # Begin unit tests
 test_that("contrasts_to_parameter_list handles various contrasts correctly", {
-  
+  skip_cmdstan()
   # Define a variety of contrasts
   contrasts <- c(
     # Simple contrast without special characters
@@ -893,7 +893,7 @@ test_that("use two methods", {
 })
 
 test_that("get_design_matrix_with_na_handling properly handles NA values", {
-  
+  skip_cmdstan()
   # Create a test dataset with NA values in categorical variables
   test_data <- tibble(
     sample = paste0("sample_", 1:10),
