@@ -755,6 +755,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom rlang quo_name
 #' @importFrom tidyselect all_of
 #' @importFrom readr type_convert
+#' @importFrom tibble rownames_to_column
 #' @noRd
 get_random_effect_design3 = function(
   .data_, formula, grouping, .sample, 
@@ -778,6 +779,12 @@ get_random_effect_design3 = function(
   
   # Apply mask to group matrix (setting non-masked values to "")
   group_matrix[!mask] = ""
+  
+  # Handle NAs in group matrix
+  if(accept_NA_as_average_effect) {
+    # For rows with NA in grouping, set group to "NA"
+    group_matrix[is.na(group_matrix)] = "NA"
+  }
   
   colnames(group_matrix) = colnames(mydesign)
   rownames(group_matrix) = rownames(mydesign)
@@ -808,7 +815,7 @@ get_random_effect_design3 = function(
       group___numeric = as.integer(factor(group___label)),
       factor___numeric = as.integer(factor(factor))
     ) |>
-    select(sample, group___label, value)
+    select(sample, group___label, group___numeric, value)
   
   result_long
 }
@@ -1136,6 +1143,7 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_remove_all
 #' @importFrom purrr reduce
+#' @importFrom purrr map_int
 #' @importFrom stats as.formula
 #'
 #' @keywords internal
@@ -1144,12 +1152,13 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
 data_spread_to_model_input =
   function(
     .data_spread, formula, .sample, .cell_type, .count,
-    truncation_ajustment = 1, approximate_posterior_inference ,
+    truncation_ajustment = 1, approximate_posterior_inference,
     formula_variability = ~ 1,
     contrasts = NULL,
     bimodal_mean_variability_association = FALSE,
     use_data = TRUE,
-    random_effect_elements){
+    random_effect_elements,
+    accept_NA_as_average_effect = FALSE){
     
     # Define the variables as NULL to avoid CRAN NOTES
     exposure <- NULL
@@ -1188,7 +1197,8 @@ data_spread_to_model_input =
           str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
           paste(collapse="") |>
           as.formula(),
-        !!.sample
+        !!.sample,
+        accept_NA_as_average_effect = accept_NA_as_average_effect
       )
     
     Xa  =
@@ -1200,7 +1210,8 @@ data_spread_to_model_input =
           str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
           paste(collapse="") |>
           as.formula() ,
-        !!.sample
+        !!.sample,
+        accept_NA_as_average_effect = accept_NA_as_average_effect
       )
     
     XA = Xa %>%
@@ -1461,6 +1472,7 @@ data_spread_to_model_input =
     data_for_model
   }
 
+#' @importFrom purrr map_int
 data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_effect){
   
   .sample = enquo(.sample)
@@ -3777,6 +3789,16 @@ prepare_replicate_data = function(X,
                                 new_data = NULL,
                                 original_count_data) {
   
+
+  # Check that NAs are not in counts
+  check_if_NAs_in_count(original_count_data, !!.count)
+  check_if_NAs_in_count(new_data, !!.count)
+
+  # Make rectangular data
+  new_data = new_data |> make_rectangular_data(.sample, .cell_group, .count, formula_composition)
+  original_count_data = original_count_data |> make_rectangular_data(.sample, .cell_group, .count, formula_composition)
+
+
   # New data
   if(new_data |> is.null())
     new_data =
@@ -3913,7 +3935,7 @@ prepare_replicate_data = function(X,
   
   # Random intercept
   random_effect_elements = parse_formula_random_effect(formula_composition)
-  
+
   # Set default random intercept
   X_random_effect_which = array()[0]
   new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
@@ -4152,3 +4174,62 @@ replicate_data = function(.data,
     threads_per_chain = 1
   )
 }
+
+  #' Check if data frame is rectangular
+  #'
+  #' @description
+  #' Checks if the input data frame has the same number of samples for each cell group
+  #' and vice versa. If not, it makes the data frame rectangular by adding zeros
+  #' for missing sample/cell group pairs.
+  #'
+  #' @param .data A tibble containing the data
+  #' @param .sample Column containing sample identifiers
+  #' @param .cell_group Column containing cell group identifiers
+  #' @param .count Column containing count data
+  #' @param formula_composition Formula for composition
+  #'
+  #' @return A rectangular data frame with zeros added for missing combinations
+  #' @keywords internal
+  #' @noRd
+  make_rectangular_data = function(.data, .sample, .cell_group, .count, formula_composition) {
+   
+   .sample = enquo(.sample)
+   .cell_group = enquo(.cell_group)
+   .count = enquo(.count)
+   
+    if(
+      .data |> count(!!.sample) |> distinct(n) |> nrow() > 1 || 
+      .data |> count(!!.cell_group) |> distinct(n) |> nrow() > 1 
+    ){
+      warning(sprintf("sccomp says: the input data frame does not have the same number of `%s`, for all `%s`. We have made it so, adding 0s for the missing sample/feature pairs.", quo_name(.cell_group), quo_name(.sample)))
+      
+      .data |> 
+        # I need renaming trick because complete list(...) cannot accept quosures
+        select(!!.sample, !!.cell_group, count := !!.count) |> 
+        distinct() |> 
+        complete( !!.sample, !!.cell_group, fill = list(count = 0) ) %>%
+        rename(!!.count := count) |> 
+        mutate(!!.count := as.integer(!!.count)) |> 
+        
+        # Add formula_composition information
+        add_formula_columns(.data, !!.sample, formula_composition)
+    } else {
+      .data
+    }
+  }
+
+
+#' function that check is there are NAs in the count column
+#'
+#' @param .data A tibble containing the data
+#' @param .count Column containing count data
+#'
+#' @return A tibble with NAs in the count column
+#' @keywords internal
+#' @noRd
+check_if_NAs_in_count = function(.data, .count){
+  .count = enquo(.count)
+  if(.data |> pull(!!.count) |> is.na() |> any())
+    stop("sccomp says: the input data frame has NAs in the count column")
+}
+
