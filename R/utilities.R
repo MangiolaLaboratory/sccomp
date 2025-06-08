@@ -3797,6 +3797,15 @@ prepare_replicate_data = function(X,
   if(new_data |> is.null())
     new_data = original_count_data 
   
+    # Check that original_count_data dont have duplicated sample names
+  if(original_count_data |> count(!!.sample) |> pull(n) |> max() > 1)
+  stop("sccomp says: your original_count_data has duplicated sample names. Please ensure that the sample names are unique.") 
+  
+  # Check that new_data dont have duplicated sample names
+  if(new_data |> count(!!.sample) |> pull(n) |> max() > 1)
+    stop("sccomp says: your new_data has duplicated sample names. Please ensure that the sample names are unique.") 
+
+
   # If seurat
   else if(new_data |> is("Seurat")) new_data = new_data[[]]
   

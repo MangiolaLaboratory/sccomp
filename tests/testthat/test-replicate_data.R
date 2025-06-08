@@ -1026,3 +1026,94 @@ test_that("prepare_replicate_data handles complex design with NAs and prints new
   expect_true(all(!is.na(result$X)))
   expect_true(all(!is.na(result$X_random_effect)))
 })
+
+test_that("prepare_replicate_data throws error for duplicate sample names", {
+  # Load test data
+  data("counts_obj")
+  
+  # Create formulas
+  formula_composition = ~ type
+  formula_variability = ~ type
+  
+  # Create .data object
+  model_input = 
+    counts_obj |> 
+    mutate(random_effect = "1") |> 
+    sccomp:::data_to_spread(
+      formula = formula_composition,
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "random_effect"
+    ) |>
+    sccomp:::data_spread_to_model_input(
+      formula = formula_composition,
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      truncation_ajustment = 1.1,
+      approximate_posterior_inference = FALSE,
+      formula_variability = formula_variability,
+      contrasts = NULL,
+      bimodal_mean_variability_association = FALSE,
+      use_data = TRUE,
+      random_effect_elements = tibble(factor = character(), grouping = character())
+    )
+
+  # Test case 1: Duplicate samples in original_count_data
+  original_count_data_duplicates = 
+    counts_obj |>
+    sccomp:::.subset(!!quo(sample)) 
+  
+  original_count_data_duplicates = 
+    original_count_data_duplicates |>
+    bind_rows(
+      original_count_data_duplicates |> filter(sample == first(sample))  # Duplicate first sample
+    ) 
+
+  expect_error(
+    sccomp:::prepare_replicate_data(
+      X = model_input$X,
+      Xa = model_input$Xa,
+      N = model_input$N,
+      intercept_in_design = model_input$intercept_in_design,
+      X_random_effect = model_input$X_random_effect,
+      X_random_effect_2 = model_input$X_random_effect_2,
+      .sample = !!rlang::quo(sample),
+      .cell_group = !!rlang::quo(cell_group),
+      .count = !!rlang::quo(count),
+      formula_composition = formula_composition,
+      formula_variability = formula_variability,
+      new_data = NULL,
+      original_count_data = original_count_data_duplicates
+    ),
+    "sccomp says: your original_count_data has duplicated sample names"
+  )
+
+  # Test case 2: Duplicate samples in new_data
+  new_data_duplicates = 
+    counts_obj |>
+    sccomp:::.subset(!!quo(sample)) |> 
+    bind_rows(
+      counts_obj |> sccomp:::.subset(!!quo(sample)) |> filter(sample == first(sample))  # Duplicate first sample
+    ) 
+
+  expect_error(
+    sccomp:::prepare_replicate_data(
+      X = model_input$X,
+      Xa = model_input$Xa,
+      N = model_input$N,
+      intercept_in_design = model_input$intercept_in_design,
+      X_random_effect = model_input$X_random_effect,
+      X_random_effect_2 = model_input$X_random_effect_2,
+      .sample = !!rlang::quo(sample),
+      .cell_group = !!rlang::quo(cell_group),
+      .count = !!rlang::quo(count),
+      formula_composition = formula_composition,
+      formula_variability = formula_variability,
+      new_data = new_data_duplicates,
+      original_count_data = counts_obj |> sccomp:::.subset(!!quo(sample))
+    ),
+    "sccomp says: your new_data has duplicated sample names"
+  )
+})
