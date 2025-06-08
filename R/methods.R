@@ -1488,11 +1488,6 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 #' @export
 #'
-#' print("cmdstanr is needed to run this example.")
-#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
-#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
-#'
-#'
 #' @examples
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
@@ -1506,7 +1501,7 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'   formula_variability = ~1,
 #'   .sample = sample,
 #'   .cell_group = cell_group,
-#'   .count = count,
+#'   .abundance = count,
 #'   approximate_posterior_inference = "all",
 #'   cores = 1
 #' )
@@ -1523,7 +1518,6 @@ sccomp_calculate_residuals <- function(.data) {
 }
 
 #' @export
-#'
 sccomp_calculate_residuals.sccomp_tbl = function(.data){
   
   
