@@ -4,9 +4,11 @@
 sccomp_glm_data_frame_raw = function(.data,
                                      formula_composition = ~ 1 ,
                                      formula_variability = ~ 1,
-                                     .sample,
-                                     .cell_group,
-                                     .count = NULL,
+                                     
+                                     sample_column,
+                                     cell_group_column,
+                                     abundance_column = NULL,
+                                  
                                      
                                      # Secondary arguments
                                      contrasts = NULL,
@@ -35,22 +37,22 @@ sccomp_glm_data_frame_raw = function(.data,
   
   
   # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
+  .sample = as.symbol(sample_column)
+  .cell_group = as.symbol(cell_group_column)
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   
   # Check if columns exist
   check_columns_exist(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    parse_formula(formula_composition)
+    !!.sample,
+    !!.cell_group,
+    all_of(parse_formula(formula_composition))
   ))
   
   # Check if any column is NA or null
   check_if_any_NA(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    parse_formula(formula_composition)
+    !!.sample,
+    !!.cell_group,
+    all_of(parse_formula(formula_composition))
   ))
   
   .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
@@ -81,9 +83,10 @@ sccomp_glm_data_frame_raw = function(.data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       
-      .sample = !!.sample,
-      .cell_group = !!.cell_group,
-      .count = count,
+      sample_column = sample_column,
+      cell_group_column = cell_group_column,
+      abundance_column = "count",
+      
       contrasts = contrasts,
       #.grouping_for_random_effect = !! .grouping_for_random_effect,
       prior_mean = prior_mean,
@@ -110,9 +113,10 @@ sccomp_glm_data_frame_raw = function(.data,
 sccomp_glm_data_frame_counts = function(.data,
                                         formula_composition = ~ 1 ,
                                         formula_variability = ~ 1,
-                                        .sample,
-                                        .cell_group,
-                                        .count = NULL,
+                                        
+                                        sample_column,
+                                        cell_group_column,
+                                        abundance_column = NULL,
                                         
                                         # Secondary arguments
                                         contrasts = NULL,
@@ -138,9 +142,10 @@ sccomp_glm_data_frame_counts = function(.data,
                                         ...) {
   
   # Prepare column same enquo
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
-  .count = enquo(.count)
+  .sample = as.symbol(sample_column)
+  .cell_group = as.symbol(cell_group_column)
+  .count = as.symbol(abundance_column)
+  
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   #.grouping_for_random_effect = enquo(.grouping_for_random_effect)
   
@@ -157,10 +162,11 @@ sccomp_glm_data_frame_counts = function(.data,
   
   # Check if columns exist
   check_columns_exist(.data, c(
-    quo_name(.sample),
-    quo_name(.cell_group),
-    quo_name(.count),
-    parse_formula(formula_composition)
+    !!.sample,
+    !!.cell_group,
+    !!.count,
+    all_of(parse_formula(formula_composition))
+    
   ))
   
   # Check that NAs are not in counts

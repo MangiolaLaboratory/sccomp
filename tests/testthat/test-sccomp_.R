@@ -8,7 +8,7 @@ data("counts_obj")
 counts_obj = 
   counts_obj |>
   mutate(count = count+1) |> 
-  with_groups(sample, ~ .x |> mutate(proportion = count/sum(count))) 
+  with_groups("sample", ~ .x |> mutate(proportion = count/sum(count))) 
 
 set.seed(42)
 
@@ -19,7 +19,7 @@ if (instantiate::stan_cmdstan_exists()){
     sccomp_estimate(
       formula_composition = ~ continuous_covariate * type ,
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       
       cores = 1, 
       inference_method = "pathfinder",
@@ -33,7 +33,7 @@ if (instantiate::stan_cmdstan_exists()){
     sccomp_estimate(
       formula_composition = ~ continuous_covariate * type ,
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       
       cores = 1, 
       inference_method = "pathfinder",
@@ -46,7 +46,7 @@ if (instantiate::stan_cmdstan_exists()){
     sccomp_estimate(
       formula_composition = ~ continuous_covariate * type ,
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       cores = 1, 
       inference_method = "hmc",
       mcmc_seed = 42,
@@ -58,7 +58,7 @@ if (instantiate::stan_cmdstan_exists()){
     sccomp_estimate(
       formula_composition = ~ 0 + type + continuous_covariate,
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,
       max_sampling_iterations = 1000, verbose=FALSE
@@ -70,7 +70,7 @@ if (instantiate::stan_cmdstan_exists()){
       formula_composition = ~ type + (type | group__),
       
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,     
       max_sampling_iterations = 1000, verbose=FALSE
@@ -81,7 +81,7 @@ if (instantiate::stan_cmdstan_exists()){
   # 	sccomp_estimate(
   # 		formula_composition = ~ 1 +  type + (1 + type | group__),
   # 		formula_variability = ~ 1,
-  # 		sample, cell_group,
+  # 		"sample", "cell_group",
   # 		cores = 1,
   # 		mcmc_seed = 42,     
   # 		max_sampling_iterations = 1000
@@ -92,7 +92,7 @@ if (instantiate::stan_cmdstan_exists()){
   # 	sccomp_estimate(
   # 		formula_composition = ~  type + (1 | group__),
   # 		formula_variability = ~ 1,
-  # 		sample, cell_group,
+  # 		"sample", "cell_group",
   # 		cores = 1,
   # 		mcmc_seed = 42,     
   # 		max_sampling_iterations = 1000
@@ -101,6 +101,31 @@ if (instantiate::stan_cmdstan_exists()){
   
   
 }
+
+test_that("correct columns",{
+  skip_cmdstan()
+  
+  my_estimate = 
+    seurat_obj |>
+    sccomp_estimate(
+      sample_column = "sampleX", 
+      cell_group_column = "cell_group"
+    ) |> 
+    expect_error("Can't select columns that don't exist") |> 
+    expect_warning("please check typos in your")
+  
+  my_estimate = 
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ typeX,
+      sample_column = "sample", 
+      cell_group_column = "cell_group"
+    ) |> 
+    expect_error("Can't subset elements that don't exist") |> 
+    expect_warning("please check typos in your")
+  
+  
+})
 
 
 test_that("Generate data",{
@@ -206,7 +231,7 @@ test_that("multilevel multi beta binomial from Seurat",{
     sccomp_estimate(
       formula_composition = ~ type + (1 | group__),
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,     
       max_sampling_iterations = 1000, verbose=FALSE
@@ -274,7 +299,7 @@ test_that("multilevel nested",{
     sccomp_estimate(
       formula_composition = ~ type + (1 | group__) + (1 | nested_group),
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,     
       max_sampling_iterations = 1000
@@ -295,7 +320,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
     sccomp_estimate(
       formula_composition = ~ continuous_covariate + (1 + continuous_covariate | group__),
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,   
       max_sampling_iterations = 1000,
@@ -327,7 +352,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 #   # library(tidyseurat)
 #   # seurat_obj =
 #   #   seurat_obj |>
-#   #   nest(data = -c(sample, type)) |>
+#   #   nest(data = -c("sample", type)) |>
 #   #   mutate(group__wrong = c(1,1,1,1,1, 2,2,2,2,2, 1,1,1,1,1, 2,2,2,2,2) |> as.character()) |>
 #   #   unnest(data)
 #
@@ -338,7 +363,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 #         sccomp_estimate(
 #           formula_composition = ~ 0 + type + (type | group__wrong),
 #           formula_variability = ~ 1,
-#           sample, cell_group,
+#           "sample", "cell_group",
 #           contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
 #           cores = 1,
 #           mcmc_seed = 42,       max_sampling_iterations = 1000
@@ -397,7 +422,7 @@ test_that("remove unwanted variation",{
     seurat_obj |>
     
     # Add batch
-    nest(data = -c(sample, type)) |>
+    nest(data = -c("sample", type)) |>
     mutate(batch = rep(c(0,1), 10)) |>
     unnest(data)
   
@@ -407,7 +432,7 @@ test_that("remove unwanted variation",{
     sccomp_estimate(
       formula_composition = ~ type + batch,
       formula_variability = ~ 1,
-      sample, cell_group,
+      "sample", "cell_group",
       cores = 1,
       mcmc_seed = 43,    
       max_sampling_iterations = 1000, verbose = FALSE
@@ -432,9 +457,7 @@ test_that("multi beta binomial from SCE",{
       sce_obj |>
     sccomp_estimate(
       formula_composition = ~ type,
-      formula_variability = ~ 1,
-      sample,
-      cell_group,
+      formula_variability = ~ 1,sample_column = "sample",cell_group_column = "cell_group",
       cores = 1,
       mcmc_seed = 42,      
       max_sampling_iterations = 1000, verbose = FALSE
@@ -460,8 +483,8 @@ res_composition =
   sccomp_estimate(
     formula_composition = ~ type,
     formula_variability = ~ 1,
-    sample,
-    cell_group,
+    "sample",
+    "cell_group",
     cores = 1,
     mcmc_seed = 42,   
     max_sampling_iterations = 1000, verbose = FALSE
@@ -472,8 +495,8 @@ res_composition_variability =
   sccomp_estimate(
     formula_composition = ~ type,
     formula_variability = ~ type,
-    sample,
-    cell_group,
+    "sample",
+    "cell_group",
     cores = 1,
     mcmc_seed = 42,    
     max_sampling_iterations = 1000, verbose = FALSE
@@ -622,8 +645,8 @@ test_that("proportions",{
       counts_obj |>
       sccomp_estimate(
       formula_composition = ~ type , 
-      .sample = sample,  
-      .cell_group = cell_group, 
+      sample_column = "sample",  
+      cell_group_column = "cell_group", 
       .count = proportion,
       cores = 1,
       mcmc_seed = 42,
@@ -634,9 +657,9 @@ test_that("proportions",{
   counts_obj |>
     sccomp_estimate(
       formula_composition = ~ type , 
-      .sample = sample,  
-      .cell_group = cell_group, 
-      .abundance = proportion,
+      sample_column = "sample",  
+      cell_group_column = "cell_group", 
+      abundance_column = "proportion",
       cores = 1,
       mcmc_seed = 42,
       max_sampling_iterations = 1000
@@ -673,8 +696,8 @@ test_that("plotting for no significance",{
   sccomp:::no_significance_df |>
     mutate(count = count |> as.integer()) |> 
     sccomp_estimate(formula_composition = ~ condition,
-                    .sample = sample,
-                    .cell_group = cell_group,.abundance = count,
+                    sample_column = "sample",
+                    cell_group_column = "cell_group",abundance_column = "count",
                     bimodal_mean_variability_association = TRUE,      
                     cores = 1
 ) |>
@@ -777,9 +800,9 @@ test_that("sample ID malformed", {
     mutate(count = count |> as.integer()) |> 
   sccomp_estimate(
     formula_composition = ~ type ,
-    .sample = sample,
-    .cell_group = cell_group,
-    .abundance = count,
+    sample_column = "sample",
+    cell_group_column = "cell_group",
+    abundance_column = "count",
     cores = 1
   ) |>
   expect_warning("sccomp says: the input data frame does not have the same number") |>
@@ -808,16 +831,16 @@ test_that("sample ID malformed", {
       sample = paste0("s", 1:n())
     ) %>%
     pivot_longer(
-      -c(sample, condition),
+      -c("sample", condition),
       names_to = "taxon", values_to = "count")
   
   counts_df |> 
     mutate(count = count |> as.integer()) |> 
     sccomp_estimate(
       formula_composition = ~ condition,
-      .cell_group = taxon,
-      .sample = sample,
-      .abundance = count
+      cell_group_column = "taxon",
+      sample_column = "sample",
+      abundance_column = "count"
     ) |> 
     expect_no_error()
   
@@ -826,8 +849,8 @@ test_that("sample ID malformed", {
     seurat_obj |>
     sccomp_estimate( 
       formula_composition = ~ 1, 
-      .sample =  sample, 
-      .cell_group = cell_group
+      sample_column = "sample", 
+      cell_group_column = "cell_group"
     ) |> 
     expect_no_error()
 
