@@ -1,6 +1,7 @@
 library(testthat)
 library(tibble)
 library(dplyr)
+library(tidyr)
 library(rlang)
 library(sccomp)
 

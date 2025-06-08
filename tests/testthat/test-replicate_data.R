@@ -903,7 +903,7 @@ test_that("replicate_data works with new data containing only NA groups", {
   new_data = 
     counts_obj |>
     sccomp:::.subset(!!quo(sample)) |> 
-    filter(sample %in% unique(sample)[1:2]) |>  # Take just 2 samples
+    slice(1, 10) |> 
     mutate(
       group__ = NA_character_,  # Set all groups to NA
       sample = paste0("new_", sample)  # Give them new sample names
@@ -917,7 +917,7 @@ test_that("replicate_data works with new data containing only NA groups", {
                 new_data = new_data,
                 number_of_draws = 1,
                 mcmc_seed = sample(1e5, 1),
-                cores = detectCores())  
+                cores = 1)  
 
   print(result)
   print(result$summary())

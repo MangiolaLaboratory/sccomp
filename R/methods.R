@@ -752,6 +752,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         # Grouping 2 - Random intercept DUPLICATED
         X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
         
+        # Initialize unseen random effect variables
+        ncol_X_random_eff_unseen = c(0, 0),
+        X_random_effect_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+        X_random_effect_2_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+        
         create_intercept = FALSE
       )),
 
@@ -878,6 +883,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       
       # Grouping 2 - Random intercept DUPLICATED
       X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
+      
+      # Initialize unseen random effect variables
+      ncol_X_random_eff_unseen = c(0, 0),
+      X_random_effect_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+      X_random_effect_2_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
       
       create_intercept = FALSE
       
