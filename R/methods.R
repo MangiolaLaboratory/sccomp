@@ -156,15 +156,6 @@ sccomp_estimate <- function(.data,
                             .cell_group = NULL,
                             .abundance = NULL) {
   
-
-  
-  # rlang::inform(
-  #   message = "sccomp says: From version 1.7.12 the logit fold change threshold for significance has been changed from 0.2 to 0.1.",
-  #   .frequency = "once",
-  #   .frequency_id = "new_logit_fold_change_threshold"
-  # )
-  
-  
   # Run the function
   check_and_install_cmdstanr()
   
@@ -212,11 +203,16 @@ sccomp_estimate.Seurat <- function(.data,
                                    .sample = NULL,
                                    .cell_group = NULL,
                                    .abundance = NULL) {
+
+    .count <- enquo(.count)
+    .sample <- enquo(.sample)
+    .cell_group <- enquo(.cell_group)
+    .abundance <- enquo(.abundance)
   
-  if (!is.null(.abundance))
+  if (!quo_is_null(.abundance))
     stop("sccomp says: .abundance argument can be used only for data frame input")
   
-  if (!is.null(.count))
+  if (!quo_is_null(.count))
     stop("sccomp says: .count argument can be used only for data frame input")
   
   
@@ -250,11 +246,13 @@ sccomp_estimate.Seurat <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
-      .sample = .sample,
-      .cell_group = .cell_group,
-      .abundance = .abundance,
-      .count = .count,
-      ...
+      ...,
+      .count = !!.count,
+      approximate_posterior_inference = approximate_posterior_inference,
+      variational_inference = variational_inference,
+      .sample = !!.sample,
+      .cell_group = !!.cell_group,
+      .abundance = !!.abundance
     )
 }
 
@@ -300,12 +298,17 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  .abundance = NULL) {
   
 
+  .count <- enquo(.count)
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .abundance <- enquo(.abundance)
+
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
-  if (!is.null(.abundance))
+  if (!quo_is_null(.abundance))
     stop("sccomp says: .abundance argument can be used only for data frame input")
   
-  if (!is.null(.count))
+  if (!quo_is_null(.count))
     stop("sccomp says: .count argument can be used only for data frame input")
   
 
@@ -337,11 +340,13 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
-      .sample = .sample,
-      .cell_group = .cell_group,
-      .abundance = .abundance,
-      .count = .count,
-      ...
+      ...,
+      .count = !!.count,
+      approximate_posterior_inference = approximate_posterior_inference,
+      variational_inference = variational_inference,
+      .sample = !!.sample,
+      .cell_group = !!.cell_group,
+      .abundance = !!.abundance
     )
 }
 
@@ -386,7 +391,12 @@ sccomp_estimate.DFrame <- function(.data,
                                    .cell_group = NULL,
                                    .abundance = NULL) {
   
- 
+  .count <- enquo(.count)
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .abundance <- enquo(.abundance)
+  
+  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
   .data %>%
     as.data.frame() %>%
@@ -414,11 +424,13 @@ sccomp_estimate.DFrame <- function(.data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit, 
-      .sample = .sample,
-      .cell_group = .cell_group,
-      .abundance = .abundance,
-      .count = .count,
-      ...
+      ...,
+      .count = !!.count,
+      approximate_posterior_inference = approximate_posterior_inference,
+      variational_inference = variational_inference,
+      .sample = !!.sample,
+      .cell_group = !!.cell_group,
+      .abundance = !!.abundance
     )
 }
 
@@ -467,6 +479,11 @@ sccomp_estimate.data.frame <- function(.data,
                                        .abundance = NULL) {
   
 
+  .count <- enquo(.count)
+  .sample <- enquo(.sample)
+  .cell_group <- enquo(.cell_group)
+  .abundance <- enquo(.abundance)
+
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
   
 
@@ -484,57 +501,64 @@ sccomp_estimate.data.frame <- function(.data,
   }
 
   # Handle deprecated column arguments
-  if (lifecycle::is_present(enquo(.sample)) && !quo_is_null(enquo(.sample))) {
+  if (lifecycle::is_present(.sample) && 
+      !rlang::quo_is_null(.sample) && 
+      rlang::is_symbolic(.sample) && 
+      !is.null(rlang::eval_tidy(.sample))) {
     lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", 
       details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
     sample_column = quo_name(.sample)
   } else {
       # Capture the quosure for sample_column using a symbol
  if(
-  rlang::enquo(sample_column) |>
- rlang::quo_get_expr() |>
+  sample_column |>
  is.character() |>
- not()
+ not() 
  ) {
   stop("sccomp says: sample_column must be of character type")
  }
 }
   
-  if (lifecycle::is_present(enquo(.cell_group)) && !quo_is_null(enquo(.cell_group))) {
+  if (lifecycle::is_present(.cell_group) && 
+      !rlang::quo_is_null(.cell_group) && 
+      rlang::is_symbolic(.cell_group) ) {
     lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", 
       details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
     cell_group_column = quo_name(.cell_group)
   } else {
     if(
-  rlang::enquo(cell_group_column) |>
- rlang::quo_get_expr() |>
+  cell_group_column |>
  is.character() |>
- not()
+ not() 
  ) {
   stop("sccomp says: cell_group_column must be of character type")
  }
-  }
-  
-    # Handle deprecated .count argument
-  if (lifecycle::is_present(enquo(.count)) && !quo_is_null(enquo(.count))) {
-    rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
-    .abundance <- .count
+}
+
+  # Handle deprecated .count argument
+  if (lifecycle::is_present(.count) && 
+      !rlang::quo_is_null(.count) && 
+      rlang::is_symbolic(.count) ) {
+    rlang::warn("The argument '.count' is deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
+    abundance_column <- quo_name(.count)
   }
 
-  if (lifecycle::is_present(enquo(.abundance)) && !quo_is_null(enquo(.abundance))) {
+  if (lifecycle::is_present(.abundance) && 
+      !rlang::quo_is_null(.abundance) && 
+      rlang::is_symbolic(.abundance) ) {
     lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.abundance)", 
       details = ".abundance argument (which were tidy evaluations, i.e. .abundance = my_abundance) have been deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
     abundance_column = quo_name(.abundance)
   } else {
     if(
-  rlang::enquo(abundance_column) |>
- rlang::quo_get_expr() |>
+      !is.null(abundance_column) &&
+  abundance_column  |>
  is.character() |>
- not()
+ not() 
  ) {
   stop("sccomp says: abundance_column must be of character type")
  }
-  }
+}
 
 
 

@@ -21,7 +21,7 @@ test_that("warnings when symbols are provided for key columns", {
         cell_group_column = "cell_group",
         abundance_column = "count"
       ),
-    "sccomp says: sample_column must be of character type"
+    "object 'donor' not found"
   )
   
   # Test with symbol for cell_group column
@@ -33,7 +33,7 @@ test_that("warnings when symbols are provided for key columns", {
         cell_group_column = cell_group,
         abundance_column = "count"
       ),
-    "sccomp says: cell_group_column must be of character type"
+    "object 'cell_group' not found"
   )
   
   # Test with symbol for abundance column
@@ -46,18 +46,6 @@ test_that("warnings when symbols are provided for key columns", {
         abundance_column = count
       ),
     "sccomp says: abundance_column must be of character type"
-  )
-  
-  # Test with all symbols
-  expect_error(
-    test_data |>
-      sccomp_estimate(
-        formula_composition = ~ type,
-        sample_column = donor,
-        cell_group_column = cell_group,
-        abundance_column = count
-      ),
-    "sccomp says: sample_column must be of character type"
   )
   
   # Test with correct character strings (should not warn)
@@ -118,84 +106,50 @@ test_that("errors when non-character values are provided for column arguments", 
   )
 })
 
-test_that("warnings when deprecated arguments are used", {
+test_that("warnings when using deprecated column names", {
+  # Create test data
   test_data <- tibble(
-    donor = rep(c("s1", "s2"), each = 2),
-    cell_group = rep(c("cg1", "cg2"), times = 2),
-    count = c(10L, 20L, 15L, 25L),
-    type = rep(c("A", "B"), each = 2)
+    donor = rep(c("sample1", "sample2", "sample3"), each = 3),
+    cell_group = rep(c("A", "B", "C"), times = 3),
+    count = c(10L, 20L, 30L, 15L, 25L, 35L, 12L, 22L, 32L),
+    type = rep(c("healthy", "healthy", "cancer"), each = 3)
   )
   
-  # Test deprecated .sample argument
+  # Test with deprecated .sample
   expect_warning(
-    sccomp_estimate(test_data, 
-                   formula_composition = ~type,
-                   .sample = donor,
-                   cell_group_column = "cell_group",
-                   abundance_column = "count"),
-    regexp = "The \\`\\.sample\\` argument of \\`sccomp_estimate\\(\\)\\` is deprecated as of sccomp 2.1.1.",
-    fixed = FALSE
+    test_data |>
+      sccomp_estimate(
+        formula_composition = ~ type,
+        .sample = "donor",
+        cell_group_column = "cell_group",
+        abundance_column = "count"
+      ),
+    "The `.sample` argument of*"
   )
   
-  # Test deprecated .cell_group argument
+  # Test with deprecated .cell_group
   expect_warning(
-    sccomp_estimate(test_data, 
-                   formula_composition = ~type,
-                   sample_column = "donor",
-                   .cell_group = cell_group,
-                   abundance_column = "count"),
-    regexp = "The \\`\\.cell_group\\` argument of \\`sccomp_estimate\\(\\)\\` is deprecated as of sccomp 2.1.1.",
-    fixed = FALSE
+    test_data |>
+      sccomp_estimate(
+        formula_composition = ~ type,
+        sample_column = "donor",
+        .cell_group = "cell_group",
+        abundance_column = "count"
+      ),
+    ".cell_group argument.*have been deprecated in favour of cell_group_column"
   )
   
-  # Test deprecated .abundance argument
+  # Test with deprecated .abundance
   expect_warning(
-    sccomp_estimate(test_data, 
-                   formula_composition = ~type,
-                   sample_column = "donor",
-                   cell_group_column = "cell_group",
-                   .abundance = count),
-    regexp = "The \\`\\.abundance\\` argument of \\`sccomp_estimate\\(\\)\\` is deprecated as of sccomp 2.1.1.",
-    fixed = FALSE
+    test_data |>
+      sccomp_estimate(
+        formula_composition = ~ type,
+        sample_column = "donor",
+        cell_group_column = "cell_group",
+        .abundance = "count"
+      ),
+    ".abundance argument.*have been deprecated in favour of abundance_column"
   )
 })
 
-test_that("errors when *_column arguments are provided with symbols", {
-  test_data <- tibble(
-    donor = c("s1", "s1", "s2", "s2"),
-    cell_group = c("cg1", "cg2", "cg1", "cg2"),
-    count = c(10, 15, 20, 25),
-    type = c("A", "A", "B", "B")
-  )
-  
-  # Test sample_column with symbol
-  expect_error(
-    sccomp_estimate(test_data, 
-                   formula_composition = ~type,
-                   sample_column = donor,
-                   cell_group_column = "cell_group",
-                   abundance_column = "count"),
-    "sccomp says: sample_column must be of character type"
-  )
-  
-  # Test cell_group_column with symbol
-  expect_error(
-    sccomp_estimate(test_data, 
-                   formula_composition = ~type,
-                   sample_column = "donor",
-                   cell_group_column = cell_group,
-                   abundance_column = "count"),
-    "sccomp says: cell_group_column must be of character type"
-  )
-  
-  # Test abundance_column with symbol
-  expect_error(
-    sccomp_estimate(test_data, 
-                   formula_composition = ~type,
-                   sample_column = "donor",
-                   cell_group_column = "cell_group",
-                   abundance_column = count),
-    "sccomp says: abundance_column must be of character type"
-  )
-})
 

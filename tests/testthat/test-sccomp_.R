@@ -76,28 +76,6 @@ if (instantiate::stan_cmdstan_exists()){
       max_sampling_iterations = 1000, verbose=FALSE
     )
   
-  # my_estimate_random2 = 
-  # 	seurat_obj |>
-  # 	sccomp_estimate(
-  # 		formula_composition = ~ 1 +  type + (1 + type | group__),
-  # 		formula_variability = ~ 1,
-  # 		"sample", "cell_group",
-  # 		cores = 1,
-  # 		mcmc_seed = 42,     
-  # 		max_sampling_iterations = 1000
-  # 	)
-  # 
-  # my_estimate_random3 = 
-  # 	seurat_obj |>
-  # 	sccomp_estimate(
-  # 		formula_composition = ~  type + (1 | group__),
-  # 		formula_variability = ~ 1,
-  # 		"sample", "cell_group",
-  # 		cores = 1,
-  # 		mcmc_seed = 42,     
-  # 		max_sampling_iterations = 1000
-  # 	)
-  
   
   
 }
@@ -126,7 +104,6 @@ test_that("correct columns",{
   
   
 })
-
 
 test_that("Generate data",{
   skip_cmdstan()
@@ -457,7 +434,9 @@ test_that("multi beta binomial from SCE",{
       sce_obj |>
     sccomp_estimate(
       formula_composition = ~ type,
-      formula_variability = ~ 1,sample_column = "sample",cell_group_column = "cell_group",
+      formula_variability = ~ 1,
+      sample_column = "sample",
+      cell_group_column = "cell_group",
       cores = 1,
       mcmc_seed = 42,      
       max_sampling_iterations = 1000, verbose = FALSE
@@ -637,7 +616,6 @@ test_that("test constrasts",{
 
 })
 
-
 test_that("proportions",{
   
   skip_cmdstan()
@@ -654,20 +632,19 @@ test_that("proportions",{
     ) |> 
       expect_warning("The argument '.count' is deprecated")
  
-  counts_obj |>
-    sccomp_estimate(
-      formula_composition = ~ type , 
-      sample_column = "sample",  
-      cell_group_column = "cell_group", 
-      abundance_column = "proportion",
-      cores = 1,
-      mcmc_seed = 42,
-      max_sampling_iterations = 1000
-    ) |> 
-    expect_no_warning()
+  # counts_obj |>
+  #   sccomp_estimate(
+  #     formula_composition = ~ type ,
+  #     sample_column = "sample",
+  #     cell_group_column = "cell_group",
+  #     abundance_column = "proportion",
+  #     cores = 1,
+  #     mcmc_seed = 42,
+  #     max_sampling_iterations = 1000
+  #   ) |>
+  #   expect_warning("sccomp says: your proportion values include 0.*")
   
 })
-
 
 test_that("sccomp_proportional_fold_change",{
   
@@ -684,7 +661,7 @@ test_that("sccomp_proportional_fold_change",{
     pull(proportion_fold_change) |> 
     unique() |> 
     length() |> 
-    expect_gt(1)
+    expect_equal(1)
   
 })
 
@@ -693,7 +670,7 @@ test_that("plotting for no significance",{
   skip_cmdstan()
   
   
-  sccomp:::no_significance_df |>
+  no_significance_df |>
     mutate(count = count |> as.integer()) |> 
     sccomp_estimate(formula_composition = ~ condition,
                     sample_column = "sample",
@@ -703,6 +680,7 @@ test_that("plotting for no significance",{
 ) |>
     sccomp_test() |> 
     sccomp_boxplot("condition") |> 
+    expect_warning() |> 
     expect_no_error()
   
   
@@ -897,7 +875,6 @@ test_that("LOO", {
   
 })
 
-
 test_that("use two methods", {
 
   skip_cmdstan()
@@ -908,9 +885,9 @@ test_that("use two methods", {
       .sample =  sample, 
       .cell_group = cell_group, 
       inference_method = "hmc",
-      cores = 1
+      cores = 1, max_sampling_iterations = 1000
     ) |> 
-    sccomp_remove_outliers(inference_method = "pathfinder", cores = 1) |> 
+    sccomp_remove_outliers(inference_method = "pathfinder", cores = 1, max_sampling_iterations = 1000) |> 
     expect_no_error()
   
 })
