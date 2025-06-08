@@ -368,7 +368,7 @@ In the case of a categorical variable, the starting and ending points are catego
 res |> 
    sccomp_proportional_fold_change(
      formula_composition = ~  type,
-     from =  "benign", 
+     from =  "healthy", 
      to = "cancer"
     ) |> 
   select(cell_group, statement)

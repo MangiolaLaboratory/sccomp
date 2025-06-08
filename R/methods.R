@@ -752,6 +752,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         # Grouping 2 - Random intercept DUPLICATED
         X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
         
+        # Initialize unseen random effect variables
+        ncol_X_random_eff_unseen = c(0, 0),
+        X_random_effect_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+        X_random_effect_2_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+        
         create_intercept = FALSE
       )),
 
@@ -878,6 +883,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       
       # Grouping 2 - Random intercept DUPLICATED
       X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
+      
+      # Initialize unseen random effect variables
+      ncol_X_random_eff_unseen = c(0, 0),
+      X_random_effect_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+      X_random_effect_2_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
       
       create_intercept = FALSE
       
@@ -1478,11 +1488,6 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'
 #' @export
 #'
-#' print("cmdstanr is needed to run this example.")
-#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
-#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
-#'
-#'
 #' @examples
 #' \donttest{
 #'   if (instantiate::stan_cmdstan_exists() && .Platform$OS.type == "unix") {
@@ -1496,7 +1501,7 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'   formula_variability = ~1,
 #'   .sample = sample,
 #'   .cell_group = cell_group,
-#'   .count = count,
+#'   .abundance = count,
 #'   approximate_posterior_inference = "all",
 #'   cores = 1
 #' )
@@ -1513,7 +1518,6 @@ sccomp_calculate_residuals <- function(.data) {
 }
 
 #' @export
-#'
 sccomp_calculate_residuals.sccomp_tbl = function(.data){
   
   
@@ -2262,3 +2266,5 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     
 
 }
+
+

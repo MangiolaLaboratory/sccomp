@@ -195,6 +195,7 @@ ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
 
 #' @importFrom tidyr gather
 #' @importFrom magrittr set_rownames
+#' @importFrom tibble deframe
 #'
 #' @keywords internal
 #' @noRd
@@ -471,7 +472,6 @@ fit_model = function(
 )
 {
   
-  
   # # if analysis approximated
   # # If posterior analysis is approximated I just need enough
   # how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
@@ -521,8 +521,8 @@ fit_model = function(
       data_for_model$how_many_factors_in_random_design[1]
     ))
     
-    init_list$random_effect_sigma_mu = 0.5 |> as.array()
-    init_list$random_effect_sigma_sigma = 0.2 |> as.array()
+    # init_list$random_effect_sigma_mu = 0.5 |> as.array()
+    # init_list$random_effect_sigma_sigma = 0.2 |> as.array()
     init_list$zero_random_effect = rep(0, size = 1) |> as.array()
     
   } 
@@ -728,8 +728,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
   
 }
 
-
-#' Get Random Intercept Design 2
+#' Get Random Intercept Design 3
 #'
 #' This function processes the formula composition elements in the data and creates design matrices
 #' for random intercept models.
@@ -756,235 +755,228 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom rlang quo_name
 #' @importFrom tidyselect all_of
 #' @importFrom readr type_convert
+#' @importFrom tibble rownames_to_column
 #' @noRd
-get_random_effect_design2 = function(.data_, .sample, formula_composition ){
+get_random_effect_design3 = function(
+  .data_, formula, grouping, .sample, 
+  accept_NA_as_average_effect = FALSE 
+){
   
   # Define the variables as NULL to avoid CRAN NOTES
-  formula <- NULL
-  
   .sample = enquo(.sample)
   
-  grouping_table =
-    formula_composition |>
-    formula_to_random_effect_formulae() |>
-    
-    mutate(design = map2(
-      formula, grouping,
-      ~ {
-        
-        mydesign = .data_ |> get_design_matrix(.x, !!.sample)
-        
-        mydesigncol_X_random_eff = .data_ |> select(all_of(.y)) |> pull(1) |> rep(ncol(mydesign)) |> matrix(ncol = ncol(mydesign))
-        mydesigncol_X_random_eff[mydesign==0L] = NA
-        colnames(mydesigncol_X_random_eff) = colnames(mydesign)
-        rownames(mydesigncol_X_random_eff) = rownames(mydesign)
-        
-        mydesigncol_X_random_eff |>
-          as_tibble(rownames = quo_name(.sample)) |>
-          pivot_longer(-!!.sample, names_to = "factor", values_to = "grouping") |>
-          filter(!is.na(grouping)) |>
-          
-          mutate("mean_idx" = glue("{factor}___{grouping}") |> as.factor() |> as.integer() )|>
-          with_groups(factor, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
-          mutate(minus_sum = if_else(mean_idx==0, factor |> as.factor() |> as.integer(), 0L)) |>
-          
-          # Make right rank
-          mutate(mean_idx = mean_idx |> as.factor() |> as.integer() |> subtract(1)) |>
-          
-          # drop minus_sum if we just have one grouping per factor
-          with_groups(factor, ~ {
-            if(length(unique(..1$grouping)) == 1) ..1 |> mutate(., minus_sum = 0)
-            else ..1
-          }) |>
-          
-          # Add value
-          left_join(
-            
-            mydesign |>
-              as.data.frame() |> 
-              mutate_all(as.character) |> 
-              readr::type_convert(guess_integer = TRUE ) |> 
-              as_tibble(rownames = quo_name(.sample)) |>
-              suppressMessages() |>
-              mutate_if(is.integer, ~1) |>
-              pivot_longer(-!!.sample, names_to = "factor"),
-            
-            by = join_by(!!.sample, factor)
-          ) |>
-          
-          # Create unique name
-          mutate(group___label = glue("{factor}___{grouping}")) |>
-          mutate(group___numeric = group___label |> as.factor() |> as.integer()) |>
-          mutate(factor___numeric = `factor` |> as.factor() |> as.integer())
-        
-        
-        
-      }))
+  mydesign = .data_ |> get_design_matrix(formula, !!.sample, accept_NA_as_average_effect = accept_NA_as_average_effect)
   
+  # Create a matrix of group assignments
+  group_matrix = .data_ |> 
+    select(all_of(grouping)) |> 
+    pull(1) |> 
+    rep(ncol(mydesign)) |> 
+    matrix(ncol = ncol(mydesign))
+  
+  # Create a mask where design matrix has non-zero values
+  mask = mydesign != 0
+  
+  # Apply mask to group matrix (setting non-masked values to "")
+  group_matrix[!mask] = ""
+  
+  # Handle NAs in group matrix
+  if(accept_NA_as_average_effect) {
+    # For rows with NA in grouping, set group to "NA"
+    group_matrix[is.na(group_matrix)] = "NA"
+  }
+  
+  colnames(group_matrix) = colnames(mydesign)
+  rownames(group_matrix) = rownames(mydesign)
+  
+  # Create the result matrix
+  result = matrix(0, nrow = nrow(mydesign), ncol = ncol(mydesign))
+  rownames(result) = rownames(mydesign)
+  colnames(result) = colnames(mydesign)
+  
+  # For each column in the design matrix
+  for(col in seq_len(ncol(mydesign))) {
+    # Get the non-zero values and their corresponding groups
+    non_zero = mydesign[, col] != 0
+    if(any(non_zero)) {
+      # Set the values in the result matrix
+      result[non_zero, col] = mydesign[non_zero, col]
+    }
+  }
+  
+  # Convert to long format with the correct column names
+  result_long = result |>
+    as.data.frame() |>
+    rownames_to_column("sample") |>
+    pivot_longer(-sample, names_to = "factor", values_to = "value") |>
+    filter(value != 0) |>
+    mutate(
+      group___label = paste0(factor, "___", group_matrix[cbind(sample, factor)]),
+      group___numeric = as.integer(factor(group___label)),
+      factor___numeric = as.integer(factor(factor))
+    ) |>
+    select(sample, group___label, group___numeric, value)
+  
+  result_long
 }
 
-
-#' Get Random Intercept Design
-#'
-#' This function processes random intercept elements in the data and creates design matrices
-#' for random intercept models.
-#'
-#' @param .data_ A data frame containing the data.
-#' @param .sample A quosure representing the sample variable.
-#' @param random_effect_elements A data frame containing the random intercept elements.
-#' 
-#' @return A data frame with the processed design matrices for random intercept models.
-#' 
 #' @importFrom glue glue
-#' @importFrom magrittr subtract
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate
+#' @importFrom dplyr across
 #' @importFrom dplyr pull
-#' @importFrom dplyr if_else
-#' @importFrom dplyr distinct
-#' @importFrom dplyr group_by
-#' @importFrom dplyr summarise
-#' @importFrom rlang set_names
-#' @importFrom purrr map_lgl
-#' @importFrom purrr pmap
-#' @importFrom purrr map_int
-#' @importFrom dplyr with_groups
+#' @importFrom tidyr where
 #' @importFrom rlang enquo
-#' @importFrom rlang quo_name
-#' @importFrom tidyselect all_of
 #' @noRd
-get_random_effect_design = function(.data_, .sample, random_effect_elements ){
-  
-  # Define the variables as NULL to avoid CRAN NOTES
-  is_factor_continuous <- NULL
-  design <- NULL
-  max_mean_idx <- NULL
-  max_minus_sum <- NULL
-  max_factor_numeric <- NULL
-  max_group_numeric <- NULL
-  min_mean_idx <- NULL
-  min_minus_sum <- NULL
+get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE){
   
   .sample = enquo(.sample)
   
-  # If intercept is not defined create it
-  if(nrow(random_effect_elements) == 0 )
-    return(
-      random_effect_elements |>
-        mutate(
-          design = list(),
-          is_factor_continuous = logical()
-        )
-    )
-  
-  # Otherwise process
-  random_effect_elements |>
-    mutate(is_factor_continuous = map_lgl(
-      `factor`,
-      ~ .x != "(Intercept)" && .data_ |> select(all_of(.x)) |> pull(1) |> is("numeric")
-    )) |>
-    mutate(design = pmap(
-      list(grouping, `factor`, is_factor_continuous),
-      ~ {
-        
-        # Make exception for random intercept
-        if(..2 == "(Intercept)")
-          .data_ = .data_ |> mutate(`(Intercept)` = 1)
-        
-        .data_ =
-          .data_ |>
-          select(!!.sample, ..1, ..2) |>
-          set_names(c(quo_name(.sample), "group___", "factor___")) |>
-          mutate(group___numeric = group___, factor___numeric = factor___) |>
-          
-          mutate(group___label := glue("{group___}___{.y}")) |>
-          mutate(factor___ = ..2)
-        
-        
-        # If factor is continuous
-        if(..3)
-          .data_ %>%
-          
-          # Mutate random intercept grouping to number
-          mutate(group___numeric = factor(group___numeric) |> as.integer()) |>
-          
-          # If intercept is not defined create it
-          mutate(., factor___numeric = 1L) |>
-          
-          # If categorical make sure the group is independent for factors
-          mutate(mean_idx = glue("{group___numeric}") |> as.factor() |> as.integer()) |>
-          mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx)) |>
-          mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
-          mutate(minus_sum = if_else(mean_idx==0, 1L, 0L))
-        
-        #|>
-        #  distinct()
-        
-        # If factor is discrete
-        else
-          .data_ %>%
-          
-          # Mutate random intercept grouping to number
-          mutate(group___numeric = factor(group___numeric) |> as.integer()) |>
-          
-          # If categorical make sure the group is independent for factors
-          mutate(mean_idx = glue("{factor___numeric}{group___numeric}") |> as.factor() |> as.integer()) |>
-          with_groups(factor___numeric, ~ ..1 |> mutate(mean_idx = if_else(mean_idx == max(mean_idx), 0L, mean_idx))) |>
-          mutate(mean_idx = as.factor(mean_idx) |> as.integer() |> subtract(1L)) |>
-          mutate(minus_sum = if_else(mean_idx==0, as.factor(factor___numeric) |> as.integer(), 0L)) |>
-          
-          # drop minus_sum if we just have one group___numeric per factor
-          with_groups(factor___numeric, ~ {
-            if(length(unique(..1$group___numeric)) == 1) ..1 |> mutate(., minus_sum = 0)
-            else ..1
-          }) |>
-          mutate(factor___numeric = as.factor(factor___numeric) |> as.integer())
-        
-        #|>
-        #  distinct()
-      }
-    )) |>
-    
-    # Make indexes unique across parameters
-    mutate(
-      max_mean_idx = map_int(design, ~ ..1 |> pull(mean_idx) |> max()),
-      max_minus_sum = map_int(design, ~ ..1 |> pull(minus_sum) |> max()),
-      max_factor_numeric = map_int(design, ~ ..1 |> pull(factor___numeric) |> max()),
-      max_group_numeric = map_int(design, ~ ..1 |> pull(group___numeric) |> max())
-    ) |>
-    mutate(
-      min_mean_idx = cumsum(max_mean_idx) - max_mean_idx ,
-      min_minus_sum = cumsum(max_minus_sum) - max_minus_sum,
-      max_factor_numeric = cumsum(max_factor_numeric) - max_factor_numeric,
-      max_group_numeric = cumsum(max_group_numeric) - max_group_numeric
-    ) |>
-    mutate(design = pmap(
-      list(design, min_mean_idx, min_minus_sum, max_factor_numeric, max_group_numeric),
-      ~ ..1 |>
-        mutate(
-          mean_idx = if_else(mean_idx>0, mean_idx + ..2, mean_idx),
-          minus_sum = if_else(minus_sum>0, minus_sum + ..3, minus_sum),
-          factor___numeric = factor___numeric + ..4,
-          group___numeric = group___numeric + ..5
-          
-        )
-    ))
-  
-}
-
-#' @importFrom glue glue
-#' @noRd
-get_design_matrix = function(.data_spread, formula, .sample){
-  
-  .sample = enquo(.sample)
-  
-  design_matrix =
-    .data_spread %>%
+  .data_spread = .data_spread %>%
     
     select(!!.sample, parse_formula(formula)) |>
-    mutate(across(where(is.numeric),  scale)) |>
+    mutate(across(where(is.numeric),  scale)) 
+
+  # Check for NAs in the data
+  has_na = any(is.na(.data_spread |> select(parse_formula(formula))))
+  
+  # If NAs are present and we don't accept them as average effects, throw an error
+  if(has_na && !accept_NA_as_average_effect){
+    stop("sccomp says: NA values are present in the design matrix factors. Set accept_NA_as_average_effect = TRUE to handle NAs as average effects across factor levels.")
+  }
+
+  # Check if we should handle NAs as average effects
+  if(accept_NA_as_average_effect && has_na){
+    return(get_design_matrix_with_na_handling(.data_spread, formula, !!.sample))
+  }
+  
+  design_matrix =
+    .data_spread |>
     model.matrix(formula, data=_)
   
+  rownames(design_matrix) = .data_spread |> pull(!!.sample)
+  
+  design_matrix
+}
+
+#' @description
+#' This function handles NA values in a special way for design matrices.
+#' When NA values are present in categorical variables (factors or characters), they are treated as a separate
+#' level "NA" initially, but then this level is removed from the design matrix. For rows with NA values,
+#' the function sets equal weights (0.5) across all remaining factor levels. This approach allows for modeling
+#' the average effect across all levels of a factor when the specific level is unknown or missing, rather than
+#' excluding these observations or treating NA as its own distinct category. This is particularly useful when
+#' you want to include observations with missing factor values but don't want to bias the model toward any
+#' particular level of that factor.
+#' 
+#' @param .data_spread A data frame containing the data.
+#' @param formula The formula to use for creating the design matrix.
+#' @param .sample A quosure representing the sample variable.
+#' 
+#' @return A design matrix with rows named by the sample variable.
+#' 
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate
+#' @importFrom dplyr across
+#' @importFrom dplyr pull
+#' @importFrom tidyr where
+#' @importFrom rlang enquo
+#' @noRd
+get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
+  
+  .sample = enquo(.sample)
+  
+  # Convert NA to a factor level "NA" for categorical variables
+  data_with_na <- .data_spread %>%
+    mutate(
+      # 1) Handle factor/character: turn NA into a real "NA" level, last in the ordering
+      across(
+        where(~ is.factor(.x) || is.character(.x)),
+        ~{
+          if (any(is.na(.x))) {
+            x_char <- as.character(.x)
+            x_char[is.na(x_char)] <- "NA"
+            f <- factor(x_char)
+            non_na_levels <- setdiff(levels(f), "NA")
+            new_levels <- c(non_na_levels, "NA")
+            factor(f, levels = new_levels)
+          } else {
+            .x
+          }
+        }
+      ),
+      # 2) Handle numeric: replace NA by the (non-NA) mean of that column
+      across(
+        where(is.numeric),
+        ~{
+          if (any(is.na(.x))) {
+            mean_val <- mean(.x, na.rm = TRUE)
+            ifelse(is.na(.x), mean_val, .x)  # Only replace NAs, keep original values
+          } else {
+            .x
+          }
+        }
+      )
+    )
+  
+  # Create design matrix
+  design_matrix = model.matrix(formula, data = data_with_na, na.action = NULL)
+  
+  # Process rows that had NA values and remove the "NA" columns
+  for(col_name in names(data_with_na)) {
+    if(is.factor(data_with_na[[col_name]]) || is.character(data_with_na[[col_name]])) {
+      # Get unique levels of this factor (excluding NA)
+      factor_levels = levels(factor(data_with_na[[col_name]]))
+      factor_levels = factor_levels[factor_levels != "NA"]
+      
+      # Find the "NA" column for this factor
+      na_col_pattern = paste0(col_name, "NA$")
+      na_col = grep(na_col_pattern, colnames(design_matrix))
+      
+      if(length(na_col) > 0) {
+        # Find rows with NA values using the design matrix
+        na_rows = which(design_matrix[, na_col] == 1)
+        
+        if(length(na_rows) > 0) {
+          # Find all columns related to this factor in the design matrix
+          factor_cols = c()
+          for(level in factor_levels) {
+            # Skip the reference level which won't appear in the design matrix
+            level_col = grep(paste0("^", col_name, level, "$"), colnames(design_matrix))
+            if(length(level_col) > 0) {
+              factor_cols = c(factor_cols, level_col)
+            }
+          }
+          
+          # If we can't find factor columns by level names, try the generic pattern
+          if(length(factor_cols) == 0) {
+            factor_pattern = paste0("^", col_name)
+            factor_cols = grep(factor_pattern, colnames(design_matrix))
+            factor_cols = setdiff(factor_cols, na_col)
+          }
+          
+          # Remove NA column from design matrix
+          design_matrix = design_matrix[, -na_col, drop = FALSE]
+          
+          # Number of visible levels in design matrix (accounting for reference level)
+          n_levels = length(factor_cols)
+          
+          # For multi-level factors, we need to consider the reference level too
+          # The reference level is implied when all other level columns are 0
+          # So we distribute 1/(n_levels+1) to each visible level
+          # Base level gets effect of 1 - sum(other_effects)
+          
+          if(n_levels > 0) {
+            for(row in na_rows) {
+              # Equal weight for each level
+              design_matrix[row, factor_cols] = 1/(n_levels + 1)
+            }
+          }
+        }
+      }
+    }
+  }
+
   rownames(design_matrix) = .data_spread |> pull(!!.sample)
   
   design_matrix
@@ -1151,6 +1143,7 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_remove_all
 #' @importFrom purrr reduce
+#' @importFrom purrr map_int
 #' @importFrom stats as.formula
 #'
 #' @keywords internal
@@ -1159,12 +1152,13 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
 data_spread_to_model_input =
   function(
     .data_spread, formula, .sample, .cell_type, .count,
-    truncation_ajustment = 1, approximate_posterior_inference ,
+    truncation_ajustment = 1, approximate_posterior_inference,
     formula_variability = ~ 1,
     contrasts = NULL,
     bimodal_mean_variability_association = FALSE,
     use_data = TRUE,
-    random_effect_elements){
+    random_effect_elements,
+    accept_NA_as_average_effect = FALSE){
     
     # Define the variables as NULL to avoid CRAN NOTES
     exposure <- NULL
@@ -1203,7 +1197,8 @@ data_spread_to_model_input =
           str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
           paste(collapse="") |>
           as.formula(),
-        !!.sample
+        !!.sample,
+        accept_NA_as_average_effect = accept_NA_as_average_effect
       )
     
     Xa  =
@@ -1215,7 +1210,8 @@ data_spread_to_model_input =
           str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
           paste(collapse="") |>
           as.formula() ,
-        !!.sample
+        !!.sample,
+        accept_NA_as_average_effect = accept_NA_as_average_effect
       )
     
     XA = Xa %>%
@@ -1232,8 +1228,15 @@ data_spread_to_model_input =
     # Random intercept
     if(nrow(random_effect_elements)>0 ) {
       
+  
       #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
-      random_effect_grouping = get_random_effect_design2(.data_spread, !!.sample,  formula )
+      random_effect_grouping = formula |>
+        formula_to_random_effect_formulae() |>
+        mutate(design = map2(
+          formula, grouping,
+          ~ {
+            get_random_effect_design3(.data_spread, .x, .y, !!.sample )
+          }))
       
       # Actual parameters, excluding for the sum to one parameters
       is_random_effect = 1
@@ -1255,15 +1258,25 @@ data_spread_to_model_input =
         _[[1]]  |>  
         as_matrix(rownames = quo_name(.sample))
       
+      # Separate NA group column into X_random_effect_unseen
+      X_random_effect_unseen = X_random_effect[, colnames(X_random_effect) |> str_detect("___NA$"), drop = FALSE]
+      X_random_effect = X_random_effect[, !colnames(X_random_effect) |> str_detect("___NA$"), drop = FALSE]
+      
       # For now that stan does not have tuples, I just allow max two levels
       if(random_effect_grouping |> nrow() > 2) stop("sccomp says: at the moment sccomp allow max two groupings")
       # This will be modularised with the new stan
-      if(random_effect_grouping |> nrow() > 1)
+      if(random_effect_grouping |> nrow() > 1){
         X_random_effect_2 =   
         random_effect_grouping |> 
         pull(design_matrix) |> 
         _[[2]] |>  
         as_matrix(rownames = quo_name(.sample))
+
+        # Separate NA group column into X_random_effect_2_unseen  
+        X_random_effect_2_unseen = X_random_effect_2[, colnames(X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
+        X_random_effect_2 = X_random_effect_2[, !colnames(X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
+      }
+
       else X_random_effect_2 =  X_random_effect[,0,drop=FALSE]
       
       n_random_eff = random_effect_grouping |> nrow()
@@ -1451,17 +1464,21 @@ data_spread_to_model_input =
         nrow()
     }
     
+    # Default all grouping known. This is used for data generation to estimate unknown groupings.
+    data_for_model$unknown_grouping = c(FALSE, FALSE)
+    
+    
     # Return
     data_for_model
   }
 
+#' @importFrom purrr map_int
 data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_effect){
   
   .sample = enquo(.sample)
   .cell_type = enquo(.cell_type)
   .count = enquo(.count)
-  .grouping_for_random_effect = .grouping_for_random_effect |> map(~ .x |> quo_name() ) |> unlist()
-  
+
   is_proportion = .data |> pull(!!.count) |> max() <= 1
   
   .data = 
@@ -3065,319 +3082,7 @@ get_variability_contrast_draws = function(.data, contrasts){
   
 }
 
-#' @importFrom tibble deframe
-#'
-#' @noRd
-replicate_data = function(.data,
-                          formula_composition = NULL,
-                          formula_variability = NULL,
-                          new_data = NULL,
-                          number_of_draws = 1,
-                          mcmc_seed = sample(1e5, 1),
-                          cores = detectCores()){
-  
-  
-  # Select model based on noise model
-  noise_model = attr(.data, "noise_model")
-  
-  model_input = attr(.data, "model_input")
-  .sample = attr(.data, ".sample")
-  .cell_group = attr(.data, ".cell_group")
-  .count = attr(.data, ".count")
-  
-  # Composition
-  if(is.null(formula_composition)) formula_composition =  .data |> attr("formula_composition")
-  
-  # New data
-  if(new_data |> is.null())
-    new_data =
-    .data |>
-    select(count_data) |>
-    unnest(count_data) |>
-    distinct()
-  
-  # If seurat
-  else if(new_data |> is("Seurat")) new_data = new_data[[]]
-  
-  # Just subset
-  new_data = new_data |> .subset(!!.sample)
-  
-  
-  # Check if the input new data is not suitable
-  if(!parse_formula(formula_composition) %in% colnames(new_data) |> all())
-    stop("sccomp says: your `new_data` might be malformed. It might have the covariate columns with multiple values for some element of the \"%s\" column. As a generic example, a sample identifier (\"Sample_123\") might be associated with multiple treatment values, or age values.")
-  
-  
-  # Match factors with old data
-  nrow_new_data = nrow(new_data)
-  new_exposure = new_data |>
-    nest(data = -!!.sample) |>
-    mutate(exposure = map_dbl(
-      data,
-      ~{
-        if (quo_name(.count) %in% colnames(.x)) .x |> pull(!!.count) |> sum()
-        else 5000
-      })) |>
-    select(!!.sample, exposure) |>
-    deframe() |>
-    as.array()
-  
-  # Update data, merge with old data because
-  # I need the same ordering of the design matrix
-  old_data = 
-    .data |>
-    select(count_data) |>
-    unnest(count_data) |>
-    select(-!!.count) |>
-    select(new_data |> as_tibble() |> colnames() |>  any_of()) |>
-    distinct() |>
-    
-    # Change sample names to make unique
-    mutate(dummy = "OLD") |>
-    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___")
-    
-  # Harmonise factors
-  new_data = new_data |> as_tibble() |> harmonise_factor_levels(old_data)
-  
-  # Check if some values were not present in the original data
-  if(
-    new_data |> nrow() > 
-    new_data |> select(-!!.sample) |> drop_na() |> nrow()
-  )
-    stop(
-      "sccomp says: some factor values were not present in the original training data. \n",
-      new_data
-      )
 
-  new_data =  old_data |> bind_rows( new_data )
-  
-  new_X =
-    new_data |>
-    get_design_matrix(
-      
-      # Drop random intercept
-      formula_composition |>
-        as.character() |>
-        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
-        paste(collapse="") |>
-        as.formula(),
-      !!.sample
-    ) |>
-    tail(nrow_new_data) %>%
-    
-    # Remove columns that are not in the original design matrix
-    .[,colnames(.) %in% colnames(model_input$X), drop=FALSE]
-  
-  # Check that all effect combination were present when the model was fitted
-  check_missing_parameters(
-    new_X |> colnames(), 
-    model_input$X |> colnames()
-  ) 
-  
-  X_which =
-    colnames(new_X) |>
-    match(
-      model_input$X %>%
-        colnames()
-    ) |>
-    na.omit() |>
-    as.array()
-  
-  # Variability
-  if(is.null(formula_variability)) formula_variability =  .data |> attr("formula_variability")
-  
-  new_Xa =
-    new_data |>
-    get_design_matrix(
-      
-      # Drop random intercept
-      formula_variability |>
-        as.character() |>
-        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
-        paste(collapse="") |>
-        as.formula(),
-      !!.sample
-    ) |>
-    tail(nrow_new_data) %>%
-    
-    # Remove columns that are not in the original design matrix
-    .[,colnames(.) %in% colnames(model_input$Xa), drop=FALSE]
-  
-  XA_which =
-    colnames(new_Xa) |>
-    match(
-      model_input %$%
-        Xa %>%
-        colnames()
-    ) |>
-    na.omit() |>
-    as.array()
-  
-  # If I want to replicate data with intercept and I don't have intercept in my fit
-  create_intercept =
-    model_input %$% intercept_in_design |> not() &
-    "(Intercept)" %in% colnames(new_X)
-  if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
-  
-  # Original grouping
-  original_grouping_names = .data |> attr("formula_composition") |> formula_to_random_effect_formulae() |> pull(grouping)
-  
-  # Random intercept
-  random_effect_elements = parse_formula_random_effect(formula_composition)
-  
-  random_effect_grouping =
-    new_data %>%
-    
-    get_random_effect_design2(
-      !!.sample,
-      formula_composition
-    )
-  
-  
-  # if(random_effect_elements |> nrow() |> equals(0)) {
-  #   
-  # }
-  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any()) {
-    
-    # HAVE TO DEBUG
-    new_X_random_effect =
-      random_effect_grouping |>
-      filter(grouping==original_grouping_names[1]) |> 
-      mutate(design_matrix = map(
-        design,
-        ~ ..1 |>
-          select(!!.sample, group___label, value) |>
-          pivot_wider(names_from = group___label, values_from = value) |>
-          mutate(across(everything(), ~ .x |> replace_na(0)))
-      )) |>
-      
-      # Merge
-      pull(design_matrix) |> 
-      _[[1]] |> 
-      as_matrix(rownames = quo_name(.sample))  |>
-      tail(nrow_new_data)
-    
-    # Check that all effect combination were present when the model was fitted
-    check_missing_parameters(
-      new_X_random_effect |> colnames(), 
-      model_input %$% X_random_effect |> colnames()
-    ) 
-    
-    # I HAVE TO KEEP GROUP NAME IN COLUMN NAME
-    X_random_effect_which =
-      colnames(new_X_random_effect) |>
-      match(
-        model_input %$%
-          X_random_effect %>%
-          colnames()
-      ) |>
-      as.array()
-    
-    # Check if I have column in the new design that are not in the old one
-    missing_columns = new_X_random_effect |> colnames() |> setdiff(colnames(model_input$X_random_effect))
-    if(missing_columns |> length() > 0)
-      stop(glue("sccomp says: the columns in the design matrix {paste(missing_columns, collapse= ' ,')} are missing from the design matrix of the estimate-input object. Please make sure your new model is a sub-model of your estimated one."))
-    
-  }
-  else{
-    X_random_effect_which = array()[0]
-    new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-    
-  }
-  if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()){
-    # HAVE TO DEBUG
-    new_X_random_effect_2 =
-      random_effect_grouping |>
-      filter(grouping==original_grouping_names[2]) |> 
-      mutate(design_matrix = map(
-        design,
-        ~ ..1 |>
-          select(!!.sample, group___label, value) |>
-          pivot_wider(names_from = group___label, values_from = value) |>
-          mutate(across(everything(), ~ .x |> replace_na(0)))
-      )) |>
-      
-      # Merge
-      pull(design_matrix) |> 
-      _[[1]] |> 
-      as_matrix(rownames = quo_name(.sample))  |>
-      tail(nrow_new_data)
-    
-    
-    # Check that all effect combination were present when the model was fitted
-    check_missing_parameters(
-      new_X_random_effect_2 |> colnames(), 
-      model_input %$% X_random_effect_2 |> colnames()
-    ) 
-      
-    # DUPLICATE
-    X_random_effect_which_2 =
-      colnames(new_X_random_effect_2) |>
-      match(
-        model_input %$%
-          X_random_effect_2 %>%
-          colnames()
-      ) |>
-      as.array()
-    
-  }
-  else{
-    X_random_effect_which_2 = array()[0]
-    new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  }
-  
-  # New X
-  model_input$X_original = model_input$X
-  model_input$X = new_X
-  model_input$Xa = new_Xa
-  model_input$N_original = model_input$N
-  model_input$N = nrow_new_data
-  model_input$exposure = new_exposure
-  
-  model_input$X_random_effect = new_X_random_effect
-  model_input$X_random_effect_2 = new_X_random_effect_2
-  
-  model_input$ncol_X_random_eff_new = ncol(new_X_random_effect) |> c(ncol(new_X_random_effect_2))
-  
-  
-  
-  number_of_draws_in_the_fit = attr(.data, "fit") |>  get_output_samples()
-  
-  # To avoid error in case of a NULL posterior sample
-  number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
-  
-  # Load model
-  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
-  
-  
-  # Generate quantities
-  mod_rng |> sample_safe(
-    generate_quantities_fx,
-    attr(.data, "fit")$draws(format = "matrix")[
-      sample(seq_len(number_of_draws_in_the_fit), size=number_of_draws),, drop=FALSE
-    ],
-    data = model_input |> c(list(
-      
-      # Add subset of coefficients
-      length_X_which = length(X_which),
-      length_XA_which = length(XA_which),
-      X_which = X_which,
-      XA_which = XA_which,
-      
-      # Random intercept
-      X_random_effect_which = X_random_effect_which,
-      X_random_effect_which_2 = X_random_effect_which_2,
-      length_X_random_effect_which = length(X_random_effect_which) |> c(length(X_random_effect_which_2)),
-      
-      # Should I create intercept for generate quantities
-      create_intercept = create_intercept
-      
-    )),
-    seed = mcmc_seed, 
-    threads_per_chain = 1
-    
-  )
-}
 
 get_model_from_data = function(file_compiled_model, model_code){
   if(file.exists(file_compiled_model))
@@ -3761,7 +3466,7 @@ add_class = function(var, name) {
 #' # Assuming 'fit' is a stanfit object obtained from running a Stan model
 #' print("samples_count = get_output_samples(fit)")
 #'
-#' @export
+#' @noRd
 #' 
 get_output_samples = function(fit){
   
@@ -3797,7 +3502,7 @@ get_output_samples = function(fit){
 #' Defaults to `FALSE`.
 #' @param threads An integer specifying the number of threads to use for compilation. 
 #' Defaults to `1`.
-#' 
+# 
 #' @return A compiled Stan model object from `cmdstanr`.
 #' 
 #' @importFrom instantiate stan_package_model
@@ -3935,6 +3640,7 @@ drop_environment <- function(obj) {
 
 check_missing_parameters <- function(effects, model_effects) {
   # Find missing parameters
+
   missing_parameters <- 
     effects |> 
     setdiff(model_effects)
@@ -3947,25 +3653,75 @@ check_missing_parameters <- function(effects, model_effects) {
       if (length(missing_parameters) > 3) "\n..."
     )
   }
+
 }
 
-harmonise_factor_levels <- function(dataframe_query, dataframe_reference) {
-  # 1. Identify factor columns in the reference
-  factor_cols <- names(dataframe_reference)[sapply(dataframe_reference, is.factor)]
+#' harmonise_factor_levels
+#'
+#' @description
+#' A helper function to make sure that factor levels in new data match the old data
+#'
+#' @param new_data A data frame containing potential factor variables
+#' @param old_data A data frame containing the reference factor levels
+#'
+#' @return A data frame with the same dimensions as `new_data`
+#' @noRd
+#'
+harmonise_factor_levels <- function(new_data, old_data) {
+  if (!is.data.frame(new_data) || !is.data.frame(old_data)) {
+    stop("Both new_data and old_data must be data frames")
+  }
   
-  # 2. For each reference factor column, if the query has that column, coerce it to factor
-  for (col in factor_cols) {
-    if (col %in% names(dataframe_query)) {
-      # Use the reference's levels
-      ref_levels <- levels(dataframe_reference[[col]])
-      
-      # Force the query to adopt these levels, whether or not it was originally a factor
-      dataframe_query[[col]] <- factor(dataframe_query[[col]], levels = ref_levels)
+  # Ensure arguments are in the correct order
+  if (!identical(names(formals(harmonise_factor_levels))[1:2], c("new_data", "old_data"))) {
+    warning("Arguments appear to be in the wrong order. 'new_data' should be the data to be harmonized, 'old_data' is the reference.")
+  }
+  
+  # Original implementation follows
+  f_old <- sapply(old_data, is.factor)
+  f_new <- sapply(new_data, is.factor)
+  
+  # Get the common factor column names
+  common_f <- intersect(names(old_data)[f_old], names(new_data)[f_new])
+  
+  # If there are no common factor columns, return the new_data as is
+  if (length(common_f) == 0) {
+    return(new_data)
+  }
+  
+  # For each common factor column
+  for (col in common_f) {
+    # Get all unique levels from both datasets
+    all_levels <- unique(c(levels(old_data[[col]]), levels(new_data[[col]])))
+    
+    # Check if there are new levels in new_data that don't exist in old_data
+    new_levels <- setdiff(levels(new_data[[col]]), levels(old_data[[col]]))
+    if (length(new_levels) > 0) {
+      message(paste("sccomp says: New levels found in column", col, ":", paste(new_levels, collapse = ", ")))
+    }
+    
+    # Set levels of new_data to match old_data, adding any missing levels
+    new_data[[col]] <- factor(new_data[[col]], levels = levels(old_data[[col]]))
+  }
+  
+  # Also check for character columns in new_data that are factors in old_data
+  char_new <- sapply(new_data, is.character)
+  factor_cols_in_old <- names(old_data)[f_old]
+  
+  char_to_factor <- intersect(names(new_data)[char_new], factor_cols_in_old)
+  
+  for (col in char_to_factor) {
+    # Convert character to factor with the same levels as in old_data
+    new_data[[col]] <- factor(new_data[[col]], levels = levels(old_data[[col]]))
+    
+    # Check if there are values in new_data that don't exist in old_data's levels
+    invalid_values <- setdiff(unique(as.character(new_data[[col]])), levels(old_data[[col]]))
+    if (length(invalid_values) > 0 && !all(is.na(invalid_values))) {
+      warning(paste("sccomp says: Values in column", col, "not found in reference levels:", paste(invalid_values[!is.na(invalid_values)], collapse = ", ")))
     }
   }
   
-  # 3. Return ONLY the updated query
-  dataframe_query
+  return(new_data)
 }
 
 #' Print Tibble in Red
@@ -4032,3 +3788,489 @@ check_if_sample_is_a_unique_identifier <- function(data_wide, .sample) {
     return(data_wide)
   }
 }
+
+#' Prepare data for replicate_data function
+#' 
+#' @description
+#' Internal function that prepares the data for the replicate_data function. It handles:
+#' - Data validation and preprocessing
+#' - Design matrix creation
+#' - Random effects handling
+#' - Unseen group handling
+#' 
+#' @param X Original design matrix
+#' @param Xa Original variability design matrix
+#' @param N Original number of samples
+#' @param intercept_in_design Whether intercept is in design
+#' @param X_random_effect Original random effect design matrix
+#' @param X_random_effect_2 Original second random effect design matrix
+#' @param .sample Quosure for the sample identifier column
+#' @param .cell_group Quosure for the cell group column
+#' @param .count Quosure for the count column
+#' @param formula_composition Formula for the composition model
+#' @param formula_variability Formula for the variability model
+#' @param new_data New data to generate predictions for. If NULL, uses the original data
+#' @param original_count_data Original count data from the model
+#' 
+#' @return A list containing:
+#' - model_input: The prepared model input data
+#' - X_which: Indices for the composition design matrix
+#' - XA_which: Indices for the variability design matrix
+#' - X_random_effect_which: Indices for the first random effect design matrix
+#' - X_random_effect_which_2: Indices for the second random effect design matrix
+#' - create_intercept: Boolean indicating if intercept should be created
+#' 
+#' @noRd
+prepare_replicate_data = function(X,
+                                Xa,
+                                N,
+                                intercept_in_design,
+                                X_random_effect,
+                                X_random_effect_2,
+                                .sample,
+                                .cell_group,
+                                .count,
+                                formula_composition,
+                                formula_variability,
+                                new_data = NULL,
+                                original_count_data) {
+  
+
+  .sample = enquo(.sample)
+  .count = enquo(.count)
+
+  # New data
+  if(new_data |> is.null())
+    new_data = original_count_data 
+  
+  # Check that original_count_data dont have duplicated sample names
+  if(original_count_data |> count(!!.sample) |> pull(n) |> max() > 1)
+  stop("sccomp says: your original_count_data has duplicated sample names. Please ensure that the sample names are unique.") 
+  
+  # Check that new_data dont have duplicated sample names
+  if(new_data |> count(!!.sample) |> pull(n) |> max() > 1)
+    stop("sccomp says: your new_data has duplicated sample names. Please ensure that the sample names are unique.") 
+
+
+  # If seurat
+  else if(new_data |> is("Seurat")) new_data = new_data[[]]
+  
+  # Check if the input new data is not suitable
+  if(!parse_formula(formula_composition) %in% colnames(new_data) |> all())
+    stop("sccomp says: your `new_data` might be malformed. It might have the covariate columns with multiple values for some element of the \"%s\" column. As a generic example, a sample identifier (\"Sample_123\") might be associated with multiple treatment values, or age values.")
+  
+  # Match factors with old data
+  nrow_new_data = nrow(new_data)
+  
+  new_exposure = new_data |>
+    nest(data = -!!.sample) |>
+    mutate(exposure = map_dbl(
+      data,
+      ~{
+        if (quo_name(.count) %in% colnames(.x)) .x |> pull(!!.count) |> sum()
+        else 5000
+      })) |>
+    select(!!.sample, exposure) |>
+    deframe() |>
+    as.array()
+  
+  # Update data, merge with old data because
+  # I need the same ordering of the design matrix
+  old_data = original_count_data |>
+    
+    # Change sample names to make unique
+    mutate(dummy = "OLD") |>
+    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___")
+  
+  # Harmonise factors
+  new_data = new_data |> as_tibble() |> harmonise_factor_levels(old_data)
+  
+  # check that for each column of the old data. The new data has values that are found in the old data, omit NA , ignore !!.sample column
+  map(
+    old_data %>%
+      # Just apply to categorical
+      select(where(~ is.factor(.) || is.character(.))) %>%
+      names() %>%
+      setdiff(quo_name(.sample)),
+    ~ if (any(!new_data[[.x]][!is.na(new_data[[.x]])] %in% old_data[[.x]])) {
+      stop(
+        paste(
+          "sccomp says: The values for column `",.x,"` in the new data must be among the factor levels in the original data. Please ensure that the factor levels are consistent between the two datasets."
+        )
+      )
+    }
+  )
+  
+  new_data =  old_data |> bind_rows( new_data ) 
+  
+  new_X =
+    new_data |>
+    get_design_matrix(
+      # Drop random intercept
+      formula_composition |>
+        as.character() |>
+        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+        paste(collapse="") |>
+        as.formula(),
+      !!.sample, 
+      accept_NA_as_average_effect = TRUE
+    ) |>
+    tail(nrow_new_data) %>%
+    # Remove columns that are not in the original design matrix
+    .[,colnames(.) %in% colnames(X), drop=FALSE]
+  
+  # Check that all effect combination were present when the model was fitted
+  check_missing_parameters(
+    new_X |> colnames(), 
+    X |> colnames()
+  ) 
+  
+  X_which =
+    colnames(new_X) |>
+    match(
+      X %>%
+        colnames()
+    ) |>
+    na.omit() |>
+    as.array()
+  
+  # Variability
+  new_Xa =
+    new_data |>
+    get_design_matrix(
+      # Drop random intercept
+      formula_variability |>
+        as.character() |>
+        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
+        paste(collapse="") |>
+        as.formula(),
+      !!.sample, 
+      accept_NA_as_average_effect = TRUE
+    ) |>
+    tail(nrow_new_data) %>%
+    # Remove columns that are not in the original design matrix
+    .[,colnames(.) %in% colnames(Xa), drop=FALSE]
+  
+  XA_which =
+    colnames(new_Xa) |>
+    match(
+      Xa %>%
+        colnames()
+    ) |>
+    na.omit() |>
+    as.array()
+  
+  # If I want to replicate data with intercept and I don't have intercept in my fit
+  create_intercept =
+    !intercept_in_design &
+    "(Intercept)" %in% colnames(new_X)
+  if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
+  
+  # Original grouping
+  original_grouping_names = formula_composition |> formula_to_random_effect_formulae() |> pull(grouping)
+  
+  # Random intercept
+  random_effect_elements = parse_formula_random_effect(formula_composition)
+
+  # Initialize unseen random effect variables
+  new_X_random_effect_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  new_X_random_effect_2_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  
+  # Set default random intercept
+  X_random_effect_which = array()[0]
+  new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  
+  # setup default unknown_grouping variable for generated quantities
+  unknown_grouping = c(FALSE, FALSE)
+  
+      #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
+      random_effect_grouping = 
+        formula_composition |>
+        formula_to_random_effect_formulae() |>
+        mutate(design = map2(
+          formula, grouping,
+          ~  get_random_effect_design3(new_data, .x, .y, !!.sample,
+      accept_NA_as_average_effect = TRUE )
+          ))
+
+
+  
+  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any() && !unknown_grouping[1]) {
+    new_X_random_effect =
+      random_effect_grouping |>
+      filter(grouping==original_grouping_names[1]) |> 
+      mutate(design_matrix = map(
+        design,
+        ~ ..1 |>
+            select(!!.sample, group___label, value) |>
+            pivot_wider(names_from = group___label, values_from = value) |>
+            mutate(across(everything(), ~ .x |> replace_na(0)))
+      )) |>
+      # Merge
+      pull(design_matrix) |> 
+      _[[1]] |> 
+      as_matrix(rownames = quo_name(.sample))  |>
+      tail(nrow_new_data)
+   
+    # Separate NA group column into new_X_random_effect_unseen
+    new_X_random_effect_unseen = new_X_random_effect[, colnames(new_X_random_effect) |> str_detect("___NA$"), drop = FALSE]
+    new_X_random_effect = new_X_random_effect[, !colnames(new_X_random_effect) |> str_detect("___NA$"), drop = FALSE]
+    
+    # Check that all effect combination were present when the model was fitted
+    check_missing_parameters(
+      new_X_random_effect |> colnames(), 
+      X_random_effect |> colnames()
+    ) 
+    
+    X_random_effect_which =
+      colnames(new_X_random_effect) |>
+      match(
+        X_random_effect %>%
+          colnames()
+      ) |>
+      as.array()
+  }
+  
+  # Set default X random intercept
+  X_random_effect_which_2 = array()[0]
+  new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  
+  if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()){
+    new_X_random_effect_2 =
+      random_effect_grouping |>
+      filter(grouping==original_grouping_names[2]) |> 
+      mutate(design_matrix = map(
+        design,
+        ~ ..1 |>
+          select(!!.sample, group___label, value) |>
+          pivot_wider(names_from = group___label, values_from = value) |>
+          mutate(across(everything(), ~ .x |> replace_na(0)))
+      )) |>
+      # Merge
+      pull(design_matrix) |> 
+      _[[1]] |> 
+      as_matrix(rownames = quo_name(.sample))  |>
+      tail(nrow_new_data)
+    
+    # Separate NA group column into new_X_random_effect_2_unseen
+    new_X_random_effect_2_unseen = new_X_random_effect_2[, colnames(new_X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
+    new_X_random_effect_2 = new_X_random_effect_2[, !colnames(new_X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
+    
+    # Check that all effect combination were present when the model was fitted
+    check_missing_parameters(
+      new_X_random_effect_2 |> colnames(), 
+      X_random_effect_2 |> colnames()
+    )
+    
+    X_random_effect_which_2 =
+      colnames(new_X_random_effect_2) |>
+      match(
+        X_random_effect_2 %>%
+          colnames()
+      ) |>
+      as.array()
+  }
+  
+  # Prepare the list of inputs to the model
+  list(
+    X = new_X,
+    Xa = new_Xa,
+    N = nrow_new_data,  
+    exposure = new_exposure,
+    X_random_effect = new_X_random_effect,
+    X_random_effect_2 = new_X_random_effect_2,
+    X_random_effect_unseen = new_X_random_effect_unseen,
+    X_random_effect_2_unseen = new_X_random_effect_2_unseen,
+    ncol_X_random_eff_new = c(ncol(new_X_random_effect), ncol(new_X_random_effect_2)),  
+    unknown_grouping = unknown_grouping,
+    ncol_X_random_eff_unseen = c(ncol(new_X_random_effect_unseen), ncol(new_X_random_effect_2_unseen)),
+
+    X_which = X_which,
+    XA_which = XA_which,
+    X_random_effect_which = X_random_effect_which,
+    X_random_effect_which_2 = X_random_effect_which_2,
+    create_intercept = create_intercept
+  )
+ 
+}
+
+#' Generate replicated data from a fitted sccomp model
+#' 
+#' @description
+#' This function generates replicated data from a fitted sccomp model. It can be used to:
+#' - Generate predictions for new data
+#' - Simulate data from the fitted model
+#' - Generate posterior predictive samples
+#' 
+#' @param .data A sccomp model object
+#' @param formula_composition Formula for the composition model. If NULL, uses the formula from .data
+#' @param formula_variability Formula for the variability model. If NULL, uses the formula from .data
+#' @param new_data New data to generate predictions for. If NULL, uses the original data
+#' @param number_of_draws Number of posterior draws to use for generation
+#' @param mcmc_seed Random seed for reproducibility
+#' @param cores Number of CPU cores to use
+#' 
+#' @return A cmdstanr model object containing the generated quantities
+#' 
+#' @examples
+#' # Generate predictions for new data
+#' replicate_data(fitted_model, new_data = new_samples)
+#' 
+#' # Generate 1000 posterior predictive samples
+#' replicate_data(fitted_model, number_of_draws = 1000)
+#' 
+#' @noRd
+replicate_data = function(.data,
+                         formula_composition = NULL,
+                         formula_variability = NULL,
+                         new_data = NULL,
+                         number_of_draws = 1,
+                         mcmc_seed = sample(1e5, 1),
+                         cores = detectCores()){
+  
+  # Extract required components from .data
+  .sample = attr(.data, ".sample")
+  .cell_group = attr(.data, ".cell_group")
+  .count = attr(.data, ".count")
+  
+  # Get formulas if not provided
+  if(is.null(formula_composition)) formula_composition = attr(.data, "formula_composition")
+  if(is.null(formula_variability)) formula_variability = attr(.data, "formula_variability")
+  
+  # create model input 
+  model_input = attr(.data, "model_input")
+
+  # Prepare data
+  prepared_data = prepare_replicate_data(
+    X = model_input$X,
+    Xa = model_input$Xa,
+    N = model_input$N,
+    intercept_in_design = model_input$intercept_in_design,
+    X_random_effect = model_input$X_random_effect,
+    X_random_effect_2 = model_input$X_random_effect_2,
+    .sample = !!.sample,
+    .cell_group = !!.cell_group,
+    .count = !!.count,
+    formula_composition = formula_composition,
+    formula_variability = formula_variability,
+    new_data = new_data,
+    original_count_data =  
+      .data |> 
+      select(count_data) |> 
+      unnest(count_data) |>
+      .subset(!!.sample)
+  )
+  
+  # Original input 
+  model_input$X_original = model_input$X
+  model_input$N_original = model_input$N
+  
+  # New input
+  model_input$X = prepared_data$X
+  model_input$Xa = prepared_data$Xa 
+  model_input$N = prepared_data$N
+  model_input$exposure = prepared_data$exposure
+  model_input$X_random_effect = prepared_data$X_random_effect
+  model_input$X_random_effect_2 = prepared_data$X_random_effect_2
+  model_input$X_random_effect_unseen = prepared_data$X_random_effect_unseen
+  model_input$X_random_effect_2_unseen = prepared_data$X_random_effect_2_unseen
+  model_input$ncol_X_random_eff_new = prepared_data$ncol_X_random_eff_new
+  model_input$unknown_grouping = prepared_data$unknown_grouping
+  model_input$ncol_X_random_eff_unseen = prepared_data$ncol_X_random_eff_unseen
+
+  # Add subset of coefficients
+  # Add subset of coefficients
+  model_input$length_X_which = length(prepared_data$X_which)
+  model_input$length_XA_which = length(prepared_data$XA_which)
+  model_input$X_which = prepared_data$X_which
+  model_input$XA_which = prepared_data$XA_which
+  
+  # Add random effect coefficients
+  model_input$X_random_effect_which = prepared_data$X_random_effect_which
+  model_input$X_random_effect_which_2 = prepared_data$X_random_effect_which_2
+  model_input$length_X_random_effect_which = c(
+    length(prepared_data$X_random_effect_which),
+    length(prepared_data$X_random_effect_which_2)
+  )
+
+  # Should I create an intercept for generate quantities?
+  model_input$create_intercept = prepared_data$create_intercept
+      
+  number_of_draws_in_the_fit = attr(.data, "fit") |>  get_output_samples()
+  
+  # To avoid error in case of a NULL posterior sample
+  number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
+  
+  # Load model
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
+  
+  # Generate quantities
+  mod_rng |> sample_safe(
+    generate_quantities_fx,
+    attr(.data, "fit")$draws(format = "matrix")[
+      sample(seq_len(number_of_draws_in_the_fit), size=number_of_draws),, drop=FALSE
+    ],
+    data = model_input,
+    seed = mcmc_seed, 
+    threads_per_chain = 1
+  )
+}
+
+  #' Check if data frame is rectangular
+  #'
+  #' @description
+  #' Checks if the input data frame has the same number of samples for each cell group
+  #' and vice versa. If not, it makes the data frame rectangular by adding zeros
+  #' for missing sample/cell group pairs.
+  #'
+  #' @param .data A tibble containing the data
+  #' @param .sample Column containing sample identifiers
+  #' @param .cell_group Column containing cell group identifiers
+  #' @param .count Column containing count data
+  #' @param formula_composition Formula for composition
+  #'
+  #' @return A rectangular data frame with zeros added for missing combinations
+  #' @keywords internal
+  #' @noRd
+  make_rectangular_data = function(.data, .sample, .cell_group, .count, formula_composition) {
+   
+   .sample = enquo(.sample)
+   .cell_group = enquo(.cell_group)
+   .count = enquo(.count)
+   
+    if(
+      .data |> count(!!.sample) |> distinct(n) |> nrow() > 1 || 
+      .data |> count(!!.cell_group) |> distinct(n) |> nrow() > 1 
+    ){
+      warning(sprintf("sccomp says: the input data frame does not have the same number of `%s`, for all `%s`. We have made it so, adding 0s for the missing sample/feature pairs.", quo_name(.cell_group), quo_name(.sample)))
+      
+      .data |> 
+        # I need renaming trick because complete list(...) cannot accept quosures
+        select(!!.sample, !!.cell_group, count := !!.count) |> 
+        distinct() |> 
+        complete( !!.sample, !!.cell_group, fill = list(count = 0) ) %>%
+        rename(!!.count := count) |> 
+        mutate(!!.count := as.integer(!!.count)) |> 
+        
+        # Add formula_composition information
+        add_formula_columns(.data, !!.sample, formula_composition)
+    } else {
+      .data
+    }
+  }
+
+
+#' function that check is there are NAs in the count column
+#'
+#' @param .data A tibble containing the data
+#' @param .count Column containing count data
+#'
+#' @return A tibble with NAs in the count column
+#' @keywords internal
+#' @noRd
+check_if_NAs_in_count = function(.data, .count){
+  .count = enquo(.count)
+  if(.data |> pull(!!.count) |> is.na() |> any())
+    stop("sccomp says: the input data frame has NAs in the count column")
+}
+

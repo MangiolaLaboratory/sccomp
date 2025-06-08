@@ -128,7 +128,7 @@ test_that("Predict data",{
   
   new_data_seurat = seurat_obj[, seurat_obj[[]]$sample %in% c("10x_8K", "SI-GA-E5")] 
   new_data_seurat[[]]$sample = new_data_seurat[[]]$sample |> str_replace("SI", "AB") |>  str_replace("10x", "9x") 
-  new_data_tibble = new_data_seurat[[]] |> distinct(sample, type, continuous_covariate)
+  new_data_tibble = new_data_seurat[[]] |> distinct(sample, type, continuous_covariate, group__)
   
   # With new tibble data
   my_estimate |>
@@ -169,6 +169,16 @@ test_that("Predict data",{
     ) |>
     nrow() |>
     expect_equal(60)
+  
+  
+  # Predict random
+  
+  my_estimate_random |> 
+    sccomp_predict(
+      formula_composition = ~ type + (1 | group__),
+      new_data = new_data_tibble, 
+      number_of_draws = 1
+    )
   
 })
 
@@ -239,7 +249,7 @@ test_that("multilevel nested",{
   
   library(tidyseurat)
   library(sccomp)
-  #debugonce(sccomp:::fit_model)
+
   res =
     seurat_obj |>
     dplyr::left_join(
@@ -370,7 +380,7 @@ test_that("calculate residuals",{
   library(dplyr)
   
   my_estimate_random |> 
-    sccomp_calculate_residuals() |> 
+    sccomp:::sccomp_calculate_residuals() |> 
     pull(residuals) |> 
     max() |> 
     expect_lt(1)
@@ -660,7 +670,7 @@ test_that("plotting for no significance",{
   skip_cmdstan()
   
   
-  no_significance_df |>
+  sccomp:::no_significance_df |>
     mutate(count = count |> as.integer()) |> 
     sccomp_estimate(formula_composition = ~ condition,
                     .sample = sample,
@@ -685,7 +695,7 @@ library(stringr)
 
 # Begin unit tests
 test_that("contrasts_to_parameter_list handles various contrasts correctly", {
-  
+  skip_cmdstan()
   # Define a variety of contrasts
   contrasts <- c(
     # Simple contrast without special characters
@@ -880,5 +890,115 @@ test_that("use two methods", {
     sccomp_remove_outliers(inference_method = "pathfinder", cores = 1) |> 
     expect_no_error()
   
+})
+
+test_that("get_design_matrix_with_na_handling properly handles NA values", {
+  skip_cmdstan()
+  # Create a test dataset with NA values in categorical variables
+  test_data <- tibble(
+    sample = paste0("sample_", 1:10),
+    type = c("A", "B", "A", "B", "A", NA, NA, "C", "C", "B"),
+    numeric_var = c(1.2, 0.8, 1.5, 0.6, 1.0, 0.9, 1.1, 1.3, 0.7, 0.5)
+  )
+  test_data$type <- as.factor(test_data$type)
+  
+  # Create a test dataset with NA at the beginning
+  test_data_na_first <- tibble(
+    sample = paste0("sample_", 1:10),
+    type = c(NA, NA, "A", "B", "A", "B", "A", "C", "C", "B"),
+    numeric_var = c(0.9, 1.1, 1.2, 0.8, 1.5, 0.6, 1.0, 1.3, 0.7, 0.5)
+  )
+  test_data_na_first$type <- as.factor(test_data_na_first$type)
+  
+  # Create the formula
+  formula <- ~ type + numeric_var
+  
+  # Call the function for both datasets
+  design_matrix <- sccomp:::get_design_matrix_with_na_handling(test_data, formula, sample)
+  design_matrix_na_first <- sccomp:::get_design_matrix_with_na_handling(test_data_na_first, formula, sample)
+  
+  # Test colnames of design_matrix_na_first
+  expect_equal(colnames(design_matrix_na_first), colnames(design_matrix))
+  
+  # Test dimensions
+  expect_equal(nrow(design_matrix), 10)
+  
+  # Test that NA column is removed
+  expect_false(any(grepl("typeNA", colnames(design_matrix))))
+  
+  # Test that rows with NA values get equal distribution across factor levels
+  # Get row indices with NA in original data
+  na_rows <- which(is.na(test_data$type))
+  
+  # Get type columns in design matrix
+  type_cols <- grep("^type", colnames(design_matrix))
+  
+  # Number of visible levels in design matrix
+  n_visible_levels <- length(type_cols)
+  
+  # Expected value accounting for reference level: 1/(n_visible_levels+1)
+  # This matches current implementation which considers reference level
+  expected_value <- 1/(n_visible_levels + 1)
+  
+  # For NA rows, each type column should have the expected value
+  for (row in na_rows) {
+    for (col in type_cols) {
+      expect_equal(design_matrix[row, col], expected_value, 
+                   tolerance = 1e-6,
+                   info = paste("Row", row, "Column", col))
+    }
+  }
+  
+  # Test multiclass factor with 3 levels
+  test_data2 <- tibble(
+    sample = paste0("sample_", 1:10),
+    type3 = c("X", "Y", "Z", "X", "Y", NA, NA, "Z", "X", "Y"),
+    numeric_var = c(1.2, 0.8, 1.5, 0.6, 1.0, 0.9, 1.1, 1.3, 0.7, 0.5)
+  )
+  test_data2$type3 <- as.factor(test_data2$type3)
+  
+  formula2 <- ~ type3 + numeric_var
+  
+  design_matrix2 <- get_design_matrix_with_na_handling(test_data2, formula2, sample)
+  
+  # Test dimensions
+  expect_equal(nrow(design_matrix2), 10)
+  
+  # Test that NA column is removed
+  expect_false(any(grepl("type3NA", colnames(design_matrix2))))
+  
+  # Get NA rows
+  na_rows2 <- which(is.na(test_data2$type3))
+  
+  # Get type columns in design matrix
+  type_cols2 <- grep("^type3", colnames(design_matrix2))
+  
+  # Number of visible levels in design matrix
+  n_visible_levels2 <- length(type_cols2)
+  
+  # For a 3-level factor with one reference level, each visible column should get 1/3
+  expected_value2 <- 1/(n_visible_levels2 + 1)
+  
+  # For NA rows, each type column should have the expected value
+  for (row in na_rows2) {
+    for (col in type_cols2) {
+      expect_equal(design_matrix2[row, col], expected_value2, 
+                   tolerance = 1e-6,
+                   info = paste("Row", row, "Column", col))
+    }
+  }
+  
+  # Test mix of categorical and numeric variables
+  test_data3 <- tibble(
+    sample = paste0("sample_", 1:10),
+    type = c("A", "B", "A", "B", "A", NA, NA, "C", "C", "B"),
+    numeric_var = c(1.2, 0.8, 1.5, 0.6, 1.0, NA, 1.1, 1.3, 0.7, 0.5)
+  )
+  test_data3$type <- as.factor(test_data3$type)
+  
+  formula3 <- ~ type + numeric_var
+  
+  # This should handle both NA in factors and numerics
+  expect_error(design_matrix3 <- get_design_matrix_with_na_handling(test_data3, formula3, sample), NA)
 })
 

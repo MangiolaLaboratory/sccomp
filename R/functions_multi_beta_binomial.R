@@ -163,26 +163,15 @@ sccomp_glm_data_frame_counts = function(.data,
     parse_formula(formula_composition)
   ))
   
-  # Check that I have rectangular data frame
-  if(
-    .data |> count(!!.sample) |> distinct(n) |> nrow() > 1 || 
-    .data |> count(!!.cell_group) |> distinct(n) |> nrow() > 1 
-  ){
-    warning(sprintf("sccomp says: the input data frame does not have the same number of `%s`, for all `%s`. We have made it so, adding 0s for the missing sample/feature pairs.", quo_name(.cell_group), quo_name(.sample)))
-    .data = .data |> 
-      
-      # I need renaming trick because complete list(...) cannot accept quosures
-      select(!!.sample, !!.cell_group, count := !!.count) |> 
-      distinct() |> 
-      complete( !!.sample, !!.cell_group, fill = list(count = 0) ) %>%
-      rename(!!.count := count) |> 
-      mutate(!!.count := as.integer(!!.count)) |> 
-      
-      # Add formula_composition information
-      add_formula_columns(.data, !!.sample, formula_composition) 
-  }
+  # Check that NAs are not in counts
+  check_if_NAs_in_count(.data, !!.count)
   
+
+  # Make rectangular data
+  .data = .data |> make_rectangular_data(!!.sample, !!.cell_group, !!.count, formula_composition)
   
+
+
   # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
   if(test_composition_above_logit_fold_change <= 0)
     stop("sccomp says: test_composition_above_logit_fold_change should be > 0 for the FDR to be calculated in the Bayesian context (doi: 10.1093/biostatistics/kxw041). Also, testing for > 0 differences avoids significant but meaningless (because of the small magnitude) estimates.")
@@ -247,7 +236,11 @@ sccomp_glm_data_frame_counts = function(.data,
   
   data_for_model =
     .data %>%
-    data_to_spread ( formula_composition, !!.sample, !!.cell_group, !!.count, .grouping_for_random_effect) |>
+    data_to_spread ( 
+      formula_composition, 
+      !!.sample, !!.cell_group, !!.count, 
+      .grouping_for_random_effect |> map(~ .x |> quo_name() ) |> unlist()
+    ) |>
     
     # This emerged with
     # https://github.com/MangiolaLaboratory/sccomp/issues/175#issuecomment-2622749180
@@ -310,7 +303,12 @@ sccomp_glm_data_frame_counts = function(.data,
       output_directory = output_directory,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
+      pars = c(
+        "beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", 
+        "random_effect", "random_effect_2", 
+        "random_effect_sigma", "random_effect_sigma_2", 
+        "log_lik"
+      ),
       sig_figs = sig_figs,
       ...
     )

@@ -43,7 +43,7 @@ estimates <- sccomp_estimate(
   formula_variability = ~1,
   .sample = sample,
   .cell_group = cell_group,
-  .count = count,
+  .abundance = count,
   approximate_posterior_inference = "all",
   cores = 1
 )
