@@ -20,6 +20,9 @@
 #' @importFrom lifecycle is_present
 #' @importFrom lifecycle deprecate_warn
 #' @importFrom rlang is_symbolic
+#' @importFrom rlang quo_get_expr
+#' @importFrom rlang enquo
+#' @importFrom magrittr not
 #'
 #' @param .data A tibble including cell_group name column, sample name column,
 #'              abundance column (counts or proportions), and factor columns.
@@ -164,6 +167,40 @@ sccomp_estimate <- function(.data,
   
   # Run the function
   check_and_install_cmdstanr()
+  
+  # Capture the quosure for sample_column using a symbol
+ if(
+  is.null(sample_column) &&
+  rlang::enquo(sample_column) |>
+ rlang::quo_get_expr() |>
+ is.character() |>
+ not()
+ ) {
+  stop("sccomp says: sample_column must be of character type")
+ }
+
+# Capture the quosure for cell_group_column using a symbol
+  if(
+  is.null(cell_group_column) &&
+  rlang::enquo(cell_group_column) |>
+ rlang::quo_get_expr() |>
+ is.character() |>
+ not()
+ ) {
+  stop("sccomp says: cell_group_column must be of character type")
+ }
+
+  # Capture the quosure for abundance_column using a symbol
+  if(
+  is.null(abundance_column) &&
+  rlang::enquo(abundance_column) |>
+ rlang::quo_get_expr() |>
+ is.character() |>
+ not()
+ ) {
+  stop("sccomp says: abundance_column must be of character type")
+ }
+  
   
   UseMethod("sccomp_estimate", .data)
 }
