@@ -74,7 +74,6 @@
 #' }
 #' @usage data(multipanel_theme)
 #' 
-#' @noRd
 "multipanel_theme"
 
 
@@ -101,5 +100,4 @@
 #'
 #' @importFrom utils data
 #' 
-#' @noRd
 "no_significance_df"
