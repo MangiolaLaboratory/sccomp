@@ -3790,26 +3790,15 @@ prepare_replicate_data = function(X,
                                 original_count_data) {
   
 
-  # Check that NAs are not in counts
-  check_if_NAs_in_count(original_count_data, !!.count)
-  check_if_NAs_in_count(new_data, !!.count)
-
-  # Make rectangular data
-  new_data = new_data |> make_rectangular_data(.sample, .cell_group, .count, formula_composition)
-  original_count_data = original_count_data |> make_rectangular_data(.sample, .cell_group, .count, formula_composition)
-
+  .sample = enquo(.sample)
+  .count = enquo(.count)
 
   # New data
   if(new_data |> is.null())
-    new_data =
-    original_count_data |>
-    distinct()
+    new_data = original_count_data 
   
   # If seurat
   else if(new_data |> is("Seurat")) new_data = new_data[[]]
-  
-  # Just subset
-  new_data = new_data |> .subset(!!.sample)
   
   # Check if the input new data is not suitable
   if(!parse_formula(formula_composition) %in% colnames(new_data) |> all())
@@ -3817,10 +3806,6 @@ prepare_replicate_data = function(X,
   
   # Match factors with old data
   nrow_new_data = nrow(new_data)
-  
-  # Initialize unseen random effect variables
-  new_X_random_effect_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  new_X_random_effect_2_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
   
   new_exposure = new_data |>
     nest(data = -!!.sample) |>
@@ -3836,11 +3821,7 @@ prepare_replicate_data = function(X,
   
   # Update data, merge with old data because
   # I need the same ordering of the design matrix
-  old_data = 
-    original_count_data |>
-    select(-!!.count) |>
-    select(new_data |> as_tibble() |> colnames() |>  any_of()) |>
-    distinct() |>
+  old_data = original_count_data |>
     
     # Change sample names to make unique
     mutate(dummy = "OLD") |>
@@ -3936,6 +3917,10 @@ prepare_replicate_data = function(X,
   # Random intercept
   random_effect_elements = parse_formula_random_effect(formula_composition)
 
+  # Initialize unseen random effect variables
+  new_X_random_effect_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  new_X_random_effect_2_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  
   # Set default random intercept
   X_random_effect_which = array()[0]
   new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
@@ -4097,9 +4082,6 @@ replicate_data = function(.data,
   if(is.null(formula_composition)) formula_composition = attr(.data, "formula_composition")
   if(is.null(formula_variability)) formula_variability = attr(.data, "formula_variability")
   
-  # Get original count data
-  original_count_data = .data |> select(count_data) |> unnest(count_data)
-  
   # create model input 
   model_input = attr(.data, "model_input")
 
@@ -4111,13 +4093,19 @@ replicate_data = function(.data,
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    .sample = .sample,
-    .cell_group = .cell_group,
-    .count = .count,
+    .sample = !!.sample,
+    .cell_group = !!.cell_group,
+    .count = !!.count,
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = new_data,
-    original_count_data = original_count_data
+    original_count_data =  
+      .data |> 
+      select(count_data) |> 
+      unnest(count_data) |>
+      select(-!!.count) |>
+      select(new_data |> as_tibble() |> colnames() |>  any_of()) |>
+      distinct() 
   )
   
   # Original input 
