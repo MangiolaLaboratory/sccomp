@@ -670,7 +670,7 @@ test_that("plotting for no significance",{
   skip_cmdstan()
   
   
-  no_significance_df |>
+  sccomp:::no_significance_df |>
     mutate(count = count |> as.integer()) |> 
     sccomp_estimate(formula_composition = ~ condition,
                     .sample = sample,

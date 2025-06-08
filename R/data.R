@@ -73,6 +73,8 @@
 #'   \item \strong{axis.text}: Customises axis text appearance for better readability.
 #' }
 #' @usage data(multipanel_theme)
+#' 
+#' @noRd
 "multipanel_theme"
 
 
@@ -98,4 +100,6 @@
 #' head(no_significance_df)
 #'
 #' @importFrom utils data
+#' 
+#' @noRd
 "no_significance_df"
