@@ -168,40 +168,6 @@ sccomp_estimate <- function(.data,
   # Run the function
   check_and_install_cmdstanr()
   
-  # Capture the quosure for sample_column using a symbol
- if(
-  is.null(sample_column) &&
-  rlang::enquo(sample_column) |>
- rlang::quo_get_expr() |>
- is.character() |>
- not()
- ) {
-  stop("sccomp says: sample_column must be of character type")
- }
-
-# Capture the quosure for cell_group_column using a symbol
-  if(
-  is.null(cell_group_column) &&
-  rlang::enquo(cell_group_column) |>
- rlang::quo_get_expr() |>
- is.character() |>
- not()
- ) {
-  stop("sccomp says: cell_group_column must be of character type")
- }
-
-  # Capture the quosure for abundance_column using a symbol
-  if(
-  is.null(abundance_column) &&
-  rlang::enquo(abundance_column) |>
- rlang::quo_get_expr() |>
- is.character() |>
- not()
- ) {
-  stop("sccomp says: abundance_column must be of character type")
- }
-  
-  
   UseMethod("sccomp_estimate", .data)
 }
 
@@ -247,45 +213,12 @@ sccomp_estimate.Seurat <- function(.data,
                                    .cell_group = NULL,
                                    .abundance = NULL) {
   
-  .sample <- enquo(.sample)
-  .cell_group <- enquo(.cell_group)
-  
   if (!is.null(.abundance))
     stop("sccomp says: .abundance argument can be used only for data frame input")
   
   if (!is.null(.count))
     stop("sccomp says: .count argument can be used only for data frame input")
   
-  # DEPRECATION OF approximate_posterior_inference
-  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
-    
-    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
-  }
-  
-  # DEPRECATION OF variational_inference
-  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
-    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
-    
-    inference_method <- ifelse(variational_inference, "variational", "hmc")
-  }
-  
-  # DEPRECATION OF .sample
-  if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
-    
-    sample_column = quo_name(.sample)
-    
-  }
-  
-  # DEPRECATION OF .cell_group
-  if (lifecycle::is_present(.cell_group) & !quo_is_null(.cell_group)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
-    
-    cell_group_column = quo_name(.cell_group)
-    
-  }
-
   
   # Prepare column names
 
@@ -317,6 +250,10 @@ sccomp_estimate.Seurat <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      .sample = .sample,
+      .cell_group = .cell_group,
+      .abundance = .abundance,
+      .count = .count,
       ...
     )
 }
@@ -362,11 +299,8 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  .cell_group = NULL,
                                                  .abundance = NULL) {
   
-  # Prepare column names
-  .sample <- enquo(.sample)
-  .cell_group <- enquo(.cell_group)
+
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
-  
   
   if (!is.null(.abundance))
     stop("sccomp says: .abundance argument can be used only for data frame input")
@@ -374,35 +308,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
   if (!is.null(.count))
     stop("sccomp says: .count argument can be used only for data frame input")
   
-  # DEPRECATION OF approximate_posterior_inference
-  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
-    
-    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
-  }
-  
-  # DEPRECATION OF variational_inference
-  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
-    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
-    
-    inference_method <- ifelse(variational_inference, "variational", "hmc")
-  }
-  
-  # DEPRECATION OF .sample
-  if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
-    
-    sample_column = quo_name(.sample)
-    
-  }
-  
-  # DEPRECATION OF .cell_group
-  if (lifecycle::is_present(.cell_group) & !quo_is_null(.cell_group)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
-    
-    cell_group_column = quo_name(.cell_group)
-    
-  }
+
 
   .data |>
     colData() |>
@@ -431,6 +337,10 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      .sample = .sample,
+      .cell_group = .cell_group,
+      .abundance = .abundance,
+      .count = .count,
       ...
     )
 }
@@ -476,64 +386,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    .cell_group = NULL,
                                    .abundance = NULL) {
   
-  if (!is.null(.abundance))
-    stop("sccomp says: .abundance argument can be used only for data frame input")
-  
-  if (!is.null(.count))
-    stop("sccomp says: .count argument can be used only for data frame input")
-  
-  # Prepare column names
-  .sample <- enquo(.sample)
-  .cell_group <- enquo(.cell_group)
-  .abundance <- enquo(.abundance)
-  .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
-  .count = enquo(.count)
-  
-
-  # Deprecation of .count
-  if (rlang::quo_is_symbolic(.count)) {
-    rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
-    .abundance <- .count
-  }
-  
-  
-  # DEPRECATION OF approximate_posterior_inference
-  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
-    
-    inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
-  }
-  
-  # DEPRECATION OF variational_inference
-  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
-    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
-    
-    inference_method <- ifelse(variational_inference, "variational", "hmc")
-  }
-  
-  # DEPRECATION OF .sample
-  if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
-    
-    sample_column = quo_name(.sample)
-    
-  }
-  
-  # DEPRECATION OF .cell_group
-  if (lifecycle::is_present(.cell_group) & !quo_is_null(.cell_group)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
-    
-    cell_group_column = quo_name(.cell_group)
-    
-  }
-  
-  # DEPRECATION OF .abundance
-  if (lifecycle::is_present(.abundance) & !quo_is_null(.abundance)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.abundance)", details = ".abundance argument (which were tidy evaluations, i.e. .abundance = my_abundance) have been deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
-    
-    abundance_column = quo_name(.abundance)
-    
-  }
+ 
   
   .data %>%
     as.data.frame() %>%
@@ -560,7 +413,12 @@ sccomp_estimate.DFrame <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, ...
+      pass_fit = pass_fit, 
+      .sample = .sample,
+      .cell_group = .cell_group,
+      .abundance = .abundance,
+      .count = .count,
+      ...
     )
 }
 
@@ -609,57 +467,76 @@ sccomp_estimate.data.frame <- function(.data,
                                        .abundance = NULL) {
   
 
-  # Prepare column names
-  .sample <- enquo(.sample)
-  .cell_group <- enquo(.cell_group)
-  .abundance <- enquo(.abundance)
-  .count <- enquo(.count)
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
-
-  # Deprecation of .count
-  if (rlang::quo_is_symbolic(.count)) {
-    rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
-    .abundance <- .count
-  }
   
-  # DEPRECATION OF approximate_posterior_inference
-  if (lifecycle::is_present(approximate_posterior_inference) & !is.null(approximate_posterior_inference)) {
-    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
-    
+
+  # Handle deprecated inference method arguments
+  if (lifecycle::is_present(approximate_posterior_inference) && !is.null(approximate_posterior_inference)) {
+    lifecycle::deprecate_warn("1.7.7", "sccomp::sccomp_estimate(approximate_posterior_inference = )", 
+      details = "The argument approximate_posterior_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from approximate_posterior_inference.")
     inference_method <- ifelse(approximate_posterior_inference == "all", "variational", "hmc")
   }
   
-  # DEPRECATION OF variational_inference
-  if (lifecycle::is_present(variational_inference) & !is.null(variational_inference)) {
-    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
-    
+  if (lifecycle::is_present(variational_inference) && !is.null(variational_inference)) {
+    lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", 
+      details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
     inference_method <- ifelse(variational_inference, "variational", "hmc")
   }
-  
-  # DEPRECATION OF .sample
-  if (lifecycle::is_present(.sample) & !quo_is_null(.sample)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
-    
+
+  # Handle deprecated column arguments
+  if (lifecycle::is_present(enquo(.sample)) && !quo_is_null(enquo(.sample))) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", 
+      details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
     sample_column = quo_name(.sample)
-    
-  }
+  } else {
+      # Capture the quosure for sample_column using a symbol
+ if(
+  rlang::enquo(sample_column) |>
+ rlang::quo_get_expr() |>
+ is.character() |>
+ not()
+ ) {
+  stop("sccomp says: sample_column must be of character type")
+ }
+}
   
-  # DEPRECATION OF .cell_group
-  if (lifecycle::is_present(.cell_group) & !quo_is_null(.cell_group)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
-    
+  if (lifecycle::is_present(enquo(.cell_group)) && !quo_is_null(enquo(.cell_group))) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", 
+      details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
     cell_group_column = quo_name(.cell_group)
-    
+  } else {
+    if(
+  rlang::enquo(cell_group_column) |>
+ rlang::quo_get_expr() |>
+ is.character() |>
+ not()
+ ) {
+  stop("sccomp says: cell_group_column must be of character type")
+ }
   }
   
-  # DEPRECATION OF .abundance
-  if (lifecycle::is_present(.abundance) & !quo_is_null(.abundance)) {
-    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.abundance)", details = ".abundance argument (which were tidy evaluations, i.e. .abundance = my_abundance) have been deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
-    
+    # Handle deprecated .count argument
+  if (lifecycle::is_present(enquo(.count)) && !quo_is_null(enquo(.count))) {
+    rlang::warn("The argument '.count' is deprecated. Please use '.abundance' instead. This because now `sccomp` cam model both counts and proportions.")
+    .abundance <- .count
+  }
+
+  if (lifecycle::is_present(enquo(.abundance)) && !quo_is_null(enquo(.abundance))) {
+    lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.abundance)", 
+      details = ".abundance argument (which were tidy evaluations, i.e. .abundance = my_abundance) have been deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
     abundance_column = quo_name(.abundance)
-    
+  } else {
+    if(
+  rlang::enquo(abundance_column) |>
+ rlang::quo_get_expr() |>
+ is.character() |>
+ not()
+ ) {
+  stop("sccomp says: abundance_column must be of character type")
+ }
   }
-  
+
+
 
   if (abundance_column |> is.null())
     res <- sccomp_glm_data_frame_raw(
