@@ -18,16 +18,16 @@ test_that("replicate_data works correctly", {
       mutate(random_effect = "1") |> 
        sccomp:::data_to_spread(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
-      grouping_for_random_effect = "random_effect"
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "random_effect"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
       formula_variability = formula_variability,
@@ -46,9 +46,9 @@ test_that("replicate_data works correctly", {
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    sample = "sample",
-    cell_group = "cell_group",
-    count = "count",
+    .sample = !!rlang::quo(sample),
+    .cell_group = !!rlang::quo(cell_group),
+    .count = !!rlang::quo(count),
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
@@ -107,16 +107,16 @@ test_that("replicate_data works with random intercept model", {
     test_data |> 
     sccomp:::data_to_spread(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
-      grouping_for_random_effect = "group__"
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
       formula_variability = formula_variability,
@@ -135,9 +135,9 @@ test_that("replicate_data works with random intercept model", {
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    sample = "sample",
-    cell_group = "cell_group",
-    count = "count",
+    .sample = !!rlang::quo(sample),
+    .cell_group = !!rlang::quo(cell_group),
+    .count = !!rlang::quo(count),
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
@@ -198,16 +198,16 @@ test_that("replicate_data works with random slope model", {
     test_data |> 
     sccomp:::data_to_spread(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
-      grouping_for_random_effect = "group__"
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
       formula_variability = formula_variability,
@@ -229,9 +229,9 @@ test_that("replicate_data works with random slope model", {
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    sample = "sample",
-    cell_group = "cell_group",
-    count = "count",
+    .sample = !!rlang::quo(sample),
+    .cell_group = !!rlang::quo(cell_group),
+    .count = !!rlang::quo(count),
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
@@ -290,21 +290,25 @@ test_that("replicate_data works with random slope model and type NA", {
       )
     )
 
+
+  # Create test data with group information and type NA
+  
+
   # Create .data object
   model_input = 
     test_data |> 
     sccomp:::data_to_spread(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
-      grouping_for_random_effect = "group__"
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
       formula_variability = formula_variability,
@@ -318,10 +322,14 @@ test_that("replicate_data works with random slope model and type NA", {
       accept_NA_as_average_effect = TRUE
     )
 
-  new_data = 
+
+
+new_data = 
     test_data |> 
     sccomp:::.subset(!!quo(sample)) |> 
     mutate(type = NA_character_)
+
+
 
   # Prepare replicate data
   result = sccomp:::prepare_replicate_data(
@@ -331,9 +339,9 @@ test_that("replicate_data works with random slope model and type NA", {
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    sample = "sample",
-    cell_group = "cell_group",
-    count = "count",
+    .sample = !!rlang::quo(sample),
+    .cell_group = !!rlang::quo(cell_group),
+    .count = !!rlang::quo(count),
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = new_data,
@@ -362,6 +370,7 @@ test_that("replicate_data works with random slope model and type NA", {
   print(paste('result$X_random_effect[1,', col_intercept, ']:')); print(result$X_random_effect[1, col_intercept])
   expect_equal(result$X_random_effect[1, col_type], 0.5)
   expect_equal(result$X_random_effect[1, col_intercept], 1)
+
 })
 
 test_that("replicate_data works with nested random effects", {
@@ -388,16 +397,16 @@ test_that("replicate_data works with nested random effects", {
     test_data |> 
     sccomp:::data_to_spread(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
-      grouping_for_random_effect = c("group__", "group2__")
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = c("group__", "group2__")
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
       formula_variability = formula_variability,
@@ -419,9 +428,9 @@ test_that("replicate_data works with nested random effects", {
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    sample = "sample",
-    cell_group = "cell_group",
-    count = "count",
+    .sample = !!rlang::quo(sample),
+    .cell_group = !!rlang::quo(cell_group),
+    .count = !!rlang::quo(count),
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
@@ -501,16 +510,16 @@ test_that("replicate_data works with NA values in grouping", {
     test_data |> 
     sccomp:::data_to_spread(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
-      grouping_for_random_effect = "group__"
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
       formula_variability = formula_variability,
@@ -529,9 +538,9 @@ test_that("replicate_data works with NA values in grouping", {
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    sample = "sample",
-    cell_group = "cell_group",
-    count = "count",
+    .sample = !!rlang::quo(sample),
+    .cell_group = !!rlang::quo(cell_group),
+    .count = !!rlang::quo(count),
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
@@ -634,16 +643,16 @@ test_that("replicate_data works with NA values in grouping and random effects", 
     test_data |> 
     sccomp:::data_to_spread(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
-      grouping_for_random_effect = "group__"
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
       formula_variability = formula_variability,
@@ -662,9 +671,9 @@ test_that("replicate_data works with NA values in grouping and random effects", 
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    sample = "sample",
-    cell_group = "cell_group",
-    count = "count",
+    .sample = !!rlang::quo(sample),
+    .cell_group = !!rlang::quo(cell_group),
+    .count = !!rlang::quo(count),
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
@@ -803,16 +812,16 @@ test_that("replicate_data works with type NA and group__ NA", {
     test_data |> 
     sccomp:::data_to_spread(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
-      grouping_for_random_effect = "group__"
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
+      .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
-      sample = "sample",
-      cell_group = "cell_group",
-      count = "count",
+      .sample = !!quo(sample),
+      .cell_type = !!quo(cell_group),
+      .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
       formula_variability = formula_variability,
@@ -831,9 +840,9 @@ test_that("replicate_data works with type NA and group__ NA", {
     intercept_in_design = model_input$intercept_in_design,
     X_random_effect = model_input$X_random_effect,
     X_random_effect_2 = model_input$X_random_effect_2,
-    sample = "sample",
-    cell_group = "cell_group",
-    count = "count",
+    .sample = !!rlang::quo(sample),
+    .cell_group = !!rlang::quo(cell_group),
+    .count = !!rlang::quo(count),
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = new_data,
