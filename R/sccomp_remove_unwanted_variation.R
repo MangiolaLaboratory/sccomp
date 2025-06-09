@@ -1,5 +1,3 @@
-
-
 #' sccomp_remove_unwanted_variation
 #'
 #' @description This function uses the model to remove unwanted variation from a dataset using the estimates of the model. For example, if you fit your data with the formula `~ factor_1 + factor_2` and use the formula `~ factor_1` to remove unwanted variation, the `factor_2` effect will be factored out.
@@ -39,6 +37,9 @@
 #'     sccomp_remove_unwanted_variation()
 #'   }
 #' }
+#'
+#' @references
+#' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
 sccomp_remove_unwanted_variation <- function(.data,
                                              formula_composition_keep = NULL,

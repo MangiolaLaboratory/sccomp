@@ -522,7 +522,7 @@ get_random_effect_design3 = function(
 #' @importFrom dplyr mutate
 #' @importFrom dplyr across
 #' @importFrom dplyr pull
-#' @importFrom tidyr where
+#' @importFrom dplyr where
 #' @importFrom rlang enquo
 #' @noRd
 get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE){
@@ -576,7 +576,7 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
 #' @importFrom dplyr mutate
 #' @importFrom dplyr across
 #' @importFrom dplyr pull
-#' @importFrom tidyr where
+#' @importFrom dplyr where
 #' @importFrom rlang enquo
 #' @noRd
 get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){

@@ -1,10 +1,6 @@
-
-
-
 #' sccomp_replicate
 #'
 #' @description This function replicates counts from a real-world dataset.
-#'
 #'
 #' @param fit The result of sccomp_estimate.
 #' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
@@ -22,6 +18,9 @@
 #'   \item \strong{generated_counts} - An integer column representing the counts generated from the model.
 #'   \item \strong{replicate} - An integer column representing the replicate number, where each row corresponds to a different replicate of the data.
 #' }
+#'
+#' @references
+#' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
 #' @export
 #'

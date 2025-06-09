@@ -24,9 +24,9 @@ simulate_data(
 
 \item{.estimate_object}{The result of sccomp_estimate execution. This is used for sampling from real-data properties.}
 
-\item{formula_composition}{A formula. The sample formula used to perform the differential cell_group abundance analysis}
+\item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment}
 
-\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors.}
+\item{formula_variability}{A formula. The formula describing the model for differential variability, for example ~treatment}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 
@@ -60,7 +60,7 @@ A tibble (\code{tbl}) with the following columns:
 }
 }
 \description{
-This function simulates counts from a linear model.
+This function simulates data from a fitted model.
 }
 \examples{
 
@@ -87,4 +87,7 @@ print("cmdstanr is needed to run this example.")
   }
 }
 
+}
+\references{
+S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 }

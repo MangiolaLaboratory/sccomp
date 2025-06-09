@@ -1,8 +1,6 @@
-
-
 #' simulate_data
 #'
-#' @description This function simulates counts from a linear model.
+#' @description This function simulates data from a fitted model.
 #'
 #' @import dplyr
 #' @importFrom magrittr %$%
@@ -15,8 +13,8 @@
 #'
 #' @param .data A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param .estimate_object The result of sccomp_estimate execution. This is used for sampling from real-data properties.
-#' @param formula_composition A formula. The sample formula used to perform the differential cell_group abundance analysis
-#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors.
+#' @param formula_composition A formula. The formula describing the model for differential abundance, for example ~treatment
+#' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
@@ -40,6 +38,8 @@
 #'   \item \strong{replicate} - An integer column representing the replicate number for each draw from the posterior distribution.
 #' }
 #'
+#' @references
+#' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
 #' @export
 #'

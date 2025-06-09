@@ -2,7 +2,6 @@
 #'
 #' @description This function test contrasts from a sccomp result.
 #'
-#'
 #' @param .data A tibble. The result of sccomp_estimate.
 #' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
@@ -18,26 +17,21 @@
 #'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
 #'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
 #'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
-#'   \item c_FDR - False discovery rate of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
-#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+#'   \item c_FDR - False-discovery rate of the null hypothesis (no difference) for a composition (c).
+#'   \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better.
 #'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
 #'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
 #'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
 #'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
-#'   \item v_pH0 - Probability of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
-#'   \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
+#'   \item v_pH0 - Probability of the null hypothesis (no difference) for a variability (v).
+#'   \item v_FDR - False-discovery rate of the null hypothesis (no difference) for a variability (v).
 #'   \item v_n_eff - Effective sample size for a variability (v) parameter.
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter.
+#'   \item count_data - Nested input count data.
 #' }
 #'
-#' The function also attaches several attributes to the result:
-#' \itemize{
-#'   \item count_data - The original count data used in the analysis, stored as an attribute for efficient access.
-#'   \item model_input - The model input data used for fitting.
-#'   \item formula_composition - The formula used for composition modeling.
-#'   \item formula_variability - The formula used for variability modeling.
-#'   \item fit - The Stan fit object (if pass_fit = TRUE).
-#' }
+#' @references
+#' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
 #' @export
 #'
