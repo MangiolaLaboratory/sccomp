@@ -632,7 +632,7 @@ test_that("proportions",{
       mcmc_seed = 42,
       max_sampling_iterations = n_iterations, verbose = FALSE
     ) |> 
-      expect_warning("The argument '.count' is deprecated")
+      expect_warning("sccomp says: your proportion values include 0")
  
   # counts_obj |>
   #   sccomp_estimate(
