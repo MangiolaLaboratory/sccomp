@@ -94,8 +94,8 @@ sccomp_result =
   sce_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
-    .sample =  sample, 
-    .cell_group = cell_group, 
+    sample = "sample", 
+    cell_group = "cell_group", 
     cores = 1 
   ) |> 
   sccomp_test()
@@ -110,9 +110,9 @@ sccomp_result =
   counts_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
-    .sample = sample,
-    .cell_group = cell_group,
-    .count = count, 
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count", 
     cores = 1, verbose = FALSE
   ) |> 
   sccomp_test()
@@ -152,9 +152,9 @@ sccomp_result =
   counts_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
-    .sample = sample,
-    .cell_group = cell_group,
-    .count = count, 
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count", 
     cores = 1, verbose = FALSE
   ) |> 
   
@@ -217,9 +217,9 @@ sccomp_result =
   counts_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
-    .sample = sample,
-    .cell_group = cell_group,
-    .count = proportion, 
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "proportion", 
     cores = 1, verbose = FALSE
   ) |> 
   sccomp_test()
@@ -235,7 +235,8 @@ res =
     seurat_obj |>
     sccomp_estimate(
       formula_composition = ~ type + continuous_covariate, 
-      .sample = sample, .cell_group = cell_group,
+      sample = "sample", 
+      cell_group = "cell_group",
       cores = 1, verbose=FALSE
     )
 
@@ -248,7 +249,7 @@ res
 
 ### Random Intercept Model
 
-In this example, we demonstrate how to fit a random intercept model using sccomp. We’ll model the cell-type proportions with both fixed effects (e.g., treatment) and random effects (e.g., subject-specific variability).
+In this example, we demonstrate how to fit a random intercept model using sccomp. We'll model the cell-type proportions with both fixed effects (e.g., treatment) and random effects (e.g., subject-specific variability).
 
 Here is the input data
 
@@ -261,8 +262,8 @@ res =
   seurat_obj |>
   sccomp_estimate( 
     formula_composition = ~ type + (1 | group__), 
-    .sample = sample,
-    .cell_group = cell_group,
+    sample = "sample",
+    cell_group = "cell_group",
     bimodal_mean_variability_association = TRUE,
     cores = 1, verbose = FALSE
   ) 
@@ -279,8 +280,8 @@ res =
   seurat_obj |>
   sccomp_estimate(
       formula_composition = ~ type + (type | group__),
-      .sample = sample,
-      .cell_group = cell_group,
+      sample = "sample",
+      cell_group = "cell_group",
       bimodal_mean_variability_association = TRUE,
       cores = 1, verbose = FALSE
     )
@@ -297,8 +298,8 @@ res =
   seurat_obj |>
   sccomp_estimate(
       formula_composition = ~ type + (type | group__) + (1 | group2__),
-      .sample = sample,
-      .cell_group = cell_group,
+      sample = "sample",
+      cell_group = "cell_group",
       bimodal_mean_variability_association = TRUE,
       cores = 1, verbose = FALSE
     )
@@ -334,8 +335,8 @@ sccomp_result |>
 seurat_obj |>
   sccomp_estimate( 
     formula_composition = ~ 0 + type, 
-    .sample = sample,
-    .cell_group = cell_group, 
+    sample = "sample",
+    cell_group = "cell_group", 
     cores = 1, verbose = FALSE
   ) |> 
   sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
@@ -359,8 +360,8 @@ model_with_factor_association =
   seurat_obj |>
   sccomp_estimate( 
     formula_composition = ~ type, 
-    .sample =  sample, 
-    .cell_group = cell_group, 
+    sample = "sample", 
+    cell_group = "cell_group", 
     inference_method = "hmc",
     enable_loo = TRUE
   )
@@ -370,8 +371,8 @@ model_without_association =
   seurat_obj |>
   sccomp_estimate( 
     formula_composition = ~ 1, 
-    .sample =  sample, 
-    .cell_group = cell_group, 
+    sample = "sample", 
+    cell_group = "cell_group", 
     inference_method = "hmc",
     enable_loo = TRUE
   )
@@ -395,8 +396,8 @@ res =
   sccomp_estimate( 
     formula_composition = ~ type, 
     formula_variability = ~ type,
-    .sample = sample,
-    .cell_group = cell_group,
+    sample = "sample",
+    cell_group = "cell_group",
     cores = 1, verbose = FALSE
   )
 

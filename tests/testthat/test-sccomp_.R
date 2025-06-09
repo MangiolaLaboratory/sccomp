@@ -624,10 +624,10 @@ test_that("proportions",{
   
       counts_obj |>
       sccomp_estimate(
-      formula_composition = ~ type , 
+      formula_composition = ~ type, 
       sample = "sample",  
       cell_group = "cell_group", 
-      .count = proportion,
+      abundance = "proportion",
       cores = 1,
       mcmc_seed = 42,
       max_sampling_iterations = n_iterations, verbose = FALSE
@@ -846,8 +846,8 @@ test_that("LOO", {
     seurat_obj |>
     sccomp_estimate( 
       formula_composition = ~ type, 
-      .sample =  sample, 
-      .cell_group = cell_group, 
+      sample = "sample", 
+      cell_group = "cell_group", 
       inference_method = "hmc",
       cores = 1, 
       enable_loo = TRUE, max_sampling_iterations = n_iterations, verbose = FALSE
@@ -859,8 +859,8 @@ test_that("LOO", {
     seurat_obj |>
     sccomp_estimate( 
       formula_composition = ~ 1, 
-      .sample =  sample, 
-      .cell_group = cell_group, 
+      sample = "sample", 
+      cell_group = "cell_group", 
       inference_method = "hmc",
       cores = 1, 
       enable_loo = TRUE, max_sampling_iterations = n_iterations, verbose = FALSE
@@ -884,8 +884,8 @@ test_that("use two methods", {
     seurat_obj |>
     sccomp_estimate( 
       formula_composition = ~ 1, 
-      .sample =  sample, 
-      .cell_group = cell_group, 
+      sample = "sample", 
+      cell_group = "cell_group", 
       inference_method = "hmc",
       cores = 1, max_sampling_iterations = n_iterations, verbose = FALSE
     ) |> 
