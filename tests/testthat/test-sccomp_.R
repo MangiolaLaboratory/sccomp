@@ -1004,3 +1004,40 @@ test_that("get_design_matrix_with_na_handling properly handles NA values", {
   expect_error(design_matrix3 <- get_design_matrix_with_na_handling(test_data3, formula3, sample), NA)
 })
 
+test_that("renamed columns in Seurat input", {
+  skip_cmdstan()
+  
+  # Create a copy of seurat_obj with renamed columns
+  renamed_seurat = seurat_obj
+  colnames(renamed_seurat[[]])[colnames(renamed_seurat[[]]) == "sample"] = "a"
+  colnames(renamed_seurat[[]])[colnames(renamed_seurat[[]]) == "cell_group"] = "b"
+  
+  # Test that sccomp_estimate works with renamed columns
+  renamed_estimate = 
+    renamed_seurat |>
+    sccomp_estimate(
+      formula_composition = ~ type,
+      formula_variability = ~ 1,
+      sample = "a",
+      cell_group = "b",
+      cores = 1,
+      mcmc_seed = 42,
+      max_sampling_iterations = n_iterations,
+      verbose = FALSE
+    ) |>
+    expect_no_error()
+  
+  # Verify the results contain the expected columns and data
+  expect_true("b" %in% (renamed_estimate |> attr(".cell_group") |> as.character()))
+  expect_true(all(c("a", "b") %in% colnames(renamed_seurat[[]])))
+  
+  # Test that we can still use the renamed columns for predictions
+  renamed_estimate |>
+    sccomp_predict(
+      formula_composition = ~ type,
+      new_data = renamed_seurat[[]] |> distinct(a, type),
+      number_of_draws = 1
+    ) |>
+    expect_no_error()
+})
+
