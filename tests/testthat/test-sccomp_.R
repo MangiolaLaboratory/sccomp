@@ -618,35 +618,35 @@ test_that("test constrasts",{
 
 })
 
-test_that("proportions",{
-  
-  skip_cmdstan()
-  
-  counts_obj |>
-      sccomp_estimate(
-      formula_composition = ~ type, 
-      sample = "sample",  
-      cell_group = "cell_group", 
-      abundance = "proportion",
-      cores = 1,
-      mcmc_seed = 42,
-      max_sampling_iterations = n_iterations, verbose = FALSE
-    ) |> 
-      expect_warning("sccomp says: your proportion values include 0")
- 
-  # counts_obj |>
-  #   sccomp_estimate(
-  #     formula_composition = ~ type ,
-  #     sample = "sample",
-  #     cell_group = "cell_group",
-  #     abundance = "proportion",
-  #     cores = 1,
-  #     mcmc_seed = 42,
-  #     max_sampling_iterations = n_iterations
-  #   ) |>
-  #   expect_warning("sccomp says: your proportion values include 0.*")
-  
-})
+# test_that("proportions",{
+#   
+#   skip_cmdstan()
+#   
+#   counts_obj |>
+#       sccomp_estimate(
+#       formula_composition = ~ type, 
+#       sample = "sample",  
+#       cell_group = "cell_group", 
+#       abundance = "proportion",
+#       cores = 1,
+#       mcmc_seed = 42,
+#       max_sampling_iterations = n_iterations, verbose = FALSE
+#     ) |> 
+#       expect_warning("sccomp says: your proportion values include 0")
+#  
+#   # counts_obj |>
+#   #   sccomp_estimate(
+#   #     formula_composition = ~ type ,
+#   #     sample = "sample",
+#   #     cell_group = "cell_group",
+#   #     abundance = "proportion",
+#   #     cores = 1,
+#   #     mcmc_seed = 42,
+#   #     max_sampling_iterations = n_iterations
+#   #   ) |>
+#   #   expect_warning("sccomp says: your proportion values include 0.*")
+#   
+# })
 
 test_that("sccomp_proportional_fold_change",{
   

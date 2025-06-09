@@ -87,8 +87,7 @@ sccomp_predict.sccomp_tbl = function(fit,
   if(new_data |> is.null())
     new_data =
     fit |>
-    select(count_data) |>
-    unnest(count_data) |> 
+    attr("count_data") |>
     distinct() |> 
     .subset(!!.sample)
   

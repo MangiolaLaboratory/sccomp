@@ -45,7 +45,7 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
-  count_data <- NULL
+  count_data <- x |> attr("count_data")
   v_effect <- NULL
   
   .cell_group = attr(x, ".cell_group")
@@ -65,7 +65,9 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
     select(-`factor`) |>
     
     pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) |>
-    unnest(count_data) |>
+    left_join(
+      count_data, by = join_by(!!.cell_group)
+    ) |> 
     with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) )
   
   
@@ -352,6 +354,9 @@ plot_2D_intervals = function(
         # Facet by parameter
         facet_wrap(~parameter, scales = "free") +
         
+        xlab("c_effect (Abundance effect)") +
+        ylab("v_effect (Variability effect)") +
+        
         # Apply custom theme
         multipanel_theme 
     }
@@ -435,11 +440,16 @@ plot_scatterplot = function(
     else
       significance_colors =
         significance_colors |>
-        mutate(count_data = map(count_data, ~ .x |> select(all_of(factor_of_interest)) |> distinct())) |>
-        unnest(count_data) |>
+        mutate(
+          factor_values = attr(.data, "count_data") |>
+            select(all_of(factor_of_interest)) |>
+            distinct() |>
+            pull(all_of(factor_of_interest))
+        ) |>
+        unnest(factor_values) |>
         
         # Filter relevant parameters
-        mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
+        mutate( !!as.symbol(factor_of_interest) := as.character(factor_values) ) |>
         filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
         
         # Rename

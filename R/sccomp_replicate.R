@@ -68,8 +68,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
   
   sample_names =
     fit |>
-    select(count_data) |>
-    unnest(count_data) |>
+    attr("count_data") |>
     distinct(!!.sample) |> 
     pull(!!.sample)
   
@@ -472,11 +471,10 @@ replicate_data = function(.data,
     formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = new_data,
-    original_count_data =  
-      .data |> 
-      select(count_data) |> 
-      unnest(count_data) |>
-      .subset(!!.sample)
+    original_count_data =
+      .data |>
+      attr("count_data") |>
+      .subset(!!.sample) 
   )
   
   # Original input 

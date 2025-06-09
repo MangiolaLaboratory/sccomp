@@ -1,5 +1,3 @@
-
-
 #' sccomp_test
 #'
 #' @description This function test contrasts from a sccomp result.
@@ -30,8 +28,17 @@
 #'   \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
 #'   \item v_n_eff - Effective sample size for a variability (v) parameter.
 #'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
-#'   \item count_data - Nested input count data.
-#' }#'
+#' }
+#'
+#' The function also attaches several attributes to the result:
+#' \itemize{
+#'   \item count_data - The original count data used in the analysis, stored as an attribute for efficient access.
+#'   \item model_input - The model input data used for fitting.
+#'   \item formula_composition - The formula used for composition modeling.
+#'   \item formula_variability - The formula used for variability modeling.
+#'   \item fit - The Stan fit object (if pass_fit = TRUE).
+#' }
+#'
 #' @export
 #'
 #' @examples
@@ -78,7 +85,7 @@ sccomp_test.sccomp_tbl = function(.data,
                                   test_composition_above_logit_fold_change = 0.1,
                                   pass_fit = TRUE){
   
-  
+
   .sample = .data |>  attr(".sample")
   .cell_group = .data |>  attr(".cell_group")
   .count = .data |>  attr(".count")
@@ -138,37 +145,6 @@ sccomp_test.sccomp_tbl = function(.data,
     
     select(!!.cell_group, everything(),-M)
   
-  
-  result =
-    result |>
-    left_join(
-      truncation_df2 |>
-        select(-any_of(c(
-          "M",
-          "N",
-          ".variable",
-          "mean",
-          "se_mean",
-          "sd",
-          "n_eff",
-          "R_hat",
-          "k_hat",
-          "Rhat",
-          ".lower", ".median", ".upper"
-        ))) |>
-        nest(count_data = -!!.cell_group),
-      by = quo_name(.cell_group)
-    )
-  
-  # result =
-  #   result |>
-  # 
-  #   # Add back attributes
-  #   add_attr(
-  #     .data |> attr("fit") |> get_mean_precision_association(),
-  #     "mean_concentration_association"
-  #   )
-  
   if(pass_fit)
     result =
     result |>
@@ -193,6 +169,9 @@ sccomp_test.sccomp_tbl = function(.data,
     add_attr(.data |> attr("formula_composition"), "formula_composition") |>
     add_attr(.data |> attr("formula_variability"), "formula_variability") |>
     add_attr(inference_method, "inference_method" ) |> 
+    
+    # Add count data as attribute
+    add_attr(.data |> attr("count_data"), "count_data") |>
     
     # Add class to the tbl
     add_class("sccomp_tbl") 

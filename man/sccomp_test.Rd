@@ -43,8 +43,16 @@ A tibble (\code{tbl}), with the following columns:
 \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023.
 \item v_n_eff - Effective sample size for a variability (v) parameter.
 \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
-\item count_data - Nested input count data.
-}#'
+}
+
+The function also attaches several attributes to the result:
+\itemize{
+\item count_data - The original count data used in the analysis, stored as an attribute for efficient access.
+\item model_input - The model input data used for fitting.
+\item formula_composition - The formula used for composition modeling.
+\item formula_variability - The formula used for variability modeling.
+\item fit - The Stan fit object (if pass_fit = TRUE).
+}
 }
 \description{
 This function test contrasts from a sccomp result.

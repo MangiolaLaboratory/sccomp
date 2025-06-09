@@ -101,26 +101,34 @@ abundance column (counts or proportions), and factor columns.}
 \item{.abundance}{\strong{DEPRECATED}. Use \code{abundance} instead.}
 }
 \value{
-A tibble (\code{tbl}) with the following columns:
+A tibble (\code{tbl}), with the following columns:
 \itemize{
 \item cell_group - The cell groups being tested.
-\item parameter - The parameter being estimated from the design matrix described by the input \code{formula_composition} and \code{formula_variability}.
+\item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
 \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
 \item c_lower - Lower (2.5\%) quantile of the posterior distribution for a composition (c) parameter.
 \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
 \item c_upper - Upper (97.5\%) quantile of the posterior distribution for a composition (c) parameter.
-\item c_pH0 - Probability of the null hypothesis (no difference) for a composition (c). This is not a p-value.
-\item c_FDR - False-discovery rate of the null hypothesis for a composition (c).
-\item c_n_eff - Effective sample size for a composition (c) parameter.
-\item c_R_k_hat - R statistic for a composition (c) parameter, should be within 0.05 of 1.0.
+\item c_pH0 - Probability of the c_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument.
+\item c_FDR - False discovery rate of the c_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023.
+\item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+\item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
 \item v_lower - Lower (2.5\%) quantile of the posterior distribution for a variability (v) parameter.
 \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
 \item v_upper - Upper (97.5\%) quantile of the posterior distribution for a variability (v) parameter.
-\item v_pH0 - Probability of the null hypothesis for a variability (v).
-\item v_FDR - False-discovery rate of the null hypothesis for a variability (v).
+\item v_pH0 - Probability of the v_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument.
+\item v_FDR - False discovery rate of the v_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023.
 \item v_n_eff - Effective sample size for a variability (v) parameter.
-\item v_R_k_hat - R statistic for a variability (v) parameter.
-\item count_data - Nested input count data.
+\item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+}
+
+The function also attaches several attributes to the result:
+\itemize{
+\item count_data - The original count data used in the analysis, stored as an attribute for efficient access.
+\item model_input - The model input data used for fitting.
+\item formula_composition - The formula used for composition modeling.
+\item formula_variability - The formula used for variability modeling.
+\item fit - The Stan fit object (if pass_fit = TRUE).
 }
 }
 \description{

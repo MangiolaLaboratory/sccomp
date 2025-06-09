@@ -56,26 +56,34 @@
 #' @param .abundance **DEPRECATED**. Use `abundance` instead.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #'
-#' @return A tibble (`tbl`) with the following columns:
+#' @return A tibble (`tbl`), with the following columns:
 #' \itemize{
 #'   \item cell_group - The cell groups being tested.
-#'   \item parameter - The parameter being estimated from the design matrix described by the input `formula_composition` and `formula_variability`.
+#'   \item parameter - The parameter being estimated from the design matrix described by the input formula_composition and formula_variability.
 #'   \item factor - The covariate factor in the formula, if applicable (e.g., not present for Intercept or contrasts).
 #'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
 #'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
 #'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_pH0 - Probability of the null hypothesis (no difference) for a composition (c). This is not a p-value.
-#'   \item c_FDR - False-discovery rate of the null hypothesis for a composition (c).
-#'   \item c_n_eff - Effective sample size for a composition (c) parameter.
-#'   \item c_R_k_hat - R statistic for a composition (c) parameter, should be within 0.05 of 1.0.
+#'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
+#'   \item c_FDR - False discovery rate of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
+#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
+#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
 #'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
 #'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
 #'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
-#'   \item v_pH0 - Probability of the null hypothesis for a variability (v).
-#'   \item v_FDR - False-discovery rate of the null hypothesis for a variability (v).
+#'   \item v_pH0 - Probability of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
+#'   \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
 #'   \item v_n_eff - Effective sample size for a variability (v) parameter.
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter.
-#'   \item count_data - Nested input count data.
+#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#' }
+#'
+#' The function also attaches several attributes to the result:
+#' \itemize{
+#'   \item count_data - The original count data used in the analysis, stored as an attribute for efficient access.
+#'   \item model_input - The model input data used for fitting.
+#'   \item formula_composition - The formula used for composition modeling.
+#'   \item formula_variability - The formula used for variability modeling.
+#'   \item fit - The Stan fit object (if pass_fit = TRUE).
 #' }
 #'
 #' @examples
@@ -812,8 +820,6 @@ sccomp_glm_data_frame_counts = function(.data,
   # Make rectangular data
   .data = .data |> make_rectangular_data(!!.sample, !!.cell_group, !!.count, formula_composition)
   
-  
-  
   # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
   if(test_composition_above_logit_fold_change <= 0)
     stop("sccomp says: test_composition_above_logit_fold_change should be > 0 for the FDR to be calculated in the Bayesian context (doi: 10.1093/biostatistics/kxw041). Also, testing for > 0 differences avoids significant but meaningless (because of the small magnitude) estimates.")
@@ -966,8 +972,15 @@ sccomp_glm_data_frame_counts = function(.data,
     tibble() |>
     # Attach association mean concentration
     add_attr(fit, "fit") %>%
-    add_attr(data_for_model, "model_input") |>
-    add_attr(.data, "truncation_df2") |>
+    add_attr(data_for_model, "model_input") |> 
+
+    # Save data only taking the columns essential, including the ones use for the formulas 
+    add_attr(.data |> select(
+      !!.sample, !!.cell_group, !!.count, 
+      all_of(parse_formula(formula_composition)),
+      all_of(random_effect_elements |> pull(grouping) |> unique())
+      ), "count_data") |>
+    
     add_attr(.sample |> drop_environment(), ".sample") |>
     add_attr(.cell_group |> drop_environment(), ".cell_group") |>
     add_attr(.count |> drop_environment(), ".count") |>
@@ -992,7 +1005,6 @@ sccomp_glm_data_frame_counts = function(.data,
     warning("sccomp says: using variational inference, c_R_k_hat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using inference_method = \"hmc\" to use the state-of-the-art (although slower) HMC sampler.")
   
   estimate_tibble
-  
 }
 
 #' Check if data frame is rectangular

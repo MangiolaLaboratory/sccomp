@@ -74,7 +74,10 @@ sccomp_boxplot = function(
     select(-`factor`) |>
     
     pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) |>
-    unnest(count_data) |>
+    left_join(
+      attr(.data, "count_data") ,
+      by = quo_name(.cell_group)
+    ) |>
     with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |> 
     mutate(is_zero = proportion==0) 
   
@@ -214,11 +217,16 @@ plot_boxplot = function(
     else
       significance_colors =
         significance_colors |>
-        mutate(count_data = map(count_data, ~ .x |> select(all_of(factor_of_interest)) |> distinct())) |>
-        unnest(count_data) |>
+        mutate(
+          factor_values = attr(.data, "count_data") |>
+            select(all_of(factor_of_interest)) |>
+            distinct() |>
+            pull(all_of(factor_of_interest))
+        ) |>
+        unnest(factor_values) |>
         
         # Filter relevant parameters
-        mutate( !!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest) ) ) |>
+        mutate( !!as.symbol(factor_of_interest) := as.character(factor_values) ) |>
         filter(str_detect(parameter, !!as.symbol(factor_of_interest) )) |>
         
         # Rename
