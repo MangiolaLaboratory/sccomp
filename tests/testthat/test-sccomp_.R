@@ -622,7 +622,7 @@ test_that("proportions",{
   
   skip_cmdstan()
   
-      counts_obj |>
+  counts_obj |>
       sccomp_estimate(
       formula_composition = ~ type, 
       sample = "sample",  

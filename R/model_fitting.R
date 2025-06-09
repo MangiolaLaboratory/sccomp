@@ -109,9 +109,9 @@ fit_model = function(
         output_dir = output_directory,
         show_messages = verbose,
         sig_figs = sig_figs,
+        show_exceptions = FALSE,
         ...
-      ) |> 
-        suppressWarnings()
+      ) 
       
     },
     error = function(e) {
@@ -144,9 +144,9 @@ fit_model = function(
       psis_resample = FALSE, 
       verbose = verbose,
       sig_figs = sig_figs,
+      show_exceptions = FALSE,
       ...
-    ) %>%
-      suppressWarnings()
+    ) 
     
   }
   
