@@ -1,3 +1,5 @@
+#include "common_functions.stan"
+
 functions{
 
  vector Q_sum_to_zero_QR(int N) {
