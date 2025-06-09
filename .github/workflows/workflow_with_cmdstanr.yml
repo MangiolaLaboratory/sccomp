@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [main, master]
 
-name: R-CMD-check
+name: workflow_with_cmdstanr
 
 jobs:
-  R-CMD-check:
+  workflow_with_cmdstanr:
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
