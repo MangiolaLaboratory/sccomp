@@ -58,6 +58,7 @@ jobs:
             any::ggplot2
             any::tibble
             any::dplyr
+            any::prettydoc
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
