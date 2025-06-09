@@ -43,16 +43,16 @@ get_specific_annotation_columns <- function(.data, .col){
     select(-!!.col) %>%
     colnames %>%
     map(
-      ~
-        .x %>%
-        ifelse_pipe(
-          .data %>%
+      ~ {
+        if (.data %>%
             distinct_at(vars(!!.col, .x)) %>%
             nrow %>%
-            equals(n_x),
-          ~ .x,
-          ~ NULL
-        )
+            equals(n_x)) {
+          .x
+        } else {
+          NULL
+        }
+      }
     ) %>%
 
     # Drop NULL

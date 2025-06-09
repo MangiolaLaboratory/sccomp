@@ -164,32 +164,6 @@ parse_formula_random_effect <- function(fm) {
   
 }
 
-#' Get matrix from tibble
-#'
-#' @import dplyr
-#'
-#' @keywords internal
-#' @noRd
-#'
-#' @import dplyr
-#' @importFrom purrr as_mapper
-#'
-#' @param .x A tibble
-#' @param .p A boolean
-#' @param .f1 A function
-#' @param .f2 A function
-#'
-#' @return A tibble
-ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
-  switch(.p %>% `!` %>% sum(1),
-         as_mapper(.f1)(.x),
-         if (.f2 %>% is.null %>% `!`)
-           as_mapper(.f2)(.x)
-         else
-           .x)
-  
-}
-
 #' @importFrom tidyr gather
 #' @importFrom magrittr set_rownames
 #' @importFrom tibble deframe
@@ -207,31 +181,39 @@ as_matrix <- function(tbl, rownames = NULL) {
   # Define the variables as NULL to avoid CRAN NOTES
   variable <- NULL
   
-  tbl %>%
-    
-    ifelse_pipe(
-      tbl %>%
-        ifelse_pipe(!is.null(rownames),		~ .x %>% dplyr::select(-contains(rownames))) %>%
-        summarise_all(class) %>%
-        gather(variable, class) %>%
-        pull(class) %>%
-        unique() %>%
-        `%in%`(c("numeric", "integer")) %>% not() %>% any(),
-      ~ {
-        warning("to_matrix says: there are NON-numerical columns, the matrix will NOT be numerical")
-        .x
+  # Check for non-numerical columns
+  has_non_numerical <- tbl %>%
+    {
+      if (!is.null(rownames)) {
+        dplyr::select(., -contains(rownames))
+      } else {
+        .
       }
-    ) %>%
-    as.data.frame() %>%
-    
-    # Deal with rownames column if present
-    ifelse_pipe(!is.null(rownames),
-                ~ .x  %>%
-                  set_rownames(tbl %>% pull(!!rownames)) %>%
-                  select(-!!rownames)) %>%
-    
-    # Convert to matrix
-    as.matrix()
+    } %>%
+    summarise_all(class) %>%
+    gather(variable, class) %>%
+    pull(class) %>%
+    unique() %>%
+    `%in%`(c("numeric", "integer")) %>% 
+    not() %>% 
+    any()
+  
+  if (has_non_numerical) {
+    warning("to_matrix says: there are NON-numerical columns, the matrix will NOT be numerical")
+  }
+  
+  # Convert to data frame
+  tbl <- as.data.frame(tbl)
+  
+  # Handle rownames if present
+  if (!is.null(rownames)) {
+    tbl <- tbl %>%
+      set_rownames(tbl %>% pull(!!rownames)) %>%
+      select(-!!rownames)
+  }
+  
+  # Convert to matrix
+  as.matrix(tbl)
 }
 
 #' draws_to_tibble_x_y

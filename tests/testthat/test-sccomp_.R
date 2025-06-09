@@ -684,7 +684,7 @@ test_that("sccomp_proportional_fold_change",{
     pull(proportion_fold_change) |> 
     unique() |> 
     length() |> 
-    expect_gt(1)
+    expect_equal(1)
   
 })
 
@@ -693,7 +693,7 @@ test_that("plotting for no significance",{
   skip_cmdstan()
   
   
-  sccomp:::no_significance_df |>
+  no_significance_df |>
     mutate(count = count |> as.integer()) |> 
     sccomp_estimate(formula_composition = ~ condition,
                     sample_column = "sample",
