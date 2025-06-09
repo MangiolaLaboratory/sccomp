@@ -48,7 +48,7 @@ print("cmdstanr is needed to run this example.")
 
     estimates = sccomp_estimate(
       counts_obj,
-      ~ type, ~1, sample, cell_group, count,
+      ~ type, ~1, "sample", "cell_group", "count",
       cores = 1
     ) |>
     sccomp_remove_unwanted_variation()

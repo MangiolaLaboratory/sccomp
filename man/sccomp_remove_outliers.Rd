@@ -11,7 +11,7 @@ sccomp_remove_outliers(
   inference_method = attr(.estimate, "inference_method"),
   output_directory = "sccomp_draws_files",
   verbose = TRUE,
-  mcmc_seed = sample(1e+05, 1),
+  mcmc_seed = sample_seed(),
   max_sampling_iterations = 20000,
   enable_loo = FALSE,
   sig_figs = 9,
@@ -83,9 +83,9 @@ print("cmdstanr is needed to run this example.")
       counts_obj,
       ~ type,
       ~1,
-      sample,
-      cell_group,
-      count,
+      "sample",
+      "cell_group",
+      "count",
       cores = 1
     ) |>
     sccomp_remove_outliers(cores = 1)

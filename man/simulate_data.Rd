@@ -14,7 +14,7 @@ simulate_data(
   .coefficients = NULL,
   variability_multiplier = 5,
   number_of_draws = 1,
-  mcmc_seed = sample(1e+05, 1),
+  mcmc_seed = sample_seed(),
   cores = detectCores(),
   sig_figs = 9
 )
@@ -75,7 +75,7 @@ print("cmdstanr is needed to run this example.")
 
     estimate = sccomp_estimate(
       counts_obj,
-      ~ type, ~1, sample, cell_group, count,
+      ~ type, ~1, "sample", "cell_group", "count",
       cores = 1
     )
 

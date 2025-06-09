@@ -6,12 +6,13 @@ Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
                   )
 Description: A robust and outlier-aware method for testing differences in cell-type proportion in single-cell data. This model can infer changes in tissue composition and heterogeneity, and can produce realistic data simulations based on any existing dataset. This model can also transfer knowledge from a large set of integrated datasets to increase accuracy further.
 License: GPL-3 
+License_file: LICENSE
 URL: https://github.com/MangiolaLaboratory/sccomp
 BugReports: https://github.com/MangiolaLaboratory/sccomp/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Depends: R (>= 4.2.0)
+Depends: R (>= 4.3.0)
 Imports:
     instantiate (>= 0.2.3),
     stats,

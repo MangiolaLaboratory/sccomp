@@ -9,7 +9,7 @@ sccomp_predict(
   formula_composition = NULL,
   new_data = NULL,
   number_of_draws = 500,
-  mcmc_seed = sample(1e+05, 1),
+  mcmc_seed = sample_seed(),
   summary_instead_of_draws = TRUE
 )
 }
@@ -51,7 +51,7 @@ print("cmdstanr is needed to run this example.")
 
     sccomp_estimate(
       counts_obj,
-      ~ type, ~1, sample, cell_group, count,
+      ~ type, ~1, "sample", "cell_group", "count",
       cores = 1
     ) |>
     sccomp_predict()

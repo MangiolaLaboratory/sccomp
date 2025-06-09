@@ -44,9 +44,9 @@ if (instantiate::stan_cmdstan_exists()) {
       counts_obj,
       formula_composition = ~ type,
       formula_variability = ~ 1,
-      .sample = sample,
-      .cell_group = cell_group,
-      .count = count,
+      sample = "sample",
+      cell_group = "cell_group",
+      abundance = "count",
       cores = 1
     ) |>
     sccomp_test()

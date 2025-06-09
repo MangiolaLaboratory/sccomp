@@ -1871,9 +1871,9 @@ get_FDR = function(x){
 #'       counts_obj,
 #'       ~ type,
 #'       ~1,
-#'       sample,
-#'       cell_group,
-#'       count,
+#'       "sample",
+#'       "cell_group",
+#'       "count",
 #'       cores = 1
 #'     ) |> 
 #'     sccomp_test()
@@ -1978,9 +1978,9 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
 #'       counts_obj,
 #'       ~ type,
 #'       ~type,
-#'       sample,
-#'       cell_group,
-#'       count,
+#'       "sample",
+#'       "cell_group",
+#'       "count",
 #'       cores = 1
 #'     ) |> 
 #'     sccomp_test()
@@ -4275,3 +4275,7 @@ check_if_NAs_in_count = function(.data, .count){
     stop("sccomp says: the input data frame has NAs in the count column")
 }
 
+# This is needed because I have a `sample` argument, that when it is not defined affects the sample() function
+sample_seed = function(){
+  sample(1e5, 1)
+}

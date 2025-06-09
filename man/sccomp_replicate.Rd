@@ -9,7 +9,7 @@ sccomp_replicate(
   formula_composition = NULL,
   formula_variability = NULL,
   number_of_draws = 1,
-  mcmc_seed = sample(1e+05, 1)
+  mcmc_seed = sample_seed()
 )
 }
 \arguments{
@@ -50,7 +50,7 @@ print("cmdstanr is needed to run this example.")
 
     sccomp_estimate(
       counts_obj,
-      ~ type, ~1, sample, cell_group, count,
+      ~ type, ~1, "sample", "cell_group", "count",
       cores = 1
     ) |>
     sccomp_replicate()
