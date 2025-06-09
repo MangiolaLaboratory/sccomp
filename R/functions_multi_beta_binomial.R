@@ -5,9 +5,9 @@ sccomp_glm_data_frame_raw = function(.data,
                                      formula_composition = ~ 1 ,
                                      formula_variability = ~ 1,
                                      
-                                     sample_column,
-                                     cell_group_column,
-                                     abundance_column = NULL,
+                                     sample,
+                                     cell_group,
+                                     abundance = NULL,
                                   
                                      
                                      # Secondary arguments
@@ -26,7 +26,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      enable_loo = FALSE,
                                      use_data = TRUE,
                                      cores = 4,
-                                     mcmc_seed = sample(1e5, 1),
+                                     mcmc_seed = sample_seed(),
                                      max_sampling_iterations = 20000,
                                      pass_fit = TRUE,
                                      sig_figs = 9,
@@ -37,8 +37,8 @@ sccomp_glm_data_frame_raw = function(.data,
   
   
   # Prepare column same enquo
-  .sample = as.symbol(sample_column)
-  .cell_group = as.symbol(cell_group_column)
+  .sample = as.symbol(sample)
+  .cell_group = as.symbol(cell_group)
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   
   # Check if columns exist
@@ -83,9 +83,9 @@ sccomp_glm_data_frame_raw = function(.data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       
-      sample_column = sample_column,
-      cell_group_column = cell_group_column,
-      abundance_column = "count",
+      sample = sample,
+      cell_group = cell_group,
+      abundance = "count",
       
       contrasts = contrasts,
       #.grouping_for_random_effect = !! .grouping_for_random_effect,
@@ -110,13 +110,15 @@ sccomp_glm_data_frame_raw = function(.data,
     )
 }
 
+
+
 sccomp_glm_data_frame_counts = function(.data,
                                         formula_composition = ~ 1 ,
                                         formula_variability = ~ 1,
                                         
-                                        sample_column,
-                                        cell_group_column,
-                                        abundance_column = NULL,
+                                        sample,
+                                        cell_group,
+                                        abundance = NULL,
                                         
                                         # Secondary arguments
                                         contrasts = NULL,
@@ -135,16 +137,16 @@ sccomp_glm_data_frame_counts = function(.data,
                                         enable_loo = FALSE,
                                         use_data = TRUE,
                                         cores = 4,
-                                        mcmc_seed = sample(1e5, 1),
+                                        mcmc_seed = sample_seed(),
                                         max_sampling_iterations = 20000,
                                         pass_fit = TRUE,
                                         sig_figs = 9,
                                         ...) {
   
   # Prepare column same enquo
-  .sample = as.symbol(sample_column)
-  .cell_group = as.symbol(cell_group_column)
-  .count = as.symbol(abundance_column)
+  .sample = as.symbol(sample)
+  .cell_group = as.symbol(cell_group)
+  .count = as.symbol(abundance)
   
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   #.grouping_for_random_effect = enquo(.grouping_for_random_effect)

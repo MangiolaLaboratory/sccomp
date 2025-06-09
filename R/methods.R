@@ -28,9 +28,9 @@
 #'              abundance column (counts or proportions), and factor columns.
 #' @param formula_composition A formula describing the model for differential abundance.
 #' @param formula_variability A formula describing the model for differential variability.
-#' @param sample_column A column name as a character string for the sample identifier. Replaces the deprecated `.sample`.
-#' @param cell_group_column A column name as a character string for the cell-group identifier. Replaces the deprecated `.cell_group`.
-#' @param abundance_column A column name as a character string for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across `cell_group_column`). Replaces the deprecated `.abundance` and `.count`.
+#' @param sample A column name as a character string for the sample identifier. Replaces the deprecated `.sample`.
+#' @param cell_group A column name as a character string for the cell-group identifier. Replaces the deprecated `.cell_group`.
+#' @param abundance A column name as a character string for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across `cell_group`). Replaces the deprecated `.abundance` and `.count`.
 #' @param cores Number of cores to use for parallel calculations.
 #' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
 #' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
@@ -48,12 +48,12 @@
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
 #' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
-#' @param .count **DEPRECATED**. Use `abundance_column` instead.
+#' @param .count **DEPRECATED**. Use `abundance` instead.
 #' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
-#' @param .sample **DEPRECATED**. Use `sample_column` instead.
-#' @param .cell_group **DEPRECATED**. Use `cell_group_column` instead.
-#' @param .abundance **DEPRECATED**. Use `abundance_column` instead.
+#' @param .sample **DEPRECATED**. Use `sample` instead.
+#' @param .cell_group **DEPRECATED**. Use `cell_group` instead.
+#' @param .abundance **DEPRECATED**. Use `abundance` instead.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #'
 #' @return A tibble (`tbl`) with the following columns:
@@ -92,9 +92,9 @@
 #'       counts_obj,
 #'       ~ type,
 #'       ~1,
-#'       sample,
-#'       cell_group,
-#'       count,
+#'       "sample",
+#'       "cell_group",
+#'       "count",
 #'       cores = 1
 #'     )
 #'     
@@ -106,9 +106,9 @@
 #'       counts_obj,
 #'       ~ type,
 #'       ~1,
-#'       sample,
-#'       cell_group,
-#'       proportion,
+#'       "sample",
+#'       "cell_group",
+#'       "proportion",
 #'       cores = 1
 #'     )
 #'     
@@ -120,9 +120,9 @@ sccomp_estimate <- function(.data,
                             formula_composition = ~1,
                             formula_variability = ~1,
                             
-                            sample_column,
-                            cell_group_column,
-                            abundance_column = NULL,
+                            sample,
+                            cell_group,
+                            abundance = NULL,
 
                             # Secondary arguments
                             cores = detectCores(),
@@ -142,7 +142,7 @@ sccomp_estimate <- function(.data,
                             noise_model = "multi_beta_binomial",
                             exclude_priors = FALSE,
                             use_data = TRUE,
-                            mcmc_seed = sample(1e5, 1),
+                            mcmc_seed = sample_seed(),
                             max_sampling_iterations = 20000,
                             pass_fit = TRUE,
                             sig_figs = 9,
@@ -168,9 +168,9 @@ sccomp_estimate.Seurat <- function(.data,
                                    formula_composition = ~1,
                                    formula_variability = ~1,
                                    
-                                   sample_column,
-                                   cell_group_column,
-                                   abundance_column = NULL,
+                                   sample,
+                                   cell_group,
+                                   abundance = NULL,
                                    
                                    # Secondary arguments
                                    cores = detectCores(),
@@ -190,7 +190,7 @@ sccomp_estimate.Seurat <- function(.data,
                                    noise_model = "multi_beta_binomial",
                                    exclude_priors = FALSE,
                                    use_data = TRUE,
-                                   mcmc_seed = sample(1e5, 1),
+                                   mcmc_seed = sample_seed(),
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
@@ -225,8 +225,8 @@ sccomp_estimate.Seurat <- function(.data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       
-      sample_column = sample_column,
-      cell_group_column = cell_group_column,
+      sample = sample,
+      cell_group = cell_group,
       
       # Secondary arguments
       cores = cores,
@@ -261,9 +261,9 @@ sccomp_estimate.Seurat <- function(.data,
 sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  formula_composition = ~1,
                                                  formula_variability = ~1,
-                                                 sample_column,
-                                                 cell_group_column,
-                                                 abundance_column = NULL,
+                                                 sample,
+                                                 cell_group,
+                                                 abundance = NULL,
                                                  
                                                  # Secondary arguments
                                                  cores = detectCores(),
@@ -283,7 +283,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  noise_model = "multi_beta_binomial",
                                                  exclude_priors = FALSE,
                                                  use_data = TRUE,
-                                                 mcmc_seed = sample(1e5, 1),
+                                                 mcmc_seed = sample_seed(),
                                                  max_sampling_iterations = 20000,
                                                  pass_fit = TRUE,
                                                  sig_figs = 9,
@@ -319,8 +319,8 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-      sample_column = sample_column,
-      cell_group_column = cell_group_column,
+      sample = sample,
+      cell_group = cell_group,
       
       # Secondary arguments
       cores = cores,
@@ -355,9 +355,9 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
 sccomp_estimate.DFrame <- function(.data,
                                    formula_composition = ~1,
                                    formula_variability = ~1,
-                                   sample_column,
-                                   cell_group_column,
-                                   abundance_column = NULL,
+                                   sample,
+                                   cell_group,
+                                   abundance = NULL,
                                    
                                    # Secondary arguments
                                    cores = detectCores(),
@@ -377,7 +377,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    noise_model = "multi_beta_binomial",
                                    exclude_priors = FALSE,
                                    use_data = TRUE,
-                                   mcmc_seed = sample(1e5, 1),
+                                   mcmc_seed = sample_seed(),
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
@@ -403,9 +403,9 @@ sccomp_estimate.DFrame <- function(.data,
     sccomp_estimate(
       formula_composition = formula_composition,
       formula_variability = formula_variability,
-      sample_column = sample_column,
-      cell_group_column = cell_group_column,
-      abundance_column = abundance_column,
+      sample = sample,
+      cell_group = cell_group,
+      abundance = abundance,
       
       # Secondary arguments
       cores = cores,
@@ -442,9 +442,9 @@ sccomp_estimate.data.frame <- function(.data,
                                        formula_composition = ~1,
                                        formula_variability = ~1,
                                        
-                                       sample_column,
-                                       cell_group_column,
-                                       abundance_column = NULL,
+                                       sample,
+                                       cell_group,
+                                       abundance = NULL,
                                        
                                        # Secondary arguments
                                        cores = detectCores(),
@@ -464,7 +464,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        noise_model = "multi_beta_binomial",
                                        exclude_priors = FALSE,
                                        use_data = TRUE,
-                                       mcmc_seed = sample(1e5, 1),
+                                       mcmc_seed = sample_seed(),
                                        max_sampling_iterations = 20000,
                                        pass_fit = TRUE,
                                        sig_figs = 9,
@@ -506,16 +506,16 @@ sccomp_estimate.data.frame <- function(.data,
       rlang::is_symbolic(.sample) && 
       !is.null(rlang::eval_tidy(.sample))) {
     lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", 
-      details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample_column (without trailing dot, and which is now a character string, i.e. sample_column = \"my_sample\")")
-    sample_column = quo_name(.sample)
+      details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample (without trailing dot, and which is now a character string, i.e. sample = \"my_sample\")")
+    sample = quo_name(.sample)
   } else {
-      # Capture the quosure for sample_column using a symbol
+      # Capture the quosure for sample using a symbol
  if(
-  sample_column |>
+  sample |>
  is.character() |>
  not() 
  ) {
-  stop("sccomp says: sample_column must be of character type")
+  stop("sccomp says: sample must be of character type")
  }
 }
   
@@ -523,15 +523,15 @@ sccomp_estimate.data.frame <- function(.data,
       !rlang::quo_is_null(.cell_group) && 
       rlang::is_symbolic(.cell_group) ) {
     lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.cell_group)", 
-      details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group_column (without trailing dot, and which is now a character string, i.e. cell_group_column = \"my_cell_group\")")
-    cell_group_column = quo_name(.cell_group)
+      details = ".cell_group argument (which were tidy evaluations, i.e. .cell_group = my_cell_group) have been deprecated in favour of cell_group (without trailing dot, and which is now a character string, i.e. cell_group = \"my_cell_group\")")
+    cell_group = quo_name(.cell_group)
   } else {
     if(
-  cell_group_column |>
+  cell_group |>
  is.character() |>
  not() 
  ) {
-  stop("sccomp says: cell_group_column must be of character type")
+  stop("sccomp says: cell_group must be of character type")
  }
 }
 
@@ -539,37 +539,37 @@ sccomp_estimate.data.frame <- function(.data,
   if (lifecycle::is_present(.count) && 
       !rlang::quo_is_null(.count) && 
       rlang::is_symbolic(.count) ) {
-    rlang::warn("The argument '.count' is deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
-    abundance_column <- quo_name(.count)
+    rlang::warn("The argument '.count' is deprecated in favour of abundance (without trailing dot, and which is now a character string, i.e. abundance = \"my_abundance\")")
+    abundance <- quo_name(.count)
   }
 
   if (lifecycle::is_present(.abundance) && 
       !rlang::quo_is_null(.abundance) && 
       rlang::is_symbolic(.abundance) ) {
     lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.abundance)", 
-      details = ".abundance argument (which were tidy evaluations, i.e. .abundance = my_abundance) have been deprecated in favour of abundance_column (without trailing dot, and which is now a character string, i.e. abundance_column = \"my_abundance\")")
-    abundance_column = quo_name(.abundance)
+      details = ".abundance argument (which were tidy evaluations, i.e. .abundance = my_abundance) have been deprecated in favour of abundance (without trailing dot, and which is now a character string, i.e. abundance = \"my_abundance\")")
+    abundance = quo_name(.abundance)
   } else {
     if(
-      !is.null(abundance_column) &&
-  abundance_column  |>
+      !is.null(abundance) &&
+  abundance  |>
  is.character() |>
  not() 
  ) {
-  stop("sccomp says: abundance_column must be of character type")
+  stop("sccomp says: abundance must be of character type")
  }
 }
 
 
 
-  if (abundance_column |> is.null())
+  if (abundance |> is.null())
     res <- sccomp_glm_data_frame_raw(
       .data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       
-      sample_column = sample_column,
-      cell_group_column = cell_group_column,
+      sample = sample,
+      cell_group = cell_group,
 
       # Secondary arguments
       cores = cores,
@@ -597,9 +597,9 @@ sccomp_estimate.data.frame <- function(.data,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       
-      sample_column = sample_column,
-      cell_group_column = cell_group_column,
-      abundance_column = abundance_column,
+      sample = sample,
+      cell_group = cell_group,
+      abundance = abundance,
       
       # Secondary arguments
       cores = cores,
@@ -690,9 +690,9 @@ sccomp_estimate.data.frame <- function(.data,
 #'       counts_obj,
 #'       ~ type,
 #'       ~1,
-#'       sample,
-#'       cell_group,
-#'       count,
+#'       "sample",
+#'       "cell_group",
+#'       "count",
 #'       cores = 1
 #'     ) |>
 #'     sccomp_remove_outliers(cores = 1)
@@ -706,7 +706,7 @@ sccomp_remove_outliers <- function(.estimate,
                                    inference_method = .estimate |> attr("inference_method"),
                                    output_directory = "sccomp_draws_files",
                                    verbose = TRUE,
-                                   mcmc_seed = sample(1e5, 1),
+                                   mcmc_seed = sample_seed(),
                                    max_sampling_iterations = 20000,
                                    enable_loo = FALSE,
                                    sig_figs = 9,
@@ -737,7 +737,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              inference_method = .estimate |> attr("inference_method"),
                                              output_directory = "sccomp_draws_files",
                                              verbose = TRUE,
-                                             mcmc_seed = sample(1e5, 1),
+                                             mcmc_seed = sample_seed(),
                                              max_sampling_iterations = 20000,
                                              enable_loo = FALSE,
                                              sig_figs = 9,
@@ -1135,7 +1135,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
 #'
 #'     estimates = sccomp_estimate(
 #'       counts_obj,
-#'       ~ 0 + type, ~1, sample, cell_group, count,
+#'       ~ 0 + type, ~1, "sample", "cell_group", "count",
 #'       cores = 1
 #'     ) |>
 #'     sccomp_test("typecancer - typebenign")
@@ -1324,7 +1324,7 @@ sccomp_test.sccomp_tbl = function(.data,
 #'
 #'     sccomp_estimate(
 #'       counts_obj,
-#'       ~ type, ~1, sample, cell_group, count,
+#'       ~ type, ~1, "sample", "cell_group", "count",
 #'       cores = 1
 #'     ) |>
 #'     sccomp_replicate()
@@ -1334,7 +1334,7 @@ sccomp_replicate <- function(fit,
                              formula_composition = NULL,
                              formula_variability = NULL,
                              number_of_draws = 1,
-                             mcmc_seed = sample(1e5, 1)) {
+                             mcmc_seed = sample_seed()) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -1348,7 +1348,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
                                        formula_composition = NULL,
                                        formula_variability = NULL,
                                        number_of_draws = 1,
-                                       mcmc_seed = sample(1e5, 1)){
+                                       mcmc_seed = sample_seed()){
 
   .sample = attr(fit, ".sample")
   .cell_group = attr(fit, ".cell_group")
@@ -1428,7 +1428,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #'
 #'     sccomp_estimate(
 #'       counts_obj,
-#'       ~ type, ~1, sample, cell_group, count,
+#'       ~ type, ~1, "sample", "cell_group", "count",
 #'       cores = 1
 #'     ) |>
 #'     sccomp_predict()
@@ -1440,7 +1440,7 @@ sccomp_predict <- function(fit,
                            formula_composition = NULL,
                            new_data = NULL,
                            number_of_draws = 500,
-                           mcmc_seed = sample(1e5, 1),
+                           mcmc_seed = sample_seed(),
 													 summary_instead_of_draws = TRUE) {
 
   
@@ -1457,7 +1457,7 @@ sccomp_predict.sccomp_tbl = function(fit,
                                      formula_composition = NULL,
                                      new_data = NULL,
                                      number_of_draws = 500,
-                                     mcmc_seed = sample(1e5, 1),
+                                     mcmc_seed = sample_seed(),
 																		 summary_instead_of_draws = TRUE){
 
 
@@ -1574,9 +1574,9 @@ sccomp_predict.sccomp_tbl = function(fit,
 #'   counts_obj,
 #'   formula_composition = ~ type,
 #'   formula_variability = ~1,
-#'   .sample = sample,
-#'   .cell_group = cell_group,
-#'   .abundance = count,
+#'   sample = "sample",
+#'   cell_group = "cell_group",
+#'   abundance = "count",
 #'   approximate_posterior_inference = "all",
 #'   cores = 1
 #' )
@@ -1672,7 +1672,7 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
 #'
 #'     estimates = sccomp_estimate(
 #'       counts_obj,
-#'       ~ type, ~1, sample, cell_group, count,
+#'       ~ type, ~1, "sample", "cell_group", "count",
 #'       cores = 1
 #'     ) |>
 #'     sccomp_remove_unwanted_variation()
@@ -1809,7 +1809,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
 #'
 #'     estimate = sccomp_estimate(
 #'       counts_obj,
-#'       ~ type, ~1, sample, cell_group, count,
+#'       ~ type, ~1, "sample", "cell_group", "count",
 #'       cores = 1
 #'     )
 #'
@@ -1830,7 +1830,7 @@ simulate_data <- function(.data,
                        .coefficients = NULL,
                        variability_multiplier = 5,
                        number_of_draws = 1,
-                       mcmc_seed = sample(1e5, 1),
+                       mcmc_seed = sample_seed(),
                        cores = detectCores(),
                        sig_figs = 9) {
   
@@ -1857,7 +1857,7 @@ simulate_data.tbl = function(.data,
                                     .coefficients = NULL,
                                     variability_multiplier = 5,
                                     number_of_draws = 1,
-                                    mcmc_seed = sample(1e5, 1),
+                                    mcmc_seed = sample_seed(),
                              cores = detectCores(),
                              sig_figs = 9) {
 
@@ -1970,9 +1970,9 @@ simulate_data.tbl = function(.data,
 #'       counts_obj,
 #'       formula_composition = ~ type,
 #'       formula_variability = ~ 1,
-#'       .sample = sample,
-#'       .cell_group = cell_group,
-#'       .count = count,
+#'       sample = "sample",
+#'       cell_group = "cell_group",
+#'       abundance = "count",
 #'       cores = 1
 #'     ) |>
 #'     sccomp_test()
@@ -2079,7 +2079,7 @@ sccomp_boxplot = function(
 #'
 #'     estimate = sccomp_estimate(
 #'       counts_obj,
-#'       ~ type, ~1, sample, cell_group, count,
+#'       ~ type, ~1, "sample", "cell_group", "count",
 #'       cores = 1
 #'     )
 #'
@@ -2249,9 +2249,9 @@ clear_stan_model_cache <- function(cache_dir = sccomp_stan_models_cache_dir) {
 #'       counts_obj,
 #'       ~ type,
 #'       ~1,
-#'       sample,
-#'       cell_group,
-#'       count,
+#'       "sample",
+#'       "cell_group",
+#'       "count",
 #'       cores = 1
 #'   )
 #'  

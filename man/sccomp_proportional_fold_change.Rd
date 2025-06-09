@@ -54,9 +54,9 @@ if (instantiate::stan_cmdstan_exists()) {
       counts_obj,
       ~ type,
       ~1,
-      sample,
-      cell_group,
-      count,
+      "sample",
+      "cell_group",
+      "count",
       cores = 1
   )
  

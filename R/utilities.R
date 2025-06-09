@@ -4275,3 +4275,7 @@ check_if_NAs_in_count = function(.data, .count){
     stop("sccomp says: the input data frame has NAs in the count column")
 }
 
+# This is needed because I have a `sample` argument, that when it is not defined affects the sample() function
+sample_seed = function(){
+  sample(1e5, 1)
+}

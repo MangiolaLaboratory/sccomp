@@ -8,9 +8,9 @@ sccomp_estimate(
   .data,
   formula_composition = ~1,
   formula_variability = ~1,
-  sample_column,
-  cell_group_column,
-  abundance_column = NULL,
+  sample,
+  cell_group,
+  abundance = NULL,
   cores = detectCores(),
   bimodal_mean_variability_association = FALSE,
   percent_false_positive = 5,
@@ -46,11 +46,11 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{formula_variability}{A formula describing the model for differential variability.}
 
-\item{sample_column}{A column name as a character string for the sample identifier. Replaces the deprecated \code{.sample}.}
+\item{sample}{A column name as a character string for the sample identifier. Replaces the deprecated \code{.sample}.}
 
-\item{cell_group_column}{A column name as a character string for the cell-group identifier. Replaces the deprecated \code{.cell_group}.}
+\item{cell_group}{A column name as a character string for the cell-group identifier. Replaces the deprecated \code{.cell_group}.}
 
-\item{abundance_column}{A column name as a character string for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across \code{cell_group_column}). Replaces the deprecated \code{.abundance} and \code{.count}.}
+\item{abundance}{A column name as a character string for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across \code{cell_group}). Replaces the deprecated \code{.abundance} and \code{.count}.}
 
 \item{cores}{Number of cores to use for parallel calculations.}
 
@@ -88,17 +88,17 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 
-\item{.count}{\strong{DEPRECATED}. Use \code{abundance_column} instead.}
+\item{.count}{\strong{DEPRECATED}. Use \code{abundance} instead.}
 
 \item{approximate_posterior_inference}{\strong{DEPRECATED}. Use \code{inference_method} instead.}
 
 \item{variational_inference}{\strong{DEPRECATED}. Use \code{inference_method} instead.}
 
-\item{.sample}{\strong{DEPRECATED}. Use \code{sample_column} instead.}
+\item{.sample}{\strong{DEPRECATED}. Use \code{sample} instead.}
 
-\item{.cell_group}{\strong{DEPRECATED}. Use \code{cell_group_column} instead.}
+\item{.cell_group}{\strong{DEPRECATED}. Use \code{cell_group} instead.}
 
-\item{.abundance}{\strong{DEPRECATED}. Use \code{abundance_column} instead.}
+\item{.abundance}{\strong{DEPRECATED}. Use \code{abundance} instead.}
 }
 \value{
 A tibble (\code{tbl}) with the following columns:
@@ -145,9 +145,9 @@ print("cmdstanr is needed to run this example.")
       counts_obj,
       ~ type,
       ~1,
-      sample,
-      cell_group,
-      count,
+      "sample",
+      "cell_group",
+      "count",
       cores = 1
     )
     
@@ -159,9 +159,9 @@ print("cmdstanr is needed to run this example.")
       counts_obj,
       ~ type,
       ~1,
-      sample,
-      cell_group,
-      proportion,
+      "sample",
+      "cell_group",
+      "proportion",
       cores = 1
     )
     

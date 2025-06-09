@@ -86,8 +86,8 @@ test_that("correct columns",{
   my_estimate = 
     seurat_obj |>
     sccomp_estimate(
-      sample_column = "sampleX", 
-      cell_group_column = "cell_group"
+      sample = "sampleX", 
+      cell_group = "cell_group"
     ) |> 
     expect_error("Can't select columns that don't exist") |> 
     expect_warning("please check typos in your")
@@ -96,8 +96,8 @@ test_that("correct columns",{
     seurat_obj |>
     sccomp_estimate(
       formula_composition = ~ typeX,
-      sample_column = "sample", 
-      cell_group_column = "cell_group"
+      sample = "sample", 
+      cell_group = "cell_group"
     ) |> 
     expect_error("Can't subset elements that don't exist") |> 
     expect_warning("please check typos in your")
@@ -435,8 +435,8 @@ test_that("multi beta binomial from SCE",{
     sccomp_estimate(
       formula_composition = ~ type,
       formula_variability = ~ 1,
-      sample_column = "sample",
-      cell_group_column = "cell_group",
+      sample = "sample",
+      cell_group = "cell_group",
       cores = 1,
       mcmc_seed = 42,      
       max_sampling_iterations = 1000, verbose = FALSE
@@ -623,8 +623,8 @@ test_that("proportions",{
       counts_obj |>
       sccomp_estimate(
       formula_composition = ~ type , 
-      sample_column = "sample",  
-      cell_group_column = "cell_group", 
+      sample = "sample",  
+      cell_group = "cell_group", 
       .count = proportion,
       cores = 1,
       mcmc_seed = 42,
@@ -635,9 +635,9 @@ test_that("proportions",{
   # counts_obj |>
   #   sccomp_estimate(
   #     formula_composition = ~ type ,
-  #     sample_column = "sample",
-  #     cell_group_column = "cell_group",
-  #     abundance_column = "proportion",
+  #     sample = "sample",
+  #     cell_group = "cell_group",
+  #     abundance = "proportion",
   #     cores = 1,
   #     mcmc_seed = 42,
   #     max_sampling_iterations = 1000
@@ -673,8 +673,8 @@ test_that("plotting for no significance",{
   no_significance_df |>
     mutate(count = count |> as.integer()) |> 
     sccomp_estimate(formula_composition = ~ condition,
-                    sample_column = "sample",
-                    cell_group_column = "cell_group",abundance_column = "count",
+                    sample = "sample",
+                    cell_group = "cell_group",abundance = "count",
                     bimodal_mean_variability_association = TRUE,      
                     cores = 1
 ) |>
@@ -778,9 +778,9 @@ test_that("sample ID malformed", {
     mutate(count = count |> as.integer()) |> 
   sccomp_estimate(
     formula_composition = ~ type ,
-    sample_column = "sample",
-    cell_group_column = "cell_group",
-    abundance_column = "count",
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
     cores = 1
   ) |>
   expect_warning("sccomp says: the input data frame does not have the same number") |>
@@ -816,9 +816,9 @@ test_that("sample ID malformed", {
     mutate(count = count |> as.integer()) |> 
     sccomp_estimate(
       formula_composition = ~ condition,
-      cell_group_column = "taxon",
-      sample_column = "sample",
-      abundance_column = "count"
+      cell_group = "taxon",
+      sample = "sample",
+      abundance = "count"
     ) |> 
     expect_no_error()
   
@@ -827,8 +827,8 @@ test_that("sample ID malformed", {
     seurat_obj |>
     sccomp_estimate( 
       formula_composition = ~ 1, 
-      sample_column = "sample", 
-      cell_group_column = "cell_group"
+      sample = "sample", 
+      cell_group = "cell_group"
     ) |> 
     expect_no_error()
 

@@ -20,9 +20,9 @@ test_that("warnings when symbols are provided for key columns", {
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = donor,
-        cell_group_column = "cell_group",
-        abundance_column = "count"
+        sample = donor,
+        cell_group = "cell_group",
+        abundance = "count"
       ),
     "object 'donor' not found"
   )
@@ -32,9 +32,9 @@ test_that("warnings when symbols are provided for key columns", {
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = "donor",
-        cell_group_column = cell_group,
-        abundance_column = "count"
+        sample = "donor",
+        cell_group = cell_group,
+        abundance = "count"
       ),
     "object 'cell_group' not found"
   )
@@ -44,11 +44,11 @@ test_that("warnings when symbols are provided for key columns", {
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = "donor",
-        cell_group_column = "cell_group",
-        abundance_column = count
+        sample = "donor",
+        cell_group = "cell_group",
+        abundance = count
       ),
-    "sccomp says: abundance_column must be of character type"
+    "sccomp says: abundance must be of character type"
   )
   
   # Test with correct character strings (should not warn)
@@ -56,9 +56,9 @@ test_that("warnings when symbols are provided for key columns", {
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = "donor",
-        cell_group_column = "cell_group",
-        abundance_column = "count"
+        sample = "donor",
+        cell_group = "cell_group",
+        abundance = "count"
       )
   )
 })
@@ -75,40 +75,40 @@ test_that("errors when non-character values are provided for column arguments", 
     type = c("healthy", "healthy", "cancer")
   )
   
-  # Test with non-character sample_column
+  # Test with non-character sample
   expect_error(
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = 123,
-        cell_group_column = "cell_group",
-        abundance_column = "count"
+        sample = 123,
+        cell_group = "cell_group",
+        abundance = "count"
       ),
-    "sccomp says: sample_column must be of character type"
+    "sccomp says: sample must be of character type"
   )
   
-  # Test with non-character cell_group_column
+  # Test with non-character cell_group
   expect_error(
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = "donor",
-        cell_group_column = 456,
-        abundance_column = "count"
+        sample = "donor",
+        cell_group = 456,
+        abundance = "count"
       ),
-    "sccomp says: cell_group_column must be of character type"
+    "sccomp says: cell_group must be of character type"
   )
   
-  # Test with non-character abundance_column
+  # Test with non-character abundance
   expect_error(
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = "donor",
-        cell_group_column = "cell_group",
-        abundance_column = 789
+        sample = "donor",
+        cell_group = "cell_group",
+        abundance = 789
       ),
-    "sccomp says: abundance_column must be of character type"
+    "sccomp says: abundance must be of character type"
   )
 })
 
@@ -130,8 +130,8 @@ test_that("warnings when using deprecated column names", {
       sccomp_estimate(
         formula_composition = ~ type,
         .sample = "donor",
-        cell_group_column = "cell_group",
-        abundance_column = "count"
+        cell_group = "cell_group",
+        abundance = "count"
       ),
     "The `.sample` argument of*"
   )
@@ -141,11 +141,11 @@ test_that("warnings when using deprecated column names", {
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = "donor",
+        sample = "donor",
         .cell_group = "cell_group",
-        abundance_column = "count"
+        abundance = "count"
       ),
-    ".cell_group argument.*have been deprecated in favour of cell_group_column"
+    ".cell_group argument.*have been deprecated in favour of cell_group"
   )
   
   # Test with deprecated .abundance
@@ -153,11 +153,11 @@ test_that("warnings when using deprecated column names", {
     test_data |>
       sccomp_estimate(
         formula_composition = ~ type,
-        sample_column = "donor",
-        cell_group_column = "cell_group",
+        sample = "donor",
+        cell_group = "cell_group",
         .abundance = "count"
       ),
-    ".abundance argument.*have been deprecated in favour of abundance_column"
+    ".abundance argument.*have been deprecated in favour of abundance"
   )
 })
 
