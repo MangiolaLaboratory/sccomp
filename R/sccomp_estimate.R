@@ -693,3 +693,452 @@ sccomp_estimate.data.frame <- function(.data,
     # Track input parameters
     add_attr(noise_model, "noise_model")
 }
+
+#' @importFrom tidyr complete
+#' @importFrom tidyr nesting
+#' @importFrom tidyr replace_na
+sccomp_glm_data_frame_raw = function(.data,
+                                     formula_composition = ~ 1 ,
+                                     formula_variability = ~ 1,
+                                     
+                                     sample_column,
+                                     cell_group_column,
+                                     abundance_column = NULL,
+                                     
+                                     
+                                     # Secondary arguments
+                                     contrasts = NULL,
+                                     prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                     prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                     percent_false_positive =  5,
+                                     check_outliers = TRUE,
+                                     variational_inference = NULL,
+                                     inference_method = "variational",
+                                     test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
+                                     output_directory = "sccomp_draws_files",
+                                     verbose = FALSE,
+                                     exclude_priors = FALSE,
+                                     bimodal_mean_variability_association = FALSE,
+                                     enable_loo = FALSE,
+                                     use_data = TRUE,
+                                     cores = 4,
+                                     mcmc_seed = sample(1e5, 1),
+                                     max_sampling_iterations = 20000,
+                                     pass_fit = TRUE,
+                                     sig_figs = 9,
+                                     ...) {
+  
+  # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
+  # See https://github.com/tidyverse/tidyr/issues/506
+  
+  
+  # Prepare column same enquo
+  .sample = as.symbol(sample_column)
+  .cell_group = as.symbol(cell_group_column)
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  
+  # Check if columns exist
+  check_columns_exist(.data, c(
+    !!.sample,
+    !!.cell_group,
+    all_of(parse_formula(formula_composition))
+  ))
+  
+  # Check if any column is NA or null
+  check_if_any_NA(.data, c(
+    !!.sample,
+    !!.cell_group,
+    all_of(parse_formula(formula_composition))
+  ))
+  
+  .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
+  
+  # Make counts
+  .data %>%
+    
+    class_list_to_counts(!!.sample, !!.cell_group) %>%
+    
+    # Add formula_composition information
+    add_formula_columns(.data, !!.sample,formula_composition) |>
+    
+    # Attach possible exclusion of data points
+    left_join(.data %>%
+                as_tibble() |>
+                select(
+                  !!.sample, !!.cell_group, any_of(quo_name(.sample_cell_group_pairs_to_exclude))
+                ) %>%
+                distinct(),
+              by = c(quo_name(.sample), quo_name(.cell_group))
+    ) |>
+    mutate(
+      across(!!.sample_cell_group_pairs_to_exclude, ~replace_na(.x, 0))
+    ) |>
+    
+    # Return
+    sccomp_glm_data_frame_counts(
+      formula_composition = formula_composition,
+      formula_variability = formula_variability,
+      
+      sample_column = sample_column,
+      cell_group_column = cell_group_column,
+      abundance_column = "count",
+      
+      contrasts = contrasts,
+      #.grouping_for_random_effect = !! .grouping_for_random_effect,
+      prior_mean = prior_mean,
+      prior_overdispersion_mean_association = prior_overdispersion_mean_association,
+      percent_false_positive =  percent_false_positive,
+      check_outliers = check_outliers,
+      inference_method = inference_method,
+      exclude_priors = exclude_priors,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      enable_loo = enable_loo,
+      use_data = use_data,
+      cores = cores,
+      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      verbose = verbose,
+      output_directory = output_directory,
+      mcmc_seed = mcmc_seed,
+      max_sampling_iterations = max_sampling_iterations,
+      pass_fit = pass_fit,
+      sig_figs = sig_figs,
+      ...
+    )
+}
+
+#' @importFrom magrittr not
+sccomp_glm_data_frame_counts = function(.data,
+                                        formula_composition = ~ 1 ,
+                                        formula_variability = ~ 1,
+                                        
+                                        sample_column,
+                                        cell_group_column,
+                                        abundance_column = NULL,
+                                        
+                                        # Secondary arguments
+                                        contrasts = NULL,
+                                        #.grouping_for_random_effect = NULL,
+                                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                        percent_false_positive = 5,
+                                        check_outliers = TRUE,
+                                        variational_inference = NULL,
+                                        inference_method = "variational",
+                                        test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
+                                        output_directory = "sccomp_draws_files",
+                                        verbose = FALSE,
+                                        exclude_priors = FALSE,
+                                        bimodal_mean_variability_association = FALSE,
+                                        enable_loo = FALSE,
+                                        use_data = TRUE,
+                                        cores = 4,
+                                        mcmc_seed = sample(1e5, 1),
+                                        max_sampling_iterations = 20000,
+                                        pass_fit = TRUE,
+                                        sig_figs = 9,
+                                        ...) {
+  
+  # Prepare column same enquo
+  .sample = as.symbol(sample_column)
+  .cell_group = as.symbol(cell_group_column)
+  .count = as.symbol(abundance_column)
+  
+  .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
+  #.grouping_for_random_effect = enquo(.grouping_for_random_effect)
+  
+  # Check Sample Consistency of Factors
+  check_sample_consistency_of_factors(.data, formula_composition, !!.sample, !!.cell_group)
+  
+  #Check column class
+  check_if_columns_right_class(.data, !!.sample, !!.cell_group)
+  
+  # Check that count is integer
+  if(.data %>% pull(!!.count) %>% is("integer")) message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))
+  else if(.data %>% pull(!!.count) %>% is("integer") |> not() & .data %>% pull(!!.count) |> dplyr::between(0, 1) |> all()) message(sprintf("sccomp says: %s column is a proportion. The sum-constrained beta model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).", quo_name(.count)))
+  else stop(sprintf("sccomp: `%s` column must be an integer or a proportion", quo_name(.count)))
+  
+  # Check if columns exist
+  check_columns_exist(.data, c(
+    !!.sample,
+    !!.cell_group,
+    !!.count,
+    all_of(parse_formula(formula_composition))
+    
+  ))
+  
+  # Check that NAs are not in counts
+  check_if_NAs_in_count(.data, !!.count)
+  
+  
+  # Make rectangular data
+  .data = .data |> make_rectangular_data(!!.sample, !!.cell_group, !!.count, formula_composition)
+  
+  # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
+  if(test_composition_above_logit_fold_change <= 0)
+    stop("sccomp says: test_composition_above_logit_fold_change should be > 0 for the FDR to be calculated in the Bayesian context (doi: 10.1093/biostatistics/kxw041). Also, testing for > 0 differences avoids significant but meaningless (because of the small magnitude) estimates.")
+  
+  
+  # Check if any column is NA or null
+  check_if_any_NA(.data, c(
+    quo_name(.sample),
+    quo_name(.cell_group),
+    quo_name(.count),
+    parse_formula(formula_composition)
+  ))
+  
+  # Return
+  
+  # Credible interval
+  CI = 1 - (percent_false_positive/100)
+  
+  # Produce data list
+  factor_names = parse_formula(formula_composition)
+  
+  # Random intercept
+  random_effect_elements = parse_formula_random_effect(formula_composition)
+  
+  # Variational only if no random intercept
+  if(inference_method=="variational" & random_effect_elements |> filter(factor != "(Intercept)") |> nrow() > 0)
+    stop("sccomp says: for random effect modelling plese use `inference_method` = \"hmc\", for the full Bayes HMC inference.")
+  
+  # If no random intercept fake it
+  if(nrow(random_effect_elements)>0){
+    .grouping_for_random_effect = random_effect_elements |> pull(grouping) |> unique() |>   map(~ quo(!! sym(.x)))
+    
+  } else{
+    .grouping_for_random_effect = list(quo(!! sym("random_effect")))
+    .data = .data |> mutate(!!.grouping_for_random_effect[[1]] := "1")
+  }
+  
+  # If .sample_cell_group_pairs_to_exclude 
+  if(quo_is_symbolic(.sample_cell_group_pairs_to_exclude)){
+    
+    # Error if not logical
+    if(.data |> pull(!!.sample_cell_group_pairs_to_exclude) |> is("logical") |> not())
+      stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be logical"))
+    
+    # Error if not consistent to sample/cell group
+    if(.data |> count(!!.sample, !!.cell_group, name = "n") |> filter(n>1) |> nrow() |> gt(0))
+      stop(glue("sccomp says: {quo_name(.sample_cell_group_pairs_to_exclude)} must be unique with .sample/.cell_group pairs. You might have a .sample/.cell_group pair with both TRUE and FALSE {quo_name(.sample_cell_group_pairs_to_exclude)}."))
+    
+  } else {
+    
+    # If no .sample_cell_group_pairs_to_exclude fake it
+    .sample_cell_group_pairs_to_exclude = quo(!! sym(".sample_cell_group_pairs_to_exclude"))
+    .data = .data |> mutate(!!.sample_cell_group_pairs_to_exclude := FALSE)
+  }
+  
+  
+  # Original - old
+  # prec_sd ~ normal(0,2);
+  # prec_coeff ~ normal(0,5);
+  
+  message("sccomp says: estimation")
+  
+  data_for_model =
+    .data %>%
+    data_to_spread ( 
+      formula_composition, 
+      !!.sample, !!.cell_group, !!.count, 
+      .grouping_for_random_effect |> map(~ .x |> quo_name() ) |> unlist()
+    ) |>
+    
+    # This emerged with
+    # https://github.com/MangiolaLaboratory/sccomp/issues/175#issuecomment-2622749180
+    check_if_sample_is_a_unique_identifier(!!.sample) |> 
+    
+    # Create input for Stan
+    data_spread_to_model_input(
+      formula_composition, !!.sample, !!.cell_group, !!.count,
+      truncation_ajustment = 1.1,
+      approximate_posterior_inference = inference_method %in% c("variational", "pathfinder"),
+      formula_variability = formula_variability,
+      contrasts = contrasts,
+      bimodal_mean_variability_association = bimodal_mean_variability_association,
+      use_data = use_data,
+      random_effect_elements
+    )
+  
+  # Print design matrix
+  message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
+  message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
+  
+  # Force outliers, Get the truncation index
+  data_for_model$user_forced_truncation_not_idx = 
+    .data |> 
+    select(!!.sample, !!.cell_group, !!.sample_cell_group_pairs_to_exclude) |>
+    left_join( data_for_model$X |> rownames() |> enframe(name="N", value=quo_name(.sample)), by = join_by(!!.sample) ) |>  
+    left_join( data_for_model$y |> colnames() |> enframe(name="M", value=quo_name(.cell_group)), by = join_by(!!.cell_group) ) |> 
+    select(!!.sample_cell_group_pairs_to_exclude, N, M) |>
+    arrange(N, M) |>
+    pull(!!.sample_cell_group_pairs_to_exclude) |>
+    not() |>
+    which()
+  
+  data_for_model$truncation_not_idx = data_for_model$user_forced_truncation_not_idx
+  data_for_model$TNS = length(data_for_model$truncation_not_idx)
+  
+  # Prior
+  data_for_model$prior_prec_intercept = prior_overdispersion_mean_association$intercept
+  data_for_model$prior_prec_slope  = prior_overdispersion_mean_association$slope
+  data_for_model$prior_prec_sd = prior_overdispersion_mean_association$standard_deviation
+  data_for_model$prior_mean_intercept = prior_mean$intercept
+  data_for_model$prior_mean_coefficients = prior_mean$coefficients
+  data_for_model$exclude_priors = exclude_priors
+  data_for_model$enable_loo = enable_loo
+  
+  # # Check that design matrix is not too big
+  # if(ncol(data_for_model$X)>20)
+  #   message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical factors are erroneously of type character/factor.")
+  
+  fit =
+    data_for_model %>%
+    
+    # Run the first discovery phase with permissive false discovery rate
+    fit_model(
+      "glm_multi_beta_binomial",
+      cores= cores,
+      quantile = CI,
+      inference_method = inference_method,
+      verbose = verbose,
+      output_directory = output_directory,
+      seed = mcmc_seed,
+      max_sampling_iterations = max_sampling_iterations,
+      pars = c(
+        "beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", 
+        "random_effect", "random_effect_2", 
+        "random_effect_sigma", "random_effect_sigma_2", 
+        "log_lik"
+      ),
+      sig_figs = sig_figs,
+      ...
+    )
+  
+  # # Make the fit standalone
+  # temp_rds_file <- tempfile(fileext = ".rds")
+  # fit$save_object(file = temp_rds_file) 
+  # fit = readRDS(temp_rds_file)
+  # file.remove(temp_rds_file)
+  
+  estimate_tibble = 
+    # Create a dummy tibble
+    tibble() |>
+    # Attach association mean concentration
+    add_attr(fit, "fit") %>%
+    add_attr(data_for_model, "model_input") |>
+    add_attr(.data, "truncation_df2") |>
+    add_attr(.sample |> drop_environment(), ".sample") |>
+    add_attr(.cell_group |> drop_environment(), ".cell_group") |>
+    add_attr(.count |> drop_environment(), ".count") |>
+    add_attr(check_outliers, "check_outliers") |>
+    add_attr(formula_composition |> drop_environment(), "formula_composition") |>
+    add_attr(formula_variability |> drop_environment(), "formula_variability") |>
+    add_attr(parse_formula(formula_composition), "factors" ) |> 
+    add_attr(inference_method, "inference_method" ) |> 
+    
+    # Add class to the tbl
+    add_class("sccomp_tbl") |> 
+    
+    # Print estimates
+    sccomp_test() |>
+    
+    # drop hypothesis testing as the estimation exists without probabilities.
+    # For hypothesis testing use sccomp_test
+    select(-contains("_FDR"), -contains("_pH0")) 
+  
+  
+  if(inference_method %in% c("variational") && max(na.omit(estimate_tibble$c_R_k_hat)) > 4)
+    warning("sccomp says: using variational inference, c_R_k_hat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using inference_method = \"hmc\" to use the state-of-the-art (although slower) HMC sampler.")
+  
+  estimate_tibble
+  
+}
+
+#' Check if data frame is rectangular
+#'
+#' @description
+#' Checks if the input data frame has the same number of samples for each cell group
+#' and vice versa. If not, it makes the data frame rectangular by adding zeros
+#' for missing sample/cell group pairs.
+#'
+#' @param .data A tibble containing the data
+#' @param .sample Column containing sample identifiers
+#' @param .cell_group Column containing cell group identifiers
+#' @param .count Column containing count data
+#' @param formula_composition Formula for composition
+#'
+#' @return A rectangular data frame with zeros added for missing combinations
+#' @keywords internal
+#' @noRd
+make_rectangular_data = function(.data, .sample, .cell_group, .count, formula_composition) {
+  
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  .count = enquo(.count)
+  
+  if(
+    .data |> count(!!.sample) |> distinct(n) |> nrow() > 1 || 
+    .data |> count(!!.cell_group) |> distinct(n) |> nrow() > 1 
+  ){
+    warning(sprintf("sccomp says: the input data frame does not have the same number of `%s`, for all `%s`. We have made it so, adding 0s for the missing sample/feature pairs.", quo_name(.cell_group), quo_name(.sample)))
+    
+    .data |> 
+      # I need renaming trick because complete list(...) cannot accept quosures
+      select(!!.sample, !!.cell_group, count := !!.count) |> 
+      distinct() |> 
+      complete( !!.sample, !!.cell_group, fill = list(count = 0) ) %>%
+      rename(!!.count := count) |> 
+      mutate(!!.count := as.integer(!!.count)) |> 
+      
+      # Add formula_composition information
+      add_formula_columns(.data, !!.sample, formula_composition)
+  } else {
+    .data
+  }
+}
+
+#' @importFrom rlang ensym
+#' @noRd
+class_list_to_counts = function(.data, .sample, .cell_group){
+  
+  .sample_for_tidyr = ensym(.sample)
+  .cell_group_for_tidyr = ensym(.cell_group)
+  
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  
+  
+  .data %>%
+    count(!!.sample,
+          !!.cell_group,
+          name = "count") %>%
+    
+    complete(
+      !!.sample_for_tidyr,!!.cell_group_for_tidyr,
+      fill = list(count = 0)
+    ) %>%
+    mutate(count = as.integer(count))
+}
+
+add_formula_columns = function(.data, .original_data, .sample,  formula_composition){
+  
+  .sample = enquo(.sample)
+  
+  formula_elements = parse_formula(formula_composition)
+  
+  # If no formula return the input
+  if(length(formula_elements) == 0) return(.data)
+  
+  # Get random intercept
+  .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
+  
+  data_frame_formula =
+    .original_data %>%
+    as_tibble() |>
+    select( !!.sample, formula_elements, any_of(.grouping_for_random_effect) ) %>%
+    distinct()
+  
+  .data |>
+    left_join(data_frame_formula, by = quo_name(.sample) )
+  
+}

@@ -94,11 +94,7 @@ sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
       
     ) |>
     distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    # mutate(proportion_mean =
-    #          proportion_mean |>
-    #          # compress_zero_one() |>
-    #          boot::logit()
-    # ) |>
+
     left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
     mutate(adjusted_proportion = proportion_mean + residuals) |>
     mutate(adjusted_proportion = adjusted_proportion |> pmax(0)) |> 

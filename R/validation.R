@@ -94,3 +94,182 @@ check_if_columns_right_class = function(.data, .sample, .cell_group){
 
 
 }
+
+
+#' Check if a Sample Column is a Unique Identifier
+#'
+#' This function checks if the `.sample` column in a wide dataset is truly
+#' a unique identifier. If not, it throws an error containing the problematic
+#' rows in red text.
+#'
+#' @param data_wide A data frame or tibble in wide format.
+#' @param .sample   An unquoted column name indicating the sample column to check.
+#'
+#' @return Returns the original `data_wide` if `.sample` is unique. Otherwise,
+#'   throws an error showing the problematic rows in red.
+#'
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_name
+#' @importFrom dplyr count
+#' @importFrom dplyr add_count
+#' @importFrom dplyr filter
+#' @importFrom dplyr pull
+#' @importFrom dplyr select
+#' @importFrom glue glue
+#' @noRd
+check_if_sample_is_a_unique_identifier <- function(data_wide, .sample) {
+  .sample <- enquo(.sample)
+  
+  if (
+    data_wide |>
+    count(!!.sample) |>
+    pull(n) |>
+    max() > 1
+  ) {
+    stop(
+      paste(
+        glue("sccomp says: .sample column `{quo_name(.sample)}` should be a unique identifier, with a unique combination of factors. For example Sample_A cannot have both treated and untreated conditions in your input"),
+        data_wide |>
+          add_count(!!.sample, name = "n___") |>
+          filter(n___ > 1) |>
+          select(-n___) |>
+          print_red_tibble(),
+        sep = "\n\n"
+      )
+    )
+  } else {
+    return(data_wide)
+  }
+}
+
+check_missing_parameters <- function(effects, model_effects) {
+  # Find missing parameters
+  
+  missing_parameters <- 
+    effects |> 
+    setdiff(model_effects)
+  
+  # If there are any missing parameters, stop and show an error message
+  if (length(missing_parameters) > 0) {
+    stop(
+      "sccomp says: Some of the parameters present in the data provided were not present when the model was fitted. For example:\n",
+      paste(missing_parameters[1:min(3, length(missing_parameters))], collapse = "\n"),
+      if (length(missing_parameters) > 3) "\n..."
+    )
+  }
+  
+}
+
+
+#' Check Sample Consistency of Factors
+#'
+#' This function checks for each sample in the provided data frame if the number of unique
+#' covariate values from a specified formula matches the number of samples. It is useful for
+#' verifying data consistency before statistical analysis. The function stops and throws an
+#' error if inconsistencies are found.
+#'
+#' @importFrom dplyr select
+#' @importFrom dplyr filter
+#' @importFrom dplyr mutate
+#' @importFrom dplyr pull
+#' @importFrom dplyr distinct
+#' @importFrom tidyr pivot_longer
+#' @importFrom purrr map_lgl
+#'
+#' @param .data A data frame containing the samples and covariates.
+#' @param my_formula A formula specifying the covariates to check, passed as a string.
+#'
+#' @details The function selects the sample and covariates based on `my_formula`, pivots
+#' the data longer so each row represents a unique sample-covariate combination, nests
+#' the data by covariate name, and checks if the number of unique sample-covariate
+#' pairs matches the number of samples for each covariate.
+#'
+#' @return This function does not return a value; it stops with an error message if any
+#' inconsistencies are found.
+#'
+#' @noRd
+#' @keywords internal
+check_sample_consistency_of_factors = function(.data, my_formula, .sample, .cell_group){
+  
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  
+  # Check that I have one set of covariates per sample
+  first_cell_group = .data |> pull(!!.cell_group) |> _[[1]]
+  
+  # If the formula is intercept only -> ~ 1 this test does not apply
+  if(my_formula |> parse_formula() |> length() == 0)
+    return(TRUE)
+  
+  any_covariate_not_matching_sample_size = 
+    .data |> 
+    filter(!!.cell_group == first_cell_group) |> 
+    select(!!.sample, parse_formula(my_formula)) |> 
+    pivot_longer(-!!.sample, values_transform = as.character) |> 
+    nest(data = -name) |> 
+    mutate(correct_size = map_lgl(data,
+                                  ~ 
+                                    (.x |> distinct(!!.sample, value) |> nrow()) <= 
+                                    (.x |> distinct(!!.sample) |> nrow())
+    )) |> 
+    filter(!correct_size)
+  
+  if( any_covariate_not_matching_sample_size |> nrow() > 0 ) stop(
+    sprintf("sccomp says: your \"%s\" factor(s) is(are) mismatched across samples. ", any_covariate_not_matching_sample_size |> pull(name) |> paste(collapse = ", ")),
+    "For example, sample_bar having more than one value for factor_foo. ",
+    "For sample_bar you should have one value for factor_foo. consistent across groups (e.g. cell types)."
+  )
+  
+}
+
+
+#' chatGPT - Check for Valid Column Names in Tidyverse Context
+#'
+#' This function checks if each given column name in a vector contains only valid characters 
+#' (letters, numbers, periods, and underscores) and does not start with a digit 
+#' or an underscore, which are the conditions for a valid column name in `tidyverse`.
+#'
+#' @param column_names A character vector representing the column names to be checked.
+#'
+#' @return A logical vector: `TRUE` for each column name that contains only valid characters 
+#' and does not start with a digit or an underscore; `FALSE` otherwise.
+#'
+#' @examples
+#' contains_only_valid_chars_for_column(c("valid_column", "invalid column", "valid123", 
+#' "123startWithNumber", "_startWithUnderscore"))
+#'
+#' @noRd
+contains_only_valid_chars_for_column <- function(column_names) {
+  # Function to check a single column name
+  check_validity <- function(column_name) {
+    # Regex pattern for valid characters (letters, numbers, periods, underscores)
+    valid_char_pattern <- "[A-Za-z0-9._]"
+    
+    # Check if all characters in the string match the valid pattern
+    all_chars_valid <- stringr::str_detect(column_name, paste0("^", valid_char_pattern, "+$"))
+    
+    # Check for leading digits or underscores
+    starts_with_digit_or_underscore <- stringr::str_detect(column_name, "^[0-9_]")
+    
+    return(all_chars_valid && !starts_with_digit_or_underscore)
+  }
+  
+  # Apply the check to each element of the vector
+  sapply(column_names, check_validity)
+}
+
+
+
+#' function that check is there are NAs in the count column
+#'
+#' @param .data A tibble containing the data
+#' @param .count Column containing count data
+#'
+#' @return A tibble with NAs in the count column
+#' @keywords internal
+#' @noRd
+check_if_NAs_in_count = function(.data, .count){
+  .count = enquo(.count)
+  if(.data |> pull(!!.count) |> is.na() |> any())
+    stop("sccomp says: the input data frame has NAs in the count column")
+}
