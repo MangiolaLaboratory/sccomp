@@ -444,7 +444,6 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     # Attach association mean concentration
     add_attr(fit3, "fit") |>
     add_attr(data_for_model, "model_input") |>
-    add_attr(truncation_df2, "truncation_df2") |>
     add_attr(.sample, ".sample") |>
     add_attr(.cell_group, ".cell_group") |>
     add_attr(.count, ".count") |>
@@ -453,6 +452,9 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     add_attr(formula_variability, "formula_variability") |>
     add_attr(parse_formula(formula_composition), "factors" ) |> 
     add_attr(inference_method, "inference_method" ) |> 
+    
+    # Add count data as attribute
+    add_attr(.data, "count_data") |>
     
     # Add class to the tbl
     add_class("sccomp_tbl") |> 
