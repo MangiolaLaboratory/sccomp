@@ -9,7 +9,7 @@ sccomp_predict(
   formula_composition = NULL,
   new_data = NULL,
   number_of_draws = 500,
-  mcmc_seed = sample(1e+05, 1),
+  mcmc_seed = sample_seed(),
   summary_instead_of_draws = TRUE
 )
 }

@@ -25,7 +25,7 @@ sccomp_estimate(
   noise_model = "multi_beta_binomial",
   exclude_priors = FALSE,
   use_data = TRUE,
-  mcmc_seed = sample(1e+05, 1),
+  mcmc_seed = sample_seed(),
   max_sampling_iterations = 20000,
   pass_fit = TRUE,
   sig_figs = 9,

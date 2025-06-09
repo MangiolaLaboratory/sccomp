@@ -9,7 +9,7 @@ sccomp_replicate(
   formula_composition = NULL,
   formula_variability = NULL,
   number_of_draws = 1,
-  mcmc_seed = sample(1e+05, 1)
+  mcmc_seed = sample_seed()
 )
 }
 \arguments{
