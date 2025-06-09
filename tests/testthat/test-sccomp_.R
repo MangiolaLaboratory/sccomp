@@ -12,6 +12,8 @@ counts_obj =
 
 set.seed(42)
 
+n_iterations = 1000
+
 if (instantiate::stan_cmdstan_exists()){
   
   my_estimate = 
@@ -24,7 +26,7 @@ if (instantiate::stan_cmdstan_exists()){
       cores = 1, 
       inference_method = "pathfinder",
       # mcmc_seed = 42,
-      max_sampling_iterations = 1000, verbose=FALSE
+      max_sampling_iterations = n_iterations, verbose=FALSE
     )
   
   my_estimate_inverse_factor = 
@@ -38,7 +40,7 @@ if (instantiate::stan_cmdstan_exists()){
       cores = 1, 
       inference_method = "pathfinder",
       # mcmc_seed = 42,
-      max_sampling_iterations = 1000, verbose=FALSE
+      max_sampling_iterations = n_iterations, verbose=FALSE
     )
   
   my_estimate_full_bayes = 
@@ -50,7 +52,7 @@ if (instantiate::stan_cmdstan_exists()){
       cores = 1, 
       inference_method = "hmc",
       mcmc_seed = 42,
-      max_sampling_iterations = 1000, verbose=FALSE
+      max_sampling_iterations = n_iterations, verbose=FALSE
     )
   
   my_estimate_no_intercept = 
@@ -61,7 +63,7 @@ if (instantiate::stan_cmdstan_exists()){
       "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,
-      max_sampling_iterations = 1000, verbose=FALSE
+      max_sampling_iterations = n_iterations, verbose=FALSE
     )
   
   my_estimate_random = 
@@ -73,7 +75,7 @@ if (instantiate::stan_cmdstan_exists()){
       "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,     
-      max_sampling_iterations = 1000, verbose=FALSE
+      max_sampling_iterations = n_iterations, verbose=FALSE
     )
   
   
@@ -191,7 +193,7 @@ test_that("outliers",{
   my_estimate |>
     sccomp_remove_outliers(
       cores = 1, 
-      max_sampling_iterations = 1000,
+      max_sampling_iterations = n_iterations,
       inference_method = "hmc",
        verbose=FALSE
     )
@@ -211,7 +213,7 @@ test_that("multilevel multi beta binomial from Seurat",{
       "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,     
-      max_sampling_iterations = 1000, verbose=FALSE
+      max_sampling_iterations = n_iterations, verbose=FALSE
     )
 
   # # Check order
@@ -279,7 +281,7 @@ test_that("multilevel nested",{
       "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,     
-      max_sampling_iterations = 1000
+      max_sampling_iterations = n_iterations, verbose=FALSE
     )
   
   
@@ -300,7 +302,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       "sample", "cell_group",
       cores = 1,
       mcmc_seed = 42,   
-      max_sampling_iterations = 1000,
+      max_sampling_iterations = n_iterations,
       inference_method = "hmc", verbose=FALSE
     )
 
@@ -343,7 +345,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 #           "sample", "cell_group",
 #           contrasts = c("typecancer - typehealthy", "typehealthy - typecancer"),
 #           cores = 1,
-#           mcmc_seed = 42,       max_sampling_iterations = 1000
+#           mcmc_seed = 42,       max_sampling_iterations = n_iterations
 #         ) ,
 #       regexp = "should not be shared"
 #     )
@@ -412,7 +414,7 @@ test_that("remove unwanted variation",{
       "sample", "cell_group",
       cores = 1,
       mcmc_seed = 43,    
-      max_sampling_iterations = 1000, verbose = FALSE
+      max_sampling_iterations = n_iterations, verbose = FALSE
     )
 
   # DEPRECATION TEST
@@ -439,7 +441,7 @@ test_that("multi beta binomial from SCE",{
       cell_group = "cell_group",
       cores = 1,
       mcmc_seed = 42,      
-      max_sampling_iterations = 1000, verbose = FALSE
+      max_sampling_iterations = n_iterations, verbose = FALSE
     )
 
   # res |>
@@ -466,7 +468,7 @@ res_composition =
     "cell_group",
     cores = 1,
     mcmc_seed = 42,   
-    max_sampling_iterations = 1000, verbose = FALSE
+    max_sampling_iterations = n_iterations, verbose = FALSE
   )
 
 res_composition_variability =
@@ -478,7 +480,7 @@ res_composition_variability =
     "cell_group",
     cores = 1,
     mcmc_seed = 42,    
-    max_sampling_iterations = 1000, verbose = FALSE
+    max_sampling_iterations = n_iterations, verbose = FALSE
   )
 }
 
@@ -628,7 +630,7 @@ test_that("proportions",{
       .count = proportion,
       cores = 1,
       mcmc_seed = 42,
-      max_sampling_iterations = 1000
+      max_sampling_iterations = n_iterations, verbose = FALSE
     ) |> 
       expect_warning("The argument '.count' is deprecated")
  
@@ -640,7 +642,7 @@ test_that("proportions",{
   #     abundance = "proportion",
   #     cores = 1,
   #     mcmc_seed = 42,
-  #     max_sampling_iterations = 1000
+  #     max_sampling_iterations = n_iterations
   #   ) |>
   #   expect_warning("sccomp says: your proportion values include 0.*")
   
@@ -676,7 +678,7 @@ test_that("plotting for no significance",{
                     sample = "sample",
                     cell_group = "cell_group",abundance = "count",
                     bimodal_mean_variability_association = TRUE,      
-                    cores = 1
+                    cores = 1, max_sampling_iterations = n_iterations, verbose = FALSE
 ) |>
     sccomp_test() |> 
     sccomp_boxplot("condition") |> 
@@ -781,7 +783,7 @@ test_that("sample ID malformed", {
     sample = "sample",
     cell_group = "cell_group",
     abundance = "count",
-    cores = 1
+    cores = 1, verbose = FALSE
   ) |>
   expect_warning("sccomp says: the input data frame does not have the same number") |>
     expect_error("sccomp says: You have duplicated")
@@ -818,7 +820,7 @@ test_that("sample ID malformed", {
       formula_composition = ~ condition,
       cell_group = "taxon",
       sample = "sample",
-      abundance = "count"
+      abundance = "count", verbose = FALSE
     ) |> 
     expect_no_error()
   
@@ -828,7 +830,7 @@ test_that("sample ID malformed", {
     sccomp_estimate( 
       formula_composition = ~ 1, 
       sample = "sample", 
-      cell_group = "cell_group"
+      cell_group = "cell_group", verbose = FALSE
     ) |> 
     expect_no_error()
 
@@ -848,7 +850,7 @@ test_that("LOO", {
       .cell_group = cell_group, 
       inference_method = "hmc",
       cores = 1, 
-      enable_loo = TRUE
+      enable_loo = TRUE, max_sampling_iterations = n_iterations, verbose = FALSE
     ) |> 
     expect_no_error()
   
@@ -861,7 +863,7 @@ test_that("LOO", {
       .cell_group = cell_group, 
       inference_method = "hmc",
       cores = 1, 
-      enable_loo = TRUE
+      enable_loo = TRUE, max_sampling_iterations = n_iterations, verbose = FALSE
     ) |> 
     expect_no_error()
   
@@ -885,9 +887,9 @@ test_that("use two methods", {
       .sample =  sample, 
       .cell_group = cell_group, 
       inference_method = "hmc",
-      cores = 1, max_sampling_iterations = 1000
+      cores = 1, max_sampling_iterations = n_iterations, verbose = FALSE
     ) |> 
-    sccomp_remove_outliers(inference_method = "pathfinder", cores = 1, max_sampling_iterations = 1000) |> 
+    sccomp_remove_outliers(inference_method = "pathfinder", cores = 1, max_sampling_iterations = n_iterations) |> 
     expect_no_error()
   
 })
