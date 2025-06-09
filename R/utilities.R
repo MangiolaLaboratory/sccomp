@@ -504,15 +504,15 @@ get_random_effect_design3 = function(
   # Convert to long format with the correct column names
   result_long = result |>
     as.data.frame() |>
-    rownames_to_column("sample") |>
-    pivot_longer(-sample, names_to = "factor", values_to = "value") |>
+    rownames_to_column(quo_name(.sample)) |>
+    pivot_longer(-!!.sample, names_to = "factor", values_to = "value") |>
     filter(value != 0) |>
     mutate(
-      group___label = paste0(factor, "___", group_matrix[cbind(sample, factor)]),
+      group___label = paste0(factor, "___", group_matrix[cbind(!!.sample, factor)]),
       group___numeric = as.integer(factor(group___label)),
       factor___numeric = as.integer(factor(factor))
     ) |>
-    select(sample, group___label, group___numeric, value)
+    select(!!.sample, group___label, group___numeric, value)
   
   result_long
 }
