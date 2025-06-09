@@ -1,26 +1,8 @@
+
+
 functions{
-  vector Q_sum_to_zero_QR(int N) {
-    vector [2*N] Q_r;
-    
-    for(i in 1:N) {
-      Q_r[i] = -sqrt((N-i)/(N-i+1.0));
-      Q_r[i+N] = inv_sqrt((N-i) * (N-i+1));
-    }
-    return Q_r;
-  }
-  
-  row_vector sum_to_zero_QR(row_vector x_raw, vector Q_r) {
-    int N = num_elements(x_raw) + 1;
-    row_vector [N] x;
-    real x_aux = 0;
-    
-    for(i in 1:N-1){
-      x[i] = x_aux + x_raw[i] * Q_r[i];
-      x_aux = x_aux + x_raw[i] * Q_r[i+N];
-    }
-    x[N] = x_aux;
-    return x;
-  }
+ 
+  #include common_functions.stan
   
   array[] int rep_each(array[] int x, int K) {
     int N = size(x);
@@ -35,38 +17,6 @@ functions{
     return y;
   }
   
-  
-  // real partial_sum_lpmf(
-  //   array[] int slice_y,
-  //   int start,
-  //   int end,
-  //   array[] int exposure_array,
-  //   vector mu_array,
-  //   vector precision_array
-  //   ) {
-  //     
-  //     return beta_binomial_lupmf(
-  //       slice_y |
-  //       exposure_array[start:end],
-  //       (mu_array[start:end] .* precision_array[start:end]),
-  //       (1.0 - mu_array[start:end]) .* precision_array[start:end]
-  //       ) ;
-  //       
-  //   }
-    
-    row_vector average_by_col(matrix X) {
-      int rows_X = rows(X);
-      int cols_X = cols(X);
-      row_vector[cols_X] means;
-      
-      for (j in 1:cols_X) {
-        means[j] = mean(X[, j]);
-      }
-      
-      return means;
-      
-      
-    }
     
     real abundance_variability_regression(row_vector variability, row_vector abundance, array[] real prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
       
@@ -86,92 +36,6 @@ functions{
       
       return(lp);
     }
-    
-    array[] matrix reshape_to_3d_matrix(
-      int M,
-      int n_groups,
-      int how_many_factors_in_random_design,
-      matrix input_matrix,
-      array[,] int group_factor_indexes_for_covariance
-    ) {
-      // PIVOT WIDER
-      // increase of one dimension array[cell_type] matrix[group, factor]
-      array[M-1] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects_raw;
-      
-      for(m in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
-        
-        // If I don't have the factor for one group 
-        if(group_factor_indexes_for_covariance[j,i] == 0)
-          matrix_of_random_effects_raw[m, j,i] = 0;
-        else 
-          matrix_of_random_effects_raw[m, j,i] = input_matrix[group_factor_indexes_for_covariance[j,i], m];
-      }
-      
-      return matrix_of_random_effects_raw;
-    }
-    
-    matrix reshape_to_2d_matrix(
-      int M,
-      int n_groups,
-      int how_many_factors_in_random_design,
-      array[] matrix matrix_of_random_effects,
-      array[,] int group_factor_indexes_for_covariance,
-      int ncol_X_random_eff
-    ) {
-      matrix[ncol_X_random_eff , M-1] random_effect;
-      
-      // Pivot longer
-      for(m in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
-        
-        // If I don't have the factor for one group 
-        if(group_factor_indexes_for_covariance[j,i] > 0)
-          random_effect[group_factor_indexes_for_covariance[j,i], m] = matrix_of_random_effects[m,j,i];
-      }
-      
-      return random_effect;
-    }
-    
-    matrix get_random_effect_matrix(
-      int M,                           // Number of categories/outcomes
-      int n_groups,                    // Number of groups in the random effects design
-      int how_many_factors_in_random_design,  // Number of factors in the random effects design
-      int is_random_effect,            // Flag indicating if random effects are used (0/1)
-      int ncol_X_random_eff,           // Number of columns in the random effects design matrix
-      array[,] int group_factor_indexes_for_covariance,  // 2D array mapping factors to groups for covariance structure
-      
-      matrix random_effect_raw,      // Raw random effects matrix before transformation
-      array[] vector random_effect_sigma,  // Standard deviations for each random effect
-      array[] matrix sigma_correlation_factor  // Correlation matrices for random effects
-      ){
-        
-        // PIVOT WIDER, as my columns should be covariates, not groups
-        array[M-1] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects_raw = 
-          reshape_to_3d_matrix(
-            M, 
-            n_groups, 
-            how_many_factors_in_random_design, 
-            random_effect_raw, 
-            group_factor_indexes_for_covariance
-          );
-        
-        // Design L
-        array[M-1] matrix[how_many_factors_in_random_design, how_many_factors_in_random_design] L;
-        array[M-1] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects;
-        
-        for(m in 1:(M-1)) L[m] = diag_pre_multiply(random_effect_sigma[m], sigma_correlation_factor[m]) ;
-        for(m in 1:(M-1)) matrix_of_random_effects[m] = L[m] * matrix_of_random_effects_raw[m];
-        
-        // PIVOT LONGER 
-        return reshape_to_2d_matrix(
-          M, 
-          n_groups, 
-          how_many_factors_in_random_design, 
-          matrix_of_random_effects, 
-          group_factor_indexes_for_covariance,
-          ncol_X_random_eff
-        );
-      }
-      
       
       real partial_sum_2_lpmf(
         // Parallel
@@ -387,77 +251,6 @@ array[,] int filter_missing_indices(array[,] int missing_indices, array[] int id
           // Return the array of non-missing indices (trimmed to the actual count)
           return non_missing_indices[1:count];
 
-        }
-        
-        /**
-        * Compute indices of missing elements in a matrix when flattened in column-major order.
-        *
-        * This function identifies the positions of missing elements in a matrix and returns their
-        * corresponding indices as if the matrix were flattened into a vector in column-major order.
-        * It is useful for models where missing data needs to be explicitly handled or imputed.
-        *
-        * @param n_rows          Number of rows in the matrix.
-        * @param n_cols          Number of columns in the matrix.
-        * @param missing_indices A two-dimensional integer array of size [TNIM, 2], where TNIM is the
-        *                        total number of missing elements. Each row contains a pair {row, col},
-        *                        representing the 1-based indices of missing elements in the matrix.
-        * @return                An integer array containing the indices of missing elements in the
-        *                        flattened matrix (column-major order).
-        *
-        * @details
-        * The function computes the indices of missing elements by transforming their row and column
-        * positions into indices as if the matrix were flattened in column-major order. This allows
-        * for efficient handling of missing data within the Stan model, such as imputing missing values
-        * or adjusting likelihood calculations.
-        *
-        * **Example Usage:**
-        * Suppose you have a 3x3 matrix:
-        * ```
-        * [ [a11, a12, a13],
-        *   [a21, a22, a23],
-        *   [a31, a32, a33] ]
-        * ```
-        * And the missing elements are at positions (1,2) and (3,3), so:
-        * ```
-        * missing_indices = { {1,2}, {3,3} }
-        * ```
-        * When the matrix is flattened in column-major order, the elements are ordered as:
-        * ```
-        * [a11, a21, a31, a12, a22, a32, a13, a23, a33]
-        * ```
-        * The function will return the indices of the missing elements:
-        * ```
-        * [4, 9]
-        * ```
-        * Corresponding to elements:
-        * ```
-        * a12 (index 4), a33 (index 9)
-        * ```
-        *
-        * **Important Notes:**
-        * - **Indexing:** Stan uses 1-based indexing. Ensure that `missing_indices` uses 1-based indices.
-        * - **Column-Major Order:** The flattening of the matrix follows column-major order, consistent
-        *   with Stan's internal representation.
-        * - **Validation:** It is assumed that all indices in `missing_indices` are within the valid
-        *   range of the matrix dimensions.
-        *
-        * **Applications:**
-        * - Handling missing data in hierarchical models.
-        * - Efficiently indexing missing observations for imputation.
-        */
-        array[] int get_missing_indices(int n_rows, int n_cols, array[,] int missing_indices) {
-          int num_missing = dims(missing_indices)[1];  // Number of missing elements
-          array[num_missing] int missing_indices_flat;       // Array to store flattened indices of missing elements
-          
-          // Loop over the missing_indices array and compute the flattened index for each missing element
-          for (i in 1:num_missing) {
-            int row = missing_indices[i, 1];  // Row index of the missing element
-            int col = missing_indices[i, 2];  // Column index of the missing element
-            // Compute the index in the flattened matrix (column-major order)
-            missing_indices_flat[i] = (col - 1) * n_rows + row;
-          }
-          
-          return missing_indices_flat;
         }
         
 
