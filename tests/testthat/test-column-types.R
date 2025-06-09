@@ -4,6 +4,9 @@ library(sccomp)
 library(rlang)
 
 test_that("warnings when symbols are provided for key columns", {
+  
+  skip_cmdstan()
+  
   # Create test data
   test_data <- tibble(
     donor = rep(c("sample1", "sample2", "sample3"), each = 3),
@@ -61,6 +64,9 @@ test_that("warnings when symbols are provided for key columns", {
 })
 
 test_that("errors when non-character values are provided for column arguments", {
+  
+  skip_cmdstan()
+  
   # Create test data
   test_data <- tibble(
     donor = c("sample1", "sample2", "sample3"),
@@ -107,6 +113,9 @@ test_that("errors when non-character values are provided for column arguments", 
 })
 
 test_that("warnings when using deprecated column names", {
+  
+  skip_cmdstan()
+  
   # Create test data
   test_data <- tibble(
     donor = rep(c("sample1", "sample2", "sample3"), each = 3),
