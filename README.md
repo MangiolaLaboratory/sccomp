@@ -144,7 +144,7 @@ cmdstanr::install_cmdstan()
 | `sccomp_replicate` | Simulate data from the model, or part of the model |
 | `sccomp_predict` | Predicts proportions, based on the model, or part of the model |
 | `sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors |
-| `plot` | Plots summary plots to asses significance |
+| `plot` | Plots summary plots to assess significance |
 
 # Analysis
 
@@ -241,16 +241,16 @@ sccomp_result
     ## # A tibble: 72 × 20
     ##    cell_group parameter   factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
     ##    <chr>      <chr>       <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B1         (Intercept) <NA>    0.892     1.17   1.45   0       0         1.00
-    ##  2 B1         typecancer  type   -1.08     -0.665 -0.261  0.00350 4.50e-4   1.00
-    ##  3 B2         (Intercept) <NA>    0.440     0.743  1.05   0       0         1.00
-    ##  4 B2         typecancer  type   -1.16     -0.711 -0.262  0.00400 7.73e-4   1.00
-    ##  5 B3         (Intercept) <NA>   -0.673    -0.355 -0.0533 0.0503  5.50e-3   1.00
-    ##  6 B3         typecancer  type   -0.767    -0.308  0.137  0.167   4.68e-2   1.00
-    ##  7 BM         (Intercept) <NA>   -1.30     -0.989 -0.679  0       0         1.00
-    ##  8 BM         typecancer  type   -0.751    -0.310  0.111  0.168   5.21e-2   1.00
-    ##  9 CD4 1      (Intercept) <NA>    0.153     0.340  0.527  0.00700 8.9 e-4   1.00
-    ## 10 CD4 1      typecancer  type   -0.0782    0.169  0.424  0.289   6.83e-2   1.00
+    ##  1 B1         (Intercept) <NA>    0.888     1.18   1.46   0       0         1.00
+    ##  2 B1         typecancer  type   -1.08     -0.666 -0.274  0.00275 5.25e-4   1.00
+    ##  3 B2         (Intercept) <NA>    0.426     0.746  1.07   0       0         1.00
+    ##  4 B2         typecancer  type   -1.18     -0.715 -0.244  0.00325 7.73e-4   1.00
+    ##  5 B3         (Intercept) <NA>   -0.660    -0.351 -0.0300 0.0570  7.84e-3   1.00
+    ##  6 B3         typecancer  type   -0.762    -0.316  0.135  0.170   4.97e-2   1.00
+    ##  7 BM         (Intercept) <NA>   -1.31     -0.991 -0.674  0       0         1.00
+    ##  8 BM         typecancer  type   -0.758    -0.309  0.148  0.189   5.57e-2   1.00
+    ##  9 CD4 1      (Intercept) <NA>    0.147     0.336  0.524  0.00650 2.95e-4   1.00
+    ## 10 CD4 1      typecancer  type   -0.0878    0.170  0.415  0.295   7.25e-2   1.00
     ## # ℹ 62 more rows
     ## # ℹ 11 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_rhat <dbl>,
@@ -417,7 +417,7 @@ sccomp_result =
 
 ## Continuous factor
 
-`sccomp` is able to fit erbitrary complex models. In this example we
+`sccomp` is able to fit arbitrary complex models. In this example we
 have a continuous and binary covariate.
 
 ``` r
@@ -453,18 +453,18 @@ res
 ```
 
     ## # A tibble: 90 × 16
-    ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
-    ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… <NA>    0.387    0.765   1.13     1.00      3753.
-    ##  2 B immature        typeheal… type    0.859    1.35    1.85     1.00      4093.
-    ##  3 B immature        continuo… conti… -0.235    0.0598  0.358    1.00      3900.
-    ##  4 B mem             (Interce… <NA>   -1.26    -0.808  -0.388    1.00      3515.
-    ##  5 B mem             typeheal… type    1.06     1.67    2.28     1.00      3344.
-    ##  6 B mem             continuo… conti… -0.229    0.0868  0.398    1.00      3163.
-    ##  7 CD4 cm S100A4     (Interce… <NA>    1.19     1.50    1.83     1.00      3956.
-    ##  8 CD4 cm S100A4     typeheal… type    0.685    1.12    1.54     1.00      3825.
-    ##  9 CD4 cm S100A4     continuo… conti… -0.0643   0.192   0.439    1.00      3864.
-    ## 10 CD4 cm high cyto… (Interce… <NA>   -0.931   -0.460   0.0237   1.00      3959.
+    ##    cell_group       parameter factor c_lower c_effect  c_upper c_rhat c_ess_bulk
+    ##    <chr>            <chr>     <chr>    <dbl>    <dbl>    <dbl>  <dbl>      <dbl>
+    ##  1 B immature       (Interce… <NA>    0.383    0.754   1.13      1.00      4091.
+    ##  2 B immature       typeheal… type    0.832    1.36    1.87      1.00      4055.
+    ##  3 B immature       continuo… conti… -0.240    0.0617  0.354     1.00      3822.
+    ##  4 B mem            (Interce… <NA>   -1.25    -0.814  -0.364     1.00      4024.
+    ##  5 B mem            typeheal… type    1.05     1.68    2.28      1.00      4048.
+    ##  6 B mem            continuo… conti… -0.241    0.0853  0.418     1.00      3970.
+    ##  7 CD4 cm S100A4    (Interce… <NA>    1.18     1.50    1.81      1.00      3974.
+    ##  8 CD4 cm S100A4    typeheal… type    0.698    1.12    1.55      1.00      3874.
+    ##  9 CD4 cm S100A4    continuo… conti… -0.0628   0.187   0.432     1.00      3947.
+    ## 10 CD4 cm high cyt… (Interce… <NA>   -0.927   -0.453   0.00677   1.00      4079.
     ## # ℹ 80 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -543,16 +543,16 @@ res
     ## # A tibble: 180 × 16
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.475    0.844   1.20     1.01      113. 
-    ##  2 B immature typehealthy      type    0.505    1.04    1.55     1.00       75.9
-    ##  3 B immature (Intercept)___G… <NA>   -0.365    0.140   0.840   NA          NA  
-    ##  4 B immature (Intercept)___G… <NA>   -0.0496   0.283   0.835   NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.106    0.234   0.679   NA          NA  
-    ##  6 B immature (Intercept)___G… <NA>   -0.762   -0.309   0.0246  NA          NA  
-    ##  7 B mem      (Intercept)      <NA>   -0.711   -0.267   0.129    1.00      125. 
-    ##  8 B mem      typehealthy      type    0.258    0.918   1.45     1.01       83.9
-    ##  9 B mem      (Intercept)___G… <NA>   -0.314    0.0987  0.767   NA          NA  
-    ## 10 B mem      (Intercept)___G… <NA>   -0.0231   0.346   0.945   NA          NA  
+    ##  1 B immature (Intercept)      <NA>    0.540     0.838  1.15     1.00      236. 
+    ##  2 B immature typehealthy      type    0.510     1.03   1.50     1.02       76.3
+    ##  3 B immature (Intercept)___G… <NA>   -0.226     0.175  1.04    NA          NA  
+    ##  4 B immature (Intercept)___G… <NA>   -0.0245    0.345  0.992   NA          NA  
+    ##  5 B immature (Intercept)___G… <NA>   -0.0856    0.254  0.718   NA          NA  
+    ##  6 B immature (Intercept)___G… <NA>   -0.796    -0.340  0.0147  NA          NA  
+    ##  7 B mem      (Intercept)      <NA>   -0.654    -0.267  0.197    1.02       73.3
+    ##  8 B mem      typehealthy      type    0.175     0.890  1.46     1.01       51.2
+    ##  9 B mem      (Intercept)___G… <NA>   -0.412     0.130  0.879   NA          NA  
+    ## 10 B mem      (Intercept)___G… <NA>   -0.0372    0.374  0.996   NA          NA  
     ## # ℹ 170 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -596,16 +596,16 @@ res
     ## # A tibble: 240 × 16
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.382    0.811   1.16     1.01      154. 
-    ##  2 B immature typehealthy      type    0.562    1.07    1.66     1.04       82.8
-    ##  3 B immature (Intercept)___G… <NA>   -0.470    0.0713  0.525   NA          NA  
-    ##  4 B immature typehealthy___G… <NA>   -0.213    0.0710  0.583   NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.190    0.161   0.574   NA          NA  
-    ##  6 B immature typehealthy___G… <NA>   -0.123    0.149   0.498   NA          NA  
-    ##  7 B immature (Intercept)___G… <NA>   -0.0808   0.198   0.610   NA          NA  
-    ##  8 B immature (Intercept)___G… <NA>   -0.754   -0.250   0.0165  NA          NA  
-    ##  9 B mem      (Intercept)      <NA>   -0.905   -0.381   0.0446   1.00      117. 
-    ## 10 B mem      typehealthy      type    0.361    0.985   1.56     1.00       77.3
+    ##  1 B immature (Intercept)      <NA>    0.473    0.826  1.18e+0   1.01       90.9
+    ##  2 B immature typehealthy      type    0.570    1.04   1.51e+0   1.02       81.9
+    ##  3 B immature (Intercept)___G… <NA>   -0.455    0.0826 5.42e-1  NA          NA  
+    ##  4 B immature typehealthy___G… <NA>   -0.164    0.0766 5.12e-1  NA          NA  
+    ##  5 B immature (Intercept)___G… <NA>   -0.312    0.147  5.51e-1  NA          NA  
+    ##  6 B immature typehealthy___G… <NA>   -0.0710   0.170  5.70e-1  NA          NA  
+    ##  7 B immature (Intercept)___G… <NA>   -0.0461   0.184  5.95e-1  NA          NA  
+    ##  8 B immature (Intercept)___G… <NA>   -0.690   -0.231  5.06e-2  NA          NA  
+    ##  9 B mem      (Intercept)      <NA>   -0.830   -0.408  8.90e-4   1.00      127. 
+    ## 10 B mem      typehealthy      type    0.288    0.975  1.60e+0   1.00       53.7
     ## # ℹ 230 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -651,16 +651,16 @@ res
     ## # A tibble: 300 × 16
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.372    0.807   1.38     1.01       68.8
-    ##  2 B immature typehealthy      type    0.551    1.05    1.59     1.04       54.7
-    ##  3 B immature (Intercept)___G… <NA>   -0.177    0.0838  0.611   NA          NA  
-    ##  4 B immature typehealthy___G… <NA>   -0.219    0.0847  0.605   NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.296    0.0815  0.440   NA          NA  
-    ##  6 B immature typehealthy___G… <NA>   -0.215    0.0867  0.422   NA          NA  
-    ##  7 B immature (Intercept)___G… <NA>   -0.0414   0.169   0.638   NA          NA  
-    ##  8 B immature (Intercept)___G… <NA>   -0.782   -0.214   0.0342  NA          NA  
-    ##  9 B immature (Intercept)___G… <NA>   -0.469   -0.0608  0.283   NA          NA  
-    ## 10 B immature (Intercept)___G… <NA>   -0.0289   0.214   0.666   NA          NA  
+    ##  1 B immature (Intercept)      <NA>    0.413    0.796   1.32     1.06       22.4
+    ##  2 B immature typehealthy      type    0.539    0.981   1.51     1.01       81.2
+    ##  3 B immature (Intercept)___G… <NA>   -0.165    0.135   0.617   NA          NA  
+    ##  4 B immature typehealthy___G… <NA>   -0.145    0.102   0.606   NA          NA  
+    ##  5 B immature (Intercept)___G… <NA>   -0.135    0.0972  0.471   NA          NA  
+    ##  6 B immature typehealthy___G… <NA>   -0.139    0.0844  0.417   NA          NA  
+    ##  7 B immature (Intercept)___G… <NA>   -0.0674   0.216   0.678   NA          NA  
+    ##  8 B immature (Intercept)___G… <NA>   -0.827   -0.331   0.0385  NA          NA  
+    ##  9 B immature (Intercept)___G… <NA>   -0.367   -0.0896  0.183   NA          NA  
+    ## 10 B immature (Intercept)___G… <NA>   -0.0360   0.263   0.639   NA          NA  
     ## # ℹ 290 more rows
     ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
@@ -707,16 +707,16 @@ sccomp_result |>
     ## # A tibble: 36 × 2
     ##    cell_group statement                                
     ##    <chr>      <glue>                                   
-    ##  1 B1         2-fold decrease (from 0.0588 to 0.0295)  
-    ##  2 B2         2.1-fold decrease (from 0.0384 to 0.018) 
-    ##  3 B3         1.4-fold decrease (from 0.0128 to 0.0091)
-    ##  4 BM         1.3-fold decrease (from 0.0065 to 0.0049)
-    ##  5 CD4 1      1.2-fold increase (from 0.0247 to 0.0299)
-    ##  6 CD4 2      1.4-fold increase (from 0.0513 to 0.0731)
-    ##  7 CD4 3      2.6-fold decrease (from 0.0849 to 0.033) 
-    ##  8 CD4 4      1-fold increase (from 0.0018 to 0.0019)  
-    ##  9 CD4 5      1-fold increase (from 0.0308 to 0.0313)  
-    ## 10 CD8 1      1.1-fold increase (from 0.111 to 0.121)  
+    ##  1 B1         2-fold decrease (from 0.0588 to 0.0293)  
+    ##  2 B2         2.1-fold decrease (from 0.0385 to 0.0184)
+    ##  3 B3         1.4-fold decrease (from 0.0127 to 0.0092)
+    ##  4 BM         1.3-fold decrease (from 0.0066 to 0.0049)
+    ##  5 CD4 1      1.2-fold increase (from 0.0249 to 0.0297)
+    ##  6 CD4 2      1.4-fold increase (from 0.052 to 0.072)  
+    ##  7 CD4 3      2.6-fold decrease (from 0.0847 to 0.0329)
+    ##  8 CD4 4      1-fold increase (from 0.0017 to 0.0018)  
+    ##  9 CD4 5      1-fold increase (from 0.0301 to 0.0313)  
+    ## 10 CD8 1      1.1-fold increase (from 0.1105 to 0.1215)
     ## # ℹ 26 more rows
 
 ## Contrasts
@@ -735,16 +735,16 @@ seurat_obj |>
     ## # A tibble: 60 × 12
     ##    cell_group   parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
     ##    <chr>        <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B immature   typecanc… <NA>    -1.89    -1.35   -0.777 0       0           NA
-    ##  2 B immature   typeheal… <NA>     0.777    1.35    1.89  0       0           NA
-    ##  3 B mem        typecanc… <NA>    -2.26    -1.63   -1.02  0       0           NA
-    ##  4 B mem        typeheal… <NA>     1.02     1.63    2.26  0       0           NA
-    ##  5 CD4 cm S100… typecanc… <NA>    -1.45    -0.993  -0.527 2.50e-4 5.00e-5     NA
-    ##  6 CD4 cm S100… typeheal… <NA>     0.527    0.993   1.45  2.50e-4 5.00e-5     NA
-    ##  7 CD4 cm high… typecanc… <NA>     0.814    1.55    2.28  0       0           NA
-    ##  8 CD4 cm high… typeheal… <NA>    -2.28    -1.55   -0.814 0       0           NA
-    ##  9 CD4 cm ribo… typecanc… <NA>     0.301    0.941   1.59  6.25e-3 1.91e-3     NA
-    ## 10 CD4 cm ribo… typeheal… <NA>    -1.59    -0.941  -0.301 6.25e-3 1.91e-3     NA
+    ##  1 B immature   typecanc… <NA>    -1.89    -1.35   -0.826 0       0           NA
+    ##  2 B immature   typeheal… <NA>     0.826    1.35    1.89  0       0           NA
+    ##  3 B mem        typecanc… <NA>    -2.26    -1.63   -1.03  0       0           NA
+    ##  4 B mem        typeheal… <NA>     1.03     1.63    2.26  0       0           NA
+    ##  5 CD4 cm S100… typecanc… <NA>    -1.46    -0.988  -0.523 0       0           NA
+    ##  6 CD4 cm S100… typeheal… <NA>     0.523    0.988   1.46  0       0           NA
+    ##  7 CD4 cm high… typecanc… <NA>     0.828    1.55    2.26  0       0           NA
+    ##  8 CD4 cm high… typeheal… <NA>    -2.26    -1.55   -0.828 0       0           NA
+    ##  9 CD4 cm ribo… typecanc… <NA>     0.315    0.942   1.56  0.00500 0.00125     NA
+    ## 10 CD4 cm ribo… typeheal… <NA>    -1.56    -0.942  -0.315 0.00500 0.00125     NA
     ## # ℹ 50 more rows
     ## # ℹ 3 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, count_data <list>
 
@@ -757,402 +757,7 @@ comparisons `sccomp_remove_outliers()` must not be executed as the
 leave-one-out must work with the same amount of data, while outlier
 elimination does not guarantee it.
 
-If `elpd_diff` is away from zero of \> 5 `se_diff` difference of 5, we
-are confident that a model is better than the other
-[reference](https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola).
-In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model
-one, the one with factor association, is better than model two.
-
-``` r
-library(loo)
-
-# Fit first model
-model_with_factor_association = 
-  seurat_obj |>
-  sccomp_estimate( 
-    formula_composition = ~ type, 
-    sample = "sample", 
-    cell_group = "cell_group", 
-    inference_method = "hmc",
-    enable_loo = TRUE
-  )
-```
-
-    ## Running MCMC with 6 parallel chains, with 3 thread(s) per chain...
-    ## 
-    ## Chain 1 Iteration:   1 / 966 [  0%]  (Warmup) 
-    ## Chain 1 Iteration: 100 / 966 [ 10%]  (Warmup)
-
-    ## Chain 2 Iteration:   1 / 966 [  0%]  (Warmup) 
-    ## Chain 2 Iteration: 100 / 966 [ 10%]  (Warmup)
-
-    ## Chain 3 Iteration:   1 / 966 [  0%]  (Warmup)
-
-    ## Chain 4 Iteration:   1 / 966 [  0%]  (Warmup)
-
-    ## Chain 5 Iteration:   1 / 966 [  0%]  (Warmup)
-
-    ## Chain 6 Iteration:   1 / 966 [  0%]  (Warmup)
-
-    ## Chain 1 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 3 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 4 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 2 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 5 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 1 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 1 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 6 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 2 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 2 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 3 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 4 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 5 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 1 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 3 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 3 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 4 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 4 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 6 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 2 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 5 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 5 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 6 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 6 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 1 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 3 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 4 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 2 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 5 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 1 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 3 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 6 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 4 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 2 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 5 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 3 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 6 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 1 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 4 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 2 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 5 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 6 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 1 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 3 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 4 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 2 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 5 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 6 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 1 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 3 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 4 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 2 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 1 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 5 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 1 finished in 3.5 seconds.
-    ## Chain 2 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 3 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 6 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 2 finished in 3.4 seconds.
-    ## Chain 4 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 5 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 3 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 4 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 6 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 3 finished in 3.4 seconds.
-    ## Chain 4 finished in 3.4 seconds.
-    ## Chain 5 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 5 finished in 3.4 seconds.
-    ## Chain 6 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 6 finished in 3.4 seconds.
-    ## 
-    ## All 6 chains finished successfully.
-    ## Mean chain execution time: 3.4 seconds.
-    ## Total execution time: 4.3 seconds.
-
-``` r
-# Fit second model
-model_without_association = 
-  seurat_obj |>
-  sccomp_estimate( 
-    formula_composition = ~ 1, 
-    sample = "sample", 
-    cell_group = "cell_group", 
-    inference_method = "hmc",
-    enable_loo = TRUE
-  )
-```
-
-    ## Running MCMC with 6 parallel chains, with 3 thread(s) per chain...
-    ## 
-    ## Chain 1 Iteration:   1 / 966 [  0%]  (Warmup) 
-    ## Chain 1 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 1 Iteration: 200 / 966 [ 20%]  (Warmup)
-
-    ## Chain 2 Iteration:   1 / 966 [  0%]  (Warmup) 
-    ## Chain 2 Iteration: 100 / 966 [ 10%]  (Warmup)
-
-    ## Chain 3 Iteration:   1 / 966 [  0%]  (Warmup) 
-    ## Chain 3 Iteration: 100 / 966 [ 10%]  (Warmup)
-
-    ## Chain 4 Iteration:   1 / 966 [  0%]  (Warmup)
-
-    ## Chain 5 Iteration:   1 / 966 [  0%]  (Warmup)
-
-    ## Chain 6 Iteration:   1 / 966 [  0%]  (Warmup)
-
-    ## Chain 4 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 1 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 1 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 2 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 5 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 3 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 6 Iteration: 100 / 966 [ 10%]  (Warmup) 
-    ## Chain 2 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 2 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 4 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 3 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 3 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 5 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 1 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 6 Iteration: 200 / 966 [ 20%]  (Warmup) 
-    ## Chain 4 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 4 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 2 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 5 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 5 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 6 Iteration: 300 / 966 [ 31%]  (Warmup) 
-    ## Chain 6 Iteration: 301 / 966 [ 31%]  (Sampling) 
-    ## Chain 1 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 3 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 4 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 2 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 5 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 6 Iteration: 400 / 966 [ 41%]  (Sampling) 
-    ## Chain 1 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 3 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 4 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 5 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 2 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 6 Iteration: 500 / 966 [ 51%]  (Sampling) 
-    ## Chain 1 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 3 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 4 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 5 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 2 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 6 Iteration: 600 / 966 [ 62%]  (Sampling) 
-    ## Chain 4 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 1 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 3 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 5 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 2 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 6 Iteration: 700 / 966 [ 72%]  (Sampling) 
-    ## Chain 4 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 1 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 3 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 5 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 2 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 6 Iteration: 800 / 966 [ 82%]  (Sampling) 
-    ## Chain 1 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 4 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 1 finished in 3.5 seconds.
-    ## Chain 2 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 3 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 5 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 2 finished in 3.5 seconds.
-    ## Chain 4 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 6 Iteration: 900 / 966 [ 93%]  (Sampling) 
-    ## Chain 4 finished in 3.3 seconds.
-    ## Chain 3 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 5 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 3 finished in 3.5 seconds.
-    ## Chain 5 finished in 3.3 seconds.
-    ## Chain 6 Iteration: 966 / 966 [100%]  (Sampling) 
-    ## Chain 6 finished in 3.3 seconds.
-    ## 
-    ## All 6 chains finished successfully.
-    ## Mean chain execution time: 3.4 seconds.
-    ## Total execution time: 4.2 seconds.
-
-``` r
-# Compare models
-loo_compare(
-   attr(model_with_factor_association, "fit")$loo(),
-   attr(model_without_association, "fit")$loo()
-)
-```
-
-    ##        elpd_diff se_diff
-    ## model1   0.0       0.0  
-    ## model2 -78.9      11.0
-
-## Differential variability, binary factor
-
-We can model the cell-group variability also dependent on the type, and
-so test differences in variability
-
-``` r
-res = 
-  seurat_obj |>
-  sccomp_estimate( 
-    formula_composition = ~ type, 
-    formula_variability = ~ type,
-    sample = "sample",
-    cell_group = "cell_group",
-    cores = 1, verbose = FALSE
-  )
-
-res
-```
-
-    ## # A tibble: 60 × 16
-    ##    cell_group       parameter factor c_lower c_effect  c_upper c_rhat c_ess_bulk
-    ##    <chr>            <chr>     <chr>    <dbl>    <dbl>    <dbl>  <dbl>      <dbl>
-    ##  1 B immature       (Interce… <NA>     0.335    0.752  1.16e+0   1.00     2491. 
-    ##  2 B immature       typeheal… type     0.815    1.36   1.92e+0   1.00     1246. 
-    ##  3 B mem            (Interce… <NA>    -1.35    -0.847 -2.98e-1   1.00      323. 
-    ##  4 B mem            typeheal… type     1.04     1.70   2.36e+0   1.00      538. 
-    ##  5 CD4 cm S100A4    (Interce… <NA>     1.32     1.67   2.01e+0   1.00     2561. 
-    ##  6 CD4 cm S100A4    typeheal… type     0.392    0.841  1.30e+0   1.00      783. 
-    ##  7 CD4 cm high cyt… (Interce… <NA>    -0.996   -0.509 -6.82e-4   1.00     3975. 
-    ##  8 CD4 cm high cyt… typeheal… type    -2.18    -1.09  -1.89e-1   1.01       80.2
-    ##  9 CD4 cm ribosome  (Interce… <NA>    -0.159    0.337  8.26e-1   1.00     1473. 
-    ## 10 CD4 cm ribosome  typeheal… type    -1.73    -1.06  -3.80e-1   1.00     3153. 
-    ## # ℹ 50 more rows
-    ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
-    ## #   count_data <list>
-
-**Plot 1D significance plot**
-
-``` r
-plots = res |> sccomp_test() |> plot()
-```
-
-    ## sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.
-
-    ## Loading model from cache...
-
-    ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
-    ## 
-    ## Chain 1 finished in 0.0 seconds.
-
-    ## Joining with `by = join_by(cell_group, sample)`
-
-    ## Joining with `by = join_by(cell_group, type)`
-    ## sccomp says: Some FDR-significant populations may cross the fold change
-    ## threshold.  This because, as sccomp is a Bayesian method, the FDR is calculated
-    ## according to Stephens (doi: 10.1093/biostatistics/kxw041), by sorting the
-    ## probability of the null hypothesis in ascending order and calculating the
-    ## cumulative average.
-
-``` r
-plots$credible_intervals_1D
-```
-
-![](inst/figures/unnamed-chunk-27-1.png)<!-- -->
-
-**Plot 2D significance plot** Data points are cell groups. Error bars
-are the 95% credible interval. The dashed lines represent the default
-threshold fold change for which the probabilities (c_pH0, v_pH0) are
-calculated. pH0 of 0 represent the rejection of the null hypothesis that
-no effect is observed.
-
-This plot is provided only if differential variability has been tested.
-The differential variability estimates are reliable only if the linear
-association between mean and variability for `(intercept)` (left-hand
-side facet) is satisfied. A scatterplot (besides the Intercept) is
-provided for each category of interest. For each category of interest,
-the composition and variability effects should be generally
-uncorrelated.
-
-``` r
-plots$credible_intervals_2D
-```
-
-![](inst/figures/unnamed-chunk-28-1.png)<!-- -->
-
-# Suggested settings
-
-## For single-cell RNA sequencing
-
-We recommend setting `bimodal_mean_variability_association  = TRUE`. The
-bimodality of the mean-variability association can be confirmed from the
-plots\$credible_intervals_2D (see below).
-
-## For CyTOF and microbiome data
-
-We recommend setting `bimodal_mean_variability_association  = FALSE`
-(Default).
-
-## Visualisation of the MCMC chains from the posterior distribution
-
-It is possible to directly evaluate the posterior distribution. In this
-example, we plot the Monte Carlo chain for the slope parameter of the
-first cell type. We can see that it has converged and is negative with
-probability 1.
-
-``` r
-library(cmdstanr)
-```
-
-    ## This is cmdstanr version 0.8.0
-
-    ## - CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
-
-    ## - CmdStan path: /Users/a1234450/.cmdstan/cmdstan-2.36.0
-
-    ## - CmdStan version: 2.36.0
-
-``` r
-library(posterior)
-```
-
-    ## This is posterior version 1.6.1
-
-    ## 
-    ## Attaching package: 'posterior'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     mad, sd, var
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     %in%, match
-
-``` r
-library(bayesplot)
-```
-
-    ## This is bayesplot version 1.12.0
-
-    ## - Online documentation and vignettes at mc-stan.org/bayesplot
-
-    ## - bayesplot theme set to bayesplot::theme_default()
-
-    ##    * Does _not_ affect other ggplot2 plots
-
-    ##    * See ?bayesplot_theme_set for details on theme setting
-
-    ## 
-    ## Attaching package: 'bayesplot'
-
-    ## The following object is masked from 'package:posterior':
-    ## 
-    ##     rhat
-
-``` r
-# Assuming res contains the fit object from cmdstanr
-fit <- res |> attr("fit")
-
-# Extract draws for 'beta[2,1]'
-draws <- as_draws_array(fit$draws("beta[2,1]"))
-
-# Create a traceplot for 'beta[2,1]'
-mcmc_trace(draws, pars = "beta[2,1]")
-```
-
-![](inst/figures/unnamed-chunk-29-1.png)<!-- -->
+If `elpd_diff`
 
 ## The old framework
 

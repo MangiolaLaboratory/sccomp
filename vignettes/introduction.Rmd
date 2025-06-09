@@ -111,7 +111,7 @@ Function | Description
 `sccomp_replicate` | Simulate data from the model, or part of the model
 `sccomp_predict` | Predicts proportions, based on the model, or part of the model
 `sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors
-`plot` | Plots summary plots to asses significance 
+`plot` | Plots summary plots to assess significance 
 
 # Analysis
 
@@ -275,7 +275,7 @@ sccomp_result =
 
 ## Continuous factor 
 
-`sccomp` is able to fit erbitrary complex models. In this example we have a continuous and binary covariate.
+`sccomp` is able to fit arbitrary complex models. In this example we have a continuous and binary covariate.
 
 ```{r, eval = instantiate::stan_cmdstan_exists()}
 
@@ -321,7 +321,7 @@ res
 
 ### Random Effect Model (random slopes)
 
-`sccomp` can model random slopes. We providean example below.
+`sccomp` can model random slopes. We provide an example below.
 
 ```{r, eval = instantiate::stan_cmdstan_exists()}
 res = 
