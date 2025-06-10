@@ -287,10 +287,10 @@ test_that("multilevel nested",{
   
   res |> 
     sccomp_predict() |> 
-    expect_no_error
+    expect_no_error()
   
   res |> 
-    sccomp_predict(formula_composition = ~ ~ type + (1 | nested_group)) |> 
+    sccomp_predict(formula_composition = ~ type + (1 | nested_group)) |> 
     expect_no_error()
   
 })
