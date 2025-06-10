@@ -36,7 +36,9 @@ Imports:
     scales,
     stringr,
     glue,
-    crayon
+    crayon,
+    cli,
+    fansi
 Suggests:
     knitr,
     rmarkdown,
