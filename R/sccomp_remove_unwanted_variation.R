@@ -41,76 +41,22 @@
 #' @references
 #' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
+#' @noRd 
 sccomp_remove_unwanted_variation <- function(.data,
                                              formula_composition_keep = NULL,
                                              formula_composition = NULL,
                                              formula_variability = NULL,
                                              cores = detectCores()) {
-  
-  # Check for deprecated arguments
-  if (!is.null(formula_composition)) {
-    warning("The argument 'formula_composition' is deprecated. Please use 'formula_composition_keep' instead.", call. = FALSE)
-    formula_composition_keep <- formula_composition
-  }
-  
-  if (!is.null(formula_variability)) {
-    warning("The argument 'formula_variability' is deprecated as not used.", call. = FALSE)
-  }
-  
-  # Run the function
-  check_and_install_cmdstanr()
-  
-  UseMethod("sccomp_remove_unwanted_variation", .data)
+  lifecycle::deprecate_warn(
+    "2.1.1",
+    "sccomp::sccomp_remove_unwanted_variation()",
+    "sccomp::sccomp_remove_unwanted_effects()"
+  )
+  sccomp_remove_unwanted_effects(
+    .data = .data,
+    formula_composition_keep = formula_composition_keep,
+    formula_composition = formula_composition,
+    cores = cores
+  )
 }
 
-#' @importFrom readr write_file
-#' @export
-#'
-sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
-                                                       formula_composition_keep = NULL,
-                                                       formula_composition = NULL,
-                                                       formula_variability = NULL,
-                                                       cores = detectCores()){
-  
-  
-  model_input = attr(.data, "model_input")
-  .sample = attr(.data, ".sample")
-  .cell_group = attr(.data, ".cell_group")
-  .grouping_for_random_effect = attr(.data, ".grouping_for_random_effect")
-  .count = attr(.data, ".count")
-  
-  # Residuals
-  message("sccomp says: calculating residuals")
-  residuals = .data |> sccomp_calculate_residuals()
-  
-  
-  message("sccomp says: regressing out unwanted factors")
-  
-  
-  # Generate quantities
-  .data |>
-    sccomp_predict(
-      formula_composition = formula_composition_keep,
-      number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
-      
-    ) |>
-    distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    # mutate(proportion_mean =
-    #          proportion_mean |>
-    #          # compress_zero_one() |>
-    #          boot::logit()
-    # ) |>
-    left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
-    mutate(adjusted_proportion = proportion_mean + residuals) |>
-    mutate(adjusted_proportion = adjusted_proportion |> pmax(0)) |> 
-    # mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
-    # with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
-    
-    # Recostituite counts
-    mutate(adjusted_counts = adjusted_proportion * exposure) |>
-    
-    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, residuals)
-  
-  
-  
-}

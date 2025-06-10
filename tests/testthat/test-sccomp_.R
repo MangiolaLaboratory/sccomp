@@ -427,11 +427,11 @@ test_that("remove unwanted variation",{
 
   # DEPRECATION TEST
   estimate |>
-    sccomp_remove_unwanted_variation(formula_composition = ~ type) |> 
+    sccomp_remove_unwanted_effects(formula_composition = ~ type) |> 
     expect_warning("The argument 'formula_composition' is deprecated")
   
   estimate |>
-    sccomp_remove_unwanted_variation(formula_composition_keep = ~ type) |> 
+    sccomp_remove_unwanted_effects(formula_composition_keep = ~ type) |> 
     expect_no_warning()
 
 })
