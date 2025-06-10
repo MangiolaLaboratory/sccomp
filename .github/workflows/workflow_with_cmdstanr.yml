@@ -40,6 +40,15 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
+      - name: Install R dependencies
+        shell: Rscript {0}
+        run: |
+          install.packages("SeuratObject")
+          if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+          BiocManager::install()
+          if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+          devtools::install_deps(dependencies = TRUE)
+
       - name: Install CmdStan
         shell: Rscript {0}
         run: |
