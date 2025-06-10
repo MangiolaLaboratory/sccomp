@@ -399,7 +399,7 @@ test_that("calculate residuals",{
   
 })
 
-test_that("remove unwanted variation",{
+test_that("remove unwanted effects",{
 
   skip_cmdstan()
   
@@ -433,6 +433,20 @@ test_that("remove unwanted variation",{
   estimate |>
     sccomp_remove_unwanted_effects(formula_composition_keep = ~ type) |> 
     expect_no_warning()
+  
+  # DEPRECATION
+    
+    # Test that sccomp_remove_unwanted_variation is deprecated
+    estimate |>
+      sccomp_remove_unwanted_variation() |>
+      expect_warning("sccomp says: sccomp_remove_unwanted_variation is deprecated")
+    
+    # Test that it still works and produces same result as new function
+    result_old = estimate |> sccomp_remove_unwanted_variation()
+    result_new = estimate |> sccomp_remove_unwanted_effects()
+    
+    expect_equal(result_old$adjusted_proportion, result_new$adjusted_proportion, tolerance = 0.01)
+  
 
 })
 
@@ -1048,4 +1062,5 @@ test_that("renamed columns in Seurat input", {
     ) |>
     expect_no_error()
 })
+
 
