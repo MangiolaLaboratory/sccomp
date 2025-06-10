@@ -136,7 +136,6 @@ The output is a tibble containing the **Following columns**
 - `v_upper` - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
 - `v_pH0` - Probability of the null hypothesis for a variability (v).
 - `v_FDR` - False-discovery rate of the null hypothesis for a variability (v).
-- `count_data` - Nested input count data.
 
 ```{r, eval = instantiate::stan_cmdstan_exists()}
 sccomp_result
