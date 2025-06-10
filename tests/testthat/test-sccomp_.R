@@ -282,8 +282,16 @@ test_that("multilevel nested",{
       cores = 1,
       mcmc_seed = 42,     
       max_sampling_iterations = n_iterations, verbose=FALSE
-    )
+    ) |> 
+    expect_no_error()
   
+  res |> 
+    sccomp_predict() |> 
+    expect_no_error
+  
+  res |> 
+    sccomp_predict(formula_composition = ~ ~ type + (1 | nested_group)) |> 
+    expect_no_error()
   
 })
 
