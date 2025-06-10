@@ -45,6 +45,7 @@ Suggests:
     markdown,
     loo,
     prettydoc,
+    SeuratObject,
     tidyseurat,
     tidySingleCellExperiment,
     bayesplot,

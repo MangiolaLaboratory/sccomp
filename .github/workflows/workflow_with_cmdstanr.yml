@@ -40,12 +40,22 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
+      - name: Install R dependencies
+        shell: Rscript {0}
+        run: |
+          install.packages("SeuratObject")
+          if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+          BiocManager::install()
+          if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+          devtools::install_deps(dependencies = TRUE)
+
       - name: Install CmdStan
         shell: Rscript {0}
         run: |
           install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
           cmdstanr::check_cmdstan_toolchain(fix = TRUE)
-          cmdstanr::install_cmdstan()
+          cmdstanr::install_cmdstan(cores = 2)
+          cmdstanr::cmdstan_version()
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -58,6 +68,7 @@ jobs:
             any::ggplot2
             any::tibble
             any::dplyr
+            any::prettydoc
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
