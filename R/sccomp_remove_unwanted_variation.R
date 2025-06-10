@@ -48,10 +48,11 @@ sccomp_remove_unwanted_variation <- function(.data,
                                              formula_variability = NULL,
                                              cores = detectCores()) {
   lifecycle::deprecate_warn(
-    "2.1.1",
+    "1.99.20",
     "sccomp::sccomp_remove_unwanted_variation()",
-    "sccomp::sccomp_remove_unwanted_effects()"
+    details = "sccomp says: sccomp_remove_unwanted_variation is deprecated. Please use sccomp_remove_unwanted_effects() instead."
   )
+  
   sccomp_remove_unwanted_effects(
     .data = .data,
     formula_composition_keep = formula_composition_keep,
