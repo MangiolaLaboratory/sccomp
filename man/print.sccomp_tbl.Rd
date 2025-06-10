@@ -12,11 +12,13 @@
 \item{...}{Additional arguments passed to print}
 }
 \value{
-Invisibly returns the input object
+The printed object
 }
 \description{
-Print method for sccomp objects
-}
-\examples{
-# See sccomp_estimate() for examples
+Print method for sccomp objects.
+
+The print method for sccomp objects provides a summary of the model specifications,
+data dimensions, and convergence diagnostics.
+
+The output is formatted to be easy to read and understand.
 }

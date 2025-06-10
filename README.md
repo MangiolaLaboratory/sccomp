@@ -232,29 +232,45 @@ The output is a tibble containing the **Following columns**
 - `v_pH0` - Probability of the null hypothesis for a variability (v).
 - `v_FDR` - False-discovery rate of the null hypothesis for a
   variability (v).
-- `count_data` - Nested input count data.
 
 ``` r
 sccomp_result
 ```
 
-    ## # A tibble: 72 × 20
+    ## sccomp model
+    ## ============
+    ## 
+    ## Model specifications:
+    ##   Family: multi_beta_binomial 
+    ##   Composition formula: ~type 
+    ##   Variability formula: ~1 
+    ##   Inference method: pathfinder 
+    ## 
+    ## Data: Samples: 20   Cell groups: 36 
+    ## 
+    ## Column prefixes: c_ -> composition parameters  v_ -> variability parameters
+    ## 
+    ## Convergence diagnostics:
+    ##   For each parameter, n_eff is the effective sample size and R_k_hat is the potential
+    ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
+    ## 
+    ## # A tibble: 72 × 19
     ##    cell_group parameter   factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
     ##    <chr>      <chr>       <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B1         (Intercept) <NA>    0.888     1.18   1.46   0       0         1.00
-    ##  2 B1         typecancer  type   -1.08     -0.666 -0.274  0.00275 5.25e-4   1.00
-    ##  3 B2         (Intercept) <NA>    0.426     0.746  1.07   0       0         1.00
-    ##  4 B2         typecancer  type   -1.18     -0.715 -0.244  0.00325 7.73e-4   1.00
-    ##  5 B3         (Intercept) <NA>   -0.660    -0.351 -0.0300 0.0570  7.84e-3   1.00
-    ##  6 B3         typecancer  type   -0.762    -0.316  0.135  0.170   4.97e-2   1.00
-    ##  7 BM         (Intercept) <NA>   -1.31     -0.991 -0.674  0       0         1.00
-    ##  8 BM         typecancer  type   -0.758    -0.309  0.148  0.189   5.57e-2   1.00
-    ##  9 CD4 1      (Intercept) <NA>    0.147     0.336  0.524  0.00650 2.95e-4   1.00
-    ## 10 CD4 1      typecancer  type   -0.0878    0.170  0.415  0.295   7.25e-2   1.00
+    ##  1 B1         (Intercept) <NA>    0.880     1.17   1.46   0       0         1.00
+    ##  2 B1         typecancer  type   -1.10     -0.667 -0.236  0.00650 1.34e-3   1.00
+    ##  3 B2         (Intercept) <NA>    0.420     0.747  1.06   0       0         1.00
+    ##  4 B2         typecancer  type   -1.18     -0.712 -0.253  0.00625 8.25e-4   1.00
+    ##  5 B3         (Intercept) <NA>   -0.665    -0.361 -0.0613 0.0447  4.36e-3   1.00
+    ##  6 B3         typecancer  type   -0.754    -0.303  0.141  0.186   5.66e-2   1.00
+    ##  7 BM         (Intercept) <NA>   -1.31     -0.991 -0.677  0       0         1.00
+    ##  8 BM         typecancer  type   -0.749    -0.304  0.150  0.180   5.07e-2   1.00
+    ##  9 CD4 1      (Intercept) <NA>    0.148     0.339  0.526  0.00750 1.12e-3   1.00
+    ## 10 CD4 1      typecancer  type   -0.0789    0.167  0.417  0.293   8.12e-2   1.00
     ## # ℹ 62 more rows
-    ## # ℹ 11 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, v_lower <dbl>,
+    ## # ℹ 10 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_rhat <dbl>,
-    ## #   v_ess_bulk <dbl>, v_ess_tail <dbl>, count_data <list>
+    ## #   v_ess_bulk <dbl>, v_ess_tail <dbl>
 
 ## Outlier identification
 
@@ -452,23 +468,39 @@ res =
 res
 ```
 
-    ## # A tibble: 90 × 16
-    ##    cell_group       parameter factor c_lower c_effect  c_upper c_rhat c_ess_bulk
-    ##    <chr>            <chr>     <chr>    <dbl>    <dbl>    <dbl>  <dbl>      <dbl>
-    ##  1 B immature       (Interce… <NA>    0.383    0.754   1.13      1.00      4091.
-    ##  2 B immature       typeheal… type    0.832    1.36    1.87      1.00      4055.
-    ##  3 B immature       continuo… conti… -0.240    0.0617  0.354     1.00      3822.
-    ##  4 B mem            (Interce… <NA>   -1.25    -0.814  -0.364     1.00      4024.
-    ##  5 B mem            typeheal… type    1.05     1.68    2.28      1.00      4048.
-    ##  6 B mem            continuo… conti… -0.241    0.0853  0.418     1.00      3970.
-    ##  7 CD4 cm S100A4    (Interce… <NA>    1.18     1.50    1.81      1.00      3974.
-    ##  8 CD4 cm S100A4    typeheal… type    0.698    1.12    1.55      1.00      3874.
-    ##  9 CD4 cm S100A4    continuo… conti… -0.0628   0.187   0.432     1.00      3947.
-    ## 10 CD4 cm high cyt… (Interce… <NA>   -0.927   -0.453   0.00677   1.00      4079.
+    ## sccomp model
+    ## ============
+    ## 
+    ## Model specifications:
+    ##   Family: multi_beta_binomial 
+    ##   Composition formula: ~type + continuous_covariate 
+    ##   Variability formula: ~1 
+    ##   Inference method: pathfinder 
+    ## 
+    ## Data: Samples: 20   Cell groups: 30 
+    ## 
+    ## Column prefixes: c_ -> composition parameters  v_ -> variability parameters
+    ## 
+    ## Convergence diagnostics:
+    ##   For each parameter, n_eff is the effective sample size and R_k_hat is the potential
+    ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
+    ## 
+    ## # A tibble: 90 × 15
+    ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
+    ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
+    ##  1 B immature        (Interce… <NA>    0.384    0.758   1.14     1.00      3559.
+    ##  2 B immature        typeheal… type    0.841    1.35    1.87     1.00      3633.
+    ##  3 B immature        continuo… conti… -0.222    0.0555  0.350    1.00      3969.
+    ##  4 B mem             (Interce… <NA>   -1.25    -0.815  -0.385    1.00      3786.
+    ##  5 B mem             typeheal… type    1.07     1.68    2.25     1.00      3905.
+    ##  6 B mem             continuo… conti… -0.243    0.0836  0.405    1.00      4212.
+    ##  7 CD4 cm S100A4     (Interce… <NA>    1.19     1.50    1.82     1.00      3826.
+    ##  8 CD4 cm S100A4     typeheal… type    0.703    1.12    1.53     1.00      3694.
+    ##  9 CD4 cm S100A4     continuo… conti… -0.0581   0.186   0.440    1.00      4163.
+    ## 10 CD4 cm high cyto… (Interce… <NA>   -0.901   -0.455   0.0224   1.00      3716.
     ## # ℹ 80 more rows
-    ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
-    ## #   count_data <list>
+    ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
 
 ## Random Effect Modeling (mixed-effect modeling, multilevel-modeling, hierarchical modeling)
 
@@ -540,23 +572,39 @@ res =
 res
 ```
 
-    ## # A tibble: 180 × 16
+    ## sccomp model
+    ## ============
+    ## 
+    ## Model specifications:
+    ##   Family: multi_beta_binomial 
+    ##   Composition formula: ~type + (1 | group__) 
+    ##   Variability formula: ~1 
+    ##   Inference method: pathfinder 
+    ## 
+    ## Data: Samples: 20   Cell groups: 30 
+    ## 
+    ## Column prefixes: c_ -> composition parameters  v_ -> variability parameters
+    ## 
+    ## Convergence diagnostics:
+    ##   For each parameter, n_eff is the effective sample size and R_k_hat is the potential
+    ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
+    ## 
+    ## # A tibble: 180 × 15
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.540     0.838  1.15     1.00      236. 
-    ##  2 B immature typehealthy      type    0.510     1.03   1.50     1.02       76.3
-    ##  3 B immature (Intercept)___G… <NA>   -0.226     0.175  1.04    NA          NA  
-    ##  4 B immature (Intercept)___G… <NA>   -0.0245    0.345  0.992   NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.0856    0.254  0.718   NA          NA  
-    ##  6 B immature (Intercept)___G… <NA>   -0.796    -0.340  0.0147  NA          NA  
-    ##  7 B mem      (Intercept)      <NA>   -0.654    -0.267  0.197    1.02       73.3
-    ##  8 B mem      typehealthy      type    0.175     0.890  1.46     1.01       51.2
-    ##  9 B mem      (Intercept)___G… <NA>   -0.412     0.130  0.879   NA          NA  
-    ## 10 B mem      (Intercept)___G… <NA>   -0.0372    0.374  0.996   NA          NA  
+    ##  1 B immature (Intercept)      <NA>    0.545    0.843   1.20     1.00      194. 
+    ##  2 B immature typehealthy      type    0.664    1.08    1.56     1.04       88.4
+    ##  3 B immature (Intercept)___G… <NA>   -0.558    0.0837  0.675   NA          NA  
+    ##  4 B immature (Intercept)___G… <NA>   -0.107    0.259   0.735   NA          NA  
+    ##  5 B immature (Intercept)___G… <NA>   -0.0625   0.254   0.693   NA          NA  
+    ##  6 B immature (Intercept)___G… <NA>   -0.742   -0.302   0.0243  NA          NA  
+    ##  7 B mem      (Intercept)      <NA>   -0.797   -0.334   0.125    1.00      106. 
+    ##  8 B mem      typehealthy      type    0.324    1.02    1.59     1.02       76.4
+    ##  9 B mem      (Intercept)___G… <NA>   -0.316    0.0623  0.704   NA          NA  
+    ## 10 B mem      (Intercept)___G… <NA>   -0.0551   0.302   0.842   NA          NA  
     ## # ℹ 170 more rows
-    ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
-    ## #   count_data <list>
+    ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
 
 ### Random Effect Model (random slopes)
 
@@ -593,23 +641,39 @@ res =
 res
 ```
 
-    ## # A tibble: 240 × 16
+    ## sccomp model
+    ## ============
+    ## 
+    ## Model specifications:
+    ##   Family: multi_beta_binomial 
+    ##   Composition formula: ~type + (type | group__) 
+    ##   Variability formula: ~1 
+    ##   Inference method: pathfinder 
+    ## 
+    ## Data: Samples: 20   Cell groups: 30 
+    ## 
+    ## Column prefixes: c_ -> composition parameters  v_ -> variability parameters
+    ## 
+    ## Convergence diagnostics:
+    ##   For each parameter, n_eff is the effective sample size and R_k_hat is the potential
+    ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
+    ## 
+    ## # A tibble: 240 × 15
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.473    0.826  1.18e+0   1.01       90.9
-    ##  2 B immature typehealthy      type    0.570    1.04   1.51e+0   1.02       81.9
-    ##  3 B immature (Intercept)___G… <NA>   -0.455    0.0826 5.42e-1  NA          NA  
-    ##  4 B immature typehealthy___G… <NA>   -0.164    0.0766 5.12e-1  NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.312    0.147  5.51e-1  NA          NA  
-    ##  6 B immature typehealthy___G… <NA>   -0.0710   0.170  5.70e-1  NA          NA  
-    ##  7 B immature (Intercept)___G… <NA>   -0.0461   0.184  5.95e-1  NA          NA  
-    ##  8 B immature (Intercept)___G… <NA>   -0.690   -0.231  5.06e-2  NA          NA  
-    ##  9 B mem      (Intercept)      <NA>   -0.830   -0.408  8.90e-4   1.00      127. 
-    ## 10 B mem      typehealthy      type    0.288    0.975  1.60e+0   1.00       53.7
+    ##  1 B immature (Intercept)      <NA>    0.429    0.798   1.14     1.04       49.3
+    ##  2 B immature typehealthy      type    0.587    1.03    1.53     1.05       44.0
+    ##  3 B immature (Intercept)___G… <NA>   -0.183    0.0625  0.519   NA          NA  
+    ##  4 B immature typehealthy___G… <NA>   -0.183    0.0619  0.456   NA          NA  
+    ##  5 B immature (Intercept)___G… <NA>   -0.0765   0.157   0.579   NA          NA  
+    ##  6 B immature typehealthy___G… <NA>   -0.0869   0.154   0.572   NA          NA  
+    ##  7 B immature (Intercept)___G… <NA>   -0.0811   0.171   0.601   NA          NA  
+    ##  8 B immature (Intercept)___G… <NA>   -0.659   -0.222   0.0436  NA          NA  
+    ##  9 B mem      (Intercept)      <NA>   -0.793   -0.376   0.0568   1.01       58.1
+    ## 10 B mem      typehealthy      type    0.419    1.01    1.62     1.01       48.9
     ## # ℹ 230 more rows
-    ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
-    ## #   count_data <list>
+    ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
 
 ### Nested Random Effects
 
@@ -648,23 +712,39 @@ res =
 res
 ```
 
-    ## # A tibble: 300 × 16
-    ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
-    ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.413    0.796   1.32     1.06       22.4
-    ##  2 B immature typehealthy      type    0.539    0.981   1.51     1.01       81.2
-    ##  3 B immature (Intercept)___G… <NA>   -0.165    0.135   0.617   NA          NA  
-    ##  4 B immature typehealthy___G… <NA>   -0.145    0.102   0.606   NA          NA  
-    ##  5 B immature (Intercept)___G… <NA>   -0.135    0.0972  0.471   NA          NA  
-    ##  6 B immature typehealthy___G… <NA>   -0.139    0.0844  0.417   NA          NA  
-    ##  7 B immature (Intercept)___G… <NA>   -0.0674   0.216   0.678   NA          NA  
-    ##  8 B immature (Intercept)___G… <NA>   -0.827   -0.331   0.0385  NA          NA  
-    ##  9 B immature (Intercept)___G… <NA>   -0.367   -0.0896  0.183   NA          NA  
-    ## 10 B immature (Intercept)___G… <NA>   -0.0360   0.263   0.639   NA          NA  
+    ## sccomp model
+    ## ============
+    ## 
+    ## Model specifications:
+    ##   Family: multi_beta_binomial 
+    ##   Composition formula: ~type + (type | group__) + (1 | group2__) 
+    ##   Variability formula: ~1 
+    ##   Inference method: pathfinder 
+    ## 
+    ## Data: Samples: 20   Cell groups: 30 
+    ## 
+    ## Column prefixes: c_ -> composition parameters  v_ -> variability parameters
+    ## 
+    ## Convergence diagnostics:
+    ##   For each parameter, n_eff is the effective sample size and R_k_hat is the potential
+    ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
+    ## 
+    ## # A tibble: 300 × 15
+    ##    cell_group parameter       factor c_lower c_effect  c_upper c_rhat c_ess_bulk
+    ##    <chr>      <chr>           <chr>    <dbl>    <dbl>    <dbl>  <dbl>      <dbl>
+    ##  1 B immature (Intercept)     <NA>    0.412    0.784   1.27      1.00       92.5
+    ##  2 B immature typehealthy     type    0.569    1.08    1.55      1.00       79.9
+    ##  3 B immature (Intercept)___… <NA>   -0.432    0.116   0.566    NA          NA  
+    ##  4 B immature typehealthy___… <NA>   -0.140    0.110   0.570    NA          NA  
+    ##  5 B immature (Intercept)___… <NA>   -0.519    0.0756  0.442    NA          NA  
+    ##  6 B immature typehealthy___… <NA>   -0.145    0.0978  0.497    NA          NA  
+    ##  7 B immature (Intercept)___… <NA>   -0.143    0.202   0.587    NA          NA  
+    ##  8 B immature (Intercept)___… <NA>   -0.798   -0.323  -0.00219  NA          NA  
+    ##  9 B immature (Intercept)___… <NA>   -0.385   -0.0444  0.234    NA          NA  
+    ## 10 B immature (Intercept)___… <NA>   -0.0520   0.249   0.680    NA          NA  
     ## # ℹ 290 more rows
-    ## # ℹ 8 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
-    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>,
-    ## #   count_data <list>
+    ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
+    ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
 
 ## An aid to result interpretation and communication
 
@@ -707,16 +787,16 @@ sccomp_result |>
     ## # A tibble: 36 × 2
     ##    cell_group statement                                
     ##    <chr>      <glue>                                   
-    ##  1 B1         2-fold decrease (from 0.0588 to 0.0293)  
-    ##  2 B2         2.1-fold decrease (from 0.0385 to 0.0184)
-    ##  3 B3         1.4-fold decrease (from 0.0127 to 0.0092)
-    ##  4 BM         1.3-fold decrease (from 0.0066 to 0.0049)
-    ##  5 CD4 1      1.2-fold increase (from 0.0249 to 0.0297)
-    ##  6 CD4 2      1.4-fold increase (from 0.052 to 0.072)  
-    ##  7 CD4 3      2.6-fold decrease (from 0.0847 to 0.0329)
+    ##  1 B1         2-fold decrease (from 0.0591 to 0.0297)  
+    ##  2 B2         2.1-fold decrease (from 0.0386 to 0.0182)
+    ##  3 B3         1.4-fold decrease (from 0.0129 to 0.009) 
+    ##  4 BM         1.3-fold decrease (from 0.0065 to 0.0049)
+    ##  5 CD4 1      1.2-fold increase (from 0.0249 to 0.03)  
+    ##  6 CD4 2      1.4-fold increase (from 0.0515 to 0.0732)
+    ##  7 CD4 3      2.5-fold decrease (from 0.0838 to 0.0331)
     ##  8 CD4 4      1-fold increase (from 0.0017 to 0.0018)  
-    ##  9 CD4 5      1-fold increase (from 0.0301 to 0.0313)  
-    ## 10 CD8 1      1.1-fold increase (from 0.1105 to 0.1215)
+    ##  9 CD4 5      1-fold increase (from 0.0303 to 0.0312)  
+    ## 10 CD8 1      1.1-fold increase (from 0.1107 to 0.1205)
     ## # ℹ 26 more rows
 
 ## Contrasts
@@ -732,21 +812,38 @@ seurat_obj |>
   sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
 ```
 
-    ## # A tibble: 60 × 12
+    ## sccomp model
+    ## ============
+    ## 
+    ## Model specifications:
+    ##   Family: multi_beta_binomial 
+    ##   Composition formula: ~0 + type 
+    ##   Variability formula: ~1 
+    ##   Inference method: pathfinder 
+    ## 
+    ## Data: Samples: 20   Cell groups: 30 
+    ## 
+    ## Column prefixes: c_ -> composition parameters  v_ -> variability parameters
+    ## 
+    ## Convergence diagnostics:
+    ##   For each parameter, n_eff is the effective sample size and R_k_hat is the potential
+    ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
+    ## 
+    ## # A tibble: 60 × 11
     ##    cell_group   parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
     ##    <chr>        <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B immature   typecanc… <NA>    -1.89    -1.35   -0.826 0       0           NA
-    ##  2 B immature   typeheal… <NA>     0.826    1.35    1.89  0       0           NA
-    ##  3 B mem        typecanc… <NA>    -2.26    -1.63   -1.03  0       0           NA
-    ##  4 B mem        typeheal… <NA>     1.03     1.63    2.26  0       0           NA
-    ##  5 CD4 cm S100… typecanc… <NA>    -1.46    -0.988  -0.523 0       0           NA
-    ##  6 CD4 cm S100… typeheal… <NA>     0.523    0.988   1.46  0       0           NA
-    ##  7 CD4 cm high… typecanc… <NA>     0.828    1.55    2.26  0       0           NA
-    ##  8 CD4 cm high… typeheal… <NA>    -2.26    -1.55   -0.828 0       0           NA
-    ##  9 CD4 cm ribo… typecanc… <NA>     0.315    0.942   1.56  0.00500 0.00125     NA
-    ## 10 CD4 cm ribo… typeheal… <NA>    -1.56    -0.942  -0.315 0.00500 0.00125     NA
+    ##  1 B immature   typecanc… <NA>    -1.88    -1.34   -0.797 0       0           NA
+    ##  2 B immature   typeheal… <NA>     0.797    1.34    1.88  0       0           NA
+    ##  3 B mem        typecanc… <NA>    -2.23    -1.63   -1.02  0       0           NA
+    ##  4 B mem        typeheal… <NA>     1.02     1.63    2.23  0       0           NA
+    ##  5 CD4 cm S100… typecanc… <NA>    -1.43    -0.983  -0.529 2.50e-4 5.00e-5     NA
+    ##  6 CD4 cm S100… typeheal… <NA>     0.529    0.983   1.43  2.50e-4 5.00e-5     NA
+    ##  7 CD4 cm high… typecanc… <NA>     0.831    1.54    2.24  2.50e-4 8.33e-5     NA
+    ##  8 CD4 cm high… typeheal… <NA>    -2.24    -1.54   -0.831 2.50e-4 8.33e-5     NA
+    ##  9 CD4 cm ribo… typecanc… <NA>     0.296    0.951   1.56  6.75e-3 2.09e-3     NA
+    ## 10 CD4 cm ribo… typeheal… <NA>    -1.56    -0.951  -0.296 6.75e-3 2.09e-3     NA
     ## # ℹ 50 more rows
-    ## # ℹ 3 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, count_data <list>
+    ## # ℹ 2 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>
 
 ## Categorical factor (e.g. Bayesian ANOVA)
 
