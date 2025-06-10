@@ -8,7 +8,7 @@
 #' 
 #' The output is formatted to be easy to read and understand.
 #' 
-#' @importFrom magrittr `%$%`
+#' @importFrom magrittr "%$%"
 #' @param x A sccomp object
 #' @param ... Additional arguments passed to print
 #'
