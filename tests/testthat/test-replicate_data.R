@@ -50,6 +50,7 @@ test_that("replicate_data works correctly", {
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
     original_count_data = counts_obj |> sccomp:::.subset(!!quo(sample))
@@ -139,6 +140,7 @@ test_that("replicate_data works with random intercept model", {
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
     original_count_data = test_data |> sccomp:::.subset(!!quo(sample))
@@ -233,6 +235,7 @@ test_that("replicate_data works with random slope model", {
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
     original_count_data = test_data |> sccomp:::.subset(!!quo(sample))
@@ -343,6 +346,7 @@ new_data =
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = new_data,
     original_count_data = test_data |> sccomp:::.subset(!!quo(sample))
@@ -432,6 +436,7 @@ test_that("replicate_data works with nested random effects", {
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
     original_count_data = test_data |> sccomp:::.subset(!!quo(sample))
@@ -542,6 +547,7 @@ test_that("replicate_data works with NA values in grouping", {
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
     original_count_data = test_data |> sccomp:::.subset(!!quo(sample))
@@ -675,6 +681,7 @@ test_that("replicate_data works with NA values in grouping and random effects", 
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = NULL,
     original_count_data = test_data |> sccomp:::.subset(!!quo(sample))
@@ -844,6 +851,7 @@ test_that("replicate_data works with type NA and group__ NA", {
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = new_data,
     original_count_data = test_data |> sccomp:::.subset(!!quo(sample))
@@ -1008,6 +1016,7 @@ test_that("prepare_replicate_data handles complex design with NAs and prints new
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
     formula_composition = formula_composition,
+    original_formula_composition = formula_composition,
     formula_variability = formula_variability,
     new_data = new_data,
     original_count_data = original_count_data
@@ -1094,6 +1103,7 @@ test_that("prepare_replicate_data throws error for duplicate sample names", {
       .cell_group = !!rlang::quo(cell_group),
       .count = !!rlang::quo(count),
       formula_composition = formula_composition,
+      original_formula_composition = formula_composition,
       formula_variability = formula_variability,
       new_data = NULL,
       original_count_data = original_count_data_duplicates
@@ -1121,6 +1131,7 @@ test_that("prepare_replicate_data throws error for duplicate sample names", {
       .cell_group = !!rlang::quo(cell_group),
       .count = !!rlang::quo(count),
       formula_composition = formula_composition,
+      original_formula_composition = formula_composition,
       formula_variability = formula_variability,
       new_data = new_data_duplicates,
       original_count_data = counts_obj |> sccomp:::.subset(!!quo(sample))
