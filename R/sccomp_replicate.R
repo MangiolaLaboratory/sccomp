@@ -147,6 +147,7 @@ prepare_replicate_data = function(X,
                                   .cell_group,
                                   .count,
                                   formula_composition,
+                                  original_formula_composition,
                                   formula_variability,
                                   new_data = NULL,
                                   original_count_data) {
@@ -283,7 +284,7 @@ prepare_replicate_data = function(X,
   if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
   
   # Original grouping
-  original_grouping_names = formula_composition |> formula_to_random_effect_formulae() |> pull(grouping)
+  original_grouping_names = original_formula_composition |> formula_to_random_effect_formulae() |> pull(grouping)
   
   # Random intercept
   random_effect_elements = parse_formula_random_effect(formula_composition)
@@ -468,6 +469,7 @@ replicate_data = function(.data,
     .cell_group = !!.cell_group,
     .count = !!.count,
     formula_composition = formula_composition,
+    original_formula_composition = .data |> attr("formula_composition"),
     formula_variability = formula_variability,
     new_data = new_data,
     original_count_data =
