@@ -84,7 +84,7 @@ sccomp_boxplot = function(
   if(remove_unwanted_effects){
     .data_adjusted = 
       .data |> 
-      sccomp_remove_unwanted_variation(formula_composition_keep = as.formula("~ " |> paste(factor))) |> 
+      sccomp_remove_unwanted_effects(formula_composition_keep = as.formula("~ " |> paste(factor))) |> 
       rename(proportion = adjusted_proportion)
     
     data_proportion = 
