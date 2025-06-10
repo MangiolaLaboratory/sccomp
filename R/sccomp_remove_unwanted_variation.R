@@ -1,6 +1,9 @@
-#' sccomp_remove_unwanted_variation
+#' DEPRECATED: Remove Unwanted Variation from sccomp Estimates
 #'
-#' @description This function uses the model to remove unwanted variation from a dataset using the estimates of the model. For example, if you fit your data with the formula `~ factor_1 + factor_2` and use the formula `~ factor_1` to remove unwanted variation, the `factor_2` effect will be factored out.
+#' @description This function is DEPRECATED. Please use \code{\link{sccomp_remove_unwanted_effects}} instead.
+#' This function uses the model to remove unwanted variation from a dataset using the estimates of the model. 
+#' For example, if you fit your data with the formula `~ factor_1 + factor_2` and use the formula `~ factor_1` 
+#' to remove unwanted variation, the `factor_2` effect will be factored out.
 #'
 #' @param .data A tibble. The result of `sccomp_estimate`.
 #' @param formula_composition_keep A formula. The formula describing the model for differential abundance, for example `~type`. In this case, only the effect of the `type` factor will be preserved, while all other factors will be factored out.
@@ -41,7 +44,6 @@
 #' @references
 #' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
-#' @noRd 
 sccomp_remove_unwanted_variation <- function(.data,
                                              formula_composition_keep = NULL,
                                              formula_composition = NULL,
