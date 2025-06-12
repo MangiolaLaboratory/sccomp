@@ -1,5 +1,5 @@
 test_that("test NA factors with interactions",{
-  
+  skip_cmdstan()
   
   library(dplyr)
  
@@ -68,6 +68,7 @@ test_that("test NA factors with interactions",{
 })
 
 test_that("test NA in both group2__ and type", {
+  skip_cmdstan()
   
   library(dplyr)
   
@@ -119,6 +120,7 @@ test_that("test NA in both group2__ and type", {
 })
 
 test_that("test NA in three-way interaction", {
+  skip_cmdstan()
   
   library(dplyr)
   
@@ -185,6 +187,7 @@ test_that("test NA in three-way interaction", {
 })
 
 test_that("test NA in nested effects", {
+  skip_cmdstan()
   
   library(dplyr)
   
@@ -240,6 +243,7 @@ test_that("test NA in nested effects", {
 })
 
 test_that("test NA in three-way interaction with one factor NA", {
+  skip_cmdstan()
   
   library(dplyr)
   
@@ -306,6 +310,7 @@ test_that("test NA in three-way interaction with one factor NA", {
 })
 
 test_that("test NA in three-way interaction with two factors NA", {
+  skip_cmdstan()
   
   library(dplyr)
   
@@ -372,6 +377,7 @@ test_that("test NA in three-way interaction with two factors NA", {
 })
 
 test_that("test NA in three-way interaction with three factors NA", {
+  skip_cmdstan()
   
   library(dplyr)
   

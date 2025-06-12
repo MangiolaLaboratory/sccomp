@@ -647,7 +647,20 @@ design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FAL
 #' @param design_matrix The original design matrix
 #' @param data_with_na The data frame containing the original data with NA values handled
 #'
+#' @importFrom stringr str_remove
+#' @importFrom stringr str_split
+#' @importFrom stringr str_replace_all
 #' @importFrom tidyr crossing
+#' @importFrom tidyr enframe
+#' @importFrom dplyr rowwise
+#' @importFrom dplyr c_across
+#' @importFrom dplyr filter
+#' @importFrom dplyr select
+#' @importFrom dplyr matches
+#' @importFrom dplyr all_of
+#' @importFrom purrr map
+#' @importFrom purrr reduce
+#' 
 #' @return A list of tibbles, each containing the factor combinations and their fraction contributions
 #' @noRd
 calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_matrix, data_with_na) {
@@ -659,8 +672,6 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
     list_of_contributions = 
       str_split(col, ":", simplify = TRUE) |>
       map(function(x) {
-        # If NA is not present in the column name, return the column name
-        # if(!str_detect(x[1], "NA")) return(x[1])
 
         factor_name = x[1] |> str_remove("NA$")
         
@@ -1494,7 +1505,6 @@ sample_seed = function(){
 #' @return A data frame with missing values handled:
 #'   - For categorical variables (factor/character): NA values are converted to a factor level "NA"
 #'   - For numeric variables: NA values are replaced with the mean of the column
-#' @export
 handle_missing_values <- function(data) {
   data %>%
     mutate(
