@@ -584,101 +584,120 @@ get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
   .sample = enquo(.sample)
   
   # Convert NA to a factor level "NA" for categorical variables
-  data_with_na <- .data_spread %>%
-    mutate(
-      # 1) Handle factor/character: turn NA into a real "NA" level, last in the ordering
-      across(
-        where(~ is.factor(.x) || is.character(.x)),
-        ~{
-          if (any(is.na(.x))) {
-            x_char <- as.character(.x)
-            x_char[is.na(x_char)] <- "NA"
-            f <- factor(x_char)
-            non_na_levels <- setdiff(levels(f), "NA")
-            new_levels <- c(non_na_levels, "NA")
-            factor(f, levels = new_levels)
-          } else {
-            .x
-          }
-        }
-      ),
-      # 2) Handle numeric: replace NA by the (non-NA) mean of that column
-      across(
-        where(is.numeric),
-        ~{
-          if (any(is.na(.x))) {
-            mean_val <- mean(.x, na.rm = TRUE)
-            ifelse(is.na(.x), mean_val, .x)  # Only replace NAs, keep original values
-          } else {
-            .x
-          }
-        }
-      )
-    )
+  data_with_na <- handle_missing_values(.data_spread)
   
   # Create design matrix
   design_matrix = model.matrix(formula, data = data_with_na, na.action = NULL)
   
-  # Process rows that had NA values and remove the "NA" columns
-  for(col_name in names(data_with_na)) {
-    if(is.factor(data_with_na[[col_name]]) || is.character(data_with_na[[col_name]])) {
-      # Get unique levels of this factor (excluding NA)
-      factor_levels = levels(factor(data_with_na[[col_name]]))
-      factor_levels = factor_levels[factor_levels != "NA"]
-      
-      # Find the "NA" column for this factor
-      na_col_pattern = paste0(col_name, "NA$")
-      na_col = grep(na_col_pattern, colnames(design_matrix))
-      
-      if(length(na_col) > 0) {
-        # Find rows with NA values using the design matrix
-        na_rows = which(design_matrix[, na_col] == 1)
-        
-        if(length(na_rows) > 0) {
-          # Find all columns related to this factor in the design matrix
-          factor_cols = c()
-          for(level in factor_levels) {
-            # Skip the reference level which won't appear in the design matrix
-            level_col = grep(paste0("^", col_name, level, "$"), colnames(design_matrix))
-            if(length(level_col) > 0) {
-              factor_cols = c(factor_cols, level_col)
-            }
-          }
-          
-          # If we can't find factor columns by level names, try the generic pattern
-          if(length(factor_cols) == 0) {
-            factor_pattern = paste0("^", col_name)
-            factor_cols = grep(factor_pattern, colnames(design_matrix))
-            factor_cols = setdiff(factor_cols, na_col)
-          }
-          
-          # Remove NA column from design matrix
-          design_matrix = design_matrix[, -na_col, drop = FALSE]
-          
-          # Number of visible levels in design matrix (accounting for reference level)
-          n_levels = length(factor_cols)
-          
-          # For multi-level factors, we need to consider the reference level too
-          # The reference level is implied when all other level columns are 0
-          # So we distribute 1/(n_levels+1) to each visible level
-          # Base level gets effect of 1 - sum(other_effects)
-          
-          if(n_levels > 0) {
-            for(row in na_rows) {
-              # Equal weight for each level
-              design_matrix[row, factor_cols] = 1/(n_levels + 1)
-            }
-          }
-        }
-      }
-    }
-  }
+  # Here I get
+ # design_matrix |> tail()
+ #  (Intercept) group2__GROUP22 typehealthy typeNA group2__GROUP22:typehealthy group2__GROUP22:typeNA
+ # 16           1               0           0      0                           0                      0
+ # 17           1               1           0      0                           0                      0
+ # 18           1               0           0      0                           0                      0
+ # 19           1               0           1      0                           0                      0
+ # 20           1               0           1      0                           0                      0
+ # 21           1               0           0      1                           0                      0
 
-  rownames(design_matrix) = .data_spread |> pull(!!.sample)
+# Split the design matrix into two parts:
+# 1. The part that is not affected by NA values
+# 2. The columns that are affected by NA values
+
+# Get the columns that are affected by NA values, with or without interactions
+
+
+na_rows = which(rowSums(design_matrix[, grep("NA$|NA:", colnames(design_matrix)), drop=FALSE]) > 0) |> unique()
+
+# Loop over na_rows and calculate the fraction contribution for each row
+for(row in na_rows) { 
+
+  # Select the columns that are affected by NA values and also have a non-zero value in the design matrix
+  na_cols = grep("NA$|NA:", colnames(design_matrix[row, , drop = FALSE]))
+  na_cols = na_cols[design_matrix[row, na_cols] != 0]
   
-  design_matrix
+  if(length(na_cols) == 0) next
+  
+  my_design_matrix = design_matrix[row,, drop = FALSE]
+  
+  fraction_contribution = calculate_na_fraction_contribution(my_design_matrix, na_cols, design_matrix, data_with_na)
+
+  # Now for every row in fraction_contribution, I want to add the fraction contribution to the design matrix according to the factor_name
+  for(fraction_contribution_row in 1:nrow(fraction_contribution)) {
+    my_col = which(colnames(design_matrix) == (fraction_contribution[fraction_contribution_row,,drop=FALSE] |> select(all_of("factor_name")) |> pull(1)))
+    design_matrix[row, my_col] = design_matrix[row, my_col] + (fraction_contribution[fraction_contribution_row,,drop=FALSE] |> select(all_of("fraction_contribution")) |> pull(1))
+  }
 }
 
+design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FALSE]
+
+}
+
+#' Calculate fraction contribution for NA values in design matrix
+#'
+#' This function calculates how to distribute the effect of NA values across all possible factor levels.
+#' For each column in the design matrix that contains NA values (either directly or in interactions),
+#' it:
+#' 1. Splits the column name into its components
+#' 2. For each component containing "NA", replaces it with all possible factor levels
+#' 3. Creates all possible combinations of these levels
+#' 4. Calculates the fraction of the effect that should be attributed to each combination
+#' 5. Filters to only keep combinations that exist in the original design matrix
+#'
+#' @param design_with_na A matrix containing columns with NA values
+#' @param design_matrix The original design matrix
+#' @param data_with_na The data frame containing the original data with NA values handled
+#'
+#' @importFrom tidyr crossing
+#' @return A list of tibbles, each containing the factor combinations and their fraction contributions
+#' @noRd
+calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_matrix, data_with_na) {
+  
+  design_with_na = my_design_matrix[, na_cols, drop = FALSE]
+  
+  map(colnames(design_with_na), function(col) {
+    
+    list_of_contributions = 
+      str_split(col, ":", simplify = TRUE) |>
+      map(function(x) {
+        # If NA is not present in the column name, return the column name
+        # if(!str_detect(x[1], "NA")) return(x[1])
+
+        factor_name = x[1] |> str_remove("NA$")
+        
+        # Now I want to count the possible values of the factor in the input data
+        if(data_with_na[[factor_name]] |> is.numeric())
+          factor_levels = factor_name
+        else{
+          factor_levels = levels(factor(data_with_na[[factor_name]]))
+          factor_levels = factor_levels[factor_levels != "NA"]
+          if(factor_levels |> length() == 0) factor_levels = ""
+        }
+       
+        
+        str_replace_all(x, "NA", factor_levels) |> 
+          enframe(value = "factor_name") |> 
+          select(-name) |> 
+          mutate(fraction_contribution = 1/n()) |> 
+          mutate(fraction_contribution = fraction_contribution * my_design_matrix[,x ])
+      }) 
+    
+    # Parse contribution
+    list_of_contributions |>
+      
+      purrr::reduce(crossing,  .name_repair = "unique")  |> 
+      suppressMessages() |> 
+      rowwise() |> 
+      mutate(
+        fraction_contribution = prod( c_across(matches("fraction_contribution")) ),
+        factor_name = paste0( c_across(matches("factor_name")), collapse=":" )
+      ) |> 
+      
+      filter(factor_name %in% colnames(design_matrix)) |> 
+      select(factor_name, fraction_contribution)
+  }) |>
+    
+    bind_rows()
+}
 
 #' Check Random Intercept Design
 #'
@@ -1467,6 +1486,47 @@ print_red_tibble <- function(tbl) {
 # This is needed because I have a `sample` argument, that when it is not defined affects the sample() function
 sample_seed = function(){
   sample(1e5, 1)
+}
+
+#' Handle missing values in a data frame
+#' 
+#' @param data A data frame to process
+#' @return A data frame with missing values handled:
+#'   - For categorical variables (factor/character): NA values are converted to a factor level "NA"
+#'   - For numeric variables: NA values are replaced with the mean of the column
+#' @export
+handle_missing_values <- function(data) {
+  data %>%
+    mutate(
+      # 1) Handle factor/character: turn NA into a real "NA" level, last in the ordering
+      across(
+        where(~ is.factor(.x) || is.character(.x)),
+        ~{
+          if (any(is.na(.x))) {
+            x_char <- as.character(.x)
+            x_char[is.na(x_char)] <- "NA"
+            f <- factor(x_char)
+            non_na_levels <- setdiff(levels(f), "NA")
+            new_levels <- c(non_na_levels, "NA")
+            factor(f, levels = new_levels)
+          } else {
+            .x
+          }
+        }
+      ),
+      # 2) Handle numeric: replace NA by the (non-NA) mean of that column
+      across(
+        where(is.numeric),
+        ~{
+          if (any(is.na(.x))) {
+            mean_val <- mean(.x, na.rm = TRUE) 
+            ifelse(is.na(.x), mean_val, .x)  # Only replace NAs, keep original values
+          } else {
+            .x
+          }
+        }
+      )
+    )
 }
 
 

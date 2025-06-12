@@ -246,3 +246,5 @@ test_that("get_random_effect_design3 handles multiple groups with complex factor
   expect_equal(design_matrix$`age___GROUP2`[design_matrix$sample == "sample2"], age_scaled[2])
   expect_equal(design_matrix$`age___GROUP3`[design_matrix$sample == "sample3"], age_scaled[3])
 })
+
+
