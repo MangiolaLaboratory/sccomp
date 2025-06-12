@@ -618,7 +618,7 @@ for(row in na_rows) {
   if(length(na_cols) == 0) next
   
   my_design_matrix = design_matrix[row,, drop = FALSE]
-  
+ 
   fraction_contribution = calculate_na_fraction_contribution(my_design_matrix, na_cols, design_matrix, data_with_na)
 
   # Now for every row in fraction_contribution, I want to add the fraction contribution to the design matrix according to the factor_name
@@ -628,6 +628,7 @@ for(row in na_rows) {
   }
 }
 
+rownames(design_matrix) = .data_spread |> pull(!!.sample)
 design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FALSE]
 
 }

@@ -37,7 +37,8 @@ test_that("get_random_effect_design3 handles NA values in design matrix correctl
   
   result <- sccomp:::get_random_effect_design3(test_data, formula, grouping, sample, accept_NA_as_average_effect = TRUE)
   
-  design_matrix <- result |> 
+  design_matrix <- 
+    result |> 
     select(sample, group___label, value) |>
     pivot_wider(names_from = group___label, values_from = value) |>
     mutate(across(everything(), ~ .x |> replace_na(0)))
