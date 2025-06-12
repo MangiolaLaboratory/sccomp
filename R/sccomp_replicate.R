@@ -320,6 +320,10 @@ prepare_replicate_data = function(X,
         design,
         ~ ..1 |>
           select(!!.sample, group___label, value) |>
+          
+          # Some combinations might not have been present in a specific group so the parameter does not exist
+          filter(group___label %in% colnames(X_random_effect)) |> 
+          
           pivot_wider(names_from = group___label, values_from = value) |>
           mutate(across(everything(), ~ .x |> replace_na(0)))
       )) |>
@@ -327,7 +331,7 @@ prepare_replicate_data = function(X,
       pull(design_matrix) |> 
       _[[1]] |> 
       as_matrix(rownames = quo_name(.sample))  |>
-      tail(nrow_new_data)
+      tail(nrow_new_data) 
     
     # Separate NA group column into new_X_random_effect_unseen
     new_X_random_effect_unseen = new_X_random_effect[, colnames(new_X_random_effect) |> str_detect("___NA$"), drop = FALSE]
@@ -360,6 +364,10 @@ prepare_replicate_data = function(X,
         design,
         ~ ..1 |>
           select(!!.sample, group___label, value) |>
+          
+          # Some combinations might not have been present in a specific group so the parameter does not exist
+          filter(group___label %in% colnames(X_random_effect_2)) |> 
+          
           pivot_wider(names_from = group___label, values_from = value) |>
           mutate(across(everything(), ~ .x |> replace_na(0)))
       )) |>
