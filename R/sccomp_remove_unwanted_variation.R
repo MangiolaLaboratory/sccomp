@@ -1,6 +1,9 @@
-#' sccomp_remove_unwanted_variation
+#' DEPRECATED: Remove Unwanted Variation from sccomp Estimates
 #'
-#' @description This function uses the model to remove unwanted variation from a dataset using the estimates of the model. For example, if you fit your data with the formula `~ factor_1 + factor_2` and use the formula `~ factor_1` to remove unwanted variation, the `factor_2` effect will be factored out.
+#' @description This function is DEPRECATED. Please use \code{\link{sccomp_remove_unwanted_effects}} instead.
+#' This function uses the model to remove unwanted variation from a dataset using the estimates of the model. 
+#' For example, if you fit your data with the formula `~ factor_1 + factor_2` and use the formula `~ factor_1` 
+#' to remove unwanted variation, the `factor_2` effect will be factored out.
 #'
 #' @param .data A tibble. The result of `sccomp_estimate`.
 #' @param formula_composition_keep A formula. The formula describing the model for differential abundance, for example `~type`. In this case, only the effect of the `type` factor will be preserved, while all other factors will be factored out.
@@ -46,71 +49,17 @@ sccomp_remove_unwanted_variation <- function(.data,
                                              formula_composition = NULL,
                                              formula_variability = NULL,
                                              cores = detectCores()) {
+  lifecycle::deprecate_warn(
+    "1.99.20",
+    "sccomp::sccomp_remove_unwanted_variation()",
+    details = "sccomp says: sccomp_remove_unwanted_variation is deprecated. Please use sccomp_remove_unwanted_effects() instead."
+  )
   
-  # Check for deprecated arguments
-  if (!is.null(formula_composition)) {
-    warning("The argument 'formula_composition' is deprecated. Please use 'formula_composition_keep' instead.", call. = FALSE)
-    formula_composition_keep <- formula_composition
-  }
-  
-  if (!is.null(formula_variability)) {
-    warning("The argument 'formula_variability' is deprecated as not used.", call. = FALSE)
-  }
-  
-  # Run the function
-  check_and_install_cmdstanr()
-  
-  UseMethod("sccomp_remove_unwanted_variation", .data)
+  sccomp_remove_unwanted_effects(
+    .data = .data,
+    formula_composition_keep = formula_composition_keep,
+    formula_composition = formula_composition,
+    cores = cores
+  )
 }
 
-#' @importFrom readr write_file
-#' @export
-#'
-sccomp_remove_unwanted_variation.sccomp_tbl = function(.data,
-                                                       formula_composition_keep = NULL,
-                                                       formula_composition = NULL,
-                                                       formula_variability = NULL,
-                                                       cores = detectCores()){
-  
-  
-  model_input = attr(.data, "model_input")
-  .sample = attr(.data, ".sample")
-  .cell_group = attr(.data, ".cell_group")
-  .grouping_for_random_effect = attr(.data, ".grouping_for_random_effect")
-  .count = attr(.data, ".count")
-  
-  # Residuals
-  message("sccomp says: calculating residuals")
-  residuals = .data |> sccomp_calculate_residuals()
-  
-  
-  message("sccomp says: regressing out unwanted factors")
-  
-  
-  # Generate quantities
-  .data |>
-    sccomp_predict(
-      formula_composition = formula_composition_keep,
-      number_of_draws = attr(.data, "fit") |>  get_output_samples() |> min(500)
-      
-    ) |>
-    distinct(!!.sample, !!.cell_group, proportion_mean) |>
-    # mutate(proportion_mean =
-    #          proportion_mean |>
-    #          # compress_zero_one() |>
-    #          boot::logit()
-    # ) |>
-    left_join(residuals,  by = c(quo_name(.sample), quo_name(.cell_group))) |>
-    mutate(adjusted_proportion = proportion_mean + residuals) |>
-    mutate(adjusted_proportion = adjusted_proportion |> pmax(0)) |> 
-    # mutate(adjusted_proportion = adjusted_proportion |> boot::inv.logit()) |>
-    # with_groups(!!.sample,  ~ .x |> mutate(adjusted_proportion := adjusted_proportion / sum(adjusted_proportion ))) |>
-    
-    # Recostituite counts
-    mutate(adjusted_counts = adjusted_proportion * exposure) |>
-    
-    select(!!.sample, !!.cell_group, adjusted_proportion, adjusted_counts, residuals)
-  
-  
-  
-}
