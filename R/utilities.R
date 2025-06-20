@@ -304,33 +304,49 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
 #' @importFrom tidyr separate
 #' @importFrom purrr when
 #' 
-#' @param fit A fit object from a statistical model, from the 'rstan' package.
+#' @param fit A fit object from a statistical model from 'cmdstanr' package.
 #' @param par A character vector specifying the parameters to extract from the fit object.
-#' @param x A character string specifying the first index in the parameter names.
-#' @param y A character string specifying the second index in the parameter names (optional).
-#' @param probs A numerical vector specifying the quantiles to extract.
+#' @param x A character string specifying the first index variable name in the parameter names.
+#' @param y A character string specifying the second index variable name in the parameter names (optional). If NULL, the function will attempt to parse both indices from the parameter names.
+#' @param probs A numerical vector specifying the quantiles to extract. Default is c(0.025, 0.25, 0.50, 0.75, 0.975).
+#' @param robust A logical value indicating whether to use robust statistics (median and MAD) instead of mean and standard deviation. Default is FALSE.
+#' 
+#' @return A tibble containing the summary statistics for the specified parameters, with separate columns for the parsed indices.
+#' 
+#' @details This function extracts summary statistics from a fitted model and parses parameter names 
+#' that contain indices (e.g., "beta[1,2]") into separate columns. It supports both classical 
+#' (mean/sd) and robust (median/mad) summary statistics.
 #' 
 #' @keywords internal
 #' @noRd
-summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975)) {
+summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50, 0.75, 0.975), robust = FALSE) {
   
   # Avoid bug
   #if(fit@stan_args[[1]]$method %>% is.null) fit@stan_args[[1]]$method = "hmc"
   
-  summary = 
-    fit$summary(variables = par, "mean", ~quantile(.x, probs = probs,  na.rm=TRUE), "rhat", "ess_bulk", "ess_tail") %>%
-    rename(.variable = variable ) %>%
-    
-    when(
-      is.null(y) ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop"),
-      ~ (.) %>% tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
-    )
+  # Choose between robust and classical summary statistics
+  if(!robust)
+    # Use classical statistics: mean, standard deviation, and quantiles
+    summary = 
+      fit$summary(variables = par, "mean", "sd", ~ quantile(.x, probs = probs,  na.rm=TRUE), "rhat", "ess_bulk", "ess_tail") %>%
+      rename(.variable = variable ) 
+  else
+    # Use robust statistics: median, median absolute deviation, and quantiles
+    summary = 
+      fit$summary(variables = par, "median", "mad", ~ quantile(.x, probs = probs,  na.rm=TRUE), "rhat", "ess_bulk", "ess_tail") %>%
+      rename(.variable = variable ) 
   
-  # # summaries are returned only for HMC
-  # if(!"n_eff" %in% colnames(summary)) summary = summary |> mutate(n_eff = NA)
-  # if(!"R_k_hat" %in% colnames(summary)) summary = summary |> mutate(R_k_hat = NA)
-  
-  summary
+  # Parse parameter names that contain indices (e.g., "beta[1,2]")
+  if(is.null(y))
+    # If y is not provided, extract both x and y indices from parameter names
+    summary |> 
+      tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
+  else
+    # If y is provided, still extract both indices (y parameter is ignored in this case)
+    # This maintains consistency in the output format regardless of whether y is provided
+    summary |> 
+      tidyr::separate(col = .variable,  into = c(".variable", x, y), sep="\\[|,|\\]", convert = TRUE, extra="drop")
+
   
 }
 

@@ -184,6 +184,22 @@ test_that("Predict data",{
       number_of_draws = 1
     )
   
+  # Test robust parameter
+  prediction_robust = 
+    my_estimate |>
+    sccomp_predict(
+      formula_composition = ~ type,
+      new_data = new_data_tibble,
+      robust = TRUE,
+      number_of_draws = 1
+    )
+  
+  # Test that robust prediction works and returns expected columns
+  expect_true("proportion_mean" %in% colnames(prediction_robust))
+  expect_true("proportion_lower" %in% colnames(prediction_robust))
+  expect_true("proportion_upper" %in% colnames(prediction_robust))
+  expect_equal(nrow(prediction_robust), 60)
+  
 })
 
 test_that("outliers",{

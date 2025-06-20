@@ -11,12 +11,13 @@
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #' @param summary_instead_of_draws Return the summary values (i.e. mean and quantiles) of the predicted proportions, or return single draws. Single draws can be helful to better analyse the uncertainty of the prediction.
+#' @param robust A logical. If TRUE, use robust statistics (median and median absolute deviation) instead of classical statistics (mean and standard deviation) for the summary calculations.
 #'
 #' @return A tibble (`tbl`) with the following columns:
 #' \itemize{
 #'   \item \strong{cell_group} - A character column representing the cell group being tested.
 #'   \item \strong{sample} - A factor column representing the sample name for which the predictions are made.
-#'   \item \strong{proportion_mean} - A numeric column representing the predicted mean proportions from the model.
+#'   \item \strong{proportion_mean} - A numeric column representing the predicted mean (or median when robust=TRUE) proportions from the model.
 #'   \item \strong{proportion_lower} - A numeric column representing the lower bound (2.5%) of the 95% credible interval for the predicted proportions.
 #'   \item \strong{proportion_upper} - A numeric column representing the upper bound (97.5%) of the 95% credible interval for the predicted proportions.
 #' }
@@ -48,7 +49,8 @@ sccomp_predict <- function(fit,
                            new_data = NULL,
                            number_of_draws = 500,
                            mcmc_seed = sample_seed(),
-                           summary_instead_of_draws = TRUE) {
+                           summary_instead_of_draws = TRUE,
+                           robust = FALSE) {
   
   
   # Run the function
@@ -65,7 +67,8 @@ sccomp_predict.sccomp_tbl = function(fit,
                                      new_data = NULL,
                                      number_of_draws = 500,
                                      mcmc_seed = sample_seed(),
-                                     summary_instead_of_draws = TRUE){
+                                     summary_instead_of_draws = TRUE,
+                                     robust = FALSE){
   
   
   
@@ -101,11 +104,19 @@ sccomp_predict.sccomp_tbl = function(fit,
     pull(!!.sample)
   
   # mean generated
-  if(summary_instead_of_draws)
+  if(summary_instead_of_draws){
+    
     prediction_df = 
-    rng |>
-    summary_to_tibble("mu", "M", "N") |>
-    select(M, N, proportion_mean = mean, proportion_lower = `2.5%`, proportion_upper = `97.5%`) 
+      rng |>
+      summary_to_tibble("mu", "M", "N", robust = robust) |>
+      select(M, N, 
+             
+             # This is not great, consider making proportion_mean more general such as proportion_point_estimate
+             proportion_mean = any_of(c("mean", "median")), 
+             proportion_lower = `2.5%`, 
+             proportion_upper = `97.5%`) 
+  }
+
   else
     prediction_df = 
     rng |>
