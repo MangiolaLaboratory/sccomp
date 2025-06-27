@@ -143,6 +143,9 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     inference_method = ifelse(variational_inference, "variational","hmc")
   }
   
+  # Validate inference_method parameter
+  inference_method <- match.arg(inference_method, choices = c("pathfinder", "hmc", "variational"))
+  
   # Prepare column same enquo
   .sample = .estimate |>  attr(".sample")
   .cell_group = .estimate |>  attr(".cell_group")

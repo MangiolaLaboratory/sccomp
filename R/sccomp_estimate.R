@@ -511,6 +511,9 @@ sccomp_estimate.data.frame <- function(.data,
     inference_method <- ifelse(variational_inference, "variational", "hmc")
   }
   
+  # Validate inference_method parameter
+  inference_method <- match.arg(inference_method, choices = c("pathfinder", "hmc", "variational"))
+  
   # Handle deprecated column arguments
   if (lifecycle::is_present(.sample) && 
       !rlang::quo_is_null(.sample) && 
@@ -795,6 +798,9 @@ sccomp_glm_data_frame_counts = function(.data,
   
   .sample_cell_group_pairs_to_exclude = enquo(.sample_cell_group_pairs_to_exclude)
   #.grouping_for_random_effect = enquo(.grouping_for_random_effect)
+  
+  # Validate inference_method parameter
+  inference_method <- match.arg(inference_method, choices = c("pathfinder", "hmc", "variational"))
   
   # Check Sample Consistency of Factors
   check_sample_consistency_of_factors(.data, formula_composition, !!.sample, !!.cell_group)
