@@ -10,7 +10,8 @@ sccomp_predict(
   new_data = NULL,
   number_of_draws = 500,
   mcmc_seed = sample_seed(),
-  summary_instead_of_draws = TRUE
+  summary_instead_of_draws = TRUE,
+  robust = FALSE
 )
 }
 \arguments{
@@ -25,13 +26,15 @@ sccomp_predict(
 \item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
 
 \item{summary_instead_of_draws}{Return the summary values (i.e. mean and quantiles) of the predicted proportions, or return single draws. Single draws can be helful to better analyse the uncertainty of the prediction.}
+
+\item{robust}{A logical. If TRUE, use robust statistics (median and median absolute deviation) instead of classical statistics (mean and standard deviation) for the summary calculations.}
 }
 \value{
 A tibble (\code{tbl}) with the following columns:
 \itemize{
 \item \strong{cell_group} - A character column representing the cell group being tested.
 \item \strong{sample} - A factor column representing the sample name for which the predictions are made.
-\item \strong{proportion_mean} - A numeric column representing the predicted mean proportions from the model.
+\item \strong{proportion_mean} - A numeric column representing the predicted mean (or median when robust=TRUE) proportions from the model.
 \item \strong{proportion_lower} - A numeric column representing the lower bound (2.5\%) of the 95\% credible interval for the predicted proportions.
 \item \strong{proportion_upper} - A numeric column representing the upper bound (97.5\%) of the 95\% credible interval for the predicted proportions.
 }
