@@ -182,4 +182,88 @@ test_that("plot functions work with different significance thresholds", {
       sccomp_test() |> 
       plot_2D_intervals(significance_threshold = 0.1)
   )
+})
+
+test_that("significance_statistic argument works for plot_1D_intervals", {
+  # skip_cmdstan()
+  expect_no_error(
+    my_estimate |> 
+      sccomp_test() |> 
+      plot_1D_intervals(significance_statistic = "FDR")
+  )
+  expect_no_error(
+    my_estimate |> 
+      sccomp_test() |> 
+      plot_1D_intervals(significance_statistic = "pH0")
+  )
+})
+
+test_that("significance_statistic argument works for plot_2D_intervals", {
+  # skip_cmdstan()
+  expect_no_error(
+    my_estimate_with_variance |> 
+      sccomp_test() |> 
+      plot_2D_intervals(significance_statistic = "FDR")
+  )
+  expect_no_error(
+    my_estimate_with_variance |> 
+      sccomp_test() |> 
+      plot_2D_intervals(significance_statistic = "pH0")
+  )
+})
+
+test_that("show_fdr_message argument works for plot_1D_intervals and plot_2D_intervals", {
+  # skip_cmdstan()
+  expect_no_error(
+    my_estimate |> 
+      sccomp_test() |> 
+      plot_1D_intervals(significance_statistic = "FDR", show_fdr_message = TRUE)
+  )
+  expect_no_error(
+    my_estimate |> 
+      sccomp_test() |> 
+      plot_1D_intervals(significance_statistic = "FDR", show_fdr_message = FALSE)
+  )
+  expect_no_error(
+    my_estimate_with_variance |> 
+      sccomp_test() |> 
+      plot_2D_intervals(significance_statistic = "FDR", show_fdr_message = TRUE)
+  )
+  expect_no_error(
+    my_estimate_with_variance |> 
+      sccomp_test() |> 
+      plot_2D_intervals(significance_statistic = "FDR", show_fdr_message = FALSE)
+  )
+})
+
+test_that("significance_statistic and show_fdr_message work via plot() S3 method", {
+  # skip_cmdstan()
+  expect_no_error(
+    plot(
+      my_estimate |> sccomp_test(),
+      significance_statistic = "FDR",
+      show_fdr_message = TRUE
+    )
+  )
+  expect_no_error(
+    plot(
+      my_estimate |> sccomp_test(),
+      significance_statistic = "pH0",
+      show_fdr_message = TRUE
+    )
+  )
+  expect_no_error(
+    plot(
+      my_estimate |> sccomp_test(),
+      significance_statistic = "FDR",
+      show_fdr_message = FALSE
+    )
+  )
+  expect_no_error(
+    plot(
+      my_estimate |> sccomp_test(),
+      significance_statistic = "pH0",
+      show_fdr_message = FALSE
+    )
+  )
 }) 
