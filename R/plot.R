@@ -138,6 +138,7 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
 #' @param .data Data frame containing the main data.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. 
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
 #' @importFrom tidyr drop_na
@@ -171,9 +172,7 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
 #' }
 #'
 #' 
-plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
-  
-  message("sccomp says: Some FDR-significant populations may cross the fold change threshold. \n This because, as sccomp is a Bayesian method, the FDR is calculated according to Stephens (doi: 10.1093/biostatistics/kxw041), \n by sorting the probability of the null hypothesis in ascending order and calculating the cumulative average.")
+plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), show_fdr_message = TRUE){
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
@@ -185,7 +184,6 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
   # Check if test have been done
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
-  
   
   plot_list = 
     .data |>
@@ -226,8 +224,21 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
     pull(plot) 
   
   # Combine all individual plots into one plot
-  plot_list |>
+  combined_plot <- plot_list |>
     wrap_plots(ncol = plot_list |> length() |> sqrt() |> ceiling())
+
+  if (show_fdr_message) {
+    combined_plot <- combined_plot + patchwork::plot_annotation(
+      caption = paste(
+        "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
+        "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
+        "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
+        sep = ""
+      ),
+      theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))
+    )
+  }
+  combined_plot
 }
 
 
@@ -238,6 +249,7 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
 #' @param .data Data frame containing the main data.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' 
 #' 
 #' @importFrom dplyr filter arrange mutate if_else row_number
@@ -281,7 +293,8 @@ plot_2D_intervals = function(
     .data, 
     significance_threshold = 0.05, 
     test_composition_above_logit_fold_change = 
-      .data |> attr("test_composition_above_logit_fold_change")
+      .data |> attr("test_composition_above_logit_fold_change"),
+    show_fdr_message = TRUE
 ){
   
   # Define the variables as NULL to avoid CRAN NOTES
@@ -303,9 +316,8 @@ plot_2D_intervals = function(
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
-  
   # Mean-variance association
-  .data %>%
+  plot <- .data %>%
     
     # Filter where variance is inferred
     filter(!is.na(v_effect)) %>%
@@ -361,6 +373,19 @@ plot_2D_intervals = function(
         # Apply custom theme
         multipanel_theme 
     }
+
+  if (show_fdr_message) {
+    plot <- plot + patchwork::plot_annotation(
+      caption = paste(
+        "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
+        "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
+        "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
+        sep = ""
+      ),
+      theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))
+    )
+  }
+  plot
 }
 
 
