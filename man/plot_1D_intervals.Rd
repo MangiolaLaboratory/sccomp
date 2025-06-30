@@ -8,7 +8,9 @@ plot_1D_intervals(
   .data,
   significance_threshold = 0.05,
   test_composition_above_logit_fold_change = attr(.data,
-    "test_composition_above_logit_fold_change")
+    "test_composition_above_logit_fold_change"),
+  show_fdr_message = TRUE,
+  significance_statistic = c("FDR", "pH0")
 )
 }
 \arguments{
@@ -17,6 +19,10 @@ plot_1D_intervals(
 \item{significance_threshold}{Numeric value specifying the significance threshold for highlighting differences.}
 
 \item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
+
+\item{show_fdr_message}{Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.}
+
+\item{significance_statistic}{Character vector indicating which statistic to highlight. Default is "FDR".}
 }
 \value{
 A combined plot of 1D interval plots.

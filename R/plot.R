@@ -13,6 +13,8 @@
 #' @param x A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param significance_statistic Character vector indicating which statistic to highlight. Default is "FDR".
+#' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param ... For internal use 
 #'
 #' @return A `ggplot`
@@ -42,7 +44,7 @@
 #'   }
 #' }
 #'
-plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), ...) {
+plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), significance_statistic = c("FDR", "pH0"), show_fdr_message = TRUE, ...) {
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
@@ -122,10 +124,20 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
   }
   
   # 1D intervals
-  plots$credible_intervals_1D = plot_1D_intervals(.data = x, significance_threshold = significance_threshold)
+  plots$credible_intervals_1D = plot_1D_intervals(
+    .data = x, 
+    significance_threshold = significance_threshold,
+    significance_statistic = significance_statistic,
+    show_fdr_message = show_fdr_message
+  )
   
   # 2D intervals
-  if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2D_intervals(.data = x, significance_threshold = significance_threshold)
+  if("v_effect" %in% colnames(x) && (x |> filter(!is.na(v_effect)) |> nrow()) > 0)  plots$credible_intervals_2D = plot_2D_intervals(
+    .data = x, 
+    significance_threshold = significance_threshold,
+    significance_statistic = significance_statistic,
+    show_fdr_message = show_fdr_message
+  )
   
   plots
   
@@ -138,6 +150,8 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
 #' @param .data Data frame containing the main data.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. 
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
+#' @param significance_statistic Character vector indicating which statistic to highlight. Default is "FDR".
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
 #' @importFrom tidyr drop_na
@@ -171,21 +185,27 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
 #' }
 #'
 #' 
-plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change")){
-  
-  message("sccomp says: Some FDR-significant populations may cross the fold change threshold. \n This because, as sccomp is a Bayesian method, the FDR is calculated according to Stephens (doi: 10.1093/biostatistics/kxw041), \n by sorting the probability of the null hypothesis in ascending order and calculating the cumulative average.")
+plot_1D_intervals = function(
+  .data, 
+  significance_threshold = 0.05, 
+  test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), 
+  show_fdr_message = TRUE,
+  significance_statistic = c("FDR", "pH0")
+) {
+  significance_statistic <- match.arg(significance_statistic)
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
   estimate <- NULL
   value <- NULL
+  pH0 <- NULL
+  FDR <- NULL
   
   .cell_group = attr(.data, ".cell_group")
   
   # Check if test have been done
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
-  
   
   plot_list = 
     .data |>
@@ -201,23 +221,36 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
     mutate(plot = pmap(
       list(data, which, parameter),
       ~  {
-        
+        plot_data <- ..1
         # Check if there are any statistics to plot
-        if(..1 |> filter(!effect |> is.na()) |> nrow() |> equals(0))
+        if(plot_data |> filter(!effect |> is.na()) |> nrow() |> equals(0))
           return(NA)
         
-        # Create ggplot for each nested data
-        ggplot(..1, aes(x = effect, y = fct_reorder(!!.cell_group, effect))) +
+        # Choose color variable and legend
+        if (significance_statistic == "FDR") {
+          color_var <- plot_data$FDR < significance_threshold
+          color_aes <- aes(xmin = lower, xmax = upper, color = FDR < significance_threshold)
+          color_scale <- scale_color_brewer(palette = "Set1")
+          legend_title <- "FDR < significance_threshold"
+        } else {
+          color_var <- plot_data$pH0 < significance_threshold
+          color_aes <- aes(xmin = lower, xmax = upper, color = pH0 < significance_threshold)
+          color_scale <- scale_color_brewer(palette = "Set2")
+          legend_title <- "pH0 < significance_threshold"
+        }
+        
+        ggplot(plot_data, aes(x = effect, y = fct_reorder(!!.cell_group, effect))) +
           geom_vline(xintercept = test_composition_above_logit_fold_change, colour = "grey") +
           geom_vline(xintercept = -test_composition_above_logit_fold_change, colour = "grey") +
-          geom_errorbar(aes(xmin = lower, xmax = upper, color = FDR < significance_threshold)) +
+          geom_errorbar(color_aes) +
           geom_point() +
-          scale_color_brewer(palette = "Set1") +
+          color_scale +
           xlab("Credible interval of the slope") +
           ylab("Cell group") +
           ggtitle(sprintf("%s %s", ..2, ..3)) +
           multipanel_theme +
-          theme(legend.position = "bottom") 
+          theme(legend.position = "bottom") +
+          guides(color = guide_legend(title = legend_title))
       }
     )) %>%
     
@@ -226,8 +259,22 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
     pull(plot) 
   
   # Combine all individual plots into one plot
-  plot_list |>
+  combined_plot <- plot_list |>
     wrap_plots(ncol = plot_list |> length() |> sqrt() |> ceiling())
+
+  # Only show the FDR message if significance_statistic == "FDR" and show_fdr_message is TRUE
+  if (significance_statistic == "FDR" && show_fdr_message) {
+    combined_plot <- combined_plot + patchwork::plot_annotation(
+      caption = paste(
+        "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
+        "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
+        "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
+        sep = ""
+      ),
+      theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))
+    )
+  }
+  combined_plot
 }
 
 
@@ -238,6 +285,8 @@ plot_1D_intervals = function(.data, significance_threshold = 0.05, test_composit
 #' @param .data Data frame containing the main data.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
+#' @param significance_statistic Character vector indicating which statistic to highlight. Default is "FDR".
 #' 
 #' 
 #' @importFrom dplyr filter arrange mutate if_else row_number
@@ -281,8 +330,11 @@ plot_2D_intervals = function(
     .data, 
     significance_threshold = 0.05, 
     test_composition_above_logit_fold_change = 
-      .data |> attr("test_composition_above_logit_fold_change")
+      .data |> attr("test_composition_above_logit_fold_change"),
+    show_fdr_message = TRUE,
+    significance_statistic = c("FDR", "pH0")
 ){
+  significance_statistic <- match.arg(significance_statistic)
   
   # Define the variables as NULL to avoid CRAN NOTES
   v_effect <- NULL
@@ -295,7 +347,8 @@ plot_2D_intervals = function(
   v_upper <- NULL
   v_FDR <- NULL
   cell_type_label <- NULL
-  
+  pH0 <- NULL
+  FDR <- NULL
   
   .cell_group = attr(.data, ".cell_group")
   
@@ -303,9 +356,8 @@ plot_2D_intervals = function(
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
-  
   # Mean-variance association
-  .data %>%
+  plot <- .data %>%
     
     # Filter where variance is inferred
     filter(!is.na(v_effect)) %>%
@@ -323,9 +375,23 @@ plot_2D_intervals = function(
         arrange(v_FDR) %>%
         mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & parameter != "(Intercept)"), !!.cell_group, cell_type_label))
     ) %>%
-    
     {
       .x = (.)
+      
+      # Choose color variable and legend
+      if (significance_statistic == "FDR") {
+        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_FDR < significance_threshold, alpha = c_FDR < significance_threshold)
+        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_FDR < significance_threshold, alpha = v_FDR < significance_threshold)
+        color_scale <- scale_color_manual(values = c("#D3D3D3", "#E41A1C"))
+        alpha_scale <- scale_alpha_manual(values = c(0.4, 1))
+        legend_title <- "FDR < significance_threshold"
+      } else {
+        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_pH0 < significance_threshold, alpha = c_pH0 < significance_threshold)
+        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_pH0 < significance_threshold, alpha = v_pH0 < significance_threshold)
+        color_scale <- scale_color_manual(values = c("#D3D3D3", "#377EB8"))
+        alpha_scale <- scale_alpha_manual(values = c(0.4, 1))
+        legend_title <- "pH0 < significance_threshold"
+      }
       
       # Plot
       ggplot(.x, aes(c_effect, v_effect)) +
@@ -335,8 +401,8 @@ plot_2D_intervals = function(
         geom_hline(yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
         
         # Add error bars
-        geom_errorbar(aes(xmin = `c_lower`, xmax = `c_upper`, color = `c_FDR` < significance_threshold, alpha = `c_FDR` < significance_threshold), linewidth = 0.2) +
-        geom_errorbar(aes(ymin = v_lower, ymax = v_upper, color = `v_FDR` < significance_threshold, alpha = `v_FDR` < significance_threshold), linewidth = 0.2) +
+        geom_errorbar(color_c_aes, linewidth = 0.2) +
+        geom_errorbar(color_v_aes, linewidth = 0.2) +
         
         # Add points
         geom_point(size = 0.2) +
@@ -349,8 +415,8 @@ plot_2D_intervals = function(
         geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label != "")) +
         
         # Set color and alpha scales
-        scale_color_manual(values = c("#D3D3D3", "#E41A1C")) +
-        scale_alpha_manual(values = c(0.4, 1)) +
+        color_scale +
+        alpha_scale +
         
         # Facet by parameter
         facet_wrap(~parameter, scales = "free") +
@@ -359,8 +425,24 @@ plot_2D_intervals = function(
         ylab("v_effect (Variability effect)") +
         
         # Apply custom theme
-        multipanel_theme 
+        multipanel_theme +
+        theme(legend.position = "bottom") +
+        guides(color = guide_legend(title = legend_title), alpha = "none")
     }
+
+  # Only show the FDR message if significance_statistic == "FDR" and show_fdr_message is TRUE
+  if (significance_statistic == "FDR" && show_fdr_message) {
+    plot <- plot + patchwork::plot_annotation(
+      caption = paste(
+        "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
+        "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
+        "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
+        sep = ""
+      ),
+      theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))
+    )
+  }
+  plot
 }
 
 
