@@ -43,7 +43,7 @@ if (instantiate::stan_cmdstan_exists()){
 
 # Test for plot_1d_intervals function
 test_that("plot_1d_intervals function works correctly", {
-  # skip_cmdstan()
+   skip_cmdstan()
   
   my_estimate |> 
     sccomp_test() |> 
@@ -55,7 +55,7 @@ test_that("plot_1d_intervals function works correctly", {
 
 # Test for plot_2d_intervals function
 test_that("plot_2d_intervals function works correctly", {
-  # skip_cmdstan()
+   skip_cmdstan()
   
   my_estimate_with_variance |> 
     sccomp_test() |> 
@@ -67,7 +67,7 @@ test_that("plot_2d_intervals function works correctly", {
 
 # Test for show_fdr_message parameter in plot functions
 test_that("show_fdr_message parameter works correctly in plot_1D_intervals", {
-  # skip_cmdstan()
+   skip_cmdstan()
   
   # Test with show_fdr_message = TRUE (default)
   plot_with_message <- my_estimate |> 
@@ -95,7 +95,7 @@ test_that("show_fdr_message parameter works correctly in plot_1D_intervals", {
 })
 
 test_that("show_fdr_message parameter works correctly in plot_2D_intervals", {
-  # skip_cmdstan()
+   skip_cmdstan()
   
   # Test with show_fdr_message = TRUE (default)
   plot_with_message <- my_estimate_with_variance |> 
@@ -123,7 +123,7 @@ test_that("show_fdr_message parameter works correctly in plot_2D_intervals", {
 })
 
 test_that("show_fdr_message parameter accepts logical values", {
-  # skip_cmdstan()
+   skip_cmdstan()
   
   # Test with TRUE
   expect_no_error(
@@ -155,7 +155,7 @@ test_that("show_fdr_message parameter accepts logical values", {
 })
 
 test_that("plot functions work with different significance thresholds", {
-  # skip_cmdstan()
+   skip_cmdstan()
   
   # Test plot_1D_intervals with different thresholds
   expect_no_error(
@@ -185,7 +185,8 @@ test_that("plot functions work with different significance thresholds", {
 })
 
 test_that("significance_statistic argument works for plot_1D_intervals", {
-  # skip_cmdstan()
+   skip_cmdstan()
+  
   expect_no_error(
     my_estimate |> 
       sccomp_test() |> 
@@ -199,7 +200,7 @@ test_that("significance_statistic argument works for plot_1D_intervals", {
 })
 
 test_that("significance_statistic argument works for plot_2D_intervals", {
-  # skip_cmdstan()
+   skip_cmdstan()
   expect_no_error(
     my_estimate_with_variance |> 
       sccomp_test() |> 
@@ -213,7 +214,7 @@ test_that("significance_statistic argument works for plot_2D_intervals", {
 })
 
 test_that("show_fdr_message argument works for plot_1D_intervals and plot_2D_intervals", {
-  # skip_cmdstan()
+   skip_cmdstan()
   expect_no_error(
     my_estimate |> 
       sccomp_test() |> 
@@ -237,7 +238,7 @@ test_that("show_fdr_message argument works for plot_1D_intervals and plot_2D_int
 })
 
 test_that("significance_statistic and show_fdr_message work via plot() S3 method", {
-  # skip_cmdstan()
+   skip_cmdstan()
   expect_no_error(
     plot(
       my_estimate |> sccomp_test(),
