@@ -323,29 +323,9 @@ data{
   
 }
 transformed data{
-  vector[2*M] Q_r = Q_sum_to_zero_QR(M);
-  real x_raw_sigma = inv_sqrt(1 - inv(M));
-  matrix[N, C] Q_ast;
-  matrix[C, C] R_ast;
-  matrix[C, C] R_ast_inverse;
-  // array[N*M] real y_array;
-  array[N*M] int truncation_down_array;
-  // array[N*M] int exposure_array;
   // EXCEPTION MADE FOR WINDOWS GENERATE QUANTITIES IF RANDOM EFFECT DO NOT EXIST
   int ncol_X_random_eff_WINDOWS_BUG_FIX = max(ncol_X_random_eff[1], 1);
   int ncol_X_random_eff_WINDOWS_BUG_FIX_2 = max(ncol_X_random_eff[2], 1);
-  
-  // thin and scale the QR decomposition
-  Q_ast = qr_thin_Q(X) * sqrt(N - 1);
-  R_ast_inverse = inverse(qr_thin_R(X) / sqrt(N - 1));
-  
-  // If I get crazy diagonal matrix omit it
-  if(is_random_effect>0) { 
-    if(max(R_ast_inverse)>1000 )
-    print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
-    Q_ast = X;
-    R_ast_inverse = diag_matrix(rep_vector(1.0, C));
-  }
   
   // For parallelisation
   array[N] int array_N;
@@ -356,7 +336,8 @@ transformed data{
   // exposure_array = rep_each(exposure, M);
 }
 parameters{
-  matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
+  // Use the new sum_to_zero_vector type instead of QR decomposition
+  array[C] sum_to_zero_vector[M] beta_raw; // Each row is a sum_to_zero_vector of length M
   matrix[A, M] alpha; // Variability
   // To exclude
   array[2] real prec_coeff;
@@ -387,21 +368,13 @@ parameters{
 transformed parameters{
   
   // Initialisation
-  matrix[C,M] beta_raw;
-  matrix[M, N] precision = (Xa * alpha)';
   matrix[C,M] beta;
+  matrix[M, N] precision = (Xa * alpha)';
   
-  // // // locations distribution
-  // matrix[M, N] mu;
-  // // vectorisation
-  // vector[N*M] mu_array;
-  // vector[N*M] precision_array;
-  
-  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-  beta = R_ast_inverse * beta_raw; // coefficients on x
-  
-  // // JUST FOR SANITY CHECK
-  //  mu = (Q_ast * beta_raw)';
+  // Convert sum_to_zero_vector to regular matrix
+  for(c in 1:C) {
+    beta[c,] = to_row_vector(beta_raw[c]);
+  }
   
   // Non centered parameterisation SD of random effects
   array[M-1 * (ncol_X_random_eff[1]> 0)] vector[how_many_factors_in_random_design[1]] random_effect_sigma;
@@ -480,8 +453,8 @@ model{
       alpha,
       
       // Fixed effects
-      Q_ast,                   
-      beta_raw, 
+      X,                   
+      beta, 
       M, 
       
       // Random effects
@@ -557,8 +530,8 @@ model{
   }
   
   // // Priors abundance
-  for(c in 1:B_intercept_columns) beta_raw_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] );
-  if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) to_vector(beta_raw_raw[c]) ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2]);
+  for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] );
+  if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) beta_raw[c] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2]);
   
   // Hyper priors
   mix_p ~ beta(1,5);
@@ -566,7 +539,7 @@ model{
   prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
   prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
   prec_coeff ~ std_normal();
-  to_vector(beta_raw_raw) ~ std_normal();
+  // Note: sum_to_zero_vector has built-in priors, no need for explicit std_normal()
   
   // Random intercept
   if(is_random_effect>0){
@@ -613,7 +586,7 @@ generated quantities {
     vector[N*M] mu_array;
     vector[N*M] precision_array;
 
-    mu = (Q_ast * beta_raw)';
+    mu = (X * beta)';
 
     // random intercept
     if(ncol_X_random_eff[1]> 0)

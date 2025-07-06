@@ -1,5 +1,6 @@
 functions{
     #include common_functions.stan
+    
 }
 data {
 
@@ -54,13 +55,6 @@ data {
   matrix[N, ncol_X_random_eff_unseen[2]] X_random_effect_2_unseen;
 }
 transformed data{
-  matrix[C, C] R_ast_inverse;
-  vector[2*M] Q_r;
-  
-  // thin and scale the QR decomposition
-  R_ast_inverse = inverse(qr_thin_R(X_original) / sqrt(N_original - 1));
-  Q_r = Q_sum_to_zero_QR(M);
-  
   // If needed recreate the intercept
   matrix[N,1] X_intercept;
   
@@ -69,20 +63,11 @@ transformed data{
   int ncol_X_random_eff_WINDOWS_BUG_FIX_2 = max(ncol_X_random_eff[2], 1);
   
   X_intercept = to_matrix(rep_vector(1, N));
-
-
-  // If I get crazy diagonal matrix omit it
-  if(is_random_effect>0) { 
-    if(max(R_ast_inverse)>1000 )
-      print("sccomp says: The QR deconposition resulted in extreme values, probably for the correlation structure of your design matrix. Omitting QR decomposition.");
-    R_ast_inverse = diag_matrix(rep_vector(1.0, C));
-  }
-  
 }
 
 parameters {
 
-  matrix[C, M-1] beta_raw_raw; // matrix with C rows and number of cells (-1) columns
+  array[C] vector[M] beta_raw; // Each row is a vector of length M
   matrix[A, M] alpha; // Variability
   // To exclude
   array[2] real prec_coeff;
@@ -121,9 +106,15 @@ generated quantities{
   array[N] real generated_exposure;
 
   matrix[C,M] beta;
-  matrix[C,M] beta_raw;
-  for(c in 1:C)	beta_raw[c,] =  sum_to_zero_QR(beta_raw_raw[c,], Q_r);
-  beta = R_ast_inverse * beta_raw; // coefficients on x
+  
+  // Convert vectors to matrix and apply sum-to-zero constraint manually
+  for(c in 1:C) {
+    vector[M] temp_beta = beta_raw[c];
+    // NOTE: Due to floating point precision, we must explicitly normalize to sum to zero
+    // instead of declating the sum_to_zero variabe
+    temp_beta = normalize_sum_to_zero(temp_beta);
+    beta[c,] = to_row_vector(temp_beta);
+  }
   
   // Subset for mean and deviation
   matrix[length_X_which,M] my_beta = beta[X_which,];

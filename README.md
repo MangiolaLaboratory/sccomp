@@ -97,13 +97,13 @@ factors, and capable of random-effect/intercept modelling.
 
 # Installation
 
-`sccomp` is based on `cmdstanr` which provides the latest version of
+`sccomp` is based on `cmdstanr` (version 0.9.0 or higher) which provides the latest version of
 `cmdstan` the Bayesian modelling tool. `cmdstanr` is not on CRAN, so we
 need to have 3 simple step process (that will be prompted to the user is
 forgot).
 
 1.  R installation of `sccomp`
-2.  R installation of `cmdstanr`
+2.  R installation of `cmdstanr` (>= 0.9.0)
 3.  `cmdstanr` call to `cmdstan` installation
 
 **Bioconductor**
@@ -116,6 +116,7 @@ BiocManager::install("sccomp")
 
 # Step 2
 install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+# Note: cmdstanr version 0.9.0 or higher is required for sum_to_zero_vector support
 
 # Step 3
 cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
@@ -130,6 +131,7 @@ devtools::install_github("MangiolaLaboratory/sccomp")
 
 # Step 2
 install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+# Note: cmdstanr version 0.9.0 or higher is required for sum_to_zero_vector support
 
 # Step 3
 cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting

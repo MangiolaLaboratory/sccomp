@@ -244,9 +244,11 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 
 #' Check and Install cmdstanr and CmdStan
 #'
-#' This function checks if the `cmdstanr` package and CmdStan are installed. 
+#' This function checks if the `cmdstanr` package (version 0.9.0 or higher) and CmdStan are installed. 
 #' If they are not installed, it installs them automatically in non-interactive sessions
 #' or asks for permission to install them in interactive sessions.
+#' 
+#' The function requires cmdstanr version 0.9.0 or higher for support of the new `sum_to_zero_vector` type.
 #'
 #' @importFrom instantiate stan_cmdstan_exists
 #' @importFrom rlang check_installed
@@ -289,6 +291,18 @@ check_and_install_cmdstanr <- function() {
       stan_error(conditionMessage(e))
     }
   )
+  
+  # Check cmdstanr version - requires 0.9.0 or higher for sum_to_zero_vector support
+  if (packageVersion("cmdstanr") < "0.9.0") {
+    stop(
+      "cmdstanr version 0.9.0 or higher is required for sum_to_zero_vector support.\n\n",
+      "Current version: ", packageVersion("cmdstanr"), "\n\n",
+      "Please update cmdstanr using:\n",
+      "install.packages(pkgs = \"cmdstanr\", repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\")))\n\n",
+      "Or install the latest development version:\n",
+      "remotes::install_github(\"stan-dev/cmdstanr\")"
+    )
+  }
   
   # Check if CmdStan is installed
   if (!stan_cmdstan_exists()) {
