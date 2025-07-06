@@ -528,13 +528,19 @@ replicate_data = function(.data,
   
   # Load model
   mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
+
+  draws_matrix <- attr(.data, "fit")$draws(format = "matrix")
   
+  if(number_of_draws > nrow(draws_matrix)) {
+    number_of_draws <- nrow(draws_matrix)
+  }
+  
+  draws_matrix <- draws_matrix[sample(seq_len(nrow(draws_matrix)), size=number_of_draws),, drop=FALSE]
+
   # Generate quantities
   mod_rng |> sample_safe(
     generate_quantities_fx,
-    attr(.data, "fit")$draws(format = "matrix")[
-      sample(seq_len(number_of_draws_in_the_fit), size=number_of_draws),, drop=FALSE
-    ],
+    draws_matrix,
     data = model_input,
     seed = mcmc_seed, 
     threads_per_chain = 1

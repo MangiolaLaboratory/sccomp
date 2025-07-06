@@ -83,28 +83,7 @@
         );
       }
       
-       vector Q_sum_to_zero_QR(int N) {
-    vector [2*N] Q_r;
-    
-    for(i in 1:N) {
-      Q_r[i] = -sqrt((N-i)/(N-i+1.0));
-      Q_r[i+N] = inv_sqrt((N-i) * (N-i+1));
-    }
-    return Q_r;
-  }
-  
-  row_vector sum_to_zero_QR(row_vector x_raw, vector Q_r) {
-    int N = num_elements(x_raw) + 1;
-    row_vector [N] x;
-    real x_aux = 0;
-    
-    for(i in 1:N-1){
-      x[i] = x_aux + x_raw[i] * Q_r[i];
-      x_aux = x_aux + x_raw[i] * Q_r[i+N];
-    }
-    x[N] = x_aux;
-    return x;
-  }
+  // QR-based sum-to-zero functions removed - now using sum_to_zero_vector[K] type
   
       row_vector average_by_col(matrix X) {
       int rows_X = rows(X);
@@ -119,3 +98,14 @@
       
       
     }
+
+// Normalize a vector to sum to zero
+vector normalize_sum_to_zero(vector x) {
+  int n = num_elements(x);
+  real sum_x = sum(x);
+  vector[n] normalized;
+  for (i in 1:n) {
+    normalized[i] = x[i] - sum_x / n;
+  }
+  return normalized;
+}
