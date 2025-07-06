@@ -40,20 +40,21 @@ For cellular omic data, no method for differential variability analysis exists, 
 - **IV**: Information sharing across cell types, mean–variability association.
 - **V**: Outlier detection or robustness.
 - **VI**: Differential variability analysis.
+- **VII** Mixed effect modelling
 
-| Method       | Year | Model                        | I | II | III | IV | V | VI |
-|--------------|------|------------------------------|---|----|-----|----|---|----|
-| **sccomp**   | 2023 | Sum-constrained Beta-binomial | ● | ●  | ●   | ●  | ● | ●  |
-| **scCODA**   | 2021 | Dirichlet-multinomial         | ● | ●  |     |    |   |    |
-| **quasi-binom.** | 2021 | Quasi-binomial            | ● |    | ●   |    |   |    |
-| **rlm**      | 2021 | Robust-log-linear            |   | ●  |     |    | ● |    |
-| **propeller** | 2021 | Logit-linear + limma        |   | ●  | ●   | ●  |   |    |
-| **ANCOM-BC** | 2020 | Log-linear                   |   | ●  | ●   |    |   |    |
-| **corncob**  | 2020 | Beta-binomial                | ● |    | ●   |    |   |    |
-| **scDC**     | 2019 | Log-linear                   |   | ●  | ●   |    |   |    |
-| **dmbvs**    | 2017 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |
-| **MixMC**    | 2016 | Zero-inflated Log-linear     |   | ●  | ●   |    |   |    |
-| **ALDEx2**   | 2014 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |
+| Method       | Year | Model                        | I | II | III | IV | V | VI | VII |
+|--------------|------|------------------------------|---|----|-----|----|---|----|----|
+| **sccomp**   | 2023 | Sum-constrained Beta-binomial | ● | ●  | ●   | ●  | ● | ●  | ●  |
+| **scCODA**   | 2021 | Dirichlet-multinomial         | ● | ●  |     |    |   |    |    |
+| **quasi-binom.** | 2021 | Quasi-binomial            | ● |    | ●   |    |   |    |    |
+| **rlm**      | 2021 | Robust-log-linear            |   | ●  |     |    | ● |    |    |
+| **propeller** | 2021 | Logit-linear + limma        |   | ●  | ●   | ●  |   |    |    |
+| **ANCOM-BC** | 2020 | Log-linear                   |   | ●  | ●   |    |   |    |    |
+| **corncob**  | 2020 | Beta-binomial                | ● |    | ●   |    |   |    |    |
+| **scDC**     | 2019 | Log-linear                   |   | ●  | ●   |    |   |    |    |
+| **dmbvs**    | 2017 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |    |
+| **MixMC**    | 2016 | Zero-inflated Log-linear     |   | ●  | ●   |    |   |    |    |
+| **ALDEx2**   | 2014 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |    |
 
 ```{r echo=FALSE}
 knitr::opts_chunk$set( fig.path = "inst/figures/")
