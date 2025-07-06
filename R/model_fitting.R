@@ -293,6 +293,18 @@ check_and_install_cmdstanr <- function() {
     )
   }
   
+  # Check cmdstanr version - requires 0.9.0 or higher for sum_to_zero_vector support
+  if (packageVersion("cmdstanr") < "0.9.0") {
+    stop(
+      "cmdstanr version 0.9.0 or higher is required for sum_to_zero_vector support.\n\n",
+      "Current version: ", packageVersion("cmdstanr"), "\n\n",
+      "Please update cmdstanr using:\n",
+      "install.packages(pkgs = \"cmdstanr\", repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\")))\n\n",
+      "Or install the latest development version:\n",
+      "remotes::install_github(\"stan-dev/cmdstanr\")"
+    )
+  }
+  
   # Check if CmdStan is installed
   if (!stan_cmdstan_exists()) {
     
