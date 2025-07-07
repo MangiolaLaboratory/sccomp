@@ -539,9 +539,9 @@ model{
     }
   }
   
-  // // Priors abundance
-  for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] );
-  if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) beta_raw[c] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2]);
+  // // Priors abundance - use correct scale for sum_to_zero_vector
+  for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
+  if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) beta_raw[c] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2] * inv(sqrt(1 - inv(M))) );
   
   // Hyper priors
   mix_p ~ beta(1,5);
@@ -553,9 +553,9 @@ model{
   
   // Random intercept
   if(is_random_effect>0){
-    for(m in 1:M) random_effect_raw[,m] ~ std_normal(); 
-    for(m in 1:M) random_effect_sigma_raw[m] ~ std_normal();
-    for(m in 1:M) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+    for(m in 1:M) random_effect_raw[,m] ~ normal(0, inv(sqrt(1 - inv(M)))); 
+    for(m in 1:(M-1)) random_effect_sigma_raw[m] ~ std_normal();
+    for(m in 1:(M-1)) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
     random_effect_sigma_mu ~ std_normal();
     random_effect_sigma_sigma ~ std_normal();
@@ -564,9 +564,9 @@ model{
     zero_random_effect ~ std_normal();
   }
   if(ncol_X_random_eff[2]>0){
-    for(m in 1:M) random_effect_raw_2[,m] ~ std_normal();
-    for(m in 1:M) random_effect_sigma_raw_2[m] ~ std_normal();
-    for(m in 1:M) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+    for(m in 1:M) random_effect_raw_2[,m] ~ normal(0, inv(sqrt(1 - inv(M))));
+    for(m in 1:(M-1)) random_effect_sigma_raw_2[m] ~ std_normal();
+    for(m in 1:(M-1)) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
   }
 }
