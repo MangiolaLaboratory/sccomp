@@ -75,10 +75,10 @@ functions{
           // mu
           matrix[M, N] mu = (X[idx_y,] * beta)';
           if(ncol_X_random_eff[1]> 0)
-          mu = mu + append_row((X_random_effect[idx_y,] * random_effect)', rep_row_vector(0, N));
+          mu = mu + (X_random_effect[idx_y,] * random_effect)';
           
           if(ncol_X_random_eff[2]>0 )
-          mu = mu + append_row((X_random_effect_2[idx_y,] * random_effect_2)', rep_row_vector(0, N));
+          mu = mu + (X_random_effect_2[idx_y,] * random_effect_2)';
           
           for(n in 1:N)  mu[,n] = softmax(mu[,n]);
           
@@ -344,9 +344,9 @@ parameters{
   real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
   
-  // Random intercept // matrix with ncol_X_random_effs rows and number of cells (-1) columns
-  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect_raw;
-  matrix[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0), M-1] random_effect_raw_2;
+  // Random intercept // array of sum_to_zero_vector for each random effect
+  array[ncol_X_random_eff[1] * (is_random_effect>0)] sum_to_zero_vector[M] random_effect_raw;
+  array[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0)] sum_to_zero_vector[M] random_effect_raw_2;
   
   // sd of random intercept
   array[2 * (is_random_effect>0)] real random_effect_sigma_mu;
@@ -387,11 +387,17 @@ transformed parameters{
   if(ncol_X_random_eff[2]> 0) for(m in 1:(M-1)) random_effect_sigma_2[m] = exp(random_effect_sigma_2[m]/3.0);
     
   
-  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect;
-  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2;
+  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M] random_effect;
+  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M] random_effect_2;
   
   // random intercept
   if(ncol_X_random_eff[1]> 0){
+    
+    // Convert sum_to_zero_vector array to vector array for function call
+    array[ncol_X_random_eff[1]] vector[M] random_effect_raw_vec;
+    for(i in 1:ncol_X_random_eff[1]) {
+      random_effect_raw_vec[i] = to_vector(random_effect_raw[i]);
+    }
     
     // Covariate setup
     random_effect =
@@ -402,8 +408,7 @@ transformed parameters{
       is_random_effect,
       ncol_X_random_eff[1],
       group_factor_indexes_for_covariance,
-      
-      random_effect_raw,
+      random_effect_raw_vec,
       random_effect_sigma,
       sigma_correlation_factor
       );
@@ -412,6 +417,12 @@ transformed parameters{
   
   // random intercept
   if(ncol_X_random_eff[2]>0 ){
+
+    // Convert sum_to_zero_vector array to vector array for function call
+    array[ncol_X_random_eff[2]] vector[M] random_effect_raw_2_vec;
+    for(i in 1:ncol_X_random_eff[2]) {
+      random_effect_raw_2_vec[i] = to_vector(random_effect_raw_2[i]);
+    }
 
     // Covariate setup
     random_effect_2 =
@@ -422,8 +433,7 @@ transformed parameters{
       is_random_effect,
       ncol_X_random_eff[2],
       group_factor_indexes_for_covariance_2,
-
-      random_effect_raw_2,
+      random_effect_raw_2_vec,
       random_effect_sigma_2,
       sigma_correlation_factor_2
       );
@@ -543,9 +553,9 @@ model{
   
   // Random intercept
   if(is_random_effect>0){
-    for(m in 1:(M-1)) random_effect_raw[,m] ~ std_normal(); 
-    for(m in 1:(M-1)) random_effect_sigma_raw[m] ~ std_normal();
-    for(m in 1:(M-1)) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+    for(m in 1:M) random_effect_raw[,m] ~ std_normal(); 
+    for(m in 1:M) random_effect_sigma_raw[m] ~ std_normal();
+    for(m in 1:M) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
     random_effect_sigma_mu ~ std_normal();
     random_effect_sigma_sigma ~ std_normal();
@@ -554,9 +564,9 @@ model{
     zero_random_effect ~ std_normal();
   }
   if(ncol_X_random_eff[2]>0){
-    for(m in 1:(M-1)) random_effect_raw_2[,m] ~ std_normal();
-    for(m in 1:(M-1)) random_effect_sigma_raw_2[m] ~ std_normal();
-    for(m in 1:(M-1)) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+    for(m in 1:M) random_effect_raw_2[,m] ~ std_normal();
+    for(m in 1:M) random_effect_sigma_raw_2[m] ~ std_normal();
+    for(m in 1:M) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     
   }
 }
@@ -590,9 +600,9 @@ generated quantities {
 
     // random intercept
     if(ncol_X_random_eff[1]> 0)
-    mu = mu + append_row((X_random_effect * random_effect)', rep_row_vector(0, N));
+    mu = mu + (X_random_effect * random_effect)';
     if(ncol_X_random_eff[2]>0 )
-    mu = mu + append_row((X_random_effect_2 * random_effect_2)', rep_row_vector(0, N));
+    mu = mu + (X_random_effect_2 * random_effect_2)';
 
 
     // Calculate proportions

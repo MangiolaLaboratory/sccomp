@@ -74,9 +74,9 @@ parameters {
   real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
   
-  // Random intercept // matrix with N_groupings rows and number of cells (-1) columns
-  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect_raw;
-  matrix[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0), M-1] random_effect_raw_2;
+  // Random intercept // array of sum_to_zero_vector for each random effect
+  array[ncol_X_random_eff[1] * (is_random_effect>0)] sum_to_zero_vector[M] random_effect_raw;
+  array[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0)] sum_to_zero_vector[M] random_effect_raw_2;
   
   // sd of random intercept
   array[2 * (is_random_effect>0)] real random_effect_sigma_mu;
@@ -169,11 +169,17 @@ generated quantities{
   if(ncol_X_random_eff[2]> 0) for(m in 1:(M-1)) random_effect_sigma_2[m] = exp(random_effect_sigma_2[m]/3.0);
     
   // Random intercept
-  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M-1] random_effect; 
-  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M-1] random_effect_2; 
+  matrix[ncol_X_random_eff[1] * (is_random_effect>0), M] random_effect; 
+  matrix[ncol_X_random_eff[2] * (is_random_effect>0), M] random_effect_2; 
   
   // For first random effect
   if(length_X_random_effect_which[1]>0) {
+
+    // Convert sum_to_zero_vector array to vector array for function call
+    array[ncol_X_random_eff[1]] vector[M] random_effect_raw_vec;
+    for(i in 1:ncol_X_random_eff[1]) {
+      random_effect_raw_vec[i] = to_vector(random_effect_raw[i]);
+    }
 
     // Generate random effects matrix - either from fitted effects or random draws
     
@@ -185,24 +191,36 @@ generated quantities{
       is_random_effect,
       ncol_X_random_eff[1],
       group_factor_indexes_for_covariance,
-      random_effect_raw,
+      random_effect_raw_vec,
       random_effect_sigma,
       sigma_correlation_factor
     );
     
     // Apply random effects
-    mu = mu + append_row((X_random_effect * random_effect[X_random_effect_which,])', rep_row_vector(0, N));
+    mu = mu + (X_random_effect * random_effect[X_random_effect_which,])';
     
     // Add random effects for unseen groups if they exist
     if(ncol_X_random_eff_unseen[1] > 0) {
-      matrix[ncol_X_random_eff_unseen[1], M-1] unseen_random_effect = 
-        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[1] * (M-1)), ncol_X_random_eff_unseen[1], M-1);
-      mu = mu + append_row((X_random_effect_unseen * unseen_random_effect)', rep_row_vector(0, N));
+      matrix[ncol_X_random_eff_unseen[1], M] unseen_random_effect = 
+        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[1] * M), ncol_X_random_eff_unseen[1], M);
+      
+      // Apply sum-to-zero constraint to unseen random effects
+      for(i in 1:ncol_X_random_eff_unseen[1]) {
+        unseen_random_effect[i,] = to_row_vector(normalize_sum_to_zero(to_vector(unseen_random_effect[i,])));
+      }
+      
+      mu = mu + (X_random_effect_unseen * unseen_random_effect)';
     }
   }
   
   // For second random effect
   if(length_X_random_effect_which[2]>0) {
+
+    // Convert sum_to_zero_vector array to vector array for function call
+    array[ncol_X_random_eff[2]] vector[M] random_effect_raw_2_vec;
+    for(i in 1:ncol_X_random_eff[2]) {
+      random_effect_raw_2_vec[i] = to_vector(random_effect_raw_2[i]);
+    }
 
     // Generate random effects matrix - either from fitted effects or random draws
     
@@ -214,19 +232,25 @@ generated quantities{
       is_random_effect,
       ncol_X_random_eff[2],
       group_factor_indexes_for_covariance_2,
-      random_effect_raw_2,
+      random_effect_raw_2_vec,
       random_effect_sigma_2,
       sigma_correlation_factor_2
     );
     
     // Apply random effects
-    mu = mu + append_row((X_random_effect_2 * random_effect_2[X_random_effect_which_2,])', rep_row_vector(0, N));
+    mu = mu + (X_random_effect_2 * random_effect_2[X_random_effect_which_2,])';
     
     // Add random effects for unseen groups if they exist
     if(ncol_X_random_eff_unseen[2] > 0) {
-      matrix[ncol_X_random_eff_unseen[2], M-1] unseen_random_effect_2 = 
-        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[2] * (M-1)), ncol_X_random_eff_unseen[2], M-1);
-      mu = mu + append_row((X_random_effect_2_unseen * unseen_random_effect_2)', rep_row_vector(0, N));
+      matrix[ncol_X_random_eff_unseen[2], M] unseen_random_effect_2 = 
+        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[2] * M), ncol_X_random_eff_unseen[2], M);
+      
+      // Apply sum-to-zero constraint to unseen random effects
+      for(i in 1:ncol_X_random_eff_unseen[2]) {
+        unseen_random_effect_2[i,] = to_row_vector(normalize_sum_to_zero(to_vector(unseen_random_effect_2[i,])));
+      }
+      
+      mu = mu + (X_random_effect_2_unseen * unseen_random_effect_2)';
     }
   }
 
