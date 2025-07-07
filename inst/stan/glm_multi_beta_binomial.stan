@@ -553,10 +553,11 @@ model{
   
   // Random intercept
   if(is_random_effect>0){
+
     for(m in 1:M) random_effect_raw[,m] ~ normal(0, inv(sqrt(1 - inv(M)))); 
-    for(m in 1:(M)) random_effect_sigma_raw[m] ~ std_normal();
-    for(m in 1:(M)) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
-    
+    for(m in 1:M) random_effect_sigma_raw[m] ~ std_normal();
+    for(m in 1:M) sigma_correlation_factor[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+
     random_effect_sigma_mu ~ std_normal();
     random_effect_sigma_sigma ~ std_normal();
     
@@ -565,9 +566,9 @@ model{
   }
   if(ncol_X_random_eff[2]>0){
     for(m in 1:M) random_effect_raw_2[,m] ~ normal(0, inv(sqrt(1 - inv(M))));
-    for(m in 1:(M)) random_effect_sigma_raw_2[m] ~ std_normal();
-    for(m in 1:(M)) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
-    
+    for(m in 1:M) random_effect_sigma_raw_2[m] ~ std_normal();
+    for(m in 1:M) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
+   
   }
 }
 generated quantities {
