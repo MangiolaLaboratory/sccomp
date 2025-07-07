@@ -619,8 +619,6 @@ get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
 # 1. The part that is not affected by NA values
 # 2. The columns that are affected by NA values
 
-# Get the columns that are affected by NA values, with or without interactions
-
 
 na_rows = which(rowSums(design_matrix[, grep("NA$|NA:", colnames(design_matrix)), drop=FALSE]) > 0) |> unique()
 
@@ -1025,12 +1023,7 @@ data_spread_to_model_input =
       
       n_random_eff = random_effect_grouping |> nrow()
       
-      ncol_X_random_eff =
-        random_effect_grouping |>
-        mutate(n = map_int(design, ~.x |> distinct(group___numeric) |> nrow())) |>
-        pull(n) 
-      
-      if(ncol_X_random_eff |> length() < 2) ncol_X_random_eff[2] = 0
+      ncol_X_random_eff = c(ncol(X_random_effect), ncol(X_random_effect_2))
       
       # TEMPORARY
       group_factor_indexes_for_covariance = 
@@ -1042,6 +1035,10 @@ data_spread_to_model_input =
         select(-parameter) |> 
         pivot_wider(names_from = group, values_from = order)  |> 
         as_matrix(rownames = "factor")
+
+      # DEBUG
+      cat("DEBUG: ncol_X_random_effect =", ncol(X_random_effect), "\n")
+      cat("DEBUG: max(group_factor_indexes_for_covariance) =", max(group_factor_indexes_for_covariance), "\n")
       
       n_groups = group_factor_indexes_for_covariance |> ncol()
       

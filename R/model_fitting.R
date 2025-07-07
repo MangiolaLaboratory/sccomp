@@ -50,7 +50,7 @@ fit_model = function(
   )
   
   if(data_for_model$n_random_eff>0){
-    init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1)  
+    init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M)
     init_list$random_effect_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[1])
     init_list$sigma_correlation_factor = array(0, dim = c(
       data_for_model$M-1, 
@@ -65,7 +65,7 @@ fit_model = function(
   } 
   
   if(data_for_model$n_random_eff>1){
-    init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M-1)
+    init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M)
     init_list$random_effect_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[2])
     init_list$sigma_correlation_factor_2 = array(0, dim = c(
       data_for_model$M-1, 
@@ -92,10 +92,9 @@ fit_model = function(
   }
   
   if(inference_method == "hmc"){
-    
+    browser()
     tryCatch({
-      mod |> sample_safe(
-        sample_fx,
+      mod$sample(
         data = data_for_model ,
         chains = chains,
         parallel_chains = chains,
@@ -109,7 +108,7 @@ fit_model = function(
         output_dir = output_directory,
         show_messages = verbose,
         sig_figs = sig_figs,
-        show_exceptions = FALSE,
+        show_exceptions = TRUE,
         ...
       ) 
       
