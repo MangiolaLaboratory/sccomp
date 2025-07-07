@@ -94,7 +94,7 @@ fit_model = function(
   if(inference_method == "hmc"){
     
  # tryCatch({
-      mod$sample(
+    mod$sample(
         data = data_for_model ,
         chains = chains,
         parallel_chains = chains,

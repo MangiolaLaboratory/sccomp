@@ -569,7 +569,7 @@ model{
     for(m in 1:M) random_effect_sigma_raw_2[m] ~ std_normal();
     for(m in 1:M) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
     }
-}
+  }
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
   
