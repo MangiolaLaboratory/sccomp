@@ -542,7 +542,7 @@ model{
   // // Priors abundance - use correct scale for sum_to_zero_vector
   for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
   if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) beta_raw[c] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2] * inv(sqrt(1 - inv(M))) );
-
+  
   // Hyper priors
   mix_p ~ beta(1,5);
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
@@ -568,8 +568,7 @@ model{
     for(m in 1:M) random_effect_raw_2[,m] ~ normal(0, inv(sqrt(1 - inv(M))));
     for(m in 1:M) random_effect_sigma_raw_2[m] ~ std_normal();
     for(m in 1:M) sigma_correlation_factor_2[m] ~ lkj_corr_cholesky(2);   // LKJ prior for the correlation matrix
-   
-  }
+    }
 }
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
