@@ -74,7 +74,8 @@
         // Design L
         array[M] matrix[how_many_factors_in_random_design, how_many_factors_in_random_design] L;
         array[M] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects;
-        print(random_effect_sigma);
+        
+        // print(random_effect_sigma);
         for(m in 1:M) L[m] = diag_pre_multiply(random_effect_sigma[m], sigma_correlation_factor[m]) ;
         for(m in 1:M) matrix_of_random_effects[m] = L[m] * matrix_of_random_effects_raw[m];
         
