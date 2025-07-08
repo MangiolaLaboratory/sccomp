@@ -122,7 +122,6 @@ fit_model = function(
     #     stop(e)
     # 
     # })
-
     
   } else{
     
