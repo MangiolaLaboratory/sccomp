@@ -79,7 +79,7 @@ parameters {
   // We use regular vectors and apply the constraint manually where needed
   array[ncol_X_random_eff[1] * (is_random_effect>0)] vector[M] random_effect_raw;
   array[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0)] vector[M] random_effect_raw_2;
-
+  
   // sd of random intercept
   array[2 * (is_random_effect>0)] real random_effect_sigma_mu;
   array[2 * (is_random_effect>0)] real random_effect_sigma_sigma;
@@ -222,8 +222,7 @@ generated quantities{
     array[ncol_X_random_eff[2]] vector[M] random_effect_raw_2_vec;
     for(i in 1:ncol_X_random_eff[2]) {
       random_effect_raw_2_vec[i] = normalize_sum_to_zero(random_effect_raw_2[i]);
-   }
-
+    }
     // Generate random effects matrix - either from fitted effects or random draws
     
     // Get transformed random effects
