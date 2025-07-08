@@ -45,7 +45,7 @@ fit_model = function(
     prec_coeff = c(5,0),
     prec_sd = 1,
     alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
-    beta_raw_raw = matrix(0, data_for_model$C , data_for_model$M-1) ,
+    beta_raw = matrix(0, data_for_model$C , data_for_model$M) ,
     mix_p = 0.1 
   )
   
@@ -93,7 +93,7 @@ fit_model = function(
   
   if(inference_method == "hmc"){
     
-    tryCatch({
+  tryCatch({
       mod$sample(
         data = data_for_model ,
         chains = chains,
@@ -108,21 +108,21 @@ fit_model = function(
         output_dir = output_directory,
         show_messages = verbose,
         sig_figs = sig_figs,
-        show_exceptions = TRUE,
+        show_exceptions = verbose,
         ...
       ) 
       
     },
     error = function(e) {
-      
+
       # I don't know why thi is needed nd why the model sometimes is not compliled correctly
       if(e |> as.character() |>  str_detect("Model not compiled"))
         model = load_model(model_name, force=TRUE, threads = cores)
-      else 
-        stop()   
-      
+      else
+        stop(e)
+
     })
-    
+
     
   } else{
     
