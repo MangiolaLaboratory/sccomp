@@ -74,21 +74,23 @@ parameters {
   real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
   
-  // Random intercept // array of sum_to_zero_vector for each random effect
-  array[ncol_X_random_eff[1] * (is_random_effect>0)] sum_to_zero_vector[M] random_effect_raw;
-  array[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0)] sum_to_zero_vector[M] random_effect_raw_2;
+  // Random intercept // Using regular vectors instead of sum_to_zero_vector to avoid floating-point precision issues
+  // NOTE: Floating-point precision can cause sum_to_zero_vector to fail the strict sum-to-zero constraint
+  // We use regular vectors and apply the constraint manually where needed
+  array[ncol_X_random_eff[1] * (is_random_effect>0)] vector[M] random_effect_raw;
+  array[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0)] vector[M] random_effect_raw_2;
   
   // sd of random intercept
   array[2 * (is_random_effect>0)] real random_effect_sigma_mu;
   array[2 * (is_random_effect>0)] real random_effect_sigma_sigma;
 
 	// Covariance
-  array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[1]]  random_effect_sigma_raw;
-	array[M-1 * (is_random_effect>0)] cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
+  array[M * (is_random_effect>0)] vector[how_many_factors_in_random_design[1]]  random_effect_sigma_raw;
+	array[M * (is_random_effect>0)] cholesky_factor_corr[how_many_factors_in_random_design[1] * (is_random_effect>0)] sigma_correlation_factor;
 
 	// Covariance
-  array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[2]]  random_effect_sigma_raw_2;
-	array[M-1 * (is_random_effect>0)] cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
+  array[M * (is_random_effect>0)] vector[how_many_factors_in_random_design[2]]  random_effect_sigma_raw_2;
+	array[M * (is_random_effect>0)] cholesky_factor_corr[how_many_factors_in_random_design[2] * (is_random_effect>0)] sigma_correlation_factor_2;
 
   // If I have just one group
   array[is_random_effect>0] real zero_random_effect;
@@ -159,14 +161,14 @@ generated quantities{
   }
 
   // Non centered parameterisation SD of random effects
-  array[M-1 * (ncol_X_random_eff[1]> 0)] vector[how_many_factors_in_random_design[1]] random_effect_sigma;
-  if(ncol_X_random_eff[1]> 0) for(m in 1:(M-1)) random_effect_sigma[m] = random_effect_sigma_mu[1] + random_effect_sigma_sigma[1] * random_effect_sigma_raw[m];
-  if(ncol_X_random_eff[1]> 0) for(m in 1:(M-1)) random_effect_sigma[m] = exp(random_effect_sigma[m]/3.0);
+  array[M * (ncol_X_random_eff[1]> 0)] vector[how_many_factors_in_random_design[1]] random_effect_sigma;
+  if(ncol_X_random_eff[1]> 0) for(m in 1:M) random_effect_sigma[m] = random_effect_sigma_mu[1] + random_effect_sigma_sigma[1] * random_effect_sigma_raw[m];
+  if(ncol_X_random_eff[1]> 0) for(m in 1:M) random_effect_sigma[m] = exp(random_effect_sigma[m]/3.0);
   
   // Non centered parameterisation SD of random effects 2
-  array[M-1 * (ncol_X_random_eff[2]> 0)] vector[how_many_factors_in_random_design[2]] random_effect_sigma_2;
-  if(ncol_X_random_eff[2]> 0) for(m in 1:(M-1)) random_effect_sigma_2[m] = random_effect_sigma_mu[2] + random_effect_sigma_sigma[2] * random_effect_sigma_raw_2[m];
-  if(ncol_X_random_eff[2]> 0) for(m in 1:(M-1)) random_effect_sigma_2[m] = exp(random_effect_sigma_2[m]/3.0);
+  array[M * (ncol_X_random_eff[2]> 0)] vector[how_many_factors_in_random_design[2]] random_effect_sigma_2;
+  if(ncol_X_random_eff[2]> 0) for(m in 1:M) random_effect_sigma_2[m] = random_effect_sigma_mu[2] + random_effect_sigma_sigma[2] * random_effect_sigma_raw_2[m];
+  if(ncol_X_random_eff[2]> 0) for(m in 1:M) random_effect_sigma_2[m] = exp(random_effect_sigma_2[m]/3.0);
     
   // Random intercept
   matrix[ncol_X_random_eff[1] * (is_random_effect>0), M] random_effect; 
@@ -175,10 +177,10 @@ generated quantities{
   // For first random effect
   if(length_X_random_effect_which[1]>0) {
 
-    // Convert sum_to_zero_vector array to vector array for function call
+    // Convert vector array and apply sum-to-zero constraint manually
     array[ncol_X_random_eff[1]] vector[M] random_effect_raw_vec;
     for(i in 1:ncol_X_random_eff[1]) {
-      random_effect_raw_vec[i] = to_vector(random_effect_raw[i]);
+      random_effect_raw_vec[i] = normalize_sum_to_zero(random_effect_raw[i]);
     }
 
     // Generate random effects matrix - either from fitted effects or random draws
@@ -216,10 +218,10 @@ generated quantities{
   // For second random effect
   if(length_X_random_effect_which[2]>0) {
 
-    // Convert sum_to_zero_vector array to vector array for function call
+    // Convert vector array and apply sum-to-zero constraint manually
     array[ncol_X_random_eff[2]] vector[M] random_effect_raw_2_vec;
     for(i in 1:ncol_X_random_eff[2]) {
-      random_effect_raw_2_vec[i] = to_vector(random_effect_raw_2[i]);
+      random_effect_raw_2_vec[i] = normalize_sum_to_zero(random_effect_raw_2[i]);
     }
 
     // Generate random effects matrix - either from fitted effects or random draws
