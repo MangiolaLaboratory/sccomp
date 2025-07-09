@@ -13,6 +13,7 @@
 #    load and visualise the results.
 # --------------------------------------------------------------------------
 
+# Install required packages if not already installed
 if (!requireNamespace("job", quietly = TRUE)) {
   install.packages("job")
 }
@@ -21,6 +22,7 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
 }
 
+# Load required libraries
 library(sccomp)
 library(cellNexus)
 library(dplyr)
@@ -37,21 +39,22 @@ run_branch <- function(my_df, branch = "master",
                        model_formula = ~ sex + age_days_scaled,
                        output_samples = 400) {
   
-  
-  
-  
+  # Install required packages for the function
   if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
   if (!requireNamespace("posterior", quietly = TRUE)) install.packages("posterior")
   
+  # Remove existing sccomp package to ensure clean installation
   remove.packages("sccomp")  
   
   library(devtools)
   message("Installing branch ", branch)
+  # Install the specified branch from GitHub
   devtools::install_github(repo, ref = branch, force = TRUE)
   
   library(sccomp)
   library(posterior)
   
+  # Clear Stan model cache to ensure fresh model compilation
   clear_stan_model_cache()
   system("rm -r ~/.sccomp_models")
   
@@ -67,6 +70,12 @@ run_branch <- function(my_df, branch = "master",
   
   
   
+  # Fit the compositional model using sccomp_estimate
+  # This model includes:
+  # - Fixed effects: sex, age_days_scaled, self_reported_ethnicity
+  # - Interaction: sex*age_days_scaled
+  # - Random effects: (1 | dataset_id) for dataset-level variation
+  # - Random effects: (sex*age_days_scaled | tissue_groups) for tissue-specific effects
   estimate <- sccomp_estimate(
     my_df,
     formula_composition = ~
@@ -76,11 +85,11 @@ run_branch <- function(my_df, branch = "master",
     sample = "sample_id",
     abundance = "n",
     cell_group = "cell_type_unified_ensemble",
-    inference_method = "hmc",
-    mcmc_seed = 123,
+    inference_method = "hmc",  # Hamiltonian Monte Carlo
+    mcmc_seed = 123,  # Set seed for reproducibility
     verbose = TRUE, 
-    refresh = 5, 
-    cores = as.numeric(Sys.getenv("SLURM_CPUS_PER_TASK", unset = 1))
+    refresh = 5,  # Print progress every 5 iterations
+    cores = as.numeric(Sys.getenv("SLURM_CPUS_PER_TASK", unset = 1))  # Use SLURM cores if available
     
   )
   end_time = Sys.time()
@@ -91,7 +100,8 @@ run_branch <- function(my_df, branch = "master",
   
 } 
 
-# Load cellNexus data
+# Load cellNexus data and prepare for analysis
+# Filter for blood tissue samples with 10x technology, normal disease state
 full_df =
   cellNexus::get_metadata() |>
   filter(
@@ -102,7 +112,14 @@ full_df =
     alive
     # , scDblFinder.class == "singlet" # Uncomment if this column exists
   )
+
+# Select first 300 samples for analysis
 my_samples = full_df |> distinct(sample_id) |> head(300) |> pull(1)
+
+# Prepare the data frame for sccomp analysis
+# - Count cells by sample and cell type
+# - Include metadata: sex, age, ethnicity, dataset, tissue
+# - Scale age using square root transformation and z-standardization
 my_df =
   full_df |>
   filter(sample_id %in% my_samples) |>
@@ -113,11 +130,17 @@ my_df =
   drop_na() |>
   droplevels()
 
+# Launch background job for master branch
 job::job({ result_master = run_branch(my_df, "master")  })
 
+# Launch background job for sum-to-zero-variable branch
 job::job({ result_sum_to_zero = run_branch(my_df, "sum-to-zero-variable")  })
 
+# Load ggplot2 for visualization
 library(ggplot2)
+
+# Compare ESS (Effective Sample Size) between branches
+# Create scatter plot of ESS values from both branches
 result_master$estimate |> 
   select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_master = c_ess_bulk, c_rhat_master = c_rhat) |> 
   left_join(
@@ -125,9 +148,11 @@ result_master$estimate |>
   ) |> 
   ggplot(aes(c_ess_bulk_master, c_ess_bulk_sum_to_zero)) +
   geom_point(aes(color = cell_type_unified_ensemble)) +
-  geom_abline(intercept = 0, slope = 1) +
-  geom_smooth(method = "lm", color = "red")
+  geom_abline(intercept = 0, slope = 1) +  # Perfect agreement line
+  geom_smooth(method = "lm", color = "red")  # Linear trend line
 
+# Create detailed comparison table with ESS, R-hat, and effect estimates
+# Sort by master branch ESS to identify parameters with different convergence
 result_master$estimate |> 
   select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_master = c_ess_bulk, c_rhat_master = c_rhat, c_effect_master = c_effect) |> 
   left_join(
