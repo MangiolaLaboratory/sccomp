@@ -93,7 +93,7 @@ fit_model = function(
   
   if(inference_method == "hmc"){
     
-  tryCatch({
+ # tryCatch({
       mod$sample(
         data = data_for_model ,
         chains = chains,
@@ -112,16 +112,16 @@ fit_model = function(
         ...
       ) 
       
-    },
-    error = function(e) {
-
-      # I don't know why thi is needed nd why the model sometimes is not compliled correctly
-      if(e |> as.character() |>  str_detect("Model not compiled"))
-        model = load_model(model_name, force=TRUE, threads = cores)
-      else
-        stop(e)
-
-    })
+    # },
+    # error = function(e) {
+    # 
+    #   # I don't know why thi is needed nd why the model sometimes is not compliled correctly
+    #   if(e |> as.character() |>  str_detect("Model not compiled"))
+    #     model = load_model(model_name, force=TRUE, threads = cores)
+    #   else
+    #     stop(e)
+    # 
+    # })
 
     
   } else{
