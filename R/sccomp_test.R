@@ -254,27 +254,28 @@ get_abundance_contrast_draws = function(.data, contrasts){
       with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
       mutate(.value = -.value, M = beta_random_effect |> pull(M) |> max() + 1)
     
+    # POST-MODEL CORRECTION COMMENTED OUT - Now using built-in sum_to_zero_vector in Stan
     # I HAVE TO REGULARISE THE LAST COMPONENT
-    mean_of_the_sd_of_the_point_estimates = 
-      beta_random_effect |> 
-      group_by(M, C) |> 
-      summarise(point_estimate = mean(.value)) |> 
-      group_by(M) |> 
-      summarise(sd_of_point_estimates = sd(point_estimate)) |> 
-      pull(sd_of_point_estimates) |> 
-      mean()
+    # mean_of_the_sd_of_the_point_estimates = 
+    #   beta_random_effect |> 
+    #   group_by(M, C) |> 
+    #   summarise(point_estimate = mean(.value)) |> 
+    #   group_by(M) |> 
+    #   summarise(sd_of_point_estimates = sd(point_estimate)) |> 
+    #   pull(sd_of_point_estimates) |> 
+    #   mean()
     
-    other_sd_of_the_point_estimates = 
-      other_group_random_effect |> 
-      group_by(M, C) |> 
-      summarise(point_estimate = mean(.value)) |> 
-      group_by(M) |> 
-      summarise(sd_of_point_estimates = sd(point_estimate)) |> 
-      pull(sd_of_point_estimates)
+    # other_sd_of_the_point_estimates = 
+    #   other_group_random_effect |> 
+    #   group_by(M, C) |> 
+    #   summarise(point_estimate = mean(.value)) |> 
+    #   group_by(M) |> 
+    #   summarise(sd_of_point_estimates = sd(point_estimate)) |> 
+    #   pull(sd_of_point_estimates)
     
-    other_group_random_effect = 
-      other_group_random_effect |> 
-      mutate(.value = .value / (other_sd_of_the_point_estimates / mean_of_the_sd_of_the_point_estimates))
+    # other_group_random_effect = 
+    #   other_group_random_effect |> 
+    #   mutate(.value = .value / (other_sd_of_the_point_estimates / mean_of_the_sd_of_the_point_estimates))
     
     
     beta_random_effect = 
@@ -347,27 +348,28 @@ get_abundance_contrast_draws = function(.data, contrasts){
       with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
       mutate(.value = -.value, M = beta_random_effect_2 |> pull(M) |> max() + 1)
     
+    # POST-MODEL CORRECTION COMMENTED OUT - Now using built-in sum_to_zero_vector in Stan
     # I HAVE TO REGULARISE THE LAST COMPONENT
-    mean_of_the_sd_of_the_point_estimates = 
-      beta_random_effect_2 |> 
-      group_by(M, C) |> 
-      summarise(point_estimate = mean(.value)) |> 
-      group_by(M) |> 
-      summarise(sd_of_point_estimates = sd(point_estimate)) |> 
-      pull(sd_of_point_estimates) |> 
-      mean()
+    # mean_of_the_sd_of_the_point_estimates = 
+    #   beta_random_effect_2 |> 
+    #   group_by(M, C) |> 
+    #   summarise(point_estimate = mean(.value)) |> 
+    #   group_by(M) |> 
+    #   summarise(sd_of_point_estimates = sd(point_estimate)) |> 
+    #   pull(sd_of_point_estimates) |> 
+    #   mean()
     
-    other_sd_of_the_point_estimates = 
-      other_group_random_effect |> 
-      group_by(M, C) |> 
-      summarise(point_estimate = mean(.value)) |> 
-      group_by(M) |> 
-      summarise(sd_of_point_estimates = sd(point_estimate)) |> 
-      pull(sd_of_point_estimates)
+    # other_sd_of_the_point_estimates = 
+    #   other_group_random_effect |> 
+    #   group_by(M, C) |> 
+    #   summarise(point_estimate = mean(.value)) |> 
+    #   group_by(M) |> 
+    #   summarise(sd_of_point_estimates = sd(point_estimate)) |> 
+    #   pull(sd_of_point_estimates)
     
-    other_group_random_effect = 
-      other_group_random_effect |> 
-      mutate(.value = .value / (other_sd_of_the_point_estimates / mean_of_the_sd_of_the_point_estimates))
+    # other_group_random_effect = 
+    #   other_group_random_effect |> 
+    #   mutate(.value = .value / (other_sd_of_the_point_estimates / mean_of_the_sd_of_the_point_estimates))
     
     
     beta_random_effect_2 = 
