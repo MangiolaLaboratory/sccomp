@@ -52,7 +52,11 @@ jobs:
       - name: Install CmdStan
         shell: Rscript {0}
         run: |
-          install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+          # TEMPORARY: Install cmdstanr from GitHub v0.9.0 for this branch
+          if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+          remotes::install_github("stan-dev/cmdstanr", ref = "v0.9.0")
+          # ORIGINAL CRAN INSTALLATION (commented out for temporary GitHub install):
+          # install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
           cmdstanr::check_cmdstan_toolchain(fix = TRUE)
           cmdstanr::install_cmdstan(cores = 2)
           cmdstanr::cmdstan_version()
