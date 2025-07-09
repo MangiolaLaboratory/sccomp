@@ -1036,9 +1036,7 @@ data_spread_to_model_input =
         pivot_wider(names_from = group, values_from = order)  |> 
         as_matrix(rownames = "factor")
 
-      # DEBUG
-      cat("DEBUG: ncol_X_random_effect =", ncol(X_random_effect), "\n")
-      cat("DEBUG: max(group_factor_indexes_for_covariance) =", max(group_factor_indexes_for_covariance), "\n")
+      
       
       n_groups = group_factor_indexes_for_covariance |> ncol()
       
