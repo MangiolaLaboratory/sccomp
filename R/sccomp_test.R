@@ -429,7 +429,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
   # If no contrasts of interest just return an empty data frame
   if(ncol(draws)==5) return(draws |> distinct(M, !!.cell_group))
   
-  # Get convergence
+  # Get convergence for fixed effects
   convergence_df =
     .data |>
     attr("fit") |>
@@ -451,6 +451,62 @@ get_abundance_contrast_draws = function(.data, contrasts){
         enframe(name = "C", value = "parameter"),
       by = "C"
     )
+  
+  # Get convergence for random effects if they exist
+  if(.data |> attr("model_input") %$% n_random_eff > 0) {
+    convergence_df_random =
+      .data |>
+      attr("fit") |>
+      summary_to_tibble("random_effect", "C", "M") |>
+      
+      # Add cell name
+      left_join(
+        .data |>
+          attr("model_input") %$%
+          y %>%
+          colnames() |>
+          enframe(name = "M", value  = quo_name(.cell_group)),
+        by = "M"
+      ) |>
+      
+      # factor names
+      left_join(
+        beta_random_effect_factor_of_interest |>
+          enframe(name = "C", value = "parameter"),
+        by = "C"
+      )
+    
+    # Combine fixed and random effects convergence
+    convergence_df = bind_rows(convergence_df, convergence_df_random)
+  }
+  
+  # Get convergence for second random effect if it exists
+  if(.data |> attr("model_input") %$% n_random_eff > 1) {
+    convergence_df_random_2 =
+      .data |>
+      attr("fit") |>
+      summary_to_tibble("random_effect_2", "C", "M") |>
+      
+      # Add cell name
+      left_join(
+        .data |>
+          attr("model_input") %$%
+          y %>%
+          colnames() |>
+          enframe(name = "M", value  = quo_name(.cell_group)),
+        by = "M"
+      ) |>
+      
+      # factor names
+      left_join(
+        beta_random_effect_factor_of_interest_2 |>
+          enframe(name = "C", value = "parameter"),
+        by = "C"
+      )
+    
+    # Combine with existing convergence data
+    convergence_df = bind_rows(convergence_df, convergence_df_random_2)
+  }
   
   # if ("Rhat" %in% colnames(convergence_df)) {
   #   convergence_df <- rename(convergence_df, R_k_hat = Rhat)
