@@ -33,10 +33,9 @@ setup_renv <- function() {
   }
   
   # Initialize renv project (creates .Rprofile and renv.lock if not exists)
-  if (!renv::is_initialized()) {
     cat("Initializing renv project...\n")
-    renv::init(force = TRUE)
-  }
+    renv::init()
+  
   
   # Install required packages in the isolated environment
   packages_to_install <- c(
@@ -103,8 +102,8 @@ run_branch <- function(my_df, branch = "master",
   if (!requireNamespace("posterior", quietly = TRUE)) renv::install("posterior")
   
   # Remove existing sccomp package to ensure clean installation
-  remove.packages("sccomp")  
-  
+  renv::remove("sccomp")  
+   
   library(devtools)
   message("Installing branch ", branch)
   # Install the specified branch from GitHub using renv
@@ -197,52 +196,6 @@ prepare_data <- function() {
   return(my_df)
 }
 
-# ============================================================================
-# COMPARISON FUNCTIONS
-# ============================================================================
-
-launch_comparison_jobs <- function(my_df) {
-  # Load required libraries
-  library(sccomp)
-  library(cellNexus)
-  library(dplyr)
-  library(stringr)
-  library(tidyr)
-  library(job)
-  library(ggplot2)
-  library(posterior)
-  library(cmdstanr)
-  
-  # Launch background job for master branch
-  job::job({ result_master = run_branch(my_df, "master")  })
-  
-  # Launch background job for sum-to-zero-variable branch
-  job::job({ result_sum_to_zero = run_branch(my_df, "sum-to-zero-variable")  })
-  
-  cat("Jobs launched! Check the RStudio Jobs pane for progress.\n")
-}
-
-compare_results <- function() {
-  # Compare ESS (Effective Sample Size) between branches
-  # Create scatter plot of ESS values from both branches
-  result_master$estimate |> 
-    select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_master = c_ess_bulk, c_rhat_master = c_rhat) |> 
-    left_join(
-      result_sum_to_zero$estimate |> select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_sum_to_zero = c_ess_bulk, c_rhat_sum_to_zero = c_rhat)
-    ) |> 
-    ggplot(aes(c_ess_bulk_master, c_ess_bulk_sum_to_zero)) +
-    geom_point(aes(color = cell_type_unified_ensemble)) +
-    geom_abline(intercept = 0, slope = 1) +  # Perfect agreement line
-    geom_smooth(method = "lm", color = "red")  # Linear trend line
-  
-  # Create detailed comparison table with ESS, R-hat, and effect estimates
-  # Sort by master branch ESS to identify parameters with different convergence
-  result_master$estimate |> 
-    select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_master = c_ess_bulk, c_rhat_master = c_rhat, c_effect_master = c_effect) |> 
-    left_join(
-      result_sum_to_zero$estimate |> select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_sum_to_zero = c_ess_bulk, c_rhat_sum_to_zero = c_rhat, c_effect_sum_to_zero = c_effect)
-    )|> arrange(c_ess_bulk_master) |> View()
-}
 
 # ============================================================================
 # MAIN EXECUTION
@@ -252,11 +205,51 @@ compare_results <- function() {
 setup_renv()
 
 # Prepare data
+# DUE TO DUCKDB THIS IS NOT DETERMINISTIC WITHOUT A SEED
+set.seed(42)
 my_df <- prepare_data()
 
 # Launch comparison jobs
-launch_comparison_jobs(my_df)
+# Load required libraries
+library(sccomp)
+library(cellNexus)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(job)
+library(ggplot2)
+library(posterior)
+library(cmdstanr)
 
-cat("\nSetup complete! Jobs are running in the background.\n")
-cat("When jobs complete, run: compare_results()\n")
-cat("When done testing, run: cleanup_renv()\n")
+# Launch background job for master branch
+job::job({ result_master = run_branch(my_df, "master")  })
+
+# Launch background job for sum-to-zero-variable branch
+job::job({ result_sum_to_zero = run_branch(my_df, "sum-to-zero-variable")  })
+
+renv::deactivate()
+
+# Compare ESS (Effective Sample Size) between branches
+# Create scatter plot of ESS values from both branches
+result_master$estimate |> 
+  select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_master = c_ess_bulk, c_rhat_master = c_rhat) |> 
+  left_join(
+    result_sum_to_zero$estimate |> select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_sum_to_zero = c_ess_bulk, c_rhat_sum_to_zero = c_rhat)
+  ) |> 
+  ggplot(aes(c_ess_bulk_master, c_ess_bulk_sum_to_zero)) +
+  geom_point(aes(color = cell_type_unified_ensemble)) +
+  geom_abline(intercept = 0, slope = 1) +  # Perfect agreement line
+  geom_smooth(method = "lm", color = "red")  # Linear trend line
+
+# Create detailed comparison table with ESS, R-hat, and effect estimates
+# Sort by master branch ESS to identify parameters with different convergence
+result_master$estimate |> 
+  select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_master = c_ess_bulk, c_rhat_master = c_rhat, c_effect_master = c_effect) |> 
+  left_join(
+    result_sum_to_zero$estimate |> select(cell_type_unified_ensemble, parameter, factor, c_ess_bulk_sum_to_zero = c_ess_bulk, c_rhat_sum_to_zero = c_rhat, c_effect_sum_to_zero = c_effect)
+  )|> arrange(c_ess_bulk_master) |> View()
+
+
+library(magrittr)
+result_master$estimate |> attr("fit") %$% draws("random_effect[1,1]") |> bayesplot::mcmc_trace()
+result_sum_to_zero$estimate |> attr("fit") %$% draws("random_effect[1,1]") |> bayesplot::mcmc_trace()
