@@ -84,7 +84,7 @@ run_branch <- function(my_df, branch = "master",
     
   )
   end_time = Sys.time()
-  estimate |> attr("fit") = NULL
+  # estimate |> attr("fit") = NULL
   
   # return the estimate object and time taken
   list(estimate = estimate, time = end_time - start_time)
