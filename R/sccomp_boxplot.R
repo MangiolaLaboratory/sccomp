@@ -105,7 +105,7 @@ sccomp_boxplot = function(
     !!.cell_group,
     !!.sample,
     significance_threshold = significance_threshold,
-    multipanel_theme,
+    sccomp_theme(),
     remove_unwanted_effects = remove_unwanted_effects
   ) +
     ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", factor))

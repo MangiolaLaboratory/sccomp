@@ -103,7 +103,7 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
                 factor_of_interest = .x,
                 .cell_group = !!.cell_group,
                 .sample =  !!.sample,
-                my_theme = multipanel_theme,
+                my_theme = sccomp_theme(),
                 significance_threshold = significance_threshold
               )
           
@@ -248,7 +248,7 @@ plot_1D_intervals = function(
           xlab("Credible interval of the slope") +
           ylab("Cell group") +
           ggtitle(sprintf("%s %s", ..2, ..3)) +
-          multipanel_theme +
+          sccomp_theme() +
           theme(legend.position = "bottom") +
           guides(color = guide_legend(title = legend_title))
       }
@@ -425,7 +425,7 @@ plot_2D_intervals = function(
         ylab("v_effect (Variability effect)") +
         
         # Apply custom theme
-        multipanel_theme +
+        sccomp_theme() +
         theme(legend.position = "bottom") +
         guides(color = guide_legend(title = legend_title), alpha = "none")
     }
