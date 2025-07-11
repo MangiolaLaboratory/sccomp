@@ -69,7 +69,7 @@
 #' @return A `ggplot2` theme object compatible with ggplot2 4.0.0
 #'
 #' @export
-create_multipanel_theme <- function() {
+sccomp_theme <- function() {
   ggplot2::theme_bw() +
     ggplot2::theme(
       panel.border = ggplot2::element_rect(colour = "black", fill = NA, linewidth = 0.5),
