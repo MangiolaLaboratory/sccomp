@@ -362,9 +362,31 @@ plot_2D_intervals = function(
   prec_coeff_intercept = prec_coeff_summary$mean[1]
   prec_coeff_slope = prec_coeff_summary$mean[2]
   
-  # Mean-variance association
-  plot <- .data %>%
-    
+  # Add corrected intercept (unbiased variability) as a new facet
+  .data_corrected <- .data %>%
+    filter(parameter == "(Intercept)") %>%
+    mutate(
+      v_effect = v_effect + prec_coeff_slope * c_effect,
+      v_lower = v_lower + prec_coeff_slope * c_effect,
+      v_upper = v_upper + prec_coeff_slope * c_effect,
+      parameter = "(Intercept, corrected)"
+    )
+  
+  # Bind corrected data to original (uncorrected comes first)
+  .data_plot <- bind_rows(.data, .data_corrected)
+  
+  # Set parameter as a factor to control facet order
+  .data_plot$parameter <- factor(
+    .data_plot$parameter,
+    levels = c(
+      "(Intercept)",
+      "(Intercept, corrected)",
+      setdiff(unique(.data_plot$parameter), c("(Intercept)", "(Intercept, corrected)"))
+    )
+  )
+  
+  # Use .data_plot instead of .data in the rest of the function
+  plot <- .data_plot %>%
     # Filter where variance is inferred
     filter(!is.na(v_effect)) %>%
     
@@ -373,13 +395,13 @@ plot_2D_intervals = function(
       parameter,
       ~ .x %>%
         arrange(c_FDR) %>%
-        mutate(cell_type_label = if_else(row_number() <= 3 & c_FDR < significance_threshold & parameter != "(Intercept)", !!.cell_group, ""))
+        mutate(cell_type_label = if_else(row_number() <= 3 & c_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, corrected)"), !!.cell_group, ""))
     ) %>%
     with_groups(
       parameter,
       ~ .x %>%
         arrange(v_FDR) %>%
-        mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & parameter != "(Intercept)"), !!.cell_group, cell_type_label))
+        mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, corrected)") ), !!.cell_group, cell_type_label))
     ) %>%
     {
       .x = (.)
@@ -417,14 +439,14 @@ plot_2D_intervals = function(
         geom_vline(xintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
         geom_hline(yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3)
       
-      # Add regression line only for (Intercept) facet
+       # Add regression line only for (Intercept) facet
       p <- p + geom_line(
         data = regression_data,
         mapping = aes(c_effect, v_effect),
-        color = "#0072B2", linewidth = 1, alpha = 0.8,
+        color = "#0072B2", linewidth = 0.5, alpha = 0.8,
         inherit.aes = FALSE
       )
-      
+    
       p <- p +
         # Add error bars
         geom_errorbar(color_c_aes, linewidth = 0.2) +
@@ -440,7 +462,7 @@ plot_2D_intervals = function(
         color_scale +
         alpha_scale +
         # Facet by parameter
-        facet_wrap(~parameter, scales = "free") +
+        facet_wrap(~ fct_relevel(parameter, c("(Intercept)", "(Intercept, corrected)")), scales = "free") +
         xlab("c_effect (Abundance effect)") +
         ylab("v_effect (Variability effect)") +
         # Apply custom theme
