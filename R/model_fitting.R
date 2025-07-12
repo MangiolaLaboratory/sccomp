@@ -271,7 +271,7 @@ check_and_install_cmdstanr <- function() {
       ),
 
       # I have to see if Bioconductor is compatible with this
-      action = function(...) install.packages(..., repos = c('https://mc-stan.org/r-packages'))
+      action = function(...) install.packages(..., repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
     )
   #   ,
   #   error = function(e) {
