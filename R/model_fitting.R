@@ -260,21 +260,7 @@ check_and_install_cmdstanr <- function() {
   # Check if cmdstanr is installed
   # from https://github.com/wlandau/instantiate/blob/33989d74c26f349e292e5efc11c267b3a1b71d3f/R/utils_assert.R#L114
   
-  stan_error <- function(message = NULL) {
-    stan_stop(
-      message = message,
-      class = c("stan_error", "stan")
-    )
-  }
-  
-  stan_stop <- function(message, class) {
-    old <- getOption("rlang_backtrace_on_error")
-    on.exit(options(rlang_backtrace_on_error = old))
-    options(rlang_backtrace_on_error = "none")
-    abort(message = message, class = class, call = emptyenv())
-  }
-  
-  tryCatch(
+  # tryCatch(
     rlang::check_installed(
       pkg = "cmdstanr",
       reason = paste(
@@ -282,13 +268,17 @@ check_and_install_cmdstanr <- function() {
         "CmdStan and run Stan models. Please install it manually using",
         "install.packages(pkgs = \"cmdstanr\",",
         "repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\"))"
-      )
-    ),
-    error = function(e) {
-      clear_stan_model_cache()
-      stan_error(conditionMessage(e))
-    }
-  )
+      ),
+
+      # I have to see if Bioconductor is compatible with this
+      action = function(...) install.packages(..., repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
+    )
+  #   ,
+  #   error = function(e) {
+  #     clear_stan_model_cache()
+  #     stan_error(conditionMessage(e))
+  #   }
+  # )
   
   # Check if CmdStan is installed
   if (!stan_cmdstan_exists()) {

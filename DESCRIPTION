@@ -1,6 +1,6 @@
 Package: sccomp
 Title: Tests differences in cell-type proportion for single-cell data, robust to outliers
-Version: 2.1.12
+Version: 2.1.13
 Authors@R: c(person("Stefano", "Mangiola", email = "mangiolastefano@gmail.com",
                   role = c("aut", "cre"))
                   )
