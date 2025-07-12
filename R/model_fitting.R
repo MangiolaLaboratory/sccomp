@@ -270,7 +270,10 @@ check_and_install_cmdstanr <- function() {
         "CmdStan and run Stan models. Please install it manually using",
         "install.packages(pkgs = \"cmdstanr\",",
         "repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\"))"
-      )
+      ),
+      
+      # I have to see if Bioconductor is compatible with this
+      action = function(...) install.packages(..., repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
     )
   #   ,
   #   error = function(e) {
