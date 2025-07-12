@@ -1,11 +1,21 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.14, Bioconductor 3.22 Release}{
+\itemize{
+    \item \textbf{Improved model efficiency and reliability with sum-to-zero variable constraints.} This update introduces a new way of handling certain statistical constraints in the underlying model, using a "sum-to-zero" variable type. Previously, these constraints were managed with a workaround that could be less efficient and less stable. The new approach is more mathematically direct and robust, leading to a substantial improvement in the model's ability to draw independent samples from the data (known as the "effective sample size" or ESS).
+    \item \textbf{Why was this change made?} The previous method for enforcing sum-to-zero constraints (a requirement for compositional data) relied on QR decomposition, which could be numerically unstable and inefficient, especially for complex models or large datasets. The new method leverages recent advances in the Stan modeling language, allowing these constraints to be handled natively and more accurately.
+    \item \textbf{What does this mean for users?} In practical terms, this change means that the model now converges faster and produces more reliable results, especially for analyses involving many cell types or complex experimental designs. The improvement in effective sample size (ESS) can be seen in the comparison plot: for the same amount of computation, the new method yields more independent samples, making statistical estimates more trustworthy and reducing the risk of misleading results (see https://github.com/MangiolaLaboratory/sccomp/pull/211).
+    \item \textbf{Summary of improvement:} Across a wide range of real-world datasets, the new sum-to-zero variable approach consistently increases the effective sample size, sometimes dramatically, compared to the previous method. Visual inspection of the comparison plot shows that the median improvement in ESS is in the range of 500--1000 additional effective samples per parameter, with many parameters seeing their ESS doubled or more. This makes sccomp analyses faster, more robust, and more reproducible.
+}}
+
 \section{News in version 2.1.12}{
 \itemize{
     \item Completely removed the deprecated old framework (methods_OLD_framework), including all its functions and files.
     \item The function \code{sccomp_remove_unwanted_variation} is still present as it is a recent deprecation.
 }}
+
+
 
 \section{News in version 1.7.4, Bioconductor 3.19 Release}{
 \itemize{

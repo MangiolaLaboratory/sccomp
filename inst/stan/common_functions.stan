@@ -7,9 +7,9 @@
     ) {
       // PIVOT WIDER
       // increase of one dimension array[cell_type] matrix[group, factor]
-      array[M-1] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects_raw;
+      array[M] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects_raw;
       
-      for(m in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
+      for(m in 1:M) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
         
         // If I don't have the factor for one group 
         if(group_factor_indexes_for_covariance[j,i] == 0)
@@ -29,10 +29,10 @@
       array[,] int group_factor_indexes_for_covariance,
       int ncol_X_random_eff
     ) {
-      matrix[ncol_X_random_eff , M-1] random_effect;
+      matrix[ncol_X_random_eff , M] random_effect;
       
       // Pivot longer
-      for(m in 1:(M-1)) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
+      for(m in 1:M) for(i in 1:n_groups) for(j in 1:how_many_factors_in_random_design)  {
         
         // If I don't have the factor for one group 
         if(group_factor_indexes_for_covariance[j,i] > 0)
@@ -50,27 +50,34 @@
       int ncol_X_random_eff,           // Number of columns in the random effects design matrix
       array[,] int group_factor_indexes_for_covariance,  // 2D array mapping factors to groups for covariance structure
       
-      matrix random_effect_raw,      // Raw random effects matrix before transformation
+      array[] vector random_effect_raw,      // Raw random effects as vector array
       array[] vector random_effect_sigma,  // Standard deviations for each random effect
       array[] matrix sigma_correlation_factor  // Correlation matrices for random effects
       ){
         
+        // Convert vector array to matrix for processing
+        matrix[ncol_X_random_eff, M] random_effect_matrix;
+        for(i in 1:ncol_X_random_eff) {
+          random_effect_matrix[i,] = to_row_vector(random_effect_raw[i]);
+        }
+        
         // PIVOT WIDER, as my columns should be covariates, not groups
-        array[M-1] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects_raw = 
+        array[M] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects_raw = 
           reshape_to_3d_matrix(
             M, 
             n_groups, 
             how_many_factors_in_random_design, 
-            random_effect_raw, 
+            random_effect_matrix, 
             group_factor_indexes_for_covariance
           );
         
         // Design L
-        array[M-1] matrix[how_many_factors_in_random_design, how_many_factors_in_random_design] L;
-        array[M-1] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects;
+        array[M] matrix[how_many_factors_in_random_design, how_many_factors_in_random_design] L;
+        array[M] matrix[how_many_factors_in_random_design, n_groups] matrix_of_random_effects;
         
-        for(m in 1:(M-1)) L[m] = diag_pre_multiply(random_effect_sigma[m], sigma_correlation_factor[m]) ;
-        for(m in 1:(M-1)) matrix_of_random_effects[m] = L[m] * matrix_of_random_effects_raw[m];
+        // print(random_effect_sigma);
+        for(m in 1:M) L[m] = diag_pre_multiply(random_effect_sigma[m], sigma_correlation_factor[m]) ;
+        for(m in 1:M) matrix_of_random_effects[m] = L[m] * matrix_of_random_effects_raw[m];
         
         // PIVOT LONGER 
         return reshape_to_2d_matrix(
@@ -83,28 +90,7 @@
         );
       }
       
-       vector Q_sum_to_zero_QR(int N) {
-    vector [2*N] Q_r;
-    
-    for(i in 1:N) {
-      Q_r[i] = -sqrt((N-i)/(N-i+1.0));
-      Q_r[i+N] = inv_sqrt((N-i) * (N-i+1));
-    }
-    return Q_r;
-  }
-  
-  row_vector sum_to_zero_QR(row_vector x_raw, vector Q_r) {
-    int N = num_elements(x_raw) + 1;
-    row_vector [N] x;
-    real x_aux = 0;
-    
-    for(i in 1:N-1){
-      x[i] = x_aux + x_raw[i] * Q_r[i];
-      x_aux = x_aux + x_raw[i] * Q_r[i+N];
-    }
-    x[N] = x_aux;
-    return x;
-  }
+  // QR-based sum-to-zero functions removed - now using sum_to_zero_vector[K] type
   
       row_vector average_by_col(matrix X) {
       int rows_X = rows(X);
@@ -119,3 +105,14 @@
       
       
     }
+
+// Normalize a vector to sum to zero
+vector normalize_sum_to_zero(vector x) {
+  int n = num_elements(x);
+  real sum_x = sum(x);
+  vector[n] normalized;
+  for (i in 1:n) {
+    normalized[i] = x[i] - sum_x / n;
+  }
+  return normalized;
+}

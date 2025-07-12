@@ -45,15 +45,15 @@ fit_model = function(
     prec_coeff = c(5,0),
     prec_sd = 1,
     alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
-    beta_raw_raw = matrix(0, data_for_model$C , data_for_model$M-1) ,
+    beta_raw = matrix(0, data_for_model$C , data_for_model$M) ,
     mix_p = 0.1 
   )
   
   if(data_for_model$n_random_eff>0){
-    init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M-1)  
-    init_list$random_effect_sigma_raw = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[1])
+    init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M)
+    init_list$random_effect_sigma_raw = matrix(0, data_for_model$M , data_for_model$how_many_factors_in_random_design[1])
     init_list$sigma_correlation_factor = array(0, dim = c(
-      data_for_model$M-1, 
+      data_for_model$M, 
       data_for_model$how_many_factors_in_random_design[1], 
       data_for_model$how_many_factors_in_random_design[1]
     ))
@@ -65,10 +65,10 @@ fit_model = function(
   } 
   
   if(data_for_model$n_random_eff>1){
-    init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M-1)
-    init_list$random_effect_sigma_raw_2 = matrix(0, data_for_model$M-1 , data_for_model$how_many_factors_in_random_design[2])
+    init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M)
+    init_list$random_effect_sigma_raw_2 = matrix(0, data_for_model$M , data_for_model$how_many_factors_in_random_design[2])
     init_list$sigma_correlation_factor_2 = array(0, dim = c(
-      data_for_model$M-1, 
+      data_for_model$M, 
       data_for_model$how_many_factors_in_random_design[2], 
       data_for_model$how_many_factors_in_random_design[2]
     ))
@@ -93,9 +93,8 @@ fit_model = function(
   
   if(inference_method == "hmc"){
     
-    tryCatch({
-      mod |> sample_safe(
-        sample_fx,
+ # tryCatch({
+    mod$sample(
         data = data_for_model ,
         chains = chains,
         parallel_chains = chains,
@@ -109,21 +108,21 @@ fit_model = function(
         output_dir = output_directory,
         show_messages = verbose,
         sig_figs = sig_figs,
-        show_exceptions = FALSE,
+        show_exceptions = verbose,
         ...
       ) 
       
-    },
-    error = function(e) {
-      
-      # I don't know why thi is needed nd why the model sometimes is not compliled correctly
-      if(e |> as.character() |>  str_detect("Model not compiled"))
-        model = load_model(model_name, force=TRUE, threads = cores)
-      else 
-        stop()   
-      
-    })
-    
+    # },
+    # error = function(e) {
+    # 
+    #   # I don't know why thi is needed nd why the model sometimes is not compliled correctly
+    #   if(e |> as.character() |>  str_detect("Model not compiled"))
+    #     model = load_model(model_name, force=TRUE, threads = cores)
+    #   else
+    #     stop(e)
+    # 
+    # })
+
     
   } else{
     
@@ -244,9 +243,11 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
 
 #' Check and Install cmdstanr and CmdStan
 #'
-#' This function checks if the `cmdstanr` package and CmdStan are installed. 
+#' This function checks if the `cmdstanr` package (version 0.9.0 or higher) and CmdStan are installed. 
 #' If they are not installed, it installs them automatically in non-interactive sessions
 #' or asks for permission to install them in interactive sessions.
+#' 
+#' The function requires cmdstanr version 0.9.0 or higher for support of the new `sum_to_zero_vector` type.
 #'
 #' @importFrom instantiate stan_cmdstan_exists
 #' @importFrom rlang check_installed
@@ -263,13 +264,14 @@ check_and_install_cmdstanr <- function() {
   # tryCatch(
     rlang::check_installed(
       pkg = "cmdstanr",
+      version = "0.9.0",
       reason = paste(
         "The {cmdstanr} package is required in order to install",
         "CmdStan and run Stan models. Please install it manually using",
         "install.packages(pkgs = \"cmdstanr\",",
         "repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\"))"
       ),
-
+      
       # I have to see if Bioconductor is compatible with this
       action = function(...) install.packages(..., repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
     )
@@ -279,7 +281,8 @@ check_and_install_cmdstanr <- function() {
   #     stan_error(conditionMessage(e))
   #   }
   # )
-  
+
+
   # Check if CmdStan is installed
   if (!stan_cmdstan_exists()) {
     
