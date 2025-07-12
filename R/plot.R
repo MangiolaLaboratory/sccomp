@@ -356,6 +356,12 @@ plot_2D_intervals = function(
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
+  # Extract prec_coeff parameters from the fitted model for regression line
+  fit = attr(.data, "fit")
+  prec_coeff_summary = fit$summary("prec_coeff")
+  prec_coeff_intercept = prec_coeff_summary$mean[1]
+  prec_coeff_slope = prec_coeff_summary$mean[2]
+  
   # Mean-variance association
   plot <- .data %>%
     
@@ -393,41 +399,55 @@ plot_2D_intervals = function(
         legend_title <- "pH0 < significance_threshold"
       }
       
+      # Calculate range for regression line
+      c_range = range(.x$c_effect, na.rm = TRUE)
+      c_seq = seq(c_range[1], c_range[2], length.out = 100)
+      v_pred = -(prec_coeff_intercept + prec_coeff_slope * c_seq)
+      
+      # Create regression line data only for (Intercept)
+      regression_data = data.frame(
+        c_effect = c_seq,
+        v_effect = v_pred,
+        parameter = "(Intercept)"
+      )
+      
       # Plot
-      ggplot(.x, aes(c_effect, v_effect)) +
-        
+      p <- ggplot(.x, aes(c_effect, v_effect)) +
         # Add vertical and horizontal lines
         geom_vline(xintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
-        geom_hline(yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
-        
+        geom_hline(yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3)
+      
+      # Add regression line only for (Intercept) facet
+      p <- p + geom_line(
+        data = regression_data,
+        mapping = aes(c_effect, v_effect),
+        color = "#0072B2", linewidth = 1, alpha = 0.8,
+        inherit.aes = FALSE
+      )
+      
+      p <- p +
         # Add error bars
         geom_errorbar(color_c_aes, linewidth = 0.2) +
         geom_errorbar(color_v_aes, linewidth = 0.2) +
-        
         # Add points
         geom_point(size = 0.2) +
-        
         # Add annotations
-        annotate("text", x = 0, y = 3.5, label = "Variability", size = 2) +
-        annotate("text", x = 5, y = 0, label = "Abundance", size = 2, angle = 270) +
-        
+        # annotate("text", x = 0, y = 3.5, label = "Variability", size = 2) +
+        # annotate("text", x = 5, y = 0, label = "Abundance", size = 2, angle = 270) +
         # Add text labels for significant cell groups
         geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label != "")) +
-        
         # Set color and alpha scales
         color_scale +
         alpha_scale +
-        
         # Facet by parameter
         facet_wrap(~parameter, scales = "free") +
-        
         xlab("c_effect (Abundance effect)") +
         ylab("v_effect (Variability effect)") +
-        
         # Apply custom theme
         sccomp_theme() +
         theme(legend.position = "bottom") +
         guides(color = guide_legend(title = legend_title), alpha = "none")
+      p
     }
 
   # Only show the FDR message if significance_statistic == "FDR" and show_fdr_message is TRUE
