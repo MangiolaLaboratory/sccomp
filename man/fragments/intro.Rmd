@@ -61,7 +61,7 @@ Function | Description
 `sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change)
 `sccomp_replicate` | Simulate data from the model, or part of the model
 `sccomp_predict` | Predicts proportions, based on the model, or part of the model
-`sccomp_remove_unwanted_variation` | Removes the variability for unwanted factors
+`sccomp_remove_unwanted_effects` | Removes the variability for unwanted factors
 `plot` | Plots summary plots to assess significance 
 
 # Analysis
