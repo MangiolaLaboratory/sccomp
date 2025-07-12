@@ -454,8 +454,8 @@ plot_2D_intervals = function(
         # Add points
         geom_point(size = 0.2) +
         # Add annotations
-        # annotate("text", x = 0, y = 3.5, label = "Variability", size = 2) +
-        # annotate("text", x = 5, y = 0, label = "Abundance", size = 2, angle = 270) +
+        # annotate("text", x = 0, y = 3.5, label = "Variability", size = 2) + # Disabled temporarily; revisit if annotations are needed for variability.
+        # annotate("text", x = 5, y = 0, label = "Abundance", size = 2, angle = 270) + # Disabled temporarily; revisit if annotations are needed for abundance.
         # Add text labels for significant cell groups
         geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label != "")) +
         # Set color and alpha scales
