@@ -79,6 +79,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: workflow_with_cmdstanr
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       contents: write
       pages: write
