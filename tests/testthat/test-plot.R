@@ -294,18 +294,18 @@ test_that("plot_2D_intervals includes regression line from prec_coeff parameters
   plot_data <- ggplot_build(plot_2d)$data
   
   # Look for the red line in the plot data
-  has_red_line <- FALSE
+  has_correct_line_color <- FALSE
   for (layer_data in plot_data) {
     if ("colour" %in% names(layer_data)) {
-      if (any(layer_data$colour == "red" | layer_data$colour == "#FF0000")) {
-        has_red_line <- TRUE
+      if (any(layer_data$colour == "#0072B2")) {
+        has_correct_line_color <- TRUE
         break
       }
     }
   }
   
   # The regression line should be present
-  expect_true(has_red_line)
+  expect_true(has_correct_line_color)
   
   # Test that the plot works with different significance statistics
   expect_no_error(
