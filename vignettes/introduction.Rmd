@@ -1,5 +1,5 @@
 ---
-title: "Overview of the sccomp package"
+title: "sccomp: Differential Composition and Variability Analysis for Single-Cell Data"
 author: "Stefano Mangiola"
 date: "`r Sys.Date()`"
 package: sccomp
@@ -12,19 +12,60 @@ output:
     fig_caption: yes
     df_print: paged
 abstract: > 
-  Sccomp is a generalised method for differential composition and variability analyses. It tests differences in cell type proportion, for count data. It is able of flexible continuous/discrete models, removal of unwanted variation, removal of outliers, multilevel random/effect modelling.
-
+  Sccomp is a comprehensive R package for differential composition and variability analysis in single-cell RNA sequencing, CyTOF, and microbiome data. It provides robust Bayesian modeling with outlier detection, random effects, and advanced statistical methods for cell type proportion analysis. Perfect for cancer research, immunology, and single-cell genomics.
+keywords: "single-cell RNA-seq, differential composition analysis, cell type proportions, Bayesian modeling, scRNA-seq, CyTOF, microbiome analysis, statistical modeling, R package, bioinformatics, genomics, cell type variability, outlier detection, random effects modeling"
 vignette: >
-  %\VignetteIndexEntry{sccomp}
+  %\VignetteIndexEntry{sccomp: Differential Composition and Variability Analysis for Single-Cell Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+knit: >
+    (function(x, ...){
+        proj_root <- rprojroot::find_package_root_file() |> normalizePath()
+        rmarkdown::render(
+            x,
+            output_format = "html_document",
+            params = list(
+                demo_metadata = TRUE
+            )
+        )
+        rmarkdown::render(
+            x,
+            output_file = "README.md",
+            output_format = "github_document",
+            output_dir = proj_root,
+            knit_root_dir = proj_root,
+            params = list(
+                demo_metadata = FALSE
+            )
+        )
+    })
 ---
 
 <!-- badges: start -->
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/tidyseurat/actions/)
 <!-- badges: end -->
 
-Cellular omics such as single-cell genomics, proteomics, and microbiomics allow the characterization of tissue and microbial community composition, which can be compared between conditions to identify biological drivers. This strategy has been critical to unveiling markers of disease progression in conditions such as cancer and pathogen infections.
+# sccomp: Advanced Differential Composition and Variability Analysis for Single-Cell Data
+
+**sccomp** is a powerful R package designed for comprehensive differential composition and variability analysis in single-cell genomics, proteomics, and microbiomics data. This cutting-edge tool provides robust Bayesian modeling capabilities for analyzing cell type proportions and variability across different experimental conditions.
+
+## What is sccomp?
+
+**sccomp** (Single-Cell Composition Analysis) is a specialized R package that addresses the critical need for advanced statistical methods in single-cell data analysis. It enables researchers to:
+
+- **Analyze cell type proportions** with high statistical rigor
+- **Detect differential variability** between experimental conditions  
+- **Identify outliers** using probabilistic methods
+- **Model complex experimental designs** with random effects
+- **Handle multiple data types** including scRNA-seq, CyTOF, and microbiome data
+
+## Key Applications
+
+- Single-Cell RNA Sequencing (scRNA-seq)
+- CyTOF (Cytometry by Time-of-Flight)
+- Microbiome Analysis
+
+## Why sccomp?
 
 For cellular omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce **sccomp**, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, while being robust to outliers.
 
@@ -32,7 +73,7 @@ For cellular omic data, no method for differential variability analysis exists, 
 
 <img src="../inst/cartoon_methods.png" width="100%"/>
 
-### Comparison with other methods
+### Comprehensive Method Comparison
 
 - **I**: Data are modelled as counts.
 - **II**: Group proportions are modelled as compositional.
@@ -41,31 +82,28 @@ For cellular omic data, no method for differential variability analysis exists, 
 - **V**: Outlier detection or robustness.
 - **VI**: Differential variability analysis.
 - **VII** Mixed effect modelling
+- **VIII** Removal unwanted effects
 
-| Method       | Year | Model                        | I | II | III | IV | V | VI | VII |
-|--------------|------|------------------------------|---|----|-----|----|---|----|----|
-| **sccomp**   | 2023 | Sum-constrained Beta-binomial | ● | ●  | ●   | ●  | ● | ●  | ●  |
-| **scCODA**   | 2021 | Dirichlet-multinomial         | ● | ●  |     |    |   |    |    |
-| **quasi-binom.** | 2021 | Quasi-binomial            | ● |    | ●   |    |   |    |    |
-| **rlm**      | 2021 | Robust-log-linear            |   | ●  |     |    | ● |    |    |
-| **propeller** | 2021 | Logit-linear + limma        |   | ●  | ●   | ●  |   |    |    |
-| **ANCOM-BC** | 2020 | Log-linear                   |   | ●  | ●   |    |   |    |    |
-| **corncob**  | 2020 | Beta-binomial                | ● |    | ●   |    |   |    |    |
-| **scDC**     | 2019 | Log-linear                   |   | ●  | ●   |    |   |    |    |
-| **dmbvs**    | 2017 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |    |
-| **MixMC**    | 2016 | Zero-inflated Log-linear     |   | ●  | ●   |    |   |    |    |
-| **ALDEx2**   | 2014 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |    |
+| Method       | Year | Model                        | I | II | III | IV | V | VI | VII | VIII | 
+|--------------|------|------------------------------|---|----|-----|----|---|----|----|----|
+| **sccomp**   | 2023 | Sum-constrained Beta-binomial | ● | ●  | ●   | ●  | ● | ●  | ●  | ●  | 
+| **scCODA**   | 2021 | Dirichlet-multinomial         | ● | ●  |     |    |   |    |    |   |
+| **quasi-binom.** | 2021 | Quasi-binomial            | ● |    | ●   |    |   |    |    |    |
+| **rlm**      | 2021 | Robust-log-linear            |   | ●  |     |    | ● |    |    |   | 
+| **propeller** | 2021 | Logit-linear + limma        |   | ●  | ●   | ●  |   |    |    |   |
+| **ANCOM-BC** | 2020 | Log-linear                   |   | ●  | ●   |    |   |    |    |   |
+| **corncob**  | 2020 | Beta-binomial                | ● |    | ●   |    |   |    |    |   |
+| **scDC**     | 2019 | Log-linear                   |   | ●  | ●   |    |   |    |    |   |
+| **dmbvs**    | 2017 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |    |   |
+| **MixMC**    | 2016 | Zero-inflated Log-linear     |   | ●  | ●   |    |   |    |    |   |
+| **ALDEx2**   | 2014 | Dirichlet-multinomial        | ● | ●  |     |    |   |    |    |   |
 
-```{r echo=FALSE}
-knitr::opts_chunk$set( fig.path = "inst/figures/")
-```
-
-### Cite
+### Scientific Citation
 
 Mangiola, Stefano, Alexandra J. Roth-Schulze, Marie Trussart, Enrique Zozaya-Valdés, Mengyao Ma, Zijie Gao, Alan F. Rubin, Terence P. Speed, Heejung Shim, and Anthony T. Papenfuss. 2023. "Sccomp: Robust Differential Composition and Variability Analysis for Single-Cell Data." Proceedings of the National Academy of Sciences of the United States of America 120 (33): e2203828120. https://doi.org/10.1073/pnas.2203828120
 [PNAS - sccomp: Robust differential composition and variability analysis for single-cell data](https://www.pnas.org/doi/full/10.1073/pnas.2203828120)
 
-# Installation
+# Installation Guide
 
 `sccomp` is based on `cmdstanr` which provides the latest version of `cmdstan` the Bayesian modelling tool. `cmdstanr` is not on CRAN, so we need to have 3 simple step process (that will be prompted to the user is forgot).
 
@@ -75,7 +113,7 @@ Mangiola, Stefano, Alexandra J. Roth-Schulze, Marie Trussart, Enrique Zozaya-Val
 
 **Bioconductor**
 
-```{r eval=FALSE}
+```{r eval=FALSE, message=FALSE}
 if (!requireNamespace("BiocManager")) install.packages("BiocManager")
 
 # Step 1
@@ -91,7 +129,7 @@ cmdstanr::install_cmdstan()
 
 **Github**
 
-```{r eval=FALSE}
+```{r eval=FALSE, message=FALSE}
 
 # Step 1
 devtools::install_github("MangiolaLaboratory/sccomp")
@@ -104,6 +142,8 @@ cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
 cmdstanr::install_cmdstan()
 ```
 
+## Core Functions
+
 Function | Description
 ------------ | -------------
 `sccomp_estimate` | Fit the model onto the data, and estimate the coefficients
@@ -114,7 +154,7 @@ Function | Description
 `sccomp_remove_unwanted_effects` | Removes the variability for unwanted factors
 `plot` | Plots summary plots to assess significance 
 
-# Analysis
+# Analysis Tutorial
 
 ```{r message=FALSE, warning=FALSE}
 library(dplyr)
@@ -132,13 +172,13 @@ data("counts_obj")
 cell-group variability is independent of any covariate or `~ factor_of_interest`, which assumes that the model is dependent on the
 factor of interest only. The variability model must be a subset of the model for composition.
 
-## Binary factor 
+## Binary Factor Analysis
 
 Of the output table, the estimate columns start with the prefix `c_` indicate `composition`, or with `v_` indicate `variability` (when formula_variability is set).
 
 ### From Seurat, SingleCellExperiment, metadata objects
 
-```{r eval=FALSE}
+```{r eval=FALSE, message=FALSE}
 
 sccomp_result = 
   sce_obj |>
@@ -146,7 +186,8 @@ sccomp_result =
     formula_composition = ~ type, 
     sample = "sample", 
     cell_group = "cell_group", 
-    cores = 1 
+    cores = 1,
+    verbose = FALSE
   ) |> 
   sccomp_test()
 
@@ -188,11 +229,11 @@ The output is a tibble containing the **Following columns**
 - `v_FDR` - False-discovery rate of the null hypothesis for a variability (v).
 - `count_data` - Nested input count data.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 sccomp_result
 ```
 
-## Outlier identification
+## Outlier Identification
 
 `sccomp` can identify outliers probabilistically and exclude them from the estimation. 
 
@@ -213,25 +254,25 @@ sccomp_result =
   sccomp_test()
 ```
 
-## Summary plots
+## Visualization and Summary Plots
 
 A plot of group proportions, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is descriptively adequate for the data, the blue boxplots should roughly overlay the black boxplots, which represent the observed data. The outliers are coloured in red. A boxplot will be returned for every (discrete) covariate present in formula_composition. The colour coding represents the significant associations for composition and/or variability.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 sccomp_result |> 
   sccomp_boxplot(factor = "type")
 ```
 
 You can plot proportions adjusted for unwanted effects. This is helpful especially for complex models, where multiple factors can significantly impact the proportions.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 sccomp_result |> 
   sccomp_boxplot(factor = "type", remove_unwanted_effects = TRUE)
 ```
 
 A plot of estimates of differential composition (c_) on the x-axis and differential variability (v_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if it exceeds the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 sccomp_result |> 
   plot_1D_intervals()
 ```
@@ -240,19 +281,19 @@ sccomp_result |>
 We can plot the relationship between abundance and variability. As we can see below, they are positively correlated. sccomp models this relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks to Bayesian inference.
 
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 sccomp_result |> 
   plot_2D_intervals()
 ```
 
 You can produce the series of plots calling the `plot` method.
 
-```{r, out.height="200%", eval=FALSE}
+```{r, out.height="200%", eval=FALSE, message=FALSE}
 sccomp_result |> plot() 
 ```
 
 
-## Model proportions directly (e.g. from deconvolution)
+## Model Proportions Directly (e.g. from deconvolution)
 
 **Note:** If counts are available, we strongly discourage the use of proportions, as an important source of uncertainty (i.e., for rare groups/cell types) is not modeled.
 
@@ -274,11 +315,11 @@ sccomp_result =
   sccomp_test()
 ```
 
-## Continuous factor 
+## Continuous Factor Analysis
 
 `sccomp` is able to fit arbitrary complex models. In this example we have a continuous and binary covariate.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 
 res =
     seurat_obj |>
@@ -292,7 +333,7 @@ res =
 res
 ```
 
-## Random Effect Modeling (mixed-effect modeling, multilevel-modeling, hierarchical modeling)
+## Random Effect Modeling (Mixed-Effect Modeling)
 
 `sccomp` supports multilevel modeling by allowing the inclusion of random effects in the compositional and variability formulas. This is particularly useful when your data has hierarchical or grouped structures, such as measurements nested within subjects, batches, or experimental units. By incorporating random effects, sccomp can account for variability at different levels of your data, improving model fit and inference accuracy.
 
@@ -302,11 +343,11 @@ In this example, we demonstrate how to fit a random intercept model using sccomp
 
 Here is the input data
 
-```{r}
+```{r, message=FALSE}
 seurat_obj[[]] |> as_tibble()
 ```
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 res = 
   seurat_obj |>
   sccomp_estimate( 
@@ -324,7 +365,7 @@ res
 
 `sccomp` can model random slopes. We provide an example below.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 res = 
   seurat_obj |>
   sccomp_estimate(
@@ -342,7 +383,7 @@ res
 
 If you have a more complex hierarchy, such as measurements nested within subjects and subjects nested within batches, you can include multiple grouping variables. Here `group2__` is nested within `group__`.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 res = 
   seurat_obj |>
   sccomp_estimate(
@@ -356,7 +397,7 @@ res =
 res
 ```
 
-## An aid to result interpretation and communication
+## Result Interpretation and Communication
 
 The estimated effects are expressed in the unconstrained space of the parameters, similar to differential expression analysis that expresses changes in terms of log fold change. However, for differences in proportion, logit fold change must be used, which is harder to interpret and understand.
 
@@ -366,7 +407,7 @@ From your estimates, you can specify which effects you are interested in (this c
 
 In the case of a categorical variable, the starting and ending points are categories.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 res |> 
    sccomp_proportional_fold_change(
      formula_composition = ~  type,
@@ -377,7 +418,7 @@ res |>
 ```
 
 
-## Contrasts
+## Contrasts Analysis
 
 ```{r, message=FALSE, warning=FALSE, eval = instantiate::stan_cmdstan_exists()}
 
@@ -394,7 +435,7 @@ seurat_obj |>
 ```
 
 
-## Categorical factor (e.g. Bayesian ANOVA)
+## Categorical Factor Analysis (Bayesian ANOVA)
 
 This is achieved through model comparison with `loo`. In the following example, the model with association with factors better fits the data compared to the baseline model with no factor association. For model comparisons `sccomp_remove_outliers()` must not be executed as the leave-one-out must work with the same amount of data, while outlier elimination does not guarantee it.
 
@@ -412,7 +453,8 @@ model_with_factor_association =
     sample = "sample", 
     cell_group = "cell_group", 
     inference_method = "hmc",
-    enable_loo = TRUE
+    enable_loo = TRUE,
+    verbose = FALSE
   )
 
 # Fit second model
@@ -423,7 +465,8 @@ model_without_association =
     sample = "sample", 
     cell_group = "cell_group", 
     inference_method = "hmc",
-    enable_loo = TRUE
+    enable_loo = TRUE,
+    verbose = FALSE
   )
 
 # Compare models
@@ -434,7 +477,7 @@ loo_compare(
 
 ```
 
-## Differential variability, binary factor
+## Differential Variability Analysis
 
 We can model the cell-group variability also dependent on the type, and so test differences in variability
 
@@ -456,7 +499,7 @@ res
 
 **Plot 1D significance plot**
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 plots = res |> sccomp_test() |> plot()
 
 plots$credible_intervals_1D
@@ -466,27 +509,26 @@ plots$credible_intervals_1D
 
 This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for `(intercept)` (left-hand side facet) is satisfied. A scatterplot (besides the Intercept) is provided for each category of interest. For each category of interest, the composition and variability effects should be generally uncorrelated.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 plots$credible_intervals_2D
 ```
 
-# Suggested settings 
+# Recommended Settings for Different Data Types
 
-## For single-cell RNA sequencing
+## For Single-Cell RNA Sequencing
 
 We recommend setting `bimodal_mean_variability_association  = TRUE`. The bimodality of the mean-variability association can be confirmed from the plots\$credible_intervals_2D (see below).
 
-## For CyTOF and microbiome data 
+## For CyTOF and Microbiome Data 
 
 We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 
-
-## Visualisation of the MCMC chains from the posterior distribution
+## MCMC Chain Visualization
 
 It is possible to directly evaluate the posterior distribution. In this example, we plot the Monte Carlo chain for the slope parameter of the
 first cell type. We can see that it has converged and is negative with probability 1.
 
-```{r, eval = instantiate::stan_cmdstan_exists()}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 
 library(cmdstanr)
 library(posterior)
@@ -504,7 +546,7 @@ mcmc_trace(draws, pars = "beta[2,1]")
 ```
 
 
-```{r}
+```{r, message=FALSE}
 sessionInfo()
 ```
 
