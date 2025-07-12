@@ -75,20 +75,11 @@ jobs:
         with:
           upload-snapshots: true
 
-  pkgdown:
+    # Build job
+  build:
     runs-on: ubuntu-latest
     needs: workflow_with_cmdstanr
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-    concurrency:
-      group: "pages"
-      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
@@ -127,7 +118,7 @@ jobs:
             any::dplyr
             any::prettydoc
 
-      - name: Deploy package
+      - name: Build pkgdown site
         shell: Rscript {0}
         run: |
           pkgdown::build_site()
@@ -139,6 +130,17 @@ jobs:
         with:
           path: ./docs
 
+  # Deploy job
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
