@@ -42,8 +42,12 @@ knit: >
 ---
 
 <!-- badges: start -->
-[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/tidyseurat/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/tidyseurat/actions/)
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/sccomp/actions/)
 <!-- badges: end -->
+
+# <img src="../inst/logo-01.png" height="139px" width="120px"/>
+
+
 
 # sccomp: Advanced Differential Composition and Variability Analysis for Single-Cell Data
 
@@ -102,6 +106,13 @@ For cellular omic data, no method for differential variability analysis exists, 
 
 Mangiola, Stefano, Alexandra J. Roth-Schulze, Marie Trussart, Enrique Zozaya-Valdés, Mengyao Ma, Zijie Gao, Alan F. Rubin, Terence P. Speed, Heejung Shim, and Anthony T. Papenfuss. 2023. "Sccomp: Robust Differential Composition and Variability Analysis for Single-Cell Data." Proceedings of the National Academy of Sciences of the United States of America 120 (33): e2203828120. https://doi.org/10.1073/pnas.2203828120
 [PNAS - sccomp: Robust differential composition and variability analysis for single-cell data](https://www.pnas.org/doi/full/10.1073/pnas.2203828120)
+
+### Talk
+
+<a href="https://www.youtube.com/watch?v=R_lt58We9nA&ab_channel=RConsortium" target="_blank">
+ <img src="https://img.youtube.com/vi/R_lt58We9nA/mqdefault.jpg" alt="Watch the video" width="280" height="180" border="10" />
+</a>
+
 
 # Installation Guide
 
@@ -541,7 +552,7 @@ fit <- res |> attr("fit")
 draws <- as_draws_array(fit$draws("beta[2,1]"))
 
 # Create a traceplot for 'beta[2,1]'
-mcmc_trace(draws, pars = "beta[2,1]")
+mcmc_trace(draws, pars = "beta[2,1]") + theme_bw()
 
 ```
 

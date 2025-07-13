@@ -1,53 +1,40 @@
 Package: sccomp
 Type: Package
 Title: Differential Composition and Variability Analysis for Single-Cell Data
-Version: 2.1.14
+Version: 2.1.15
 Date: 2024-01-15
-Authors@R: c(
-    person("Stefano", "Mangiola", email = "stefano.mangiola@unimelb.edu.au", role = c("aut", "cre")),
-    person("Alexandra J.", "Roth-Schulze", role = "aut"),
-    person("Marie", "Trussart", role = "aut"),
-    person("Enrique", "Zozaya-Valdés", role = "aut"),
-    person("Mengyao", "Ma", role = "aut"),
-    person("Zijie", "Gao", role = "aut"),
-    person("Alan F.", "Rubin", role = "aut"),
-    person("Terence P.", "Speed", role = "aut"),
-    person("Heejung", "Shim", role = "aut"),
-    person("Anthony T.", "Papenfuss", role = "aut")
-)
+Authors@R: c(person("Stefano", "Mangiola", email = "stefano.mangiola@unimelb.edu.au", role = c("aut", "cre")), person("Alexandra J.", "Roth-Schulze", role = "aut"), person("Marie", "Trussart", role = "aut"), person("Enrique", "Zozaya-Valdés", role = "aut"), person("Mengyao", "Ma", role = "aut"), person("Zijie", "Gao", role = "aut"), person("Alan F.", "Rubin", role = "aut"), person("Terence P.", "Speed", role = "aut"), person("Heejung", "Shim", role = "aut"), person("Anthony T.", "Papenfuss", role = "aut"))
 Description: Comprehensive R package for differential composition and variability analysis in single-cell RNA sequencing, CyTOF, and microbiome data. Provides robust Bayesian modeling with outlier detection, random effects, and advanced statistical methods for cell type proportion analysis. Features include probabilistic outlier identification, mixed-effect modeling, differential variability testing, and comprehensive visualization tools. Perfect for cancer research, immunology, developmental biology, and single-cell genomics applications.
-License: GPL-3 
-License_file: LICENSE
+License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Depends: R (>= 4.3.0)
+Depends: 
+    R (>= 4.3.0),
+    instantiate (>= 0.2.3)
 Imports:
-    instantiate (>= 0.2.3),
     stats,
-    SingleCellExperiment,
-    parallel,
+    boot,
+    utils,
+    scales,
+    lifecycle,
+    rlang,
+    tidyselect,
+    magrittr,
+    crayon,
+    cli,
+    fansi,
     dplyr,
     tidyr,
     purrr,
-    magrittr,
-    rlang,
     tibble,
-    boot,
-    lifecycle,
-    tidyselect,
-    utils,
     ggplot2,
     ggrepel,
     patchwork,
     forcats,
     readr,
-    scales,
     stringr,
-    glue,
-    crayon,
-    cli,
-    fansi
+    glue
 Suggests:
     knitr,
     rmarkdown,
@@ -57,19 +44,19 @@ Suggests:
     loo,
     prettydoc,
     SeuratObject,
+    SingleCellExperiment,
     tidyseurat,
     tidySingleCellExperiment,
     bayesplot,
     posterior
 Additional_repositories:
     https://mc-stan.org/r-packages/
-SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
+SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan), C++14
 biocViews: Bayesian, Regression, DifferentialExpression, SingleCell, Metagenomics, FlowCytometry, Spatial
 LazyData: true
 VignetteBuilder: knitr
 URL: https://github.com/MangiolaLaboratory/sccomp
 BugReports: https://github.com/MangiolaLaboratory/sccomp/issues
-SystemRequirements: C++14
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Config/testthat/snapshot/parallel: true

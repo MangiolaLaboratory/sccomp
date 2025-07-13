@@ -267,4 +267,62 @@ test_that("significance_statistic and show_fdr_message work via plot() S3 method
       show_fdr_message = FALSE
     )
   )
+})
+
+test_that("plot_2D_intervals includes regression line from prec_coeff parameters", {
+   skip_cmdstan()
+  
+  # Create a 2D plot and check that it has the regression line
+  plot_2d <- my_estimate_with_variance |> 
+    sccomp_test() |> 
+    plot_2D_intervals(
+      significance_threshold = 0.025
+    )
+  
+  # Check that the plot is created successfully
+  expect_s3_class(plot_2d, "ggplot")
+  
+  # Extract the fitted model to verify prec_coeff parameters exist
+  fit <- attr(my_estimate_with_variance |> sccomp_test(), "fit")
+  prec_coeff_summary <- fit$summary("prec_coeff")
+  
+  # Verify that prec_coeff parameters are available
+  expect_true(nrow(prec_coeff_summary) >= 2)
+  expect_true(all(c("prec_coeff[1]", "prec_coeff[2]") %in% prec_coeff_summary$variable))
+  
+  # Check that the plot data includes the regression line
+  plot_data <- ggplot_build(plot_2d)$data
+  
+  # Look for the red line in the plot data
+  has_correct_line_color <- FALSE
+  for (layer_data in plot_data) {
+    if ("colour" %in% names(layer_data)) {
+      if (any(layer_data$colour == "#0072B2")) {
+        has_correct_line_color <- TRUE
+        break
+      }
+    }
+  }
+  
+  # The regression line should be present
+  expect_true(has_correct_line_color)
+  
+  # Test that the plot works with different significance statistics
+  expect_no_error(
+    my_estimate_with_variance |> 
+      sccomp_test() |> 
+      plot_2D_intervals(
+        significance_threshold = 0.025,
+        significance_statistic = "pH0"
+      )
+  )
+  
+  expect_no_error(
+    my_estimate_with_variance |> 
+      sccomp_test() |> 
+      plot_2D_intervals(
+        significance_threshold = 0.025,
+        show_fdr_message = FALSE
+      )
+  )
 }) 

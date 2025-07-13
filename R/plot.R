@@ -230,12 +230,12 @@ plot_1D_intervals = function(
         if (significance_statistic == "FDR") {
           color_var <- plot_data$FDR < significance_threshold
           color_aes <- aes(xmin = lower, xmax = upper, color = FDR < significance_threshold)
-          color_scale <- scale_color_brewer(palette = "Set1")
+          color_scale <- scale_color_manual(values = c("grey40", "red"))
           legend_title <- "FDR < significance_threshold"
         } else {
           color_var <- plot_data$pH0 < significance_threshold
           color_aes <- aes(xmin = lower, xmax = upper, color = pH0 < significance_threshold)
-          color_scale <- scale_color_brewer(palette = "Set2")
+          color_scale <- scale_color_manual(values = c("grey40", "red"))
           legend_title <- "pH0 < significance_threshold"
         }
         
@@ -356,9 +356,37 @@ plot_2D_intervals = function(
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
-  # Mean-variance association
-  plot <- .data %>%
-    
+  # Extract prec_coeff parameters from the fitted model for regression line
+  fit = attr(.data, "fit")
+  prec_coeff_summary = fit$summary("prec_coeff")
+  prec_coeff_intercept = prec_coeff_summary$mean[1]
+  prec_coeff_slope = prec_coeff_summary$mean[2]
+  
+  # Add adjusted intercept (unbiased variability) as a new facet
+  .data_adjusted <- .data %>%
+    filter(parameter == "(Intercept)") %>%
+    mutate(
+      v_effect = v_effect + prec_coeff_slope * c_effect,
+      v_lower = v_lower + prec_coeff_slope * c_effect,
+      v_upper = v_upper + prec_coeff_slope * c_effect,
+      parameter = "(Intercept, adjusted)"
+    )
+  
+  # Bind adjusted data to original (uncorrected comes first)
+  .data_plot <- bind_rows(.data, .data_adjusted)
+  
+  # Set parameter as a factor to control facet order
+  .data_plot$parameter <- factor(
+    .data_plot$parameter,
+    levels = c(
+      "(Intercept)",
+      "(Intercept, adjusted)",
+      setdiff(unique(.data_plot$parameter), c("(Intercept)", "(Intercept, adjusted)"))
+    )
+  )
+  
+  # Use .data_plot instead of .data in the rest of the function
+  plot <- .data_plot %>%
     # Filter where variance is inferred
     filter(!is.na(v_effect)) %>%
     
@@ -367,67 +395,102 @@ plot_2D_intervals = function(
       parameter,
       ~ .x %>%
         arrange(c_FDR) %>%
-        mutate(cell_type_label = if_else(row_number() <= 3 & c_FDR < significance_threshold & parameter != "(Intercept)", !!.cell_group, ""))
+        mutate(cell_type_label = if_else(row_number() <= 3 & c_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), !!.cell_group, ""))
     ) %>%
     with_groups(
       parameter,
       ~ .x %>%
         arrange(v_FDR) %>%
-        mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & parameter != "(Intercept)"), !!.cell_group, cell_type_label))
+        mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)") ), !!.cell_group, cell_type_label))
     ) %>%
     {
       .x = (.)
       
       # Choose color variable and legend
       if (significance_statistic == "FDR") {
-        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_FDR < significance_threshold, alpha = c_FDR < significance_threshold)
-        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_FDR < significance_threshold, alpha = v_FDR < significance_threshold)
+        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), alpha = c_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"))
+        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), alpha = v_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"))
         color_scale <- scale_color_manual(values = c("#D3D3D3", "#E41A1C"))
         alpha_scale <- scale_alpha_manual(values = c(0.4, 1))
         legend_title <- "FDR < significance_threshold"
       } else {
-        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_pH0 < significance_threshold, alpha = c_pH0 < significance_threshold)
-        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_pH0 < significance_threshold, alpha = v_pH0 < significance_threshold)
+        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_pH0 < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), alpha = c_pH0 < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"))
+        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_pH0 < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), alpha = v_pH0 < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"))
         color_scale <- scale_color_manual(values = c("#D3D3D3", "#377EB8"))
         alpha_scale <- scale_alpha_manual(values = c(0.4, 1))
         legend_title <- "pH0 < significance_threshold"
       }
       
+      # Calculate range for regression line
+      c_range = range(.x$c_effect, na.rm = TRUE)
+      c_seq = seq(c_range[1], c_range[2], length.out = 100)
+      v_pred = -(prec_coeff_intercept + prec_coeff_slope * c_seq)
+      
+      # Create regression line data only for (Intercept)
+      regression_data = data.frame(
+        c_effect = c_seq,
+        v_effect = v_pred,
+        parameter = "(Intercept)"
+      )
+      
       # Plot
-      ggplot(.x, aes(c_effect, v_effect)) +
-        
+      p <- ggplot(.x, aes(c_effect, v_effect)) +
         # Add vertical and horizontal lines
         geom_vline(xintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
-        geom_hline(yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3) +
+        geom_hline(yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change), colour = "grey", linetype = "dashed", linewidth = 0.3)
+      
+       # Add regression line only for (Intercept) facet
+      p <- p + geom_line(
+        data = regression_data,
+        mapping = aes(c_effect, v_effect),
+        color = "#0072B2", linewidth = 0.5, alpha = 0.8,
+        inherit.aes = FALSE
+      )
+
+      # Add horizontal line for (Intercept, adjusted) facet
+      if ("(Intercept, adjusted)" %in% unique(.x$parameter)) {
+        mean_adjusted <- mean(.x$v_effect[.x$parameter == "(Intercept, adjusted)"])
+        c_range_adjusted <- range(.x$c_effect[.x$parameter == "(Intercept, adjusted)"], na.rm = TRUE)
         
+        # Create horizontal line data for adjusted intercept only
+        horizontal_line_data <- data.frame(
+          c_effect = c_range_adjusted,
+          v_effect = rep(mean_adjusted, 2),
+          parameter = "(Intercept, adjusted)"
+        )
+        
+        p <- p +
+          geom_line(
+            data = horizontal_line_data,
+            mapping = aes(c_effect, v_effect),
+            color = "#0072B2", linewidth = 0.5, alpha = 0.8,
+            inherit.aes = FALSE
+          )
+      }
+    
+      p <- p +
         # Add error bars
         geom_errorbar(color_c_aes, linewidth = 0.2) +
         geom_errorbar(color_v_aes, linewidth = 0.2) +
-        
         # Add points
         geom_point(size = 0.2) +
-        
         # Add annotations
-        annotate("text", x = 0, y = 3.5, label = "Variability", size = 2) +
-        annotate("text", x = 5, y = 0, label = "Abundance", size = 2, angle = 270) +
-        
+        # annotate("text", x = 0, y = 3.5, label = "Variability", size = 2) + # Disabled temporarily; revisit if annotations are needed for variability.
+        # annotate("text", x = 5, y = 0, label = "Abundance", size = 2, angle = 270) + # Disabled temporarily; revisit if annotations are needed for abundance.
         # Add text labels for significant cell groups
         geom_text_repel(aes(c_effect, -v_effect, label = cell_type_label), size = 2.5, data = .x %>% filter(cell_type_label != "")) +
-        
         # Set color and alpha scales
         color_scale +
         alpha_scale +
-        
         # Facet by parameter
-        facet_wrap(~parameter, scales = "free") +
-        
+        facet_wrap(~ fct_relevel(parameter, c("(Intercept)", "(Intercept, adjusted)")), scales = "free") +
         xlab("c_effect (Abundance effect)") +
         ylab("v_effect (Variability effect)") +
-        
         # Apply custom theme
         sccomp_theme() +
         theme(legend.position = "bottom") +
         guides(color = guide_legend(title = legend_title), alpha = "none")
+      p
     }
 
   # Only show the FDR message if significance_statistic == "FDR" and show_fdr_message is TRUE
