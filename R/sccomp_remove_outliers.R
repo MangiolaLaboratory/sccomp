@@ -9,6 +9,9 @@
 #' @importFrom SingleCellExperiment colData
 #' @importFrom parallel detectCores
 #' @importFrom tidyr unnest nest
+#' @importFrom rlang :=
+#' @importFrom dplyr select
+#' @importFrom tibble column_to_rownames
 #'
 #' @param .estimate A tibble including a cell_group name column, sample name column, read counts column (optional depending on the input class), and factor columns.
 #' @param percent_false_positive A real number between 0 and 100 (not inclusive), used to identify outliers with a specific false positive rate.
@@ -261,8 +264,18 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   # Add censoring
   data_for_model$is_truncated = 1
-  data_for_model$truncation_up = truncation_df |> select(N, M, truncation_up) |> spread(M, truncation_up) |> as_matrix(rownames = "N") |> apply(2, as.integer)
-  data_for_model$truncation_down = truncation_df |> select(N, M, truncation_down) |> spread(M, truncation_down) |> as_matrix(rownames = "N") |> apply(2, as.integer)
+  data_for_model$truncation_up = truncation_df |> 
+    select(N, M, truncation_up) |> 
+    pivot_wider(names_from = M, values_from = truncation_up) |> 
+    column_to_rownames("N") |> 
+    as.matrix() |> 
+    apply(2, as.integer)
+  data_for_model$truncation_down = truncation_df |> 
+    select(N, M, truncation_down) |> 
+    pivot_wider(names_from = M, values_from = truncation_down) |> 
+    column_to_rownames("N") |> 
+    as.matrix() |> 
+    apply(2, as.integer)
   data_for_model$truncation_not_idx = 
     (data_for_model$truncation_down >= 0) |> 
     t() |> 
@@ -397,8 +410,18 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       truncation_up = case_when(outlier ~ -1, TRUE ~ truncation_up)
     )
   
-  data_for_model$truncation_up = truncation_df2 |> select(N, M, truncation_up) |> spread(M, truncation_up) |> as_matrix(rownames = "N") |> apply(2, as.integer)
-  data_for_model$truncation_down = truncation_df2 |> select(N, M, truncation_down) |> spread(M, truncation_down) |> as_matrix(rownames = "N") |> apply(2, as.integer)
+  data_for_model$truncation_up = truncation_df2 |> 
+    select(N, M, truncation_up) |> 
+    pivot_wider(names_from = M, values_from = truncation_up) |> 
+    column_to_rownames("N") |> 
+    as.matrix() |> 
+    apply(2, as.integer)
+  data_for_model$truncation_down = truncation_df2 |> 
+    select(N, M, truncation_down) |> 
+    pivot_wider(names_from = M, values_from = truncation_down) |> 
+    column_to_rownames("N") |> 
+    as.matrix() |> 
+    apply(2, as.integer)
   data_for_model$truncation_not_idx = 
     (data_for_model$truncation_down >= 0) |> 
     t() |> 

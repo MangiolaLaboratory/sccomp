@@ -125,36 +125,34 @@ test_that("warnings when using deprecated column names", {
   )
   
   # Test with deprecated .sample
-  expect_warning(
-    test_data |>
-      sccomp_estimate(
-        formula_composition = ~ type,
-        .sample = "donor",
-        cell_group = "cell_group",
-        abundance = "count"
-      ),
-    "The `.sample` argument of*"
-  )
+  test_data |>
+    sccomp_estimate(
+      formula_composition = ~ type,
+      .sample = "donor",
+      cell_group = "cell_group",
+      abundance = "count"
+    ) |>
+    expect_warning("The `.sample` argument of*")
   
   # Test with deprecated .cell_group
-  expect_warning(
-    test_data |>
-      sccomp_estimate(
-        formula_composition = ~ type,
-        sample = "donor",
-        .cell_group = "cell_group",
-        abundance = "count"
-      ))
+  test_data |>
+    sccomp_estimate(
+      formula_composition = ~ type,
+      sample = "donor",
+      .cell_group = "cell_group",
+      abundance = "count"
+    ) |>
+    expect_warning()
   
   # Test with deprecated .abundance
-  expect_warning(
-    test_data |>
-      sccomp_estimate(
-        formula_composition = ~ type,
-        sample = "donor",
-        cell_group = "cell_group",
-        .abundance = "count"
-      ))
+  test_data |>
+    sccomp_estimate(
+      formula_composition = ~ type,
+      sample = "donor",
+      cell_group = "cell_group",
+      .abundance = "count"
+    ) |>
+    expect_warning()
 })
 
 

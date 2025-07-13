@@ -34,7 +34,8 @@ Imports:
     forcats,
     readr,
     stringr,
-    glue
+    glue,
+    SingleCellExperiment
 Suggests:
     knitr,
     rmarkdown,
@@ -44,7 +45,6 @@ Suggests:
     loo,
     prettydoc,
     SeuratObject,
-    SingleCellExperiment,
     tidyseurat,
     tidySingleCellExperiment,
     bayesplot,

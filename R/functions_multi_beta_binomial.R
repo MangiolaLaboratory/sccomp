@@ -19,32 +19,6 @@ get_mean_precision = function(fit, data_for_model){
     select( M, mean, `2.5%` , `97.5%`) %>%
     nest(concentration = -M)
 
-  # WRONG ATTEMPT TO PLOT ALPHA FROM MULTIPLE factorS
-  # fit %>%
-  #   draws_to_tibble_x_y("alpha", "C", "M") %>%
-  #   nest(data = -c(M)) %>%
-  #
-  #   # Add Design matrix
-  #   left_join(
-  #     as_tibble(data_for_model$X, rownames="M") %>%
-  #       nest(X = -M) %>%
-  #       mutate(M = as.integer(M)),
-  #     by="M"
-  #   ) %>%
-  #   mutate(concentration = map2(
-  #     data, X,
-  #     ~ .x %>%
-  #           select(.draw, C, .value) %>%
-  #           spread(C, .value) %>%
-  #           as_matrix(rownames=".draw") %*%
-  #
-  #         ( .y %>% as_matrix() %>% t() ) %>%
-  #       quantile(c(0.025, 0.5, 0.975)) %>%
-  #       enframe() %>%
-  #       spread(name, value) %>%
-  #       rename(mean = `50%`)
-  #   )) %>%
-  #   select(-data, -X)
 }
 
 get_mean_precision_association = function(fit){

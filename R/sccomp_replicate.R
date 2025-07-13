@@ -23,6 +23,7 @@
 #' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
 #' @importFrom tibble deframe
+#' @importFrom tibble column_to_rownames
 #' @export
 #'
 #' @examples
@@ -331,7 +332,7 @@ prepare_replicate_data = function(X,
       # Merge
       pull(design_matrix) |> 
       _[[1]] |> 
-      as_matrix(rownames = quo_name(.sample))  |>
+      column_to_rownames(quo_name(.sample))  |>
       tail(nrow_new_data) 
     
     # Separate NA group column into new_X_random_effect_unseen
@@ -375,7 +376,7 @@ prepare_replicate_data = function(X,
       # Merge
       pull(design_matrix) |> 
       _[[1]] |> 
-      as_matrix(rownames = quo_name(.sample))  |>
+      column_to_rownames(quo_name(.sample))  |>
       tail(nrow_new_data)
     
     # Separate NA group column into new_X_random_effect_2_unseen

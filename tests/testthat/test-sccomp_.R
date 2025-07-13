@@ -356,7 +356,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 #   # seurat_obj =
 #   #   seurat_obj |>
 #   #   nest(data = -c("sample", type)) |>
-#   #   mutate(group__wrong = c(1,1,1,1,1, 2,2,2,2,2, 1,1,1,1,1, 2,2,2,2,2) |> as.character()) |>
+#   #   mutate(group__wrong = c(1,1,1,1,1, 2,2,2,2,2) |> as.character()) |>
 #   #   unnest(data)
 #
 #     expect_error(

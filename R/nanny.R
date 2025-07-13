@@ -36,7 +36,7 @@ get_specific_annotation_columns <- function(.data, .col){
   .col <- enquo(.col)
 
   # x-annotation df
-  n_x <- .data %>% distinct_at(vars(!!.col)) %>% nrow
+  n_x <- .data %>% distinct(across(all_of(quo_names(.col)))) %>% nrow
 
   # element wise columns
   .data %>%
@@ -45,7 +45,7 @@ get_specific_annotation_columns <- function(.data, .col){
     map(
       ~ {
         condition <- .data %>%
-          distinct_at(vars(!!.col, .x)) %>%
+          distinct(across(all_of(c(quo_names(.col), .x)))) %>%
           nrow %>%
           equals(n_x)
         

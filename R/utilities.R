@@ -183,45 +183,7 @@ parse_formula_random_effect <- function(fm) {
 #' @param .f2 A function
 #'
 #' @return A tibble
-# REMOVED: ifelse_pipe function and conditional_apply function
-as_matrix <- function(tbl, rownames = NULL) {
-  
-  # Define the variables as NULL to avoid CRAN NOTES
-  variable <- NULL
-  
-  # Check for non-numerical columns
-  has_non_numerical <- tbl %>%
-    {
-      if (!is.null(rownames)) {
-        dplyr::select(., -contains(rownames))
-      } else {
-        .
-      }
-    } %>%
-    summarise_all(class) %>%
-    pivot_longer(everything(), names_to = "variable", values_to = "class") %>%
-    pull(class) %>%
-    unique() %>%
-    `%in%`(c("numeric", "integer")) |> 
-    not() %>%
-    any()
-  
-  if (has_non_numerical) {
-    warning("to_matrix says: there are NON-numerical columns, the matrix will NOT be numerical")
-  }
-  
-  # Convert to data frame
-  tbl <- as.data.frame(tbl)
-  
-  # Handle rownames if present
-  if (!is.null(rownames)) {
-    rownames(tbl) <- tbl %>% pull(!!rownames)
-    tbl <- tbl %>% select(-!!rownames)
-  }
-  
-  # Convert to matrix
-  as.matrix(tbl)
-}
+# REMOVED: ifelse_pipe function, conditional_apply function, and as_matrix function
 
 
 
@@ -451,6 +413,7 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom tidyr pivot_longer
 #' @importFrom magrittr not
 #' @importFrom tibble deframe
+#' @importFrom tibble column_to_rownames
 #' @noRd
 get_random_effect_design3 = function(
   .data_, formula, grouping, .sample, 
@@ -980,7 +943,7 @@ data_spread_to_model_input =
         random_effect_grouping |> 
         pull(design_matrix) |> 
         _[[1]]  |>  
-        as_matrix(rownames = quo_name(.sample))
+        column_to_rownames(quo_name(.sample))
       
       # Separate NA group column into X_random_effect_unseen
       X_random_effect_unseen = X_random_effect[, colnames(X_random_effect) |> str_detect("___NA$"), drop = FALSE]
@@ -994,7 +957,7 @@ data_spread_to_model_input =
           random_effect_grouping |> 
           pull(design_matrix) |> 
           _[[2]] |>  
-          as_matrix(rownames = quo_name(.sample))
+          column_to_rownames(quo_name(.sample))
         
         # Separate NA group column into X_random_effect_2_unseen  
         X_random_effect_2_unseen = X_random_effect_2[, colnames(X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
@@ -1016,7 +979,7 @@ data_spread_to_model_input =
         complete(factor, group, fill = list(order=0)) |> 
         select(-parameter) |> 
         pivot_wider(names_from = group, values_from = order)  |> 
-        as_matrix(rownames = "factor")
+        column_to_rownames("factor") |> as.matrix()
 
       
       
@@ -1032,7 +995,7 @@ data_spread_to_model_input =
         complete(factor, group, fill = list(order=0)) |> 
         select(-parameter) |> 
         pivot_wider(names_from = group, values_from = order)  |> 
-        as_matrix(rownames = "factor")
+        column_to_rownames("factor") |> as.matrix()
       else group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE]
       
       n_groups = n_groups |> c(group_factor_indexes_for_covariance_2 |> ncol())
@@ -1053,7 +1016,7 @@ data_spread_to_model_input =
     }
     
     
-    y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% as_matrix(rownames = quo_name(.sample))
+    y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% column_to_rownames(quo_name(.sample)) %>% as.matrix()
     
     # If proportion ix 0 issue
     is_proportion = y |> as.numeric() |> max()  |> between(0,1) |> all()
