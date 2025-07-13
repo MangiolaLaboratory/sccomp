@@ -183,28 +183,7 @@ parse_formula_random_effect <- function(fm) {
 #' @param .f2 A function
 #'
 #' @return A tibble
-ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
-  switch(.p %>% `!` %>% sum(1),
-         as_mapper(.f1)(.x),
-         if (.f2 %>% is.null %>% `!`)
-           as_mapper(.f2)(.x)
-         else
-           .x)
-  
-}
-
-#' @importFrom tidyr gather
-#' @importFrom magrittr set_rownames
-#' @importFrom magrittr not
-#' @importFrom tibble deframe
-#'
-#' @keywords internal
-#' @noRd
-#'
-#' @param tbl A tibble
-#' @param rownames A character string of the rownames
-#'
-#' @return A matrix
+# REMOVED: ifelse_pipe function and conditional_apply function
 as_matrix <- function(tbl, rownames = NULL) {
   
   # Define the variables as NULL to avoid CRAN NOTES
@@ -220,7 +199,7 @@ as_matrix <- function(tbl, rownames = NULL) {
       }
     } %>%
     summarise_all(class) %>%
-    gather(variable, class) %>%
+    pivot_longer(everything(), names_to = "variable", values_to = "class") %>%
     pull(class) %>%
     unique() %>%
     `%in%`(c("numeric", "integer")) |> 
@@ -236,9 +215,8 @@ as_matrix <- function(tbl, rownames = NULL) {
   
   # Handle rownames if present
   if (!is.null(rownames)) {
-    tbl <- tbl %>%
-      set_rownames(tbl %>% pull(!!rownames)) %>%
-      select(-!!rownames)
+    rownames(tbl) <- tbl %>% pull(!!rownames)
+    tbl <- tbl %>% select(-!!rownames)
   }
   
   # Convert to matrix
@@ -470,6 +448,9 @@ alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, fac
 #' @importFrom tidyselect all_of
 #' @importFrom readr type_convert
 #' @importFrom tibble rownames_to_column
+#' @importFrom tidyr pivot_longer
+#' @importFrom magrittr not
+#' @importFrom tibble deframe
 #' @noRd
 get_random_effect_design3 = function(
   .data_, formula, grouping, .sample, 

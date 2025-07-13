@@ -1091,7 +1091,7 @@ add_formula_columns = function(.data, .original_data, .sample,  formula_composit
   data_frame_formula =
     .original_data %>%
     as_tibble() |>
-    select( !!.sample, formula_elements, any_of(.grouping_for_random_effect) ) %>%
+    select( !!.sample, all_of(formula_elements), any_of(.grouping_for_random_effect) ) %>%
     distinct()
   
   .data |>
