@@ -408,14 +408,14 @@ plot_2D_intervals = function(
       
       # Choose color variable and legend
       if (significance_statistic == "FDR") {
-        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_FDR < significance_threshold, alpha = c_FDR < significance_threshold)
-        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_FDR < significance_threshold, alpha = v_FDR < significance_threshold)
+        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), alpha = c_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"))
+        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), alpha = v_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"))
         color_scale <- scale_color_manual(values = c("#D3D3D3", "#E41A1C"))
         alpha_scale <- scale_alpha_manual(values = c(0.4, 1))
         legend_title <- "FDR < significance_threshold"
       } else {
-        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_pH0 < significance_threshold, alpha = c_pH0 < significance_threshold)
-        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_pH0 < significance_threshold, alpha = v_pH0 < significance_threshold)
+        color_c_aes <- aes(xmin = c_lower, xmax = c_upper, color = c_pH0 < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), alpha = c_pH0 < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"))
+        color_v_aes <- aes(ymin = v_lower, ymax = v_upper, color = v_pH0 < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), alpha = v_pH0 < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"))
         color_scale <- scale_color_manual(values = c("#D3D3D3", "#377EB8"))
         alpha_scale <- scale_alpha_manual(values = c(0.4, 1))
         legend_title <- "pH0 < significance_threshold"
