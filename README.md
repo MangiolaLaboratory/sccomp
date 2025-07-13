@@ -267,18 +267,18 @@ sccomp_result
     ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
     ## 
     ## # A tibble: 72 × 19
-    ##    cell_group parameter  factor  c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
-    ##    <chr>      <chr>      <chr>     <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B1         (Intercep… <NA>    0.948      1.20   1.46   0       0        1.000
-    ##  2 B1         typecancer type   -0.929     -0.614 -0.291  1.00e-3 1.14e-4  1.000
-    ##  3 B2         (Intercep… <NA>    0.507      0.770  1.03   0       0        1.00 
-    ##  4 B2         typecancer type   -0.983     -0.665 -0.340  2.50e-4 2.50e-5  1.00 
-    ##  5 B3         (Intercep… <NA>   -0.590     -0.329 -0.0547 5.15e-2 4.12e-3  1.000
-    ##  6 B3         typecancer type   -0.576     -0.278  0.0277 1.21e-1 2.42e-2  1.000
-    ##  7 BM         (Intercep… <NA>   -1.23      -0.966 -0.705  0       0        1.00 
-    ##  8 BM         typecancer type   -0.595     -0.294  0.0328 1.12e-1 2.00e-2  1.000
-    ##  9 CD4 1      (Intercep… <NA>    0.198      0.369  0.538  1.75e-3 1.10e-4  1.00 
-    ## 10 CD4 1      typecancer type   -0.00612    0.201  0.429  1.65e-1 2.98e-2  1.000
+    ##    cell_group parameter factor  c_lower c_effect  c_upper   c_pH0   c_FDR c_rhat
+    ##    <chr>      <chr>     <chr>     <dbl>    <dbl>    <dbl>   <dbl>   <dbl>  <dbl>
+    ##  1 B1         (Interce… <NA>    9.50e-1    1.20   1.45    0       0        1.00 
+    ##  2 B1         typecanc… type   -9.29e-1   -0.618 -0.306   0.00100 9.09e-5  1.00 
+    ##  3 B2         (Interce… <NA>    5.06e-1    0.770  1.03    0       0        1.00 
+    ##  4 B2         typecanc… type   -9.69e-1   -0.667 -0.358   0       0        1.00 
+    ##  5 B3         (Interce… <NA>   -5.85e-1   -0.328 -0.0685  0.0373  3.41e-3  1.00 
+    ##  6 B3         typecanc… type   -5.80e-1   -0.272  0.0195  0.12    2.35e-2  1.000
+    ##  7 BM         (Interce… <NA>   -1.22e+0   -0.971 -0.709   0       0        1.000
+    ##  8 BM         typecanc… type   -5.75e-1   -0.293  0.00241 0.103   1.49e-2  1.00 
+    ##  9 CD4 1      (Interce… <NA>    2.03e-1    0.369  0.531   0.00100 9.62e-5  1.00 
+    ## 10 CD4 1      typecanc… type   -1.75e-4    0.206  0.410   0.157   2.89e-2  1.00 
     ## # ℹ 62 more rows
     ## # ℹ 10 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, v_lower <dbl>,
     ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_rhat <dbl>,
@@ -475,16 +475,16 @@ res
     ## # A tibble: 90 × 15
     ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… <NA>     0.562   0.837    1.11   1.00       3958.
-    ##  2 B immature        typeheal… type     1.03    1.34     1.66   1.000      4152.
-    ##  3 B immature        continuo… conti…  -0.274   0.0510   0.362  1.00       3949.
-    ##  4 B mem             (Interce… <NA>    -0.993  -0.673   -0.354  1.00       3702.
-    ##  5 B mem             typeheal… type     1.21    1.58     1.95   1.00       4019.
-    ##  6 B mem             continuo… conti…  -0.278   0.0625   0.414  1.00       3934.
-    ##  7 CD4 cm S100A4     (Interce… <NA>     1.32    1.56     1.79   1.00       3872.
-    ##  8 CD4 cm S100A4     typeheal… type     0.855   1.13     1.39   1.00       4028.
-    ##  9 CD4 cm S100A4     continuo… conti…  -0.106   0.170    0.454  1.00       3737.
-    ## 10 CD4 cm high cyto… (Interce… <NA>    -0.919  -0.573   -0.233  1.00       3871.
+    ##  1 B immature        (Interce… <NA>     0.556   0.837    1.12   1.000      4111.
+    ##  2 B immature        typeheal… type     1.02    1.35     1.66   1.000      3800.
+    ##  3 B immature        continuo… conti…  -0.272   0.0502   0.374  1.00       3979.
+    ##  4 B mem             (Interce… <NA>    -0.976  -0.667   -0.362  1.000      3345.
+    ##  5 B mem             typeheal… type     1.22    1.58     1.92   1.00       3748.
+    ##  6 B mem             continuo… conti…  -0.261   0.0643   0.398  1.000      3378.
+    ##  7 CD4 cm S100A4     (Interce… <NA>     1.32    1.56     1.79   1.000      3784.
+    ##  8 CD4 cm S100A4     typeheal… type     0.855   1.13     1.41   1.00       4108.
+    ##  9 CD4 cm S100A4     continuo… conti…  -0.106   0.170    0.449  1.00       3983.
+    ## 10 CD4 cm high cyto… (Interce… <NA>    -0.908  -0.584   -0.250  1.000      3685.
     ## # ℹ 80 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -562,16 +562,16 @@ res
     ## # A tibble: 180 × 15
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.490   8.41e-1  1.24    1.00       129. 
-    ##  2 B immature typehealthy      type    0.812   1.21e+0  1.67    1.03        83.0
-    ##  3 B immature (Intercept)___G… <NA>   -0.399   1.96e-2  0.434   1.02       101. 
-    ##  4 B immature (Intercept)___G… <NA>   -0.169   2.18e-1  0.618   1.01       152. 
-    ##  5 B immature (Intercept)___G… <NA>   -0.138   2.05e-1  0.608   1.00       222. 
-    ##  6 B immature (Intercept)___G… <NA>   -0.740  -3.05e-1 -0.0134  1.00       292. 
-    ##  7 B mem      (Intercept)      <NA>   -0.861  -4.77e-1 -0.120   1.000      116. 
-    ##  8 B mem      typehealthy      type    0.770   1.26e+0  1.72    1.01        58.6
-    ##  9 B mem      (Intercept)___G… <NA>   -0.365   6.56e-4  0.469   1.01       109. 
-    ## 10 B mem      (Intercept)___G… <NA>   -0.0325  2.80e-1  0.767   1.01       120. 
+    ##  1 B immature (Intercept)      <NA>    0.522   0.838    1.16    1.00       182. 
+    ##  2 B immature typehealthy      type    0.771   1.22     1.66    1.02       102. 
+    ##  3 B immature (Intercept)___G… <NA>   -0.329   0.0386   0.491   1.01        90.2
+    ##  4 B immature (Intercept)___G… <NA>   -0.0694  0.223    0.637   1.00       204. 
+    ##  5 B immature (Intercept)___G… <NA>   -0.120   0.215    0.616   1.00       113. 
+    ##  6 B immature (Intercept)___G… <NA>   -0.687  -0.290    0.0136  1.00       202. 
+    ##  7 B mem      (Intercept)      <NA>   -0.850  -0.479   -0.123   1.01        84.6
+    ##  8 B mem      typehealthy      type    0.715   1.28     1.80    1.000       57.9
+    ##  9 B mem      (Intercept)___G… <NA>   -0.530  -0.00381  0.476   1.02        86.9
+    ## 10 B mem      (Intercept)___G… <NA>   -0.220   0.273    0.760   1.02       101. 
     ## # ℹ 170 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -614,16 +614,16 @@ res
     ## # A tibble: 240 × 15
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.476    0.837   1.18    1.02       163. 
-    ##  2 B immature typehealthy      type    0.799    1.23    1.73    1.01        85.1
-    ##  3 B immature (Intercept)___G… <NA>   -0.275    0.0282  0.358   1.00       118. 
-    ##  4 B immature typehealthy___G… <NA>   -0.264    0.0112  0.313   1.00       180. 
-    ##  5 B immature (Intercept)___G… <NA>   -0.222    0.121   0.471   1.01       114. 
-    ##  6 B immature typehealthy___G… <NA>   -0.137    0.119   0.428   1.00       262. 
-    ##  7 B immature (Intercept)___G… <NA>   -0.0561   0.196   0.547   1.00       118. 
-    ##  8 B immature (Intercept)___G… <NA>   -0.653   -0.235   0.0549  1.000       70.7
-    ##  9 B mem      (Intercept)      <NA>   -0.904   -0.487  -0.140   1.01       240. 
-    ## 10 B mem      typehealthy      type    0.674    1.25    1.82    1.00        80.4
+    ##  1 B immature (Intercept)      <NA>    0.441   0.843    1.27     1.03      102. 
+    ##  2 B immature typehealthy      type    0.802   1.25     1.75     1.01       89.2
+    ##  3 B immature (Intercept)___G… <NA>   -0.263   0.0236   0.372    1.01      115. 
+    ##  4 B immature typehealthy___G… <NA>   -0.252   0.00898  0.332    1.00      147. 
+    ##  5 B immature (Intercept)___G… <NA>   -0.115   0.109    0.439    1.00      171. 
+    ##  6 B immature typehealthy___G… <NA>   -0.0968  0.113    0.425    1.00      169. 
+    ##  7 B immature (Intercept)___G… <NA>   -0.0691  0.173    0.524    1.02       86.3
+    ##  8 B immature (Intercept)___G… <NA>   -0.622  -0.205    0.0413   1.02       58.7
+    ##  9 B mem      (Intercept)      <NA>   -1.00   -0.542   -0.125    1.01       90.5
+    ## 10 B mem      typehealthy      type    0.753   1.32     1.88     1.00       69.8
     ## # ℹ 230 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -668,16 +668,16 @@ res
     ## # A tibble: 300 × 15
     ##    cell_group parameter        factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>      <chr>            <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature (Intercept)      <NA>    0.467    0.809   1.30     1.00      130. 
-    ##  2 B immature typehealthy      type    0.721    1.19    1.67     1.03      102. 
-    ##  3 B immature (Intercept)___G… <NA>   -0.129    0.0730  0.419    1.01       74.4
-    ##  4 B immature typehealthy___G… <NA>   -0.158    0.0622  0.379    1.01       94.5
-    ##  5 B immature (Intercept)___G… <NA>   -0.216    0.0751  0.332    1.01      123. 
-    ##  6 B immature typehealthy___G… <NA>   -0.188    0.0454  0.360    1.06       26.3
-    ##  7 B immature (Intercept)___G… <NA>   -0.0412   0.228   0.623    1.04       64.9
-    ##  8 B immature (Intercept)___G… <NA>   -0.699   -0.264   0.0361   1.02       79.0
-    ##  9 B immature (Intercept)___G… <NA>   -0.437   -0.131   0.117    1.04       39.6
-    ## 10 B immature (Intercept)___G… <NA>   -0.0521   0.233   0.547    1.01       96.9
+    ##  1 B immature (Intercept)      <NA>    0.429    0.872   1.33     1.02       48.8
+    ##  2 B immature typehealthy      type    0.652    1.20    1.63     1.00       77.5
+    ##  3 B immature (Intercept)___G… <NA>   -0.220    0.0534  0.408    1.03      115. 
+    ##  4 B immature typehealthy___G… <NA>   -0.201    0.0583  0.381    1.00       98.0
+    ##  5 B immature (Intercept)___G… <NA>   -0.172    0.0632  0.383    1.00      114. 
+    ##  6 B immature typehealthy___G… <NA>   -0.180    0.0514  0.325    1.02       83.5
+    ##  7 B immature (Intercept)___G… <NA>   -0.0705   0.229   0.602    1.02       28.3
+    ##  8 B immature (Intercept)___G… <NA>   -0.726   -0.252   0.0210   1.01       51.8
+    ##  9 B immature (Intercept)___G… <NA>   -0.494   -0.128   0.136    1.01       54.2
+    ## 10 B immature (Intercept)___G… <NA>   -0.0630   0.196   0.549    1.02       46.2
     ## # ℹ 290 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -721,16 +721,16 @@ res |>
     ## # A tibble: 30 × 2
     ##    cell_group           statement                                
     ##    <chr>                <glue>                                   
-    ##  1 B immature           2-fold decrease (from 0.1067 to 0.0527)  
-    ##  2 B mem                2.4-fold decrease (from 0.0343 to 0.014) 
-    ##  3 CD4 cm high cytokine 7.9-fold increase (from 0.0015 to 0.0117)
-    ##  4 CD4 cm ribosome      3.8-fold increase (from 0.0071 to 0.027) 
-    ##  5 CD4 cm S100A4        1.5-fold decrease (from 0.1416 to 0.0942)
-    ##  6 CD4 em high cytokine 4.9-fold increase (from 0.0021 to 0.0103)
-    ##  7 CD4 naive            1.5-fold decrease (from 0.1128 to 0.0769)
-    ##  8 CD4 ribosome         3-fold decrease (from 0.0855 to 0.0287)  
-    ##  9 CD8 em 1             1.2-fold increase (from 0.0495 to 0.0571)
-    ## 10 CD8 em 2             3.8-fold increase (from 0.0054 to 0.0209)
+    ##  1 B immature           2-fold decrease (from 0.1077 to 0.0537)  
+    ##  2 B mem                2.5-fold decrease (from 0.0351 to 0.0138)
+    ##  3 CD4 cm high cytokine 8.1-fold increase (from 0.0015 to 0.0119)
+    ##  4 CD4 cm ribosome      3.9-fold increase (from 0.0067 to 0.0262)
+    ##  5 CD4 cm S100A4        1.5-fold decrease (from 0.1449 to 0.0965)
+    ##  6 CD4 em high cytokine 5.1-fold increase (from 0.0021 to 0.0105)
+    ##  7 CD4 naive            1.4-fold decrease (from 0.1175 to 0.081) 
+    ##  8 CD4 ribosome         3-fold decrease (from 0.0873 to 0.0296)  
+    ##  9 CD8 em 1             1.2-fold increase (from 0.0482 to 0.0599)
+    ## 10 CD8 em 2             3.9-fold increase (from 0.0052 to 0.0205)
     ## # ℹ 20 more rows
 
 ## Contrasts Analysis
@@ -766,16 +766,16 @@ seurat_obj |>
     ## # A tibble: 60 × 11
     ##    cell_group   parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
     ##    <chr>        <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B immature   typecanc… <NA>    -1.91    -1.36   -0.796 0       0           NA
-    ##  2 B immature   typeheal… <NA>     0.796    1.36    1.91  0       0           NA
-    ##  3 B mem        typecanc… <NA>    -2.22    -1.65   -1.07  0       0           NA
-    ##  4 B mem        typeheal… <NA>     1.07     1.65    2.22  0       0           NA
-    ##  5 CD4 cm S100… typecanc… <NA>    -1.49    -0.992  -0.507 2.50e-4 4.17e-5     NA
-    ##  6 CD4 cm S100… typeheal… <NA>     0.507    0.992   1.49  2.50e-4 4.17e-5     NA
-    ##  7 CD4 cm high… typecanc… <NA>     0.954    1.57    2.19  0       0           NA
-    ##  8 CD4 cm high… typeheal… <NA>    -2.19    -1.57   -0.954 0       0           NA
-    ##  9 CD4 cm ribo… typecanc… <NA>     0.356    0.943   1.55  3.  e-3 7.27e-4     NA
-    ## 10 CD4 cm ribo… typeheal… <NA>    -1.55    -0.943  -0.356 3.  e-3 7.27e-4     NA
+    ##  1 B immature   typecanc… <NA>    -1.89    -1.36   -0.820 0       0           NA
+    ##  2 B immature   typeheal… <NA>     0.820    1.36    1.89  0       0           NA
+    ##  3 B mem        typecanc… <NA>    -2.23    -1.66   -1.06  0       0           NA
+    ##  4 B mem        typeheal… <NA>     1.06     1.66    2.23  0       0           NA
+    ##  5 CD4 cm S100… typecanc… <NA>    -1.48    -0.993  -0.525 5.00e-4 7.14e-5     NA
+    ##  6 CD4 cm S100… typeheal… <NA>     0.525    0.993   1.48  5.00e-4 7.14e-5     NA
+    ##  7 CD4 cm high… typecanc… <NA>     0.953    1.57    2.20  0       0           NA
+    ##  8 CD4 cm high… typeheal… <NA>    -2.20    -1.57   -0.953 0       0           NA
+    ##  9 CD4 cm ribo… typecanc… <NA>     0.346    0.938   1.53  4.50e-3 1.02e-3     NA
+    ## 10 CD4 cm ribo… typeheal… <NA>    -1.53    -0.938  -0.346 4.50e-3 1.02e-3     NA
     ## # ℹ 50 more rows
     ## # ℹ 2 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>
 
@@ -830,7 +830,7 @@ loo_compare(
 
     ##        elpd_diff se_diff
     ## model1   0.0       0.0  
-    ## model2 -81.6      10.7
+    ## model2 -85.4      10.5
 
 ## Differential Variability Analysis
 
@@ -871,16 +871,16 @@ res
     ## # A tibble: 60 × 15
     ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… <NA>    0.514     0.819   1.14    1.00     3509. 
-    ##  2 B immature        typeheal… type    1.02      1.38    1.73    1.00     1369. 
-    ##  3 B mem             (Interce… <NA>   -1.07     -0.698  -0.306   1.00      273. 
-    ##  4 B mem             typeheal… type    1.18      1.60    2.02    1.00      274. 
-    ##  5 CD4 cm S100A4     (Interce… <NA>    1.47      1.72    1.98    1.00     2420. 
-    ##  6 CD4 cm S100A4     typeheal… type    0.599     0.890   1.18    1.01      632. 
-    ##  7 CD4 cm high cyto… (Interce… <NA>   -0.974    -0.590  -0.203   1.00     1761. 
-    ##  8 CD4 cm high cyto… typeheal… type   -1.93     -1.23   -0.538   1.01       67.5
-    ##  9 CD4 cm ribosome   (Interce… <NA>   -0.0480    0.305   0.678   1.00     3720. 
-    ## 10 CD4 cm ribosome   typeheal… type   -1.32     -0.926  -0.527   1.00     1043. 
+    ##  1 B immature        (Interce… <NA>    0.516     0.816   1.12   1.000     2514. 
+    ##  2 B immature        typeheal… type    1.01      1.37    1.73   1.00      1294. 
+    ##  3 B mem             (Interce… <NA>   -1.09     -0.695  -0.314  1.00       251. 
+    ##  4 B mem             typeheal… type    1.18      1.61    2.03   1.01       216. 
+    ##  5 CD4 cm S100A4     (Interce… <NA>    1.45      1.72    1.98   1.000     2780. 
+    ##  6 CD4 cm S100A4     typeheal… type    0.587     0.884   1.18   1.00       927. 
+    ##  7 CD4 cm high cyto… (Interce… <NA>   -0.963    -0.586  -0.182  1.00      1508. 
+    ##  8 CD4 cm high cyto… typeheal… type   -1.88     -1.25   -0.535  1.00        73.2
+    ##  9 CD4 cm ribosome   (Interce… <NA>   -0.0727    0.305   0.674  1.00      3682. 
+    ## 10 CD4 cm ribosome   typeheal… type   -1.35     -0.911  -0.474  1.00      1439. 
     ## # ℹ 50 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
     ## #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -970,7 +970,7 @@ fit <- res |> attr("fit")
 draws <- as_draws_array(fit$draws("beta[2,1]"))
 
 # Create a traceplot for 'beta[2,1]'
-mcmc_trace(draws, pars = "beta[2,1]")
+mcmc_trace(draws, pars = "beta[2,1]") + theme_bw()
 ```
 
 ![](/Users/a1234450/Documents/GitHub/sccomp/README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->

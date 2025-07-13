@@ -552,7 +552,7 @@ fit <- res |> attr("fit")
 draws <- as_draws_array(fit$draws("beta[2,1]"))
 
 # Create a traceplot for 'beta[2,1]'
-mcmc_trace(draws, pars = "beta[2,1]")
+mcmc_trace(draws, pars = "beta[2,1]") + theme_bw()
 
 ```
 

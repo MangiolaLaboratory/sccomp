@@ -230,12 +230,12 @@ plot_1D_intervals = function(
         if (significance_statistic == "FDR") {
           color_var <- plot_data$FDR < significance_threshold
           color_aes <- aes(xmin = lower, xmax = upper, color = FDR < significance_threshold)
-          color_scale <- scale_color_brewer(palette = "Set1")
+          color_scale <- scale_color_manual(values = c("grey40", "red"))
           legend_title <- "FDR < significance_threshold"
         } else {
           color_var <- plot_data$pH0 < significance_threshold
           color_aes <- aes(xmin = lower, xmax = upper, color = pH0 < significance_threshold)
-          color_scale <- scale_color_brewer(palette = "Set2")
+          color_scale <- scale_color_manual(values = c("grey40", "red"))
           legend_title <- "pH0 < significance_threshold"
         }
         
