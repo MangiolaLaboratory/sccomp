@@ -1,14 +1,14 @@
 # Define global variable
-sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
+# sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
 
-# Greater than
-gt = function(a, b){	a > b }
+# Function to get cache directory
+#' @importFrom utils packageVersion
+get_sccomp_cache_dir <- function() {
+  file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
+}
 
-# Smaller than
-st = function(a, b){	a < b }
-
-# Negation
-not = function(is){	!is }
+# Define global variable
+sccomp_stan_models_cache_dir = get_sccomp_cache_dir()
 
 #' Add attribute to abject
 #'
@@ -195,6 +195,7 @@ ifelse_pipe = function(.x, .p, .f1, .f2 = NULL) {
 
 #' @importFrom tidyr gather
 #' @importFrom magrittr set_rownames
+#' @importFrom magrittr not
 #' @importFrom tibble deframe
 #'
 #' @keywords internal
@@ -222,8 +223,8 @@ as_matrix <- function(tbl, rownames = NULL) {
     gather(variable, class) %>%
     pull(class) %>%
     unique() %>%
-    `%in%`(c("numeric", "integer")) %>% 
-    not() %>% 
+    `%in%`(c("numeric", "integer")) |> 
+    not() %>%
     any()
   
   if (has_non_numerical) {
@@ -866,7 +867,7 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
         "sccomp says: the groups in the formula (factor | group) should be present in only one factor, including the intercept" =
           !(
             # If I duplicated groups
-            .y |> unlist() |> length() |> gt(1)
+            .y |> unlist() |> length() > 1
             
           )
       )
