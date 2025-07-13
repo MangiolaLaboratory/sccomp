@@ -666,7 +666,7 @@ design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FAL
 #' @importFrom stringr str_split
 #' @importFrom stringr str_replace_all
 #' @importFrom tidyr crossing
-#' @importFrom tidyr enframe
+#' @importFrom tibble enframe
 #' @importFrom dplyr rowwise
 #' @importFrom dplyr c_across
 #' @importFrom dplyr filter

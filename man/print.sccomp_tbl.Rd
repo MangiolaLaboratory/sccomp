@@ -22,3 +22,26 @@ data dimensions, and convergence diagnostics.
 
 The output is formatted to be easy to read and understand.
 }
+\examples{
+
+# Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+# install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+
+\donttest{
+if (instantiate::stan_cmdstan_exists()) {
+  # Create a sccomp object
+  data("counts_obj") 
+  estimate <- sccomp_estimate(
+    counts_obj,
+    ~ type,
+    ~1,
+    "sample",
+    "cell_group",
+    "count",
+    cores = 1
+  )
+  print(estimate)
+}
+}
+
+}
