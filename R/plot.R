@@ -362,26 +362,26 @@ plot_2D_intervals = function(
   prec_coeff_intercept = prec_coeff_summary$mean[1]
   prec_coeff_slope = prec_coeff_summary$mean[2]
   
-  # Add corrected intercept (unbiased variability) as a new facet
-  .data_corrected <- .data %>%
+  # Add adjusted intercept (unbiased variability) as a new facet
+  .data_adjusted <- .data %>%
     filter(parameter == "(Intercept)") %>%
     mutate(
       v_effect = v_effect + prec_coeff_slope * c_effect,
       v_lower = v_lower + prec_coeff_slope * c_effect,
       v_upper = v_upper + prec_coeff_slope * c_effect,
-      parameter = "(Intercept, corrected)"
+      parameter = "(Intercept, adjusted)"
     )
   
-  # Bind corrected data to original (uncorrected comes first)
-  .data_plot <- bind_rows(.data, .data_corrected)
+  # Bind adjusted data to original (uncorrected comes first)
+  .data_plot <- bind_rows(.data, .data_adjusted)
   
   # Set parameter as a factor to control facet order
   .data_plot$parameter <- factor(
     .data_plot$parameter,
     levels = c(
       "(Intercept)",
-      "(Intercept, corrected)",
-      setdiff(unique(.data_plot$parameter), c("(Intercept)", "(Intercept, corrected)"))
+      "(Intercept, adjusted)",
+      setdiff(unique(.data_plot$parameter), c("(Intercept)", "(Intercept, adjusted)"))
     )
   )
   
@@ -395,13 +395,13 @@ plot_2D_intervals = function(
       parameter,
       ~ .x %>%
         arrange(c_FDR) %>%
-        mutate(cell_type_label = if_else(row_number() <= 3 & c_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, corrected)"), !!.cell_group, ""))
+        mutate(cell_type_label = if_else(row_number() <= 3 & c_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)"), !!.cell_group, ""))
     ) %>%
     with_groups(
       parameter,
       ~ .x %>%
         arrange(v_FDR) %>%
-        mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, corrected)") ), !!.cell_group, cell_type_label))
+        mutate(cell_type_label = if_else((row_number() <= 3 & v_FDR < significance_threshold & !parameter %in% c("(Intercept)", "(Intercept, adjusted)") ), !!.cell_group, cell_type_label))
     ) %>%
     {
       .x = (.)
@@ -446,6 +446,27 @@ plot_2D_intervals = function(
         color = "#0072B2", linewidth = 0.5, alpha = 0.8,
         inherit.aes = FALSE
       )
+
+      # Add horizontal line for (Intercept, adjusted) facet
+      if ("(Intercept, adjusted)" %in% unique(.x$parameter)) {
+        mean_adjusted <- mean(.x$v_effect[.x$parameter == "(Intercept, adjusted)"])
+        c_range_adjusted <- range(.x$c_effect[.x$parameter == "(Intercept, adjusted)"], na.rm = TRUE)
+        
+        # Create horizontal line data for adjusted intercept only
+        horizontal_line_data <- data.frame(
+          c_effect = c_range_adjusted,
+          v_effect = rep(mean_adjusted, 2),
+          parameter = "(Intercept, adjusted)"
+        )
+        
+        p <- p +
+          geom_line(
+            data = horizontal_line_data,
+            mapping = aes(c_effect, v_effect),
+            color = "#0072B2", linewidth = 0.5, alpha = 0.8,
+            inherit.aes = FALSE
+          )
+      }
     
       p <- p +
         # Add error bars
@@ -462,7 +483,7 @@ plot_2D_intervals = function(
         color_scale +
         alpha_scale +
         # Facet by parameter
-        facet_wrap(~ fct_relevel(parameter, c("(Intercept)", "(Intercept, corrected)")), scales = "free") +
+        facet_wrap(~ fct_relevel(parameter, c("(Intercept)", "(Intercept, adjusted)")), scales = "free") +
         xlab("c_effect (Abundance effect)") +
         ylab("v_effect (Variability effect)") +
         # Apply custom theme
