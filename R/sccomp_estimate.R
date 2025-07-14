@@ -173,6 +173,49 @@ sccomp_estimate <- function(.data,
   UseMethod("sccomp_estimate", .data)
 }
 
+#' @importFrom purrr map2_lgl
+#' @importFrom tidyr pivot_wider
+#' @importFrom tidyr spread
+#' @importFrom stats C
+#' @importFrom rlang :=
+#' @importFrom tibble enframe
+#' @importFrom purrr map_int
+data_to_spread = function(.data, formula, .sample, .cell_group, .count, .grouping_for_random_effect){
+  
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
+  .count = enquo(.count)
+
+  is_proportion = .data |> pull(!!.count) |> max() <= 1
+  
+  .data = 
+    .data |>
+    nest(data = -!!.sample) 
+  
+  # If proportions exposure = 1
+  if(is_proportion) .data = .data |> mutate(exposure = 1)
+  else
+    .data = 
+    .data |>
+    mutate(exposure = map_int(data, ~ .x |> pull(!!.count) |> sum() )) 
+  
+  .data_to_spread = 
+    .data |>
+    unnest(data) |>
+    select(!!.sample, !!.cell_group, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) 
+  
+  # Check if duplicated samples
+  if(
+    .data_to_spread |> distinct(!!.sample, !!.cell_group) |> nrow() <
+    .data_to_spread |> nrow()
+  ) stop("sccomp says: You have duplicated .sample IDs in your input dataset. A .sample .cell_group combination must be unique")
+  
+  .data_to_spread |>
+    spread(!!.cell_group, !!.count)
+  
+  
+}
+
 #' @importFrom rlang is_symbolic
 #' @export
 sccomp_estimate.Seurat <- function(.data,
@@ -887,7 +930,7 @@ sccomp_glm_data_frame_counts = function(.data,
   
   data_for_model =
     .data %>%
-    data_to_spread ( 
+    data_to_spread(
       formula_composition, 
       !!.sample, !!.cell_group, !!.count, 
       .grouping_for_random_effect |> map(~ .x |> quo_name() ) |> unlist()

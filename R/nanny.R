@@ -84,55 +84,6 @@ quo_names <- function(v) {
     unlist
 }
 
-# From tidyr
-strip_names <- function(df, base, names_sep) {
-  base <- paste0(base, names_sep)
-  names <- names(df)
 
-  has_prefix <- regexpr(base, names, fixed = TRUE) == 1L
-  names[has_prefix] <- substr(names[has_prefix], nchar(base) + 1, nchar(names[has_prefix]))
 
-  set_names(df, names)
-}
 
-# Set internal
-#' @importFrom rlang enquo
-#' @importFrom rlang set_names
-#' @importFrom rlang :=
-#' @importFrom purrr map
-#' @importFrom purrr imap
-#' @importFrom tidyselect eval_select
-#'
-#' @keywords internal
-#' @noRd
-#'
-.nest_subset <- 		function(.data, ..., .exclude = NULL, .names_sep = NULL)	{
-
-  # Make col names - from tidyr
-  cols <- enquos(...)
-  .exclude <- enquo(.exclude)
-
-  # Name of the new data column
-  col_name_data  <- names(cols)
-
-  # Column names
-  cols <- map(cols, ~ names(eval_select(.x, .data)))
-  cols <- map(cols, set_names)
-  if (!is.null(.names_sep)) cols <- imap(cols, strip_names, .names_sep)
-  asis <- setdiff(names(.data), unlist(cols))
-
-  # Check if column present
-  if(asis %in% colnames(.data) %>% all %>% `!`)
-    stop("sccomp says: some of the .column specified do not exist in the input data frame.")
-
-  # Get my subset columns
-  asis_subset <- asis %>%
-    c(get_specific_annotation_columns(.data, asis)) %>%
-
-    # Exclude custom columns
-    setdiff(quo_names(.exclude))
-
-  # Apply nest on those
-  tidyr::nest(.data, !!col_name_data := -c(asis_subset))
-
-}

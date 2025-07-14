@@ -291,96 +291,6 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
   
 }
 
-#' @importFrom purrr map2_lgl
-#' @importFrom tidyr pivot_wider
-#' @importFrom tidyr spread
-#' @importFrom stats C
-#' @importFrom rlang :=
-#' @importFrom tibble enframe
-#'
-#' @keywords internal
-#' @noRd
-beta_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
-  
-  # Define the variables as NULL to avoid CRAN NOTES
-  M <- NULL
-  C_name <- NULL
-  .lower <- NULL
-  .median <- NULL
-  .upper <- NULL
-  
-  effect_column_name = sprintf("composition_effect_%s", factor_of_interest) %>% as.symbol()
-  
-  CI = fitted %>%
-    unnest(!!as.symbol(sprintf("beta_posterior_%s", censoring_iteration))) %>%
-    nest(data = -c(M, C, C_name)) %>%
-    # Attach beta
-    mutate(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration)) := map(
-      data,
-      ~ quantile(
-        .x$.value,
-        probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
-      ) %>%
-        enframe() %>%
-        mutate(name = c(".lower", ".median", ".upper")) %>%
-        spread(name, value)
-    )) %>%
-    unnest(!!as.symbol(sprintf("beta_quantiles_%s", censoring_iteration))) %>%
-    select(-data, -C) %>%
-    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) 
-  
-  # Create main effect if exists
-  if(!is.na(factor_of_interest) )
-    CI |>
-    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
-    nest(composition_CI = -c(M, !!effect_column_name))
-  
-  else 
-    CI |> nest(composition_CI = -c(M))
-  
-}
-
-#' @importFrom purrr map2_lgl
-#' @importFrom tidyr pivot_wider
-#' @importFrom stats C
-#' @importFrom rlang :=
-#'
-#' @keywords internal
-#' @noRd
-alpha_to_CI = function(fitted, censoring_iteration = 1, false_positive_rate, factor_of_interest){
-  
-  # Define the variables as NULL to avoid CRAN NOTES
-  M <- NULL
-  C_name <- NULL
-  .lower <- NULL
-  .median <- NULL
-  .upper <- NULL
-  
-  effect_column_name = sprintf("variability_effect_%s", factor_of_interest) %>% as.symbol()
-  
-  fitted %>%
-    unnest(!!as.symbol(sprintf("alpha_%s", censoring_iteration))) %>%
-    nest(data = -c(M, C, C_name)) %>%
-    # Attach beta
-    mutate(!!as.symbol(sprintf("alpha_quantiles_%s", censoring_iteration)) := map(
-      data,
-      ~ quantile(
-        .x$.value,
-        probs = c(false_positive_rate/2,  0.5,  1-(false_positive_rate/2))
-      ) %>%
-        enframe() %>%
-        mutate(name = c(".lower", ".median", ".upper")) %>%
-        spread(name, value)
-    )) %>%
-    unnest(!!as.symbol(sprintf("alpha_quantiles_%s", censoring_iteration))) %>%
-    select(-data, -C) %>%
-    pivot_wider(names_from = C_name, values_from=c(.lower , .median ,  .upper)) %>%
-    mutate(!!effect_column_name := !!as.symbol(sprintf(".median_%s", factor_of_interest))) %>%
-    nest(variability_CI = -c(M, !!effect_column_name))
-  
-  
-  
-}
 
 #' Get Random Intercept Design 3
 #'
@@ -670,159 +580,7 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
     bind_rows()
 }
 
-#' Check Random Intercept Design
-#'
-#' This function checks the validity of the random intercept design in the data.
-#'
-#' @param .data A data frame containing the data.
-#' @param factor_names A character vector of factor names.
-#' @param random_effect_elements A data frame containing the random intercept elements.
-#' @param formula The formula used for the model.
-#' @param X The design matrix.
-#' 
-#' @return A data frame with the checked random intercept elements.
-#' 
-#' @importFrom tidyr nest
-#' @importFrom dplyr mutate
-#' @importFrom dplyr select
-#' @importFrom dplyr pull
-#' @importFrom dplyr filter
-#' @importFrom dplyr distinct
-#' @importFrom rlang set_names
-#' @importFrom tidyr unite
-#' @importFrom purrr map2
-#' @importFrom stringr str_subset
-#' @importFrom readr type_convert
-#' @noRd
-check_random_effect_design = function(.data, factor_names, random_effect_elements, formula, X){
-  
-  # Define the variables as NULL to avoid CRAN NOTES
-  factors <- NULL
-  groupings <- NULL
-  
-  
-  .data_ = .data
-  
-  # Loop across groupings
-  random_effect_elements |>
-    nest(factors = `factor` ) |>
-    mutate(checked = map2(
-      grouping, factors,
-      ~ {
-        
-        .y = unlist(.y)
-        
-        # Check that the group column is categorical
-        stopifnot("sccomp says: the grouping column should be categorical (not numeric)" =
-                    .data_ |>
-                    select(all_of(.x)) |>
-                    pull(1) |>
-                    class() %in%
-                    c("factor", "logical", "character")
-        )
-        
-        
-        # # Check sanity of the grouping if only random intercept
-        # stopifnot(
-        #   "sccomp says: the random intercept completely confounded with one or more discrete factors" =
-        #     !(
-        #       !.y |> equals("(Intercept)") &&
-        #         .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any() &&
-        #         .data_ |>
-        #         select(.x, any_of(.y)) |>
-        #         select_if(\(x) is.character(x) | is.factor(x) | is.logical(x)) |>
-        #         distinct() %>%
-        #
-        #         # TEMPORARY FIX
-        #         set_names(c(colnames(.)[1], 'factor___temp')) |>
-        #
-        #         count(factor___temp) |>
-        #         pull(n) |>
-        #         equals(1) |>
-        #         any()
-        #     )
-        # )
-        
-        # # Check if random intercept with random continuous slope. At the moment is not possible
-        # # Because it would require I believe a multivariate prior
-        # stopifnot(
-        #   "sccomp says: continuous random slope is not supported yet" =
-        #     !(
-        #       .y |> str_subset("1", negate = TRUE) |> length() |> gt(0) &&
-        #         .data_ |>
-        #         select(
-        #           .y |> str_subset("1", negate = TRUE)
-        #         ) |>
-        #         map_chr(class) %in%
-        #         c("integer", "numeric")
-        #     )
-        # )
-        
-        # Check if random intercept with random continuous slope. At the moment is not possible
-        # Because it would require I believe a multivariate prior
-        stopifnot(
-          "sccomp says: currently, discrete random slope is only supported in a intercept-free model. For example ~ 0 + treatment + (treatment | group)" =
-            !(
-              # If I have both random intercept and random discrete slope
-              
-              .y |> equals("(Intercept)") |> any() &&
-                length(.y) > 1 &&
-                # If I have random slope and non-intercept-free model
-                .data_ |> select(any_of(.y)) |> suppressWarnings() |>  pull(1) |> class() %in% c("factor", "character") |> any()
-              
-            )
-        )
-        
-        
-        # I HAVE TO REVESIT THIS
-        #  stopifnot(
-        #   "sccomp says: the groups in the formula (factor | group) should not be shared across factor groups" =
-        #     !(
-        #       # If I duplicated groups
-        #       .y  |> identical("(Intercept)") |> not() &&
-        #       .data_ |> select(.y |> setdiff("(Intercept)")) |> lapply(class) != "numeric" &&
-        #         .data_ |>
-        #         select(.x, .y |> setdiff("(Intercept)")) |>
-        #
-        #         # Drop the factor represented by the intercept if any
-        #         mutate(`parameter` = .y |> setdiff("(Intercept)")) |>
-        #         unite("factor_name", c(parameter, factor), sep = "", remove = FALSE) |>
-        #         filter(factor_name %in% colnames(X)) |>
-        #
-        #         # Count
-        #         distinct() %>%
-        #         set_names(as.character(1:ncol(.))) |>
-        #         count(`1`) |>
-        #         filter(n>1) |>
-        #         nrow() |>
-        #         gt(1)
-        #
-        #     )
-        # )
-        
-      }
-    ))
-  
-  random_effect_elements |>
-    nest(groupings = grouping ) |>
-    mutate(checked = map2(`factor`, groupings, ~{
-      # Check the same group spans multiple factors
-      stopifnot(
-        "sccomp says: the groups in the formula (factor | group) should be present in only one factor, including the intercept" =
-          !(
-            # If I duplicated groups
-            .y |> unlist() |> length() > 1
-            
-          )
-      )
-      
-      
-    }))
-  
-  
-  
-  
-}
+
 
 #' @importFrom purrr when
 #' @importFrom stats model.matrix
@@ -838,7 +596,7 @@ check_random_effect_design = function(.data, factor_names, random_effect_element
 #'
 data_spread_to_model_input =
   function(
-    .data_spread, formula, .sample, .cell_type, .count,
+    .data_spread, formula, .sample, .cell_group, .count,
     truncation_ajustment = 1, approximate_posterior_inference,
     formula_variability = ~ 1,
     contrasts = NULL,
@@ -864,7 +622,7 @@ data_spread_to_model_input =
     
     # Prepare column same enquo
     .sample = enquo(.sample)
-    .cell_type = enquo(.cell_type)
+    .cell_group = enquo(.cell_group)
     .count = enquo(.count)
     .grouping_for_random_effect =
       random_effect_elements |>
@@ -1156,42 +914,7 @@ data_spread_to_model_input =
     data_for_model
   }
 
-#' @importFrom purrr map_int
-data_to_spread = function(.data, formula, .sample, .cell_type, .count, .grouping_for_random_effect){
-  
-  .sample = enquo(.sample)
-  .cell_type = enquo(.cell_type)
-  .count = enquo(.count)
 
-  is_proportion = .data |> pull(!!.count) |> max() <= 1
-  
-  .data = 
-    .data |>
-    nest(data = -!!.sample) 
-  
-  # If proportions exposure = 1
-  if(is_proportion) .data = .data |> mutate(exposure = 1)
-  else
-    .data = 
-    .data |>
-    mutate(exposure = map_int(data, ~ .x |> pull(!!.count) |> sum() )) 
-  
-  .data_to_spread = 
-    .data |>
-    unnest(data) |>
-    select(!!.sample, !!.cell_type, exposure, !!.count, parse_formula(formula), any_of(.grouping_for_random_effect)) 
-  
-  # Check if duplicated samples
-  if(
-    .data_to_spread |> distinct(!!.sample, !!.cell_type) |> nrow() <
-    .data_to_spread |> nrow()
-  ) stop("sccomp says: You have duplicated .sample IDs in your input dataset. A .sample .cell_group combination must be unique")
-  
-  .data_to_spread |>
-    spread(!!.cell_type, !!.count)
-  
-  
-}
 
 contrasts_to_parameter_list = function(contrasts, drop_back_quotes = TRUE){
   
@@ -1231,34 +954,11 @@ contrasts_to_parameter_list = function(contrasts, drop_back_quotes = TRUE){
   contrast_list |> unique()
 }
 
-mutate_ignore_error = function(x, ...){
-  tryCatch(
-    {  x |> mutate(...) },
-    error=function(cond) {  x  }
-  )
-}
 
-simulate_multinomial_logit_linear = function(model_input, sd = 0.51){
-  
-  mu = model_input$X %*% model_input$beta
-  
-  proportions =
-    rnorm(length(mu), mu, sd) %>%
-    matrix(nrow = nrow(model_input$X)) %>%
-    boot::inv.logit()
-  apply(1, function(x) x/sum(x)) %>%
-    t()
-  
-  rownames(proportions) = rownames(model_input$X)
-  colnames(proportions) = colnames(model_input$beta )
-}
 
-compress_zero_one = function(y){
-  # https://stats.stackexchange.com/questions/48028/beta-regression-of-proportion-data-including-1-and-0
-  
-  n = length(y)
-  (y * (n-1) + 0.5) / n
-}
+
+
+
 
 
 #' chatGPT - Remove Specified Regex Pattern from Each String in a Vector
