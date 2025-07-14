@@ -19,14 +19,14 @@ test_that("replicate_data works correctly", {
        sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "random_effect"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -109,14 +109,14 @@ test_that("replicate_data works with random intercept model", {
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -201,14 +201,14 @@ test_that("replicate_data works with random slope model", {
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -303,14 +303,14 @@ test_that("replicate_data works with random slope model and type NA", {
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -407,14 +407,14 @@ test_that("replicate_data works with nested random effects", {
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = c("group__", "group2__")
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -521,14 +521,14 @@ test_that("replicate_data works with NA values in grouping", {
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -654,14 +654,14 @@ test_that("replicate_data works with NA values in grouping and random effects", 
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -829,14 +829,14 @@ test_that("replicate_data works with type NA and group__ NA", {
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -990,14 +990,14 @@ test_that("prepare_replicate_data handles complex design with NAs and prints new
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "group__"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,
@@ -1071,14 +1071,14 @@ test_that("prepare_replicate_data throws error for duplicate sample names", {
     sccomp:::data_to_spread(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       .grouping_for_random_effect = "random_effect"
     ) |>
     sccomp:::data_spread_to_model_input(
       formula = formula_composition,
       .sample = !!quo(sample),
-      .cell_type = !!quo(cell_group),
+      .cell_group = !!quo(cell_group),
       .count = !!quo(count),
       truncation_ajustment = 1.1,
       approximate_posterior_inference = FALSE,

@@ -356,7 +356,7 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
 #   # seurat_obj =
 #   #   seurat_obj |>
 #   #   nest(data = -c("sample", type)) |>
-#   #   mutate(group__wrong = c(1,1,1,1,1, 2,2,2,2,2, 1,1,1,1,1, 2,2,2,2,2) |> as.character()) |>
+#   #   mutate(group__wrong = c(1,1,1,1,1, 2,2,2,2,2) |> as.character()) |>
 #   #   unnest(data)
 #
 #     expect_error(
@@ -440,29 +440,6 @@ test_that("remove unwanted effects",{
       mcmc_seed = 43,    
       max_sampling_iterations = n_iterations, verbose = FALSE
     )
-
-  # DEPRECATION TEST
-  estimate |>
-    sccomp_remove_unwanted_effects(formula_composition = ~ type) |> 
-    expect_warning("The argument 'formula_composition' is deprecated")
-  
-  estimate |>
-    sccomp_remove_unwanted_effects(formula_composition_keep = ~ type) |> 
-    expect_no_warning()
-  
-  # DEPRECATION
-    
-    # Test that sccomp_remove_unwanted_variation is deprecated
-    estimate |>
-      sccomp_remove_unwanted_variation() |>
-      expect_warning("sccomp says: sccomp_remove_unwanted_variation is deprecated")
-    
-    # Test that it still works and produces same result as new function
-    result_old = estimate |> sccomp_remove_unwanted_variation()
-    result_new = estimate |> sccomp_remove_unwanted_effects()
-    
-    expect_equal(result_old$adjusted_proportion, result_new$adjusted_proportion, tolerance = 0.01)
-  
 
 })
 

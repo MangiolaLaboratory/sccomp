@@ -763,6 +763,13 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     setNames(c(colnames(draws)[1:3], sprintf("%s%s", prefix, colnames(draws)[4:ncol(draws)])))
 }
 
+mutate_ignore_error = function(x, ...){
+  tryCatch(
+    {  x |> mutate(...) },
+    error=function(cond) {  x  }
+  )
+}
+
 #' @importFrom dplyr cummean
 #' @noRd
 get_FDR = function(x){

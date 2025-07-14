@@ -94,6 +94,7 @@ simulate_data <- function(.data,
 #' @importFrom purrr map_dbl
 #' @importFrom purrr pmap
 #' @importFrom readr read_file
+#' @importFrom tibble column_to_rownames
 #'
 simulate_data.tbl = function(.data,
                              .estimate_object,
@@ -244,7 +245,8 @@ data_simulation_to_model_input =
       unnest(!!.coefficients) %>%
       distinct() %>%
       arrange(!!.cell_type) %>%
-      as_matrix(rownames = quo_name(.cell_type)) %>%
+      pivot_wider(names_from = quo_name(.cell_type), values_from = !!.coefficients) %>%
+      column_to_rownames(quo_name(.cell_type)) %>%
       t()
     
     list(
