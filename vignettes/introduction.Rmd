@@ -21,6 +21,10 @@ vignette: >
 knit: >
     (function(x, ...){
         proj_root <- rprojroot::find_package_root_file() |> normalizePath()
+        
+        # Set knitr options for both renders
+        knitr::opts_knit$set(root.dir = proj_root)
+        
         rmarkdown::render(
             x,
             output_format = "html_document",
@@ -28,6 +32,7 @@ knit: >
                 demo_metadata = TRUE
             )
         )
+        
         rmarkdown::render(
             x,
             output_file = "README.md",
@@ -41,11 +46,17 @@ knit: >
     })
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  fig.path = ifelse(knitr::pandoc_to() %in% c('html', 'html4'), '../inst/figures/', 'inst/figures/')
+)
+```
+
 <!-- badges: start -->
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/sccomp/actions/)
 <!-- badges: end -->
 
-# <img src="../inst/logo-01.png" height="139px" width="120px"/>
+# <img src="`r ifelse(knitr::pandoc_to() %in% c('html', 'html4'), '../inst/logo-01.png', 'inst/logo-01.png')`" height="139px" width="120px"/>
 
 
 
@@ -75,7 +86,7 @@ For cellular omic data, no method for differential variability analysis exists, 
 
 **sccomp** is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. We demonstrate that mean-variability association is ubiquitous across technologies, highlighting the inadequacy of the very popular Dirichlet-multinomial modeling and providing essential principles for differential variability analysis.
 
-<img src="../inst/cartoon_methods.png" width="100%"/>
+<img src="`r ifelse(knitr::pandoc_to() == 'html', '../inst/cartoon_methods.png', 'inst/cartoon_methods.png')`" width="100%"/>
 
 ### Comprehensive Method Comparison
 
