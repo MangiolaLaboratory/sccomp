@@ -258,7 +258,6 @@ plot_boxplot = function(
         geom = "boxplot",
         fatten = 0.5,
         lwd = 0.2,
-        outlier.shape = NA, outlier.color = NA, outlier.size = 0,
         data = simulated_proportion %>%
           inner_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)),
         color = "blue"

@@ -27,14 +27,6 @@ knit: >
         
         rmarkdown::render(
             x,
-            output_format = "html_document",
-            params = list(
-                demo_metadata = TRUE
-            )
-        )
-        
-        rmarkdown::render(
-            x,
             output_file = "README.md",
             output_format = "github_document",
             output_dir = proj_root,
@@ -46,11 +38,6 @@ knit: >
     })
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  fig.path = ifelse(knitr::pandoc_to() %in% c('html', 'html4'), '../inst/figures/', 'inst/figures/')
-)
-```
 
 <!-- badges: start -->
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/sccomp/actions/)
@@ -58,33 +45,11 @@ knitr::opts_chunk$set(
 
 # <img src="`r ifelse(knitr::pandoc_to() %in% c('html', 'html4'), '../inst/logo-01.png', 'inst/logo-01.png')`" height="139px" width="120px"/>
 
-
-
-# sccomp: Advanced Differential Composition and Variability Analysis for Single-Cell Data
-
-**sccomp** is a powerful R package designed for comprehensive differential composition and variability analysis in single-cell genomics, proteomics, and microbiomics data. This cutting-edge tool provides robust Bayesian modeling capabilities for analyzing cell type proportions and variability across different experimental conditions.
-
-## What is sccomp?
-
-**sccomp** (Single-Cell Composition Analysis) is a specialized R package that addresses the critical need for advanced statistical methods in single-cell data analysis. It enables researchers to:
-
-- **Analyze cell type proportions** with high statistical rigor
-- **Detect differential variability** between experimental conditions  
-- **Identify outliers** using probabilistic methods
-- **Model complex experimental designs** with random effects
-- **Handle multiple data types** including scRNA-seq, CyTOF, and microbiome data
-
-## Key Applications
-
-- Single-Cell RNA Sequencing (scRNA-seq)
-- CyTOF (Cytometry by Time-of-Flight)
-- Microbiome Analysis
+**sccomp** is a powerful R package designed for comprehensive differential composition and variability analysis in single-cell genomics, proteomics, and microbiomics data. 
 
 ## Why sccomp?
 
 For cellular omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce **sccomp**, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, while being robust to outliers.
-
-**sccomp** is an extensive analysis framework that allows realistic data simulation and cross-study knowledge transfer. We demonstrate that mean-variability association is ubiquitous across technologies, highlighting the inadequacy of the very popular Dirichlet-multinomial modeling and providing essential principles for differential variability analysis.
 
 <img src="`r ifelse(knitr::pandoc_to() == 'html', '../inst/cartoon_methods.png', 'inst/cartoon_methods.png')`" width="100%"/>
 
@@ -189,10 +154,6 @@ data("sce_obj")
 data("counts_obj")
 ```
 
-
-`sccomp` can model changes in composition and variability. By default, the formula for variability is either `~1`, which assumes that the
-cell-group variability is independent of any covariate or `~ factor_of_interest`, which assumes that the model is dependent on the
-factor of interest only. The variability model must be a subset of the model for composition.
 
 ## Binary Factor Analysis
 
@@ -550,7 +511,7 @@ We recommend setting `bimodal_mean_variability_association  = FALSE` (Default).
 It is possible to directly evaluate the posterior distribution. In this example, we plot the Monte Carlo chain for the slope parameter of the
 first cell type. We can see that it has converged and is negative with probability 1.
 
-```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+```{r, eval = instantiate::stan_cmdstan_exists(), message=FALSE, warning=FALSE}
 
 library(cmdstanr)
 library(posterior)
