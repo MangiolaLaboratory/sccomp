@@ -253,14 +253,15 @@ plot_boxplot = function(
       
       # Add boxplot for simulated proportions
       stat_summary(
-        aes(!!as.symbol(factor_of_interest), (generated_proportions)),
-        fun.data = calc_boxplot_stat, geom="boxplot",
+        aes(!!as.symbol(factor_of_interest), generated_proportions),
+        fun.data = calc_boxplot_stat,
+        geom = "boxplot",
+        fatten = 0.5,
+        lwd = 0.2,
         outlier.shape = NA, outlier.color = NA, outlier.size = 0,
-        fatten = 0.5, lwd=0.2,
-        data =
-          simulated_proportion %>%
+        data = simulated_proportion %>%
           inner_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)),
-        color="blue"
+        color = "blue"
       )
   }
   
@@ -281,12 +282,11 @@ plot_boxplot = function(
           data_proportion |>
           mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) ,
         fatten = 0.5,
-        lwd=0.5,
+        lwd=0.5
       )
   } else {
     my_boxplot=
       my_boxplot +
-      
       # Add boxplot with significance colors
       geom_boxplot(
         aes(!!as.symbol(factor_of_interest), proportion,  group=!!as.symbol(factor_of_interest), fill = name),
@@ -296,7 +296,7 @@ plot_boxplot = function(
           mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
           left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
         fatten = 0.5,
-        lwd=0.5,
+        lwd=0.5
       )
   }
   

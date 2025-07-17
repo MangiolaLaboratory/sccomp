@@ -264,14 +264,14 @@ plot_1D_intervals = function(
 
   # Only show the FDR message if significance_statistic == "FDR" and show_fdr_message is TRUE
   if (significance_statistic == "FDR" && show_fdr_message) {
+    combined_plot <- combined_plot + theme(plot.caption = ggplot2::element_text(hjust = 0))
     combined_plot <- combined_plot + patchwork::plot_annotation(
       caption = paste(
         "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
         "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
         "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
         sep = ""
-      ),
-      theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))
+      )
     )
   }
   combined_plot
@@ -376,13 +376,10 @@ plot_2D_intervals = function(
   .data_plot <- bind_rows(.data, .data_adjusted)
   
   # Set parameter as a factor to control facet order
+  present_levels <- intersect(c("(Intercept)", "(Intercept, adjusted)"), unique(.data_plot$parameter))
   .data_plot$parameter <- factor(
     .data_plot$parameter,
-    levels = c(
-      "(Intercept)",
-      "(Intercept, adjusted)",
-      setdiff(unique(.data_plot$parameter), c("(Intercept)", "(Intercept, adjusted)"))
-    )
+    levels = c(present_levels, setdiff(unique(.data_plot$parameter), present_levels))
   )
   
   # Use .data_plot instead of .data in the rest of the function
@@ -483,7 +480,7 @@ plot_2D_intervals = function(
         color_scale +
         alpha_scale +
         # Facet by parameter
-        facet_wrap(~ fct_relevel(parameter, c("(Intercept)", "(Intercept, adjusted)")), scales = "free") +
+        facet_wrap(~ fct_relevel(parameter, "(Intercept)", "(Intercept, adjusted)"), scales = "free") +
         xlab("c_effect (Abundance effect)") +
         ylab("v_effect (Variability effect)") +
         # Apply custom theme
