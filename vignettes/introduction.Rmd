@@ -40,7 +40,7 @@ knit: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  fig.path = ifelse(knitr::pandoc_to() %in% c('html', 'html4'), '../inst/figures/', 'inst/figures/')
+  fig.path = ifelse(knitr::pandoc_to() %in% c('html', 'html4'), 'inst/figures/', 'inst/figures/')
 )
 ```
 
