@@ -38,6 +38,11 @@ knit: >
     })
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  fig.path = ifelse(knitr::pandoc_to() %in% c('html', 'html4'), '../inst/figures/', 'inst/figures/')
+)
+```
 
 <!-- badges: start -->
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/sccomp/actions/)
