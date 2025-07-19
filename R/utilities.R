@@ -7,8 +7,8 @@ get_sccomp_cache_dir <- function() {
   file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
 }
 
-# Define global variable
-sccomp_stan_models_cache_dir = get_sccomp_cache_dir()
+# Define global variable (without version - version will be added in load_model when needed)
+sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
 
 #' Add attribute to abject
 #'
