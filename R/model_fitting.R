@@ -131,6 +131,7 @@ fit_model = function(
     
     vb_iterative(
       mod,
+      model_name = model_name,
       output_samples = output_samples ,
       iter = 10000,
       tol_rel_obj = 0.01,
@@ -320,6 +321,7 @@ check_and_install_cmdstanr <- function() {
 #' @return A Stan fit object
 #'
 vb_iterative = function(model,
+                        model_name,
                         output_samples,
                         iter,
                         tol_rel_obj,
