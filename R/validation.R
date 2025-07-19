@@ -171,11 +171,17 @@ check_missing_parameters <- function(effects, model_effects) {
 #' @importFrom dplyr mutate
 #' @importFrom dplyr pull
 #' @importFrom dplyr distinct
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarise
+#' @importFrom dplyr arrange
 #' @importFrom tidyr pivot_longer
 #' @importFrom purrr map_lgl
+#' @importFrom rlang quo_name
 #'
 #' @param .data A data frame containing the samples and covariates.
-#' @param my_formula A formula specifying the covariates to check, passed as a string.
+#' @param my_formula A formula object specifying the covariates to check (e.g., ~Timepoint*Response_binary+Patient_ID).
+#' @param sample A character string specifying the sample column name.
+#' @param cell_group A character string specifying the cell group column name.
 #'
 #' @details The function selects the sample and covariates based on `my_formula`, pivots
 #' the data longer so each row represents a unique sample-covariate combination, nests
@@ -187,10 +193,11 @@ check_missing_parameters <- function(effects, model_effects) {
 #'
 #' @noRd
 #' @keywords internal
-check_sample_consistency_of_factors = function(.data, my_formula, .sample, .cell_group){
+check_sample_consistency_of_factors = function(.data, my_formula, sample, cell_group){
   
-  .sample = enquo(.sample)
-  .cell_group = enquo(.cell_group)
+  # Convert character parameters to quos like the main methods
+  .sample = sym(sample)
+  .cell_group = sym(cell_group)
   
   # Check that I have one set of covariates per sample
   first_cell_group = .data |> pull(!!.cell_group) |> _[[1]]
@@ -199,24 +206,44 @@ check_sample_consistency_of_factors = function(.data, my_formula, .sample, .cell
   if(my_formula |> parse_formula() |> length() == 0)
     return(TRUE)
   
-  any_covariate_not_matching_sample_size = 
+  # Get the formula variables
+  formula_vars = parse_formula(my_formula)
+  
+  # Check for inconsistencies by finding samples with multiple values for the same factor
+  inconsistent_samples = 
     .data |> 
     filter(!!.cell_group == first_cell_group) |> 
-    select(!!.sample, parse_formula(my_formula)) |> 
-    pivot_longer(-!!.sample, values_transform = as.character) |> 
-    nest(data = -name) |> 
-    mutate(correct_size = map_lgl(data,
-                                  ~ 
-                                    (.x |> distinct(!!.sample, value) |> nrow()) <= 
-                                    (.x |> distinct(!!.sample) |> nrow())
-    )) |> 
-    filter(!correct_size)
+    select(!!.sample, all_of(formula_vars)) |>
+    pivot_longer(-!!.sample, names_to = "factor_name", values_to = "factor_value") |>
+    group_by(!!.sample, factor_name) |>
+    summarise(
+      n_unique_values = n_distinct(factor_value),
+      unique_values = paste(sort(unique(factor_value)), collapse = " vs "),
+      .groups = "drop"
+    ) |>
+    filter(n_unique_values > 1) |>
+    arrange(!!.sample, factor_name)
   
-  if( any_covariate_not_matching_sample_size |> nrow() > 0 ) stop(
-    sprintf("sccomp says: your \"%s\" factor(s) is(are) mismatched across samples. ", any_covariate_not_matching_sample_size |> pull(name) |> paste(collapse = ", ")),
-    "For example, sample_bar having more than one value for factor_foo. ",
-    "For sample_bar you should have one value for factor_foo. consistent across groups (e.g. cell types)."
-  )
+  if(inconsistent_samples |> nrow() > 0) {
+    
+    # Create a more informative error message
+    error_msg = "sccomp says: your factors are mismatched across samples. Each sample should have consistent factor values across all cell groups.\n\n"
+    error_msg = paste0(error_msg, "Problematic samples and their conflicting values:\n")
+    
+    # Group by sample for better readability
+    for(sample_name in unique(inconsistent_samples |> pull(!!.sample))) {
+      sample_issues = inconsistent_samples |> filter(!!.sample == sample_name)
+      error_msg = paste0(error_msg, "\nSample: ", sample_name, "\n")
+      for(i in 1:nrow(sample_issues)) {
+        row = sample_issues[i, ]
+        error_msg = paste0(error_msg, "  - ", row$factor_name, ": ", row$unique_values, "\n")
+      }
+    }
+    
+    error_msg = paste0(error_msg, "\nTo fix this issue, ensure each sample has consistent factor values across all cell groups.")
+    
+    stop(error_msg)
+  }
   
 }
 
