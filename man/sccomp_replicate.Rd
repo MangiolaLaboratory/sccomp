@@ -9,7 +9,8 @@ sccomp_replicate(
   formula_composition = NULL,
   formula_variability = NULL,
   number_of_draws = 1,
-  mcmc_seed = sample_seed()
+  mcmc_seed = sample_seed(),
+  cache_stan_model = sccomp_stan_models_cache_dir
 )
 }
 \arguments{
@@ -22,6 +23,10 @@ sccomp_replicate(
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
 \item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
+
+\item{cache_stan_model}{A character string specifying the cache directory for compiled Stan models.
+The sccomp version will be automatically appended to ensure version isolation.
+Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
 }
 \value{
 A tibble \code{tbl} with cell_group-wise statistics

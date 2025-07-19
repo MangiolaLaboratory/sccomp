@@ -23,6 +23,9 @@
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
+#' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
+#'                        The sccomp version will be automatically appended to ensure version isolation.
+#'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
 #' 
 #' @return A tibble (`tbl`) with the following columns:
 #' \itemize{
@@ -79,7 +82,8 @@ simulate_data <- function(.data,
                           number_of_draws = 1,
                           mcmc_seed = sample_seed(),
                           cores = detectCores(),
-                          sig_figs = 9) {
+                          sig_figs = 9,
+                          cache_stan_model = sccomp_stan_models_cache_dir) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -107,7 +111,8 @@ simulate_data.tbl = function(.data,
                              number_of_draws = 1,
                              mcmc_seed = sample_seed(),
                              cores = detectCores(),
-                             sig_figs = 9) {
+                             sig_figs = 9,
+                             cache_stan_model = sccomp_stan_models_cache_dir) {
   
   
   .sample = enquo(.sample)
@@ -144,7 +149,7 @@ simulate_data.tbl = function(.data,
   # [1]  5.6260004 -0.6940178
   # prec_sd  = 0.816423129
   
-  mod_rng = load_model("glm_multi_beta_binomial_simulate_data", threads = cores)
+  mod_rng = load_model("glm_multi_beta_binomial_simulate_data", threads = cores, cache_dir = cache_stan_model)
   
   fit = mod_rng |> sample_safe(
     generate_quantities_fx,

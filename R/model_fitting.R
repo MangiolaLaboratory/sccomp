@@ -5,6 +5,7 @@ fit_model = function(
     seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000, 
     output_directory = "sccomp_draws_files",
     sig_figs = 9,
+    cache_stan_model = sccomp_stan_models_cache_dir,
     ...
 )
 {
@@ -82,7 +83,7 @@ fit_model = function(
   dir.create(output_directory, showWarnings = FALSE)
   
   # Fit
-  mod = load_model(model_name, threads = cores)
+  mod = load_model(model_name, threads = cores, cache_dir = cache_stan_model)
   
   # Avoid 0 proportions
   if(data_for_model$is_proportion && min(data_for_model$y_proportion)==0){
@@ -144,6 +145,7 @@ fit_model = function(
       psis_resample = FALSE, 
       verbose = verbose,
       sig_figs = sig_figs,
+      cache_stan_model = cache_stan_model,
       show_exceptions = FALSE,
       ...
     ) 
@@ -202,6 +204,10 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   #   )
   # }, error = function(e) {
   # Try to load the model from cache
+  
+  # Handle cache directory - always add version to ensure version isolation
+  sccomp_version <- as.character(packageVersion("sccomp"))
+  cache_dir <- file.path(cache_dir, sccomp_version)
   
   # RDS compiled model
   cache_dir |> dir.create(showWarnings = FALSE, recursive = TRUE)
@@ -335,6 +341,7 @@ vb_iterative = function(model,
                         verbose = TRUE,
                         psis_resample = FALSE,
                         sig_figs = 9,
+                        cache_stan_model = sccomp_stan_models_cache_dir,
                         ...) {
   res = NULL
   i = 0
@@ -384,7 +391,7 @@ vb_iterative = function(model,
     error = function(e) {
       if(e$message |> str_detect("The Stan file used to create the `CmdStanModel` object does not exist\\.")) {
         clear_stan_model_cache()
-        model <<-  load_model(model_name, force=TRUE, threads = cores)
+        model <<-  load_model(model_name, force=TRUE, threads = cores, cache_dir = cache_stan_model)
       }
       else writeLines(sprintf("Further attempt with Variational Bayes: %s", e))     
       

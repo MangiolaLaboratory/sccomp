@@ -48,6 +48,9 @@
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
 #' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
+#' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
+#'                        The sccomp version will be automatically appended to ensure version isolation.
+#'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
 #' @param .count **DEPRECATED**. Use `abundance` instead.
 #' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
@@ -157,6 +160,7 @@ sccomp_estimate <- function(.data,
                             max_sampling_iterations = 20000,
                             pass_fit = TRUE,
                             sig_figs = 9,
+                            cache_stan_model = sccomp_stan_models_cache_dir,
                             ...,
                             
                             # DEPRECATED
@@ -248,6 +252,7 @@ sccomp_estimate.Seurat <- function(.data,
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
+                                   cache_stan_model = sccomp_stan_models_cache_dir,
                                    ...,
                                    
                                    # DEPRECATED
@@ -300,6 +305,7 @@ sccomp_estimate.Seurat <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -341,6 +347,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  max_sampling_iterations = 20000,
                                                  pass_fit = TRUE,
                                                  sig_figs = 9,
+                                                 cache_stan_model = sccomp_stan_models_cache_dir,
                                                  ...,
                                                  
                                                  # DEPRECATED
@@ -394,6 +401,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -435,6 +443,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
+                                   cache_stan_model = sccomp_stan_models_cache_dir,
                                    ...,
                                    
                                    # DEPRECATED
@@ -477,7 +486,8 @@ sccomp_estimate.DFrame <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, 
+      pass_fit = pass_fit,
+      cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -522,6 +532,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        max_sampling_iterations = 20000,
                                        pass_fit = TRUE,
                                        sig_figs = 9,
+                                       cache_stan_model = sccomp_stan_models_cache_dir,
                                        ...,
                                        
                                        # DEPRECATED
@@ -642,6 +653,7 @@ sccomp_estimate.data.frame <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      cache_stan_model = cache_stan_model,
       ...
     )
   
@@ -672,6 +684,7 @@ sccomp_estimate.data.frame <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      cache_stan_model = cache_stan_model,
       ...
     )
   
@@ -718,6 +731,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      max_sampling_iterations = 20000,
                                      pass_fit = TRUE,
                                      sig_figs = 9,
+                                     cache_stan_model = sccomp_stan_models_cache_dir,
                                      ...) {
   
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
@@ -794,6 +808,7 @@ sccomp_glm_data_frame_raw = function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      cache_stan_model = cache_stan_model,
       ...
     )
 }
@@ -827,8 +842,9 @@ sccomp_glm_data_frame_counts = function(.data,
                                         cores = 4,
                                         mcmc_seed = sample_seed(),
                                         max_sampling_iterations = 20000,
-                                        pass_fit = TRUE,
-                                        sig_figs = 9,
+                                                                                 pass_fit = TRUE,
+                                         sig_figs = 9,
+                                         cache_stan_model = sccomp_stan_models_cache_dir,
                                         ...) {
   
   # Prepare column same enquo
@@ -1004,6 +1020,7 @@ sccomp_glm_data_frame_counts = function(.data,
         "log_lik"
       ),
       sig_figs = sig_figs,
+      cache_stan_model = cache_stan_model,
       ...
     )
   
