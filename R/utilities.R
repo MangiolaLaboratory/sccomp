@@ -3,12 +3,13 @@
 
 # Function to get cache directory
 #' @importFrom utils packageVersion
-get_sccomp_cache_dir <- function() {
-  file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
+get_sccomp_cache_dir <- function(base_dir = sccomp_stan_models_cache_dir) {
+  version <- as.character(utils::packageVersion("sccomp"))
+  file.path(base_dir, version)
 }
 
 # Define global variable
-sccomp_stan_models_cache_dir = get_sccomp_cache_dir()
+sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
 
 #' Add attribute to abject
 #'
@@ -1195,7 +1196,3 @@ handle_missing_values <- function(data) {
       )
     )
 }
-
-
-
-

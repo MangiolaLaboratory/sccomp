@@ -14,7 +14,7 @@
 #' If the cache directory doesn't exist, the function will simply print a message and continue.
 #' This is a safe operation as cmdstanr will recreate the cache directory when needed.
 #'
-#' @param cache_dir A character string representing the path of the cache directory to delete.
+#' @param model_cache_directory A character string representing the path of the cache directory to delete.
 #'   Defaults to `sccomp_stan_models_cache_dir`, which is the default cache location used by sccomp.
 #'
 #' @return NULL invisibly. The function is called for its side effect of removing the cache directory.
@@ -43,14 +43,14 @@
 #' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
 #' @export
-clear_stan_model_cache <- function(cache_dir = sccomp_stan_models_cache_dir) {
+clear_stan_model_cache <- function(model_cache_directory = sccomp_stan_models_cache_dir) {
   
   # Check if the directory exists
-  if (dir.exists(cache_dir)) {
+  if (dir.exists(model_cache_directory)) {
     # Attempt to delete the directory and its contents
-    unlink(cache_dir, recursive = TRUE)
-    message("Cache deleted: ", cache_dir)
+    unlink(model_cache_directory, recursive = TRUE)
+    message("Cache deleted: ", model_cache_directory)
   } else {
-    message("Cache does not exist: ", cache_dir)
+    message("Cache does not exist: ", model_cache_directory)
   }
 }

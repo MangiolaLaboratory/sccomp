@@ -33,10 +33,10 @@
 #' @param abundance A column name as a character string for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across `cell_group`). Replaces the deprecated `.abundance` and `.count`.
 #' @param cores Number of cores to use for parallel calculations.
 #' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
-#' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
-#' @param prior_overdispersion_mean_association A list specifying prior knowledge about mean/variability association.
 #' @param percent_false_positive A real number between 0 and 100 for outlier identification.
 #' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational'). Replaces the deprecated `approximate_posterior_inference` and `variational_inference`.
+#' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
+#' @param prior_overdispersion_mean_association A list specifying prior knowledge about mean/variability association.
 #' @param .sample_cell_group_pairs_to_exclude A column name indicating sample/cell-group pairs to exclude.
 #' @param output_directory A character string specifying the output directory for Stan draws.
 #' @param verbose Logical, whether to print progression details.
@@ -48,6 +48,8 @@
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
 #' @param pass_fit Logical, whether to include the Stan fit as an attribute in the output.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
+#' @param model_cache_directory A character string specifying the cache directory for compiled Stan models.
+#'                 Defaults to `sccomp_stan_models_cache_dir`.
 #' @param .count **DEPRECATED**. Use `abundance` instead.
 #' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
@@ -157,6 +159,7 @@ sccomp_estimate <- function(.data,
                             max_sampling_iterations = 20000,
                             pass_fit = TRUE,
                             sig_figs = 9,
+                            model_cache_directory = sccomp_stan_models_cache_dir,
                             ...,
                             
                             # DEPRECATED
@@ -248,6 +251,7 @@ sccomp_estimate.Seurat <- function(.data,
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
+                                   model_cache_directory = sccomp_stan_models_cache_dir,
                                    ...,
                                    
                                    # DEPRECATED
@@ -300,6 +304,7 @@ sccomp_estimate.Seurat <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      model_cache_directory = model_cache_directory,
       ...,
       .count = !!.count,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -341,6 +346,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  max_sampling_iterations = 20000,
                                                  pass_fit = TRUE,
                                                  sig_figs = 9,
+                                                 model_cache_directory = sccomp_stan_models_cache_dir,
                                                  ...,
                                                  
                                                  # DEPRECATED
@@ -394,6 +400,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      model_cache_directory = model_cache_directory,
       ...,
       .count = !!.count,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -435,6 +442,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    max_sampling_iterations = 20000,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
+                                   model_cache_directory = sccomp_stan_models_cache_dir,
                                    ...,
                                    
                                    # DEPRECATED
@@ -477,7 +485,8 @@ sccomp_estimate.DFrame <- function(.data,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pass_fit = pass_fit, 
+      pass_fit = pass_fit,
+      model_cache_directory = model_cache_directory,
       ...,
       .count = !!.count,
       approximate_posterior_inference = approximate_posterior_inference,
@@ -522,6 +531,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        max_sampling_iterations = 20000,
                                        pass_fit = TRUE,
                                        sig_figs = 9,
+                                       model_cache_directory = sccomp_stan_models_cache_dir,
                                        ...,
                                        
                                        # DEPRECATED
@@ -642,6 +652,7 @@ sccomp_estimate.data.frame <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      model_cache_directory = model_cache_directory,
       ...
     )
   
@@ -672,6 +683,7 @@ sccomp_estimate.data.frame <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      model_cache_directory = model_cache_directory,
       ...
     )
   
@@ -718,6 +730,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      max_sampling_iterations = 20000,
                                      pass_fit = TRUE,
                                      sig_figs = 9,
+                                     model_cache_directory = sccomp_stan_models_cache_dir,
                                      ...) {
   
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
@@ -794,6 +807,7 @@ sccomp_glm_data_frame_raw = function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
+      model_cache_directory = model_cache_directory,
       ...
     )
 }
@@ -829,6 +843,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         max_sampling_iterations = 20000,
                                         pass_fit = TRUE,
                                         sig_figs = 9,
+                                        model_cache_directory = sccomp_stan_models_cache_dir,
                                         ...) {
   
   # Prepare column same enquo
@@ -1004,6 +1019,7 @@ sccomp_glm_data_frame_counts = function(.data,
         "log_lik"
       ),
       sig_figs = sig_figs,
+      model_cache_directory = model_cache_directory,
       ...
     )
   

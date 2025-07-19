@@ -4,10 +4,10 @@
 \alias{clear_stan_model_cache}
 \title{Clear Stan Model Cache}
 \usage{
-clear_stan_model_cache(cache_dir = sccomp_stan_models_cache_dir)
+clear_stan_model_cache(model_cache_directory = sccomp_stan_models_cache_dir)
 }
 \arguments{
-\item{cache_dir}{A character string representing the path of the cache directory to delete.
+\item{model_cache_directory}{A character string representing the path of the cache directory to delete.
 Defaults to \code{sccomp_stan_models_cache_dir}, which is the default cache location used by sccomp.}
 }
 \value{

@@ -23,6 +23,7 @@
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
+#' @param model_cache_directory A character string specifying the cache directory for compiled Stan models. Defaults to the package's default cache directory.
 #' 
 #' @return A tibble (`tbl`) with the following columns:
 #' \itemize{
@@ -79,7 +80,8 @@ simulate_data <- function(.data,
                           number_of_draws = 1,
                           mcmc_seed = sample_seed(),
                           cores = detectCores(),
-                          sig_figs = 9) {
+                          sig_figs = 9,
+                          model_cache_directory = sccomp_stan_models_cache_dir) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -107,7 +109,8 @@ simulate_data.tbl = function(.data,
                              number_of_draws = 1,
                              mcmc_seed = sample_seed(),
                              cores = detectCores(),
-                             sig_figs = 9) {
+                             sig_figs = 9,
+                             model_cache_directory = sccomp_stan_models_cache_dir) {
   
   
   .sample = enquo(.sample)
@@ -144,7 +147,7 @@ simulate_data.tbl = function(.data,
   # [1]  5.6260004 -0.6940178
   # prec_sd  = 0.816423129
   
-  mod_rng = load_model("glm_multi_beta_binomial_simulate_data", threads = cores)
+  mod_rng = load_model("glm_multi_beta_binomial_simulate_data", model_cache_directory = get_sccomp_cache_dir(model_cache_directory), threads = cores)
   
   fit = mod_rng |> sample_safe(
     generate_quantities_fx,

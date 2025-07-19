@@ -5,6 +5,7 @@ fit_model = function(
     seed , pars = c("beta", "alpha", "prec_coeff","prec_sd"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000, 
     output_directory = "sccomp_draws_files",
     sig_figs = 9,
+    model_cache_directory = sccomp_stan_models_cache_dir,
     ...
 )
 {
@@ -82,7 +83,7 @@ fit_model = function(
   dir.create(output_directory, showWarnings = FALSE)
   
   # Fit
-  mod = load_model(model_name, threads = cores)
+  mod = load_model(model_name, model_cache_directory = get_sccomp_cache_dir(model_cache_directory), threads = cores)
   
   # Avoid 0 proportions
   if(data_for_model$is_proportion && min(data_for_model$y_proportion)==0){
@@ -172,7 +173,7 @@ get_model_from_data = function(file_compiled_model, model_code){
 #' compiled model to the cache directory for future use.
 #'
 #' @param name A character string representing the name of the Stan model (without the `.stan` extension).
-#' @param cache_dir A character string representing the path to the cache directory where compiled models are saved. 
+#' @param model_cache_directory A character string representing the path to the cache directory where compiled models are saved. 
 #' Defaults to `sccomp_stan_models_cache_dir`.
 #' @param force A logical value. If `TRUE`, the model will be recompiled even if it exists in the cache. 
 #' Defaults to `FALSE`.
@@ -190,7 +191,7 @@ get_model_from_data = function(file_compiled_model, model_code){
 #' \donttest{
 #'   model <- load_model("glm_multi_beta_binomial_", "~/cache", force = FALSE, threads = 1)
 #' }
-load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FALSE, threads = 1) {
+load_model <- function(name, model_cache_directory = sccomp_stan_models_cache_dir, force=FALSE, threads = 1) {
   
   
   # tryCatch({
@@ -203,8 +204,9 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   # Try to load the model from cache
   
   # RDS compiled model
-  cache_dir |> dir.create(showWarnings = FALSE, recursive = TRUE)
-  cache_file <- file.path(cache_dir, paste0(name, ".rds"))
+  model_cache_directory <- get_sccomp_cache_dir(model_cache_directory)
+  model_cache_directory |> dir.create(showWarnings = FALSE, recursive = TRUE)
+  cache_file <- file.path(model_cache_directory, paste0(name, ".rds"))
   
   # .STAN raw model
   stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")

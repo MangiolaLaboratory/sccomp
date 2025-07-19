@@ -23,6 +23,7 @@
 #' @param max_sampling_iterations Integer, limits the maximum number of iterations in case a large dataset is used, to limit computation time.
 #' @param enable_loo Logical, whether to enable model comparison using the R package LOO. This is useful for comparing fits between models, similar to ANOVA.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
+#' @param model_cache_directory A character string specifying the cache directory for compiled Stan models. Defaults to the package's default cache directory.
 #' @param approximate_posterior_inference DEPRECATED, use the `variational_inference` argument.
 #' @param variational_inference DEPRECATED Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
@@ -95,6 +96,7 @@ sccomp_remove_outliers <- function(.estimate,
                                    enable_loo = FALSE,
                                    sig_figs = 9,
                                    
+                                   model_cache_directory = sccomp_stan_models_cache_dir,
                                    # DEPRECATED
                                    approximate_posterior_inference = NULL,
                                    variational_inference = NULL,
@@ -127,6 +129,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              sig_figs = 9,
                                              
                                              # DEPRECATED
+                                             model_cache_directory = sccomp_stan_models_cache_dir,
                                              approximate_posterior_inference = NULL,
                                              variational_inference = NULL,
                                              ...
@@ -180,7 +183,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   random_effect_elements = .estimate |> attr("formula_composition") |> parse_formula_random_effect()
   
   # Load model
-  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", model_cache_directory = get_sccomp_cache_dir(model_cache_directory), threads = cores)
   
   rng = mod_rng |> sample_safe(
     generate_quantities_fx,

@@ -7,6 +7,7 @@
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment. In most cases, if differentially variability is of interest, the formula should only include the factor of interest as a large anount of data is needed to define variability depending to each factors. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
+#' @param model_cache_directory A character string specifying the cache directory for compiled Stan models. Defaults to the package's default cache directory.
 #'
 #' @return A tibble `tbl` with cell_group-wise statistics
 #'
@@ -48,7 +49,8 @@ sccomp_replicate <- function(fit,
                              formula_composition = NULL,
                              formula_variability = NULL,
                              number_of_draws = 1,
-                             mcmc_seed = sample_seed()) {
+                             mcmc_seed = sample_seed(),
+                             model_cache_directory = sccomp_stan_models_cache_dir) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -62,7 +64,8 @@ sccomp_replicate.sccomp_tbl = function(fit,
                                        formula_composition = NULL,
                                        formula_variability = NULL,
                                        number_of_draws = 1,
-                                       mcmc_seed = sample_seed()){
+                                       mcmc_seed = sample_seed(),
+                                       model_cache_directory = sccomp_stan_models_cache_dir){
   
   .sample = attr(fit, ".sample")
   .cell_group = attr(fit, ".cell_group")
@@ -79,7 +82,8 @@ sccomp_replicate.sccomp_tbl = function(fit,
       formula_composition = formula_composition,
       formula_variability = formula_variability,
       number_of_draws = number_of_draws,
-      mcmc_seed = mcmc_seed
+      mcmc_seed = mcmc_seed,
+      model_cache_directory = model_cache_directory
     )
   
   model_input = attr(fit, "model_input")
@@ -453,7 +457,8 @@ replicate_data = function(.data,
                           new_data = NULL,
                           number_of_draws = 1,
                           mcmc_seed = sample(1e5, 1),
-                          cores = detectCores()){
+                          cores = detectCores(),
+                          model_cache_directory = sccomp_stan_models_cache_dir){
   
   # Extract required components from .data
   .sample = attr(.data, ".sample")
@@ -529,7 +534,7 @@ replicate_data = function(.data,
   number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
   
   # Load model
-  mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores)
+  mod_rng = load_model("glm_multi_beta_binomial_generate_data", model_cache_directory = get_sccomp_cache_dir(model_cache_directory), threads = cores)
 
   draws_matrix <- attr(.data, "fit")$draws(format = "matrix")
   

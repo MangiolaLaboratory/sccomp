@@ -16,7 +16,8 @@ simulate_data(
   number_of_draws = 1,
   mcmc_seed = sample_seed(),
   cores = detectCores(),
-  sig_figs = 9
+  sig_figs = 9,
+  model_cache_directory = sccomp_stan_models_cache_dir
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ simulate_data(
 \item{cores}{Integer, the number of cores to be used for parallel calculations.}
 
 \item{sig_figs}{Number of significant figures to use for Stan model output. Default is 9.}
+
+\item{model_cache_directory}{A character string specifying the cache directory for compiled Stan models. Defaults to the package's default cache directory.}
 }
 \value{
 A tibble (\code{tbl}) with the following columns:

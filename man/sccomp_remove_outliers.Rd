@@ -15,6 +15,7 @@ sccomp_remove_outliers(
   max_sampling_iterations = 20000,
   enable_loo = FALSE,
   sig_figs = 9,
+  model_cache_directory = sccomp_stan_models_cache_dir,
   approximate_posterior_inference = NULL,
   variational_inference = NULL,
   ...
@@ -40,6 +41,8 @@ sccomp_remove_outliers(
 \item{enable_loo}{Logical, whether to enable model comparison using the R package LOO. This is useful for comparing fits between models, similar to ANOVA.}
 
 \item{sig_figs}{Number of significant figures to use for Stan model output. Default is 9.}
+
+\item{model_cache_directory}{A character string specifying the cache directory for compiled Stan models. Defaults to the package's default cache directory.}
 
 \item{approximate_posterior_inference}{DEPRECATED, use the \code{variational_inference} argument.}
 
