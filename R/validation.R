@@ -174,6 +174,8 @@ check_missing_parameters <- function(effects, model_effects) {
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarise
 #' @importFrom dplyr arrange
+#' @importFrom dplyr n_distinct
+#' @importFrom dplyr all_of
 #' @importFrom tidyr pivot_longer
 #' @importFrom purrr map_lgl
 #'
