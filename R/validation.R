@@ -176,7 +176,6 @@ check_missing_parameters <- function(effects, model_effects) {
 #' @importFrom dplyr arrange
 #' @importFrom tidyr pivot_longer
 #' @importFrom purrr map_lgl
-#' @importFrom rlang quo_name
 #'
 #' @param .data A data frame containing the samples and covariates.
 #' @param my_formula A formula object specifying the covariates to check (e.g., ~Timepoint*Response_binary+Patient_ID).
@@ -210,10 +209,15 @@ check_sample_consistency_of_factors = function(.data, my_formula, sample, cell_g
   formula_vars = parse_formula(my_formula)
   
   # Check for inconsistencies by finding samples with multiple values for the same factor
-  inconsistent_samples = 
+  # Convert all factor variables to character to avoid type conflicts in pivot_longer
+  data_for_check = 
     .data |> 
     filter(!!.cell_group == first_cell_group) |> 
     select(!!.sample, all_of(formula_vars)) |>
+    mutate(across(all_of(formula_vars), as.character))
+  
+  inconsistent_samples = 
+    data_for_check |>
     pivot_longer(-!!.sample, names_to = "factor_name", values_to = "factor_value") |>
     group_by(!!.sample, factor_name) |>
     summarise(
