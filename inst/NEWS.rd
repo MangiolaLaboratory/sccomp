@@ -4,6 +4,8 @@
 \section{News in version 2.1.18, Bioconductor 3.22 Release}{
 \itemize{
     \item {Fixed issue with sccomp_proportional_fold_change function for interaction models.} The function now properly handles complex models with interactions by correctly creating the new_data structure that sccomp_predict expects. This resolves GitHub issue #193 where the function would fail with the error "your new_data might be malformed" when working with interaction models. The fix ensures that the sample column name is dynamically retrieved from the model attributes rather than hardcoded, making the function more robust and flexible.
+    \item {Enhanced interaction category support in sccomp_proportional_fold_change.} The function now properly handles interaction categories in the from/to parameters, supporting both two-factor interactions (e.g., "treatment:followup") and three-factor interactions (e.g., "treatment:followup:B"). The function automatically parses interaction strings and creates the correct new_data structure with individual factor columns.
+    \item {Added comprehensive unit tests for sccomp_proportional_fold_change.} A new test file (test-sccomp_proportional_fold_change.R) has been added with 20 different test scenarios covering simple models, interaction models, error handling, and edge cases. The tests progress from simple single-factor models to complex three-factor interaction models, ensuring the function works correctly across all use cases. New tests specifically cover interaction categories in from/to parameters.
 }}
 
 \section{News in version 2.1.14, Bioconductor 3.22 Release}{
