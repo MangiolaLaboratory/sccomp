@@ -71,13 +71,18 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
   
   my_factor = parse_formula(formula_composition)
   
+  # Get the sample column name from the original data
+  .sample = attr(.data, ".sample")
+  
   # Predict the composition for the specified conditions
   .data |> 
     sccomp_predict(
       formula_composition = formula_composition, 
       new_data = 
-        tibble(sample=as.character(c(to, from)), factor = c(to, from)) |> 
-        rename(!!my_factor := `factor`)
+        tibble(
+          !!quo_name(.sample) := c(to, from), 
+          !!my_factor := c(to, from)
+        )
     ) |> 
     
     # Nest the predicted data by cell group
@@ -89,12 +94,12 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
       ratio_mean = map_dbl(
         data, 
         ~ {
-          x = .x |> arrange(sample != !!from) |> pull(proportion_mean); 
+          x = .x |> arrange(!!.sample != !!from) |> pull(proportion_mean); 
           x[2]/x[1] })
     ) |> 
     mutate(
-      proportion_from = map_dbl(data, ~.x |> filter(sample==from) |> pull(proportion_mean)),
-      proportion_to = map_dbl(data, ~.x |> filter(sample!=from) |> pull(proportion_mean))
+      proportion_from = map_dbl(data, ~.x |> filter(!!.sample==from) |> pull(proportion_mean)),
+      proportion_to = map_dbl(data, ~.x |> filter(!!.sample!=from) |> pull(proportion_mean))
     ) |> 
     
     # Calculate the proportional fold change
@@ -105,12 +110,12 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
       ratio_upper = map_dbl(
         data,  
         ~ {
-          x = .x |> arrange(sample != !!from) |> pull(proportion_upper); 
+          x = .x |> arrange(!!.sample != !!from) |> pull(proportion_upper); 
           x[2]/x[1] }),
       ratio_lower = map_dbl(
         data, 
         ~ {
-          x = .x |> arrange(sample != !!from) |> pull(proportion_lower); 
+          x = .x |> arrange(!!.sample != !!from) |> pull(proportion_lower); 
           x[2]/x[1] })
     ) |> 
     
