@@ -55,7 +55,7 @@ SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan), C++1
 biocViews: Bayesian, Regression, DifferentialExpression, SingleCell, Metagenomics, FlowCytometry, Spatial
 LazyData: true
 VignetteBuilder: knitr
-URL: https://github.com/MangiolaLaboratory/sccomp
+URL: https://github.com/MangiolaLaboratory/sccomp, https://mangiolalaboratory.github.io/sccomp/
 BugReports: https://github.com/MangiolaLaboratory/sccomp/issues
 Config/testthat/edition: 3
 Config/testthat/parallel: true
