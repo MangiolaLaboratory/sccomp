@@ -670,4 +670,313 @@ test_that("sccomp_proportional_fold_change handles identical conditions", {
   expect_s3_class(result, "tbl_df")
   expect_equal(nrow(result), 3)
   expect_true(is.numeric(result$proportion_fold_change))
+})
+
+# Test 16: Interaction in from/to categories - two-factor interaction
+test_that("sccomp_proportional_fold_change works with interaction categories in from/to", {
+  skip_cmdstan()
+  
+  # Create test data with two factors that will have interactions
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:8), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 8),
+    treatment = rep(c("control", "treatment"), each = 12),
+    timepoint = rep(c("baseline", "followup"), each = 6, times = 2),
+    count = as.integer(c(
+      # control-baseline
+      10, 20, 15,
+      12, 22, 17,
+      # control-followup  
+      15, 25, 20,
+      18, 28, 23,
+      # treatment-baseline
+      20, 30, 25,
+      22, 32, 27,
+      # treatment-followup
+      30, 40, 35,
+      35, 45, 40
+    ))
+  )
+  
+  # Fit model with interaction
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment * timepoint,
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test proportional fold change with interaction categories
+  result <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment * timepoint,
+    from = "control:baseline",
+    to = "treatment:followup"
+  )
+  
+  # Basic expectations
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), 3)
+  expect_true(is.numeric(result$proportion_fold_change))
+  expect_true(all(result$proportion_fold_change > 0)) # Should be positive for treatment effect
+  expect_true(is.character(result$statement))
+  expect_true(is.numeric(result$average_uncertainty))
+})
+
+# Test 17: Interaction in from/to categories - three-factor interaction
+test_that("sccomp_proportional_fold_change works with three-factor interaction categories", {
+  skip_cmdstan()
+  
+  # Create test data with three factors
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:16), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 16),
+    treatment = rep(c("control", "treatment"), each = 24),
+    timepoint = rep(c("baseline", "followup"), each = 12, times = 2),
+    cohort = rep(c("A", "B"), each = 6, times = 4),
+    count = as.integer(c(
+      # control-baseline-A
+      10, 20, 15,
+      12, 22, 17,
+      # control-baseline-B
+      11, 21, 16,
+      13, 23, 18,
+      # control-followup-A
+      15, 25, 20,
+      18, 28, 23,
+      # control-followup-B
+      16, 26, 21,
+      19, 29, 24,
+      # treatment-baseline-A
+      20, 30, 25,
+      22, 32, 27,
+      # treatment-baseline-B
+      21, 31, 26,
+      23, 33, 28,
+      # treatment-followup-A
+      30, 40, 35,
+      35, 45, 40,
+      # treatment-followup-B
+      31, 41, 36,
+      36, 46, 41
+    ))
+  )
+  
+  # Fit model with three-factor interaction
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment * timepoint * cohort,
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test proportional fold change with three-factor interaction categories
+  result <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment * timepoint * cohort,
+    from = "control:baseline:A",
+    to = "treatment:followup:B"
+  )
+  
+  # Basic expectations
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), 3)
+  expect_true(is.numeric(result$proportion_fold_change))
+  expect_true(all(result$proportion_fold_change > 0)) # Should be positive for treatment effect
+  expect_true(is.character(result$statement))
+  expect_true(is.numeric(result$average_uncertainty))
+})
+
+# Test 18: Interaction categories with different factor orders
+test_that("sccomp_proportional_fold_change works with different factor orders in interaction", {
+  skip_cmdstan()
+  
+  # Create test data
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:8), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 8),
+    treatment = rep(c("control", "treatment"), each = 12),
+    timepoint = rep(c("baseline", "followup"), each = 6, times = 2),
+    count = as.integer(c(
+      # control-baseline
+      10, 20, 15,
+      12, 22, 17,
+      # control-followup  
+      15, 25, 20,
+      18, 28, 23,
+      # treatment-baseline
+      20, 30, 25,
+      22, 32, 27,
+      # treatment-followup
+      30, 40, 35,
+      35, 45, 40
+    ))
+  )
+  
+  # Fit model with interaction
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment * timepoint,
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test with different factor orders in the interaction
+  result1 <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment * timepoint,
+    from = "control:baseline",
+    to = "treatment:followup"
+  )
+  
+  result2 <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment * timepoint,
+    from = "baseline:control",
+    to = "followup:treatment"
+  )
+  
+  # Both should work and produce similar results
+  expect_s3_class(result1, "tbl_df")
+  expect_s3_class(result2, "tbl_df")
+  expect_equal(nrow(result1), 3)
+  expect_equal(nrow(result2), 3)
+  expect_true(is.numeric(result1$proportion_fold_change))
+  expect_true(is.numeric(result2$proportion_fold_change))
+})
+
+# Test 19: Complex interaction with nested factors
+test_that("sccomp_proportional_fold_change works with complex nested interactions", {
+  skip_cmdstan()
+  
+  # Create test data with nested structure
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:12), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 12),
+    treatment = rep(c("control", "treatment"), each = 18),
+    timepoint = rep(c("baseline", "followup"), each = 9, times = 2),
+    batch = rep(c("batch1", "batch2"), each = 3, times = 6),
+    count = as.integer(c(
+      # control-baseline-batch1
+      10, 20, 15,
+      12, 22, 17,
+      11, 21, 16,
+      # control-baseline-batch2
+      13, 23, 18,
+      14, 24, 19,
+      15, 25, 20,
+      # control-followup-batch1
+      18, 28, 23,
+      20, 30, 25,
+      19, 29, 24,
+      # control-followup-batch2
+      21, 31, 26,
+      22, 32, 27,
+      23, 33, 28,
+      # treatment-baseline-batch1
+      25, 35, 30,
+      27, 37, 32,
+      26, 36, 31,
+      # treatment-baseline-batch2
+      28, 38, 33,
+      29, 39, 34,
+      30, 40, 35,
+      # treatment-followup-batch1
+      35, 45, 40,
+      37, 47, 42,
+      36, 46, 41,
+      # treatment-followup-batch2
+      38, 48, 43,
+      39, 49, 44,
+      40, 50, 45
+    ))
+  )
+  
+  # Fit model with complex interaction
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment * timepoint * batch,
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test with complex interaction categories
+  result <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment * timepoint * batch,
+    from = "control:baseline:batch1",
+    to = "treatment:followup:batch2"
+  )
+  
+  # Basic expectations
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), 3)
+  expect_true(is.numeric(result$proportion_fold_change))
+  expect_true(all(result$proportion_fold_change > 0)) # Should be positive for treatment effect
+  expect_true(is.character(result$statement))
+  expect_true(is.numeric(result$average_uncertainty))
+})
+
+# Test 20: Error handling for invalid interaction categories
+test_that("sccomp_proportional_fold_change handles invalid interaction categories gracefully", {
+  skip_cmdstan()
+  
+  # Create test data
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:4), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 4),
+    treatment = rep(c("control", "treatment"), each = 6),
+    timepoint = rep(c("baseline", "followup"), each = 3, times = 2),
+    count = as.integer(c(10, 20, 15, 15, 25, 20, 12, 22, 17, 18, 28, 23))
+  )
+  
+  # Fit model with interaction
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment * timepoint,
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test with invalid interaction category
+  expect_error(
+    sccomp_proportional_fold_change(
+      estimate,
+      formula_composition = ~ treatment * timepoint,
+      from = "invalid:category",
+      to = "treatment:followup"
+    ),
+    regexp = "Error in.*sccomp_predict"
+  )
+  
+  # Test with missing factor in interaction
+  expect_error(
+    sccomp_proportional_fold_change(
+      estimate,
+      formula_composition = ~ treatment * timepoint,
+      from = "control",
+      to = "treatment:followup"
+    ),
+    regexp = "Error in.*sccomp_predict"
+  )
 }) 

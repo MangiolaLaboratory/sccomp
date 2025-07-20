@@ -66,23 +66,44 @@ sccomp_proportional_fold_change <- function(.data, formula_composition, from, to
 #' @export
 #' 
 #' @importFrom glue glue
+#' @importFrom stringr str_split
 #' 
 sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition, from, to){
   
-  my_factor = parse_formula(formula_composition)
+  my_factors = parse_formula(formula_composition)
   
   # Get the sample column name from the original data
   .sample = attr(.data, ".sample")
+  
+  # Handle interaction categories by parsing the from/to strings
+  if (length(my_factors) > 1) {
+    # For interactions, parse the category strings
+    from_parts <- str_split(from, ":")[[1]]
+    to_parts <- str_split(to, ":")[[1]]
+    
+    # Create new_data with individual factor columns
+    new_data <- tibble(
+      !!quo_name(.sample) := c(to, from)
+    )
+    
+    # Add each factor column
+    for (i in seq_along(my_factors)) {
+      new_data <- new_data %>%
+        mutate(!!my_factors[i] := c(to_parts[i], from_parts[i]))
+    }
+  } else {
+    # For single factor, use the original approach
+    new_data <- tibble(
+      !!quo_name(.sample) := c(to, from), 
+      !!my_factors := c(to, from)
+    )
+  }
   
   # Predict the composition for the specified conditions
   .data |> 
     sccomp_predict(
       formula_composition = formula_composition, 
-      new_data = 
-        tibble(
-          !!quo_name(.sample) := c(to, from), 
-          !!my_factor := c(to, from)
-        )
+      new_data = new_data
     ) |> 
     
     # Nest the predicted data by cell group
