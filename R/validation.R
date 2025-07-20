@@ -240,7 +240,7 @@ check_sample_consistency_of_factors = function(.data, my_formula, sample, cell_g
     for(sample_name in unique(inconsistent_samples |> pull(!!.sample))) {
       sample_issues = inconsistent_samples |> filter(!!.sample == sample_name)
       error_msg = paste0(error_msg, "\nSample: ", sample_name, "\n")
-      for(i in 1:nrow(sample_issues)) {
+      for(i in seq_len(nrow(sample_issues))) {
         row = sample_issues[i, ]
         error_msg = paste0(error_msg, "  - ", row$factor_name, ": ", row$unique_values, "\n")
       }
