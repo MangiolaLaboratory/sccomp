@@ -34,7 +34,7 @@ test_that("cache_stan_model parameter works correctly", {
   expect_true(dir.exists(expected_cache_dir))
   
   # Test that default cache directory includes version
-  default_cache <- sccomp:::get_sccomp_cache_dir()
+  default_cache <- file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
   expect_true(grepl(sccomp_version, default_cache))
   
   # Clean up

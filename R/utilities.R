@@ -1,13 +1,35 @@
 # Define global variable
 # sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
 
-# Function to get cache directory
-#' @importFrom utils packageVersion
-get_sccomp_cache_dir <- function() {
-  file.path(path.expand("~"), ".sccomp_models", packageVersion("sccomp"))
-}
+
 
 # Define global variable (without version - version will be added in load_model when needed)
+#' Default cache directory for Stan models
+#' 
+#' A global variable that defines the default cache directory for Stan models used by the sccomp package.
+#' This directory is used to store compiled Stan models to avoid recompilation on subsequent runs.
+#' 
+#' @details
+#' The cache directory is set to \code{~/.sccomp_models} by default. This location is used by
+#' various sccomp functions to store and retrieve compiled Stan models, improving performance
+#' by avoiding unnecessary recompilation of models that have already been compiled.
+#' 
+#' Users can override this default by specifying a different cache directory in function calls
+#' that accept a \code{cache_stan_model} parameter.
+#' 
+#' @return A character string containing the path to the default cache directory.
+#' 
+#' @examples
+#' # View the default cache directory
+#' sccomp_stan_models_cache_dir
+#' 
+#' # Use a custom cache directory in a function call
+#' # sccomp_estimate(data, cache_stan_model = "/path/to/custom/cache")
+#' 
+#' @seealso
+#' \code{\link{sccomp_estimate}}, \code{\link{sccomp_replicate}}, \code{\link{clear_stan_model_cache}}
+#' 
+#' @export
 sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
 
 #' Add attribute to abject
