@@ -29,6 +29,7 @@ sccomp_estimate(
   max_sampling_iterations = 20000,
   pass_fit = TRUE,
   sig_figs = 9,
+  cache_stan_model = sccomp_stan_models_cache_dir,
   ...,
   .count = NULL,
   approximate_posterior_inference = NULL,
@@ -85,6 +86,10 @@ abundance column (counts or proportions), and factor columns.}
 \item{pass_fit}{Logical, whether to include the Stan fit as an attribute in the output.}
 
 \item{sig_figs}{Number of significant figures to use for Stan model output. Default is 9.}
+
+\item{cache_stan_model}{A character string specifying the cache directory for compiled Stan models.
+The sccomp version will be automatically appended to ensure version isolation.
+Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
 
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 
