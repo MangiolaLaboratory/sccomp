@@ -979,4 +979,281 @@ test_that("sccomp_proportional_fold_change handles invalid interaction categorie
     ),
     regexp = "Error in.*sccomp_predict"
   )
+})
+
+# Test 21: Random effects in composition model
+test_that("sccomp_proportional_fold_change works with random effects in composition", {
+  skip_cmdstan()
+  
+  # Create test data with random effects
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:8), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 8),
+    treatment = rep(c("control", "treatment"), each = 12),
+    batch = rep(c("batch1", "batch2"), each = 6, times = 2),
+    count = as.integer(c(
+      # control-batch1
+      10, 20, 15,
+      10, 20, 15,
+      # control-batch2
+      12, 22, 17,
+      12, 22, 17,
+      # treatment-batch1
+      20, 30, 25,
+      20, 30, 25,
+      # treatment-batch2
+      22, 32, 27,
+      22, 32, 27
+    ))
+  )
+  
+  # Fit model with random effects in composition
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment + (1|batch),
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test proportional fold change with random effects
+  result <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment + (1|batch),
+    from = "control:batch1",
+    to = "treatment:batch2"
+  )
+  
+  # Basic expectations
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), 3)
+  expect_true(is.numeric(result$proportion_fold_change))
+  expect_true(is.character(result$statement))
+  expect_true(is.numeric(result$average_uncertainty))
+})
+
+# Test 22: Random effects in variability model (current limitation)
+test_that("sccomp_proportional_fold_change handles random effects in variability model", {
+  skip_cmdstan()
+  
+  # Create test data with random effects in variability
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:8), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 8),
+    treatment = rep(c("control", "treatment"), each = 12),
+    batch = rep(c("batch1", "batch2"), each = 6, times = 2),
+    count = as.integer(c(
+      # control-batch1
+      10, 20, 15,
+      10, 20, 15,
+      # control-batch2
+      12, 22, 17,
+      12, 22, 17,
+      # treatment-batch1
+      20, 30, 25,
+      20, 30, 25,
+      # treatment-batch2
+      22, 32, 27,
+      22, 32, 27
+    ))
+  )
+  
+  # Fit model with random effects in variability
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment,
+    formula_variability = ~ (1|batch),
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test proportional fold change
+  # Note: This should work but the variability random effects are ignored
+  result <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment,
+    from = "control",
+    to = "treatment"
+  )
+  
+  # Basic expectations
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), 3)
+  expect_true(is.numeric(result$proportion_fold_change))
+  expect_true(is.character(result$statement))
+  expect_true(is.numeric(result$average_uncertainty))
+  
+  # Note: The variability random effects are ignored due to sccomp_predict limitation
+  # This is a known limitation of the current implementation
+})
+
+# Test 23: Complex random effects with multiple grouping variables
+test_that("sccomp_proportional_fold_change works with complex random effects", {
+  skip_cmdstan()
+  
+  # Create test data with multiple random effects
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:12), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 12),
+    treatment = rep(c("control", "treatment"), each = 18),
+    batch = rep(c("batch1", "batch2", "batch3"), each = 12),
+    timepoint = rep(c("baseline", "followup"), each = 6, times = 6),
+    count = as.integer(c(
+      # control-batch1-baseline
+      10, 20, 15,
+      10, 20, 15,
+      # control-batch1-followup
+      12, 22, 17,
+      12, 22, 17,
+      # control-batch2-baseline
+      11, 21, 16,
+      11, 21, 16,
+      # control-batch2-followup
+      13, 23, 18,
+      13, 23, 18,
+      # control-batch3-baseline
+      12, 22, 17,
+      12, 22, 17,
+      # control-batch3-followup
+      14, 24, 19,
+      14, 24, 19,
+      # treatment-batch1-baseline
+      20, 30, 25,
+      20, 30, 25,
+      # treatment-batch1-followup
+      22, 32, 27,
+      22, 32, 27,
+      # treatment-batch2-baseline
+      21, 31, 26,
+      21, 31, 26,
+      # treatment-batch2-followup
+      23, 33, 28,
+      23, 33, 28,
+      # treatment-batch3-baseline
+      22, 32, 27,
+      22, 32, 27,
+      # treatment-batch3-followup
+      24, 34, 29,
+      24, 34, 29
+    ))
+  )
+  
+  # Fit model with complex random effects
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment * timepoint + (1|batch),
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test proportional fold change with complex random effects
+  result <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment * timepoint + (1|batch),
+    from = "control:baseline:batch1",
+    to = "treatment:followup:batch2"
+  )
+  
+  # Basic expectations
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), 3)
+  expect_true(is.numeric(result$proportion_fold_change))
+  expect_true(is.character(result$statement))
+  expect_true(is.numeric(result$average_uncertainty))
+})
+
+# Test 24: Random effects parsing and new_data creation
+test_that("sccomp_proportional_fold_change correctly parses random effects formulas", {
+  skip_cmdstan()
+  
+  # Test random effects formula parsing
+  formula_with_random <- ~ treatment + (1|batch)
+  my_factors_random <- sccomp:::parse_formula(formula_with_random)
+  
+  # The parse_formula function should handle random effects
+  expect_true(is.character(my_factors_random))
+  expect_true(length(my_factors_random) > 0)
+  
+  # Test new_data creation for random effects
+  .sample <- quo(sample)
+  from_random <- "control:batch1"
+  to_random <- "treatment:batch2"
+  from_parts <- stringr::str_split(from_random, ":")[[1]]
+  to_parts <- stringr::str_split(to_random, ":")[[1]]
+  
+  # Create new_data for random effects
+  new_data_random <- tibble(
+    !!quo_name(.sample) := c(to_random, from_random)
+  )
+  
+  # Add factor columns
+  if (length(my_factors_random) > 1) {
+    for (i in seq_along(my_factors_random)) {
+      new_data_random <- new_data_random %>%
+        mutate(!!my_factors_random[i] := c(to_parts[i], from_parts[i]))
+    }
+  }
+  
+  # Verify the structure is correct
+  expect_s3_class(new_data_random, "tbl_df")
+  expect_equal(nrow(new_data_random), 2)
+  expect_true("sample" %in% colnames(new_data_random))
+})
+
+# Test 25: Error handling for invalid random effects
+test_that("sccomp_proportional_fold_change handles invalid random effects gracefully", {
+  skip_cmdstan()
+  
+  # Create test data
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:4), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 4),
+    treatment = rep(c("control", "treatment"), each = 6),
+    batch = rep(c("batch1", "batch2"), each = 3, times = 2),
+    count = as.integer(c(10, 20, 15, 15, 25, 20, 12, 22, 17, 18, 28, 23))
+  )
+  
+  # Fit model with random effects
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment + (1|batch),
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Test with invalid random effects category
+  expect_error(
+    sccomp_proportional_fold_change(
+      estimate,
+      formula_composition = ~ treatment + (1|batch),
+      from = "invalid:category",
+      to = "treatment:batch1"
+    ),
+    regexp = "Error in.*sccomp_predict"
+  )
+  
+  # Test with missing random effect level
+  expect_error(
+    sccomp_proportional_fold_change(
+      estimate,
+      formula_composition = ~ treatment + (1|batch),
+      from = "control",
+      to = "treatment:batch1"
+    ),
+    regexp = "Error in.*sccomp_predict"
+  )
 }) 
