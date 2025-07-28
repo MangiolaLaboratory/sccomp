@@ -40,3 +40,38 @@ test_that("cache_stan_model parameter works correctly", {
   # Clean up
   unlink(expected_cache_dir, recursive = TRUE)
 }) 
+
+# Test that cache_stan_model parameter works for sccomp_boxplot and plot.sccomp_tbl
+# This ensures the argument is accepted and propagated in plotting functions as well
+
+test_that("cache_stan_model parameter works for sccomp_boxplot and plot.sccomp_tbl", {
+  skip_if_not(instantiate::stan_cmdstan_exists())
+  data("counts_obj")
+  # Fit a model
+  fit <- sccomp_estimate(
+    counts_obj,
+    formula_composition = ~ type,
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    max_sampling_iterations = 100,
+    verbose = FALSE,
+    cache_stan_model = tmp_cache_dir
+  )
+  fit_tested <- sccomp_test(fit)
+  # Use a temporary directory for cache
+  tmp_cache <- tempdir()
+  # Test sccomp_boxplot with custom cache
+  expect_no_error({
+    p <- sccomp_boxplot(fit_tested, factor = "type", cache_stan_model = tmp_cache)
+    expect_s3_class(p, "ggplot")
+  })
+  # Test plot() S3 method with custom cache
+  expect_no_error({
+    plots <- plot(fit_tested, cache_stan_model = tmp_cache)
+    expect_true("boxplot" %in% names(plots))
+    expect_s3_class(plots$boxplot[[1]], "ggplot")
+  })
+}) 

@@ -15,6 +15,7 @@
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "FDR".
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
+#'
 #' @param ... For internal use 
 #'
 #' @return A `ggplot`
@@ -44,7 +45,7 @@
 #'   }
 #' }
 #'
-plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), significance_statistic = c("FDR", "pH0"), show_fdr_message = TRUE, ...) {
+plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"), significance_statistic = c("FDR", "pH0"), show_fdr_message = TRUE, cache_stan_model = sccomp_stan_models_cache_dir, ...) {
   
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
@@ -113,7 +114,8 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
               sccomp_boxplot(
                 .data = x,
                 factor = .x,
-                significance_threshold = significance_threshold
+                significance_threshold = significance_threshold,
+                cache_stan_model = cache_stan_model
               ) 
           
           # Return
