@@ -13,6 +13,7 @@
 #' @param significance_threshold A numeric value indicating the False Discovery Rate (FDR) threshold for labeling significant cell-groups. Defaults to 0.05.
 #' @param test_composition_above_logit_fold_change A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10% for a cell type with a baseline proportion of 50% (e.g., from 45% to 55%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.
 #' @param remove_unwanted_effects A logical value indicating whether to remove unwanted variation from the data before plotting. Defaults to `FALSE`.
+#' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. The sccomp version will be automatically appended to ensure version isolation. Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
 #'
 #' @return A `ggplot` object representing the boxplot of cell proportions across samples, stratified by the specified factor.
 #'
@@ -54,7 +55,8 @@ sccomp_boxplot = function(
     factor, 
     significance_threshold = 0.05, 
     test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"),
-    remove_unwanted_effects = FALSE
+    remove_unwanted_effects = FALSE,
+    cache_stan_model = sccomp_stan_models_cache_dir
 ){
   
   
@@ -106,7 +108,8 @@ sccomp_boxplot = function(
     !!.sample,
     significance_threshold = significance_threshold,
     sccomp_theme(),
-    remove_unwanted_effects = remove_unwanted_effects
+    remove_unwanted_effects = remove_unwanted_effects,
+    cache_stan_model = cache_stan_model
   ) +
     ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", factor))
   
@@ -147,7 +150,8 @@ plot_boxplot = function(
     .sample, 
     significance_threshold = 0.05, 
     my_theme, 
-    remove_unwanted_effects = FALSE
+    remove_unwanted_effects = FALSE,
+    cache_stan_model = sccomp_stan_models_cache_dir
 ){
   
   # Define the variables as NULL to avoid CRAN NOTES
@@ -246,7 +250,7 @@ plot_boxplot = function(
     
     simulated_proportion =
       .data |>
-      sccomp_replicate(formula_composition = formula_composition, number_of_draws = 100) |>
+      sccomp_replicate(formula_composition = formula_composition, number_of_draws = 100, cache_stan_model = cache_stan_model) |>
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group, is_zero))
     
     my_boxplot = my_boxplot +

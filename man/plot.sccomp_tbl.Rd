@@ -11,6 +11,7 @@
     "test_composition_above_logit_fold_change"),
   significance_statistic = c("FDR", "pH0"),
   show_fdr_message = TRUE,
+  cache_stan_model = sccomp_stan_models_cache_dir,
   ...
 )
 }

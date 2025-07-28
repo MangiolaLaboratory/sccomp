@@ -10,7 +10,8 @@ sccomp_boxplot(
   significance_threshold = 0.05,
   test_composition_above_logit_fold_change = attr(.data,
     "test_composition_above_logit_fold_change"),
-  remove_unwanted_effects = FALSE
+  remove_unwanted_effects = FALSE,
+  cache_stan_model = sccomp_stan_models_cache_dir
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ sccomp_boxplot(
 \item{test_composition_above_logit_fold_change}{A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10\% for a cell type with a baseline proportion of 50\% (e.g., from 45\% to 55\%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.}
 
 \item{remove_unwanted_effects}{A logical value indicating whether to remove unwanted variation from the data before plotting. Defaults to \code{FALSE}.}
+
+\item{cache_stan_model}{A character string specifying the cache directory for compiled Stan models. The sccomp version will be automatically appended to ensure version isolation. Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
 }
 \value{
 A \code{ggplot} object representing the boxplot of cell proportions across samples, stratified by the specified factor.
