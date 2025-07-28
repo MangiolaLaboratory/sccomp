@@ -1,6 +1,12 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.18, Bioconductor 3.22 Release}{
+\itemize{
+    \item {Fixed issue with sccomp_proportional_fold_change function for interaction models.} The function now properly handles complex models with interactions by correctly creating the new_data structure that sccomp_predict expects. This resolves GitHub issue #193 where the function would fail with the error "your new_data might be malformed" when working with interaction models. The fix ensures that the sample column name is dynamically retrieved from the model attributes rather than hardcoded, making the function more robust and flexible.
+    \item {Enhanced interaction category support in sccomp_proportional_fold_change.} The function now properly handles interaction categories in the from/to parameters, supporting both two-factor interactions (e.g., "treatment:followup") and three-factor interactions (e.g., "treatment:followup:B"). The function automatically parses interaction strings and creates the correct new_data structure with individual factor columns.
+}}
+
 \section{News in version 2.1.14, Bioconductor 3.22 Release}{
 \itemize{
     \item {Improved model efficiency and reliability with sum-to-zero variable constraints.} This update introduces a new way of handling certain statistical constraints in the underlying model, using a "sum-to-zero" variable type. Previously, these constraints were managed with a workaround that could be less efficient and less stable. The new approach is more mathematically direct and robust, leading to a substantial improvement in the model's ability to draw independent samples from the data (known as the "effective sample size" or ESS).
