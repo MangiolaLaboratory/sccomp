@@ -765,7 +765,7 @@ sccomp_glm_data_frame_raw = function(.data,
     class_list_to_counts(!!.sample, !!.cell_group) %>%
     
     # Add formula_composition information
-    add_formula_columns(.data, !!.sample,formula_composition) |>
+    add_formula_columns(.original_data = .data, !!.sample,formula_composition) |>
     
     # Attach possible exclusion of data points
     left_join(.data %>%
@@ -1107,7 +1107,7 @@ make_rectangular_data = function(.data, .sample, .cell_group, .count, formula_co
       mutate(!!.count := as.integer(!!.count)) |> 
       
       # Add formula_composition information
-      add_formula_columns(.data, !!.sample, formula_composition)
+      add_formula_columns(.original_data = .data, !!.sample, formula_composition)
   } else {
     .data
   }
@@ -1136,7 +1136,12 @@ class_list_to_counts = function(.data, .sample, .cell_group){
     mutate(count = as.integer(count))
 }
 
-add_formula_columns = function(.data, .original_data, .sample,  formula_composition){
+add_formula_columns = function(
+  .data,
+  .original_data = .data,   # default to current working data if not provided
+  .sample,
+  formula_composition
+){
   
   .sample = enquo(.sample)
   
