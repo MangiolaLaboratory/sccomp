@@ -1,12 +1,12 @@
 #' sccomp_boxplot
 #'
 #' @description
-#' Creates a boxplot visualization of the model results from `sccomp`. This function plots the estimated cell proportions across samples, highlighting significant changes in cell composition according to a specified factor.
+#' Creates a boxplot visualization of the model results from `sccomp`. This function plots the estimated cell proportions across samples, highlighting significant changes in cell composition according to a specified factor. The function handles both pre-computed count data and cell-level input gracefully.
 #'
 #' @import ggplot2
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom tidyr pivot_longer pivot_wider unite unnest
-#' @importFrom dplyr select with_groups mutate left_join rename
+#' @importFrom dplyr select with_groups mutate left_join rename distinct pull
 #'
 #' @param .data A tibble containing the results from `sccomp_estimate` and `sccomp_test`, including the columns: cell_group name, sample name, read counts, factor(s), p-values, and significance indicators.
 #' @param factor A character string specifying the factor of interest included in the model for stratifying the boxplot.
