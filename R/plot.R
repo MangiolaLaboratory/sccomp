@@ -588,10 +588,20 @@ plot_scatterplot = function(
       significance_colors =
         significance_colors |>
         mutate(
-          factor_values = attr(.data, "count_data") |>
-            select(all_of(factor_of_interest)) |>
-            distinct() |>
-            pull(all_of(factor_of_interest))
+          factor_values = {
+            count_data <- attr(.data, "count_data")
+            if (factor_of_interest %in% colnames(count_data)) {
+              count_data |>
+                distinct(!!as.symbol(factor_of_interest)) |>
+                pull(!!as.symbol(factor_of_interest))
+            } else {
+              # Fallback: extract factor values from data_proportion when count_data 
+              # doesn't contain the factor column (can happen with cell-level input)
+              data_proportion |>
+                distinct(!!as.symbol(factor_of_interest)) |>
+                pull(!!as.symbol(factor_of_interest))
+            }
+          }
         ) |>
         unnest(factor_values) |>
         
