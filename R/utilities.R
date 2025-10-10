@@ -938,6 +938,87 @@ data_spread_to_model_input =
 
 
 
+#' Remove standalone numbers while preserving numbers in variable names
+#'
+#' This function removes standalone numbers (like "2" in "/ 2" or "6" in "/6") 
+#' but preserves numbers that are part of variable names (like "1" in "diseaseH1").
+#' It respects backquotes to avoid modifying content inside them.
+#'
+#' @param text_vector A character vector with the strings to be processed.
+#' @return A character vector with standalone numbers removed.
+#' @noRd
+remove_standalone_numbers_ignoring_backquotes <- function(text_vector) {
+  # Nested function to handle number removal for a single string
+  remove_standalone_numbers <- function(text) {
+    inside_backticks <- FALSE
+    result <- ""
+    skip <- 0
+    
+    chars <- strsplit(text, "")[[1]]
+    for (i in seq_along(chars)) {
+      if (skip > 0) {
+        skip <- skip - 1
+        next
+      }
+      
+      char <- chars[i]
+      if (char == "`") {
+        inside_backticks <- !inside_backticks
+        result <- paste0(result, char)
+      } else if (!inside_backticks) {
+        # Check if current position starts a number
+        remaining_text <- paste(chars[i:length(chars)], collapse = "")
+        
+        # Match a number at the current position
+        number_match <- regexpr("^[0-9]+", remaining_text)
+        
+        if (attr(number_match, "match.length") > 0 && number_match[1] == 1) {
+          number_length <- attr(number_match, "match.length")
+          number_value <- substr(remaining_text, 1, number_length)
+          
+          # Check if this is a standalone number
+          # It's standalone if:
+          # 1. It's at the beginning of string, OR
+          # 2. The character before it is not a letter/digit, AND
+          # 3. The character after it is not a letter/digit (or end of string)
+          
+          prev_char <- if (i == 1) "" else chars[i-1]
+          next_char <- if (i + number_length > length(chars)) "" else chars[i + number_length]
+          
+          is_standalone <- (
+            i == 1 || !grepl("[a-zA-Z0-9]", prev_char)
+          ) && (
+            i + number_length > length(chars) || !grepl("[a-zA-Z0-9]", next_char)
+          )
+          
+          if (is_standalone) {
+            # Skip this number
+            skip <- number_length - 1
+            next
+          } else {
+            # Keep this number (it's part of a variable name)
+            result <- paste0(result, number_value)
+            skip <- number_length - 1
+            next
+          }
+        } else {
+          result <- paste0(result, char)
+        }
+      } else {
+        result <- paste0(result, char)
+      }
+    }
+    
+    return(result)
+  }
+  
+  # Apply the function to each element in the vector
+  sapply(text_vector, remove_standalone_numbers)
+}
+
+#' @importFrom stringr str_remove_all
+#' @importFrom stringr str_split
+#' @noRd
 contrasts_to_parameter_list = function(contrasts, drop_back_quotes = TRUE){
   
   if(is.null(names(contrasts)))
@@ -956,7 +1037,8 @@ contrasts_to_parameter_list = function(contrasts, drop_back_quotes = TRUE){
     str_remove_all_ignoring_if_inside_backquotes("/ ?[0-9]+") |>
     
     # Remove standalone numerical constants not inside backquotes
-    str_remove_all_ignoring_if_inside_backquotes("\\b[0-9]+\\b") |>
+    # Custom function to handle this more precisely
+    remove_standalone_numbers_ignoring_backquotes() |>
     
     # Split by "+", "-", "*", "/"
     str_split_ignoring_if_inside_backquotes("\\+|-|\\*|/") |>

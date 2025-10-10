@@ -1030,4 +1030,63 @@ test_that("renamed columns in Seurat input", {
     expect_no_error()
 })
 
+# Test specifically for the digit dropping issue
+test_that("contrasts_to_parameter_list preserves digits in variable names", {
+  skip_cmdstan()
+  
+  # Test the specific case mentioned in the issue
+  test_contrast <- "(diseaseOMBC + diseaseMBC) / 2 - (diseaseH1 + diseaseH2 + diseaseH3 + diseaseH4 + diseaseH5 + diseaseH6) /6"
+  
+  result <- contrasts_to_parameter_list(test_contrast)
+  
+  # Expected parameters - digits should be preserved in variable names
+  expected <- c("diseaseOMBC", "diseaseMBC", "diseaseH1", "diseaseH2", "diseaseH3", "diseaseH4", "diseaseH5", "diseaseH6")
+  
+  # Check that all expected parameters are present
+  expect_true(all(expected %in% result))
+  
+  # Check that digits are preserved in variable names
+  expect_true("diseaseH1" %in% result)
+  expect_true("diseaseH2" %in% result)
+  expect_true("diseaseH3" %in% result)
+  expect_true("diseaseH4" %in% result)
+  expect_true("diseaseH5" %in% result)
+  expect_true("diseaseH6" %in% result)
+  
+  # Check that standalone numbers are removed
+  expect_false("2" %in% result)
+  expect_false("6" %in% result)
+})
+
+# Test edge cases for number handling
+test_that("contrasts_to_parameter_list handles various number contexts correctly", {
+  skip_cmdstan()
+  
+  # Test with numbers at different positions
+  test_cases <- list(
+    "2 * geneA + 3 * geneB" = c("geneA", "geneB"),
+    "geneA + geneB / 2" = c("geneA", "geneB"),
+    "gene1 + gene2 - gene3" = c("gene1", "gene2", "gene3"),
+    "0.5 * treatment / control" = c("treatment", "control")
+  )
+  
+  for (test_input in names(test_cases)) {
+    result <- contrasts_to_parameter_list(test_input)
+    expected <- test_cases[[test_input]]
+    
+    # Check that variable names with digits are preserved
+    expect_true(all(expected %in% result), 
+                info = paste("Failed for input:", test_input))
+    
+    # Check that standalone numbers are removed
+    standalone_numbers <- c("2", "3", "0.5")
+    for (num in standalone_numbers) {
+      if (grepl(paste0("\\b", num, "\\b"), test_input)) {
+        expect_false(num %in% result, 
+                    info = paste("Standalone number", num, "should be removed from:", test_input))
+      }
+    }
+  }
+})
+
 
