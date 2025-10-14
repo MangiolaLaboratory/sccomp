@@ -1,14 +1,14 @@
 Package: sccomp
 Type: Package
 Title: Differential Composition and Variability Analysis for Single-Cell Data
-Version: 2.1.17
+Version: 2.1.18
 Date: 2024-01-15
 Authors@R: c(person("Stefano", "Mangiola", email = "stefano.mangiola@unimelb.edu.au", role = c("aut", "cre")), person("Alexandra J.", "Roth-Schulze", role = "aut"), person("Marie", "Trussart", role = "aut"), person("Enrique", "Zozaya-Valdés", role = "aut"), person("Mengyao", "Ma", role = "aut"), person("Zijie", "Gao", role = "aut"), person("Alan F.", "Rubin", role = "aut"), person("Terence P.", "Speed", role = "aut"), person("Heejung", "Shim", role = "aut"), person("Anthony T.", "Papenfuss", role = "aut"))
 Description: Comprehensive R package for differential composition and variability analysis in single-cell RNA sequencing, CyTOF, and microbiome data. Provides robust Bayesian modeling with outlier detection, random effects, and advanced statistical methods for cell type proportion analysis. Features include probabilistic outlier identification, mixed-effect modeling, differential variability testing, and comprehensive visualization tools. Perfect for cancer research, immunology, developmental biology, and single-cell genomics applications.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Depends: 
     R (>= 4.3.0),
     instantiate (>= 0.2.3)

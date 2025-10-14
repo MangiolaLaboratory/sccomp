@@ -568,8 +568,7 @@ sccomp_estimate.data.frame <- function(.data,
   # Handle deprecated column arguments
   if (lifecycle::is_present(.sample) && 
       !rlang::quo_is_null(.sample) && 
-      rlang::is_symbolic(.sample) && 
-      !is.null(rlang::eval_tidy(.sample))) {
+      rlang::is_symbolic(.sample)) {
     lifecycle::deprecate_warn("2.1.1", "sccomp::sccomp_estimate(.sample)", 
                               details = ".sample argument (which were tidy evaluations, i.e. .sample = my_sample) have been deprecated in favour of sample (without trailing dot, and which is now a character string, i.e. sample = \"my_sample\")")
     sample = quo_name(.sample)
