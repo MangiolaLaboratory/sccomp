@@ -2,13 +2,15 @@
 % Please edit documentation in R/sccomp-package.R
 \docType{package}
 \name{sccomp-package}
-\alias{sccomp}
 \alias{sccomp-package}
+\alias{sccomp}
 \title{sccomp: Differential Composition and Variability Analysis for Single-Cell Data}
 \description{
-The sccomp package provides comprehensive tools for differential composition 
-and variability analysis in single-cell RNA sequencing, CyTOF, and microbiome data. 
-It implements robust Bayesian modeling with outlier detection, random effects, 
+Comprehensive R package for differential composition and variability analysis in single-cell RNA sequencing, CyTOF, and microbiome data. Provides robust Bayesian modeling with outlier detection, random effects, and advanced statistical methods for cell type proportion analysis. Features include probabilistic outlier identification, mixed-effect modeling, differential variability testing, and comprehensive visualization tools. Perfect for cancer research, immunology, developmental biology, and single-cell genomics applications.
+
+The sccomp package provides comprehensive tools for differential composition
+and variability analysis in single-cell RNA sequencing, CyTOF, and microbiome data.
+It implements robust Bayesian modeling with outlier detection, random effects,
 and advanced statistical methods for cell type proportion analysis.
 }
 \details{
@@ -37,7 +39,7 @@ The code can be viewed at the GitHub repository:
 \url{https://github.com/MangiolaLaboratory/sccomp}
 }
 \references{
-Mangiola, S., Roth-Schulze, A.J., Trussart, M., Zozaya-Valdés, E., Ma, M., 
+Mangiola, S., Roth-Schulze, A.J., Trussart, M., Zozaya-Valdés, E., Ma, M.,
 Gao, Z., Rubin, A.F., Speed, T.P., Shim, H., & Papenfuss, A.T. (2023).
 sccomp: Robust differential composition and variability analysis for single-cell data.
 Proceedings of the National Academy of Sciences, 120(33), e2203828120.
@@ -49,5 +51,29 @@ Useful links:
   \item \url{https://github.com/MangiolaLaboratory/sccomp}
   \item Report bugs at \url{https://github.com/MangiolaLaboratory/sccomp/issues}
 }
+
+
+Useful links:
+\itemize{
+\item \url{https://github.com/MangiolaLaboratory/sccomp}
+\item Report bugs at \url{https://github.com/MangiolaLaboratory/sccomp/issues}
+}
+}
+\author{
+\strong{Maintainer}: Stefano Mangiola \email{stefano.mangiola@unimelb.edu.au}
+
+Authors:
+\itemize{
+  \item Alexandra J. Roth-Schulze
+  \item Marie Trussart
+  \item Enrique Zozaya-Valdés
+  \item Mengyao Ma
+  \item Zijie Gao
+  \item Alan F. Rubin
+  \item Terence P. Speed
+  \item Heejung Shim
+  \item Anthony T. Papenfuss
+}
+
 }
 \keyword{internal}
