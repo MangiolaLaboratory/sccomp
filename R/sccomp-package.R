@@ -17,7 +17,7 @@
 #' \item \code{\link{sccomp_test}} - Test for differential composition with significance testing
 #' \item \code{\link{sccomp_remove_outliers}} - Identify and remove outlier samples
 #' \item \code{\link{sccomp_predict}} - Predict cell type proportions for new samples
-#' \item \code{\link{sccomp_remove_unwanted_variation}} - Remove unwanted variation from data
+#' \item \code{\link{sccomp_remove_unwanted_effects}} - Remove unwanted variation from data
 #' \item \code{\link{sccomp_proportional_fold_change}} - Calculate proportional fold changes
 #' \item Plotting functions: \code{\link{plot.sccomp_tbl}}, \code{\link{sccomp_boxplot}}, \code{\link{plot_1D_intervals}}, \code{\link{plot_2D_intervals}}
 #' }
