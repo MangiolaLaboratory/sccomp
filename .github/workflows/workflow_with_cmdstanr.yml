@@ -125,26 +125,15 @@ jobs:
       - name: Build pkgdown site
         shell: Rscript {0}
         run: |
-          pkgdown::build_site()
+          pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to GitHub pages 🚀
+        if: github.event_name != 'pull_request' || github.head_ref == 'fix-github-pages'
+        uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
-          path: ./docs
+          clean: false
+          branch: gh-pages
+          folder: docs
 
-  # Deploy job
-  deploy:
-    needs: build
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
