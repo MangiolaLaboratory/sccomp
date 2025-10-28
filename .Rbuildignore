@@ -26,3 +26,6 @@ model_glm_dirichlet_multinomial_imputation.rds
 ^Meta$
 sccomp_draws_files
 
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
