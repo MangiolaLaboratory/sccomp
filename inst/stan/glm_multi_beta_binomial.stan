@@ -18,26 +18,26 @@ functions{
   }
   
     
-    real abundance_variability_regression(row_vector variability, row_vector abundance, array[] real prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
+    real abundance_variability_regression(row_vector variability, row_vector abundance, array[] real prec_coeff, real prec_sd_1, real prec_sd_2, int bimodal_mean_variability_association, real mix_p){
       
       real lp = 0;
-      int nu = 3;
+      int nu = 3; // df
       // If mean-variability association is bimodal such as for single-cell RNA use mixed model
       if(bimodal_mean_variability_association == 1){
         for(m in 1:cols(variability))
         lp += log_mix(mix_p,
         student_t_lpdf(variability[m] | nu,
                        abundance[m] * prec_coeff[2] + prec_coeff[1],
-                       prec_sd),
+                       prec_sd_1),
         student_t_lpdf(variability[m] | nu,
                        abundance[m] * prec_coeff[3] + prec_coeff[4],
-                       prec_sd)    // slope prior  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                       prec_sd_2)    // slope prior  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
         );
         
         // If no bimodal
       } else {
         lp =  student_t_lpdf(variability | nu,
-                             abundance * prec_coeff[2] + prec_coeff[1], prec_sd);
+                             abundance * prec_coeff[2] + prec_coeff[1], prec_sd_1);
       }
       
       return(lp);
@@ -347,11 +347,12 @@ parameters{
   matrix[A, M] alpha; // Variability
   // To exclude
   // Changed
-  // matrix[3, A] prec_coeff;  // row 1: i1, row 2: s1, row 3: i2
-  array[A] ordered[2] intercept_pair;
+  // row 1: i1, row 2: s1, row 3: i2
+  array[A] ordered[2] intercept_pair; // i1, i2
   array[A] real<upper=0> slope_1;
   array[A] real<upper=0> slope_2;
-  real<lower=0> prec_sd;
+  real<lower=0> prec_sd_1;  // c1
+  real<lower=0> prec_sd_2;  // c2
   real<lower=0, upper=1> mix_p;
   
   // Random intercept // array of sum_to_zero_vector for each random effect
@@ -388,13 +389,22 @@ transformed parameters{
   
   // Changed
   // intercept_pair + slope_1/2 prec_coeff
-  matrix[4, A] prec_coeff;
+  matrix[bimodal_mean_variability_association == 1 ? 4 : 2, A] prec_coeff;
+  if(bimodal_mean_variability_association == 1){
+  // Bimodal
   for(a in 1:A){
-    prec_coeff[1, a] = intercept_pair[a][1]; // i1 < i2，
-    prec_coeff[2, a] = slope_1[a];      // s1
-    prec_coeff[3, a] = slope_2[a];      // s2
-    prec_coeff[4, a] = intercept_pair[a][2]; // i2
+    prec_coeff[1, a] = intercept_pair[a][1];
+    prec_coeff[2, a] = slope_1[a];
+    prec_coeff[3, a] = slope_2[a];
+    prec_coeff[4, a] = intercept_pair[a][2];
   }
+} else {
+  // Single
+  for(a in 1:A){
+    prec_coeff[1, a] = intercept_pair[a][1];
+    prec_coeff[2, a] = slope_1[a];
+  }
+}
   
   // Non centered parameterisation SD of random effects
   array[M * (ncol_X_random_eff[1]> 0)] vector[how_many_factors_in_random_design[1]] random_effect_sigma;
@@ -512,11 +522,14 @@ model{
         
         
   }
-  
+  //changed
   // Priors
   // Changed: per-effect regression 
   if(exclude_priors == 0){
-    for(a in 1:A){
+  for(a in 1:A){
+    
+    if(bimodal_mean_variability_association == 1){  
+      // Bimodal model: use all 4 parameters
       array[4] real prec_coeff_a;
       prec_coeff_a[1] = prec_coeff[1, a];   // i1
       prec_coeff_a[2] = prec_coeff[2, a];   // s1
@@ -524,38 +537,86 @@ model{
       prec_coeff_a[4] = prec_coeff[4, a];   // i2
 
       target += abundance_variability_regression(
-        alpha[a],    // variability row for effect a
-        beta[a],     // composition row for effect a
+        alpha[a],
+        beta[a],
         prec_coeff_a,
-        prec_sd,
+        prec_sd_1,
+        prec_sd_2,
+        bimodal_mean_variability_association,
+        mix_p
+      );
+    } 
+    else {  
+      // Single model: use only 2 parameters
+      array[2] real prec_coeff_a;
+      prec_coeff_a[1] = prec_coeff[1, a];   // intercept
+      prec_coeff_a[2] = prec_coeff[2, a];   // slope
+
+      target += abundance_variability_regression(
+        alpha[a],
+        beta[a],
+        prec_coeff_a,
+        prec_sd_1,
+        prec_sd_2,
         bimodal_mean_variability_association,
         mix_p
       );
     }
-  } else {
-    if(intercept_in_design || A > 1){
-      for(a in 1:A_intercept_columns)  alpha[a] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
-      if(A > A_intercept_columns)
-        for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal(0, 2);
-    } else {
-      alpha[1] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
-    }
   }
+    //changed
+ if(bimodal_mean_variability_association == 1){
+  // Bimodal-specific priors
+  mix_p ~ beta(1,5);
+  for(a in 1:A){
+    prec_coeff[1, a] ~ student_t(3, 0, 2);      // i1
+    prec_coeff[4, a] ~ student_t(3, 1, 2);      // i2
+    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // s1
+    prec_coeff[3, a] ~ student_t(3, -0.5, 1.5); // s2
+  }
+   prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];        
+   prec_sd_2 ~ normal(0, prior_prec_sd[1] * 1.5) T[0,]; 
+} else {
+  // Single model priors (only 2 parameters)
+  for(a in 1:A){
+    prec_coeff[1, a] ~ student_t(3, 0, 2);      // intercept
+    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // slope
+  }
+  prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
+}
+ } 
+ else {  
+   if(intercept_in_design || A > 1){
+     for(a in 1:A_intercept_columns)  alpha[a] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
+     if(A > A_intercept_columns)
+       for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal(0, 2);
+   } else {
+     alpha[1] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
+   }
+     // hyper prior
+  if(bimodal_mean_variability_association == 1){
+    // Bimodal-specific priors
+    mix_p ~ beta(1, 5);
+  for(a in 1:A){
+    prec_coeff[1, a] ~ student_t(3, 0, 2);      // i1
+    prec_coeff[4, a] ~ student_t(3, 1, 2);      // i2
+    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // s1
+    prec_coeff[3, a] ~ student_t(3, -0.5, 1.5); // s2
+  }
+   prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];        
+   prec_sd_2 ~ normal(0, prior_prec_sd[1] * 1.5) T[0,]; 
+} else {
+  // Single model priors (only 2 parameters)
+  for(a in 1:A){
+    prec_coeff[1, a] ~ student_t(3, 0, 2);      // intercept
+    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // slope
+  }
+  prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
+}
+}
   
   // // Priors abundance - use correct scale for sum_to_zero_vector
   for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
   if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) beta_raw[c] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2] * inv(sqrt(1 - inv(M))) );
-  
-  // Hyper priors
-  mix_p ~ beta(1,5);
-  // Changed: per-effect prior 
-  for(a in 1:A){
-    intercept_pair[a][1] ~ student_t(3, 0, 2);  // i1
-    intercept_pair[a][2] ~ student_t(3, 1, 2);  // i2
-    slope_1[a] ~ student_t(3, -0.5, 1.5);          // s1
-    slope_2[a] ~ student_t(3, -0.5, 1.5);          // s2
-  }
-  prec_sd ~ gamma(prior_prec_sd[1], prior_prec_sd[2]);
   
   // Random intercept
   if(is_random_effect>0){
@@ -578,16 +639,19 @@ model{
   }
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
-  
+  //if (exclude_priors == 0) {
   // Changed
-  if(intercept_in_design){
-    if(A > 1)
-      for(a in 2:A)
-        alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2, a]);
-  } else {
-    for(a in 1:A)
-      alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2, a]);
-  }
+  //if(intercept_in_design){
+    //if(A > 1)
+      //for(a in 2:A)
+        //alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2, a]);
+  //} else {
+    //for(a in 1:A)
+      //alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2, a]);
+  //}
+  //} else {
+    //alpha_normalised = alpha;
+  //}
   
   // // Rondom effect
   // matrix[ncol_X_random_eff_WINDOWS_BUG_FIX, M] beta_random_effect;
