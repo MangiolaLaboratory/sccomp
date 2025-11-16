@@ -18,29 +18,11 @@ vignette: >
   %\VignetteIndexEntry{sccomp: Differential Composition and Variability Analysis for Single-Cell Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-knit: >
-    (function(x, ...){
-        proj_root <- rprojroot::find_package_root_file() |> normalizePath()
-        
-        # Set knitr options for both renders
-        knitr::opts_knit$set(root.dir = proj_root)
-        
-        rmarkdown::render(
-            x,
-            output_file = "README.md",
-            output_format = "github_document",
-            output_dir = proj_root,
-            knit_root_dir = proj_root,
-            params = list(
-                demo_metadata = FALSE
-            )
-        )
-    })
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  fig.path = ifelse(knitr::pandoc_to() %in% c('html', 'html4'), 'inst/figures/', 'inst/figures/')
+  fig.path = 'inst/figures/'
 )
 ```
 
@@ -48,7 +30,7 @@ knitr::opts_chunk$set(
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/sccomp/actions/)
 <!-- badges: end -->
 
-# <img src="`r ifelse(knitr::pandoc_to() %in% c('html', 'html4'), '../inst/logo-01.png', 'inst/logo-01.png')`" height="139px" width="120px"/>
+# <img src="../inst/logo-01.png" height="139px" width="120px"/>
 
 **sccomp** is a powerful R package designed for comprehensive differential composition and variability analysis in single-cell genomics, proteomics, and microbiomics data. 
 
@@ -56,7 +38,7 @@ knitr::opts_chunk$set(
 
 For cellular omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce **sccomp**, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, while being robust to outliers.
 
-<img src="`r ifelse(knitr::pandoc_to() == 'html', '../inst/cartoon_methods.png', 'inst/cartoon_methods.png')`" width="100%"/>
+<img src="../inst/cartoon_methods.png" width="100%"/>
 
 ### Comprehensive Method Comparison
 
