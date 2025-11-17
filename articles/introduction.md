@@ -298,7 +298,7 @@ sccomp_result |>
     ## 
     ## Chain 1 finished in 0.0 seconds.
 
-![](inst/figures/unnamed-chunk-8-1.png)
+![](introduction_files/figure-html/unnamed-chunk-8-1.png)
 
 You can plot proportions adjusted for unwanted effects. This is helpful
 especially for complex models, where multiple factors can significantly
@@ -321,7 +321,7 @@ sccomp_result |>
     ## 
     ## Chain 1 finished in 0.0 seconds.
 
-![](inst/figures/unnamed-chunk-9-1.png)
+![](introduction_files/figure-html/unnamed-chunk-9-1.png)
 
 A plot of estimates of differential composition (c\_) on the x-axis and
 differential variability (v\_) on the y-axis. The error bars represent
@@ -335,7 +335,7 @@ sccomp_result |>
   plot_1D_intervals()
 ```
 
-![](inst/figures/unnamed-chunk-10-1.png)
+![](introduction_files/figure-html/unnamed-chunk-10-1.png)
 
 We can plot the relationship between abundance and variability. As we
 can see below, they are positively correlated. sccomp models this
@@ -348,7 +348,7 @@ sccomp_result |>
   plot_2D_intervals()
 ```
 
-![](inst/figures/unnamed-chunk-11-1.png)
+![](introduction_files/figure-html/unnamed-chunk-11-1.png)
 
 You can produce the series of plots calling the `plot` method.
 
@@ -855,7 +855,7 @@ plots = res |> sccomp_test() |> plot()
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-23-1.png)
+![](introduction_files/figure-html/unnamed-chunk-23-1.png)
 
 **Plot 2D significance plot** Data points are cell groups. Error bars
 are the 95% credible interval. The dashed lines represent the default
@@ -875,7 +875,7 @@ uncorrelated.
 plots$credible_intervals_2D
 ```
 
-![](inst/figures/unnamed-chunk-24-1.png)
+![](introduction_files/figure-html/unnamed-chunk-24-1.png)
 
 ## Recommended Settings for Different Data Types
 
@@ -912,7 +912,7 @@ draws <- as_draws_array(fit$draws("beta[2,1]"))
 mcmc_trace(draws, pars = "beta[2,1]") + theme_bw()
 ```
 
-![](inst/figures/unnamed-chunk-25-1.png)
+![](introduction_files/figure-html/unnamed-chunk-25-1.png)
 
 ``` r
 sessionInfo()
@@ -961,7 +961,7 @@ sessionInfo()
     ## [29] withr_3.0.2                 purrr_1.2.0                
     ## [31] BiocGenerics_0.56.0         desc_1.4.3                 
     ## [33] grid_4.5.2                  stats4_4.5.2               
-    ## [35] future_1.67.0               progressr_0.18.0           
+    ## [35] future_1.68.0               progressr_0.18.0           
     ## [37] globals_0.18.0              scales_1.4.0               
     ## [39] SummarizedExperiment_1.40.0 cli_3.6.5                  
     ## [41] rmarkdown_2.30              crayon_1.5.3               
