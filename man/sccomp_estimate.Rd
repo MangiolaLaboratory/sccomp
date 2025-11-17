@@ -30,6 +30,7 @@ sccomp_estimate(
   pass_fit = TRUE,
   sig_figs = 9,
   cache_stan_model = sccomp_stan_models_cache_dir,
+  cleanup_draw_files = TRUE,
   ...,
   .count = NULL,
   approximate_posterior_inference = NULL,
@@ -90,6 +91,10 @@ abundance column (counts or proportions), and factor columns.}
 \item{cache_stan_model}{A character string specifying the cache directory for compiled Stan models.
 The sccomp version will be automatically appended to ensure version isolation.
 Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
+
+\item{cleanup_draw_files}{Logical, whether to automatically delete Stan draw CSV files after extracting results.
+These files can be large (MBs to GBs) and are typically only needed during the analysis session.
+Default is TRUE to save disk space. Set to FALSE if you need to inspect draw files for debugging.}
 
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 
