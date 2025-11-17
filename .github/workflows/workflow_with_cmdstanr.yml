@@ -93,6 +93,13 @@ jobs:
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Clean up large draw files before deployment
+        if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          # Remove large Stan draw CSV files that shouldn't be deployed
+          find docs -type f -name "*.csv" -size +10M -delete
+          echo "Cleaned up large CSV files from docs directory"
+
       - name: Deploy to GitHub pages 🚀
         if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: JamesIves/github-pages-deploy-action@v4.5.0
@@ -100,4 +107,4 @@ jobs:
           clean: false
           branch: gh-pages
           folder: docs
-
+          
