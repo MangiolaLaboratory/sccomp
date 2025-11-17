@@ -3,7 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   introduction: introduction.html
-last_built: 2025-11-17T04:57Z
+last_built: 2025-11-17T05:05Z
 urls:
   reference: https://mangiolalaboratory.github.io/sccomp/reference
   article: https://mangiolalaboratory.github.io/sccomp/articles
