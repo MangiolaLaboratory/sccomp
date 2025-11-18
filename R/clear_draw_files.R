@@ -97,7 +97,7 @@ clear_draw_files <- function(output_directory = "sccomp_draws_files",
     all_files <- all_files[file_sizes_mb > larger_than_mb]
     
     if (length(all_files) == 0) {
-      message(sprintf("No files larger than %d MB found.", larger_than_mb))
+      message(sprintf("No files larger than %.1f MB found.", larger_than_mb))
       return(invisible(list(files_deleted = 0, space_freed_mb = 0, files = character(0))))
     }
   }
