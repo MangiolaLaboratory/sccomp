@@ -86,7 +86,7 @@ clear_draw_files <- function(output_directory = "sccomp_draws_files",
     all_files <- all_files[age_days > older_than_days]
     
     if (length(all_files) == 0) {
-      message(sprintf("No files older than %d days found.", older_than_days))
+      message(sprintf("No files older than %.1f days found.", older_than_days))
       return(invisible(list(files_deleted = 0, space_freed_mb = 0, files = character(0))))
     }
   }
