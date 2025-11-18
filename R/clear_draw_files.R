@@ -25,7 +25,7 @@
 #'   \itemize{
 #'     \item `files_deleted`: Number of files deleted
 #'     \item `space_freed_mb`: Approximate disk space freed in MB
-#'     \item `files`: Vector of deleted file paths (if dry_run = FALSE)
+#'     \item `files`: Vector of file paths. When `dry_run = TRUE`, these are files that would be deleted; when `dry_run = FALSE`, these are files that were successfully deleted.
 #'   }
 #'
 #' @examples
