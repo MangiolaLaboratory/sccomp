@@ -86,11 +86,7 @@ clear_draw_files <- function(output_directory = "sccomp_draws_files",
     all_files <- all_files[age_days > older_than_days]
     
     if (length(all_files) == 0) {
-<<<<<<< HEAD
-      message(sprintf("No files older than %.1f days found.", older_than_days))
-=======
       message(sprintf("No files older than %d days found.", older_than_days))
->>>>>>> 3af1137 (Update version to 2.1.22 and add automatic cleanup for Stan draw files)
       return(invisible(list(files_deleted = 0, space_freed_mb = 0, files = character(0))))
     }
   }
@@ -101,11 +97,7 @@ clear_draw_files <- function(output_directory = "sccomp_draws_files",
     all_files <- all_files[file_sizes_mb > larger_than_mb]
     
     if (length(all_files) == 0) {
-<<<<<<< HEAD
       message(sprintf("No files larger than %.1f MB found.", larger_than_mb))
-=======
-      message(sprintf("No files larger than %d MB found.", larger_than_mb))
->>>>>>> 3af1137 (Update version to 2.1.22 and add automatic cleanup for Stan draw files)
       return(invisible(list(files_deleted = 0, space_freed_mb = 0, files = character(0))))
     }
   }
