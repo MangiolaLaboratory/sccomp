@@ -474,9 +474,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   # fit3 = readRDS(temp_rds_file)
   # file.remove(temp_rds_file)
   
-  # Create a dummy tibble
-  tibble() |>
-    # Attach association mean concentration
+  estimate_tibble =
+    tibble() |>
     add_attr(fit3, "fit") |>
     add_attr(data_for_model, "model_input") |>
     add_attr(.sample, ".sample") |>
