@@ -25,7 +25,7 @@
 #'   \itemize{
 #'     \item `files_deleted`: Number of files deleted
 #'     \item `space_freed_mb`: Approximate disk space freed in MB
-#'     \item `files`: Vector of deleted file paths (if dry_run = FALSE)
+#'     \item `files`: Vector of file paths. When `dry_run = TRUE`, these are files that would be deleted; when `dry_run = FALSE`, these are files that were successfully deleted.
 #'   }
 #'
 #' @examples
@@ -86,7 +86,7 @@ clear_draw_files <- function(output_directory = "sccomp_draws_files",
     all_files <- all_files[age_days > older_than_days]
     
     if (length(all_files) == 0) {
-      message(sprintf("No files older than %d days found.", older_than_days))
+      message(sprintf("No files older than %.1f days found.", older_than_days))
       return(invisible(list(files_deleted = 0, space_freed_mb = 0, files = character(0))))
     }
   }
@@ -97,7 +97,7 @@ clear_draw_files <- function(output_directory = "sccomp_draws_files",
     all_files <- all_files[file_sizes_mb > larger_than_mb]
     
     if (length(all_files) == 0) {
-      message(sprintf("No files larger than %d MB found.", larger_than_mb))
+      message(sprintf("No files larger than %.1f MB found.", larger_than_mb))
       return(invisible(list(files_deleted = 0, space_freed_mb = 0, files = character(0))))
     }
   }
