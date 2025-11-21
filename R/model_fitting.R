@@ -217,8 +217,16 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
   
   if (file.exists(cache_file) & !force) {
-    message("Loading model from cache...")
-    return(readRDS(cache_file))
+    mod <- readRDS(cache_file)
+    stan_file <- tryCatch(mod$stan_file(), error = function(e) "")
+    
+    if (!is.null(stan_file) && nzchar(stan_file) && file.exists(stan_file)) {
+      message("Loading model from cache...")
+      return(mod)
+    } else {
+      message("Cached model missing source Stan file. Recompiling...")
+      clear_stan_model_cache(cache_dir = cache_dir)
+    }
   }
   
   # If loading the precompiled model fails, find the Stan model file within the package
