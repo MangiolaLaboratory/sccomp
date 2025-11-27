@@ -18,31 +18,13 @@ vignette: >
   %\VignetteIndexEntry{sccomp: Differential Composition and Variability Analysis for Single-Cell Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-knit: >
-    (function(x, ...){
-        proj_root <- rprojroot::find_package_root_file() |> normalizePath()
-        
-        # Set knitr options for both renders
-        knitr::opts_knit$set(root.dir = proj_root)
-        
-        rmarkdown::render(
-            x,
-            output_file = "README.md",
-            output_format = "github_document",
-            output_dir = proj_root,
-            knit_root_dir = proj_root,
-            params = list(
-                demo_metadata = FALSE
-            )
-        )
-    })
 ---
 
 <!-- badges: start -->
 [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/sccomp/actions/)
 <!-- badges: end -->
 
-# <img src="`r ifelse(knitr::pandoc_to() %in% c('html', 'html4'), '../inst/logo-01.png', 'inst/logo-01.png')`" height="139px" width="120px"/>
+# <img src="../inst/logo-01.png" height="139px" width="120px"/>
 
 **sccomp** is a powerful R package designed for comprehensive differential composition and variability analysis in single-cell genomics, proteomics, and microbiomics data. 
 
@@ -50,7 +32,7 @@ knit: >
 
 For cellular omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce **sccomp**, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, while being robust to outliers.
 
-<img src="`r ifelse(knitr::pandoc_to() == 'html', '../inst/cartoon_methods.png', 'inst/cartoon_methods.png')`" width="100%"/>
+<img src="../inst/cartoon_methods.png" width="100%"/>
 
 ### Comprehensive Method Comparison
 
@@ -186,7 +168,8 @@ sccomp_result =
     sample = "sample",
     cell_group = "cell_group",
     abundance = "count", 
-    cores = 1, verbose = FALSE
+    cores = 1, verbose = FALSE,
+    max_sampling_iterations = 2000
   ) |> 
   sccomp_test()
 ```
@@ -228,10 +211,11 @@ sccomp_result =
     sample = "sample",
     cell_group = "cell_group",
     abundance = "count", 
-    cores = 1, verbose = FALSE
+    cores = 1, verbose = FALSE,
+    max_sampling_iterations = 2000
   ) |> 
   
-  # max_sampling_iterations is used her to not exceed the maximum file size for GitHub action of 100Mb
+  # max_sampling_iterations is used to reduce draw file sizes
   sccomp_remove_outliers(cores = 1, verbose = FALSE, max_sampling_iterations = 2000) |> # Optional
   sccomp_test()
 ```
@@ -320,7 +304,8 @@ sccomp_result =
     sample = "sample",
     cell_group = "cell_group",
     abundance = "proportion", 
-    cores = 1, verbose = FALSE
+    cores = 1, verbose = FALSE,
+    max_sampling_iterations = 2000
   ) |> 
   sccomp_test()
 ```
@@ -337,7 +322,8 @@ res =
       formula_composition = ~ type + continuous_covariate, 
       sample = "sample", 
       cell_group = "cell_group",
-      cores = 1, verbose=FALSE
+      cores = 1, verbose=FALSE,
+      max_sampling_iterations = 2000
     )
 
 res
@@ -365,7 +351,8 @@ res =
     sample = "sample",
     cell_group = "cell_group",
     bimodal_mean_variability_association = TRUE,
-    cores = 1, verbose = FALSE
+    cores = 1, verbose = FALSE,
+    max_sampling_iterations = 2000
   ) 
 
 res
@@ -383,7 +370,8 @@ res =
       sample = "sample",
       cell_group = "cell_group",
       bimodal_mean_variability_association = TRUE,
-      cores = 1, verbose = FALSE
+      cores = 1, verbose = FALSE,
+      max_sampling_iterations = 2000
     )
 
 res
@@ -401,7 +389,8 @@ res =
       sample = "sample",
       cell_group = "cell_group",
       bimodal_mean_variability_association = TRUE,
-      cores = 1, verbose = FALSE
+      cores = 1, verbose = FALSE,
+      max_sampling_iterations = 2000
     )
 
 res
@@ -437,7 +426,8 @@ seurat_obj |>
     formula_composition = ~ 0 + type, 
     sample = "sample",
     cell_group = "cell_group", 
-    cores = 1, verbose = FALSE
+    cores = 1, verbose = FALSE,
+    max_sampling_iterations = 2000
   ) |> 
   sccomp_test( contrasts =  c("typecancer - typehealthy", "typehealthy - typecancer"))
 
@@ -464,7 +454,8 @@ model_with_factor_association =
     cell_group = "cell_group", 
     inference_method = "hmc",
     enable_loo = TRUE,
-    verbose = FALSE
+    verbose = FALSE,
+    max_sampling_iterations = 2000
   )
 
 # Fit second model
@@ -476,7 +467,8 @@ model_without_association =
     cell_group = "cell_group", 
     inference_method = "hmc",
     enable_loo = TRUE,
-    verbose = FALSE
+    verbose = FALSE,
+    max_sampling_iterations = 2000
   )
 
 # Compare models
@@ -500,7 +492,8 @@ res =
     formula_variability = ~ type,
     sample = "sample",
     cell_group = "cell_group",
-    cores = 1, verbose = FALSE
+    cores = 1, verbose = FALSE,
+    max_sampling_iterations = 2000
   )
 
 res
