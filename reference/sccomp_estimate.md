@@ -38,6 +38,7 @@ sccomp_estimate(
   pass_fit = TRUE,
   sig_figs = 9,
   cache_stan_model = sccomp_stan_models_cache_dir,
+  cleanup_draw_files = TRUE,
   ...,
   .count = NULL,
   approximate_posterior_inference = NULL,
@@ -160,6 +161,14 @@ sccomp_estimate(
   models. The sccomp version will be automatically appended to ensure
   version isolation. Default is `sccomp_stan_models_cache_dir` which
   points to `~/.sccomp_models`.
+
+- cleanup_draw_files:
+
+  Logical, whether to automatically delete Stan draw CSV files after
+  extracting results. These files can be large (MBs to GBs) and are
+  typically only needed during the analysis session. Default is TRUE to
+  save disk space. Set to FALSE if you need to inspect draw files for
+  debugging.
 
 - ...:
 
@@ -511,11 +520,12 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              55      -4.788e+05      1.034e-02   1.957e-01    1.000e+00  1.000e+00      3025 -3.709e+03 -3.709e+03                   
 #> Path [50] :Best Iter: [49] ELBO (-3708.691571) evaluations: (3025) 
-#> Finished in  13.5 seconds.
+#> Finished in  13.6 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
+#> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 #> sccomp says: proportion column is a proportion. The sum-constrained beta model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).
 #> sccomp says: estimation
 #> sccomp says: the composition design matrix has columns: (Intercept), typecancer
@@ -722,10 +732,11 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>             100       2.567e+03      5.172e-02   7.435e+03    2.628e-02  2.628e-02      8422  2.280e+03 -1.284e+06                   
 #> Path [50] :Best Iter: [33] ELBO (2279.898143) evaluations: (8422) 
-#> Finished in  15.8 seconds.
+#> Finished in  15.9 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
+#> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 # }
 ```

@@ -304,6 +304,7 @@ print("cmdstanr is needed to run this example.")
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
+#> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 #> sccomp says: calculating residuals
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...

@@ -109,8 +109,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000361 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.61 seconds. 
+#> Gradient evaluation took 0.000367 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.67 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -137,6 +137,7 @@ print(residuals)
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
+#> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 

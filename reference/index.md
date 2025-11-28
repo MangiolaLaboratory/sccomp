@@ -2,6 +2,8 @@
 
 ## All functions
 
+- [`clear_draw_files()`](https://mangiolalaboratory.github.io/sccomp/reference/clear_draw_files.md)
+  : Clear Stan Draw Files
 - [`clear_stan_model_cache()`](https://mangiolalaboratory.github.io/sccomp/reference/clear_stan_model_cache.md)
   : Clear Stan Model Cache
 - [`counts_obj`](https://mangiolalaboratory.github.io/sccomp/reference/counts_obj.md)

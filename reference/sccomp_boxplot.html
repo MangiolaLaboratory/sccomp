@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.22</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -320,26 +320,27 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              59      -4.788e+05      6.350e-03   2.093e-01    1.000e+00  1.000e+00      3418 -3.705e+03 -3.707e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [56] ELBO (-3704.539424) evaluations: (3418) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  13.3 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  13.4 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(cell_group)`</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Precompiled model not found. Compiling the model...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Running make /tmp/RtmprqrPPi/model-384b488db33 "STAN_THREADS=TRUE" \</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   "STANCFLAGS += --include-paths=/tmp/RtmprqrPPi/temp_libpath384b2a85c4c4/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model'"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Running make /tmp/RtmpTPMtZ2/model-38842298bb20 "STAN_THREADS=TRUE" \</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "STANCFLAGS += --include-paths=/tmp/RtmpTPMtZ2/temp_libpath388479440d37/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model'"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Translating Stan model to C++ code ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> bin/stanc --include-paths=/tmp/RtmprqrPPi/temp_libpath384b2a85c4c4/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model' --o=/tmp/RtmprqrPPi/model-384b488db33.hpp /tmp/RtmprqrPPi/model-384b488db33.stan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> bin/stanc --include-paths=/tmp/RtmpTPMtZ2/temp_libpath388479440d37/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model' --o=/tmp/RtmpTPMtZ2/model-38842298bb20.hpp /tmp/RtmpTPMtZ2/model-38842298bb20.stan</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Compiling C++ code ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmprqrPPi/model-384b488db33.o /tmp/RtmprqrPPi/model-384b488db33.hpp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmpTPMtZ2/model-38842298bb20.o /tmp/RtmpTPMtZ2/model-38842298bb20.hpp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Linking model ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.37.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.37.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmprqrPPi/model-384b488db33.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmprqrPPi/model-384b488db33</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rm /tmp/RtmprqrPPi/model-384b488db33.o /tmp/RtmprqrPPi/model-384b488db33.hpp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.37.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.37.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmpTPMtZ2/model-38842298bb20.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmpTPMtZ2/model-38842298bb20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rm /tmp/RtmpTPMtZ2/model-38842298bb20.o /tmp/RtmpTPMtZ2/model-38842298bb20.hpp</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Model compiled and saved to cache successfully.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

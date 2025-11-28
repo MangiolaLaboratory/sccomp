@@ -17,7 +17,7 @@ group-size) and derives the count data from cell metadata."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.21</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.22</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,6 +83,7 @@ group-size) and derives the count data from cell metadata.</p>
 <span>  pass_fit <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  sig_figs <span class="op">=</span> <span class="fl">9</span>,</span>
 <span>  cache_stan_model <span class="op">=</span> <span class="va">sccomp_stan_models_cache_dir</span>,</span>
+<span>  cleanup_draw_files <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  .count <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  approximate_posterior_inference <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -194,6 +195,12 @@ abundance column (counts or proportions), and factor columns.</p></dd>
 <dd><p>A character string specifying the cache directory for compiled Stan models.
 The sccomp version will be automatically appended to ensure version isolation.
 Default is <code>sccomp_stan_models_cache_dir</code> which points to <code>~/.sccomp_models</code>.</p></dd>
+
+
+<dt id="arg-cleanup-draw-files">cleanup_draw_files<a class="anchor" aria-label="anchor" href="#arg-cleanup-draw-files"></a></dt>
+<dd><p>Logical, whether to automatically delete Stan draw CSV files after extracting results.
+These files can be large (MBs to GBs) and are typically only needed during the analysis session.
+Default is TRUE to save disk space. Set to FALSE if you need to inspect draw files for debugging.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -496,11 +503,12 @@ Default is <code>sccomp_stan_models_cache_dir</code> which points to <code>~/.sc
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              55      -4.788e+05      1.034e-02   1.957e-01    1.000e+00  1.000e+00      3025 -3.709e+03 -3.709e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [49] ELBO (-3708.691571) evaluations: (3025) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  13.5 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  13.6 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: proportion column is a proportion. The sum-constrained beta model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
@@ -707,11 +715,12 @@ Default is <code>sccomp_stan_models_cache_dir</code> which points to <code>~/.sc
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             100       2.567e+03      5.172e-02   7.435e+03    2.628e-02  2.628e-02      8422  2.280e+03 -1.284e+06                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [33] ELBO (2279.898143) evaluations: (8422) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  15.8 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  15.9 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
