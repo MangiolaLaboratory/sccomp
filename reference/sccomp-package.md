@@ -32,7 +32,7 @@ The main functions are:
 - [`sccomp_predict`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_predict.md) -
   Predict cell type proportions for new samples
 
-- [`sccomp_remove_unwanted_variation`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_remove_unwanted_variation.md) -
+- [`sccomp_remove_unwanted_effects`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_remove_unwanted_effects.md) -
   Remove unwanted variation from data
 
 - [`sccomp_proportional_fold_change`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_proportional_fold_change.md) -
@@ -71,6 +71,8 @@ for single-cell data. Proceedings of the National Academy of Sciences,
 Useful links:
 
 - <https://github.com/MangiolaLaboratory/sccomp>
+
+- <https://mangiolalaboratory.github.io/sccomp/>
 
 - Report bugs at <https://github.com/MangiolaLaboratory/sccomp/issues>
 
