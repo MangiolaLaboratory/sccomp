@@ -454,6 +454,7 @@ model_with_factor_association =
     cell_group = "cell_group", 
     inference_method = "hmc",
     enable_loo = TRUE,
+    cleanup_draw_files = FALSE,
     verbose = FALSE,
     max_sampling_iterations = 2000
   )
@@ -467,6 +468,7 @@ model_without_association =
     cell_group = "cell_group", 
     inference_method = "hmc",
     enable_loo = TRUE,
+    cleanup_draw_files = FALSE,
     verbose = FALSE,
     max_sampling_iterations = 2000
   )
