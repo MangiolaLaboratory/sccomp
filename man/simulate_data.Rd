@@ -39,7 +39,7 @@ simulate_data(
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
-\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.}
+\item{mcmc_seed}{An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()}
 
 \item{cores}{Integer, the number of cores to be used for parallel calculations.}
 
@@ -69,29 +69,28 @@ This function simulates data from a fitted model.
 }
 \examples{
 
-print("cmdstanr is needed to run this example.")
+# print("cmdstanr is needed to run this example.")
 # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
 # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 
-\donttest{
-  if (instantiate::stan_cmdstan_exists()) {
-    data("counts_obj")
-    library(dplyr)
+# \donttest{
+#   if (instantiate::stan_cmdstan_exists()) {
+#     data("counts_obj")
+#     library(dplyr)
 
-    estimate = sccomp_estimate(
-      counts_obj,
-      ~ type, ~1, "sample", "cell_group", "count",
-      cores = 1
-    )
+#     estimate = sccomp_estimate(
+#       counts_obj,
+#       ~ type, ~1, "sample", "cell_group", "count",
+#       cores = 1
+#     )
 
-    # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-    counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
+#     # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
+#     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
 
-    # Simulate data
-    simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
-  }
-}
-
+#     # Simulate data
+#     simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+#   }
+# }
 }
 \references{
 S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).

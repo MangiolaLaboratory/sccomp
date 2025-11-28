@@ -20,7 +20,7 @@
 #' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
 #' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
-#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
@@ -48,29 +48,28 @@
 #'
 #' @examples
 #'
-#' print("cmdstanr is needed to run this example.")
+#' # print("cmdstanr is needed to run this example.")
 #' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
 #' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
 #'
-#' \donttest{
-#'   if (instantiate::stan_cmdstan_exists()) {
-#'     data("counts_obj")
-#'     library(dplyr)
+#' # \donttest{
+#' #   if (instantiate::stan_cmdstan_exists()) {
+#' #     data("counts_obj")
+#' #     library(dplyr)
 #'
-#'     estimate = sccomp_estimate(
-#'       counts_obj,
-#'       ~ type, ~1, "sample", "cell_group", "count",
-#'       cores = 1
-#'     )
+#' #     estimate = sccomp_estimate(
+#' #       counts_obj,
+#' #       ~ type, ~1, "sample", "cell_group", "count",
+#' #       cores = 1
+#' #     )
 #'
-#'     # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-#'     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
+#' #     # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
+#' #     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
 #'
-#'     # Simulate data
-#'     simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
-#'   }
-#' }
-#'
+#' #     # Simulate data
+#' #     simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
+#' #   }
+#' # }
 simulate_data <- function(.data,
                           .estimate_object,
                           formula_composition,

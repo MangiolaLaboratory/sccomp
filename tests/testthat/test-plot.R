@@ -1,6 +1,7 @@
 library(dplyr)
 library(tidyr)
 library(sccomp)
+library(ggplot2)
 data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
@@ -325,4 +326,32 @@ test_that("plot_2D_intervals includes regression line from prec_coeff parameters
         show_fdr_message = FALSE
       )
   )
+}) 
+
+test_that("sccomp_boxplot can accept additional ggplot layers", {
+   skip_cmdstan()
+  
+  # Test that we can add layers to the boxplot
+  plot_with_label <- my_estimate |> 
+    sccomp_test() |> 
+    sccomp_boxplot("type", significance_threshold = 0.025) +
+    geom_label(aes(label = c_FDR), x = 1, y = 0.5)
+  
+  expect_s3_class(plot_with_label, "ggplot")
+  
+  # Test with geom_text
+  plot_with_text <- my_estimate |> 
+    sccomp_test() |> 
+    sccomp_boxplot("type", significance_threshold = 0.025) +
+    geom_text(aes(label = c_FDR), x = 1, y = 0.3)
+  
+  expect_s3_class(plot_with_text, "ggplot")
+  
+  # Test with theme modifications
+  plot_with_theme <- my_estimate |> 
+    sccomp_test() |> 
+    sccomp_boxplot("type", significance_threshold = 0.025) +
+    theme(plot.title = element_text(color = "red"))
+  
+  expect_s3_class(plot_with_theme, "ggplot")
 }) 
