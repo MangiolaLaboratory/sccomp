@@ -20,7 +20,7 @@
 #' @param .coefficients The column names for coefficients, for example, c(b_0, b_1)
 #' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
-#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()#' @param cores Integer, the number of cores to be used for parallel calculations.
+#' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
 #' @param cores Integer, the number of cores to be used for parallel calculations.
 #' @param sig_figs Number of significant figures to use for Stan model output. Default is 9.
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
@@ -45,8 +45,6 @@
 #' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
 #'
 #' @export
-#' @noRd
-#' @keywords internal
 #'
 #' @examples
 #'

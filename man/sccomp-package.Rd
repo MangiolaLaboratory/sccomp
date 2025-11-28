@@ -49,6 +49,7 @@ Proceedings of the National Academy of Sciences, 120(33), e2203828120.
 Useful links:
 \itemize{
   \item \url{https://github.com/MangiolaLaboratory/sccomp}
+  \item \url{https://mangiolalaboratory.github.io/sccomp/}
   \item Report bugs at \url{https://github.com/MangiolaLaboratory/sccomp/issues}
 }
 
