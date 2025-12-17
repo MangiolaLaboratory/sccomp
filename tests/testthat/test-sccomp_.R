@@ -330,14 +330,13 @@ test_that("multilevel multi beta binomial from Seurat with intercept and continu
       inference_method = "hmc", verbose=FALSE
     )
 
-    expect(
+    expect_true(
       "CD8 em 1" %in%
       (res |>
         filter(parameter == "continuous_covariate") |>
         arrange(desc(abs(c_effect))) |>
         slice(1:3) |>
-        pull(cell_group)),
-      TRUE
+        pull(cell_group))
     )
 
 
@@ -839,7 +838,9 @@ test_that("LOO", {
       cell_group = "cell_group", 
       inference_method = "hmc",
       cores = 1, 
-      enable_loo = TRUE, max_sampling_iterations = n_iterations, verbose = FALSE
+      enable_loo = TRUE, 
+      max_sampling_iterations = n_iterations, 
+      verbose = FALSE
     ) |> 
     expect_no_error()
   
@@ -852,7 +853,9 @@ test_that("LOO", {
       cell_group = "cell_group", 
       inference_method = "hmc",
       cores = 1, 
-      enable_loo = TRUE, max_sampling_iterations = n_iterations, verbose = FALSE
+      enable_loo = TRUE, 
+      max_sampling_iterations = n_iterations, 
+      verbose = FALSE
     ) |> 
     expect_no_error()
   
