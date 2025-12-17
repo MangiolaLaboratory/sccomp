@@ -706,6 +706,14 @@ sccomp_estimate.data.frame <- function(.data,
   
   # Auto-cleanup draw files if requested
   if (cleanup_draw_files) {
+    # Incorporate all parameters into fit object BEFORE deleting CSV files
+    # This ensures parameters are cached in memory and remain accessible after cleanup
+    fit_obj <- attr(res, "fit")
+    incorporate_parameters_into_fit_object(fit_obj)
+    
+    # Update the fit attribute with the modified fit object
+    attr(res, "fit") <- fit_obj
+    
     if (dir.exists(output_directory)) {
       files_deleted <- list.files(output_directory, pattern = "\\.csv$", full.names = TRUE)
       if (length(files_deleted) > 0) {

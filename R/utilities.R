@@ -48,6 +48,68 @@ add_attr = function(var, attribute, name) {
   var
 }
 
+#' Incorporate all Stan model parameters into fit object
+#'
+#' @description
+#' This function loads all parameters from the Stan model into the fit object.
+#' This is necessary before cleaning up CSV draw files to ensure all parameters
+#' are available for later retrieval even after the CSV files are deleted.
+#' 
+#' The function calls fit$draws() for all parameters, which forces cmdstanr
+#' to read the CSV files and cache the draws in memory. This way, when the
+#' CSV files are later deleted (via cleanup_draw_files = TRUE), the draws
+#' remain accessible through the fit object.
+#' 
+#' This function is really needed for LOO usage and outlier removal usage.
+#'
+#' @param fit A cmdstanr fit object
+#'
+#' @return The same fit object (invisibly), with all parameters loaded into memory
+#'
+#' @keywords internal
+#' @noRd
+incorporate_parameters_into_fit_object = function(fit) {
+  
+  # List of all parameters in the Stan model (glm_multi_beta_binomial)
+  # This includes parameters, transformed parameters, and generated quantities
+  parameters_to_load <- c(
+    # Parameters block
+    "beta_raw",
+    "alpha",
+    "prec_coeff",
+    "prec_sd",
+    "mix_p",
+    "random_effect_raw",
+    "random_effect_raw_2",
+    "random_effect_sigma_mu",
+    "random_effect_sigma_sigma",
+    "random_effect_sigma_raw",
+    "sigma_correlation_factor",
+    "random_effect_sigma_raw_2",
+    "sigma_correlation_factor_2",
+    "zero_random_effect",
+    # Transformed parameters
+    "beta",
+    # Generated quantities
+    "alpha_normalised",
+    "log_lik"
+  )
+  
+  # Get list of available variables from the fit object
+  available_vars <- names(fit$draws(format = "draws_df"))
+  
+  # Filter to only include the parameters we care about that are available
+  params_to_load <- intersect(parameters_to_load, available_vars)
+  
+  # Load parameters by calling draws()
+  # This forces cmdstanr to read from CSV and store in memory
+  if (length(params_to_load) > 0) {
+    fit$draws(variables = params_to_load, format = "draws_df")
+  }
+  
+  invisible(fit)
+}
+
 
 #' Formula parser
 #'
