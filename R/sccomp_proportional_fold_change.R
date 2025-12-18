@@ -63,6 +63,43 @@ sccomp_proportional_fold_change <- function(.data, formula_composition, from, to
   UseMethod("sccomp_proportional_fold_change", .data)
 }
 
+#' Convert character columns to factors with proper levels
+#'
+#' @description
+#' Internal helper function that converts character columns in new_data to factors
+#' with the same levels as in the original training data. This is critical for
+#' predictions to work correctly, as the model expects factors with specific levels.
+#' 
+#' Without this conversion, character values are treated as the reference level,
+#' leading to incorrect predictions where all conditions produce the same output.
+#'
+#' @param new_data A data frame with character columns to convert
+#' @param factor_columns Character vector of column names that should be converted to factors
+#' @param original_data The original training data containing the factor levels
+#'
+#' @return The new_data with character columns converted to factors with proper levels
+#' 
+#' @keywords internal
+#' @noRd
+convert_to_factors_with_levels <- function(new_data, factor_columns, original_data) {
+  
+  for (factor_col in factor_columns) {
+    
+    # Extract factor levels from the original data
+    if (is.factor(original_data[[factor_col]])) {
+      factor_levels <- levels(original_data[[factor_col]])
+    } else {
+      # For character columns, use unique values as levels
+      factor_levels <- unique(original_data[[factor_col]])
+    }
+    
+    # Convert new_data column to factor with the same levels
+    new_data[[factor_col]] <- factor(new_data[[factor_col]], levels = factor_levels)
+  }
+  
+  return(new_data)
+}
+
 #' @export
 #' 
 #' @importFrom glue glue
@@ -82,8 +119,9 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     to_parts <- str_split(to, ":")[[1]]
     
     # Create new_data with individual factor columns
+    # Sample column needs dummy identifiers, not the interaction string
     new_data <- tibble(
-      !!quo_name(.sample) := c(to, from)
+      !!quo_name(.sample) := c("to", "from")
     )
     
     # Add each factor column
@@ -91,21 +129,35 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
       new_data <- new_data %>%
         mutate(!!my_factors[i] := c(to_parts[i], from_parts[i]))
     }
-  } else {
+  } else {   
     # For single factor, use the original approach
+    # Sample column needs dummy identifiers, not the factor levels
     new_data <- tibble(
-      !!quo_name(.sample) := c(to, from), 
+      !!quo_name(.sample) := c("to", "from"), 
       !!my_factors := c(to, from)
     )
   }
   
+  # Convert character columns to factors with proper levels matching the original data
+  # This is critical for the prediction to work correctly
+  new_data <- convert_to_factors_with_levels(
+    new_data, 
+    my_factors, 
+    attr(.data, "count_data")
+  )
+  
   # Predict the composition for the specified conditions
-  .data |> 
+  predictions <- .data |> 
     sccomp_predict(
       formula_composition = formula_composition, 
       new_data = new_data
-    ) |> 
-    
+    )
+  
+  # Sample IDs for filtering
+  sample_to <- "to"
+  sample_from <- "from"
+  
+  predictions |> 
     # Nest the predicted data by cell group
     nest(data = -!!.data |> attr(".cell_group")) |> 
     
@@ -115,12 +167,12 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
       ratio_mean = map_dbl(
         data, 
         ~ {
-          x = .x |> arrange(!!.sample != !!from) |> pull(proportion_mean); 
+          x = .x |> arrange(!!.sample != sample_to) |> pull(proportion_mean); 
           x[2]/x[1] })
     ) |> 
     mutate(
-      proportion_from = map_dbl(data, ~.x |> filter(!!.sample==from) |> pull(proportion_mean)),
-      proportion_to = map_dbl(data, ~.x |> filter(!!.sample!=from) |> pull(proportion_mean))
+      proportion_from = map_dbl(data, ~.x |> filter(!!.sample == sample_from) |> pull(proportion_mean)),
+      proportion_to = map_dbl(data, ~.x |> filter(!!.sample == sample_to) |> pull(proportion_mean))
     ) |> 
     
     # Calculate the proportional fold change
@@ -131,12 +183,12 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
       ratio_upper = map_dbl(
         data,  
         ~ {
-          x = .x |> arrange(!!.sample != !!from) |> pull(proportion_upper); 
+          x = .x |> arrange(!!.sample != sample_to) |> pull(proportion_upper); 
           x[2]/x[1] }),
       ratio_lower = map_dbl(
         data, 
         ~ {
-          x = .x |> arrange(!!.sample != !!from) |> pull(proportion_lower); 
+          x = .x |> arrange(!!.sample != sample_to) |> pull(proportion_lower); 
           x[2]/x[1] })
     ) |> 
     
