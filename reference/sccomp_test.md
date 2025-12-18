@@ -332,7 +332,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              50      -4.788e+05      4.460e-03   1.943e-01    6.902e-01  6.902e-01      2719 -3.711e+03 -3.720e+03                   
 #> Path [50] :Best Iter: [31] ELBO (-3710.997115) evaluations: (2719) 
-#> Finished in  11.8 seconds.
+#> Finished in  11.7 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
