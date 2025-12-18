@@ -11,7 +11,7 @@ Once results are extracted into R objects, the CSV files can be safely deleted."
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.22</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.23</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@ Defaults to "sccomp_draws_files", which is the default output directory used by 
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list invisibly containing:</p><ul><li><p><code>files_deleted</code>: Number of files deleted</p></li>
 <li><p><code>space_freed_mb</code>: Approximate disk space freed in MB</p></li>
-<li><p><code>files</code>: Vector of deleted file paths (if dry_run = FALSE)</p></li>
+<li><p><code>files</code>: Vector of file paths. When <code>dry_run = TRUE</code>, these are files that would be deleted; when <code>dry_run = FALSE</code>, these are files that were successfully deleted.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

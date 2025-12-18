@@ -109,8 +109,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000346 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.46 seconds. 
+#> Gradient evaluation took 0.000339 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.39 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -130,7 +130,7 @@ print(residuals)
 #>    700        -3707.014             0.173            0.003   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
-#> Finished in  2.6 seconds.
+#> Finished in  2.4 seconds.
 #> Warning: Unknown or uninitialised column: `c_R_k_hat`.
 #> Warning: no non-missing arguments to max; returning -Inf
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,

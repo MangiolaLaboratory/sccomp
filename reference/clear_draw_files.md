@@ -54,7 +54,9 @@ A list invisibly containing:
 
 - `space_freed_mb`: Approximate disk space freed in MB
 
-- `files`: Vector of deleted file paths (if dry_run = FALSE)
+- `files`: Vector of file paths. When `dry_run = TRUE`, these are files
+  that would be deleted; when `dry_run = FALSE`, these are files that
+  were successfully deleted.
 
 ## Details
 

@@ -986,7 +986,7 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] bayesplot_1.15.0  posterior_1.6.1   cmdstanr_0.9.0    loo_2.8.0        
-    ##  [5] tidyr_1.3.1       forcats_1.0.1     ggplot2_4.0.1     sccomp_2.1.22    
+    ##  [5] tidyr_1.3.1       forcats_1.0.1     ggplot2_4.0.1     sccomp_2.1.23    
     ##  [9] instantiate_0.2.3 dplyr_1.1.4      
     ## 
     ## loaded via a namespace (and not attached):
