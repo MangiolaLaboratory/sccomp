@@ -93,8 +93,23 @@ convert_to_factors_with_levels <- function(new_data, factor_columns, original_da
       factor_levels <- unique(original_data[[factor_col]])
     }
     
+    # Store original values before conversion to detect invalids
+    original_values <- new_data[[factor_col]]
+    
     # Convert new_data column to factor with the same levels
     new_data[[factor_col]] <- factor(new_data[[factor_col]], levels = factor_levels)
+    
+    # Check if the conversion created NAs (indicating invalid factor levels)
+    na_mask <- is.na(new_data[[factor_col]])
+    if (any(na_mask)) {
+      invalid_values <- original_values[na_mask]
+      stop(sprintf(
+        "sccomp says: Invalid level(s) '%s' provided for factor '%s'. Valid levels are: %s",
+        paste(invalid_values, collapse = "', '"),
+        factor_col,
+        paste(factor_levels, collapse = ", ")
+      ))
+    }
   }
   
   return(new_data)
