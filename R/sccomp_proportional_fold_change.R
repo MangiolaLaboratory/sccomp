@@ -262,12 +262,14 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     
     
     # Calculate the ratio of proportions between 'to' and 'from' conditions
+    # After arrange(!!.sample != sample_to), x[1] is 'to' and x[2] is 'from'
+    # So x[1]/x[2] gives proportion_to / proportion_from
     mutate(
       ratio_mean = map_dbl(
         data, 
         ~ {
           x = .x |> arrange(!!.sample != sample_to) |> pull(proportion_mean); 
-          x[2]/x[1] })
+          x[1]/x[2] })
     ) |> 
     mutate(
       proportion_from = map_dbl(data, ~.x |> filter(!!.sample == sample_from) |> pull(proportion_mean)),
@@ -283,12 +285,12 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
         data,  
         ~ {
           x = .x |> arrange(!!.sample != sample_to) |> pull(proportion_upper); 
-          x[2]/x[1] }),
+          x[1]/x[2] }),
       ratio_lower = map_dbl(
         data, 
         ~ {
           x = .x |> arrange(!!.sample != sample_to) |> pull(proportion_lower); 
-          x[2]/x[1] })
+          x[1]/x[2] })
     ) |> 
     
     # Calculate the proportional fold change
@@ -299,6 +301,7 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     mutate(average_uncertainty = (abs(difference_proportion_upper_fold_change) + abs(difference_proportion_lower_fold_change))/2) |> 
     
     # Print expression
+    # The statement always shows the direction from 'from' to 'to' conditions
     mutate(increase_decrease = if_else(proportion_fold_change>0, "increase", "decrease")) |> 
     mutate(statement = glue("{round(abs(proportion_fold_change),1)}-fold {increase_decrease} (from {round(proportion_from, 4)} to {round(proportion_to, 4)})")) |> 
     
