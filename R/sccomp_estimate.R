@@ -790,6 +790,9 @@ sccomp_glm_data_frame_raw = function(.data,
     all_of(parse_formula(formula_composition))
   ))
   
+  # Check that we have at least 2 cell groups for compositional analysis
+  check_minimum_cell_groups(.data, !!.cell_group)
+  
   .grouping_for_random_effect = parse_formula_random_effect(formula_composition) |> pull(grouping) |> unique()
   
   # Make counts
@@ -893,6 +896,9 @@ sccomp_glm_data_frame_counts = function(.data,
   
   #Check column class
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)
+  
+  # Check that we have at least 2 cell groups for compositional analysis
+  check_minimum_cell_groups(.data, !!.cell_group)
   
   # Check that count is integer
   if(.data %>% pull(!!.count) %>% is("integer")) message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))

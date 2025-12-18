@@ -478,43 +478,6 @@ test_that("sccomp_proportional_fold_change works with small sample sizes", {
   expect_true(is.numeric(result$proportion_fold_change))
 })
 
-# Test 11: Edge cases - single cell group
-test_that("sccomp_proportional_fold_change works with single cell group", {
-  skip_cmdstan()
-  
-  # Create test data with single cell group
-  test_data <- data.frame(
-    sample = rep(c("s1", "s2"), each = 1),
-    cell_group = rep("cell1", 2),
-    treatment = c("control", "treatment"),
-    count = as.integer(c(100, 150))
-  )
-  
-  # Fit model
-  estimate <- sccomp_estimate(
-    test_data,
-    formula_composition = ~ treatment,
-    formula_variability = ~ 1,
-    sample = "sample",
-    cell_group = "cell_group",
-    abundance = "count",
-    cores = 1,
-    verbose = FALSE
-  )
-  
-  # Test proportional fold change
-  result <- sccomp_proportional_fold_change(
-    estimate,
-    formula_composition = ~ treatment,
-    from = "control",
-    to = "treatment"
-  )
-  
-  # Basic expectations
-  expect_s3_class(result, "tbl_df")
-  expect_equal(nrow(result), 1) # 1 cell group
-  expect_true(is.numeric(result$proportion_fold_change))
-})
 
 # Test 12: Edge cases - many cell groups
 test_that("sccomp_proportional_fold_change works with many cell groups", {

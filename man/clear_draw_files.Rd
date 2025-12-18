@@ -29,7 +29,7 @@ A list invisibly containing:
 \itemize{
 \item \code{files_deleted}: Number of files deleted
 \item \code{space_freed_mb}: Approximate disk space freed in MB
-\item \code{files}: Vector of deleted file paths (if dry_run = FALSE)
+\item \code{files}: Vector of file paths. When \code{dry_run = TRUE}, these are files that would be deleted; when \code{dry_run = FALSE}, these are files that were successfully deleted.
 }
 }
 \description{

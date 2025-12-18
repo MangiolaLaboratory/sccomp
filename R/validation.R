@@ -301,3 +301,22 @@ check_if_NAs_in_count = function(.data, .count){
   if(.data |> pull(!!.count) |> is.na() |> any())
     stop("sccomp says: the input data frame has NAs in the count column")
 }
+
+#' Check if there are at least 2 cell groups
+#'
+#' @param .data A tibble containing the data
+#' @param .cell_group Column containing cell group identifiers
+#'
+#' @return NULL (stops with error if less than 2 cell groups)
+#' @keywords internal
+#' @noRd
+check_minimum_cell_groups = function(.data, .cell_group){
+  .cell_group = enquo(.cell_group)
+  n_groups = .data |> pull(!!.cell_group) |> unique() |> length()
+  
+  if(n_groups < 2)
+    stop(sprintf(
+      "sccomp says: compositional analysis requires at least 2 cell groups, but your data only has %d cell group(s).\n\nThe softmax transformation used in compositional analysis is undefined for a single group and will always produce a proportion of 1.0, making the model degenerate. Please ensure your data includes multiple cell groups to enable meaningful composition comparisons.",
+      n_groups
+    ))
+}

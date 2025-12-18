@@ -1092,4 +1092,46 @@ test_that("contrasts_to_parameter_list handles various number contexts correctly
   }
 })
 
+test_that("sccomp_estimate fails with only 1 cell group", {
+  skip_cmdstan()
+  
+  # Create a minimal dataset with only 1 cell group
+  test_data_one_group <- data.frame(
+    sample = c("s1", "s2"),
+    cell_group = c("cell1", "cell1"),
+    treatment = c("control", "treatment"),
+    count = as.integer(c(100, 150))
+  )
+  
+  # Should fail with informative error message about compositional analysis
+  expect_error(
+    sccomp_estimate(
+      test_data_one_group,
+      formula_composition = ~ treatment,
+      formula_variability = ~ 1,
+      sample = "sample",
+      cell_group = "cell_group",
+      abundance = "count",
+      cores = 1,
+      verbose = FALSE
+    ),
+    regexp = "compositional analysis requires at least 2 cell groups"
+  )
+  
+  # Verify the error message explains the softmax issue
+  expect_error(
+    sccomp_estimate(
+      test_data_one_group,
+      formula_composition = ~ treatment,
+      formula_variability = ~ 1,
+      sample = "sample",
+      cell_group = "cell_group",
+      abundance = "count",
+      cores = 1,
+      verbose = FALSE
+    ),
+    regexp = "softmax"
+  )
+})
+
 
