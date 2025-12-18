@@ -4,6 +4,7 @@
 library(testthat)
 library(sccomp)
 library(dplyr)
+library(stringr)
 
 # Helper function to skip tests if cmdstan is not available
 skip_cmdstan <- function() {
@@ -1316,3 +1317,94 @@ test_that("sccomp_proportional_fold_change works with hyphenated factor levels -
   expect_true(all(grepl("fold", fold_changes$statement, ignore.case = TRUE)))
   expect_true(all(grepl("increase|decrease", fold_changes$statement, ignore.case = TRUE)))
 }) 
+
+# Test: Fold change sign matches direction in statement and proportions
+test_that("sccomp_proportional_fold_change sign matches statement direction and proportions", {
+  skip_cmdstan()
+  
+  # Create test data with clear directional changes
+  test_data <- data.frame(
+    sample = rep(paste0("s", 1:4), each = 3),
+    cell_group = rep(c("cell1", "cell2", "cell3"), times = 4),
+    treatment = rep(c("control", "treatment"), each = 6),
+    count = as.integer(c(
+      # control: cell1 high (50%), cell2 low (30%), cell3 medium (20%)
+      50, 30, 20,
+      55, 25, 20,
+      # treatment: cell1 low (20%), cell2 high (50%), cell3 medium (30%)
+      20, 50, 30,
+      25, 55, 20
+    ))
+  )
+  
+  # Fit model
+  estimate <- sccomp_estimate(
+    test_data,
+    formula_composition = ~ treatment,
+    formula_variability = ~ 1,
+    sample = "sample",
+    cell_group = "cell_group",
+    abundance = "count",
+    cores = 1,
+    verbose = FALSE
+  )
+  
+  # Calculate fold changes
+  result <- sccomp_proportional_fold_change(
+    estimate,
+    formula_composition = ~ treatment,
+    from = "control",
+    to = "treatment"
+  )
+  
+  # Extract proportions from statement using string manipulation
+  # Statement format: "X-fold increase/decrease (from A to B)"
+  result <- result %>%
+    mutate(
+      statement_direction = if_else(grepl("increase", statement), "increase", "decrease"),
+      # Extract the "from X to Y" proportions by splitting the string
+      from_to = stringr::str_extract(statement, "from [0-9.]+ to [0-9.]+"),
+      from_prop = as.numeric(stringr::str_extract(from_to, "[0-9.]+")),
+      to_prop = as.numeric(stringr::str_match(from_to, "to ([0-9.]+)")[,2])
+    )
+  
+  # Test 1: Fold change sign matches statement direction
+  expect_true(all(
+    (result$proportion_fold_change > 0 & result$statement_direction == "increase") |
+    (result$proportion_fold_change < 0 & result$statement_direction == "decrease")
+  ))
+  
+  # Test 2: For increases, from_prop < to_prop
+  increases <- result %>% filter(proportion_fold_change > 0)
+  if (nrow(increases) > 0) {
+    expect_true(all(increases$from_prop < increases$to_prop),
+                info = "For increases, 'from' proportion should be less than 'to' proportion")
+  }
+  
+  # Test 3: For decreases, from_prop > to_prop
+  decreases <- result %>% filter(proportion_fold_change < 0)
+  if (nrow(decreases) > 0) {
+    expect_true(all(decreases$from_prop > decreases$to_prop),
+                info = "For decreases, 'from' proportion should be greater than 'to' proportion")
+  }
+  
+  # Test 4: Verify we have both increases and decreases in this data
+  expect_true(any(result$proportion_fold_change > 0),
+              info = "Should have at least one increase")
+  expect_true(any(result$proportion_fold_change < 0),
+              info = "Should have at least one decrease")
+  
+  # Test 5: Magnitude consistency check
+  # The ratio of proportions should match the magnitude of fold change
+  result <- result %>%
+    mutate(
+      ratio = to_prop / from_prop,
+      # Expected fold change based on proportions
+      expected_fc = if_else(ratio < 1, -1/ratio, ratio)
+    )
+  
+  # Check that calculated fold change is close to expected from proportions
+  expect_true(all(abs(result$proportion_fold_change - result$expected_fc) < 0.5),
+              info = "Fold change should be consistent with proportion ratio")
+})
+
