@@ -115,6 +115,73 @@ convert_to_factors_with_levels <- function(new_data, factor_columns, original_da
   return(new_data)
 }
 
+#' Match interaction term parts to their corresponding factors
+#'
+#' @description
+#' Internal helper function that matches values from interaction specifications
+#' (e.g., "control:baseline") to their correct factor columns, regardless of the
+#' order in which they are provided. This allows users to specify interactions
+#' as either "treatment:timepoint" or "timepoint:treatment".
+#'
+#' @param parts Character vector of factor level values (e.g., c("control", "baseline"))
+#' @param factors Character vector of factor column names (e.g., c("treatment", "timepoint"))
+#' @param data The original data frame containing the factor columns
+#'
+#' @return A named list where names are factor column names and values are the matched levels
+#' 
+#' @keywords internal
+#' @noRd
+match_interaction_parts_to_factors <- function(parts, factors, data) {
+  
+  # Initialize result list
+  matched <- list()
+  
+  # For each factor, find which part matches
+  for (factor_name in factors) {
+    # Get valid levels for this factor
+    if (is.factor(data[[factor_name]])) {
+      valid_levels <- levels(data[[factor_name]])
+    } else {
+      valid_levels <- unique(data[[factor_name]])
+    }
+    
+    # Find which part matches this factor's valid levels
+    match_idx <- which(parts %in% valid_levels)
+    
+    if (length(match_idx) == 0) {
+      stop(sprintf(
+        "sccomp says: None of the provided values '%s' match valid levels for factor '%s'. Valid levels are: %s",
+        paste(parts, collapse = "', '"),
+        factor_name,
+        paste(valid_levels, collapse = ", ")
+      ))
+    } else if (length(match_idx) > 1) {
+      stop(sprintf(
+        "sccomp says: Multiple values '%s' match valid levels for factor '%s'. Each factor should have exactly one matching value.",
+        paste(parts[match_idx], collapse = "', '"),
+        factor_name
+      ))
+    }
+    
+    # Store the matched value
+    matched[[factor_name]] <- parts[match_idx]
+    
+    # Remove this part from consideration for other factors
+    parts <- parts[-match_idx]
+  }
+  
+  # Check if there are leftover parts that didn't match any factor
+  if (length(parts) > 0) {
+    stop(sprintf(
+      "sccomp says: The following values could not be matched to any factor: '%s'. Available factors are: %s",
+      paste(parts, collapse = "', '"),
+      paste(factors, collapse = ", ")
+    ))
+  }
+  
+  return(matched)
+}
+
 #' @export
 #' 
 #' @importFrom glue glue
@@ -133,16 +200,33 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
     from_parts <- str_split(from, ":")[[1]]
     to_parts <- str_split(to, ":")[[1]]
     
+    # # Validate that the number of parts matches the number of factors
+    # if (length(from_parts) != length(my_factors) || length(to_parts) != length(my_factors)) {
+    #   stop(sprintf(
+    #     "sccomp says: Interaction term requires %d factor levels separated by ':', but got %d in 'from' and %d in 'to'",
+    #     length(my_factors),
+    #     length(from_parts),
+    #     length(to_parts)
+    #   ))
+    # }
+    
+    # Get the original count data to determine which value belongs to which factor
+    original_data <- attr(.data, "count_data")
+    
+    # Match each part to the correct factor by checking which factor contains that value
+    from_matched <- match_interaction_parts_to_factors(from_parts, my_factors, original_data)
+    to_matched <- match_interaction_parts_to_factors(to_parts, my_factors, original_data)
+    
     # Create new_data with individual factor columns
     # Sample column needs dummy identifiers, not the interaction string
     new_data <- tibble(
       !!quo_name(.sample) := c("to", "from")
     )
     
-    # Add each factor column
+    # Add each factor column with matched values
     for (i in seq_along(my_factors)) {
       new_data <- new_data %>%
-        mutate(!!my_factors[i] := c(to_parts[i], from_parts[i]))
+        mutate(!!my_factors[i] := c(to_matched[[my_factors[i]]], from_matched[[my_factors[i]]]))
     }
   } else {   
     # For single factor, use the original approach
@@ -167,7 +251,7 @@ sccomp_proportional_fold_change.sccomp_tbl = function(.data, formula_composition
       formula_composition = formula_composition, 
       new_data = new_data
     )
-  
+
   # Sample IDs for filtering
   sample_to <- "to"
   sample_from <- "from"
