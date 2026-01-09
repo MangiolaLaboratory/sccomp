@@ -1,6 +1,16 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.24}{
+\itemize{
+    \item **Major enhancement: Added unconstrained predictors output in sccomp_predict and sccomp_calculate_residuals.** The functions now return columns for the unconstrained linear predictors (before softmax transformation) in addition to the transformed proportions. This provides users with direct access to the model's linear scale predictions, which can be useful for advanced analyses, debugging, and understanding model behavior.
+    \item **New output columns in sccomp_predict():** When \code{summary_instead_of_draws = TRUE}, the output now includes three additional columns: \code{unconstrained_mean} (mean of unconstrained predictors), \code{unconstrained_lower} (2.5\% quantile), and \code{unconstrained_upper} (97.5\% quantile). When \code{summary_instead_of_draws = FALSE}, the output includes an \code{unconstrained} column containing individual draws of the unconstrained predictors. These values represent the linear combination of design matrix and coefficients before the softmax transformation is applied.
+    \item **New output column in sccomp_calculate_residuals():** The residuals output now includes a \code{residuals_unconstrained} column containing the unconstrained predictors (before softmax transformation) alongside the standard residuals, exposure, sample, and cell_group columns. This allows users to examine both the transformed proportions and the underlying linear predictors when analyzing model fit.
+    \item **Technical implementation:** Modified the Stan model \code{glm_multi_beta_binomial_generate_data.stan} to save the linear predictors as \code{mu_unconstrained} before applying the softmax transformation. Updated \code{sccomp_predict()} to extract these values using both summary and draw modes, and updated \code{sccomp_calculate_residuals()} to include them in the output. The implementation includes backward compatibility - if the unconstrained predictors are not available (e.g., with older cached models), the functions gracefully handle their absence.
+    \item **Documentation and testing:** Updated function documentation to describe the new output columns. Added comprehensive unit tests in \code{test-unconstrained-predictors.R} covering all output modes (summary with robust/non-robust statistics, draws mode) and verifying that unconstrained predictors are distinct from proportions and properly formatted. All 43 unit tests passing.
+    \item **Why this feature is useful:** The unconstrained predictors provide insight into the model's linear scale, which can be valuable for: (1) understanding effect sizes on the logit scale before transformation, (2) performing downstream analyses that require linear-scale values, (3) debugging model convergence issues, (4) comparing effect magnitudes across different cell types on a common scale, and (5) advanced statistical analyses that benefit from access to both transformed and untransformed predictions.
+}}
+
 \section{News in version 2.1.22}{
 \itemize{
     \item Added automatic cleanup of Stan draw CSV files. New \code{cleanup_draw_files} parameter (default TRUE) in \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} automatically removes large draw files after analysis completion, significantly reducing disk space usage.
