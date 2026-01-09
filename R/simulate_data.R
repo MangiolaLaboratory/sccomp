@@ -122,13 +122,16 @@ simulate_data.tbl = function(.data,
   check_if_columns_right_class(.data, !!.sample, !!.cell_group)
   
   model_data = attr(.estimate_object, "model_input")
+  original_data = attr(.estimate_object, "model_input")
   
-  # # Select model based on noise model
-  # if(attr(.estimate_object, "noise_model") == "multi_beta_binomial") my_model = stanmodels$glm_multi_beta_binomial_simulate_data
-  # else if(attr(.estimate_object, "noise_model") == "dirichlet_multinomial") my_model = get_model_from_data("model_glm_dirichlet_multinomial_generate_quantities.rds", glm_dirichlet_multinomial_generate_quantities)
-  # else if(attr(.estimate_object, "noise_model") == "logit_normal_multinomial") my_model = get_model_from_data("glm_multinomial_logit_linear_simulate_data.stan", read_file("~/PostDoc/sccomp/dev/stan_models/glm_multinomial_logit_linear_simulate_data.stan"))
+  # Get formulas if not provided
+  if(is.null(formula_variability)) {
+    formula_variability = attr(.estimate_object, "formula_variability")
+  }
+  original_formula_composition = attr(.estimate_object, "formula_composition")
   
-  
+  # Validate dimensions before proceeding
+  # Issue 3: Add dimension validation
   data_for_model =
     .data |>
     nest(data___ = -!!.sample) |>
@@ -136,49 +139,206 @@ simulate_data.tbl = function(.data,
     unnest(data___) |>
     data_simulation_to_model_input(
       formula_composition,
-      #formula_variability,
+      formula_variability,  # Issue 2: Use formula_variability
       !!.sample, !!.cell_group, .exposure, !!.coefficients
     )
   names(data_for_model)  = names(data_for_model) |> stringr::str_c("_simulated")
   
-  # Drop data from old input
-  original_data = .estimate_object |> attr("model_input")
-  original_data = original_data[(names(original_data) %in% c("C", "M", "A", "ncol_X_random_eff", "is_random_effect", "how_many_factors_in_random_design"  ))]
+  # Issue 3: Validate dimensions
+  if(data_for_model$C_simulated > original_data$C) {
+    stop("sccomp says: C_simulated (", data_for_model$C_simulated, ") cannot be larger than C (", original_data$C, ") from the fitted model. The simulated design matrix has more columns than the original model.")
+  }
+  if(data_for_model$M_simulated > original_data$M) {
+    stop("sccomp says: M_simulated (", data_for_model$M_simulated, ") cannot be larger than M (", original_data$M, ") from the fitted model. The simulated data has more cell groups than the original model.")
+  }
+  if(data_for_model$A_simulated > original_data$A) {
+    stop("sccomp says: A_simulated (", data_for_model$A_simulated, ") cannot be larger than A (", original_data$A, ") from the fitted model. The simulated variability design has more columns than the original model.")
+  }
   
-  # [1]  5.6260004 -0.6940178
-  # prec_sd  = 0.816423129
+  # Extract necessary data from original model - reuse pattern from replicate_data
+  # These fields are always present in model_input from sccomp_estimate (set in data_spread_to_model_input)
+  original_data_subset = original_data[(names(original_data) %in% c("C", "M", "A", "A_intercept_columns", "intercept_in_design", "bimodal_mean_variability_association", "ncol_X_random_eff", "is_random_effect", "how_many_factors_in_random_design", "n_groups", "group_factor_indexes_for_covariance", "group_factor_indexes_for_covariance_2"))]
+  
+  # Create proper random effect design matrices
+  # Stan requires matrices to have at least 1 column, so we use max(1, ncol) to ensure valid dimensions
+  ncol_re1 = max(1, original_data_subset$ncol_X_random_eff[1])
+  ncol_re2 = max(1, original_data_subset$ncol_X_random_eff[2])
+  
+  # Initialize with empty matrices
+  X_random_effect_simulated = matrix(0, nrow = nrow(data_for_model$X_simulated), ncol = ncol_re1)
+  X_random_effect_2_simulated = matrix(0, nrow = nrow(data_for_model$X_simulated), ncol = ncol_re2)
+  
+  # Create proper random effect design matrices if they exist in the original model
+  if(original_data_subset$is_random_effect > 0 && 
+     !is.null(original_data$X_random_effect) && 
+     original_data_subset$ncol_X_random_eff[1] > 0) {
+    
+    # Get random effect elements from formula
+    random_effect_elements = parse_formula_random_effect(formula_composition)
+    original_grouping_names = original_formula_composition |> formula_to_random_effect_formulae() |> pull(grouping)
+    
+    if(length(original_grouping_names) > 0 && 
+       (random_effect_elements$grouping %in% original_grouping_names[1]) |> any()) {
+      
+      # Create random effect design for simulated data
+      random_effect_grouping = 
+        formula_composition |>
+        formula_to_random_effect_formulae() |>
+        mutate(design = map2(
+          formula, grouping,
+          ~  get_random_effect_design3(.data, .x, .y, !!.sample,
+                                       accept_NA_as_average_effect = TRUE )
+        ))
+      
+      if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any()) {
+        X_random_effect_simulated =
+          random_effect_grouping |>
+          filter(grouping==original_grouping_names[1]) |> 
+          mutate(design_matrix = map(
+            design,
+            ~ ..1 |>
+              select(!!.sample, group___label, value) |>
+              filter(group___label %in% colnames(original_data$X_random_effect)) |> 
+              pivot_wider(names_from = group___label, values_from = value) |>
+              mutate(across(everything(), ~ .x |> replace_na(0)))
+          )) |>
+          pull(design_matrix) |> 
+          _[[1]] |> 
+          column_to_rownames(quo_name(.sample))
+        
+        # Ensure matrix has correct dimensions (pad with zeros if needed)
+        if(ncol(X_random_effect_simulated) < ncol_re1) {
+          padding = matrix(0, nrow = nrow(X_random_effect_simulated), 
+                          ncol = ncol_re1 - ncol(X_random_effect_simulated))
+          X_random_effect_simulated = cbind(X_random_effect_simulated, padding)
+        } else if(ncol(X_random_effect_simulated) > ncol_re1) {
+          X_random_effect_simulated = X_random_effect_simulated[, 1:ncol_re1, drop = FALSE]
+        }
+      }
+    }
+  }
+  
+  # Create second random effect design matrix if it exists
+  if(original_data_subset$is_random_effect > 0 && 
+     !is.null(original_data$X_random_effect_2) && 
+     original_data_subset$ncol_X_random_eff[2] > 0) {
+    
+    random_effect_elements = parse_formula_random_effect(formula_composition)
+    original_grouping_names = original_formula_composition |> formula_to_random_effect_formulae() |> pull(grouping)
+    
+    if(length(original_grouping_names) > 1 && 
+       (random_effect_elements$grouping %in% original_grouping_names[2]) |> any()) {
+      
+      random_effect_grouping = 
+        formula_composition |>
+        formula_to_random_effect_formulae() |>
+        mutate(design = map2(
+          formula, grouping,
+          ~  get_random_effect_design3(.data, .x, .y, !!.sample,
+                                       accept_NA_as_average_effect = TRUE )
+        ))
+      
+      if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()) {
+        X_random_effect_2_simulated =
+          random_effect_grouping |>
+          filter(grouping==original_grouping_names[2]) |> 
+          mutate(design_matrix = map(
+            design,
+            ~ ..1 |>
+              select(!!.sample, group___label, value) |>
+              filter(group___label %in% colnames(original_data$X_random_effect_2)) |> 
+              pivot_wider(names_from = group___label, values_from = value) |>
+              mutate(across(everything(), ~ .x |> replace_na(0)))
+          )) |>
+          pull(design_matrix) |> 
+          _[[1]] |> 
+          column_to_rownames(quo_name(.sample))
+        
+        # Ensure matrix has correct dimensions
+        if(ncol(X_random_effect_2_simulated) < ncol_re2) {
+          padding = matrix(0, nrow = nrow(X_random_effect_2_simulated), 
+                          ncol = ncol_re2 - ncol(X_random_effect_2_simulated))
+          X_random_effect_2_simulated = cbind(X_random_effect_2_simulated, padding)
+        } else if(ncol(X_random_effect_2_simulated) > ncol_re2) {
+          X_random_effect_2_simulated = X_random_effect_2_simulated[, 1:ncol_re2, drop = FALSE]
+        }
+      }
+    }
+  }
   
   mod_rng = load_model("glm_multi_beta_binomial_simulate_data", threads = cores, cache_dir = cache_stan_model)
   
+  # Issue 2: Xa_simulated is already in data_for_model, so we don't need to add it again
+  # Combine all data for Stan model
+  stan_data = data_for_model |> 
+    c(original_data_subset) |> 
+    c(list(
+      variability_multiplier = variability_multiplier,
+      X_random_effect_simulated = X_random_effect_simulated,
+      X_random_effect_2_simulated = X_random_effect_2_simulated
+    ))
+  
+  # Get posterior draws - reuse pattern from replicate_data
+  number_of_draws_in_the_fit = attr(.estimate_object, "fit") |> get_output_samples()
+  number_of_draws = min(number_of_draws, number_of_draws_in_the_fit)
+  
+  draws_matrix = attr(.estimate_object, "fit")$draws(format = "matrix")
+  
+  if(number_of_draws > nrow(draws_matrix)) {
+    number_of_draws = nrow(draws_matrix)
+  }
+  
+  # Sample draws if needed (reuse pattern from replicate_data)
+  if(number_of_draws < nrow(draws_matrix)) {
+    draws_matrix = draws_matrix[sample(seq_len(nrow(draws_matrix)), size = number_of_draws),, drop = FALSE]
+  }
+  
+  # Normalize all sum_to_zero_vector parameters to ensure they sum to exactly zero
+  # This fixes floating-point precision issues when using generate_quantities
+  # Uses the utility function from utilities.R
+  draws_matrix = normalize_sum_to_zero_params(draws_matrix, "^beta_raw\\[")
+  draws_matrix = normalize_sum_to_zero_params(draws_matrix, "^random_effect_raw\\[")
+  draws_matrix = normalize_sum_to_zero_params(draws_matrix, "^random_effect_raw_2\\[")
+  
+  # Generate quantities - reuse pattern from replicate_data
   fit = mod_rng |> sample_safe(
     generate_quantities_fx,
-    attr(.estimate_object , "fit")$draws(format = "matrix"),
-    
-    # This is for the new data generation with selected factors to do adjustment
-    data = data_for_model |> c(original_data) |> c(list(variability_multiplier = variability_multiplier)),
+    draws_matrix,
+    data = stan_data,
     seed = mcmc_seed,
-    parallel_chains = attr(.estimate_object , "fit")$metadata()$threads_per_chain, 
+    parallel_chains = attr(.estimate_object, "fit")$metadata()$threads_per_chain, 
     threads_per_chain = cores,
     sig_figs = sig_figs
   )
+  
+  # Parse generated quantities - reuse parse_generated_quantities from replicate_data
+  # Get cell group names from the simulated data (same as used in data_simulation_to_model_input)
+  cell_group_names = 
+    .data |>
+    distinct(!!.cell_group) |>
+    arrange(!!.cell_group) |>
+    pull(!!.cell_group)
+  
+  sample_names = rownames(data_for_model$X_simulated)
   
   parsed_fit =
     fit |>
     parse_generated_quantities(number_of_draws = number_of_draws) |>
     
-    # Get sample name
+    # Get sample name - reuse pattern from sccomp_replicate
     nest(data = -N) |>
     arrange(N) |>
-    mutate(!!.sample := rownames(data_for_model$X_simulated)) |>
+    mutate(!!.sample := sample_names) |>
     unnest(data) |>
     
-    # get cell type name
+    # get cell type name - reuse pattern from sccomp_replicate
     nest(data = -M) |>
-    mutate(!!.cell_group := colnames(data_for_model$beta_simulated)) |>
+    mutate(!!.cell_group := cell_group_names) |>
     unnest(data) |>
     
     select(-N, -M)
   
+  # Join with original data - reuse pattern from sccomp_predict
   .data |>
     left_join(
       parsed_fit,
@@ -195,7 +355,7 @@ simulate_data.tbl = function(.data,
 #' @noRd
 #'
 data_simulation_to_model_input =
-  function(.data, formula, .sample, .cell_type, .exposure, .coefficients, truncation_ajustment = 1, approximate_posterior_inference ){
+  function(.data, formula, formula_variability = ~ 1, .sample, .cell_type, .exposure, .coefficients, truncation_ajustment = 1, approximate_posterior_inference ){
     
     # Define the variables as NULL to avoid CRAN NOTES
     sd <- NULL
@@ -209,12 +369,15 @@ data_simulation_to_model_input =
     .coefficients = enquo(.coefficients)
     
     factor_names = parse_formula(formula)
+    factor_names_variability = parse_formula(formula_variability)
     
     sample_data =
       .data %>%
-      select(!!.sample, any_of(factor_names)) %>%
+      select(!!.sample, any_of(c(factor_names, factor_names_variability))) %>%
       distinct() %>%
       arrange(!!.sample)
+    
+    # Create composition design matrix
     X =
       sample_data %>%
       model.matrix(formula, data=.) %>%
@@ -230,11 +393,25 @@ data_simulation_to_model_input =
         .x
       }
     
-    if(factor_names == "1") XA = X[,1, drop=FALSE]
-    else XA = X[,c(1,2), drop=FALSE]
+    # Create variability design matrix (Issue 2: Use formula_variability)
+    Xa =
+      sample_data %>%
+      model.matrix(formula_variability, data=.) %>%
+      apply(2, function(x) {
+        
+        if(sd(x)==0 ) x
+        else x |> scale(scale=FALSE)
+        
+      } ) %>%
+      {
+        .x = (.)
+        rownames(.x) = sample_data %>% pull(!!.sample)
+        .x
+      }
     
-    XA = XA |> 
-      as_tibble()  |> 
+    # Unique variability design (for compatibility)
+    XA = Xa %>%
+      as_tibble() %>%
       distinct()
     
     cell_cluster_names =
@@ -243,21 +420,34 @@ data_simulation_to_model_input =
       arrange(!!.cell_type) %>%
       pull(!!.cell_type)
     
-    coefficients =
+    # Extract coefficients
+    # .coefficients is a quosure pointing to column names like c(b_0, b_1)
+    # Use quo_names to extract the actual column names from the quosure
+    coeff_names = quo_names(.coefficients)
+    
+    # Pivot to long format: cell_type | coefficient_name | value
+    coefficients_long =
       .data %>%
-      select(!!.cell_type, !!.coefficients) %>%
-      unnest(!!.coefficients) %>%
+      select(!!.cell_type, all_of(coeff_names)) %>%
       distinct() %>%
       arrange(!!.cell_type) %>%
-      pivot_wider(names_from = quo_name(.cell_type), values_from = !!.coefficients) %>%
-      column_to_rownames(quo_name(.cell_type)) %>%
-      t()
+      pivot_longer(cols = all_of(coeff_names), names_to = "coefficient_name", values_to = "value")
+    
+    # Pivot to wide format: coefficient_name | (cell_type_1) | (cell_type_2) | ...
+    coefficients_wide = coefficients_long %>%
+      pivot_wider(names_from = quo_name(.cell_type), values_from = value) %>%
+      column_to_rownames("coefficient_name") %>%
+      as.matrix()
+    
+    # Transpose to get: rows = coefficients, columns = cell_types
+    coefficients = t(coefficients_wide)
     
     list(
       N = .data %>% distinct(!!.sample) %>% nrow(),
       M = .data %>% distinct(!!.cell_type) %>% nrow(),
       exposure = .data %>% distinct(!!.sample, !!.exposure) %>% arrange(!!.sample) %>% pull(!!.exposure),
       X = X,
+      Xa = Xa,  # Issue 2: Add Xa for variability design
       XA = XA,
       C = ncol(X),
       A =  ncol(XA),
