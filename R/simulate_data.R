@@ -511,10 +511,38 @@ sccomp_simulate.sccomp_tbl = function(fit,
       stop("sccomp says: beta_simulated must have ", data_for_model$M_simulated, " cell groups (after transpose), but has ", ncol(beta_provided))
     }
     
+    # Validate that coefficients sum to zero for each design column
+    # User-provided coefficients must sum to exactly zero (within floating-point tolerance)
+    # This is required for compositional models where log-ratios must sum to zero
+    max_abs_val = max(abs(beta_provided))
+    tolerance = .Machine$double.eps * 100 * max(max_abs_val, 1)
+    
+    # Check row sums using tidyverse approach
+    row_sums = beta_provided |>
+      as_tibble(.name_repair = "minimal") |>
+      rowwise() |>
+      mutate(row_sum = sum(c_across(everything()))) |>
+      pull(row_sum)
+    
+    # Find columns that don't sum to zero
+    invalid_cols = which(abs(row_sums) > tolerance)
+    if(length(invalid_cols) > 0) {
+      col_name = X_simulated_colnames[invalid_cols[1]]
+      row_sum = row_sums[invalid_cols[1]]
+      stop(
+        "sccomp says: User-provided coefficients for design column '", col_name, 
+        "' do not sum to zero (sum = ", round(row_sum, 10), "). ",
+        "Coefficients in compositional models must sum to zero. ",
+        "Please normalize your coefficients (e.g., set the last element to -sum(others)) ",
+        "or subtract the mean from each coefficient vector."
+      )
+    }
+    
     # Convert to list format for Stan (array[length_X_which] vector[M_simulated])
     # NOTE: We use vector[M_simulated] instead of sum_to_zero_vector[M_simulated] in Stan
     # to avoid floating-point precision issues. Small precision errors in sum-to-zero constraint
     # are acceptable since Stan doesn't enforce strict constraints with vector types.
+    # However, user-provided coefficients must sum to zero within reasonable tolerance (checked above).
     # Stan expects a list/array where each element is a vector of length M_simulated
     # In R, we pass this as a list of vectors
     # The length matches X_which, not C_simulated
