@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulate_data.R
 \name{simulate_data}
 \alias{simulate_data}
-\title{simulate_data}
+\title{DEPRECATED: simulate_data}
 \usage{
 simulate_data(
   .data,
@@ -33,7 +33,7 @@ simulate_data(
 
 \item{.cell_group}{A column name as symbol. The cell_group identifier}
 
-\item{.coefficients}{The column names for coefficients, for example, c(b_0, b_1)}
+\item{.coefficients}{(Deprecated) The column names for coefficients in new_data, for example, c(b_0, b_1). Use the 'coefficients' parameter in sccomp_simulate() instead.}
 
 \item{variability_multiplier}{A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.}
 
@@ -49,49 +49,6 @@ simulate_data(
 The sccomp version will be automatically appended to ensure version isolation.
 Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
 }
-\value{
-A tibble (\code{tbl}) with the following columns:
-\itemize{
-\item \strong{sample} - A character column representing the sample name.
-\item \strong{type} - A factor column representing the type of the sample.
-\item \strong{phenotype} - A factor column representing the phenotype in the data.
-\item \strong{count} - An integer column representing the original cell counts.
-\item \strong{cell_group} - A character column representing the cell group identifier.
-\item \strong{b_0} - A numeric column representing the first coefficient used for simulation.
-\item \strong{b_1} - A numeric column representing the second coefficient used for simulation.
-\item \strong{generated_proportions} - A numeric column representing the generated proportions from the simulation.
-\item \strong{generated_counts} - An integer column representing the generated cell counts from the simulation.
-\item \strong{replicate} - An integer column representing the replicate number for each draw from the posterior distribution.
-}
-}
 \description{
-This function simulates data from a fitted model.
-}
-\examples{
-
-# print("cmdstanr is needed to run this example.")
-# Note: Before running the example, ensure that the 'cmdstanr' package is installed:
-# install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
-
-# \donttest{
-#   if (instantiate::stan_cmdstan_exists()) {
-#     data("counts_obj")
-#     library(dplyr)
-
-#     estimate = sccomp_estimate(
-#       counts_obj,
-#       ~ type, ~1, "sample", "cell_group", "count",
-#       cores = 1
-#     )
-
-#     # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-#     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-
-#     # Simulate data
-#     simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
-#   }
-# }
-}
-\references{
-S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
+This function is DEPRECATED. Please use \code{\link{sccomp_simulate}} instead.
 }

@@ -1,4 +1,4 @@
-# Unit tests for simulate_data function
+# Unit tests for sccomp_simulate function
 # Testing simulation functionality with various model configurations
 
 library(testthat)
@@ -12,7 +12,7 @@ skip_cmdstan <- function() {
   }
 }
 
-test_that("simulate_data works with simple model", {
+test_that("sccomp_simulate works with simple model", {
   skip_cmdstan()
   
   # Load test data
@@ -25,19 +25,22 @@ test_that("simulate_data works with simple model", {
     cores = 1
   )
   
-  # Set coefficients for cell_groups (all zeros for simplicity)
-  counts_obj_with_coefs = counts_obj |> 
-    mutate(b_0 = 0, b_1 = 0)
+  # Create coefficients table (all zeros for simplicity)
+  coeffs_table = counts_obj |>
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
+  # Create sample-specific new_data
+  new_data_samples = counts_obj |>
+    distinct(sample, type)
   
   # Simulate data
-  result = simulate_data(
-    counts_obj_with_coefs, 
-    estimate, 
+  result = sccomp_simulate(
+    estimate,
     ~type, 
     ~1, 
-    sample, 
-    cell_group, 
-    c(b_0, b_1),
+    new_data = new_data_samples,
+    coefficients = coeffs_table,
     cores = 1
   )
   
@@ -48,11 +51,11 @@ test_that("simulate_data works with simple model", {
   expect_true("sample" %in% colnames(result))
   expect_true("cell_group" %in% colnames(result))
   
-  # Check that result has same number of rows as input (or more if multiple draws)
-  expect_true(nrow(result) >= nrow(counts_obj_with_coefs))
+  # Check that result has data
+  expect_true(nrow(result) > 0)
 })
 
-test_that("simulate_data works with variability formula", {
+test_that("sccomp_simulate works with variability formula", {
   skip_cmdstan()
   
   # Load test data
@@ -65,19 +68,22 @@ test_that("simulate_data works with variability formula", {
     cores = 1
   )
   
-  # Set coefficients
-  counts_obj_with_coefs = counts_obj |> 
-    mutate(b_0 = 0, b_1 = 0)
+  # Create coefficients table
+  coeffs_table = counts_obj |>
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
+  # Create sample-specific new_data
+  new_data_samples = counts_obj |>
+    distinct(sample, type)
   
   # Simulate data with variability formula
-  result = simulate_data(
-    counts_obj_with_coefs, 
-    estimate, 
+  result = sccomp_simulate(
+    estimate,
     ~type, 
     ~type,  # Use variability formula
-    sample, 
-    cell_group, 
-    c(b_0, b_1),
+    new_data = new_data_samples,
+    coefficients = coeffs_table,
     cores = 1
   )
   
@@ -89,7 +95,7 @@ test_that("simulate_data works with variability formula", {
   expect_true("cell_group" %in% colnames(result))
 })
 
-test_that("simulate_data validates dimensions correctly", {
+test_that("sccomp_simulate validates dimensions correctly", {
   skip_cmdstan()
   
   # Load test data
@@ -102,31 +108,34 @@ test_that("simulate_data validates dimensions correctly", {
     cores = 1
   )
   
-  # Create data with more cell groups than original (should fail)
-  counts_obj_expanded = counts_obj |>
+  # Create coefficients table with more cell groups than original (should fail)
+  coeffs_table_expanded = counts_obj |>
     bind_rows(
       counts_obj |>
         mutate(cell_group = paste0(cell_group, "_new"))
     ) |>
-    mutate(b_0 = 0, b_1 = 0)
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
+  # Create sample-specific new_data
+  new_data_samples = counts_obj |>
+    distinct(sample, type)
   
   # This should fail with dimension validation error
   expect_error(
-    simulate_data(
-      counts_obj_expanded, 
-      estimate, 
+    sccomp_simulate(
+      estimate,
       ~type, 
       ~1, 
-      sample, 
-      cell_group, 
-      c(b_0, b_1),
+      new_data = new_data_samples,
+      coefficients = coeffs_table_expanded,
       cores = 1
     ),
     "M_simulated.*cannot be larger than M"
   )
 })
 
-test_that("simulate_data works with number_of_draws parameter", {
+test_that("sccomp_simulate works with number_of_draws parameter", {
   skip_cmdstan()
   
   # Load test data
@@ -139,19 +148,22 @@ test_that("simulate_data works with number_of_draws parameter", {
     cores = 1
   )
   
-  # Set coefficients
-  counts_obj_with_coefs = counts_obj |> 
-    mutate(b_0 = 0, b_1 = 0)
+  # Create coefficients table
+  coeffs_table = counts_obj |>
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
+  # Create sample-specific new_data
+  new_data_samples = counts_obj |>
+    distinct(sample, type)
   
   # Simulate with multiple draws
-  result = simulate_data(
-    counts_obj_with_coefs, 
-    estimate, 
+  result = sccomp_simulate(
+    estimate,
     ~type, 
     ~1, 
-    sample, 
-    cell_group, 
-    c(b_0, b_1),
+    new_data = new_data_samples,
+    coefficients = coeffs_table,
     number_of_draws = 3,
     cores = 1
   )
@@ -163,7 +175,7 @@ test_that("simulate_data works with number_of_draws parameter", {
   expect_true(nrow(result) > 0)
 })
 
-test_that("simulate_data works with variability_multiplier", {
+test_that("sccomp_simulate works with variability_multiplier", {
   skip_cmdstan()
   
   # Load test data
@@ -176,31 +188,32 @@ test_that("simulate_data works with variability_multiplier", {
     cores = 1
   )
   
-  # Set coefficients
-  counts_obj_with_coefs = counts_obj |> 
-    mutate(b_0 = 0, b_1 = 0)
+  # Create coefficients table
+  coeffs_table = counts_obj |>
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
+  # Create sample-specific new_data
+  new_data_samples = counts_obj |>
+    distinct(sample, type)
   
   # Simulate with different variability multipliers
-  result1 = simulate_data(
-    counts_obj_with_coefs, 
-    estimate, 
+  result1 = sccomp_simulate(
+    estimate,
     ~type, 
     ~1, 
-    sample, 
-    cell_group, 
-    c(b_0, b_1),
+    new_data = new_data_samples,
+    coefficients = coeffs_table,
     variability_multiplier = 1,
     cores = 1
   )
   
-  result2 = simulate_data(
-    counts_obj_with_coefs, 
-    estimate, 
+  result2 = sccomp_simulate(
+    estimate,
     ~type, 
     ~1, 
-    sample, 
-    cell_group, 
-    c(b_0, b_1),
+    new_data = new_data_samples,
+    coefficients = coeffs_table,
     variability_multiplier = 10,
     cores = 1
   )
@@ -210,7 +223,7 @@ test_that("simulate_data works with variability_multiplier", {
   expect_s3_class(result2, "tbl")
 })
 
-test_that("simulate_data handles missing formula_variability gracefully", {
+test_that("sccomp_simulate handles missing formula_variability gracefully", {
   skip_cmdstan()
   
   # Load test data
@@ -223,19 +236,22 @@ test_that("simulate_data handles missing formula_variability gracefully", {
     cores = 1
   )
   
-  # Set coefficients
-  counts_obj_with_coefs = counts_obj |> 
-    mutate(b_0 = 0, b_1 = 0)
+  # Create coefficients table
+  coeffs_table = counts_obj |>
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
+  # Create sample-specific new_data
+  new_data_samples = counts_obj |>
+    distinct(sample, type)
   
   # Simulate without specifying formula_variability (should use from estimate)
-  result = simulate_data(
-    counts_obj_with_coefs, 
-    estimate, 
+  result = sccomp_simulate(
+    estimate,
     ~type, 
     NULL,  # Let it use the formula from estimate
-    sample, 
-    cell_group, 
-    c(b_0, b_1),
+    new_data = new_data_samples,
+    coefficients = coeffs_table,
     cores = 1
   )
   
@@ -243,7 +259,7 @@ test_that("simulate_data handles missing formula_variability gracefully", {
   expect_s3_class(result, "tbl")
 })
 
-test_that("simulate_data works with subset of original data", {
+test_that("sccomp_simulate works with subset of original data", {
   skip_cmdstan()
   
   # Load test data
@@ -256,25 +272,136 @@ test_that("simulate_data works with subset of original data", {
     cores = 1
   )
   
+  # Create coefficients table
+  coeffs_table = counts_obj |>
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
   # Use subset of data (fewer samples)
-  counts_obj_subset = counts_obj |>
+  new_data_samples_subset = counts_obj |>
     filter(sample %in% unique(sample)[1:3]) |>
-    mutate(b_0 = 0, b_1 = 0)
+    distinct(sample, type)
   
   # Simulate data
-  result = simulate_data(
-    counts_obj_subset, 
-    estimate, 
+  result = sccomp_simulate(
+    estimate,
     ~type, 
     ~1, 
-    sample, 
-    cell_group, 
-    c(b_0, b_1),
+    new_data = new_data_samples_subset,
+    coefficients = coeffs_table,
     cores = 1
   )
   
   # Should work with subset
   expect_s3_class(result, "tbl")
-  expect_true(nrow(result) >= nrow(counts_obj_subset))
+  expect_true(nrow(result) >= nrow(new_data_samples_subset))
+})
+
+test_that("sccomp_simulate works with separate coefficients table", {
+  skip_cmdstan()
+  
+  # Load test data
+  data("counts_obj")
+  
+  # Fit a model
+  estimate = sccomp_estimate(
+    counts_obj,
+    ~ type, ~1, "sample", "cell_group", "count",
+    cores = 1
+  )
+  
+  # Create separate coefficients table (cell-type specific)
+  coeffs_table = counts_obj |>
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
+  # Create sample-specific new_data (no cell_group needed)
+  new_data_samples = counts_obj |>
+    distinct(sample, type)
+  
+  # Simulate data with separate coefficients table
+  result = sccomp_simulate(
+    estimate,
+    ~type, 
+    ~1, 
+    new_data = new_data_samples,
+    coefficients = coeffs_table,
+    cores = 1
+  )
+  
+  # Should work
+  expect_s3_class(result, "tbl")
+  expect_true("sample" %in% colnames(result))
+  expect_true("cell_group" %in% colnames(result))
+  expect_true(nrow(result) > 0)
+  
+  # Check that all cell_groups from coefficients table are present
+  expect_true(all(coeffs_table$cell_group %in% result$cell_group))
+})
+
+test_that("sccomp_simulate works with separate coefficients table and subset data", {
+  skip_cmdstan()
+  
+  # Load test data
+  data("counts_obj")
+  
+  # Fit a model
+  estimate = sccomp_estimate(
+    counts_obj,
+    ~ type, ~1, "sample", "cell_group", "count",
+    cores = 1
+  )
+  
+  # Create separate coefficients table
+  coeffs_table = counts_obj |>
+    distinct(cell_group) |>
+    mutate(`(Intercept)` = 0, `typecancer` = 0)
+  
+  # Create subset of samples
+  new_data_samples = counts_obj |>
+    filter(sample %in% unique(sample)[1:3]) |>
+    distinct(sample, type)
+  
+  # Simulate data
+  result = sccomp_simulate(
+    estimate,
+    ~type, 
+    ~1, 
+    new_data = new_data_samples,
+    coefficients = coeffs_table,
+    cores = 1
+  )
+  
+  # Should work
+  expect_s3_class(result, "tbl")
+  expect_true(nrow(result) > 0)
+})
+
+test_that("sccomp_simulate uses posterior beta when coefficients are NULL", {
+  skip_cmdstan()
+  
+  # Load test data
+  data("counts_obj")
+  
+  # Fit a model
+  estimate = sccomp_estimate(
+    counts_obj,
+    ~ type, ~1, "sample", "cell_group", "count",
+    cores = 1
+  )
+  
+  # Simulate without providing coefficients (should use posterior beta_raw)
+  result = sccomp_simulate(
+    estimate,
+    ~type, 
+    ~1, 
+    new_data = NULL,  # Use original data
+    coefficients = NULL,  # No coefficients provided
+    cores = 1
+  )
+  
+  # Should work
+  expect_s3_class(result, "tbl")
+  expect_true(nrow(result) > 0)
 })
 
