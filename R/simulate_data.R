@@ -714,7 +714,7 @@ simulate_data <- function(.data,
                           cache_stan_model = sccomp_stan_models_cache_dir) {
   
   lifecycle::deprecate_warn(
-    "2.2.0",
+    "2.1.26",
     "sccomp::simulate_data()",
     details = "sccomp says: simulate_data is deprecated. Please use sccomp_simulate() instead."
   )
