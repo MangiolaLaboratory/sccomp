@@ -22,6 +22,12 @@ data{
   // but does not need to be enforced at the Stan type level for generate_quantities
   // Small precision errors are acceptable since Stan doesn't enforce strict constraints with vector types
   array[C_simulated] vector[M_simulated] beta_simulated_provided; // Provided coefficients
+  
+  // Optional: provided slope and intercept for mean-dispersion association
+  int<lower=0, upper=1> user_provided_prec_coeff_slope; // 1 if prec_coeff_slope is provided, 0 to use posterior prec_coeff[2]
+  real prec_coeff_slope_provided; // Provided slope for mean-dispersion association (alpha = beta * slope + intercept)
+  int<lower=0, upper=1> user_provided_prec_coeff_intercept; // 1 if prec_coeff_intercept is provided, 0 to use posterior prec_coeff[1]
+  real prec_coeff_intercept_provided; // Provided intercept for mean-dispersion association (alpha = beta * slope + intercept)
 
   int M;
 	int C;
@@ -210,6 +216,11 @@ generated quantities{
   // First compute full alpha_simulated from beta, then subset using XA_which
   matrix[A_simulated, M_simulated] alpha_simulated;
   
+  // Use user-provided slope if available, otherwise use posterior prec_coeff[2]
+  real prec_coeff_slope = user_provided_prec_coeff_slope ? prec_coeff_slope_provided : prec_coeff[2];
+  // Use user-provided intercept if available, otherwise use posterior prec_coeff[1]
+  real prec_coeff_intercept = user_provided_prec_coeff_intercept ? prec_coeff_intercept_provided : prec_coeff[1];
+  
   // Build alpha from beta following the root model's association
   // Map A_simulated columns to corresponding beta columns via XA_which -> X_which
   if(A_simulated == 1) {
@@ -217,23 +228,23 @@ generated quantities{
     // Find intercept column in X_which
     int beta_col = intercept_in_design && length_X_which > 0 ? X_which[1] : 1;
     for(m in 1:M_simulated) {
-      alpha_simulated[1, m] = beta[beta_col, m] * prec_coeff[2] + prec_coeff[1];
+      alpha_simulated[1, m] = beta[beta_col, m] * prec_coeff_slope + prec_coeff_intercept;
     }
   } else {
     // Multiple columns: handle intercept and non-intercept columns separately
     int A_intercept_columns_sim = min(A_intercept_columns, A_simulated);
     
-    // Intercept columns: alpha = beta * prec_coeff[2] + prec_coeff[1]
+    // Intercept columns: alpha = beta * prec_coeff_slope + prec_coeff_intercept
     for(a in 1:A_intercept_columns_sim) {
       int alpha_col_idx = XA_which[a];
       // Find corresponding beta column - intercept columns map to first columns in X_which
       int beta_col = intercept_in_design && length_X_which > 0 ? X_which[min(a, length_X_which)] : 1;
       for(m in 1:M_simulated) {
-        alpha_simulated[a, m] = beta[beta_col, m] * prec_coeff[2] + prec_coeff[1];
+        alpha_simulated[a, m] = beta[beta_col, m] * prec_coeff_slope + prec_coeff_intercept;
       }
     }
     
-    // Non-intercept columns: alpha = beta * prec_coeff[2]
+    // Non-intercept columns: alpha = beta * prec_coeff_slope
     if(A_simulated > A_intercept_columns_sim) {
       for(a in (A_intercept_columns_sim + 1):A_simulated) {
         int alpha_col_idx = XA_which[a];
@@ -241,7 +252,7 @@ generated quantities{
         int beta_col_idx = a;
         int beta_col = beta_col_idx <= length_X_which ? X_which[beta_col_idx] : X_which[length_X_which];
         for(m in 1:M_simulated) {
-          alpha_simulated[a, m] = beta[beta_col, m] * prec_coeff[2];
+          alpha_simulated[a, m] = beta[beta_col, m] * prec_coeff_slope;
         }
       }
     }

@@ -12,7 +12,7 @@ simulate_data(
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
-  variability_multiplier = 5,
+  variability_multiplier = 1,
   number_of_draws = 1,
   mcmc_seed = sample_seed(),
   cores = detectCores(),

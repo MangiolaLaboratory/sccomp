@@ -18,6 +18,8 @@
 #' @param new_data A tibble including sample-specific columns (sample identifier and factor columns from formula). If coefficients are provided separately, cell_group column is optional. Otherwise, should include cell_group column.
 #' @param formula_variability A formula. The formula describing the model for differential variability, for example ~treatment
 #' @param coefficients A data frame/tibble with cell-type specific coefficients. Must contain a column matching the cell_group column name, and columns matching the design matrix column names (e.g., "(Intercept)", "typeB"). If NULL, posterior beta_raw will be used.
+#' @param mean_dispersion_slope Optional numeric value for the slope parameter of the mean-dispersion association. If NULL, the slope from the fitted model (prec_coeff[2]) will be used.
+#' @param mean_dispersion_intercept Optional numeric value for the intercept parameter of the mean-dispersion association. If NULL, the intercept from the fitted model (prec_coeff[1]) will be used. This ensures that when only the slope is changed, the intercept remains the same.
 #' @param .sample A column name as symbol. The sample identifier
 #' @param .cell_group A column name as symbol. The cell_group identifier
 #' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
@@ -78,9 +80,11 @@ sccomp_simulate <- function(fit,
                           formula_variability = NULL,
                           new_data = NULL,
                           coefficients = NULL,
+                          mean_dispersion_slope = NULL,
+                          mean_dispersion_intercept = NULL,
                           .sample = NULL,
                           .cell_group = NULL,
-                          variability_multiplier = 5,
+                          variability_multiplier = 1,
                           number_of_draws = 1,
                           mcmc_seed = sample_seed(),
                           cores = detectCores(),
@@ -108,9 +112,11 @@ sccomp_simulate.sccomp_tbl = function(fit,
                              formula_variability = NULL,
                                      new_data = NULL,
                                      coefficients = NULL,
+                                     mean_dispersion_slope = NULL,
+                                     mean_dispersion_intercept = NULL,
                              .sample = NULL,
                              .cell_group = NULL,
-                             variability_multiplier = 5,
+                             variability_multiplier = 1,
                              number_of_draws = 1,
                              mcmc_seed = sample_seed(),
                              cores = detectCores(),
@@ -553,6 +559,36 @@ sccomp_simulate.sccomp_tbl = function(fit,
     user_provided_beta = 1
   }
   
+  # Handle optional mean-dispersion slope and intercept parameters
+  # Similar to user_provided_beta, allow user to override prec_coeff[2] (slope) and prec_coeff[1] (intercept)
+  user_provided_prec_coeff_slope = 0
+  prec_coeff_slope_provided = 0.0  # Default value (will be ignored if user_provided_prec_coeff_slope == 0)
+  user_provided_prec_coeff_intercept = 0
+  prec_coeff_intercept_provided = 0.0  # Default value (will be ignored if user_provided_prec_coeff_intercept == 0)
+  
+  # If slope is provided but intercept is not, automatically preserve the mean intercept from the fit
+  if(!is.null(mean_dispersion_slope) && is.null(mean_dispersion_intercept)) {
+    fit_obj = attr(fit, "fit")
+    prec_coeff_summary = fit_obj$summary("prec_coeff")
+    mean_dispersion_intercept = prec_coeff_summary$mean[1]
+  }
+  
+  if(!is.null(mean_dispersion_slope)) {
+    if(!is.numeric(mean_dispersion_slope) || length(mean_dispersion_slope) != 1) {
+      stop("sccomp says: mean_dispersion_slope must be a single numeric value.")
+    }
+    user_provided_prec_coeff_slope = 1
+    prec_coeff_slope_provided = as.numeric(mean_dispersion_slope)
+  }
+  
+  if(!is.null(mean_dispersion_intercept)) {
+    if(!is.numeric(mean_dispersion_intercept) || length(mean_dispersion_intercept) != 1) {
+      stop("sccomp says: mean_dispersion_intercept must be a single numeric value.")
+    }
+    user_provided_prec_coeff_intercept = 1
+    prec_coeff_intercept_provided = as.numeric(mean_dispersion_intercept)
+  }
+  
   # Issue 2: Xa_simulated is already in data_for_model, so we don't need to add it again
   # Combine all data for Stan model
   stan_data = data_for_model |> 
@@ -563,6 +599,10 @@ sccomp_simulate.sccomp_tbl = function(fit,
       X_random_effect_2_simulated = X_random_effect_2_simulated,
       user_provided_beta = user_provided_beta,
       beta_simulated_provided = beta_simulated_provided,
+      user_provided_prec_coeff_slope = user_provided_prec_coeff_slope,
+      prec_coeff_slope_provided = prec_coeff_slope_provided,
+      user_provided_prec_coeff_intercept = user_provided_prec_coeff_intercept,
+      prec_coeff_intercept_provided = prec_coeff_intercept_provided,
       length_X_which = length(X_which),
       length_XA_which = length(XA_which),
       X_which = X_which,
@@ -666,7 +706,7 @@ simulate_data <- function(.data,
                           .sample = NULL,
                           .cell_group = NULL,
                           .coefficients = NULL,
-                          variability_multiplier = 5,
+                          variability_multiplier = 1,
                           number_of_draws = 1,
                           mcmc_seed = sample_seed(),
                           cores = detectCores(),
@@ -687,6 +727,8 @@ simulate_data <- function(.data,
     .sample = .sample,
     .cell_group = .cell_group,
     .coefficients = .coefficients,
+    mean_dispersion_slope = mean_dispersion_slope,
+    mean_dispersion_intercept = mean_dispersion_intercept,
     variability_multiplier = variability_multiplier,
     number_of_draws = number_of_draws,
     mcmc_seed = mcmc_seed,

@@ -10,9 +10,11 @@ sccomp_simulate(
   formula_variability = NULL,
   new_data = NULL,
   coefficients = NULL,
+  mean_dispersion_slope = NULL,
+  mean_dispersion_intercept = NULL,
   .sample = NULL,
   .cell_group = NULL,
-  variability_multiplier = 5,
+  variability_multiplier = 1,
   number_of_draws = 1,
   mcmc_seed = sample_seed(),
   cores = detectCores(),
@@ -31,6 +33,10 @@ sccomp_simulate(
 \item{new_data}{A tibble including sample-specific columns (sample identifier and factor columns from formula). If coefficients are provided separately, cell_group column is optional. Otherwise, should include cell_group column.}
 
 \item{coefficients}{A data frame/tibble with cell-type specific coefficients. Must contain a column matching the cell_group column name, and columns matching the design matrix column names (e.g., "(Intercept)", "typeB"). If NULL, posterior beta_raw will be used.}
+
+\item{mean_dispersion_slope}{Optional numeric value for the slope parameter of the mean-dispersion association. If NULL, the slope from the fitted model (prec_coeff\link{2}) will be used.}
+
+\item{mean_dispersion_intercept}{Optional numeric value for the intercept parameter of the mean-dispersion association. If NULL, the intercept from the fitted model (prec_coeff\link{1}) will be used. This ensures that when only the slope is changed, the intercept remains the same.}
 
 \item{.sample}{A column name as symbol. The sample identifier}
 

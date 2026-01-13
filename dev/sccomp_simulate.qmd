@@ -1,0 +1,859 @@
+---
+title: "Data Simulation with sccomp_simulate"
+author: "sccomp"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-tools: true
+---
+
+## Introduction
+
+The `sccomp_simulate` function allows you to simulate compositional count data from a fitted sccomp model. This vignette demonstrates three main use cases:
+
+1. **Posterior Predictive Checks**: Simulate data using the full fitted model (all parameters from posterior distribution)
+2. **New Data Simulation**: Simulate data for new sample conditions using the fitted model
+3. **Custom Coefficients**: Simulate data with user-specified coefficients for specific scenarios
+
+## Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+# Load development version to ensure latest features
+if(requireNamespace("devtools", quietly = TRUE)) {
+  devtools::load_all(quiet = TRUE)
+}
+library(sccomp)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+Load example data:
+
+```{r load-data, message=FALSE}
+data("counts_obj")
+```
+
+## 1. Posterior Predictive Check (Using Everything from Fit)
+
+The simplest use case is to simulate data using all parameters from the fitted model. This is useful for posterior predictive checks to validate model fit.
+
+### Fit the Model
+
+```{r fit-model, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+estimate = sccomp_estimate(
+  counts_obj,
+  formula_composition = ~ type, 
+  formula_variability = ~ 1,
+  sample = "sample", 
+  cell_group = "cell_group", 
+  abundance = "count",
+  
+  verbose = FALSE,
+  max_sampling_iterations = 2000
+)
+```
+
+### Simulate from Posterior Distribution
+
+When `new_data = NULL` and `coefficients = NULL`, the function uses the original data and samples from the posterior distribution of all model parameters:
+
+```{r posterior-predictive, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Simulate using all parameters from the fitted model
+simulated_data = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = NULL,        # Use original data
+  coefficients = NULL,    # Use posterior beta_raw
+  
+  number_of_draws = 10     # Generate 3 replicates
+)
+
+# View the simulated data
+head(simulated_data, 20)
+```
+
+The simulated data includes:
+- Original columns from the input data
+- `generated_counts`: Simulated cell counts
+- `replicate`: Which draw from the posterior (1, 2, 3, etc.)
+
+### Visualize Posterior Predictive Check
+
+```{r visualize-ppc, eval = instantiate::stan_cmdstan_exists(), message=FALSE, fig.height=6}
+# Compare observed vs simulated
+comparison = 
+  bind_rows(
+    counts_obj |> 
+      mutate(type = "observed") |>
+      select(sample, cell_group, count, type),
+    simulated_data |>
+      filter(replicate == 1) |>
+      mutate(type = "simulated") |>
+      select(sample, cell_group, generated_counts, type) |>
+      rename(count = generated_counts)
+  )
+
+comparison |>
+  ggplot(aes(x = cell_group, y = count, fill = type)) +
+  geom_boxplot(position = "dodge", alpha = 0.7, outlier.alpha = 0.3) +
+  scale_y_continuous(trans = "log1p") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Posterior Predictive Check: Observed vs Simulated",
+       subtitle = "All samples combined",
+       x = "Cell Group", y = "Count (log1p scale)")
+```
+
+## 2. Simulate for New Data (New Sample Conditions)
+
+You can simulate data for new sample conditions (e.g., new treatment groups, new time points) while using the fitted model parameters.
+
+### Create New Data
+
+When `coefficients = NULL`, `new_data` must include the `cell_group` column. We can expand the sample data to include all cell groups:
+
+```{r new-data-example, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Create new sample conditions
+sample_conditions = tibble(
+  sample = c("new_sample_1", "new_sample_2", "new_sample_3"),
+  type = factor(c("normal", "cancer", "cancer"))
+)
+
+# Expand to include all cell groups from the fitted model
+# Get unique cell groups from original data
+all_cell_groups = counts_obj |>
+  distinct(cell_group) |>
+  pull(cell_group)
+
+# Create full new_data with all combinations
+new_samples = sample_conditions |>
+  tidyr::crossing(cell_group = all_cell_groups)
+
+# Simulate for new samples using posterior parameters
+simulated_new = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = new_samples,
+  coefficients = NULL,    # Still use posterior beta_raw
+  
+  number_of_draws = 10
+)
+
+head(simulated_new, 20)
+```
+
+Note: When `coefficients = NULL`, the function automatically expands `new_data` to include all cell groups from the fitted model. The design matrix for the new samples is created based on the `formula_composition` and `formula_variability`.
+
+### Simulate for Subset of Samples
+
+You can also simulate for a subset of the original samples. When `coefficients = NULL`, the data must include `cell_group`:
+
+```{r subset-samples, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Select a subset of original samples (with cell_group)
+subset_samples = counts_obj |>
+  filter(sample %in% unique(counts_obj$sample)[1:3]) |>  # First 3 samples
+  select(sample, type, cell_group)
+
+# Simulate for subset
+simulated_subset = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = subset_samples,
+  coefficients = NULL,
+  cores = 1
+)
+
+head(simulated_subset, 15)
+```
+
+## 3. Simulate with Custom Coefficients
+
+You can specify custom coefficients to simulate specific scenarios (e.g., hypothetical treatment effects, what-if analyses).
+
+### Create Coefficients Table
+
+The coefficients table must contain:
+- A column matching the `cell_group` column name
+- Columns matching the design matrix column names (e.g., `(Intercept)`, `typecancer`)
+
+```{r create-coefficients, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Get design matrix column names from the fitted model
+# These typically include "(Intercept)" and factor levels
+design_cols = c("(Intercept)", "typecancer")
+
+# Create coefficients table
+# Example: Set all coefficients to zero (null scenario)
+coeffs_null = counts_obj |>
+  distinct(cell_group) |>
+  mutate(
+    `(Intercept)` = 0,
+    `typecancer` = 0
+  )
+
+coeffs_null
+```
+
+### Verify Zero Coefficients Give Equal Mean Proportions
+
+When all coefficients are zero (both intercept and treatment effects), all cell types should have equal mean proportions (1/M, where M is the number of cell types). This is because with zero log-odds, `softmax(0, 0, ..., 0) = (1/M, 1/M, ..., 1/M)`.
+
+Let's verify this by simulating 30 samples:
+
+```{r verify-zero-coefficients, eval = instantiate::stan_cmdstan_exists(), message=FALSE, fig.height=6}
+# Simulate with zero coefficients across 30 samples
+sample_data_many = tibble(
+  sample = paste0("sample_", 1:30),
+  type = factor(rep(c("normal", "cancer"), each = 15))
+)
+
+sim_zero = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = sample_data_many,
+  coefficients = coeffs_null,
+  
+  number_of_draws = 10
+)
+
+# Expected proportion (1/M where M is number of cell types)
+M = nrow(coeffs_null)
+expected_prop = 1 / M
+
+cat("Expected proportion per cell type (1/M):", round(expected_prop, 4), "\n")
+cat("Number of cell types (M):", M, "\n\n")
+
+# Visualize with boxplots - all cell types should have similar mean proportions
+sim_zero |>
+  ggplot(aes(x = cell_group, y = generated_proportions)) +
+  geom_boxplot(fill = "steelblue", alpha = 0.7, outlier.alpha = 0.3) +
+  geom_hline(
+    yintercept = expected_prop, 
+    linetype = "dashed", 
+    color = "red", 
+    linewidth = 1
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    title = "Proportions with Zero Coefficients (30 samples)",
+    subtitle = paste("Expected mean:", round(expected_prop, 4), "(red dashed line) - All cell types should align"),
+    x = "Cell Group",
+    y = "Proportion",
+    caption = "With all coefficients = 0, all cell types should have equal mean proportions (1/M)"
+  )
+```
+
+**Note**: Individual samples may show variation due to:
+- Random effects (if present in the model)
+- Variability parameters (alpha) affecting the beta-binomial distribution
+- Sampling variability
+
+However, the **mean** across many samples should converge to 1/M for each cell type.
+
+### Simulate with Custom Coefficients
+
+```{r simulate-custom-coefficients, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Create new data for samples
+new_samples_coef = tibble(
+  sample = c("scenario_1", "scenario_2"),
+  type = factor(c("normal", "cancer"))
+)
+
+# Simulate with custom coefficients
+simulated_custom = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = new_samples_coef,
+  coefficients = coeffs_null,
+  
+  number_of_draws = 10
+)
+
+head(simulated_custom, 20)
+
+# Note: With zero coefficients, mean proportions should be equal across cell types
+# Individual samples may vary due to random effects and variability parameters,
+# but the mean across many samples should converge to 1/M for each cell type
+```
+
+### Simulate Different Scenarios
+
+You can create multiple coefficient tables to simulate different scenarios. When using `new_data`, it's useful to simulate from at least 30 samples to see clear patterns:
+
+```{r multiple-scenarios, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Create sample data with 30 samples for better visualization
+new_samples_scenarios = tibble(
+  sample = paste0("scenario_sample_", 1:30),
+  type = factor(rep(c("normal", "cancer"), each = 15))
+)
+
+# Scenario 1: Strong cancer effect for specific cell type
+coeffs_strong_effect = counts_obj |>
+  distinct(cell_group) |>
+  mutate(
+    `(Intercept)` = 0,
+    `typecancer` = if_else(cell_group == "B1", 2.0, 0.0)  # Strong effect for B1
+  )
+
+# Scenario 2: Moderate effect across all cell types
+coeffs_moderate = counts_obj |>
+  distinct(cell_group) |>
+  mutate(
+    `(Intercept)` = 0,
+    `typecancer` = 0.5  # Moderate effect for all
+  )
+
+# Simulate both scenarios
+scenario1 = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = new_samples_scenarios,
+  coefficients = coeffs_strong_effect,
+  cores = 1
+) |> mutate(scenario = "Strong B1 effect")
+
+scenario2 = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = new_samples_scenarios,
+  coefficients = coeffs_moderate,
+  cores = 1
+) |> mutate(scenario = "Moderate effect")
+
+# Compare scenarios - focus on cancer samples
+bind_rows(scenario1, scenario2) |>
+  filter(type == "cancer") |>
+  ggplot(aes(x = cell_group, y = generated_counts, fill = scenario)) +
+  geom_boxplot(position = "dodge", alpha = 0.7) +
+  scale_y_continuous(trans = "log1p") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Comparison of Different Coefficient Scenarios (30 cancer samples)",
+       x = "Cell Group", y = "Simulated Counts (log1p scale)")
+```
+
+## 4. Combining New Data with Custom Coefficients
+
+When both `new_data` and `coefficients` are provided, `new_data` can omit the `cell_group` column. The function automatically expands `new_data` to include all cell groups from the `coefficients` table using a cross join:
+
+```{r combine-newdata-coefficients, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Sample-specific data (no cell_group needed)
+sample_data = tibble(
+  sample = c("experiment_1", "experiment_2", "experiment_3"),
+  type = factor(c("normal", "cancer", "cancer"))
+)
+
+# Cell-type-specific coefficients
+coeffs_table = counts_obj |>
+  distinct(cell_group) |>
+  mutate(
+    `(Intercept)` = 0,
+    `typecancer` = 0
+  )
+
+# Simulate: new_data specifies samples, coefficients specifies cell types
+simulated_combined = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = sample_data,      # Sample-specific
+  coefficients = coeffs_table,  # Cell-type-specific
+  cores = 1
+)
+
+# The result has all combinations of samples x cell_groups
+simulated_combined |>
+  select(sample, type, cell_group, generated_counts) |>
+  head(20)
+```
+
+## 5. Advanced: Multiple Draws and Variability
+
+### Custom Mean-Dispersion Association Slope
+
+The `mean_dispersion_slope` parameter allows you to override the slope of the mean-dispersion association from the fitted model. This controls how variability (dispersion) relates to mean abundance. If `NULL`, the slope from the fitted model (`prec_coeff[2]`) is used.
+
+We can visualize the effect by comparing 2D plots from `plot_2D_intervals()` showing the mean-variance association:
+
+```{r mean-dispersion-slope, eval = instantiate::stan_cmdstan_exists(), message=FALSE, fig.height=8}
+# First, get the 2D plot from the original fit (shows the association)
+# The original estimate was fitted with formula_variability = ~ 1, but we need ~ type for 2D plots
+# So we'll refit with ~ type for variability
+estimate_with_variability = sccomp_estimate(
+  counts_obj,
+  formula_composition = ~ type,
+  formula_variability = ~ type,  # Include type in variability to get 2D plots for factor
+  sample = "sample",
+  cell_group = "cell_group",
+  abundance = "count",
+  verbose = FALSE
+)
+
+estimate_tested = estimate_with_variability |>
+  sccomp_test()
+
+plot_original = plot_2D_intervals(estimate_tested) +
+  labs(title = "Original Fit: Mean-Dispersion Association")
+
+# Simulate data with zero slope (no association)
+# When mean_dispersion_slope is provided, the intercept is automatically preserved from the original fit
+# Use formula_variability = ~ type to get 2D plots for the factor as well
+# Use multiple replicates and treat them as separate samples for better fit
+sim_no_association = sccomp_simulate(
+  estimate_with_variability,  # Use the refitted estimate with ~ type variability
+  formula_composition = ~ type,
+  formula_variability = ~ type,  # Include type in variability to get 2D plots for factor
+  new_data = NULL,
+  coefficients = NULL,
+  mean_dispersion_slope = 0.0,  # No association (intercept is automatically preserved)
+  
+  number_of_draws = 10  # Use multiple replicates
+)
+
+# Get the original fit parameters for comparison
+fit_original = attr(estimate_tested, "fit")
+prec_coeff_original = fit_original$summary("prec_coeff")
+cat("Original fit: intercept =", round(prec_coeff_original$mean[1], 2), 
+    ", slope =", round(prec_coeff_original$mean[2], 2), "\n")
+cat("Simulation used: intercept =", round(prec_coeff_original$mean[1], 2), 
+    ", slope = 0.0\n")
+
+# Fit the simulated data (with zero association)
+# Treat each replicate as a separate sample to get more data
+sim_data_for_fit = sim_no_association |>
+  mutate(sample = paste0(sample, "_rep", replicate)) |>
+  select(sample, cell_group, type, count = generated_counts)
+
+estimate_simulated = sccomp_estimate(
+  sim_data_for_fit,
+  formula_composition = ~ type,
+  formula_variability = ~ type,  # Match the variability formula used in simulation
+  sample = "sample",
+  cell_group = "cell_group",
+  abundance = "count",
+  
+  verbose = FALSE
+) |>
+  sccomp_test()
+
+# Get the fitted parameters from simulated data
+fit_simulated = attr(estimate_simulated, "fit")
+prec_coeff_simulated = fit_simulated$summary("prec_coeff")
+cat("Fitted from simulated data: intercept =", round(prec_coeff_simulated$mean[1], 2), 
+    ", slope =", round(prec_coeff_simulated$mean[2], 2), "\n")
+
+plot_simulated = plot_2D_intervals(estimate_simulated) +
+  labs(title = "Simulated with Slope = 0: No Mean-Dispersion Association")
+
+# Display plots side by side
+library(patchwork)
+plot_original / plot_simulated
+
+# Note: The regression line in the plot shows the ESTIMATED parameters from fitting the simulated data,
+# not the simulation parameters themselves. The simulation correctly used:
+# - intercept = original fit intercept (preserved automatically)
+# - slope = 0.0 (as specified)
+# However, when we fit the simulated data, the model estimates new parameters from the data structure.
+# The fitted intercept may differ from the simulation intercept because:
+# - The simulated data has a different structure (slope = 0 changes the alpha-beta relationship)
+# - The model estimates parameters that best fit the observed data
+# The "(Intercept, adjusted)" facet shows the variability effect after adjusting for
+# the estimated association, which should be closer to horizontal when slope = 0.
+```
+
+### Simulate with Non-Zero Coefficients and No Association
+
+We can also simulate with specific coefficients (e.g., a treatment effect) while removing the mean-dispersion association:
+
+```{r simulate-with-coefficients-no-association, eval = instantiate::stan_cmdstan_exists(), message=FALSE, fig.height=10}
+# Create coefficients table with a non-zero effect for typecancer
+# We'll use a moderate effect size
+# Coefficients must sum to zero for compositional models
+coeffs_no_assoc = estimate_tested |>
+  distinct(cell_group) |>
+  mutate(
+    `(Intercept)` = 0,
+    typecancer_raw = if_else(cell_group == "B1", 1.5, 0)  # B1 has positive effect
+  ) |>
+  mutate(
+    typecancer = typecancer_raw - mean(typecancer_raw)  # Normalize to sum to zero
+  ) |>
+  select(-typecancer_raw)
+
+# Simulate with these coefficients and slope = 0 (no association)
+# Use formula_variability = ~ type to get 2D plots for the factor as well
+sim_coeffs_no_assoc = sccomp_simulate(
+  estimate_with_variability,  # Use the refitted estimate with ~ type variability
+  formula_composition = ~ type,
+  formula_variability = ~ type,  # Include type in variability to get 2D plots for factor
+  new_data = NULL,
+  coefficients = coeffs_no_assoc,
+  mean_dispersion_slope = 0.0,  # No association
+  
+  number_of_draws = 10
+)
+
+cat("Simulation with coefficients and no association completed\n")
+cat("Coefficients used: B1 typecancer =", coeffs_no_assoc$typecancer[coeffs_no_assoc$cell_group == "B1"], "\n")
+
+# Fit the simulated data
+sim_data_coeffs = sim_coeffs_no_assoc |>
+  mutate(sample = paste0(sample, "_rep", replicate)) |>
+  select(sample, cell_group, type, count = generated_counts)
+
+estimate_simulated_coeffs = sccomp_estimate(
+  sim_data_coeffs,
+  formula_composition = ~ type,
+  formula_variability = ~ type,  # Match the variability formula used in simulation
+  sample = "sample",
+  cell_group = "cell_group",
+  abundance = "count",
+  
+  verbose = FALSE
+) |>
+  sccomp_test()
+
+# Get fitted parameters
+fit_simulated_coeffs = attr(estimate_simulated_coeffs, "fit")
+prec_coeff_simulated_coeffs = fit_simulated_coeffs$summary("prec_coeff")
+cat("Fitted from simulated data (with coefficients): intercept =", round(prec_coeff_simulated_coeffs$mean[1], 2), 
+    ", slope =", round(prec_coeff_simulated_coeffs$mean[2], 2), "\n")
+
+plot_simulated_coeffs = plot_2D_intervals(estimate_simulated_coeffs) +
+  labs(title = "Simulated with Coefficients (b1≠0) and Slope = 0: No Mean-Dispersion Association")
+
+# Display all three plots: original, simulated without coefficients, simulated with coefficients
+plot_original / plot_simulated / plot_simulated_coeffs
+```
+
+The three plots show:
+1. **Top**: Original fit with mean-dispersion association (sloped regression line)
+2. **Middle**: Simulated with zero coefficients and slope = 0 (no association, horizontal line)
+3. **Bottom**: Simulated with non-zero coefficients (B1 has positive effect) and slope = 0 (no association, horizontal line)
+
+Even with non-zero coefficients, when `mean_dispersion_slope = 0`, there should be no association between mean and dispersion, resulting in a horizontal regression line.
+```
+
+### Multiple Posterior Draws
+
+You can simulate multiple draws from the posterior distribution:
+
+```{r multiple-draws, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Simulate 5 draws from posterior
+simulated_multi = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = NULL,
+  coefficients = NULL,
+  
+  number_of_draws = 10
+)
+
+# Check replicate column
+simulated_multi |>
+  distinct(replicate) |>
+  count()
+```
+
+### Variability Multiplier
+
+You can artificially increase variability for benchmarking or sensitivity analysis:
+
+```{r variability-multiplier, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Standard simulation
+sim_normal = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = NULL,
+  coefficients = NULL,
+  
+  variability_multiplier = 1  # Default
+) |> mutate(variability = "Normal")
+
+# Increased variability
+sim_high = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = NULL,
+  coefficients = NULL,
+  
+  variability_multiplier = 10  # 10x variability
+) |> mutate(variability = "High")
+
+# Compare
+bind_rows(sim_normal, sim_high) |>
+  filter(replicate == 1) |>
+  ggplot(aes(x = cell_group, y = generated_counts, fill = variability)) +
+  geom_boxplot(position = "dodge", alpha = 0.7) +
+  scale_y_continuous(trans = "log1p") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Effect of Variability Multiplier",
+       x = "Cell Group", y = "Simulated Counts (log1p scale)")
+```
+
+## 6. Comparing Simulated Scenarios: Significant Cell Type Analysis
+
+A powerful use case is comparing simulations with different coefficient scenarios, especially for cell types that show significant differences. This helps visualize the impact of treatment effects vs. null scenarios.
+
+### Find a Significantly Different Cell Type
+
+First, let's identify which cell types are significantly different between conditions:
+
+```{r find-significant, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Test for significance
+test_results = estimate |>
+  sccomp_test()
+
+# Find significantly different cell types (e.g., FDR < 0.05)
+significant_cells = test_results |>
+  filter(c_FDR < 0.05 | is.na(c_FDR)) |>
+  arrange(c_FDR) |>
+  head(3)
+
+# Display significant cell types
+significant_cells |>
+  select(cell_group, parameter, c_effect, c_lower, c_upper, c_FDR)
+
+# Pick the most significant one for demonstration
+if(nrow(significant_cells) > 0) {
+  selected_cell = significant_cells$cell_group[1]
+  cat("\nSelected cell type for comparison:", selected_cell, "\n")
+} else {
+  # If no significant, pick one with largest effect
+  selected_cell = test_results |>
+    arrange(desc(abs(c_effect))) |>
+    head(1) |>
+    pull(cell_group)
+  cat("\nNo significant cell types found. Using cell type with largest effect:", selected_cell, "\n")
+}
+```
+
+### Simulate with Posterior Parameters (Real Effect)
+
+```{r simulate-posterior, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Simulate using all parameters from fit (includes real effects)
+sim_posterior = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = NULL,
+  coefficients = NULL,  # Use posterior beta_raw (real effects)
+  
+  number_of_draws = 10
+)
+
+# Calculate proportions for the selected cell type
+# Use generated_proportions directly from the simulation output
+proportions_posterior = sim_posterior |>
+  filter(cell_group == selected_cell) |>
+  select(sample, type, replicate, generated_proportions) |>
+  rename(proportion = generated_proportions) |>
+  mutate(scenario = "Posterior (real effects)")
+```
+
+### Simulate with Different Coefficient Scenarios
+
+```{r simulate-scenarios, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+# Create coefficients tables for different scenarios
+coeffs_null = counts_obj |>
+  distinct(cell_group) |>
+  mutate(
+    `(Intercept)` = 0,
+    `typecancer` = 0  # No effect
+  )
+
+coeffs_positive = counts_obj |>
+  distinct(cell_group) |>
+  mutate(
+    `(Intercept)` = 0,
+    `typecancer` = if_else(cell_group == selected_cell, 1.5, 0.0)  # Positive effect for selected cell type
+  ) |>
+  mutate(`typecancer` = `typecancer` - mean(`typecancer`))  # Normalize to sum to zero
+
+coeffs_negative = counts_obj |>
+  distinct(cell_group) |>
+  mutate(
+    `(Intercept)` = 0,
+    `typecancer` = if_else(cell_group == selected_cell, -1.5, 0.0)  # Negative effect for selected cell type
+  ) |>
+  mutate(`typecancer` = `typecancer` - mean(`typecancer`))  # Normalize to sum to zero
+
+# Get sample data
+sample_data = counts_obj |>
+  distinct(sample, type)
+
+# Simulate with different coefficients
+sim_null = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = sample_data,
+  coefficients = coeffs_null,  # Zero coefficients (no effect)
+  
+  number_of_draws = 10
+)
+
+sim_positive = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = sample_data,
+  coefficients = coeffs_positive,  # Positive coefficients
+  
+  number_of_draws = 10
+)
+
+sim_negative = sccomp_simulate(
+  estimate,
+  formula_composition = ~ type,
+  formula_variability = ~ 1,
+  new_data = sample_data,
+  coefficients = coeffs_negative,  # Negative coefficients
+  
+  number_of_draws = 10
+)
+
+# Calculate proportions for the selected cell type
+# Use generated_proportions directly from the simulation output
+proportions_null = sim_null |>
+  filter(cell_group == selected_cell) |>
+  select(sample, type, replicate, generated_proportions) |>
+  rename(proportion = generated_proportions) |>
+  mutate(scenario = "Zero (null)")
+
+proportions_positive = sim_positive |>
+  filter(cell_group == selected_cell) |>
+  select(sample, type, replicate, generated_proportions) |>
+  rename(proportion = generated_proportions) |>
+  mutate(scenario = "Positive (+1.5)")
+
+proportions_negative = sim_negative |>
+  filter(cell_group == selected_cell) |>
+  select(sample, type, replicate, generated_proportions) |>
+  rename(proportion = generated_proportions) |>
+  mutate(scenario = "Negative (-1.5)")
+```
+
+### Compare Proportions Between Scenarios
+
+```{r compare-scenarios, eval = instantiate::stan_cmdstan_exists(), message=FALSE, fig.height=6}
+# Combine all scenarios
+comparison = bind_rows(
+  proportions_posterior,
+  proportions_null,
+  proportions_positive,
+  proportions_negative
+)
+
+# Calculate mean proportions by type and scenario
+summary_comparison = comparison |>
+  group_by(type, scenario) |>
+  summarise(
+    mean_proportion = mean(proportion, na.rm = TRUE),
+    sd_proportion = sd(proportion, na.rm = TRUE),
+    lower = quantile(proportion, 0.025, na.rm = TRUE),
+    upper = quantile(proportion, 0.975, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Visualize comparison
+p1 = comparison |>
+  ggplot(aes(x = type, y = proportion, fill = scenario)) +
+  geom_boxplot(position = "dodge", alpha = 0.7, outlier.alpha = 0.3) +
+  facet_wrap(~scenario, ncol = 2) +
+  theme_minimal() +
+  labs(
+    title = paste("Proportion Comparison:", selected_cell),
+    subtitle = "Posterior (real) vs Zero vs Positive (+1.5) vs Negative (-1.5) coefficients",
+    x = "Type", 
+    y = "Proportion",
+    fill = "Scenario"
+  ) +
+  theme(legend.position = "none")
+
+# Show mean differences
+p2 = summary_comparison |>
+  ggplot(aes(x = type, y = mean_proportion, fill = scenario)) +
+  geom_col(position = "dodge", alpha = 0.7) +
+  geom_errorbar(
+    aes(ymin = lower, ymax = upper),
+    position = position_dodge(width = 0.9),
+    width = 0.2
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Mean Proportions with 95% CI",
+    x = "Type",
+    y = "Mean Proportion",
+    fill = "Scenario"
+  )
+
+# Display plots
+p1
+p2
+
+# Calculate difference between types for each scenario
+# First, get mean proportion per type, scenario, and replicate
+type_means = comparison |>
+  group_by(type, scenario, replicate) |>
+  summarise(mean_prop = mean(proportion, na.rm = TRUE), .groups = "drop")
+
+# Get type levels to use correct column names after pivot
+type_levels = sort(unique(as.character(type_means$type)))
+type1 = type_levels[1]
+type2 = type_levels[2]
+
+# Calculate difference between types for each replicate
+differences = type_means |>
+  pivot_wider(names_from = type, values_from = mean_prop) |>
+  mutate(
+    difference = .data[[type2]] - .data[[type1]],
+    abs_difference = abs(difference)
+  )
+
+# Show difference summary
+cat("\nDifference between", type2, "and", type1, ":\n")
+differences |>
+  group_by(scenario) |>
+  summarise(
+    mean_diff = mean(difference, na.rm = TRUE),
+    sd_diff = sd(difference, na.rm = TRUE),
+    lower_diff = quantile(difference, 0.025, na.rm = TRUE),
+    upper_diff = quantile(difference, 0.975, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  print()
+```
+
+This comparison clearly shows:
+- **Posterior simulation**: Reflects the actual treatment effects estimated from the data
+- **Zero coefficients simulation**: Shows what would happen if there were no treatment effects (null scenario)
+
+The difference between these scenarios demonstrates the magnitude of the treatment effect for the selected cell type.
+
+## 7. Summary
+
+The `sccomp_simulate` function provides flexible data simulation capabilities:
+
+- **Posterior Predictive Checks**: Use `new_data = NULL, coefficients = NULL` to simulate from the full posterior
+- **New Conditions**: Provide `new_data` with new sample conditions while using posterior parameters
+- **Custom Scenarios**: Provide `coefficients` table to specify custom effect sizes
+- **Combined**: Use both `new_data` and `coefficients` for maximum flexibility
+- **Effect Comparison**: Compare different coefficient scenarios to visualize treatment effects
+
+All simulations respect the compositional nature of the data and include proper uncertainty quantification through the posterior distribution.
+
