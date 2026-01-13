@@ -69,7 +69,7 @@ simulated_data = sccomp_simulate(
   new_data = NULL,        # Use original data
   coefficients = NULL,    # Use posterior beta_raw
   
-  number_of_draws = 10     # Generate 3 replicates
+  number_of_draws = 10     # Generate 10 replicates
 )
 
 # View the simulated data
