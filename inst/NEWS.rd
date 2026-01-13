@@ -1,7 +1,7 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
-\section{News in version 2.1.26}{
+\section{News in version 2.1.24}{
 \itemize{
     \item **Simulation improvements:** Changed default \code{variability_multiplier} parameter from 5 to 1 in \code{sccomp_simulate()} and \code{simulate_data()}. The new default preserves the fitted model's variability by default, rather than artificially increasing it. Users can still specify custom values greater than 1 to increase variability for benchmarking or sensitivity analysis.
     \item Enhanced simulation documentation. Improved clarity on how \code{mean_dispersion_slope} parameter affects both intercept and factor-level variability parameters in the variability formula. Updated vignette examples to use consistent \code{number_of_draws} values.
