@@ -97,7 +97,15 @@ This function simulates data from a fitted model.
 #     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
 
 #     # Simulate data
-#     sccomp_simulate(estimate, ~type, ~1, counts_obj, sample, cell_group, c(b_0, b_1))
+#     sccomp_simulate(
+#       estimate,
+#       formula_composition = ~type,
+#       formula_variability = ~1,
+#       new_data = counts_obj,
+#       .sample = sample,
+#       .cell_group = cell_group,
+#       coefficients = c(b_0, b_1)
+#     )
 #   }
 # }
 }
