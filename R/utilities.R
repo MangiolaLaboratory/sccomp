@@ -664,7 +664,62 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
     bind_rows()
 }
 
-
+#' Normalize sum_to_zero_vector parameters in posterior draws
+#'
+#' @description
+#' This function normalizes sum_to_zero_vector parameters in Stan posterior draws to ensure
+#' they sum to exactly zero. This fixes floating-point precision issues when using
+#' generate_quantities with sum_to_zero_vector types.
+#'
+#' @details
+#' Stan's sum_to_zero_vector type has a strict constraint that the sum must be exactly zero.
+#' When posterior draws are saved and reloaded, floating-point precision can cause the sum
+#' to deviate slightly from zero, causing generate_quantities to fail. This function fixes
+#' this by setting the last element of each vector to exactly the negative sum of all others,
+#' guaranteeing a zero sum.
+#'
+#' @param draws A matrix of posterior draws from a Stan model
+#' @param param_pattern A regular expression pattern matching the parameter names to normalize
+#'   (e.g., "^beta_raw\\[" for beta_raw parameters)
+#'
+#' @return A matrix with normalized parameters that sum to exactly zero
+#'
+#' @keywords internal
+#' @noRd
+#'
+normalize_sum_to_zero_params = function(draws, param_pattern) {
+  param_cols = grep(param_pattern, colnames(draws))
+  if(length(param_cols) == 0) return(draws)
+  
+  # Parse parameter names to extract indices
+  param_names = colnames(draws)[param_cols]
+  # Extract first index (grouping dimension) and second index (M dimension)
+  first_indices = gsub(paste0("^", param_pattern, "\\[(\\d+),.*"), "\\1", param_names)
+  second_indices = gsub(paste0("^", param_pattern, "\\[\\d+,(\\d+)\\]"), "\\1", param_names)
+  
+  # Group by first index and normalize each group
+  unique_groups = unique(first_indices)
+  for(group_idx in unique_groups) {
+    group_cols = param_cols[first_indices == group_idx]
+    if(length(group_cols) > 1) {
+      # Get the M indices for this group to find the last element
+      m_indices = as.integer(second_indices[first_indices == group_idx])
+      last_m_idx = max(m_indices)
+      last_col_idx = group_cols[m_indices == last_m_idx]
+      
+      # Normalize each row's vector to sum to exactly zero
+      for(i in seq_len(nrow(draws))) {
+        vec = as.numeric(draws[i, group_cols])
+        # Calculate sum of all but the last element
+        sum_others = sum(vec[-which(group_cols == last_col_idx)])
+        # Set last element to exactly negative sum of others (guarantees zero sum)
+        vec[which(group_cols == last_col_idx)] = -sum_others
+        draws[i, group_cols] = vec
+      }
+    }
+  }
+  return(draws)
+}
 
 #' @importFrom purrr when
 #' @importFrom stats model.matrix

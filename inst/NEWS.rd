@@ -1,6 +1,13 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.24}{
+\itemize{
+    \item **Simulation improvements:** Changed default \code{variability_multiplier} parameter from 5 to 1 in \code{sccomp_simulate()} and \code{simulate_data()}. The new default preserves the fitted model's variability by default, rather than artificially increasing it. Users can still specify custom values greater than 1 to increase variability for benchmarking or sensitivity analysis.
+    \item Enhanced simulation documentation. Improved clarity on how \code{mean_dispersion_slope} parameter affects both intercept and factor-level variability parameters in the variability formula. Updated vignette examples to use consistent \code{number_of_draws} values.
+    \item Clarified behavior of mean-dispersion association parameters in simulation. The \code{mean_dispersion_slope} affects the slope for both intercept columns (alpha1) and factor columns (alpha2, e.g., type), with intercept only added to intercept columns as per the model specification.
+}}
+
 \section{News in version 2.1.22}{
 \itemize{
     \item Added automatic cleanup of Stan draw CSV files. New \code{cleanup_draw_files} parameter (default TRUE) in \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} automatically removes large draw files after analysis completion, significantly reducing disk space usage.

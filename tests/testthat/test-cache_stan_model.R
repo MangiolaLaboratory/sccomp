@@ -5,13 +5,15 @@ test_that("cache_stan_model parameter works correctly", {
   # Test that cache_stan_model parameter is available in all relevant functions
   expect_true("cache_stan_model" %in% names(formals(sccomp_estimate)))
   expect_true("cache_stan_model" %in% names(formals(sccomp_replicate)))
-  expect_true("cache_stan_model" %in% names(formals(simulate_data)))
+  expect_true("cache_stan_model" %in% names(formals(sccomp_simulate)))
+  expect_true("cache_stan_model" %in% names(formals(simulate_data)))  # Deprecated but still has parameter
   expect_true("cache_stan_model" %in% names(formals(sccomp_remove_outliers)))
   
   # Test that cache_stan_model defaults to sccomp_stan_models_cache_dir
   expect_equal(formals(sccomp_estimate)$cache_stan_model, quote(sccomp_stan_models_cache_dir))
   expect_equal(formals(sccomp_replicate)$cache_stan_model, quote(sccomp_stan_models_cache_dir))
-  expect_equal(formals(simulate_data)$cache_stan_model, quote(sccomp_stan_models_cache_dir))
+  expect_equal(formals(sccomp_simulate)$cache_stan_model, quote(sccomp_stan_models_cache_dir))
+  expect_equal(formals(simulate_data)$cache_stan_model, quote(sccomp_stan_models_cache_dir))  # Deprecated but still has parameter
   expect_equal(formals(sccomp_remove_outliers)$cache_stan_model, quote(sccomp_stan_models_cache_dir))
   
   # Test that sccomp:::load_model function handles cache_stan_model correctly
