@@ -356,6 +356,7 @@ test_that("sccomp_boxplot can accept additional ggplot layers", {
   expect_s3_class(plot_with_theme, "ggplot")
 }) 
 
+
 test_that("sccomp_remove_outliers output exposes outliers attr and red boxplot points", {
    skip_cmdstan()
   
@@ -363,6 +364,40 @@ test_that("sccomp_remove_outliers output exposes outliers attr and red boxplot p
     mutate(count = as.integer(count)) |>
     sccomp_estimate(
       formula_composition = ~ type,
+
+test_that("sccomp_boxplot issue #256: point count matches sample count for >2-level factor", {
+   skip_cmdstan()
+  
+  sample_ids <- counts_obj |>
+    distinct(sample) |>
+    pull(sample) |>
+    as.character() |>
+    sort()
+  
+  group3_map <- setNames(
+    rep(c("g1", "g2", "g3"), length.out = length(sample_ids)),
+    sample_ids
+  )
+  batch_map <- setNames(
+    rep(c("b1", "b2"), length.out = length(sample_ids)),
+    sample_ids
+  )
+  sex_map <- setNames(
+    rep(c("f", "m", "f"), length.out = length(sample_ids)),
+    sample_ids
+  )
+  
+  counts_obj_issue_256 <- counts_obj |>
+    mutate(
+      count = as.integer(count),
+      group3 = unname(group3_map[as.character(sample)]),
+      batch = unname(batch_map[as.character(sample)]),
+      sex = unname(sex_map[as.character(sample)])
+    )
+  
+  estimate_issue_256 <- counts_obj_issue_256 |>
+    sccomp_estimate(
+      formula_composition = ~ group3 + batch + sex,
       formula_variability = ~ 1,
       sample = "sample",
       cell_group = "cell_group",
@@ -372,6 +407,7 @@ test_that("sccomp_remove_outliers output exposes outliers attr and red boxplot p
       max_sampling_iterations = 300,
       verbose = FALSE
     ) |>
+
     sccomp_remove_outliers(
       percent_false_positive = 80,
       cores = 1,
@@ -390,4 +426,18 @@ test_that("sccomp_remove_outliers output exposes outliers attr and red boxplot p
   jitter_layer <- ggplot_build(boxplot_with_outliers)$data[[length(ggplot_build(boxplot_with_outliers)$data)]]
   
   expect_true(any(jitter_layer$colour == "#e11f28", na.rm = TRUE))
+
+    sccomp_test()
+  
+  plot_issue_256 <- sccomp_boxplot(estimate_issue_256, factor = "group3")
+  plot_data <- ggplot_build(plot_issue_256)$data
+  
+  actual_points <- nrow(plot_data[[length(plot_data)]])
+  expected_points <- attr(estimate_issue_256, "count_data") |>
+    distinct(sample, cell_group) |>
+    nrow()
+  
+  # Positive control for regression: this fails on current master where
+  # plotting rows are duplicated for factors with >2 levels.
+  expect_equal(actual_points, expected_points)
 })
