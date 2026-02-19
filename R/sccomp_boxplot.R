@@ -84,10 +84,7 @@ sccomp_boxplot = function(
       by = quo_name(.cell_group)
     ) |>
     with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |> 
-    mutate(is_zero = proportion==0) |> 
-    
-    # Add columns for plotting expansion
-    left_join(data_proportion |> select(cell_group, parameter, c_pH0, c_FDR, v_pH0, v_FDR))
+    mutate(is_zero = proportion==0)
   
   if(remove_unwanted_effects){
     .data_adjusted = 
@@ -244,7 +241,9 @@ plot_boxplot = function(
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
   }
   
-  my_boxplot = data_proportion |> ggplot()
+  # Keep parameter-level statistics as default ggplot data for optional
+  # user-added layers, while geometry layers use data_proportion explicitly.
+  my_boxplot = .data |> filter(factor == factor_of_interest) |> ggplot()
   
   if("fit" %in% names(attributes(.data))){
     
