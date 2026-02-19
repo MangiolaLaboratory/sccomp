@@ -51,9 +51,11 @@
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
 #'                        The sccomp version will be automatically appended to ensure version isolation.
 #'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
-#' @param cleanup_draw_files Logical, whether to automatically delete Stan draw CSV files after extracting results.
-#'                               These files can be large (MBs to GBs) and are typically only needed during the analysis session.
-#'                               Default is TRUE to save disk space. Set to FALSE if you need to inspect draw files for debugging.
+#' @param portable Logical, whether to incorporate all parameters into the fit object and delete Stan draw CSV files.
+#'                               When TRUE, parameters are loaded into memory (which takes time) and CSV files are deleted,
+#'                               making the R object self-contained and portable. When FALSE (default), parameters remain
+#'                               in CSV files and are not incorporated, which is faster but requires CSV files to be present.
+#'                               Default is FALSE for faster execution.
 #' @param .count **DEPRECATED**. Use `abundance` instead.
 #' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
@@ -164,7 +166,7 @@ sccomp_estimate <- function(.data,
                             pass_fit = TRUE,
                             sig_figs = 9,
                             cache_stan_model = sccomp_stan_models_cache_dir,
-                            cleanup_draw_files = TRUE,
+                            portable = FALSE,
                             ...,
                             
                             # DEPRECATED
@@ -257,7 +259,7 @@ sccomp_estimate.Seurat <- function(.data,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
                                    cache_stan_model = sccomp_stan_models_cache_dir,
-                                   cleanup_draw_files = TRUE,
+                                   portable = FALSE,
                                    ...,
                                    
                                    # DEPRECATED
@@ -310,7 +312,7 @@ sccomp_estimate.Seurat <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
-      cleanup_draw_files = cleanup_draw_files,
+      portable = portable,
       cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
@@ -354,7 +356,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  pass_fit = TRUE,
                                                  sig_figs = 9,
                                                  cache_stan_model = sccomp_stan_models_cache_dir,
-                                                 cleanup_draw_files = TRUE,
+                                                 portable = FALSE,
                                                  ...,
                                                  
                                                  # DEPRECATED
@@ -408,7 +410,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
-      cleanup_draw_files = cleanup_draw_files,
+      portable = portable,
       cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
@@ -452,7 +454,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
                                    cache_stan_model = sccomp_stan_models_cache_dir,
-                                   cleanup_draw_files = TRUE,
+                                   portable = FALSE,
                                    ...,
                                    
                                    # DEPRECATED
@@ -497,7 +499,7 @@ sccomp_estimate.DFrame <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
-      cleanup_draw_files = cleanup_draw_files,
+      portable = portable,
       cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
@@ -544,7 +546,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        pass_fit = TRUE,
                                        sig_figs = 9,
                                        cache_stan_model = sccomp_stan_models_cache_dir,
-                                       cleanup_draw_files = TRUE,
+                                       portable = FALSE,
                                        ...,
                                        
                                        # DEPRECATED
@@ -704,8 +706,8 @@ sccomp_estimate.data.frame <- function(.data,
   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).")
   
-  # Auto-cleanup draw files if requested
-  if (cleanup_draw_files) {
+  # Incorporate parameters and cleanup draw files if portable mode is requested
+  if (portable) {
     # Incorporate all parameters into fit object BEFORE deleting CSV files
     # This ensures parameters are cached in memory and remain accessible after cleanup
     fit_obj <- attr(res, "fit")
@@ -719,7 +721,7 @@ sccomp_estimate.data.frame <- function(.data,
       if (length(files_deleted) > 0) {
         file.remove(files_deleted)
         if (verbose) {
-          message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'", 
+          message(sprintf("sccomp says: portable mode removed %d draw files from '%s'", 
                          length(files_deleted), output_directory))
         }
       }
@@ -729,7 +731,8 @@ sccomp_estimate.data.frame <- function(.data,
   res |>
     
     # Track input parameters
-    add_attr(noise_model, "noise_model")
+    add_attr(noise_model, "noise_model") |>
+    add_attr(portable, "portable")
 }
 
 #' @importFrom tidyr complete
@@ -1038,7 +1041,7 @@ sccomp_glm_data_frame_counts = function(.data,
   # # Check that design matrix is not too big
   # if(ncol(data_for_model$X)>20)
   #   message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical factors are erroneously of type character/factor.")
-  
+  browser()
   fit =
     data_for_model %>%
     

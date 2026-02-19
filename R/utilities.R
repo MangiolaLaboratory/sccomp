@@ -281,10 +281,13 @@ parse_formula_random_effect <- function(fm) {
 #' @param par A character vector. The parameters to extract.
 #' @param x A character. The first index.
 #' @param y A character. The first index.
+#' @param number_of_draws Optional number of draws to limit
+#' @param specific_indices Optional list with x and y indices to read only specific parameters (e.g., list(x = c(1,2), y = c(1,2))).
+#'                         When provided and portable = FALSE, only reads these specific indices to optimize CSV reading.
 #'
 #' @keywords internal
 #' @noRd
-draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
+draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL, specific_indices = NULL) {
   
   # Define the variables as NULL to avoid CRAN NOTES
   dummy <- NULL
@@ -294,8 +297,19 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   .draw <- NULL
   .value <- NULL
 
+  # If specific_indices provided, construct specific variable names for optimization
+  variables_to_read <- par
+  if (!is.null(specific_indices) && !is.null(specific_indices$x) && !is.null(specific_indices$y)) {
+    # Construct variable names like "beta[1,1]", "beta[1,2]", etc.
+    variables_to_read <- character()
+    for (xi in specific_indices$x) {
+      for (yi in specific_indices$y) {
+        variables_to_read <- c(variables_to_read, paste0(par, "[", xi, ",", yi, "]"))
+      }
+    }
+  }
   
-  fit$draws(variables = par, format = "draws_df") %>%
+  fit$draws(variables = variables_to_read, format = "draws_df") %>%
     mutate(.iteration = seq_len(n())) %>%
     
     pivot_longer(

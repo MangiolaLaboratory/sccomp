@@ -86,10 +86,12 @@ sccomp_test.sccomp_tbl = function(.data,
   model_input = .data |> attr("model_input")
   truncation_df2 =  .data |>  attr("truncation_df2")
   inference_method = .data |>  attr("inference_method")
+  portable = .data |> attr("portable")
+  if (is.null(portable)) portable = FALSE  # Default to FALSE for backward compatibility
   
   # Abundance
   abundance_CI =
-    get_abundance_contrast_draws(.data, contrasts)
+    get_abundance_contrast_draws(.data, contrasts, portable = portable)
   
   # If my contrasts do not match my model. I have to do something more elegant.
   if ("parameter" %in% colnames(abundance_CI))
@@ -103,7 +105,7 @@ sccomp_test.sccomp_tbl = function(.data,
     )
   
   variability_CI =
-    get_variability_contrast_draws(.data, contrasts)
+    get_variability_contrast_draws(.data, contrasts, portable = portable)
   
   # Variability
   if ("parameter" %in% colnames(variability_CI))
@@ -172,7 +174,7 @@ sccomp_test.sccomp_tbl = function(.data,
 }
 
 # this can be helpful if we want to draw PCA with uncertainty
-get_abundance_contrast_draws = function(.data, contrasts){
+get_abundance_contrast_draws = function(.data, contrasts, portable = FALSE){
   
   # Define the variables as NULL to avoid CRAN NOTES
   X <- NULL
@@ -191,18 +193,24 @@ get_abundance_contrast_draws = function(.data, contrasts){
   
   # Beta
   beta_factor_of_interest = .data |> attr("model_input") %$% X |> colnames()
-  # beta =
-  #   .data |>
-  #   attr("fit") %>%
-  #   draws_to_tibble_x_y("beta", "C", "M") |>
-  #   pivot_wider(names_from = C, values_from = .value) %>%
-  #   setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
+  
+  # Determine which C indices are needed for optimization when portable = FALSE
+  beta_indices_needed <- NULL
+  if (!portable && !is.null(contrasts) && 
+      (beta_factor_of_interest %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0) {
+    # Get the C indices that match the contrasts
+    needed_params <- beta_factor_of_interest[beta_factor_of_interest %in% contrasts_to_parameter_list(contrasts)]
+    c_indices <- which(beta_factor_of_interest %in% needed_params)
+    # Get number of cell groups (M dimension)
+    n_cell_groups <- .data |> attr("model_input") %$% ncol(y)
+    beta_indices_needed <- list(x = c_indices, y = seq_len(n_cell_groups))
+  }
   
   if(contrasts |> is.null())
     draws = 
     .data |>
     attr("fit") %>%
-    draws_to_tibble_x_y("beta", "C", "M") |> 
+    draws_to_tibble_x_y("beta", "C", "M", specific_indices = beta_indices_needed) |> 
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
   
@@ -213,7 +221,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
     draws =
     .data |>
     attr("fit") %>%
-    draws_to_tibble_x_y("beta", "C", "M") |> 
+    draws_to_tibble_x_y("beta", "C", "M", specific_indices = beta_indices_needed) |> 
     left_join(
       beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
       by = "C"
@@ -243,10 +251,20 @@ get_abundance_contrast_draws = function(.data, contrasts){
   ){
     
     
+    # Determine random effect indices if portable = FALSE and contrasts provided
+    random_effect_indices_needed <- NULL
+    if (!portable && !is.null(contrasts) && 
+        (beta_random_effect_factor_of_interest %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0) {
+      needed_params <- beta_random_effect_factor_of_interest[beta_random_effect_factor_of_interest %in% contrasts_to_parameter_list(contrasts)]
+      c_indices <- which(beta_random_effect_factor_of_interest %in% needed_params)
+      n_cell_groups <- .data |> attr("model_input") %$% ncol(y)
+      random_effect_indices_needed <- list(x = c_indices, y = seq_len(n_cell_groups))
+    }
+    
     beta_random_effect =
       .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y("random_effect", "C", "M") 
+      draws_to_tibble_x_y("random_effect", "C", "M", specific_indices = random_effect_indices_needed) 
     
     # Add last component
     other_group_random_effect = 
@@ -337,10 +355,20 @@ get_abundance_contrast_draws = function(.data, contrasts){
     )
   ){
     
+    # Determine random effect 2 indices if portable = FALSE and contrasts provided
+    random_effect_2_indices_needed <- NULL
+    if (!portable && !is.null(contrasts) && 
+        (beta_random_effect_factor_of_interest_2 %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0) {
+      needed_params <- beta_random_effect_factor_of_interest_2[beta_random_effect_factor_of_interest_2 %in% contrasts_to_parameter_list(contrasts)]
+      c_indices <- which(beta_random_effect_factor_of_interest_2 %in% needed_params)
+      n_cell_groups <- .data |> attr("model_input") %$% ncol(y)
+      random_effect_2_indices_needed <- list(x = c_indices, y = seq_len(n_cell_groups))
+    }
+    
     beta_random_effect_2 =
       .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y("random_effect_2", "C", "M") 
+      draws_to_tibble_x_y("random_effect_2", "C", "M", specific_indices = random_effect_2_indices_needed) 
     
     # Add last component
     other_group_random_effect = 
@@ -536,7 +564,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 
 #' @importFrom forcats fct_relevel
 #' @noRd
-get_variability_contrast_draws = function(.data, contrasts){
+get_variability_contrast_draws = function(.data, contrasts, portable = FALSE){
   
   # Define the variables as NULL to avoid CRAN NOTES
   XA <- NULL
@@ -552,11 +580,23 @@ get_variability_contrast_draws = function(.data, contrasts){
   
   variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()
   
+  # Determine which C indices are needed for optimization when portable = FALSE
+  alpha_indices_needed <- NULL
+  if (!portable && !is.null(contrasts) && 
+      (variability_factor_of_interest %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0) {
+    # Get the C indices that match the contrasts
+    needed_params <- variability_factor_of_interest[variability_factor_of_interest %in% contrasts_to_parameter_list(contrasts)]
+    c_indices <- which(variability_factor_of_interest %in% needed_params)
+    # Get number of cell groups (M dimension)
+    n_cell_groups <- .data |> attr("model_input") %$% ncol(y)
+    alpha_indices_needed <- list(x = c_indices, y = seq_len(n_cell_groups))
+  }
+  
   draws =
     
     .data |>
     attr("fit") %>%
-    draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
+    draws_to_tibble_x_y("alpha_normalised", "C", "M", specific_indices = alpha_indices_needed) |>
     
     # We want variability, not concentration
     mutate(.value = -.value) 
