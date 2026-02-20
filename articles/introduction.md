@@ -985,55 +985,56 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] bayesplot_1.15.0  posterior_1.6.1   cmdstanr_0.9.0    loo_2.8.0        
-    ##  [5] tidyr_1.3.1       forcats_1.0.1     ggplot2_4.0.1     sccomp_2.1.23    
-    ##  [9] instantiate_0.2.3 dplyr_1.1.4      
+    ##  [1] bayesplot_1.15.0  posterior_1.6.1   cmdstanr_0.9.0    loo_2.9.0        
+    ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.2     sccomp_2.1.24    
+    ##  [9] instantiate_0.2.3 dplyr_1.2.0      
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] tidyselect_1.2.1            farver_2.1.2               
-    ##  [3] S7_0.2.1                    fastmap_1.2.0              
-    ##  [5] SingleCellExperiment_1.32.0 tensorA_0.36.2.1           
-    ##  [7] dotCall64_1.2               digest_0.6.39              
-    ##  [9] lifecycle_1.0.4             SeuratObject_5.3.0         
-    ## [11] processx_3.8.6              magrittr_2.0.4             
-    ## [13] compiler_4.5.2              rlang_1.1.6                
-    ## [15] sass_0.4.10                 tools_4.5.2                
-    ## [17] utf8_1.2.6                  yaml_2.3.12                
-    ## [19] data.table_1.17.8           knitr_1.50                 
-    ## [21] labeling_0.4.3              S4Arrays_1.10.1            
-    ## [23] htmlwidgets_1.6.4           sp_2.2-0                   
-    ## [25] DelayedArray_0.36.0         plyr_1.8.9                 
-    ## [27] RColorBrewer_1.1-3          abind_1.4-8                
-    ## [29] withr_3.0.2                 purrr_1.2.0                
-    ## [31] BiocGenerics_0.56.0         desc_1.4.3                 
-    ## [33] grid_4.5.2                  stats4_4.5.2               
-    ## [35] future_1.68.0               progressr_0.18.0           
-    ## [37] globals_0.18.0              scales_1.4.0               
-    ## [39] SummarizedExperiment_1.40.0 cli_3.6.5                  
-    ## [41] rmarkdown_2.30              crayon_1.5.3               
-    ## [43] ragg_1.5.0                  generics_0.1.4             
-    ## [45] future.apply_1.20.1         reshape2_1.4.5             
-    ## [47] tzdb_0.5.0                  cachem_1.1.0               
-    ## [49] stringr_1.6.0               parallel_4.5.2             
-    ## [51] XVector_0.50.0              matrixStats_1.5.0          
-    ## [53] vctrs_0.6.5                 Matrix_1.7-4               
-    ## [55] jsonlite_2.0.0              callr_3.7.6                
-    ## [57] IRanges_2.44.0              hms_1.1.4                  
-    ## [59] patchwork_1.3.2             S4Vectors_0.48.0           
-    ## [61] ggrepel_0.9.6               listenv_0.10.0             
-    ## [63] systemfonts_1.3.1           jquerylib_0.1.4            
-    ## [65] spam_2.11-1                 parallelly_1.46.0          
-    ## [67] glue_1.8.0                  pkgdown_2.2.0              
-    ## [69] codetools_0.2-20            ps_1.9.1                   
-    ## [71] distributional_0.5.0        stringi_1.8.7              
-    ## [73] gtable_0.3.6                GenomicRanges_1.62.1       
-    ## [75] tibble_3.3.0                pillar_1.11.1              
-    ## [77] htmltools_0.5.9             Seqinfo_1.0.0              
-    ## [79] R6_2.6.1                    textshaping_1.0.4          
-    ## [81] evaluate_1.0.5              lattice_0.22-7             
-    ## [83] Biobase_2.70.0              readr_2.1.6                
-    ## [85] backports_1.5.0             bslib_0.9.0                
-    ## [87] Rcpp_1.1.0                  SparseArray_1.10.7         
-    ## [89] checkmate_2.3.3             xfun_0.55                  
-    ## [91] fs_1.6.6                    MatrixGenerics_1.22.0      
-    ## [93] prettydoc_0.4.1             pkgconfig_2.0.3
+    ##  [1] rlang_1.1.7                 magrittr_2.0.4             
+    ##  [3] otel_0.2.0                  matrixStats_1.5.0          
+    ##  [5] compiler_4.5.2              systemfonts_1.3.1          
+    ##  [7] callr_3.7.6                 vctrs_0.7.1                
+    ##  [9] reshape2_1.4.5              stringr_1.6.0              
+    ## [11] pkgconfig_2.0.3             crayon_1.5.3               
+    ## [13] fastmap_1.2.0               backports_1.5.0            
+    ## [15] XVector_0.50.0              labeling_0.4.3             
+    ## [17] utf8_1.2.6                  rmarkdown_2.30             
+    ## [19] tzdb_0.5.0                  ps_1.9.1                   
+    ## [21] ragg_1.5.0                  purrr_1.2.1                
+    ## [23] xfun_0.56                   cachem_1.1.0               
+    ## [25] jsonlite_2.0.0              DelayedArray_0.36.0        
+    ## [27] parallel_4.5.2              R6_2.6.1                   
+    ## [29] bslib_0.10.0                stringi_1.8.7              
+    ## [31] RColorBrewer_1.1-3          parallelly_1.46.1          
+    ## [33] GenomicRanges_1.62.1        jquerylib_0.1.4            
+    ## [35] Rcpp_1.1.1                  Seqinfo_1.0.0              
+    ## [37] SummarizedExperiment_1.40.0 knitr_1.51                 
+    ## [39] future.apply_1.20.2         readr_2.2.0                
+    ## [41] IRanges_2.44.0              Matrix_1.7-4               
+    ## [43] tidyselect_1.2.1            abind_1.4-8                
+    ## [45] yaml_2.3.12                 codetools_0.2-20           
+    ## [47] processx_3.8.6              listenv_0.10.0             
+    ## [49] plyr_1.8.9                  lattice_0.22-7             
+    ## [51] tibble_3.3.1                Biobase_2.70.0             
+    ## [53] withr_3.0.2                 S7_0.2.1                   
+    ## [55] evaluate_1.0.5              future_1.69.0              
+    ## [57] desc_1.4.3                  pillar_1.11.1              
+    ## [59] MatrixGenerics_1.22.0       tensorA_0.36.2.1           
+    ## [61] checkmate_2.3.4             stats4_4.5.2               
+    ## [63] distributional_0.6.0        generics_0.1.4             
+    ## [65] sp_2.2-1                    S4Vectors_0.48.0           
+    ## [67] hms_1.1.4                   scales_1.4.0               
+    ## [69] globals_0.19.0              glue_1.8.0                 
+    ## [71] tools_4.5.2                 data.table_1.18.2.1        
+    ## [73] fs_1.6.6                    dotCall64_1.2              
+    ## [75] grid_4.5.2                  SingleCellExperiment_1.32.0
+    ## [77] patchwork_1.3.2             cli_3.6.5                  
+    ## [79] textshaping_1.0.4           spam_2.11-3                
+    ## [81] S4Arrays_1.10.1             gtable_0.3.6               
+    ## [83] sass_0.4.10                 digest_0.6.39              
+    ## [85] progressr_0.18.0            BiocGenerics_0.56.0        
+    ## [87] SparseArray_1.10.8          ggrepel_0.9.6              
+    ## [89] htmlwidgets_1.6.4           SeuratObject_5.3.0         
+    ## [91] farver_2.1.2                htmltools_0.5.9            
+    ## [93] pkgdown_2.2.0               lifecycle_1.0.5            
+    ## [95] prettydoc_0.4.1

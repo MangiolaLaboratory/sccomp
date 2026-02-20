@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.23</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.24</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2025-12-18</h4>
+            <h4 data-toc-skip class="date">2026-02-20</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="d-none name"><code>introduction.Rmd</code></div>
@@ -580,7 +580,7 @@ the significant associations for composition and/or variability.</p>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
-<p><img src="introduction_files/figure-html/boxplot-basic-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/boxplot-basic-1.png" class="r-plt" alt="" width="700"></p>
 <p>You can plot proportions adjusted for unwanted effects. This is
 helpful especially for complex models, where multiple factors can
 significantly impact the proportions.</p>
@@ -596,7 +596,7 @@ significantly impact the proportions.</p>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
-<p><img src="introduction_files/figure-html/boxplot-adjusted-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/boxplot-adjusted-1.png" class="r-plt" alt="" width="700"></p>
 <div class="section level4">
 <h4 id="adding-custom-layers-to-boxplots">Adding Custom Layers to Boxplots<a class="anchor" aria-label="anchor" href="#adding-custom-layers-to-boxplots"></a>
 </h4>
@@ -615,7 +615,7 @@ labels showing FDR values or other statistics:</p>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
-<p><img src="introduction_files/figure-html/boxplot-fdr-labels-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/boxplot-fdr-labels-1.png" class="r-plt" alt="" width="700"></p>
 <p>You can also add text annotations for p-values:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
@@ -629,7 +629,7 @@ labels showing FDR values or other statistics:</p>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
-<p><img src="introduction_files/figure-html/boxplot-pvalue-labels-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/boxplot-pvalue-labels-1.png" class="r-plt" alt="" width="700"></p>
 <p>A plot of estimates of differential composition (c_) on the x-axis
 and differential variability (v_) on the y-axis. The error bars
 represent 95% credible intervals. The dashed lines represent the minimal
@@ -639,7 +639,7 @@ credible interval. Facets represent the covariates in the model.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/plot_1D_intervals.html">plot_1D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/plot-1d-intervals-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/plot-1d-intervals-1.png" class="r-plt" alt="" width="700"></p>
 <p>We can plot the relationship between abundance and variability. As we
 can see below, they are positively correlated. sccomp models this
 relationship to obtain a shrinkage effect on the estimates of both the
@@ -648,7 +648,7 @@ modelled jointly, thanks to Bayesian inference.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/plot_2D_intervals.html">plot_2D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/plot-2d-intervals-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/plot-2d-intervals-1.png" class="r-plt" alt="" width="700"></p>
 <p>You can produce the series of plots calling the <code>plot</code>
 method.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
@@ -1124,7 +1124,7 @@ and so test differences in variability</p>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/plot-1d-significance-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/plot-1d-significance-1.png" class="r-plt" alt="" width="700"></p>
 <p><strong>Plot 2D significance plot</strong> Data points are cell
 groups. Error bars are the 95% credible interval. The dashed lines
 represent the default threshold fold change for which the probabilities
@@ -1139,7 +1139,7 @@ interest. For each category of interest, the composition and variability
 effects should be generally uncorrelated.</p>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/plot-2d-significance-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/plot-2d-significance-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 </div>
 <div class="section level2">
@@ -1180,7 +1180,7 @@ with probability 1.</p>
 <span></span>
 <span><span class="co"># Create a traceplot for 'beta[2,1]'</span></span>
 <span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/MCMC-traces.html" class="external-link">mcmc_trace</a></span><span class="op">(</span><span class="va">draws</span>, pars <span class="op">=</span> <span class="st">"beta[2,1]"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/mcmc-traceplot-1.png" class="r-plt" width="700"></p>
+<p><img src="introduction_files/figure-html/mcmc-traceplot-1.png" class="r-plt" alt="" width="700"></p>
 <div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.2 (2025-10-31)</span></span>
@@ -1204,58 +1204,59 @@ with probability 1.</p>
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] bayesplot_1.15.0  posterior_1.6.1   cmdstanr_0.9.0    loo_2.8.0        </span></span>
-<span><span class="co">##  [5] tidyr_1.3.1       forcats_1.0.1     ggplot2_4.0.1     sccomp_2.1.23    </span></span>
-<span><span class="co">##  [9] instantiate_0.2.3 dplyr_1.1.4      </span></span>
+<span><span class="co">##  [1] bayesplot_1.15.0  posterior_1.6.1   cmdstanr_0.9.0    loo_2.9.0        </span></span>
+<span><span class="co">##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.2     sccomp_2.1.24    </span></span>
+<span><span class="co">##  [9] instantiate_0.2.3 dplyr_1.2.0      </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] tidyselect_1.2.1            farver_2.1.2               </span></span>
-<span><span class="co">##  [3] S7_0.2.1                    fastmap_1.2.0              </span></span>
-<span><span class="co">##  [5] SingleCellExperiment_1.32.0 tensorA_0.36.2.1           </span></span>
-<span><span class="co">##  [7] dotCall64_1.2               digest_0.6.39              </span></span>
-<span><span class="co">##  [9] lifecycle_1.0.4             SeuratObject_5.3.0         </span></span>
-<span><span class="co">## [11] processx_3.8.6              magrittr_2.0.4             </span></span>
-<span><span class="co">## [13] compiler_4.5.2              rlang_1.1.6                </span></span>
-<span><span class="co">## [15] sass_0.4.10                 tools_4.5.2                </span></span>
-<span><span class="co">## [17] utf8_1.2.6                  yaml_2.3.12                </span></span>
-<span><span class="co">## [19] data.table_1.17.8           knitr_1.50                 </span></span>
-<span><span class="co">## [21] labeling_0.4.3              S4Arrays_1.10.1            </span></span>
-<span><span class="co">## [23] htmlwidgets_1.6.4           sp_2.2-0                   </span></span>
-<span><span class="co">## [25] DelayedArray_0.36.0         plyr_1.8.9                 </span></span>
-<span><span class="co">## [27] RColorBrewer_1.1-3          abind_1.4-8                </span></span>
-<span><span class="co">## [29] withr_3.0.2                 purrr_1.2.0                </span></span>
-<span><span class="co">## [31] BiocGenerics_0.56.0         desc_1.4.3                 </span></span>
-<span><span class="co">## [33] grid_4.5.2                  stats4_4.5.2               </span></span>
-<span><span class="co">## [35] future_1.68.0               progressr_0.18.0           </span></span>
-<span><span class="co">## [37] globals_0.18.0              scales_1.4.0               </span></span>
-<span><span class="co">## [39] SummarizedExperiment_1.40.0 cli_3.6.5                  </span></span>
-<span><span class="co">## [41] rmarkdown_2.30              crayon_1.5.3               </span></span>
-<span><span class="co">## [43] ragg_1.5.0                  generics_0.1.4             </span></span>
-<span><span class="co">## [45] future.apply_1.20.1         reshape2_1.4.5             </span></span>
-<span><span class="co">## [47] tzdb_0.5.0                  cachem_1.1.0               </span></span>
-<span><span class="co">## [49] stringr_1.6.0               parallel_4.5.2             </span></span>
-<span><span class="co">## [51] XVector_0.50.0              matrixStats_1.5.0          </span></span>
-<span><span class="co">## [53] vctrs_0.6.5                 Matrix_1.7-4               </span></span>
-<span><span class="co">## [55] jsonlite_2.0.0              callr_3.7.6                </span></span>
-<span><span class="co">## [57] IRanges_2.44.0              hms_1.1.4                  </span></span>
-<span><span class="co">## [59] patchwork_1.3.2             S4Vectors_0.48.0           </span></span>
-<span><span class="co">## [61] ggrepel_0.9.6               listenv_0.10.0             </span></span>
-<span><span class="co">## [63] systemfonts_1.3.1           jquerylib_0.1.4            </span></span>
-<span><span class="co">## [65] spam_2.11-1                 parallelly_1.46.0          </span></span>
-<span><span class="co">## [67] glue_1.8.0                  pkgdown_2.2.0              </span></span>
-<span><span class="co">## [69] codetools_0.2-20            ps_1.9.1                   </span></span>
-<span><span class="co">## [71] distributional_0.5.0        stringi_1.8.7              </span></span>
-<span><span class="co">## [73] gtable_0.3.6                GenomicRanges_1.62.1       </span></span>
-<span><span class="co">## [75] tibble_3.3.0                pillar_1.11.1              </span></span>
-<span><span class="co">## [77] htmltools_0.5.9             Seqinfo_1.0.0              </span></span>
-<span><span class="co">## [79] R6_2.6.1                    textshaping_1.0.4          </span></span>
-<span><span class="co">## [81] evaluate_1.0.5              lattice_0.22-7             </span></span>
-<span><span class="co">## [83] Biobase_2.70.0              readr_2.1.6                </span></span>
-<span><span class="co">## [85] backports_1.5.0             bslib_0.9.0                </span></span>
-<span><span class="co">## [87] Rcpp_1.1.0                  SparseArray_1.10.7         </span></span>
-<span><span class="co">## [89] checkmate_2.3.3             xfun_0.55                  </span></span>
-<span><span class="co">## [91] fs_1.6.6                    MatrixGenerics_1.22.0      </span></span>
-<span><span class="co">## [93] prettydoc_0.4.1             pkgconfig_2.0.3</span></span></code></pre>
+<span><span class="co">##  [1] rlang_1.1.7                 magrittr_2.0.4             </span></span>
+<span><span class="co">##  [3] otel_0.2.0                  matrixStats_1.5.0          </span></span>
+<span><span class="co">##  [5] compiler_4.5.2              systemfonts_1.3.1          </span></span>
+<span><span class="co">##  [7] callr_3.7.6                 vctrs_0.7.1                </span></span>
+<span><span class="co">##  [9] reshape2_1.4.5              stringr_1.6.0              </span></span>
+<span><span class="co">## [11] pkgconfig_2.0.3             crayon_1.5.3               </span></span>
+<span><span class="co">## [13] fastmap_1.2.0               backports_1.5.0            </span></span>
+<span><span class="co">## [15] XVector_0.50.0              labeling_0.4.3             </span></span>
+<span><span class="co">## [17] utf8_1.2.6                  rmarkdown_2.30             </span></span>
+<span><span class="co">## [19] tzdb_0.5.0                  ps_1.9.1                   </span></span>
+<span><span class="co">## [21] ragg_1.5.0                  purrr_1.2.1                </span></span>
+<span><span class="co">## [23] xfun_0.56                   cachem_1.1.0               </span></span>
+<span><span class="co">## [25] jsonlite_2.0.0              DelayedArray_0.36.0        </span></span>
+<span><span class="co">## [27] parallel_4.5.2              R6_2.6.1                   </span></span>
+<span><span class="co">## [29] bslib_0.10.0                stringi_1.8.7              </span></span>
+<span><span class="co">## [31] RColorBrewer_1.1-3          parallelly_1.46.1          </span></span>
+<span><span class="co">## [33] GenomicRanges_1.62.1        jquerylib_0.1.4            </span></span>
+<span><span class="co">## [35] Rcpp_1.1.1                  Seqinfo_1.0.0              </span></span>
+<span><span class="co">## [37] SummarizedExperiment_1.40.0 knitr_1.51                 </span></span>
+<span><span class="co">## [39] future.apply_1.20.2         readr_2.2.0                </span></span>
+<span><span class="co">## [41] IRanges_2.44.0              Matrix_1.7-4               </span></span>
+<span><span class="co">## [43] tidyselect_1.2.1            abind_1.4-8                </span></span>
+<span><span class="co">## [45] yaml_2.3.12                 codetools_0.2-20           </span></span>
+<span><span class="co">## [47] processx_3.8.6              listenv_0.10.0             </span></span>
+<span><span class="co">## [49] plyr_1.8.9                  lattice_0.22-7             </span></span>
+<span><span class="co">## [51] tibble_3.3.1                Biobase_2.70.0             </span></span>
+<span><span class="co">## [53] withr_3.0.2                 S7_0.2.1                   </span></span>
+<span><span class="co">## [55] evaluate_1.0.5              future_1.69.0              </span></span>
+<span><span class="co">## [57] desc_1.4.3                  pillar_1.11.1              </span></span>
+<span><span class="co">## [59] MatrixGenerics_1.22.0       tensorA_0.36.2.1           </span></span>
+<span><span class="co">## [61] checkmate_2.3.4             stats4_4.5.2               </span></span>
+<span><span class="co">## [63] distributional_0.6.0        generics_0.1.4             </span></span>
+<span><span class="co">## [65] sp_2.2-1                    S4Vectors_0.48.0           </span></span>
+<span><span class="co">## [67] hms_1.1.4                   scales_1.4.0               </span></span>
+<span><span class="co">## [69] globals_0.19.0              glue_1.8.0                 </span></span>
+<span><span class="co">## [71] tools_4.5.2                 data.table_1.18.2.1        </span></span>
+<span><span class="co">## [73] fs_1.6.6                    dotCall64_1.2              </span></span>
+<span><span class="co">## [75] grid_4.5.2                  SingleCellExperiment_1.32.0</span></span>
+<span><span class="co">## [77] patchwork_1.3.2             cli_3.6.5                  </span></span>
+<span><span class="co">## [79] textshaping_1.0.4           spam_2.11-3                </span></span>
+<span><span class="co">## [81] S4Arrays_1.10.1             gtable_0.3.6               </span></span>
+<span><span class="co">## [83] sass_0.4.10                 digest_0.6.39              </span></span>
+<span><span class="co">## [85] progressr_0.18.0            BiocGenerics_0.56.0        </span></span>
+<span><span class="co">## [87] SparseArray_1.10.8          ggrepel_0.9.6              </span></span>
+<span><span class="co">## [89] htmlwidgets_1.6.4           SeuratObject_5.3.0         </span></span>
+<span><span class="co">## [91] farver_2.1.2                htmltools_0.5.9            </span></span>
+<span><span class="co">## [93] pkgdown_2.2.0               lifecycle_1.0.5            </span></span>
+<span><span class="co">## [95] prettydoc_0.4.1</span></span></code></pre>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
