@@ -489,6 +489,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     
     # Add count data as attribute
     add_attr(.data, "count_data") |>
+    add_attr(truncation_df2 |> select(!!.sample, !!.cell_group, outlier, contains_outliers), "outliers") |>
     
     # Add class to the tbl
     add_class("sccomp_tbl") |> 

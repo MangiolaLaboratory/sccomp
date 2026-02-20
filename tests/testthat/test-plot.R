@@ -355,3 +355,39 @@ test_that("sccomp_boxplot can accept additional ggplot layers", {
   
   expect_s3_class(plot_with_theme, "ggplot")
 }) 
+
+test_that("sccomp_remove_outliers output exposes outliers attr and red boxplot points", {
+   skip_cmdstan()
+  
+  estimate_with_outliers <- counts_obj |>
+    mutate(count = as.integer(count)) |>
+    sccomp_estimate(
+      formula_composition = ~ type,
+      formula_variability = ~ 1,
+      sample = "sample",
+      cell_group = "cell_group",
+      abundance = "count",
+      cores = 1,
+      inference_method = "pathfinder",
+      max_sampling_iterations = 300,
+      verbose = FALSE
+    ) |>
+    sccomp_remove_outliers(
+      percent_false_positive = 80,
+      cores = 1,
+      inference_method = "pathfinder",
+      max_sampling_iterations = 300,
+      verbose = FALSE
+    ) |>
+    sccomp_test()
+  
+  outliers_attr <- attr(estimate_with_outliers, "outliers")
+  expect_true(!is.null(outliers_attr))
+  expect_true("outlier" %in% colnames(outliers_attr))
+  expect_gt(sum(outliers_attr$outlier, na.rm = TRUE), 0)
+  
+  boxplot_with_outliers <- sccomp_boxplot(estimate_with_outliers, factor = "type")
+  jitter_layer <- ggplot_build(boxplot_with_outliers)$data[[length(ggplot_build(boxplot_with_outliers)$data)]]
+  
+  expect_true(any(jitter_layer$colour == "#e11f28", na.rm = TRUE))
+})

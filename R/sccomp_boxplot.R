@@ -66,7 +66,6 @@ sccomp_boxplot = function(
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
-  
   data_proportion =
     .data |>
     
@@ -102,9 +101,14 @@ sccomp_boxplot = function(
   }
   else 
     message( "sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.")
-  
+
   # If I don't have outliers add them
-  if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
+  if(.data |> attr("outliers") |> is.null() |> not())
+    data_proportion = 
+    data_proportion |> 
+    left_join(.data |> attr("outliers"), by = c(quo_name(.sample), quo_name(.cell_group)))
+ else 
+  data_proportion = data_proportion |> mutate(outlier = FALSE) 
   
   plot_boxplot(
     .data,
