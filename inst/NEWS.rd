@@ -33,6 +33,10 @@
 
 \section{News in version 2.1.18, Bioconductor 3.22 Release}{
 \itemize{
+    \item **Major improvement:** Transitioned to using built-in sum_to_zero_vector in Stan for improved efficiency and clarity. Dropped post-model correction calculations in favor of native Stan implementation.
+    \item Removed deprecated QR-based sum-to-zero functions and replaced with new implementation.
+    \item Refactored random effect handling in Stan models. Updated from matrices to arrays for improved flexibility and applied proper sum-to-zero constraints.
+    \item Updated cmdstanr version check to require version 0.9.0 or higher.
     \item Removed deprecated .sample argument handling. Cleaned up sccomp_estimate function by removing deprecated argument handling and added tests for old argument style compatibility.
     \item Commit ID: c6f2afe (tag v2.1.18)
 }}
@@ -75,16 +79,7 @@
 
 \section{News in version 2.1.14, Bioconductor 3.22 Release}{
 \itemize{
-    \item **Major improvement:** Transitioned to using built-in sum_to_zero_vector in Stan for improved efficiency and clarity. Dropped post-model correction calculations in favor of native Stan implementation.
-    \item Removed deprecated QR-based sum-to-zero functions and replaced with new implementation. This update introduces a new way of handling certain statistical constraints in the underlying model, using a "sum-to-zero" variable type.
-    \item Why was this change made? The previous method for enforcing sum-to-zero constraints (a requirement for compositional data) relied on QR decomposition, which could be numerically unstable and inefficient, especially for complex models or large datasets. The new method leverages recent advances in the Stan modeling language (requiring cmdstanr version 0.9.0 or higher).
-    \item What does this mean for users? The model now converges faster and produces more reliable results, especially for analyses involving many cell types or complex experimental designs. The improvement in effective sample size (ESS) can be dramatic - across real-world datasets, the median improvement is in the range of 500--1000 additional effective samples per parameter, with many parameters seeing their ESS doubled or more.
-    \item Refactored random effect handling in Stan models. Updated from matrices to arrays for improved flexibility. Adjusted array dimensions for random effects and their corresponding sigma parameters to ensure consistency. Applied proper sum-to-zero constraints.
-    \item Updated cmdstanr version check to require version 0.9.0 or higher. Added error handling for cmdstanr version checks.
-    \item Corrected beta_raw matrix dimensions and improved error handling during HMC inference. Adjusted verbosity for exception display and refined error reporting for model compilation issues.
-    \item Updated priors and random effects in glm_multi_beta_binomial Stan model to use correct scaling for sum-to-zero constraints. Adjusted normal distributions for random effects and their corresponding sigma parameters.
-    \item Added compare_branches_job.R script for parallel branch comparison to validate improvements.
-    \item Enhanced NEWS.rd documentation with detailed explanations of improvements. See https://github.com/MangiolaLaboratory/sccomp/pull/211 for comparison plots and benchmarks.
+    \item Historical development note: this section was drafted during development, but the sum-to-zero Stan refactor and related cmdstanr updates were released in \code{v2.1.18}. See the \code{2.1.18} section for the release-level changelog.
     \item Between commits: 4c1b7541c18ad60806481e8d5d5fb97cac80fd9a..ae4c9a67064c119253aaf176513d2a9dcd0bf163
 }}
 
