@@ -447,4 +447,5 @@ test_that("sccomp_remove_outliers output exposes outliers attr and red boxplot p
   jitter_layer <- ggplot_build(boxplot_with_outliers)$data[[length(ggplot_build(boxplot_with_outliers)$data)]]
   
   expect_true(any(jitter_layer$colour == "#e11f28", na.rm = TRUE))
+
 })
