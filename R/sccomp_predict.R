@@ -20,6 +20,12 @@
 #'   \item \strong{proportion_mean} - A numeric column representing the predicted mean (or median when robust=TRUE) proportions from the model.
 #'   \item \strong{proportion_lower} - A numeric column representing the lower bound (2.5%) of the 95% credible interval for the predicted proportions.
 #'   \item \strong{proportion_upper} - A numeric column representing the upper bound (97.5%) of the 95% credible interval for the predicted proportions.
+#'   \item \strong{unconstrained_mean} - A numeric column representing the mean unconstrained predictors (before softmax transformation).
+#'   \item \strong{unconstrained_lower} - A numeric column representing the lower bound (2.5%) of the 95% credible interval for the unconstrained predictors.
+#'   \item \strong{unconstrained_upper} - A numeric column representing the upper bound (97.5%) of the 95% credible interval for the unconstrained predictors.
+#'   \item \strong{unconstrained} - A numeric column (when summary_instead_of_draws=FALSE) representing individual draws of the unconstrained predictors.
+#'   \item \strong{proportion} - A numeric column (when summary_instead_of_draws=FALSE) representing individual draws of the predicted proportions.
+#'   \item \strong{.draw} - An integer column (when summary_instead_of_draws=FALSE) representing the draw index.
 #' }
 #' 
 #' @export
@@ -106,22 +112,51 @@ sccomp_predict.sccomp_tbl = function(fit,
   # mean generated
   if(summary_instead_of_draws){
     
+    # Determine which column name to use for central tendency
+    central_tendency_col = if(robust) "median" else "mean"
+    
     prediction_df = 
       rng |>
       summary_to_tibble("mu", "M", "N", robust = robust) |>
       select(M, N, 
              
              # This is not great, consider making proportion_mean more general such as proportion_point_estimate
-             proportion_mean = any_of(c("mean", "median")), 
+             proportion_mean = !!as.symbol(central_tendency_col), 
              proportion_lower = `2.5%`, 
              proportion_upper = `97.5%`) 
+    
+    # Extract unconstrained predictors (before softmax)
+    mu_unconstrained_df =
+      rng |>
+      summary_to_tibble("mu_unconstrained", "M", "N", robust = robust) |>
+      select(M, N, 
+             unconstrained_mean = !!as.symbol(central_tendency_col),
+             unconstrained_lower = `2.5%`,
+             unconstrained_upper = `97.5%`)
+    
+    # Join unconstrained predictors
+    prediction_df = 
+      prediction_df |>
+      left_join(mu_unconstrained_df, by = c("M", "N"))
   }
 
-  else
+  else {
     prediction_df = 
     rng |>
     draws_to_tibble_x_y("mu", "M", "N") |> 
     select(M, N, proportion = .value, .draw) 
+    
+    # Extract unconstrained predictors (before softmax)
+    mu_unconstrained_df =
+      rng |>
+      draws_to_tibble_x_y("mu_unconstrained", "M", "N") |>
+      select(M, N, unconstrained = .value, .draw)
+    
+    # Join unconstrained predictors
+    prediction_df = 
+      prediction_df |>
+      left_join(mu_unconstrained_df, by = c("M", "N", ".draw"))
+  } 
   
   prediction_df = 
     prediction_df |>

@@ -11,15 +11,17 @@
 #'   \item \strong{cell_group} - A character column representing the cell group identifiers.
 #'   \item \strong{residuals} - A numeric column representing the residuals, calculated as the difference between observed and predicted proportions.
 #'   \item \strong{exposure} - A numeric column representing the total counts (sum of counts across cell groups) for each sample.
+#'   \item \strong{residuals_unconstrained} - A numeric column representing the residuals on the unconstrained scale, calculated as the difference between the inverse softmax transform of observed proportions and the predicted unconstrained predictors.
 #' }
 #'
 #' @details
 #' The function performs the following steps:
 #' \enumerate{
-#'   \item Extracts the predicted mean proportions for each cell group and sample using `sccomp_predict()`.
+#'   \item Extracts the predicted mean proportions and unconstrained predictors for each cell group and sample using `sccomp_predict()`.
 #'   \item Calculates the observed proportions from the original count data.
-#'   \item Computes residuals by subtracting the predicted proportions from the observed proportions.
-#'   \item Returns a tibble containing the sample, cell group, residuals, and exposure (total counts per sample).
+#'   \item Computes residuals on the proportion scale by subtracting the predicted proportions from the observed proportions.
+#'   \item Computes residuals on the unconstrained (log-ratio) scale by: (1) applying inverse softmax (log-ratio transform with sum-to-zero normalization) to observed proportions, (2) subtracting the predicted unconstrained predictors.
+#'   \item Returns a tibble containing the sample, cell group, residuals (proportion scale), residuals_unconstrained (log-ratio scale), and exposure (total counts per sample).
 #' }
 #'
 #' @references
@@ -30,6 +32,7 @@
 #' @importFrom dplyr left_join
 #' @importFrom dplyr distinct
 #' @importFrom dplyr with_groups
+#' @importFrom dplyr all_of
 #' @importFrom tidyr pivot_longer
 #' @importFrom tibble as_tibble
 #' @importFrom magrittr %$%
@@ -88,7 +91,8 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
         _[1] |> 
         min(500) 
     ) |>
-    distinct(!!.sample, !!.cell_group, proportion_mean) 
+    select(!!.sample, !!.cell_group, proportion_mean, unconstrained_mean) |>
+    distinct() 
   
   if(.data |> attr("model_input") %$% is_proportion)
     y = .data |> attr("model_input") %$% y_proportion
@@ -103,12 +107,21 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
     with_groups(!!.sample,  ~ .x |>  mutate(exposure := sum(!!.count))  )
   
   
+  # Join with observed data and calculate residuals
   residual |>
     left_join(
       y,
       by = c(quo_name(.sample), quo_name(.cell_group))
     ) |>
-    mutate(residuals = observed_proportion - proportion_mean) |>
-    select(!!.sample, !!.cell_group, residuals, exposure)
+    # Calculate inverse softmax of observed proportions per sample
+    mutate(
+      observed_unconstrained = inv_softmax(observed_proportion),
+      .by = quo_name(.sample)
+    ) |>
+    mutate(
+      residuals = observed_proportion - proportion_mean,
+      residuals_unconstrained = observed_unconstrained - unconstrained_mean
+    ) |>
+    select(!!.sample, !!.cell_group, residuals, exposure, residuals_unconstrained)
   
 }
