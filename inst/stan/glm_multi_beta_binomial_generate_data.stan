@@ -255,9 +255,6 @@ generated quantities{
     }
   }
 
-  // Save unconstrained predictors before softmax
-  matrix[M,N] mu_unconstrained = mu;
-
   // Calculate proportions
   for(i in 1:N) mu[,i] = softmax(mu[,i]);
 

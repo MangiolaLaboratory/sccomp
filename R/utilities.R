@@ -1322,44 +1322,6 @@ sample_seed = function(){
   sample(1e5, 1)
 }
 
-#' Inverse softmax transform (log-ratio transform with sum-to-zero normalization)
-#' 
-#' Transforms proportions to unconstrained (logit) scale by applying the inverse
-#' of the softmax function. This is the inverse operation of softmax, which converts
-#' a vector of real numbers to a probability distribution.
-#' 
-#' The function:
-#' 1. Applies log transform to proportions: log(p_i)
-#' 2. Normalizes to sum-to-zero: log(p_i) - mean(log(p))
-#' 
-#' This normalization matches Stan's `normalize_sum_to_zero()` function and ensures
-#' the result is on the same scale as the unconstrained predictors from the model.
-#' 
-#' @param proportions A numeric vector of proportions (should sum to approximately 1).
-#'   Values should be positive and non-zero (log(0) is undefined).
-#' 
-#' @return A numeric vector of the same length as `proportions`, containing the
-#'   unconstrained (logit) values normalized to sum-to-zero.
-#' 
-#' @examples
-#' # Example proportions
-#' props <- c(0.1, 0.3, 0.6)
-#' 
-#' # Inverse softmax
-#' unconstrained <- inv_softmax(props)
-#' 
-#' # Verify sum-to-zero property
-#' sum(unconstrained)  # Should be approximately 0
-#' 
-#' @keywords internal
-#' @noRd
-inv_softmax = function(proportions) {
-  # Apply log transform
-  log_props = log(proportions)
-  # Normalize to sum-to-zero (matching Stan's normalize_sum_to_zero)
-  log_props - mean(log_props)
-}
-
 #' Handle missing values in a data frame
 #' 
 #' @param data A data frame to process

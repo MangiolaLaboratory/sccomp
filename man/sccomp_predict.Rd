@@ -37,12 +37,6 @@ A tibble (\code{tbl}) with the following columns:
 \item \strong{proportion_mean} - A numeric column representing the predicted mean (or median when robust=TRUE) proportions from the model.
 \item \strong{proportion_lower} - A numeric column representing the lower bound (2.5\%) of the 95\% credible interval for the predicted proportions.
 \item \strong{proportion_upper} - A numeric column representing the upper bound (97.5\%) of the 95\% credible interval for the predicted proportions.
-\item \strong{unconstrained_mean} - A numeric column representing the mean unconstrained predictors (before softmax transformation).
-\item \strong{unconstrained_lower} - A numeric column representing the lower bound (2.5\%) of the 95\% credible interval for the unconstrained predictors.
-\item \strong{unconstrained_upper} - A numeric column representing the upper bound (97.5\%) of the 95\% credible interval for the unconstrained predictors.
-\item \strong{unconstrained} - A numeric column (when summary_instead_of_draws=FALSE) representing individual draws of the unconstrained predictors.
-\item \strong{proportion} - A numeric column (when summary_instead_of_draws=FALSE) representing individual draws of the predicted proportions.
-\item \strong{.draw} - An integer column (when summary_instead_of_draws=FALSE) representing the draw index.
 }
 }
 \description{
