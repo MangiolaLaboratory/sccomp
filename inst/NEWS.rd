@@ -1,6 +1,13 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.25}{
+\itemize{
+    \item Improved plotting significance colouring controls. Added \code{significance_statistic} to \code{sccomp_boxplot()} with default \code{c("pH0", "FDR")}, so colouring now defaults to posterior probability while still supporting FDR-based colouring.
+    \item Bayesian FDR messaging is now shown only when FDR is selected, avoiding FDR-specific text when probability-based significance is used.
+    \item Fixed the package version dot-numbering https://github.com/MangiolaLaboratory/sccomp/issues/256.
+}}
+
 \section{News in version 2.1.22}{
 \itemize{
     \item Added automatic cleanup of Stan draw CSV files. New \code{cleanup_draw_files} parameter (default TRUE) in \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} automatically removes large draw files after analysis completion, significantly reducing disk space usage.

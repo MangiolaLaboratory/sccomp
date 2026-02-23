@@ -268,6 +268,20 @@ test_that("significance_statistic and show_fdr_message work via plot() S3 method
       show_fdr_message = FALSE
     )
   )
+  
+  fdr_plot <- plot_1D_intervals(
+    my_estimate |> sccomp_test(),
+    significance_statistic = "FDR",
+    show_fdr_message = TRUE
+  )
+  ph0_plot <- plot_1D_intervals(
+    my_estimate |> sccomp_test(),
+    significance_statistic = "pH0",
+    show_fdr_message = TRUE
+  )
+  
+  expect_true(grepl("Bayesian FDR", fdr_plot$labels$caption))
+  expect_true(is.null(ph0_plot$labels$caption) || !grepl("Bayesian FDR", ph0_plot$labels$caption))
 })
 
 test_that("plot_2D_intervals includes regression line from prec_coeff parameters", {
