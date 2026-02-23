@@ -66,7 +66,6 @@ sccomp_boxplot = function(
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
-  
   data_proportion =
     .data |>
     
@@ -84,10 +83,7 @@ sccomp_boxplot = function(
       by = quo_name(.cell_group)
     ) |>
     with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) ) |> 
-    mutate(is_zero = proportion==0) |> 
-    
-    # Add columns for plotting expansion
-    left_join(data_proportion |> select(cell_group, parameter, c_pH0, c_FDR, v_pH0, v_FDR))
+    mutate(is_zero = proportion==0)
   
   if(remove_unwanted_effects){
     .data_adjusted = 
@@ -102,9 +98,14 @@ sccomp_boxplot = function(
   }
   else 
     message( "sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.")
-  
+
   # If I don't have outliers add them
-  if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
+  if(.data |> attr("outliers") |> is.null() |> not())
+    data_proportion = 
+    data_proportion |> 
+    left_join(.data |> attr("outliers"), by = c(quo_name(.sample), quo_name(.cell_group)))
+ else 
+  data_proportion = data_proportion |> mutate(outlier = FALSE) 
   
   plot_boxplot(
     .data,
@@ -244,7 +245,9 @@ plot_boxplot = function(
         with_groups(c(!!.cell_group, !!as.symbol(factor_of_interest)), ~ .x %>% summarise(name = paste(name, collapse = ", ")))
   }
   
-  my_boxplot = data_proportion |> ggplot()
+  # Keep parameter-level statistics as default ggplot data for optional
+  # user-added layers, while geometry layers use data_proportion explicitly.
+  my_boxplot = .data |> filter(factor == factor_of_interest) |> ggplot()
   
   if("fit" %in% names(attributes(.data))){
     

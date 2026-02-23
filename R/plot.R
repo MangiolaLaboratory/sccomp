@@ -75,8 +75,15 @@ plot.sccomp_tbl <- function(x,  significance_threshold = 0.05, test_composition_
   
   
   # If I don't have outliers add them
-  if(!"outlier" %in% colnames(data_proportion)) data_proportion = data_proportion |> mutate(outlier = FALSE) 
+  if(x |> attr("outliers") |> is.null() |> not())
+    data_proportion = 
+    data_proportion |> 
+    left_join(x |> attr("outliers"), by = join_by(!!.sample, !!.cell_group))
+ else 
+  data_proportion = data_proportion |> mutate(outlier = FALSE) 
   
+ 
+
   # Select the factors to plot  
   my_factors =
     x |>
