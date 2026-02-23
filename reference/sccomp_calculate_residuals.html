@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.25</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.27</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,6 +59,7 @@
 <li><p><strong>cell_group</strong> - A character column representing the cell group identifiers.</p></li>
 <li><p><strong>residuals</strong> - A numeric column representing the residuals, calculated as the difference between observed and predicted proportions.</p></li>
 <li><p><strong>exposure</strong> - A numeric column representing the total counts (sum of counts across cell groups) for each sample.</p></li>
+<li><p><strong>residuals_unconstrained</strong> - A numeric column representing the unconstrained predictors (before softmax transformation), corresponding to the linear combination of design matrix and coefficients.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -117,8 +118,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>   This procedure has not been thoroughly tested and may be unstable </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   or buggy. The interface is subject to change. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------ </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Gradient evaluation took 0.000361 seconds </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1000 transitions using 10 leapfrog steps per transition would take 3.61 seconds. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Gradient evaluation took 0.000359 seconds </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1000 transitions using 10 leapfrog steps per transition would take 3.59 seconds. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Adjust your expectations accordingly! </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Begin eta adaptation. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration:   1 / 250 [  0%]  (Adaptation) </span>
@@ -150,19 +151,19 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 finished in 0.0 seconds.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    sample cell_group residuals exposure</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K B1           0.010<span style="text-decoration: underline;">7</span>      <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K B2          -<span style="color: #BB0000;">0.027</span><span style="color: #BB0000; text-decoration: underline;">2</span>      <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K B3          -<span style="color: #BB0000;">0.004</span><span style="color: #BB0000; text-decoration: underline;">88</span>     <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K BM           0.002<span style="text-decoration: underline;">04</span>     <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K CD4 1        0.002<span style="text-decoration: underline;">10</span>     <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K CD4 2       -<span style="color: #BB0000;">0.016</span><span style="color: #BB0000; text-decoration: underline;">2</span>      <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K CD4 3        0.061<span style="text-decoration: underline;">3</span>      <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K CD4 4       -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">05</span>     <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K CD4 5       -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">39</span>     <span style="text-decoration: underline;">5</span>030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K CD8 1       -<span style="color: #BB0000;">0.028</span><span style="color: #BB0000; text-decoration: underline;">3</span>      <span style="text-decoration: underline;">5</span>030</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    sample cell_group residuals exposure residuals_unconstrained</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K B1           0.010<span style="text-decoration: underline;">7</span>      <span style="text-decoration: underline;">5</span>030                  0.179 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K B2          -<span style="color: #BB0000;">0.027</span><span style="color: #BB0000; text-decoration: underline;">2</span>      <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">1.20</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K B3          -<span style="color: #BB0000;">0.004</span><span style="color: #BB0000; text-decoration: underline;">88</span>     <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.460</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K BM           0.002<span style="text-decoration: underline;">04</span>     <span style="text-decoration: underline;">5</span>030                  0.299 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K CD4 1        0.002<span style="text-decoration: underline;">10</span>     <span style="text-decoration: underline;">5</span>030                  0.103 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K CD4 2       -<span style="color: #BB0000;">0.016</span><span style="color: #BB0000; text-decoration: underline;">2</span>      <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.357</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K CD4 3        0.061<span style="text-decoration: underline;">3</span>      <span style="text-decoration: underline;">5</span>030                  0.600 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K CD4 4       -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">05</span>     <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.992</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K CD4 5       -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">39</span>     <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.026</span><span style="color: #BB0000; text-decoration: underline;">9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K CD8 1       -<span style="color: #BB0000;">0.028</span><span style="color: #BB0000; text-decoration: underline;">3</span>      <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.268</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 710 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

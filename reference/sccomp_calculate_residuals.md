@@ -39,6 +39,11 @@ A tibble (`tbl`) with the following columns:
 - **exposure** - A numeric column representing the total counts (sum of
   counts across cell groups) for each sample.
 
+- **residuals_unconstrained** - A numeric column representing the
+  unconstrained predictors (before softmax transformation),
+  corresponding to the linear combination of design matrix and
+  coefficients.
+
 ## Details
 
 The function performs the following steps:
@@ -109,8 +114,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000361 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.61 seconds. 
+#> Gradient evaluation took 0.000359 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.59 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -142,18 +147,18 @@ print(residuals)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
 #> Chain 1 finished in 0.0 seconds.
-#> # A tibble: 720 × 4
-#>    sample cell_group residuals exposure
-#>    <chr>  <chr>          <dbl>    <int>
-#>  1 10x_6K B1           0.0107      5030
-#>  2 10x_6K B2          -0.0272      5030
-#>  3 10x_6K B3          -0.00488     5030
-#>  4 10x_6K BM           0.00204     5030
-#>  5 10x_6K CD4 1        0.00210     5030
-#>  6 10x_6K CD4 2       -0.0162      5030
-#>  7 10x_6K CD4 3        0.0613      5030
-#>  8 10x_6K CD4 4       -0.00105     5030
-#>  9 10x_6K CD4 5       -0.00139     5030
-#> 10 10x_6K CD8 1       -0.0283      5030
+#> # A tibble: 720 × 5
+#>    sample cell_group residuals exposure residuals_unconstrained
+#>    <chr>  <chr>          <dbl>    <int>                   <dbl>
+#>  1 10x_6K B1           0.0107      5030                  0.179 
+#>  2 10x_6K B2          -0.0272      5030                 -1.20  
+#>  3 10x_6K B3          -0.00488     5030                 -0.460 
+#>  4 10x_6K BM           0.00204     5030                  0.299 
+#>  5 10x_6K CD4 1        0.00210     5030                  0.103 
+#>  6 10x_6K CD4 2       -0.0162      5030                 -0.357 
+#>  7 10x_6K CD4 3        0.0613      5030                  0.600 
+#>  8 10x_6K CD4 4       -0.00105     5030                 -0.992 
+#>  9 10x_6K CD4 5       -0.00139     5030                 -0.0269
+#> 10 10x_6K CD8 1       -0.0283      5030                 -0.268 
 #> # ℹ 710 more rows
 ```

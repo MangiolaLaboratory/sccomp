@@ -77,6 +77,28 @@ A tibble (`tbl`) with the following columns:
 - **proportion_upper** - A numeric column representing the upper bound
   (97.5%) of the 95% credible interval for the predicted proportions.
 
+- **unconstrained_mean** - A numeric column representing the mean
+  unconstrained predictors (before softmax transformation).
+
+- **unconstrained_lower** - A numeric column representing the lower
+  bound (2.5%) of the 95% credible interval for the unconstrained
+  predictors.
+
+- **unconstrained_upper** - A numeric column representing the upper
+  bound (97.5%) of the 95% credible interval for the unconstrained
+  predictors.
+
+- **unconstrained** - A numeric column (when
+  summary_instead_of_draws=FALSE) representing individual draws of the
+  unconstrained predictors.
+
+- **proportion** - A numeric column (when
+  summary_instead_of_draws=FALSE) representing individual draws of the
+  predicted proportions.
+
+- **.draw** - An integer column (when summary_instead_of_draws=FALSE)
+  representing the draw index.
+
 ## References
 
 S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z.
@@ -309,7 +331,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              55      -4.788e+05      1.417e-02   4.070e-01    1.000e+00  1.000e+00      3026 -3.709e+03 -3.706e+03                   
 #> Path [50] :Best Iter: [55] ELBO (-3706.044293) evaluations: (3026) 
-#> Finished in  13.6 seconds.
+#> Finished in  13.5 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -319,7 +341,7 @@ print("cmdstanr is needed to run this example.")
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
 #> Chain 1 finished in 0.0 seconds.
-#> # A tibble: 720 × 6
+#> # A tibble: 720 × 9
 #>    sample type   cell_group proportion_mean proportion_lower proportion_upper
 #>    <fct>  <fct>  <chr>                <dbl>            <dbl>            <dbl>
 #>  1 10x_6K benign B1                 0.0587           0.0461           0.0720 
@@ -333,6 +355,8 @@ print("cmdstanr is needed to run this example.")
 #>  9 10x_6K benign CD4 5              0.0304           0.0237           0.0373 
 #> 10 10x_6K benign CD8 1              0.111            0.0949           0.129  
 #> # ℹ 710 more rows
+#> # ℹ 3 more variables: unconstrained_mean <dbl>, unconstrained_lower <dbl>,
+#> #   unconstrained_upper <dbl>
 # }
 
 ```
