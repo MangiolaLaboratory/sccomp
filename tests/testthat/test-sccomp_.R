@@ -557,6 +557,11 @@ test_that("plot_boxplot function works correctly", {
     sccomp_test() |> 
     sccomp_boxplot("type", significance_threshold = 0.025, remove_unwanted_effects = TRUE) |> 
     expect_s3_class( "ggplot")
+  
+  my_estimate |> 
+    sccomp_test() |> 
+    sccomp_boxplot("type", significance_threshold = 0.025, significance_statistic = "FDR") |> 
+    expect_s3_class( "ggplot")
 })
 
 test_that("test constrasts",{

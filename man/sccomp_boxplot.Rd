@@ -8,6 +8,7 @@ sccomp_boxplot(
   .data,
   factor,
   significance_threshold = 0.05,
+  significance_statistic = c("pH0", "FDR"),
   test_composition_above_logit_fold_change = attr(.data,
     "test_composition_above_logit_fold_change"),
   remove_unwanted_effects = FALSE
@@ -18,7 +19,9 @@ sccomp_boxplot(
 
 \item{factor}{A character string specifying the factor of interest included in the model for stratifying the boxplot.}
 
-\item{significance_threshold}{A numeric value indicating the False Discovery Rate (FDR) threshold for labeling significant cell-groups. Defaults to 0.05.}
+\item{significance_threshold}{A numeric value indicating the threshold for labeling significant cell-groups. Defaults to 0.05.}
+
+\item{significance_statistic}{Character vector indicating which statistic is used to colour significant groups. Defaults to \code{c("pH0", "FDR")}.}
 
 \item{test_composition_above_logit_fold_change}{A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10\% for a cell type with a baseline proportion of 50\% (e.g., from 45\% to 55\%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.}
 

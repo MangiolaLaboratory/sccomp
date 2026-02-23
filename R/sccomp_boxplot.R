@@ -10,7 +10,8 @@
 #'
 #' @param .data A tibble containing the results from `sccomp_estimate` and `sccomp_test`, including the columns: cell_group name, sample name, read counts, factor(s), p-values, and significance indicators.
 #' @param factor A character string specifying the factor of interest included in the model for stratifying the boxplot.
-#' @param significance_threshold A numeric value indicating the False Discovery Rate (FDR) threshold for labeling significant cell-groups. Defaults to 0.05.
+#' @param significance_threshold A numeric value indicating the threshold for labeling significant cell-groups. Defaults to 0.05.
+#' @param significance_statistic Character vector indicating which statistic is used to colour significant groups. Defaults to `c("pH0", "FDR")`.
 #' @param test_composition_above_logit_fold_change A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10% for a cell type with a baseline proportion of 50% (e.g., from 45% to 55%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.
 #' @param remove_unwanted_effects A logical value indicating whether to remove unwanted variation from the data before plotting. Defaults to `FALSE`.
 #'
@@ -53,17 +54,19 @@ sccomp_boxplot = function(
     .data, 
     factor, 
     significance_threshold = 0.05, 
+    significance_statistic = c("pH0", "FDR"),
     test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"),
     remove_unwanted_effects = FALSE
 ){
   
+  selected_statistic <- match.arg(significance_statistic)
   
   .cell_group = attr(.data, ".cell_group")
   .count = attr(.data, ".count")
   .sample = attr(.data, ".sample")
   
   # Check if test have been done
-  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+  if(.data |> select(any_of(c(paste0("c_", selected_statistic), paste0("v_", selected_statistic)))) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
   data_proportion =
@@ -114,6 +117,7 @@ sccomp_boxplot = function(
     !!.cell_group,
     !!.sample,
     significance_threshold = significance_threshold,
+    selected_statistic,
     sccomp_theme(),
     remove_unwanted_effects = remove_unwanted_effects
   ) +
@@ -132,6 +136,7 @@ sccomp_boxplot = function(
 #' @param .cell_group Character string specifying the cell group to be analyzed.
 #' @param .sample Character string specifying the sample identifier.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.
+#' @param significance_statistic Character vector indicating which statistic is used to colour significant groups. Defaults to `c("pH0", "FDR")`.
 #' @param my_theme A ggplot2 theme object to be applied to the plot.
 #' @param remove_unwanted_effects Logical value indicating whether to remove unwanted effects. Default is FALSE.
 #' 
@@ -155,9 +160,14 @@ plot_boxplot = function(
     .data, data_proportion, factor_of_interest, .cell_group,
     .sample, 
     significance_threshold = 0.05, 
+    significance_statistic = c("pH0", "FDR"),
     my_theme, 
     remove_unwanted_effects = FALSE
 ){
+  selected_statistic <- match.arg(significance_statistic)
+  if (selected_statistic == "pH0")
+    message("sccomp says: from version 2.1.25, the default `significance_statistic` for boxplots is `pH0` (previously `FDR`). Set `significance_statistic = \"FDR\"` to use the previous default.")
+  
   
   # Define the variables as NULL to avoid CRAN NOTES
   stats_name <- NULL
@@ -207,7 +217,7 @@ plot_boxplot = function(
       names_to = c("which", "stats_name"),
       values_to = "stats_value"
     ) %>%
-    filter(stats_name == "FDR") %>%
+    filter(stats_name == selected_statistic) %>%
     filter(parameter != "(Intercept)") %>%
     filter(stats_value < significance_threshold) %>%
     filter(`factor` == factor_of_interest) 

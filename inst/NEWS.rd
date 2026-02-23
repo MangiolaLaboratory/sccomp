@@ -1,6 +1,13 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.25}{
+\itemize{
+    \item Improved plotting significance colouring controls. Added \code{significance_statistic} to \code{sccomp_boxplot()} with default \code{c("pH0", "FDR")}, so colouring now defaults to posterior probability while still supporting FDR-based colouring.
+    \item Bayesian FDR messaging is now shown only when FDR is selected, avoiding FDR-specific text when probability-based significance is used.
+    \item Fixed the package version dot-numbering (\url{https://github.com/MangiolaLaboratory/sccomp/issues/256}).
+}}
+
 \section{News in version 2.1.27}{
 \itemize{
     \item **Major enhancement: Added unconstrained predictors output in sccomp_predict and sccomp_calculate_residuals.** The functions now return columns for the unconstrained linear predictors (before softmax transformation) in addition to the transformed proportions. This provides users with direct access to the model's linear scale predictions, which can be useful for advanced analyses, debugging, and understanding model behavior.
