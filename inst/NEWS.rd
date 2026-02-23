@@ -1,7 +1,7 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
-\section{News in version 2.1.24}{
+\section{News in version 2.1.27}{
 \itemize{
     \item **Major enhancement: Added unconstrained predictors output in sccomp_predict and sccomp_calculate_residuals.** The functions now return columns for the unconstrained linear predictors (before softmax transformation) in addition to the transformed proportions. This provides users with direct access to the model's linear scale predictions, which can be useful for advanced analyses, debugging, and understanding model behavior.
     \item **New output columns in sccomp_predict():** When \code{summary_instead_of_draws = TRUE}, the output now includes three additional columns: \code{unconstrained_mean} (mean of unconstrained predictors), \code{unconstrained_lower} (2.5\% quantile), and \code{unconstrained_upper} (97.5\% quantile). When \code{summary_instead_of_draws = FALSE}, the output includes an \code{unconstrained} column containing individual draws of the unconstrained predictors. These values represent the linear combination of design matrix and coefficients before the softmax transformation is applied.
