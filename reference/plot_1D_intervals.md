@@ -13,7 +13,7 @@ plot_1D_intervals(
   test_composition_above_logit_fold_change = attr(.data,
     "test_composition_above_logit_fold_change"),
   show_fdr_message = TRUE,
-  significance_statistic = c("FDR", "pH0")
+  significance_statistic = c("pH0", "FDR")
 )
 ```
 
@@ -45,7 +45,7 @@ plot_1D_intervals(
 - significance_statistic:
 
   Character vector indicating which statistic to highlight. Default is
-  "FDR".
+  "pH0".
 
 ## Value
 
@@ -281,7 +281,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              52      -4.788e+05      9.819e-03   3.220e-01    8.951e-01  8.951e-01      2903 -3.710e+03 -3.724e+03                   
 #> Path [50] :Best Iter: [42] ELBO (-3709.584588) evaluations: (2903) 
-#> Finished in  13.5 seconds.
+#> Finished in  13.6 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
