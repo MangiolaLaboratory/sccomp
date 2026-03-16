@@ -21,17 +21,24 @@ functions{
     real abundance_variability_regression(row_vector variability, row_vector abundance, array[] real prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
       
       real lp = 0;
+      int nu = 3;
       // If mean-variability association is bimodal such as for single-cell RNA use mixed model
       if(bimodal_mean_variability_association == 1){
         for(m in 1:cols(variability))
         lp += log_mix(mix_p,
-        normal_lpdf(variability[m] | abundance[m] * prec_coeff[2] + prec_coeff[1], prec_sd ),
-        normal_lpdf(variability[m] | abundance[m] * prec_coeff[2] + 1, prec_sd)  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+        student_t_lpdf(variability[m] | nu,
+                       abundance[m] * prec_coeff[2] + prec_coeff[1],
+                       prec_sd),
+        student_t_lpdf(variability[m] | nu,
+                       abundance[m] * prec_coeff[2] + 1,
+                       prec_sd)    // slope prior  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
         );
         
         // If no bimodal
       } else {
-        lp =  normal_lpdf(variability | abundance * prec_coeff[2] + prec_coeff[1], prec_sd );
+        lp =  student_t_lpdf(variability | nu,
+                             abundance * prec_coeff[2] + prec_coeff[1],
+                             prec_sd);
       }
       
       return(lp);
@@ -340,7 +347,8 @@ parameters{
   array[C] sum_to_zero_vector[M] beta_raw; // Each row is a sum_to_zero_vector of length M
   matrix[A, M] alpha; // Variability
   // To exclude
-  array[2] real prec_coeff;
+  // Changed
+  matrix[2, A] prec_coeff; 
   real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
   
@@ -492,50 +500,29 @@ model{
   }
   
   // Priors
+  // CHANGED: per-effect regression 
   if(exclude_priors == 0){
-    
-    // If interceopt in design or I have complex variability design
-    // This would include the models 
-    // composition ~ 1 + ...; composition ~ 0 + ...; 
-    // variability ~ 1
-    if(A == 1){
+    for(a in 1:A){
+      array[2] real prec_coeff_a;
+      prec_coeff_a[1] = prec_coeff[1, a];   // intercept for effect a
+      prec_coeff_a[2] = prec_coeff[2, a];   // slope    for effect a
+
       target += abundance_variability_regression(
-        alpha[1],
-        beta[1], // average_by_col(beta[1:B_intercept_columns,]),
-        prec_coeff,
+        alpha[a],    // variability row for effect a
+        beta[a],     // composition row for effect a
+        prec_coeff_a,
         prec_sd,
         bimodal_mean_variability_association,
         mix_p
-        );
+      );
     }
-    else {
-      // Loop across the intercept columns in case of a intercept-less design (covariate are intercepts)
-      for(a in 1:A_intercept_columns)
-      target += abundance_variability_regression(
-        alpha[a],
-        beta[a],
-        prec_coeff,
-        prec_sd,
-        bimodal_mean_variability_association,
-        mix_p
-        );
-        
-        // Variability effect if the formula is more complex
-        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
-    }
-    
-  }
-  
-  // If I don't have priors for overdispersion
-  else{
-    // Priors variability
+  } else {
     if(intercept_in_design || A > 1){
-      for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prec_coeff[1], prec_sd );
-      if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
-    }
-    // if ~ 0 + covariuate
-    else {
-      alpha[1]  ~ normal( prec_coeff[1], prec_sd );
+      for(a in 1:A_intercept_columns)  alpha[a] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
+      if(A > A_intercept_columns)
+        for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal(0, 2);
+    } else {
+      alpha[1] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
     }
   }
   
@@ -545,11 +532,12 @@ model{
   
   // Hyper priors
   mix_p ~ beta(1,5);
-  prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
-  prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
-  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
-  prec_coeff ~ std_normal();
-  // Note: sum_to_zero_vector has built-in priors, no need for explicit std_normal()
+  // CHANGED: per-effect prior 
+  for(a in 1:A){
+    prec_coeff[1, a] ~ student_t(3, prior_prec_intercept[1], prior_prec_intercept[2]); // intercept prior
+    prec_coeff[2, a] ~ student_t(3, prior_prec_slope[1], prior_prec_slope[2]);    // slope prior
+  }
+  prec_sd ~ gamma(prior_prec_sd[1], prior_prec_sd[2]);
   
   // Random intercept
   if(is_random_effect>0){
@@ -573,6 +561,16 @@ model{
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
   
+  // CHANGED
+  if(intercept_in_design){
+    if(A > 1)
+      for(a in 2:A)
+        alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2, a]);
+  } else {
+    for(a in 1:A)
+      alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2, a]);
+  }
+  
   // // Rondom effect
   // matrix[ncol_X_random_eff_WINDOWS_BUG_FIX, M] beta_random_effect;
   // matrix[ncol_X_random_eff_WINDOWS_BUG_FIX_2, M] beta_random_effect_2;
@@ -580,15 +578,7 @@ generated quantities {
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
   
-  // These instructions regress out the effect of mean proportion to the overdispersion
-  // This adjustment provide A overdispersion value that can be tested for a hypotheses for example differences between two conditions
-  if(intercept_in_design){
-    if(A > 1) for(a in 2:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
-  }
-  else{
-    for(a in 1:A) alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2] );
-  }
-  
+
   // LOO
   if(enable_loo==1){
 
