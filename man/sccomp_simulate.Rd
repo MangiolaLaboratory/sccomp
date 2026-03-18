@@ -104,7 +104,7 @@ This function simulates data from a fitted model.
 #       new_data = counts_obj,
 #       .sample = sample,
 #       .cell_group = cell_group,
-#       coefficients = c(b_0, b_1)
+#       .coefficients = c("b_0", "b_1")
 #     )
 #   }
 # }
