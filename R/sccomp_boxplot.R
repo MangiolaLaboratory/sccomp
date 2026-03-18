@@ -14,6 +14,7 @@
 #' @param significance_statistic Character vector indicating which statistic is used to colour significant groups. Defaults to `c("pH0", "FDR")`.
 #' @param test_composition_above_logit_fold_change A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10% for a cell type with a baseline proportion of 50% (e.g., from 45% to 55%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.
 #' @param remove_unwanted_effects A logical value indicating whether to remove unwanted variation from the data before plotting. Defaults to `FALSE`.
+#' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`. Use a custom path in restricted environments where the default is not writable.
 #'
 #' @return A `ggplot` object representing the boxplot of cell proportions across samples, stratified by the specified factor.
 #'
@@ -56,7 +57,8 @@ sccomp_boxplot = function(
     significance_threshold = 0.05, 
     significance_statistic = c("pH0", "FDR"),
     test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"),
-    remove_unwanted_effects = FALSE
+    remove_unwanted_effects = FALSE,
+    cache_stan_model = sccomp_stan_models_cache_dir
 ){
   
   selected_statistic <- match.arg(significance_statistic)
@@ -119,7 +121,8 @@ sccomp_boxplot = function(
     significance_threshold = significance_threshold,
     selected_statistic,
     sccomp_theme(),
-    remove_unwanted_effects = remove_unwanted_effects
+    remove_unwanted_effects = remove_unwanted_effects,
+    cache_stan_model = cache_stan_model
   ) +
     ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", factor))
   
@@ -162,7 +165,8 @@ plot_boxplot = function(
     significance_threshold = 0.05, 
     significance_statistic = c("pH0", "FDR"),
     my_theme, 
-    remove_unwanted_effects = FALSE
+    remove_unwanted_effects = FALSE,
+    cache_stan_model = sccomp_stan_models_cache_dir
 ){
   selected_statistic <- match.arg(significance_statistic)
   if (selected_statistic == "pH0")
@@ -267,7 +271,7 @@ plot_boxplot = function(
     
     simulated_proportion =
       .data |>
-      sccomp_replicate(formula_composition = formula_composition, number_of_draws = 100) |>
+      sccomp_replicate(formula_composition = formula_composition, number_of_draws = 100, cache_stan_model = cache_stan_model) |>
       left_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.sample, !!.cell_group, is_zero))
     
     my_boxplot = my_boxplot +
