@@ -1,12 +1,11 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
-\section{News in version 2.1.25}{
+\section{News in version 2.1.28}{
 \itemize{
-    \item Improved plotting significance colouring controls. Added \code{significance_statistic} to \code{sccomp_boxplot()} with default \code{c("pH0", "FDR")}, so colouring now defaults to posterior probability while still supporting FDR-based colouring.
-    \item Bayesian FDR messaging is now shown only when FDR is selected, avoiding FDR-specific text when probability-based significance is used.
-    \item Fixed the package version dot-numbering (\url{https://github.com/MangiolaLaboratory/sccomp/issues/256}).
-}}
+    \item **Simulation improvements:** Changed default \code{variability_multiplier} parameter from 5 to 1 in \code{sccomp_simulate()} and \code{simulate_data()}. The new default preserves the fitted model's variability by default, rather than artificially increasing it. Users can still specify custom values greater than 1 to increase variability for benchmarking or sensitivity analysis.
+    \item Enhanced simulation documentation. Improved clarity on how \code{mean_dispersion_slope} parameter affects both intercept and factor-level variability parameters in the variability formula. Updated vignette examples to use consistent \code{number_of_draws} values.
+    \item Clarified behavior of mean-dispersion association parameters in simulation. The \code{mean_dispersion_slope} affects the slope for both intercept columns (alpha1) and factor columns (alpha2, e.g., type), with intercept only added to intercept columns as per the model specification.
 
 \section{News in version 2.1.27}{
 \itemize{
@@ -16,6 +15,14 @@
     \item **Technical implementation:** Modified the Stan model \code{glm_multi_beta_binomial_generate_data.stan} to save the linear predictors as \code{mu_unconstrained} before applying the softmax transformation. Updated \code{sccomp_predict()} to extract these values using both summary and draw modes, and updated \code{sccomp_calculate_residuals()} to include them in the output. The implementation includes backward compatibility - if the unconstrained predictors are not available (e.g., with older cached models), the functions gracefully handle their absence.
     \item **Documentation and testing:** Updated function documentation to describe the new output columns. Added comprehensive unit tests in \code{test-unconstrained-predictors.R} covering all output modes (summary with robust/non-robust statistics, draws mode) and verifying that unconstrained predictors are distinct from proportions and properly formatted. All 43 unit tests passing.
     \item **Why this feature is useful:** The unconstrained predictors provide insight into the model's linear scale, which can be valuable for: (1) understanding effect sizes on the logit scale before transformation, (2) performing downstream analyses that require linear-scale values, (3) debugging model convergence issues, (4) comparing effect magnitudes across different cell types on a common scale, and (5) advanced statistical analyses that benefit from access to both transformed and untransformed predictions.
+
+\section{News in version 2.1.25}{
+\itemize{
+    \item Improved plotting significance colouring controls. Added \code{significance_statistic} to \code{sccomp_boxplot()} with default \code{c("pH0", "FDR")}, so colouring now defaults to posterior probability while still supporting FDR-based colouring.
+    \item Bayesian FDR messaging is now shown only when FDR is selected, avoiding FDR-specific text when probability-based significance is used.
+    \item Fixed the package version dot-numbering (\url{https://github.com/MangiolaLaboratory/sccomp/issues/256}).
+}}
+
 }}
 
 \section{News in version 2.1.22}{
