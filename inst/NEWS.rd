@@ -1,11 +1,28 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
-\section{News in version 2.1.24}{
+\section{News in version 2.1.28}{
 \itemize{
     \item **Simulation improvements:** Changed default \code{variability_multiplier} parameter from 5 to 1 in \code{sccomp_simulate()} and \code{simulate_data()}. The new default preserves the fitted model's variability by default, rather than artificially increasing it. Users can still specify custom values greater than 1 to increase variability for benchmarking or sensitivity analysis.
     \item Enhanced simulation documentation. Improved clarity on how \code{mean_dispersion_slope} parameter affects both intercept and factor-level variability parameters in the variability formula. Updated vignette examples to use consistent \code{number_of_draws} values.
     \item Clarified behavior of mean-dispersion association parameters in simulation. The \code{mean_dispersion_slope} affects the slope for both intercept columns (alpha1) and factor columns (alpha2, e.g., type), with intercept only added to intercept columns as per the model specification.
+
+\section{News in version 2.1.27}{
+\itemize{
+    \item **Major enhancement: Added unconstrained predictors output in sccomp_predict and sccomp_calculate_residuals.** The functions now return columns for the unconstrained linear predictors (before softmax transformation) in addition to the transformed proportions. This provides users with direct access to the model's linear scale predictions, which can be useful for advanced analyses, debugging, and understanding model behavior.
+    \item **New output columns in sccomp_predict():** When \code{summary_instead_of_draws = TRUE}, the output now includes three additional columns: \code{unconstrained_mean} (mean of unconstrained predictors), \code{unconstrained_lower} (2.5\% quantile), and \code{unconstrained_upper} (97.5\% quantile). When \code{summary_instead_of_draws = FALSE}, the output includes an \code{unconstrained} column containing individual draws of the unconstrained predictors. These values represent the linear combination of design matrix and coefficients before the softmax transformation is applied.
+    \item **New output column in sccomp_calculate_residuals():** The residuals output now includes a \code{residuals_unconstrained} column containing the unconstrained predictors (before softmax transformation) alongside the standard residuals, exposure, sample, and cell_group columns. This allows users to examine both the transformed proportions and the underlying linear predictors when analyzing model fit.
+    \item **Technical implementation:** Modified the Stan model \code{glm_multi_beta_binomial_generate_data.stan} to save the linear predictors as \code{mu_unconstrained} before applying the softmax transformation. Updated \code{sccomp_predict()} to extract these values using both summary and draw modes, and updated \code{sccomp_calculate_residuals()} to include them in the output. The implementation includes backward compatibility - if the unconstrained predictors are not available (e.g., with older cached models), the functions gracefully handle their absence.
+    \item **Documentation and testing:** Updated function documentation to describe the new output columns. Added comprehensive unit tests in \code{test-unconstrained-predictors.R} covering all output modes (summary with robust/non-robust statistics, draws mode) and verifying that unconstrained predictors are distinct from proportions and properly formatted. All 43 unit tests passing.
+    \item **Why this feature is useful:** The unconstrained predictors provide insight into the model's linear scale, which can be valuable for: (1) understanding effect sizes on the logit scale before transformation, (2) performing downstream analyses that require linear-scale values, (3) debugging model convergence issues, (4) comparing effect magnitudes across different cell types on a common scale, and (5) advanced statistical analyses that benefit from access to both transformed and untransformed predictions.
+
+\section{News in version 2.1.25}{
+\itemize{
+    \item Improved plotting significance colouring controls. Added \code{significance_statistic} to \code{sccomp_boxplot()} with default \code{c("pH0", "FDR")}, so colouring now defaults to posterior probability while still supporting FDR-based colouring.
+    \item Bayesian FDR messaging is now shown only when FDR is selected, avoiding FDR-specific text when probability-based significance is used.
+    \item Fixed the package version dot-numbering (\url{https://github.com/MangiolaLaboratory/sccomp/issues/256}).
+}}
+
 }}
 
 \section{News in version 2.1.22}{
@@ -40,6 +57,10 @@
 
 \section{News in version 2.1.18, Bioconductor 3.22 Release}{
 \itemize{
+    \item **Major improvement:** Transitioned to using built-in sum_to_zero_vector in Stan for improved efficiency and clarity. Dropped post-model correction calculations in favor of native Stan implementation.
+    \item Removed deprecated QR-based sum-to-zero functions and replaced with new implementation.
+    \item Refactored random effect handling in Stan models. Updated from matrices to arrays for improved flexibility and applied proper sum-to-zero constraints.
+    \item Updated cmdstanr version check to require version 0.9.0 or higher.
     \item Removed deprecated .sample argument handling. Cleaned up sccomp_estimate function by removing deprecated argument handling and added tests for old argument style compatibility.
     \item Commit ID: c6f2afe (tag v2.1.18)
 }}
@@ -82,16 +103,7 @@
 
 \section{News in version 2.1.14, Bioconductor 3.22 Release}{
 \itemize{
-    \item **Major improvement:** Transitioned to using built-in sum_to_zero_vector in Stan for improved efficiency and clarity. Dropped post-model correction calculations in favor of native Stan implementation.
-    \item Removed deprecated QR-based sum-to-zero functions and replaced with new implementation. This update introduces a new way of handling certain statistical constraints in the underlying model, using a "sum-to-zero" variable type.
-    \item Why was this change made? The previous method for enforcing sum-to-zero constraints (a requirement for compositional data) relied on QR decomposition, which could be numerically unstable and inefficient, especially for complex models or large datasets. The new method leverages recent advances in the Stan modeling language (requiring cmdstanr version 0.9.0 or higher).
-    \item What does this mean for users? The model now converges faster and produces more reliable results, especially for analyses involving many cell types or complex experimental designs. The improvement in effective sample size (ESS) can be dramatic - across real-world datasets, the median improvement is in the range of 500--1000 additional effective samples per parameter, with many parameters seeing their ESS doubled or more.
-    \item Refactored random effect handling in Stan models. Updated from matrices to arrays for improved flexibility. Adjusted array dimensions for random effects and their corresponding sigma parameters to ensure consistency. Applied proper sum-to-zero constraints.
-    \item Updated cmdstanr version check to require version 0.9.0 or higher. Added error handling for cmdstanr version checks.
-    \item Corrected beta_raw matrix dimensions and improved error handling during HMC inference. Adjusted verbosity for exception display and refined error reporting for model compilation issues.
-    \item Updated priors and random effects in glm_multi_beta_binomial Stan model to use correct scaling for sum-to-zero constraints. Adjusted normal distributions for random effects and their corresponding sigma parameters.
-    \item Added compare_branches_job.R script for parallel branch comparison to validate improvements.
-    \item Enhanced NEWS.rd documentation with detailed explanations of improvements. See https://github.com/MangiolaLaboratory/sccomp/pull/211 for comparison plots and benchmarks.
+    \item Historical development note: this section was drafted during development, but the sum-to-zero Stan refactor and related cmdstanr updates were released in \code{v2.1.18}. See the \code{2.1.18} section for the release-level changelog.
     \item Between commits: 4c1b7541c18ad60806481e8d5d5fb97cac80fd9a..ae4c9a67064c119253aaf176513d2a9dcd0bf163
 }}
 

@@ -166,7 +166,9 @@ sccomp_test.sccomp_tbl = function(.data,
     
     # Add count data as attribute
     add_attr(.data |> attr("count_data"), "count_data") |>
+    add_attr(.data |> attr("outliers"), "outliers") |>
     
+  
     # Add class to the tbl
     add_class("sccomp_tbl") 
 }

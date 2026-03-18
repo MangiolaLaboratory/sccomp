@@ -10,7 +10,7 @@ plot_1D_intervals(
   test_composition_above_logit_fold_change = attr(.data,
     "test_composition_above_logit_fold_change"),
   show_fdr_message = TRUE,
-  significance_statistic = c("FDR", "pH0")
+  significance_statistic = c("pH0", "FDR")
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ plot_1D_intervals(
 
 \item{show_fdr_message}{Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.}
 
-\item{significance_statistic}{Character vector indicating which statistic to highlight. Default is "FDR".}
+\item{significance_statistic}{Character vector indicating which statistic to highlight. Default is "pH0".}
 }
 \value{
 A combined plot of 1D interval plots.

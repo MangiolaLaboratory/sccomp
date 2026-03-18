@@ -16,6 +16,7 @@ A tibble (\code{tbl}) with the following columns:
 \item \strong{cell_group} - A character column representing the cell group identifiers.
 \item \strong{residuals} - A numeric column representing the residuals, calculated as the difference between observed and predicted proportions.
 \item \strong{exposure} - A numeric column representing the total counts (sum of counts across cell groups) for each sample.
+\item \strong{residuals_unconstrained} - A numeric column representing the unconstrained predictors (before softmax transformation), corresponding to the linear combination of design matrix and coefficients.
 }
 }
 \description{
