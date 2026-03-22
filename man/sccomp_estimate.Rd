@@ -74,7 +74,9 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{enable_loo}{Logical, whether to enable model comparison using the LOO package.}
 
-\item{noise_model}{A character string specifying the noise model (e.g., 'multi_beta_binomial').}
+\item{noise_model}{A character string specifying the noise model: 'multi_beta_binomial' (default)
+or 'dirichlet'. The Dirichlet model uses proportions only (counts are converted) and has no
+mean-dispersion association.}
 
 \item{exclude_priors}{Logical, whether to run a prior-free model.}
 
