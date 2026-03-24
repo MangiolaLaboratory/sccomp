@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.27</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.28</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -355,6 +355,54 @@ process (that will be prompted to the user is forgot).</p>
 <span><span class="co"># Step 3</span></span>
 <span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">check_cmdstan_toolchain</a></span><span class="op">(</span>fix <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># Just checking system setting</span></span>
 <span><span class="fu">cmdstanr</span><span class="fu">::</span><span class="fu"><a href="https://mc-stan.org/cmdstanr/reference/install_cmdstan.html" class="external-link">install_cmdstan</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="server-special-requirements-restricted-or-read-only-environments">Server special requirements: Restricted or read-only
+environments<a class="anchor" aria-label="anchor" href="#server-special-requirements-restricted-or-read-only-environments"></a>
+</h4>
+<p><code>sccomp</code> needs to write files to disk (compiled Stan
+models, draw files). On shared servers or restricted environments:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Prefer installing locally</strong> – Install sccomp in a
+user-writable R library so it can use the default cache
+<code>~/.sccomp_models</code>.</li>
+<li>
+<strong>Or request write access</strong> – Ask your system
+administrator for permission to write in your user directories.</li>
+</ol>
+<p>If your administrator has pre-compiled models in a shared directory
+(e.g. <code>/opt/sccomp_models</code>), you can point sccomp to that
+cache <strong>before</strong> calling any sccomp function. This is
+required because <code>sccomp_boxplot</code>,
+<code>sccomp_estimate</code>, and other functions use internal routines
+that check the cache directory:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/MangiolaLaboratory/sccomp" class="external-link">sccomp</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cache_stan_model_dir</span> <span class="op">&lt;-</span> <span class="st">"/opt/sccomp_models"</span></span>
+<span></span>
+<span><span class="co"># Set the cache directory before any sccomp call</span></span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/getFromNamespace.html" class="external-link">assignInNamespace</a></span><span class="op">(</span><span class="st">"sccomp_stan_models_cache_dir"</span>, <span class="va">cache_stan_model_dir</span>, ns <span class="op">=</span> <span class="st">"sccomp"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Now run your analysis</span></span>
+<span><span class="va">sccomp_result</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span>formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span>, sample <span class="op">=</span> <span class="st">"sample"</span>, cell_group <span class="op">=</span> <span class="st">"cell_group"</span>, </span>
+<span>                  abundance <span class="op">=</span> <span class="st">"count"</span>, cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span></span></code></pre></div>
+<p>Alternatively, pass <code>cache_stan_model</code> explicitly in each
+call:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span><span class="va">...</span>, cache_stan_model <span class="op">=</span> <span class="st">"/opt/sccomp_models"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_remove_outliers.html">sccomp_remove_outliers</a></span><span class="op">(</span>cache_stan_model <span class="op">=</span> <span class="st">"/opt/sccomp_models"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span>, cache_stan_model <span class="op">=</span> <span class="st">"/opt/sccomp_models"</span><span class="op">)</span></span></code></pre></div>
+</div>
 <div class="section level3">
 <h3 id="core-functions">Core Functions<a class="anchor" aria-label="anchor" href="#core-functions"></a>
 </h3>
@@ -405,7 +453,7 @@ interval (i.e. test_composition_above_logit_fold_change)</td>
 <div class="section level2">
 <h2 id="analysis-tutorial">Analysis Tutorial<a class="anchor" aria-label="anchor" href="#analysis-tutorial"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/MangiolaLaboratory/sccomp" class="external-link">sccomp</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -424,7 +472,7 @@ formula_variability is set).</p>
 <div class="section level4">
 <h4 id="from-seurat-singlecellexperiment-metadata-objects">From Seurat, SingleCellExperiment, metadata objects<a class="anchor" aria-label="anchor" href="#from-seurat-singlecellexperiment-metadata-objects"></a>
 </h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">=</span> </span>
 <span>  <span class="va">sce_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -439,7 +487,7 @@ formula_variability is set).</p>
 <div class="section level4">
 <h4 id="from-counts">From counts<a class="anchor" aria-label="anchor" href="#from-counts"></a>
 </h4>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">=</span> </span>
 <span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -499,7 +547,7 @@ a variability (v).</li>
 <li>
 <code>count_data</code> - Nested input count data.</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span></span></code></pre></div>
 <pre><code><span><span class="co">## sccomp model</span></span>
 <span><span class="co">## ============</span></span>
@@ -542,7 +590,7 @@ a variability (v).</li>
 </h3>
 <p><code>sccomp</code> can identify outliers probabilistically and
 exclude them from the estimation.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">=</span> </span>
 <span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -574,7 +622,7 @@ black boxplots, which represent the observed data. The outliers are
 coloured in red. A boxplot will be returned for every (discrete)
 covariate present in formula_composition. The colour coding represents
 the significant associations for composition and/or variability.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
@@ -584,7 +632,7 @@ the significant associations for composition and/or variability.</p>
 <p>You can plot proportions adjusted for unwanted effects. This is
 helpful especially for complex models, where multiple factors can
 significantly impact the proportions.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span>, remove_unwanted_effects <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
@@ -603,7 +651,7 @@ significantly impact the proportions.</p>
 <p>Since <code><a href="../reference/sccomp_boxplot.html">sccomp_boxplot()</a></code> returns a ggplot object, you can
 add additional layers to customize the plot. For example, you can add
 labels showing FDR values or other statistics:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span> <span class="op">+</span></span>
 <span></span>
@@ -617,7 +665,7 @@ labels showing FDR values or other statistics:</p>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <p><img src="introduction_files/figure-html/boxplot-fdr-labels-1.png" class="r-plt" alt="" width="700"></p>
 <p>You can also add text annotations for p-values:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span> <span class="op">+</span></span>
 <span></span>
@@ -636,7 +684,7 @@ represent 95% credible intervals. The dashed lines represent the minimal
 effect that the hypothesis test is based on. An effect is labelled as
 significant if it exceeds the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/plot_1D_intervals.html">plot_1D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/plot-1d-intervals-1.png" class="r-plt" alt="" width="700"></p>
@@ -645,13 +693,13 @@ can see below, they are positively correlated. sccomp models this
 relationship to obtain a shrinkage effect on the estimates of both the
 abundance and the variability. This shrinkage is adaptive as it is
 modelled jointly, thanks to Bayesian inference.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/plot_2D_intervals.html">plot_2D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/plot-2d-intervals-1.png" class="r-plt" alt="" width="700"></p>
 <p>You can produce the series of plots calling the <code>plot</code>
 method.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
 </div>
 </div>
@@ -667,7 +715,7 @@ available.</p>
 <p>Proportions should be greater than 0. Assuming that zeros derive from
 a precision threshold (e.g., deconvolution), zeros are converted to the
 smallest non-zero value.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">=</span> </span>
 <span>  <span class="va">counts_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -685,7 +733,7 @@ smallest non-zero value.</p>
 </h3>
 <p><code>sccomp</code> is able to fit arbitrary complex models. In this
 example we have a continuous and binary covariate.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span></span>
 <span>    <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -749,7 +797,7 @@ using sccomp. We’ll model the cell-type proportions with both fixed
 effects (e.g., treatment) and random effects (e.g., subject-specific
 variability).</p>
 <p>Here is the input data</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 106,297 × 9</span></span></span>
 <span><span class="co">##    cell_group nCount_RNA nFeature_RNA group__ group__wrong sample type  group2__</span></span>
@@ -766,7 +814,7 @@ variability).</p>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 106,287 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: continuous_covariate &lt;dbl&gt;</span></span></span></code></pre>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -818,7 +866,7 @@ variability).</p>
 </h4>
 <p><code>sccomp</code> can model random slopes. We provide an example
 below.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -872,7 +920,7 @@ below.</p>
 within subjects and subjects nested within batches, you can include
 multiple grouping variables. Here <code>group2__</code> is nested within
 <code>group__</code>.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -939,7 +987,7 @@ in (this can be a subset of the full model if you wish to exclude
 unwanted effects), and the two points you would like to compare.</p>
 <p>In the case of a categorical variable, the starting and ending points
 are categories.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">|&gt;</span> </span>
 <span>   <span class="fu"><a href="../reference/sccomp_proportional_fold_change.html">sccomp_proportional_fold_change</a></span><span class="op">(</span></span>
 <span>     formula_composition <span class="op">=</span> <span class="op">~</span>  <span class="va">type</span>,</span>
@@ -968,7 +1016,7 @@ are categories.</p>
 <div class="section level3">
 <h3 id="contrasts-analysis">Contrasts Analysis<a class="anchor" aria-label="anchor" href="#contrasts-analysis"></a>
 </h3>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">type</span>, </span>
@@ -1025,7 +1073,7 @@ while outlier elimination does not guarantee it.</p>
 better than the other <a href="https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola" class="external-link">reference</a>.
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model
 one, the one with factor association, is better than model two.</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/loo/" class="external-link">loo</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fit first model</span></span>
@@ -1070,7 +1118,7 @@ one, the one with factor association, is better than model two.</p>
 </h3>
 <p>We can model the cell-group variability also dependent on the type,
 and so test differences in variability</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -1117,12 +1165,12 @@ and so test differences in variability</p>
 <span><span class="co">## <span style="color: #949494;"># ℹ 7 more variables: c_ess_tail &lt;dbl&gt;, v_lower &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_upper &lt;dbl&gt;, v_rhat &lt;dbl&gt;, v_ess_bulk &lt;dbl&gt;, v_ess_tail &lt;dbl&gt;</span></span></span></code></pre>
 <p><strong>Plot 1D significance plot</strong></p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/plot-1d-significance-1.png" class="r-plt" alt="" width="700"></p>
 <p><strong>Plot 2D significance plot</strong> Data points are cell
@@ -1137,7 +1185,7 @@ linear association between mean and variability for
 scatterplot (besides the Intercept) is provided for each category of
 interest. For each category of interest, the composition and variability
 effects should be generally uncorrelated.</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/plot-2d-significance-1.png" class="r-plt" alt="" width="700"></p>
 </div>
@@ -1167,7 +1215,7 @@ plots$credible_intervals_2D (see below).</p>
 this example, we plot the Monte Carlo chain for the slope parameter of
 the first cell type. We can see that it has converged and is negative
 with probability 1.</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/posterior/" class="external-link">posterior</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span></span>
@@ -1181,7 +1229,7 @@ with probability 1.</p>
 <span><span class="co"># Create a traceplot for 'beta[2,1]'</span></span>
 <span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/MCMC-traces.html" class="external-link">mcmc_trace</a></span><span class="op">(</span><span class="va">draws</span>, pars <span class="op">=</span> <span class="st">"beta[2,1]"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/mcmc-traceplot-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -1205,7 +1253,7 @@ with probability 1.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
 <span><span class="co">##  [1] bayesplot_1.15.0  posterior_1.6.1   cmdstanr_0.9.0    loo_2.9.0        </span></span>
-<span><span class="co">##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.2     sccomp_2.1.27    </span></span>
+<span><span class="co">##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.2     sccomp_2.1.28    </span></span>
 <span><span class="co">##  [9] instantiate_0.2.3 dplyr_1.2.0      </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>

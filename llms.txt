@@ -103,6 +103,53 @@ cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
 cmdstanr::install_cmdstan()
 ```
 
+### Server special requirements: Restricted or read-only environments
+
+`sccomp` needs to write files to disk (compiled Stan models, draw
+files). On shared servers or restricted environments:
+
+1.  **Prefer installing locally** – Install sccomp in a user-writable R
+    library (e.g. `~/R/x86_64-pc-linux-gnu-library/4.x`) so it can use
+    the default cache `~/.sccomp_models`.
+2.  **Or request write access** – Ask your system administrator for
+    permission to write in your user directories
+    (e.g. `~/.sccomp_models`).
+
+If your administrator has pre-compiled models in a shared directory
+(e.g. `/opt/sccomp_models`), you can point sccomp to that cache
+**before** calling any sccomp function:
+
+``` r
+library(sccomp)
+
+cache_stan_model_dir <- "/opt/sccomp_models"
+
+# Set the cache directory before any sccomp call (sccomp_boxplot, sccomp_estimate, etc.
+# use internal functions that check this cache)
+utils::assignInNamespace("sccomp_stan_models_cache_dir", cache_stan_model_dir, ns = "sccomp")
+
+# Now run your analysis
+sccomp_result <- 
+  counts_obj |>
+  sccomp_estimate(formula_composition = ~ type, sample = "sample", cell_group = "cell_group", 
+                  abundance = "count", cores = 1) |>
+  sccomp_test()
+
+sccomp_result |> sccomp_boxplot(factor = "type")
+```
+
+Alternatively, pass `cache_stan_model` explicitly in each call:
+
+``` r
+sccomp_result <- 
+  counts_obj |>
+  sccomp_estimate(..., cache_stan_model = "/opt/sccomp_models") |>
+  sccomp_remove_outliers(cache_stan_model = "/opt/sccomp_models") |>
+  sccomp_test()
+
+sccomp_result |> sccomp_boxplot(factor = "type", cache_stan_model = "/opt/sccomp_models")
+```
+
 ## Core Functions
 
 | Function                         | Description                                                                                                                 |

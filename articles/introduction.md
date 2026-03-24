@@ -115,6 +115,52 @@ cmdstanr::check_cmdstan_toolchain(fix = TRUE) # Just checking system setting
 cmdstanr::install_cmdstan()
 ```
 
+#### Server special requirements: Restricted or read-only environments
+
+`sccomp` needs to write files to disk (compiled Stan models, draw
+files). On shared servers or restricted environments:
+
+1.  **Prefer installing locally** – Install sccomp in a user-writable R
+    library so it can use the default cache `~/.sccomp_models`.
+2.  **Or request write access** – Ask your system administrator for
+    permission to write in your user directories.
+
+If your administrator has pre-compiled models in a shared directory
+(e.g. `/opt/sccomp_models`), you can point sccomp to that cache
+**before** calling any sccomp function. This is required because
+`sccomp_boxplot`, `sccomp_estimate`, and other functions use internal
+routines that check the cache directory:
+
+``` r
+library(sccomp)
+
+cache_stan_model_dir <- "/opt/sccomp_models"
+
+# Set the cache directory before any sccomp call
+utils::assignInNamespace("sccomp_stan_models_cache_dir", cache_stan_model_dir, ns = "sccomp")
+
+# Now run your analysis
+sccomp_result <- 
+  counts_obj |>
+  sccomp_estimate(formula_composition = ~ type, sample = "sample", cell_group = "cell_group", 
+                  abundance = "count", cores = 1) |>
+  sccomp_test()
+
+sccomp_result |> sccomp_boxplot(factor = "type")
+```
+
+Alternatively, pass `cache_stan_model` explicitly in each call:
+
+``` r
+sccomp_result <- 
+  counts_obj |>
+  sccomp_estimate(..., cache_stan_model = "/opt/sccomp_models") |>
+  sccomp_remove_outliers(cache_stan_model = "/opt/sccomp_models") |>
+  sccomp_test()
+
+sccomp_result |> sccomp_boxplot(factor = "type", cache_stan_model = "/opt/sccomp_models")
+```
+
 ### Core Functions
 
 | Function                         | Description                                                                                                                 |
@@ -986,7 +1032,7 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] bayesplot_1.15.0  posterior_1.6.1   cmdstanr_0.9.0    loo_2.9.0        
-    ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.2     sccomp_2.1.27    
+    ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.2     sccomp_2.1.28    
     ##  [9] instantiate_0.2.3 dplyr_1.2.0      
     ## 
     ## loaded via a namespace (and not attached):

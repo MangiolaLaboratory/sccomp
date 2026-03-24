@@ -630,7 +630,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>             100      -4.264e+05      4.115e-02   6.752e+02    3.781e-02  3.781e-02      8206 -3.311e+03 -4.209e+04                   
 #> Path [50] :Best Iter: [55] ELBO (-3311.161607) evaluations: (8206) 
-#> Finished in  30.5 seconds.
+#> Finished in  30.6 seconds.
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
 #> Chain 1 finished in 0.0 seconds.
@@ -838,7 +838,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>             100      -4.264e+05      4.115e-02   6.752e+02    3.781e-02  3.781e-02      8206 -3.311e+03 -4.209e+04                   
 #> Path [50] :Best Iter: [55] ELBO (-3311.161607) evaluations: (8206) 
-#> Finished in  27.2 seconds.
+#> Finished in  27.3 seconds.
 #> sccomp says: auto-cleanup removed 2 draw files from 'sccomp_draws_files'
 # }
 ```
