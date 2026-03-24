@@ -114,8 +114,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000346 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.46 seconds. 
+#> Gradient evaluation took 0.000354 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.54 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -126,16 +126,14 @@ print(residuals)
 #> Success! Found best value [eta = 1] earlier than expected. 
 #> Begin stochastic gradient ascent. 
 #>   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes  
-#>    100        -4472.862             1.000            1.000 
-#>    200        -3754.237             0.596            1.000 
-#>    300        -3713.096             0.401            0.191 
-#>    400        -3719.384             0.301            0.191 
-#>    500        -3709.501             0.241            0.011 
-#>    600        -3709.158             0.201            0.011 
-#>    700        -3707.014             0.173            0.003   MEDIAN ELBO CONVERGED 
+#>    100        -3990.266             1.000            1.000 
+#>    200        -3726.676             0.535            1.000 
+#>    300        -3715.469             0.358            0.071 
+#>    400        -3711.000             0.269            0.071 
+#>    500        -3703.070             0.215            0.003   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
-#> Finished in  2.6 seconds.
+#> Finished in  2.5 seconds.
 #> Warning: Unknown or uninitialised column: `c_R_k_hat`.
 #> Warning: no non-missing arguments to max; returning -Inf
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
@@ -150,15 +148,15 @@ print(residuals)
 #> # A tibble: 720 × 5
 #>    sample cell_group residuals exposure residuals_unconstrained
 #>    <chr>  <chr>          <dbl>    <int>                   <dbl>
-#>  1 10x_6K B1           0.0107      5030                  0.179 
-#>  2 10x_6K B2          -0.0272      5030                 -1.20  
-#>  3 10x_6K B3          -0.00488     5030                 -0.460 
-#>  4 10x_6K BM           0.00204     5030                  0.299 
-#>  5 10x_6K CD4 1        0.00210     5030                  0.103 
-#>  6 10x_6K CD4 2       -0.0162      5030                 -0.357 
-#>  7 10x_6K CD4 3        0.0613      5030                  0.600 
-#>  8 10x_6K CD4 4       -0.00105     5030                 -0.992 
-#>  9 10x_6K CD4 5       -0.00139     5030                 -0.0269
-#> 10 10x_6K CD8 1       -0.0283      5030                 -0.268 
+#>  1 10x_6K B1           0.0130      5030                  0.226 
+#>  2 10x_6K B2          -0.0286      5030                 -1.23  
+#>  3 10x_6K B3          -0.00437     5030                 -0.412 
+#>  4 10x_6K BM           0.00163     5030                  0.244 
+#>  5 10x_6K CD4 1       -0.00101     5030                 -0.0157
+#>  6 10x_6K CD4 2       -0.0156      5030                 -0.342 
+#>  7 10x_6K CD4 3        0.0674      5030                  0.687 
+#>  8 10x_6K CD4 4       -0.00105     5030                 -0.986 
+#>  9 10x_6K CD4 5       -0.00265     5030                 -0.0601
+#> 10 10x_6K CD8 1       -0.0251      5030                 -0.234 
 #> # ℹ 710 more rows
 ```
