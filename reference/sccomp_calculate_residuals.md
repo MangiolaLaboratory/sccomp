@@ -114,8 +114,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000411 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 4.11 seconds. 
+#> Gradient evaluation took 0.000374 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.74 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -126,14 +126,14 @@ print(residuals)
 #> Success! Found best value [eta = 1] earlier than expected. 
 #> Begin stochastic gradient ascent. 
 #>   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes  
-#>    100        -3990.266             1.000            1.000 
-#>    200        -3726.676             0.535            1.000 
-#>    300        -3715.469             0.358            0.071 
-#>    400        -3711.000             0.269            0.071 
-#>    500        -3703.070             0.215            0.003   MEDIAN ELBO CONVERGED 
+#>    100        -3977.155             1.000            1.000 
+#>    200        -3710.165             0.536            1.000 
+#>    300        -3698.763             0.358            0.072 
+#>    400        -3694.202             0.269            0.072 
+#>    500        -3686.256             0.216            0.003   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
-#> Finished in  2.5 seconds.
+#> Finished in  2.4 seconds.
 #> Warning: Unknown or uninitialised column: `c_R_k_hat`.
 #> Warning: no non-missing arguments to max; returning -Inf
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
@@ -148,15 +148,15 @@ print(residuals)
 #> # A tibble: 720 × 5
 #>    sample cell_group residuals exposure residuals_unconstrained
 #>    <chr>  <chr>          <dbl>    <int>                   <dbl>
-#>  1 10x_6K B1           0.0130      5030                  0.226 
-#>  2 10x_6K B2          -0.0286      5030                 -1.23  
-#>  3 10x_6K B3          -0.00437     5030                 -0.412 
-#>  4 10x_6K BM           0.00163     5030                  0.244 
-#>  5 10x_6K CD4 1       -0.00101     5030                 -0.0157
-#>  6 10x_6K CD4 2       -0.0156      5030                 -0.342 
-#>  7 10x_6K CD4 3        0.0674      5030                  0.687 
-#>  8 10x_6K CD4 4       -0.00105     5030                 -0.986 
-#>  9 10x_6K CD4 5       -0.00265     5030                 -0.0601
-#> 10 10x_6K CD8 1       -0.0251      5030                 -0.234 
+#>  1 10x_6K B1          0.0129       5030                  0.222 
+#>  2 10x_6K B2         -0.0286       5030                 -1.24  
+#>  3 10x_6K B3         -0.00436      5030                 -0.413 
+#>  4 10x_6K BM          0.00164      5030                  0.243 
+#>  5 10x_6K CD4 1      -0.001000     5030                 -0.0175
+#>  6 10x_6K CD4 2      -0.0156       5030                 -0.345 
+#>  7 10x_6K CD4 3       0.0672       5030                  0.682 
+#>  8 10x_6K CD4 4      -0.00104      5030                 -0.980 
+#>  9 10x_6K CD4 5      -0.00264      5030                 -0.0619
+#> 10 10x_6K CD8 1      -0.0252       5030                 -0.237 
 #> # ℹ 710 more rows
 ```

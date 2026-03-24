@@ -131,206 +131,206 @@ print("cmdstanr is needed to run this example.")
 #> sccomp says: the composition design matrix has columns: (Intercept), typecancer
 #> sccomp says: the variability design matrix has columns: (Intercept)
 #> Loading model from cache...
-#> Path [1] :Initial log joint density = -481736.465292 
+#> Path [1] :Initial log joint density = -481734.557481 
 #> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              57      -4.788e+05      6.245e-03   1.980e-01    1.000e+00  1.000e+00      3193 -3.705e+03 -3.703e+03                   
-#> Path [1] :Best Iter: [57] ELBO (-3702.565331) evaluations: (3193) 
-#> Path [2] :Initial log joint density = -481860.688422 
+#>              59      -4.788e+05      1.782e-02   2.137e-01    1.000e+00  1.000e+00      3364 -3.683e+03 -3.683e+03                   
+#> Path [1] :Best Iter: [59] ELBO (-3683.123617) evaluations: (3364) 
+#> Path [2] :Initial log joint density = -481859.638338 
 #> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              51      -4.788e+05      8.305e-03   2.726e-01    8.709e-01  8.709e-01      2724 -3.711e+03 -3.721e+03                   
-#> Path [2] :Best Iter: [45] ELBO (-3710.584652) evaluations: (2724) 
-#> Path [3] :Initial log joint density = -481646.542410 
+#>              53      -4.788e+05      7.881e-03   2.590e-01    8.462e-01  8.462e-01      2869 -3.691e+03 -3.706e+03                   
+#> Path [2] :Best Iter: [51] ELBO (-3691.423923) evaluations: (2869) 
+#> Path [3] :Initial log joint density = -481645.361562 
 #> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              59      -4.788e+05      9.282e-03   2.254e-01    1.000e+00  1.000e+00      3396 -3.701e+03 -3.708e+03                   
-#> Path [3] :Best Iter: [58] ELBO (-3701.003387) evaluations: (3396) 
-#> Path [4] :Initial log joint density = -483351.891450 
+#>              59      -4.788e+05      7.029e-03   2.060e-01    8.714e-01  8.714e-01      3396 -3.686e+03 -3.700e+03                   
+#> Path [3] :Best Iter: [58] ELBO (-3685.870491) evaluations: (3396) 
+#> Path [4] :Initial log joint density = -483351.423837 
 #> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              58      -4.788e+05      8.737e-03   1.862e-01    9.297e-01  9.297e-01      3277 -3.700e+03 -3.710e+03                   
-#> Path [4] :Best Iter: [56] ELBO (-3700.166928) evaluations: (3277) 
-#> Path [5] :Initial log joint density = -481491.369531 
+#>              58      -4.788e+05      9.088e-03   3.069e-01    1.000e+00  1.000e+00      3288 -3.686e+03 -3.698e+03                   
+#> Path [4] :Best Iter: [55] ELBO (-3686.302448) evaluations: (3288) 
+#> Path [5] :Initial log joint density = -481488.987259 
 #> Path [5] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      1.122e-02   3.609e-01    4.949e-01  1.000e+00      3124 -3.709e+03 -3.710e+03                   
-#> Path [5] :Best Iter: [43] ELBO (-3708.636080) evaluations: (3124) 
-#> Path [6] :Initial log joint density = -481661.919655 
+#>              56      -4.788e+05      7.680e-03   3.606e-01    3.731e-01  1.000e+00      3158 -3.687e+03 -3.696e+03                   
+#> Path [5] :Best Iter: [55] ELBO (-3687.070593) evaluations: (3158) 
+#> Path [6] :Initial log joint density = -481659.676563 
 #> Path [6] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      1.076e-02   2.913e-01    4.798e-01  1.000e+00      3123 -3.705e+03 -3.707e+03                   
-#> Path [6] :Best Iter: [43] ELBO (-3705.205422) evaluations: (3123) 
-#> Path [7] :Initial log joint density = -481587.336505 
+#>              56      -4.788e+05      8.835e-03   2.918e-01    1.000e+00  1.000e+00      3207 -3.682e+03 -3.686e+03                   
+#> Path [6] :Best Iter: [55] ELBO (-3682.089991) evaluations: (3207) 
+#> Path [7] :Initial log joint density = -481583.848041 
 #> Path [7] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      7.808e-03   3.538e-01    3.729e-01  1.000e+00      3127 -3.705e+03 -3.707e+03                   
-#> Path [7] :Best Iter: [43] ELBO (-3705.254014) evaluations: (3127) 
-#> Path [8] :Initial log joint density = -481535.379693 
+#>              52      -4.788e+05      5.671e-03   2.458e-01    9.133e-01  9.133e-01      2833 -3.689e+03 -3.706e+03                   
+#> Path [7] :Best Iter: [46] ELBO (-3688.856477) evaluations: (2833) 
+#> Path [8] :Initial log joint density = -481535.021836 
 #> Path [8] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              57      -4.788e+05      7.966e-03   2.348e-01    1.000e+00  1.000e+00      3187 -3.706e+03 -3.703e+03                   
-#> Path [8] :Best Iter: [57] ELBO (-3702.952267) evaluations: (3187) 
-#> Path [9] :Initial log joint density = -481825.565125 
+#>              58      -4.788e+05      1.437e-02   3.491e-01    1.000e+00  1.000e+00      3272 -3.682e+03 -3.688e+03                   
+#> Path [8] :Best Iter: [57] ELBO (-3681.522784) evaluations: (3272) 
+#> Path [9] :Initial log joint density = -481825.435626 
 #> Path [9] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              54      -4.788e+05      1.776e-02   3.184e-01    8.911e-01  8.911e-01      2983 -3.708e+03 -3.719e+03                   
-#> Path [9] :Best Iter: [48] ELBO (-3708.159174) evaluations: (2983) 
-#> Path [10] :Initial log joint density = -481501.000775 
+#>              55      -4.788e+05      8.695e-03   2.858e-01    8.049e-01  8.049e-01      3119 -3.692e+03 -3.695e+03                   
+#> Path [9] :Best Iter: [43] ELBO (-3691.756853) evaluations: (3119) 
+#> Path [10] :Initial log joint density = -481498.967518 
 #> Path [10] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              50      -4.788e+05      7.657e-03   2.326e-01    1.000e+00  1.000e+00      2672 -3.707e+03 -3.709e+03                   
-#> Path [10] :Best Iter: [42] ELBO (-3707.317868) evaluations: (2672) 
-#> Path [11] :Initial log joint density = -481524.238457 
+#>              53      -4.788e+05      6.319e-03   2.079e-01    1.000e+00  1.000e+00      2959 -3.688e+03 -3.694e+03                   
+#> Path [10] :Best Iter: [44] ELBO (-3688.222063) evaluations: (2959) 
+#> Path [11] :Initial log joint density = -481521.112640 
 #> Path [11] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              49      -4.788e+05      8.147e-03   2.613e-01    1.000e+00  1.000e+00      2731 -3.708e+03 -3.719e+03                   
-#> Path [11] :Best Iter: [45] ELBO (-3708.016193) evaluations: (2731) 
-#> Path [12] :Initial log joint density = -483138.185320 
+#>              49      -4.788e+05      8.299e-03   2.774e-01    1.000e+00  1.000e+00      2731 -3.690e+03 -3.702e+03                   
+#> Path [11] :Best Iter: [45] ELBO (-3690.410182) evaluations: (2731) 
+#> Path [12] :Initial log joint density = -483135.835088 
 #> Path [12] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      6.330e-03   2.200e-01    1.000e+00  1.000e+00      3155 -3.706e+03 -3.703e+03                   
-#> Path [12] :Best Iter: [56] ELBO (-3702.944946) evaluations: (3155) 
-#> Path [13] :Initial log joint density = -481576.111766 
+#>              56      -4.788e+05      6.577e-03   2.328e-01    8.810e-01  8.810e-01      3155 -3.685e+03 -3.698e+03                   
+#> Path [12] :Best Iter: [55] ELBO (-3684.818956) evaluations: (3155) 
+#> Path [13] :Initial log joint density = -481575.739498 
 #> Path [13] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              61      -4.788e+05      6.565e-03   1.443e-01    1.000e+00  1.000e+00      3478 -3.699e+03 -3.713e+03                   
-#> Path [13] :Best Iter: [58] ELBO (-3699.258470) evaluations: (3478) 
-#> Path [14] :Initial log joint density = -481764.989011 
+#>              61      -4.788e+05      1.113e-02   1.530e-01    1.000e+00  1.000e+00      3573 -3.682e+03 -3.684e+03                   
+#> Path [13] :Best Iter: [58] ELBO (-3682.031083) evaluations: (3573) 
+#> Path [14] :Initial log joint density = -481763.960910 
 #> Path [14] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              54      -4.788e+05      8.149e-03   2.340e-01    1.000e+00  1.000e+00      3030 -3.709e+03 -3.712e+03                   
-#> Path [14] :Best Iter: [43] ELBO (-3708.899677) evaluations: (3030) 
-#> Path [15] :Initial log joint density = -481387.741241 
+#>              52      -4.788e+05      8.415e-03   2.261e-01    1.000e+00  1.000e+00      2827 -3.691e+03 -3.694e+03                   
+#> Path [14] :Best Iter: [46] ELBO (-3691.227838) evaluations: (2827) 
+#> Path [15] :Initial log joint density = -481386.069627 
 #> Path [15] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      8.577e-03   2.368e-01    8.248e-01  8.248e-01      3010 -3.709e+03 -3.710e+03                   
-#> Path [15] :Best Iter: [54] ELBO (-3708.517140) evaluations: (3010) 
-#> Path [16] :Initial log joint density = -484897.723958 
+#>              58      -4.788e+05      6.000e-03   1.793e-01    8.857e-01  8.857e-01      3220 -3.685e+03 -3.695e+03                   
+#> Path [15] :Best Iter: [57] ELBO (-3685.041133) evaluations: (3220) 
+#> Path [16] :Initial log joint density = -484896.156105 
 #> Path [16] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              61      -4.788e+05      6.879e-03   1.901e-01    8.535e-01  8.535e-01      3527 -3.700e+03 -3.713e+03                   
-#> Path [16] :Best Iter: [55] ELBO (-3699.954256) evaluations: (3527) 
-#> Path [17] :Initial log joint density = -481749.069759 
+#>              63      -4.788e+05      1.226e-02   2.906e-01    1.000e+00  1.000e+00      3706 -3.682e+03 -3.692e+03                   
+#> Path [16] :Best Iter: [62] ELBO (-3682.341422) evaluations: (3706) 
+#> Path [17] :Initial log joint density = -481747.086581 
 #> Path [17] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      3.157e-03   3.016e-01    6.092e-01  6.092e-01      3151 -3.705e+03 -3.716e+03                   
-#> Path [17] :Best Iter: [50] ELBO (-3705.420546) evaluations: (3151) 
-#> Path [18] :Initial log joint density = -481923.580134 
+#>              57      -4.788e+05      9.214e-03   2.821e-01    7.805e-01  7.805e-01      3242 -3.687e+03 -3.698e+03                   
+#> Path [17] :Best Iter: [56] ELBO (-3687.187680) evaluations: (3242) 
+#> Path [18] :Initial log joint density = -481923.194865 
 #> Path [18] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              58      -4.788e+05      1.555e-02   2.769e-01    1.000e+00  1.000e+00      3273 -3.703e+03 -3.706e+03                   
-#> Path [18] :Best Iter: [57] ELBO (-3702.926294) evaluations: (3273) 
-#> Path [19] :Initial log joint density = -482255.116395 
+#>              58      -4.788e+05      7.743e-03   2.463e-01    8.445e-01  8.445e-01      3273 -3.686e+03 -3.698e+03                   
+#> Path [18] :Best Iter: [55] ELBO (-3685.852024) evaluations: (3273) 
+#> Path [19] :Initial log joint density = -482255.068876 
 #> Path [19] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              58      -4.788e+05      1.393e-02   2.714e-01    1.000e+00  1.000e+00      3327 -3.701e+03 -3.699e+03                   
-#> Path [19] :Best Iter: [58] ELBO (-3699.435785) evaluations: (3327) 
-#> Path [20] :Initial log joint density = -481546.240853 
+#>              58      -4.788e+05      7.292e-03   2.040e-01    8.844e-01  8.844e-01      3355 -3.683e+03 -3.692e+03                   
+#> Path [19] :Best Iter: [56] ELBO (-3683.410975) evaluations: (3355) 
+#> Path [20] :Initial log joint density = -481546.149047 
 #> Path [20] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              54      -4.788e+05      9.100e-03   2.068e-01    1.000e+00  1.000e+00      2944 -3.708e+03 -3.711e+03                   
-#> Path [20] :Best Iter: [52] ELBO (-3708.200608) evaluations: (2944) 
-#> Path [21] :Initial log joint density = -481984.349458 
+#>              52      -4.788e+05      1.032e-02   2.820e-01    9.455e-01  9.455e-01      2783 -3.690e+03 -3.698e+03                   
+#> Path [20] :Best Iter: [49] ELBO (-3689.865635) evaluations: (2783) 
+#> Path [21] :Initial log joint density = -481983.863610 
 #> Path [21] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              58      -4.788e+05      1.085e-02   3.039e-01    9.335e-01  9.335e-01      3220 -3.701e+03 -3.711e+03                   
-#> Path [21] :Best Iter: [57] ELBO (-3700.894361) evaluations: (3220) 
-#> Path [22] :Initial log joint density = -483060.662799 
+#>              60      -4.788e+05      1.217e-02   3.877e-01    1.000e+00  1.000e+00      3434 -3.684e+03 -3.692e+03                   
+#> Path [21] :Best Iter: [59] ELBO (-3683.726125) evaluations: (3434) 
+#> Path [22] :Initial log joint density = -483059.373740 
 #> Path [22] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              54      -4.788e+05      9.423e-03   2.285e-01    9.188e-01  9.188e-01      2989 -3.705e+03 -3.720e+03                   
-#> Path [22] :Best Iter: [52] ELBO (-3705.414592) evaluations: (2989) 
-#> Path [23] :Initial log joint density = -481516.159447 
+#>              56      -4.788e+05      2.324e-03   2.824e-01    6.305e-01  6.305e-01      3156 -3.690e+03 -3.698e+03                   
+#> Path [22] :Best Iter: [55] ELBO (-3690.129439) evaluations: (3156) 
+#> Path [23] :Initial log joint density = -481514.229393 
 #> Path [23] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      7.730e-03   2.545e-01    8.761e-01  8.761e-01      3080 -3.706e+03 -3.712e+03                   
-#> Path [23] :Best Iter: [54] ELBO (-3705.728833) evaluations: (3080) 
-#> Path [24] :Initial log joint density = -481385.707339 
+#>              55      -4.788e+05      1.468e-02   2.124e-01    1.000e+00  1.000e+00      3077 -3.692e+03 -3.686e+03                   
+#> Path [23] :Best Iter: [55] ELBO (-3686.129104) evaluations: (3077) 
+#> Path [24] :Initial log joint density = -481384.137221 
 #> Path [24] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              53      -4.788e+05      6.805e-03   1.690e-01    1.000e+00  1.000e+00      2863 -3.706e+03 -3.710e+03                   
-#> Path [24] :Best Iter: [41] ELBO (-3705.904961) evaluations: (2863) 
-#> Path [25] :Initial log joint density = -481626.134189 
+#>              53      -4.788e+05      8.921e-03   1.745e-01    8.792e-01  8.792e-01      2863 -3.690e+03 -3.701e+03                   
+#> Path [24] :Best Iter: [41] ELBO (-3690.389443) evaluations: (2863) 
+#> Path [25] :Initial log joint density = -481625.698424 
 #> Path [25] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              61      -4.788e+05      7.901e-03   2.339e-01    1.000e+00  1.000e+00      3478 -3.700e+03 -3.703e+03                   
-#> Path [25] :Best Iter: [58] ELBO (-3700.311628) evaluations: (3478) 
-#> Path [26] :Initial log joint density = -481832.934655 
+#>              64      -4.788e+05      1.485e-02   3.660e-01    1.000e+00  1.000e+00      3780 -3.682e+03 -3.684e+03                   
+#> Path [25] :Best Iter: [63] ELBO (-3681.740819) evaluations: (3780) 
+#> Path [26] :Initial log joint density = -481832.418436 
 #> Path [26] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              60      -4.788e+05      2.559e-02   3.115e-01    1.000e+00  1.000e+00      3653 -3.699e+03 -3.707e+03                   
-#> Path [26] :Best Iter: [58] ELBO (-3699.288833) evaluations: (3653) 
-#> Path [27] :Initial log joint density = -481618.829359 
+#>              62      -4.788e+05      8.098e-03   1.697e-01    1.000e+00  1.000e+00      3778 -3.684e+03 -3.686e+03                   
+#> Path [26] :Best Iter: [59] ELBO (-3684.003621) evaluations: (3778) 
+#> Path [27] :Initial log joint density = -481617.906730 
 #> Path [27] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              54      -4.788e+05      7.574e-03   2.248e-01    1.000e+00  1.000e+00      2993 -3.709e+03 -3.710e+03                   
-#> Path [27] :Best Iter: [37] ELBO (-3708.527766) evaluations: (2993) 
-#> Path [28] :Initial log joint density = -481547.034706 
+#>              59      -4.788e+05      1.139e-02   2.545e-01    9.137e-01  9.137e-01      3418 -3.685e+03 -3.693e+03                   
+#> Path [27] :Best Iter: [57] ELBO (-3685.384374) evaluations: (3418) 
+#> Path [28] :Initial log joint density = -481545.979805 
 #> Path [28] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      1.349e-02   4.568e-01    1.000e+00  1.000e+00      3074 -3.708e+03 -3.712e+03                   
-#> Path [28] :Best Iter: [54] ELBO (-3708.430839) evaluations: (3074) 
-#> Path [29] :Initial log joint density = -481485.073153 
+#>              53      -4.788e+05      1.246e-02   3.044e-01    1.000e+00  1.000e+00      2909 -3.691e+03 -3.697e+03                   
+#> Path [28] :Best Iter: [52] ELBO (-3690.778931) evaluations: (2909) 
+#> Path [29] :Initial log joint density = -481483.372353 
 #> Path [29] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      1.396e-02   3.879e-01    9.610e-01  9.610e-01      3101 -3.701e+03 -3.714e+03                   
-#> Path [29] :Best Iter: [55] ELBO (-3700.851565) evaluations: (3101) 
-#> Path [30] :Initial log joint density = -481709.001740 
+#>              56      -4.788e+05      1.058e-02   2.486e-01    1.000e+00  1.000e+00      3107 -3.685e+03 -3.683e+03                   
+#> Path [29] :Best Iter: [56] ELBO (-3683.392447) evaluations: (3107) 
+#> Path [30] :Initial log joint density = -481708.749372 
 #> Path [30] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      6.010e-03   2.297e-01    1.000e+00  1.000e+00      3026 -3.709e+03 -3.712e+03                   
-#> Path [30] :Best Iter: [44] ELBO (-3708.672494) evaluations: (3026) 
-#> Path [31] :Initial log joint density = -483175.094337 
+#>              56      -4.788e+05      5.824e-03   2.266e-01    7.577e-01  7.577e-01      3109 -3.684e+03 -3.692e+03                   
+#> Path [30] :Best Iter: [55] ELBO (-3684.146137) evaluations: (3109) 
+#> Path [31] :Initial log joint density = -483171.772948 
 #> Path [31] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      1.036e-02   3.089e-01    1.000e+00  1.000e+00      3158 -3.703e+03 -3.705e+03                   
-#> Path [31] :Best Iter: [55] ELBO (-3702.585400) evaluations: (3158) 
-#> Path [32] :Initial log joint density = -481389.434125 
+#>              57      -4.788e+05      1.666e-02   2.196e-01    1.000e+00  1.000e+00      3238 -3.685e+03 -3.685e+03                   
+#> Path [31] :Best Iter: [57] ELBO (-3684.538992) evaluations: (3238) 
+#> Path [32] :Initial log joint density = -481388.419279 
 #> Path [32] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      5.246e-03   1.964e-01    1.000e+00  1.000e+00      3026 -3.705e+03 -3.707e+03                   
-#> Path [32] :Best Iter: [41] ELBO (-3705.329082) evaluations: (3026) 
-#> Path [33] :Initial log joint density = -481637.819583 
+#>              60      -4.788e+05      1.422e-02   1.990e-01    1.000e+00  1.000e+00      3451 -3.681e+03 -3.682e+03                   
+#> Path [32] :Best Iter: [59] ELBO (-3680.937473) evaluations: (3451) 
+#> Path [33] :Initial log joint density = -481635.814908 
 #> Path [33] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              52      -4.788e+05      9.740e-03   1.906e-01    1.000e+00  1.000e+00      2886 -3.709e+03 -3.716e+03                   
-#> Path [33] :Best Iter: [44] ELBO (-3709.471560) evaluations: (2886) 
-#> Path [34] :Initial log joint density = -481601.725867 
+#>              53      -4.788e+05      4.940e-03   1.698e-01    1.000e+00  1.000e+00      3049 -3.689e+03 -3.702e+03                   
+#> Path [33] :Best Iter: [46] ELBO (-3688.516342) evaluations: (3049) 
+#> Path [34] :Initial log joint density = -481601.435952 
 #> Path [34] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      1.239e-02   2.980e-01    1.000e+00  1.000e+00      3134 -3.702e+03 -3.711e+03                   
-#> Path [34] :Best Iter: [55] ELBO (-3701.944585) evaluations: (3134) 
-#> Path [35] :Initial log joint density = -482984.485174 
+#>              57      -4.788e+05      5.258e-03   2.100e-01    1.000e+00  1.000e+00      3210 -3.690e+03 -3.693e+03                   
+#> Path [34] :Best Iter: [55] ELBO (-3689.835050) evaluations: (3210) 
+#> Path [35] :Initial log joint density = -482984.307984 
 #> Path [35] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      7.229e-03   2.188e-01    9.279e-01  9.279e-01      3268 -3.702e+03 -3.709e+03                   
-#> Path [35] :Best Iter: [55] ELBO (-3701.606776) evaluations: (3268) 
-#> Path [36] :Initial log joint density = -482364.704955 
+#>              55      -4.788e+05      1.348e-02   2.403e-01    1.000e+00  1.000e+00      3185 -3.694e+03 -3.686e+03                   
+#> Path [35] :Best Iter: [55] ELBO (-3686.312367) evaluations: (3185) 
+#> Path [36] :Initial log joint density = -482363.470665 
 #> Path [36] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              58      -4.788e+05      1.632e-02   3.706e-01    1.000e+00  1.000e+00      3437 -3.698e+03 -3.703e+03                   
-#> Path [36] :Best Iter: [56] ELBO (-3697.836833) evaluations: (3437) 
-#> Path [37] :Initial log joint density = -481709.538224 
+#>              57      -4.788e+05      1.358e-02   3.654e-01    1.000e+00  1.000e+00      3442 -3.681e+03 -3.688e+03                   
+#> Path [36] :Best Iter: [56] ELBO (-3681.247203) evaluations: (3442) 
+#> Path [37] :Initial log joint density = -481707.239198 
 #> Path [37] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              55      -4.788e+05      1.180e-02   3.242e-01    8.385e-01  8.385e-01      3163 -3.709e+03 -3.712e+03                   
-#> Path [37] :Best Iter: [41] ELBO (-3708.864064) evaluations: (3163) 
-#> Path [38] :Initial log joint density = -483548.081022 
+#>              52      -4.788e+05      7.260e-03   2.653e-01    1.000e+00  1.000e+00      2783 -3.692e+03 -3.711e+03                   
+#> Path [37] :Best Iter: [48] ELBO (-3692.095405) evaluations: (2783) 
+#> Path [38] :Initial log joint density = -483547.559866 
 #> Path [38] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              60      -4.788e+05      1.682e-02   2.059e-01    1.000e+00  1.000e+00      3510 -3.702e+03 -3.702e+03                   
-#> Path [38] :Best Iter: [60] ELBO (-3701.718762) evaluations: (3510) 
-#> Path [39] :Initial log joint density = -481657.934013 
+#>              59      -4.788e+05      1.501e-02   2.324e-01    1.000e+00  1.000e+00      3463 -3.685e+03 -3.685e+03                   
+#> Path [38] :Best Iter: [57] ELBO (-3684.555250) evaluations: (3463) 
+#> Path [39] :Initial log joint density = -481657.864204 
 #> Path [39] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      7.809e-03   2.065e-01    1.000e+00  1.000e+00      3227 -3.706e+03 -3.700e+03                   
-#> Path [39] :Best Iter: [56] ELBO (-3700.297599) evaluations: (3227) 
-#> Path [40] :Initial log joint density = -481567.525112 
+#>              57      -4.788e+05      1.519e-02   2.425e-01    1.000e+00  1.000e+00      3332 -3.688e+03 -3.687e+03                   
+#> Path [39] :Best Iter: [57] ELBO (-3686.763529) evaluations: (3332) 
+#> Path [40] :Initial log joint density = -481565.748249 
 #> Path [40] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              52      -4.788e+05      9.791e-03   1.822e-01    1.000e+00  1.000e+00      2866 -3.706e+03 -3.715e+03                   
-#> Path [40] :Best Iter: [50] ELBO (-3706.201049) evaluations: (2866) 
-#> Path [41] :Initial log joint density = -481676.575940 
+#>              55      -4.788e+05      9.752e-03   2.632e-01    9.388e-01  9.388e-01      3071 -3.691e+03 -3.696e+03                   
+#> Path [40] :Best Iter: [44] ELBO (-3691.310433) evaluations: (3071) 
+#> Path [41] :Initial log joint density = -481675.690961 
 #> Path [41] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              52      -4.788e+05      5.983e-03   2.137e-01    1.000e+00  1.000e+00      2827 -3.707e+03 -3.716e+03                   
-#> Path [41] :Best Iter: [49] ELBO (-3706.601060) evaluations: (2827) 
-#> Path [42] :Initial log joint density = -481967.920483 
+#>              52      -4.788e+05      4.037e-03   2.465e-01    7.902e-01  7.902e-01      2873 -3.690e+03 -3.703e+03                   
+#> Path [41] :Best Iter: [46] ELBO (-3690.292354) evaluations: (2873) 
+#> Path [42] :Initial log joint density = -481966.652117 
 #> Path [42] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              59      -4.788e+05      1.102e-02   2.692e-01    1.000e+00  1.000e+00      3518 -3.704e+03 -3.704e+03                   
-#> Path [42] :Best Iter: [57] ELBO (-3703.559800) evaluations: (3518) 
-#> Path [43] :Initial log joint density = -481440.955609 
+#>              57      -4.788e+05      9.832e-03   2.851e-01    9.318e-01  9.318e-01      3245 -3.685e+03 -3.692e+03                   
+#> Path [42] :Best Iter: [55] ELBO (-3685.061706) evaluations: (3245) 
+#> Path [43] :Initial log joint density = -481439.939422 
 #> Path [43] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      9.330e-03   2.678e-01    9.031e-01  9.031e-01      3215 -3.700e+03 -3.714e+03                   
-#> Path [43] :Best Iter: [55] ELBO (-3700.102331) evaluations: (3215) 
-#> Path [44] :Initial log joint density = -481860.382020 
+#>              62      -4.788e+05      7.776e-03   1.594e-01    8.314e-01  8.314e-01      3665 -3.680e+03 -3.689e+03                   
+#> Path [43] :Best Iter: [55] ELBO (-3679.897141) evaluations: (3665) 
+#> Path [44] :Initial log joint density = -481860.121007 
 #> Path [44] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              58      -4.788e+05      2.649e-02   2.111e-01    1.000e+00  1.000e+00      3334 -3.700e+03 -3.700e+03                   
-#> Path [44] :Best Iter: [58] ELBO (-3699.608257) evaluations: (3334) 
-#> Path [45] :Initial log joint density = -481561.106265 
+#>              60      -4.788e+05      1.681e-02   1.982e-01    1.000e+00  1.000e+00      3596 -3.684e+03 -3.682e+03                   
+#> Path [44] :Best Iter: [60] ELBO (-3682.166176) evaluations: (3596) 
+#> Path [45] :Initial log joint density = -481559.611205 
 #> Path [45] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      1.059e-02   3.338e-01    1.000e+00  1.000e+00      3155 -3.699e+03 -3.706e+03                   
-#> Path [45] :Best Iter: [55] ELBO (-3698.590171) evaluations: (3155) 
-#> Path [46] :Initial log joint density = -481680.333856 
+#>              55      -4.788e+05      8.962e-03   2.782e-01    1.000e+00  1.000e+00      3114 -3.690e+03 -3.688e+03                   
+#> Path [45] :Best Iter: [55] ELBO (-3688.316597) evaluations: (3114) 
+#> Path [46] :Initial log joint density = -481678.419036 
 #> Path [46] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      6.257e-03   1.803e-01    1.000e+00  1.000e+00      3053 -3.705e+03 -3.701e+03                   
-#> Path [46] :Best Iter: [56] ELBO (-3701.137391) evaluations: (3053) 
-#> Path [47] :Initial log joint density = -481543.598434 
+#>              56      -4.788e+05      5.969e-03   1.633e-01    1.000e+00  1.000e+00      3053 -3.691e+03 -3.694e+03                   
+#> Path [46] :Best Iter: [53] ELBO (-3691.186058) evaluations: (3053) 
+#> Path [47] :Initial log joint density = -481542.796923 
 #> Path [47] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              54      -4.788e+05      1.154e-02   3.887e-01    1.000e+00  1.000e+00      2944 -3.708e+03 -3.722e+03                   
-#> Path [47] :Best Iter: [48] ELBO (-3708.422815) evaluations: (2944) 
-#> Path [48] :Initial log joint density = -481753.026806 
+#>              53      -4.788e+05      7.045e-03   2.807e-01    9.563e-01  9.563e-01      2863 -3.691e+03 -3.705e+03                   
+#> Path [47] :Best Iter: [40] ELBO (-3691.256401) evaluations: (2863) 
+#> Path [48] :Initial log joint density = -481751.664310 
 #> Path [48] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              56      -4.788e+05      8.090e-03   2.074e-01    1.000e+00  1.000e+00      3161 -3.700e+03 -3.705e+03                   
-#> Path [48] :Best Iter: [55] ELBO (-3700.169205) evaluations: (3161) 
-#> Path [49] :Initial log joint density = -481559.321930 
+#>              56      -4.788e+05      4.822e-03   2.665e-01    6.480e-01  6.480e-01      3161 -3.688e+03 -3.697e+03                   
+#> Path [48] :Best Iter: [55] ELBO (-3687.790586) evaluations: (3161) 
+#> Path [49] :Initial log joint density = -481557.343307 
 #> Path [49] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              53      -4.788e+05      8.469e-03   2.472e-01    1.000e+00  1.000e+00      2921 -3.708e+03 -3.709e+03                   
-#> Path [49] :Best Iter: [50] ELBO (-3708.362261) evaluations: (2921) 
-#> Path [50] :Initial log joint density = -481570.241650 
+#>              55      -4.788e+05      4.328e-03   1.710e-01    8.144e-01  8.144e-01      3133 -3.688e+03 -3.687e+03                   
+#> Path [49] :Best Iter: [55] ELBO (-3687.108673) evaluations: (3133) 
+#> Path [50] :Initial log joint density = -481568.993317 
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              53      -4.788e+05      9.306e-03   3.328e-01    1.000e+00  1.000e+00      2913 -3.713e+03 -3.726e+03                   
-#> Path [50] :Best Iter: [45] ELBO (-3712.981570) evaluations: (2913) 
+#>              52      -4.788e+05      1.417e-02   1.858e-01    1.000e+00  1.000e+00      2957 -3.692e+03 -3.695e+03                   
+#> Path [50] :Best Iter: [46] ELBO (-3692.173606) evaluations: (2957) 
 #> Finished in  13.3 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
@@ -344,15 +344,15 @@ print("cmdstanr is needed to run this example.")
 #> # A tibble: 720 × 9
 #>    sample type   cell_group proportion_mean proportion_lower proportion_upper
 #>    <fct>  <fct>  <chr>                <dbl>            <dbl>            <dbl>
-#>  1 10x_6K benign B1                 0.0593           0.0458           0.0752 
-#>  2 10x_6K benign B2                 0.0378           0.0289           0.0472 
-#>  3 10x_6K benign B3                 0.0125           0.00951          0.0159 
-#>  4 10x_6K benign BM                 0.00676          0.00509          0.00881
-#>  5 10x_6K benign CD4 1              0.0255           0.0214           0.0302 
-#>  6 10x_6K benign CD4 2              0.0509           0.0420           0.0620 
-#>  7 10x_6K benign CD4 3              0.0818           0.0614           0.103  
-#>  8 10x_6K benign CD4 4              0.00169          0.00115          0.00243
-#>  9 10x_6K benign CD4 5              0.0305           0.0231           0.0380 
+#>  1 10x_6K benign B1                 0.0591           0.0453           0.0753 
+#>  2 10x_6K benign B2                 0.0384           0.0294           0.0482 
+#>  3 10x_6K benign B3                 0.0126           0.00947          0.0163 
+#>  4 10x_6K benign BM                 0.00673          0.00511          0.00867
+#>  5 10x_6K benign CD4 1              0.0254           0.0216           0.0300 
+#>  6 10x_6K benign CD4 2              0.0509           0.0421           0.0623 
+#>  7 10x_6K benign CD4 3              0.0823           0.0642           0.104  
+#>  8 10x_6K benign CD4 4              0.00167          0.00116          0.00251
+#>  9 10x_6K benign CD4 5              0.0305           0.0240           0.0385 
 #> 10 10x_6K benign CD8 1              0.112            0.0963           0.128  
 #> # ℹ 710 more rows
 #> # ℹ 3 more variables: unconstrained_mean <dbl>, unconstrained_lower <dbl>,
