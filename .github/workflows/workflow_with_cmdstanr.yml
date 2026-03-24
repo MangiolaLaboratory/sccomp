@@ -49,7 +49,7 @@ jobs:
           if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
           remotes::install_deps(dependencies = TRUE)
 
-      - name: Install CmdStan
+      - name: Install CmdStan  
         shell: Rscript {0}
         run: |
           # TEMPORARY: Install cmdstanr from GitHub v0.9.0 for this branch
@@ -69,6 +69,7 @@ jobs:
             any::rcmdcheck
             any::knitr
             any::rmarkdown
+            any::ragg
             any::ggplot2
             any::tibble
             any::dplyr
@@ -83,7 +84,7 @@ jobs:
         if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         shell: Rscript {0}
         run: |
-          install.packages("pkgdown")
+          install.packages(c("pkgdown", "ragg"))
 
       - name: Build pkgdown site
         if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
