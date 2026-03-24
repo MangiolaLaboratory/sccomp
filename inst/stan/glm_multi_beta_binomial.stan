@@ -548,7 +548,7 @@ model{
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
   prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
   prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
-  prec_coeff ~ std_normal();
+  // prec_coeff ~ std_normal(); // prior imposed again for prec_coeff, should delete this line, and maybe the comment below
   // Note: sum_to_zero_vector has built-in priors, no need for explicit std_normal()
   
   // Random intercept
