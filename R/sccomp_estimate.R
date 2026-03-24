@@ -922,7 +922,11 @@ sccomp_glm_data_frame_counts = function(.data,
     else
       message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))
   } else if(is_proportion_input) {
-    proportion_model_label = ifelse(noise_model == "dirichlet_multinomial", "sum-constrained beta")
+    if (noise_model == "dirichlet_multinomial") {
+      proportion_model_label = "Dirichlet-multinomial"
+    } else {
+      proportion_model_label = "sum-constrained beta"
+    }
     message(sprintf("sccomp says: %s column is a proportion. The %s model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).", quo_name(.count), proportion_model_label))
   } else stop(sprintf("sccomp: `%s` column must be an integer or a proportion", quo_name(.count)))
   
