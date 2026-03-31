@@ -564,15 +564,6 @@ model{
   for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
   if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) beta_raw[c] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2] * inv(sqrt(1 - inv(M))) );
   
-  // Hyper priors
-  mix_p ~ beta(1,5);
-  prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
-  prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
-  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
-  // prec_coeff ~ std_normal(); // prior imposed again for prec_coeff, should delete this line, and maybe the comment below
-  // Note: sum_to_zero_vector has built-in priors, no need for explicit std_normal()
-  
-
   // Random intercept
   if(is_random_effect>0){
 
