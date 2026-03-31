@@ -387,24 +387,21 @@ transformed parameters{
     beta[c,] = to_row_vector(beta_raw[c]);
   }
 
-  // intercept_pair + slope_1/2 prec_coeff
-  matrix[bimodal_mean_variability_association == 1 ? 4 : 2, A] prec_coeff;
-  if(bimodal_mean_variability_association == 1){
-  // Bimodal
+  // Unified prec_coeff for likelihood / priors / generated quantities. Cannot be
+  // declared as a single matrix in parameters: bimodal needs ordered[2] (i1<i2)
+  // and slopes need <upper=0>, which do not map to one unconstrained matrix.
+  matrix[4, A] prec_coeff = rep_matrix(0, 4, A);
   for(a in 1:A){
-    prec_coeff[1, a] = intercept_pair[a][1];
-    prec_coeff[2, a] = slope_1[a];
-    prec_coeff[3, a] = slope_2[a];
-    prec_coeff[4, a] = intercept_pair[a][2];
+    if(bimodal_mean_variability_association == 1){
+      prec_coeff[1, a] = intercept_pair[a][1];
+      prec_coeff[2, a] = slope_1[a];
+      prec_coeff[3, a] = slope_2[a];
+      prec_coeff[4, a] = intercept_pair[a][2];
+    } else {
+      prec_coeff[1, a] = intercept_single[a];
+      prec_coeff[2, a] = slope_single[a];
+    }
   }
-} else {
-  // Single
-  for(a in 1:A){
-    prec_coeff[1, a] = intercept_single[a];
-    prec_coeff[2, a] = slope_single[a];       // slope (global)
-  }
-}
-  real prec_sd_2_scalar = bimodal_mean_variability_association == 1 ? prec_sd_2[1] : 0.0;
   real mix_p_scalar = bimodal_mean_variability_association == 1 ? mix_p : 0.5;
 
   // Non centered parameterisation SD of random effects
@@ -521,93 +518,53 @@ model{
   }
 
   // Priors
-  // per-effect regression
+  // Per-effect regression (optional for testing)
   if(exclude_priors == 0){
-  for(a in 1:A){
-
-    if(bimodal_mean_variability_association == 1){
-      // Bimodal model: use all 4 parameters
+    for(a in 1:A){
       array[4] real prec_coeff_a;
-      prec_coeff_a[1] = prec_coeff[1, a];   // i1
-      prec_coeff_a[2] = prec_coeff[2, a];   // s1
-      prec_coeff_a[3] = prec_coeff[3, a];   // s2
-      prec_coeff_a[4] = prec_coeff[4, a];   // i2
+      prec_coeff_a[1] = prec_coeff[1, a];
+      prec_coeff_a[2] = prec_coeff[2, a];
+      if(bimodal_mean_variability_association == 1){
+        prec_coeff_a[3] = prec_coeff[3, a];
+        prec_coeff_a[4] = prec_coeff[4, a];
+      } else {
+        // Unused in single-mode branch inside abundance_variability_regression().
+        prec_coeff_a[3] = 0;
+        prec_coeff_a[4] = 0;
+      }
 
       target += abundance_variability_regression(
         alpha[a],
         beta[a],
         prec_coeff_a,
         prec_sd_1,
-        prec_sd_2_scalar,
         bimodal_mean_variability_association,
         mix_p_scalar
       );
     }
-    else {
-      // Single model: use only 2 parameters
-      array[2] real prec_coeff_a;
-      prec_coeff_a[1] = prec_coeff[1, a];   // intercept
-      prec_coeff_a[2] = prec_coeff[2, a];   // slope
-
-      target += abundance_variability_regression(
-        alpha[a],
-        beta[a],
-        prec_coeff_a,
-        prec_sd_1,
-        prec_sd_2_scalar,
-        bimodal_mean_variability_association,
-        mix_p_scalar
-      );
+  } else {
+    if(intercept_in_design || A > 1){
+      for(a in 1:A_intercept_columns)  alpha[a] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
+      if(A > A_intercept_columns)
+        for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal(0, 2);
+    } else {
+      alpha[1] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
     }
   }
 
- if(bimodal_mean_variability_association == 1){
-  // Bimodal-specific priors
-  mix_p ~ beta(1,5);
-  for(a in 1:A){
-    prec_coeff[1, a] ~ student_t(3, -1, 2);      // i1
-    prec_coeff[4, a] ~ student_t(3, 0, 2);      // i2
-    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // s1
-    prec_coeff[3, a] ~ student_t(3, -0.5, 1.5); // s2
-  }
-   prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
-   prec_sd_2[1] ~ normal(0, prior_prec_sd[1] * 1.5) T[0,];
-} else {
-  mix_p ~ beta(1, 1);
-  // Single model priors (only 2 parameters)
-  for(a in 1:A){
-    prec_coeff[1, a] ~ student_t(3, 0, 2);      // intercept
-    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // slope
-  }
-  prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
-}
- }
- else {
-   if(intercept_in_design || A > 1){
-     for(a in 1:A_intercept_columns)  alpha[a] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
-     if(A > A_intercept_columns)
-       for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal(0, 2);
-   } else {
-     alpha[1] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
-   }
-     // hyper prior
-  if(bimodal_mean_variability_association == 1){
-    // Bimodal-specific priors
+  // Hyper priors: i1/s1 (and prec_sd_1) shared; bimodal adds i2/s2 and mix_p shape
+  if(bimodal_mean_variability_association == 1)
     mix_p ~ beta(1, 5);
+  else
+    mix_p ~ beta(1, 1);
+
   for(a in 1:A){
-    prec_coeff[1, a] ~ student_t(3, -1, 2);      // i1
-    prec_coeff[4, a] ~ student_t(3, 0, 2);      // i2
-    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // s1
-    prec_coeff[3, a] ~ student_t(3, -0.5, 1.5); // s2
-  }
-   prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
-   prec_sd_2[1] ~ normal(0, prior_prec_sd[1] * 1.5) T[0,];
-} else {
-  mix_p ~ beta(1, 1);
-  // Single model priors (only 2 parameters)
-  for(a in 1:A){
-    prec_coeff[1, a] ~ student_t(3, 0, 2);      // intercept
-    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // slope
+    prec_coeff[1, a] ~ student_t(3, 4, 2); // i1
+    prec_coeff[2, a] ~ student_t(3, 0, 2); // s1
+    if(bimodal_mean_variability_association == 1){
+      prec_coeff[4, a] ~ student_t(3, 4, 2); // i2
+      prec_coeff[3, a] ~ student_t(3, 0, 2); // s2
+    }
   }
   prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
 }
