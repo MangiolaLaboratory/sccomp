@@ -300,9 +300,16 @@ test_that("significance_statistic and show_fdr_message work via plot() S3 method
     significance_statistic = "pH0",
     show_fdr_message = TRUE
   )
-  
-  expect_true(grepl("Bayesian FDR", fdr_plot$labels$caption))
-  expect_true(is.null(ph0_plot$labels$caption) || !grepl("Bayesian FDR", ph0_plot$labels$caption))
+
+  # patchwork::plot_annotation caption is not in ggplot $labels
+  patchwork_caption <- function(p) {
+    ann <- p$patches$annotation$caption
+    if (!is.null(ann) && length(ann) && nzchar(ann)) return(ann)
+    lab <- p$labels$caption
+    if (is.null(lab)) "" else lab
+  }
+  expect_true(grepl("Bayesian FDR", patchwork_caption(fdr_plot)))
+  expect_true(!grepl("Bayesian FDR", patchwork_caption(ph0_plot)))
 })
 test_that("plot_2D_intervals includes regression line from prec parameters", {
   skip_cmdstan()
