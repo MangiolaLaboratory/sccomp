@@ -75,7 +75,6 @@ parameters {
   array[A * bimodal_mean_variability_association] real<upper=0> slope_2;
   array[A * (1 - bimodal_mean_variability_association)] real<upper=0> slope_single;
   real<lower=0> prec_sd_1;
-  array[bimodal_mean_variability_association] real<lower=0> prec_sd_2;
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // Using regular vectors instead of sum_to_zero_vector to avoid floating-point precision issues
