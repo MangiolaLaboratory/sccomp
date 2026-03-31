@@ -354,9 +354,8 @@ parameters{
   // Use the new sum_to_zero_vector type instead of QR decomposition
   array[C] sum_to_zero_vector[M] beta_raw; // Each row is a sum_to_zero_vector of length M
   matrix[A, M] alpha; // Variability
-  // Mean-variability intercepts
-  array[A] real prec_intercept_1; // i1, always present
-  array[A * bimodal_mean_variability_association] real prec_intercept_2; // i2, only for bimodal
+  // Mean-variability intercepts: length 1 if unimodal, length 2 (strictly increasing) if bimodal.
+  array[A] ordered[1 + bimodal_mean_variability_association] prec_intercept;
   // Mean-variability slopes
   array[A] real prec_slope_1; // s1, always present
   array[A * bimodal_mean_variability_association] real prec_slope_2; // s2, only for bimodal
@@ -385,6 +384,14 @@ parameters{
 
 }
 transformed parameters{
+
+  array[A] real prec_intercept_1;
+  array[A * bimodal_mean_variability_association] real prec_intercept_2;
+  for (a in 1:A) {
+    prec_intercept_1[a] = prec_intercept[a][1];
+    if (bimodal_mean_variability_association == 1)
+      prec_intercept_2[a] = prec_intercept[a][2];
+  }
 
   // Initialisation
   matrix[C,M] beta;
@@ -545,13 +552,13 @@ model{
   for(a in 1:A){
     // If design has intercept, first column gets intercept-centred prior, others are centred at 0.
     if(intercept_in_design == 1 && a == 1){
-      prec_intercept_1[a] ~ student_t(3, 4, 2); // i1, intercept column
+      prec_intercept[a][1] ~ student_t(3, 4, 2);
       if(bimodal_mean_variability_association == 1)
-        prec_intercept_2[a] ~ student_t(3, 4, 2); // i2, intercept column
+        prec_intercept[a][2] ~ student_t(3, 4, 2);
     } else {
-      prec_intercept_1[a] ~ student_t(3, 0, 2); // i1, non-intercept columns
+      prec_intercept[a][1] ~ student_t(3, 0, 2);
       if(bimodal_mean_variability_association == 1)
-        prec_intercept_2[a] ~ student_t(3, 0, 2); // i2, non-intercept columns
+        prec_intercept[a][2] ~ student_t(3, 0, 2);
     }
     prec_slope_1[a] ~ student_t(3, 0, 2); // s1
     if(bimodal_mean_variability_association == 1){
