@@ -231,7 +231,6 @@ plot_1D_intervals = function(
 
   plot_list =
     .data |>
-    filter(parameter != "(Intercept)") |>
 
     # Reshape data
     select(-contains("n_eff"), -contains("R_k_hat"), -contains("_ess"), -contains("_rhat")) |>
@@ -285,7 +284,7 @@ plot_1D_intervals = function(
           geom_errorbar(color_aes) +
           geom_point() +
           color_scale +
-          xlab("Credible interval of the slope") +
+          xlab("Credible interval of the effect") +
           ylab("Cell group") +
           ggtitle(sprintf("%s %s", plot_which, plot_param)) +
           sccomp_theme() +
