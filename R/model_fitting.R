@@ -2,8 +2,8 @@
 fit_model = function(
     data_for_model, model_name, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
     warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
-    seed , pars = c("beta", "alpha", "prec_sd_1", "intercept_single", "slope_single",
-                    "intercept_pair", "slope_1", "slope_2"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000,
+    seed , pars = c("beta", "alpha", "prec_sd", "prec_intercept_1", "prec_slope_1",
+                    "prec_intercept_2", "prec_slope_2"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000,
     output_directory = "sccomp_draws_files",
     sig_figs = 9,
     cache_stan_model = sccomp_stan_models_cache_dir,
@@ -48,17 +48,20 @@ fit_model = function(
                      rep(0, (data_for_model$A - 1) * data_for_model$M)),
                    nrow = data_for_model$A, byrow = TRUE),
     beta_raw = matrix(0, data_for_model$C, data_for_model$M),
-    prec_sd_1 = 1,
+    prec_sd = 1,
     mix_p = 0.1
   )
 
+  # Mean-variability regression: prec_coeff[1|4,a] ~ student_t(3, 4, 2), prec_coeff[2|3,a] ~ student_t(3, 0, 2).
+  # Intercepts are modelled as prec_intercept_1 (always) and prec_intercept_2 (bimodal only).
   if (data_for_model$bimodal_mean_variability_association == 1) {
-    init_list$intercept_pair = replicate(data_for_model$A, c(-1, 3), simplify = FALSE)
-    init_list$slope_1 = rep(-0.5, data_for_model$A)
-    init_list$slope_2 = rep(-0.5, data_for_model$A)
+    init_list$prec_intercept_1 = rep(3, data_for_model$A)
+    init_list$prec_intercept_2 = rep(5, data_for_model$A)
+    init_list$prec_slope_1 = rep(0, data_for_model$A)
+    init_list$prec_slope_2 = rep(0, data_for_model$A)
   } else {
-    init_list$intercept_single = rep(5, data_for_model$A)
-    init_list$slope_single = rep(-0.5, data_for_model$A)
+    init_list$prec_intercept_1 = rep(4, data_for_model$A)
+    init_list$prec_slope_1 = rep(0, data_for_model$A)
   }
 
   if(data_for_model$n_random_eff>0){

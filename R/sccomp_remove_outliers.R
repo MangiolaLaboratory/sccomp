@@ -331,7 +331,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff", "prec_sd", "alpha_normalised", "random_effect", "random_effect_2"),
+      pars = c(
+        "beta", "alpha",
+        "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2", "prec_sd",
+        "alpha_normalised", "random_effect", "random_effect_2"
+      ),
       sig_figs = sig_figs,
       cache_stan_model = cache_stan_model,
       ...
@@ -463,7 +467,11 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       verbose = verbose, 
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c("beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", "random_effect", "random_effect_2", "log_lik"),
+      pars = c(
+        "beta", "alpha",
+        "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2", "prec_sd",
+        "alpha_normalised", "random_effect", "random_effect_2", "log_lik"
+      ),
       cache_stan_model = cache_stan_model,
       ...
     )
