@@ -11,6 +11,7 @@ plot_1D_intervals(
     "test_composition_above_logit_fold_change"),
   show_fdr_message = TRUE,
   significance_statistic = c("pH0", "FDR")
+  sort_by = c("none", "effect", "significance", "alphabetical")
 )
 }
 \arguments{
@@ -22,7 +23,10 @@ plot_1D_intervals(
 
 \item{show_fdr_message}{Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.}
 
+
 \item{significance_statistic}{Character vector indicating which statistic to highlight. Default is "pH0".}
+
+\item{sort_by}{Character vector indicating how to sort taxa. Options are "none" (default), "effect" (by effect size), "significance" (by FDR/pH0), or "alphabetical".}
 }
 \value{
 A combined plot of 1D interval plots.
@@ -46,12 +50,12 @@ print("cmdstanr is needed to run this example.")
       "cell_group",
       "count",
       cores = 1
-    ) |> 
+    ) |>
     sccomp_test()
-    
+
   # Example usage:
-  my_plot = plot_1D_intervals(estimate)
-    
+  my_plot = plot_1D_intervals(estimate, sort_by = "effect")
+
   }
 }
 
