@@ -566,9 +566,7 @@ model{
       prec_coeff[3, a] ~ student_t(3, 0, 2); // s2
     }
   }
-  prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
-}
-}
+  prec_sd_1 ~ normal(0, 1) T[0,];
 
   // // Priors abundance - use correct scale for sum_to_zero_vector
   for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
