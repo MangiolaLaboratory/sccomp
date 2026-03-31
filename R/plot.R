@@ -326,7 +326,6 @@ plot_1D_intervals = function(
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test.
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
-#' @param model_type Character indicating "single" or "bimodal" model type. If NULL, will be auto-detected from prec_coeff dimensions.
 #' @param add_marginal_density Logical. Whether to add marginal density plots on adjusted panels. Default is TRUE.
 #'
 #' @importFrom dplyr filter arrange mutate if_else row_number bind_rows distinct slice pull with_groups
@@ -371,8 +370,7 @@ plot_2D_intervals <- function(
     test_composition_above_logit_fold_change =
       .data |> attr("test_composition_above_logit_fold_change"),
     show_fdr_message = TRUE,
-  significance_statistic = c("pH0", "FDR"),
-  model_type = NULL,
+    significance_statistic = c("pH0", "FDR"),
     add_marginal_density = TRUE
 ) {
 
@@ -402,9 +400,18 @@ plot_2D_intervals <- function(
   if(.data |> select(ends_with("FDR")) |> ncol() == 0)
     stop("sccomp says: you need to run sccomp_test() first.")
 
-  # Extract fitted model and prec_coeff
+  # Extract fitted model and mean-variability regression coefficients
   fit <- attr(.data, "fit")
-  prec_coeff_summary <- fit$summary("prec_coeff")
+  prec_intercept_1_summary <- fit$summary("prec_intercept_1")
+  prec_slope_1_summary <- fit$summary("prec_slope_1")
+  prec_intercept_2_summary <- tryCatch(
+    fit$summary("prec_intercept_2"),
+    error = function(e) tibble()
+  )
+  prec_slope_2_summary <- tryCatch(
+    fit$summary("prec_slope_2"),
+    error = function(e) tibble()
+  )
 
   # Get number of parameters (effects)
   n_params <- .data |>
@@ -412,32 +419,25 @@ plot_2D_intervals <- function(
     distinct(parameter) |>
     nrow()
 
-  # Auto-detect model type if not specified
-  if (is.null(model_type)) {
-    n_prec_coeff <- nrow(prec_coeff_summary)
-    if (n_prec_coeff == 2 * n_params) {
-      model_type <- "single"
-    } else if (n_prec_coeff == 4 * n_params) {
-      model_type <- "bimodal"
-    } else {
-      stop("Cannot auto-detect model type from prec_coeff dimensions")
-    }
+  # Derive model type from stored model metadata
+  bimodal_flag <- attr(.data, "model_input")$bimodal_mean_variability_association
+  if (is.null(bimodal_flag)) {
+    stop("sccomp says: cannot infer model type because `bimodal_mean_variability_association` is missing from model metadata.")
   }
+  bimodal_flag <- isTRUE(as.logical(bimodal_flag))
 
   # Extract parameters based on model type
-  if (model_type == "single") {
+  if (!bimodal_flag) {
     params_list <- lapply(1:n_params, function(a) {
       param_name <- .data |>
         filter(!is.na(v_effect)) |>
         distinct(parameter) |>
         slice(a) |>
         pull(parameter)
-      intercept_idx <- 2 * (a - 1) + 1
-      slope_idx <- 2 * (a - 1) + 2
       list(
         parameter = param_name,
-        intercept = prec_coeff_summary$mean[intercept_idx],
-        slope = prec_coeff_summary$mean[slope_idx]
+        intercept = prec_intercept_1_summary$mean[a],
+        slope = prec_slope_1_summary$mean[a]
       )
     })
 
@@ -461,10 +461,10 @@ plot_2D_intervals <- function(
 
       list(
         parameter = param_name,
-        intercept_1 = prec_coeff_summary$mean[1 + (a-1)*4],
-        slope_1 = prec_coeff_summary$mean[2 + (a-1)*4],
-        slope_2 = prec_coeff_summary$mean[3 + (a-1)*4],
-        intercept_2 = prec_coeff_summary$mean[4 + (a-1)*4]
+        intercept_1 = prec_intercept_1_summary$mean[a],
+        slope_1 = prec_slope_1_summary$mean[a],
+        slope_2 = prec_slope_2_summary$mean[a],
+        intercept_2 = prec_intercept_2_summary$mean[a]
       )
     })
 
@@ -482,7 +482,7 @@ plot_2D_intervals <- function(
   # "unadjusted" panel: ADD BACK entanglement to show raw alpha
   # "adjusted" panel: USE v_effect AS-IS
 
-  if (model_type == "single") {
+  if (!bimodal_flag) {
     .data_unadjusted_list <- lapply(params_list, function(params) {
       .data %>%
         filter(parameter == params$parameter) %>%
@@ -603,7 +603,7 @@ plot_2D_intervals <- function(
   }
 
   # Prepare regression line data based on model type
-  if (model_type == "single") {
+  if (!bimodal_flag) {
     regression_data_all <- lapply(params_list, function(params) {
       unadj_param <- paste0(params$parameter, ", unadjusted")
       param_data <- .data_plot %>% filter(parameter == unadj_param)
@@ -697,6 +697,7 @@ plot_2D_intervals <- function(
 
   # Add caption based on model type
   if (significance_statistic == "FDR" && show_fdr_message) {
+
 
     plot <- plot + ggplot2::labs(caption = caption_text)
     plot <- plot + theme(plot.caption = ggplot2::element_text(hjust = 0))
@@ -822,7 +823,7 @@ plot_scatterplot = function(
           inner_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group, !!.sample)) ,
         color="blue", fill="blue",
         span = 1
-      )
+    )
   }
   
   if(
@@ -875,7 +876,7 @@ plot_scatterplot = function(
         )
 
       # Add regression lines
-      if (model_type == "single") {
+      if (!bimodal_flag) {
         reg_data <- regression_data_all %>% filter(parameter == param)
         if(!is.null(reg_data) && nrow(reg_data) > 0) {
           p_param <- p_param +
@@ -941,11 +942,11 @@ plot_scatterplot = function(
       # Add marginal density for adjusted panels (not Intercept)
       if (str_detect(param, "adjusted") && !str_detect(param, "unadjusted") && !str_detect(param, "Intercept")) {
 
-        if (model_type == "single") {
+        if (!bimodal_flag) {
           param_idx <- which(sapply(params_list, function(p) paste0(p$parameter, ", adjusted") == param))
 
           if (length(param_idx) > 0) {
-            intercept_var_name <- paste0("prec_coeff[1,", param_idx, "]")
+            intercept_var_name <- paste0("prec_intercept_1[", param_idx, "]")
 
             tryCatch({
               intercept_draws <- fit$draws(variables = intercept_var_name, format = "draws_df")
@@ -984,8 +985,8 @@ plot_scatterplot = function(
           param_idx <- which(sapply(params_list, function(p) paste0(p$parameter, ", adjusted") == param))
 
           if (length(param_idx) > 0) {
-            intercept1_var_name <- paste0("prec_coeff[1,", param_idx, "]")
-            intercept2_var_name <- paste0("prec_coeff[4,", param_idx, "]")
+            intercept1_var_name <- paste0("prec_intercept_1[", param_idx, "]")
+            intercept2_var_name <- paste0("prec_intercept_2[", param_idx, "]")
 
             tryCatch({
               intercept1_draws <- fit$draws(variables = intercept1_var_name, format = "draws_df")
@@ -1062,7 +1063,7 @@ plot_scatterplot = function(
       )
 
     # Add regression lines
-    if (model_type == "single") {
+    if (!bimodal_flag) {
       if(!is.null(regression_data_all) && nrow(regression_data_all) > 0) {
         p <- p + geom_line(data = regression_data_all, mapping = aes(c_effect, v_effect),
                            color = "#0072B2", linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE)

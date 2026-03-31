@@ -69,12 +69,11 @@ parameters {
 
   array[C] vector[M] beta_raw; // Each row is a vector of length M
   matrix[A, M] alpha; // Variability
-  array[A * bimodal_mean_variability_association] ordered[2] intercept_pair;
-  array[A * (1 - bimodal_mean_variability_association)] real intercept_single;
-  array[A * bimodal_mean_variability_association] real<upper=0> slope_1;
-  array[A * bimodal_mean_variability_association] real<upper=0> slope_2;
-  array[A * (1 - bimodal_mean_variability_association)] real<upper=0> slope_single;
-  real<lower=0> prec_sd_1;
+  array[A] real prec_intercept_1;
+  array[A * bimodal_mean_variability_association] real prec_intercept_2;
+  array[A] real prec_slope_1;
+  array[A * bimodal_mean_variability_association] real prec_slope_2;
+  real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // Using regular vectors instead of sum_to_zero_vector to avoid floating-point precision issues

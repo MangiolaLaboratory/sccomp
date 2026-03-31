@@ -76,7 +76,10 @@ incorporate_parameters_into_fit_object = function(fit) {
     # Parameters block
     "beta_raw",
     "alpha",
-    "prec_coeff",
+    "prec_intercept_1",
+    "prec_slope_1",
+    "prec_intercept_2",
+    "prec_slope_2",
     "prec_sd",
     "mix_p",
     "random_effect_raw",

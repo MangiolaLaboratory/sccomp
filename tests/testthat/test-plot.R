@@ -304,7 +304,7 @@ test_that("significance_statistic and show_fdr_message work via plot() S3 method
   expect_true(grepl("Bayesian FDR", fdr_plot$labels$caption))
   expect_true(is.null(ph0_plot$labels$caption) || !grepl("Bayesian FDR", ph0_plot$labels$caption))
 })
-test_that("plot_2D_intervals includes regression line from prec_coeff parameters", {
+test_that("plot_2D_intervals includes regression line from prec parameters", {
   skip_cmdstan()
 
   plot_2d <- my_estimate_with_variance |>
@@ -314,10 +314,13 @@ test_that("plot_2D_intervals includes regression line from prec_coeff parameters
   expect_s3_class(plot_2d, "patchwork")
 
   fit <- attr(my_estimate_with_variance |> sccomp_test(), "fit")
-  prec_coeff_summary <- fit$summary("prec_coeff")
+  prec_intercept_summary <- fit$summary("prec_intercept_1")
+  prec_slope_summary <- fit$summary("prec_slope_1")
 
-  expect_true(nrow(prec_coeff_summary) >= 2)
-  expect_true(all(c("prec_coeff[1,1]", "prec_coeff[2,1]") %in% prec_coeff_summary$variable))
+  expect_true(nrow(prec_intercept_summary) >= 1)
+  expect_true(nrow(prec_slope_summary) >= 1)
+  expect_true(any(grepl("^prec_intercept_1\\[1\\]$", prec_intercept_summary$variable)))
+  expect_true(any(grepl("^prec_slope_1\\[1\\]$", prec_slope_summary$variable)))
 
   expect_no_error(
     my_estimate_with_variance |>
