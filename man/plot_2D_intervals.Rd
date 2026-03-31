@@ -10,8 +10,7 @@ plot_2D_intervals(
   test_composition_above_logit_fold_change = attr(.data,
     "test_composition_above_logit_fold_change"),
   show_fdr_message = TRUE,
-  significance_statistic = c("pH0", "FDR")
-  model_type = NULL,
+  significance_statistic = c("pH0", "FDR"),
   add_marginal_density = TRUE
 )
 }
@@ -25,8 +24,6 @@ plot_2D_intervals(
 \item{show_fdr_message}{Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.}
 
 \item{significance_statistic}{Character vector indicating which statistic to highlight. Default is "pH0".}
-
-\item{model_type}{Character indicating "single" or "bimodal" model type. If NULL, will be auto-detected from prec_coeff dimensions.}
 
 \item{add_marginal_density}{Logical. Whether to add marginal density plots on adjusted panels. Default is TRUE.}
 }
