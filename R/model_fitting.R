@@ -3,7 +3,7 @@ fit_model = function(
     data_for_model, model_name, censoring_iteration = 1, cores = detectCores(), quantile = 0.95,
     warmup_samples = 300, approximate_posterior_inference = NULL, inference_method, verbose = TRUE,
     seed , pars = c("beta", "alpha", "prec_sd_1", "intercept_single", "slope_single",
-                    "intercept_pair", "slope_1", "slope_2", "prec_sd_2"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000,
+                    "intercept_pair", "slope_1", "slope_2"), output_samples = NULL, chains=NULL, max_sampling_iterations = 20000,
     output_directory = "sccomp_draws_files",
     sig_figs = 9,
     cache_stan_model = sccomp_stan_models_cache_dir,
@@ -56,7 +56,6 @@ fit_model = function(
     init_list$intercept_pair = replicate(data_for_model$A, c(-1, 3), simplify = FALSE)
     init_list$slope_1 = rep(-0.5, data_for_model$A)
     init_list$slope_2 = rep(-0.5, data_for_model$A)
-    init_list$prec_sd_2 = c(1)
   } else {
     init_list$intercept_single = rep(5, data_for_model$A)
     init_list$slope_single = rep(-0.5, data_for_model$A)
