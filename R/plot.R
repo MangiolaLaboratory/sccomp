@@ -483,22 +483,22 @@ plot_2D_intervals <- function(
   }
 
   # v_effect already comes from alpha_normalised (adjusted in Stan)
-  # "unadjusted" panel: ADD BACK entanglement to show raw alpha
+  # "raw" panel: ADD BACK entanglement to show raw alpha
   # "adjusted" panel: USE v_effect AS-IS
 
   if (!bimodal_flag) {
-    .data_unadjusted_list <- lapply(params_list, function(params) {
+    .data_raw_list <- lapply(params_list, function(params) {
       .data %>%
         filter(parameter == params$parameter) %>%
         mutate(
           v_effect = v_effect - params$slope * c_effect,
           v_lower = v_lower - params$slope * c_effect,
           v_upper = v_upper - params$slope * c_effect,
-          parameter = paste0(params$parameter, ", unadjusted")
+          parameter = paste0(params$parameter, ", raw")
         )
     })
   } else {
-    .data_unadjusted_list <- lapply(params_list, function(params) {
+    .data_raw_list <- lapply(params_list, function(params) {
       .data %>%
         filter(parameter == params$parameter) %>%
         rowwise() %>%
@@ -514,14 +514,14 @@ plot_2D_intervals <- function(
           v_effect = v_effect - slope_to_use * c_effect,
           v_lower = v_lower - slope_to_use * c_effect,
           v_upper = v_upper - slope_to_use * c_effect,
-          parameter = paste0(params$parameter, ", unadjusted")
+          parameter = paste0(params$parameter, ", raw")
         ) %>%
         ungroup() %>%
         select(-raw_v_comp1, -raw_v_comp2, -pred_comp1, -pred_comp2, -slope_to_use)
     })
   }
 
-  .data_unadjusted <- bind_rows(.data_unadjusted_list)
+  .data_raw <- bind_rows(.data_raw_list)
 
   # Adjusted panel: v_effect as-is (already from alpha_normalised)
   .data_adjusted_list <- lapply(params_list, function(params) {
@@ -531,12 +531,12 @@ plot_2D_intervals <- function(
   })
   .data_adjusted <- bind_rows(.data_adjusted_list)
 
-  .data_plot <- bind_rows(.data_unadjusted, .data_adjusted)
+  .data_plot <- bind_rows(.data_raw, .data_adjusted)
 
   # Set parameter factor levels
   param_order <- c()
   for(p in params_list) {
-    param_order <- c(param_order, paste0(p$parameter, ", unadjusted"), paste0(p$parameter, ", adjusted"))
+    param_order <- c(param_order, paste0(p$parameter, ", raw"), paste0(p$parameter, ", adjusted"))
   }
 
   .data_plot$parameter <- factor(.data_plot$parameter, levels = param_order)
@@ -552,7 +552,7 @@ plot_2D_intervals <- function(
           cell_type_label = if_else(
             row_number() <= 3 &
               c_FDR < significance_threshold &
-              str_detect(parameter, "unadjusted"),
+              str_detect(parameter, ", adjusted$"),
             !!sym(.cell_group),
             ""
           )
@@ -566,8 +566,7 @@ plot_2D_intervals <- function(
           cell_type_label = if_else(
             row_number() <= 3 &
               v_FDR < significance_threshold &
-              str_detect(parameter, "adjusted") &
-              !str_detect(parameter, "unadjusted") &
+              str_detect(parameter, ", adjusted$") &
               cell_type_label == "",
             !!sym(.cell_group),
             cell_type_label
@@ -579,13 +578,13 @@ plot_2D_intervals <- function(
   if (significance_statistic == "FDR") {
     color_c_aes <- aes(
       xmin = c_lower, xmax = c_upper,
-      color = c_FDR < significance_threshold & str_detect(parameter, "adjusted") & !str_detect(parameter, "unadjusted"),
-      alpha = c_FDR < significance_threshold & str_detect(parameter, "adjusted") & !str_detect(parameter, "unadjusted")
+      color = c_FDR < significance_threshold & str_detect(parameter, ", adjusted$"),
+      alpha = c_FDR < significance_threshold & str_detect(parameter, ", adjusted$")
     )
     color_v_aes <- aes(
       ymin = v_lower, ymax = v_upper,
-      color = v_FDR < significance_threshold & str_detect(parameter, "adjusted") & !str_detect(parameter, "unadjusted"),
-      alpha = v_FDR < significance_threshold & str_detect(parameter, "adjusted") & !str_detect(parameter, "unadjusted")
+      color = v_FDR < significance_threshold & str_detect(parameter, ", adjusted$"),
+      alpha = v_FDR < significance_threshold & str_detect(parameter, ", adjusted$")
     )
     color_scale <- scale_color_manual(values = c("#D3D3D3", "#E41A1C"))
     alpha_scale <- scale_alpha_manual(values = c(0.4, 1))
@@ -593,13 +592,13 @@ plot_2D_intervals <- function(
   } else {
     color_c_aes <- aes(
       xmin = c_lower, xmax = c_upper,
-      color = c_pH0 < significance_threshold & str_detect(parameter, "unadjusted"),
-      alpha = c_pH0 < significance_threshold & str_detect(parameter, "unadjusted")
+      color = c_pH0 < significance_threshold & str_detect(parameter, ", adjusted$"),
+      alpha = c_pH0 < significance_threshold & str_detect(parameter, ", adjusted$")
     )
     color_v_aes <- aes(
       ymin = v_lower, ymax = v_upper,
-      color = v_pH0 < significance_threshold & str_detect(parameter, "unadjusted"),
-      alpha = v_pH0 < significance_threshold & str_detect(parameter, "unadjusted")
+      color = v_pH0 < significance_threshold & str_detect(parameter, ", adjusted$"),
+      alpha = v_pH0 < significance_threshold & str_detect(parameter, ", adjusted$")
     )
     color_scale <- scale_color_manual(values = c("#D3D3D3", "#377EB8"))
     alpha_scale <- scale_alpha_manual(values = c(0.4, 1))
@@ -609,8 +608,8 @@ plot_2D_intervals <- function(
   # Prepare regression line data based on model type
   if (!bimodal_flag) {
     regression_data_all <- lapply(params_list, function(params) {
-      unadj_param <- paste0(params$parameter, ", unadjusted")
-      param_data <- .data_plot %>% filter(parameter == unadj_param)
+      raw_param <- paste0(params$parameter, ", raw")
+      param_data <- .data_plot %>% filter(parameter == raw_param)
       if(nrow(param_data) == 0) return(NULL)
 
       c_range <- range(param_data$c_effect, na.rm = TRUE)
@@ -620,7 +619,7 @@ plot_2D_intervals <- function(
       data.frame(
         c_effect = c_seq,
         v_effect = v_pred,
-        parameter = unadj_param,
+        parameter = raw_param,
         stringsAsFactors = FALSE
       )
     }) %>% bind_rows()
@@ -643,8 +642,8 @@ plot_2D_intervals <- function(
 
   } else {
     regression_data_all <- lapply(params_list, function(params) {
-      unadj_param <- paste0(params$parameter, ", unadjusted")
-      param_data <- .data_plot %>% filter(parameter == unadj_param)
+      raw_param <- paste0(params$parameter, ", raw")
+      param_data <- .data_plot %>% filter(parameter == raw_param)
       if(nrow(param_data) == 0) return(NULL)
 
       c_range <- range(param_data$c_effect, na.rm = TRUE)
@@ -656,11 +655,11 @@ plot_2D_intervals <- function(
       bind_rows(
         data.frame(
           c_effect = c_seq, v_effect = v_pred_1,
-          parameter = unadj_param, component = "Component 1"
+          parameter = raw_param, component = "Component 1"
         ),
         data.frame(
           c_effect = c_seq, v_effect = v_pred_2,
-          parameter = unadj_param, component = "Component 2"
+          parameter = raw_param, component = "Component 2"
         )
       )
     }) %>% bind_rows()
@@ -791,7 +790,7 @@ plot_2D_intervals <- function(
         guides(color = guide_legend(title = legend_title), alpha = "none")
 
       # Add marginal density for adjusted panels (not Intercept)
-      if (str_detect(param, "adjusted") && !str_detect(param, "unadjusted") && !str_detect(param, "Intercept")) {
+      if (str_detect(param, ", adjusted$") && !str_detect(param, "Intercept")) {
 
         if (!bimodal_flag) {
           param_idx <- which(sapply(params_list, function(p) paste0(p$parameter, ", adjusted") == param))
