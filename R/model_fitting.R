@@ -52,24 +52,24 @@ fit_model = function(
     mix_p = 0.1
   )
 
-  # Mean-variability regression: prec_coeff[1|4,a] ~ student_t(3, 4, 2), prec_coeff[2|3,a] ~ student_t(3, 0, 2).
-  # Intercepts are modelled as prec_intercept_1 (always) and prec_intercept_2 (bimodal only).
   has_variability_intercept <- isTRUE(as.logical(data_for_model$intercept_in_design))
-  if (has_variability_intercept && data_for_model$A > 1) {
-    init_prec_intercept_1 <- c(4, rep(0, data_for_model$A - 1))
-    init_prec_intercept_2 <- c(5, rep(0, data_for_model$A - 1))
-  } else {
-    init_prec_intercept_1 <- rep(4, data_for_model$A)
-    init_prec_intercept_2 <- rep(5, data_for_model$A)
+  bimodal <- data_for_model$bimodal_mean_variability_association == 1L
+  init_list$prec_intercept <- vector("list", data_for_model$A)
+  for (a in seq_len(data_for_model$A)) {
+    intercept_col <- has_variability_intercept && a == 1L
+    init_list$prec_intercept[[a]] <- if (bimodal) {
+      if (intercept_col) c(4, 5)
+      else if (has_variability_intercept) c(0, 1)
+      else c(4, 5)
+    } else {
+      if (intercept_col) c(4)
+      else if (has_variability_intercept) c(0)
+      else c(4)
+    }
   }
+  init_list$prec_slope_1 = rep(0, data_for_model$A)
   if (data_for_model$bimodal_mean_variability_association == 1) {
-    init_list$prec_intercept_1 = init_prec_intercept_1
-    init_list$prec_intercept_2 = init_prec_intercept_2
-    init_list$prec_slope_1 = rep(0, data_for_model$A)
     init_list$prec_slope_2 = rep(0, data_for_model$A)
-  } else {
-    init_list$prec_intercept_1 = init_prec_intercept_1
-    init_list$prec_slope_1 = rep(0, data_for_model$A)
   }
 
   if(data_for_model$n_random_eff>0){

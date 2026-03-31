@@ -69,8 +69,7 @@ parameters {
 
   array[C] vector[M] beta_raw; // Each row is a vector of length M
   matrix[A, M] alpha; // Variability
-  array[A] real prec_intercept_1;
-  array[A * bimodal_mean_variability_association] real prec_intercept_2;
+  array[A] ordered[1 + bimodal_mean_variability_association] prec_intercept;
   array[A] real prec_slope_1;
   array[A * bimodal_mean_variability_association] real prec_slope_2;
   real<lower=0> prec_sd;
@@ -97,6 +96,16 @@ parameters {
   // If I have just one group
   array[is_random_effect>0] real zero_random_effect;
 
+}
+
+transformed parameters {
+  array[A] real prec_intercept_1;
+  array[A * bimodal_mean_variability_association] real prec_intercept_2;
+  for (a in 1:A) {
+    prec_intercept_1[a] = prec_intercept[a][1];
+    if (bimodal_mean_variability_association == 1)
+      prec_intercept_2[a] = prec_intercept[a][2];
+  }
 }
 
 generated quantities{
