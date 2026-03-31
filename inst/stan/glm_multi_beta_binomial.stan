@@ -18,26 +18,27 @@ functions{
   }
 
 
-    real abundance_variability_regression(row_vector variability, row_vector abundance, array[] real prec_coeff, real prec_sd_1, real prec_sd_2, int bimodal_mean_variability_association, real mix_p){
+    real abundance_variability_regression(row_vector variability, row_vector abundance, array[] real prec_coeff, real prec_sd, int bimodal_mean_variability_association, real mix_p){
 
       real lp = 0;
-      int nu = 3; // df
+      int nu = 3;
       // If mean-variability association is bimodal such as for single-cell RNA use mixed model
       if(bimodal_mean_variability_association == 1){
         for(m in 1:cols(variability))
         lp += log_mix(mix_p,
         student_t_lpdf(variability[m] | nu,
                        abundance[m] * prec_coeff[2] + prec_coeff[1],
-                       prec_sd_1), // c1
+                       prec_sd),
         student_t_lpdf(variability[m] | nu,
                        abundance[m] * prec_coeff[3] + prec_coeff[4],
-                       prec_sd_2)    // c2  // -0.73074903 is what we observe in single-cell dataset Therefore it is safe to fix it for this mixture model as it just want to capture few possible outlier in the association
+                       prec_sd)
         );
 
         // If no bimodal
       } else {
-        lp =  student_t_lpdf(variability | nu,
-                             abundance * prec_coeff[2] + prec_coeff[1], prec_sd_1);
+        lp = student_t_lpdf(variability | nu,
+                            abundance * prec_coeff[2] + prec_coeff[1],
+                            prec_sd);
       }
 
       return(lp);
@@ -351,8 +352,7 @@ parameters{
   array[A * bimodal_mean_variability_association] real<upper=0> slope_1;
   array[A * bimodal_mean_variability_association] real<upper=0> slope_2;
   array[A * (1 - bimodal_mean_variability_association)] real<upper=0> slope_single;
-  real<lower=0> prec_sd_1;  // c1
-  array[bimodal_mean_variability_association] real<lower=0> prec_sd_2;  // c2
+  real<lower=0> prec_sd_1;  // residual scale for mean–variability association (single or bimodal)
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // array of sum_to_zero_vector for each random effect
