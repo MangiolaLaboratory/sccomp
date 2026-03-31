@@ -603,16 +603,11 @@ model{
 generated quantities {
   matrix[A, M] alpha_normalised = alpha;
 
-    // Entanglement adjustment
-  if(intercept_in_design){
-    if(A > 1)
-      for(a in 2:A)
-        alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2, a]);
-  }
-  else{
+// Entanglement adjustment
+
     for(a in 1:A)
       alpha_normalised[a] = alpha[a] - (beta[a] * prec_coeff[2, a]);
-  }
+
 
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
