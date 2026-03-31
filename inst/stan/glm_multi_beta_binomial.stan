@@ -543,10 +543,18 @@ model{
     mix_p ~ beta(1, 1);
 
   for(a in 1:A){
-    prec_intercept_1[a] ~ student_t(3, 4, 2); // i1
+    // If design has intercept, first column gets intercept-centred prior, others are centred at 0.
+    if(intercept_in_design == 1 && a == 1){
+      prec_intercept_1[a] ~ student_t(3, 4, 2); // i1, intercept column
+      if(bimodal_mean_variability_association == 1)
+        prec_intercept_2[a] ~ student_t(3, 4, 2); // i2, intercept column
+    } else {
+      prec_intercept_1[a] ~ student_t(3, 0, 2); // i1, non-intercept columns
+      if(bimodal_mean_variability_association == 1)
+        prec_intercept_2[a] ~ student_t(3, 0, 2); // i2, non-intercept columns
+    }
     prec_slope_1[a] ~ student_t(3, 0, 2); // s1
     if(bimodal_mean_variability_association == 1){
-      prec_intercept_2[a] ~ student_t(3, 4, 2); // i2
       prec_slope_2[a] ~ student_t(3, 0, 2); // s2
     }
   }
