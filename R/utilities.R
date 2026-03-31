@@ -707,6 +707,34 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
 #' @importFrom purrr map_int
 #' @importFrom stats as.formula
 #'
+#' Match variability to composition design columns
+#'
+#' @param X Composition design matrix
+#' @param Xa Variability design matrix
+#'
+#' @return Integer vector indexing composition columns for each variability column
+#' @keywords internal
+#' @noRd
+get_variability_to_composition_map = function(X, Xa) {
+  variability_to_composition_map = match(colnames(Xa), colnames(X))
+
+  if (any(is.na(variability_to_composition_map))) {
+    missing_terms = colnames(Xa)[is.na(variability_to_composition_map)]
+    stop(
+      sprintf(
+        paste0(
+          "sccomp says: every variability design term must also be present ",
+          "in the composition design matrix. Missing terms: %s"
+        ),
+        paste(missing_terms, collapse = ", ")
+      )
+    )
+  }
+
+  as.integer(variability_to_composition_map)
+}
+
+#'
 #' @keywords internal
 #' @noRd
 #'
@@ -774,6 +802,8 @@ data_spread_to_model_input =
         !!.sample,
         accept_NA_as_average_effect = accept_NA_as_average_effect
       )
+
+    variability_to_composition_map = get_variability_to_composition_map(X, Xa)
     
     XA = Xa %>%
       as_tibble() %>%
@@ -914,6 +944,7 @@ data_spread_to_model_input =
         X = X,
         XA = XA,
         Xa = Xa,
+        variability_to_composition_map = variability_to_composition_map,
         C = ncol(X),
         A = A,
         Ar = Ar,
