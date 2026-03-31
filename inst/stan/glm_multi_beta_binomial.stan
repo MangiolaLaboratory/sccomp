@@ -285,6 +285,7 @@ data{
   matrix[N, C] X;
   matrix[Ar, A] XA; // The unique variability design
   matrix[N, A] Xa; // The variability design
+  array[A] int<lower=1, upper=C> variability_to_composition_map;
 
   // Truncation
   int is_truncated;
@@ -523,7 +524,7 @@ model{
     for(a in 1:A){
       target += abundance_variability_regression(
         alpha[a],
-        beta[a],
+        beta[variability_to_composition_map[a]],
         prec_intercept_1[a],
         prec_slope_1[a],
         bimodal_mean_variability_association == 1 ? prec_slope_2[a] : 0,
@@ -596,7 +597,7 @@ generated quantities {
 // Entanglement adjustment
 
     for(a in 1:A)
-      alpha_normalised[a] = alpha[a] - (beta[a] * prec_slope_1[a]);
+      alpha_normalised[a] = alpha[a] - (beta[variability_to_composition_map[a]] * prec_slope_1[a]);
 
 
   // LOO
