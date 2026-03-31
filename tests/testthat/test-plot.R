@@ -40,6 +40,18 @@ if (instantiate::stan_cmdstan_exists()){
       inference_method = "pathfinder",
       max_sampling_iterations = n_iterations, verbose=FALSE
     )
+
+  my_estimate_intercept_only =
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ 1,
+      formula_variability = ~ 1,
+      "sample", "cell_group",
+      cores = 1,
+      inference_method = "pathfinder",
+      max_sampling_iterations = n_iterations,
+      verbose = FALSE
+    )
 }
 
 # Test for plot_1d_intervals function
@@ -51,6 +63,15 @@ test_that("plot_1d_intervals function works correctly", {
     plot_1D_intervals(
       significance_threshold = 0.025
     ) |>
+    expect_s3_class("patchwork")
+})
+
+test_that("plot_1D_intervals works with intercept-only composition", {
+  skip_cmdstan()
+
+  my_estimate_intercept_only |>
+    sccomp_test() |>
+    plot_1D_intervals() |>
     expect_s3_class("patchwork")
 })
 
