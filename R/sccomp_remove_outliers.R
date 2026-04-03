@@ -513,16 +513,13 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   # Auto-cleanup draw files if requested
   if (cleanup_draw_files) {
-    if (dir.exists(output_directory)) {
-      files_deleted <- list.files(output_directory, pattern = "\\.csv$", full.names = TRUE)
-      if (length(files_deleted) > 0) {
-        file.remove(files_deleted)
-        if (verbose) {
-          message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'", 
-                         length(files_deleted), output_directory))
-        }
-      }
-    }
+    incorporate_parameters_into_fit_object(fit3)
+    attr(estimate_tibble, "fit") <- fit3
+
+    fit_csv_files <- fit3$output_files()
+    suppressWarnings(unlink(fit_csv_files, force = TRUE))
+    message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'",  length(fit_csv_files), output_directory))
+
   }
   
   estimate_tibble

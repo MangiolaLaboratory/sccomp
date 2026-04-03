@@ -48,7 +48,7 @@ fit_model = function(
                      rep(0, (data_for_model$A - 1) * data_for_model$M)),
                    nrow = data_for_model$A, byrow = TRUE),
     beta_raw = matrix(0, data_for_model$C, data_for_model$M),
-    prec_sd = 1,
+    prec_sd = rep(1, data_for_model$A),
     mix_p = 0.1
   )
 

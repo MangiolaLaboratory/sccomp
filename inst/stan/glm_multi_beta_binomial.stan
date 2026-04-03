@@ -360,7 +360,7 @@ parameters{
   // Mean-variability slopes
   array[A] real prec_slope_1; // s1, always present
   array[A * bimodal_mean_variability_association] real prec_slope_2; // s2, only for bimodal
-  real<lower=0> prec_sd;  // residual scale for mean–variability association (single or bimodal)
+  array[A] real<lower=0> prec_sd;  // residual scale per effect for mean-variability association
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // array of sum_to_zero_vector for each random effect
@@ -529,18 +529,18 @@ model{
         prec_slope_1[a],
         bimodal_mean_variability_association == 1 ? prec_slope_2[a] : 0,
         bimodal_mean_variability_association == 1 ? prec_intercept_2[a] : 0,
-        prec_sd,
+        prec_sd[a],
         bimodal_mean_variability_association,
         mix_p_scalar
       );
     }
   } else {
     if(intercept_in_design || A > 1){
-      for(a in 1:A_intercept_columns)  alpha[a] ~ student_t( 3, prior_prec_intercept[1], prec_sd[a] );
+      for(a in 1:A_intercept_columns)  alpha[a] ~ student_t(3, prior_prec_intercept[1], prec_sd[a]);
       if(A > A_intercept_columns)
         for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ student_t(3, 0, prec_sd[a]);
     } else {
-      alpha[1] ~ student_t( 3, prior_prec_intercept[1], prec_sd[a] );
+      alpha[1] ~ student_t(3, prior_prec_intercept[1], prec_sd[1]);
     }
   }
 
@@ -566,7 +566,7 @@ model{
       prec_slope_2[a] ~ student_t(3, 0, 2); // s2
     }
   }
-  prec_sd ~ normal(0, 1) T[0,];
+  for(a in 1:A) prec_sd[a] ~ normal(0, 1) T[0,];
 
   // // Priors abundance - use correct scale for sum_to_zero_vector
   for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );

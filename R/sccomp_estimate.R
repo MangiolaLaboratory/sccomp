@@ -714,16 +714,10 @@ sccomp_estimate.data.frame <- function(.data,
     # Update the fit attribute with the modified fit object
     attr(res, "fit") <- fit_obj
     
-    if (dir.exists(output_directory)) {
-      files_deleted <- list.files(output_directory, pattern = "\\.csv$", full.names = TRUE)
-      if (length(files_deleted) > 0) {
-        file.remove(files_deleted)
-        if (verbose) {
-          message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'", 
-                         length(files_deleted), output_directory))
-        }
-      }
-    }
+    fit_csv_files <- fit_obj$output_files()
+    suppressWarnings(unlink(fit_csv_files, force = TRUE))
+    message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'",  length(fit_csv_files), output_directory))
+
   }
   
   res |>

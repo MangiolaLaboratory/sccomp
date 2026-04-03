@@ -60,18 +60,18 @@ test_that("plot_1d_intervals function works correctly", {
 
   my_estimate |>
     sccomp_test() |>
-    plot_1D_intervals(
+    sccomp_plot_intervals_1D(
       significance_threshold = 0.025
     ) |>
     expect_s3_class("patchwork")
 })
 
-test_that("plot_1D_intervals works with intercept-only composition", {
+test_that("sccomp_plot_intervals_1D works with intercept-only composition", {
   skip_cmdstan()
 
   my_estimate_intercept_only |>
     sccomp_test() |>
-    plot_1D_intervals() |>
+    sccomp_plot_intervals_1D() |>
     expect_s3_class("patchwork")
 })
 
@@ -81,54 +81,54 @@ test_that("plot_2d_intervals function works correctly", {
 
   my_estimate_with_variance |>
     sccomp_test() |>
-    plot_2D_intervals(
+    sccomp_plot_intervals_2D(
       significance_threshold = 0.025
     ) |>
     expect_s3_class("patchwork")
 })
 
-test_that("plot_1D_intervals accepts factor argument", {
+test_that("sccomp_plot_intervals_1D accepts factor argument", {
   skip_cmdstan()
 
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(factor = "type")
+      sccomp_plot_intervals_1D(factor = "type")
   )
 
   expect_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(factor = "not_a_factor"),
+      sccomp_plot_intervals_1D(factor = "not_a_factor"),
     "is not among model factors"
   )
 })
 
-test_that("plot_2D_intervals accepts factor argument", {
+test_that("sccomp_plot_intervals_2D accepts factor argument", {
   skip_cmdstan()
 
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(factor = "type")
+      sccomp_plot_intervals_2D(factor = "type")
   )
 
   expect_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(factor = "not_a_factor"),
+      sccomp_plot_intervals_2D(factor = "not_a_factor"),
     "is not among model factors"
   )
 })
 
 # Test for show_fdr_message parameter in plot functions
-test_that("show_fdr_message parameter works correctly in plot_1D_intervals", {
+test_that("show_fdr_message parameter works correctly in sccomp_plot_intervals_1D", {
    skip_cmdstan()
 
   # Test with show_fdr_message = TRUE (default)
   plot_with_message <- my_estimate |>
     sccomp_test() |>
-    plot_1D_intervals(
+    sccomp_plot_intervals_1D(
       significance_threshold = 0.025,
       show_fdr_message = TRUE
     )
@@ -138,7 +138,7 @@ test_that("show_fdr_message parameter works correctly in plot_1D_intervals", {
   # Test with show_fdr_message = FALSE
   plot_without_message <- my_estimate |>
     sccomp_test() |>
-    plot_1D_intervals(
+    sccomp_plot_intervals_1D(
       significance_threshold = 0.025,
       show_fdr_message = FALSE
     )
@@ -150,13 +150,13 @@ test_that("show_fdr_message parameter works correctly in plot_1D_intervals", {
   expect_no_error(plot_without_message)
 })
 
-test_that("show_fdr_message parameter works correctly in plot_2D_intervals", {
+test_that("show_fdr_message parameter works correctly in sccomp_plot_intervals_2D", {
    skip_cmdstan()
 
   # Test with show_fdr_message = TRUE (default)
   plot_with_message <- my_estimate_with_variance |>
     sccomp_test() |>
-    plot_2D_intervals(
+    sccomp_plot_intervals_2D(
       significance_threshold = 0.025,
       show_fdr_message = TRUE
     )
@@ -166,7 +166,7 @@ test_that("show_fdr_message parameter works correctly in plot_2D_intervals", {
   # Test with show_fdr_message = FALSE
   plot_without_message <- my_estimate_with_variance |>
     sccomp_test() |>
-    plot_2D_intervals(
+    sccomp_plot_intervals_2D(
       significance_threshold = 0.025,
       show_fdr_message = FALSE
     )
@@ -185,111 +185,111 @@ test_that("show_fdr_message parameter accepts logical values", {
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(show_fdr_message = TRUE)
+      sccomp_plot_intervals_1D(show_fdr_message = TRUE)
   )
 
   # Test with FALSE
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(show_fdr_message = FALSE)
+      sccomp_plot_intervals_1D(show_fdr_message = FALSE)
   )
 
   # Test with TRUE for 2D plots
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(show_fdr_message = TRUE)
+      sccomp_plot_intervals_2D(show_fdr_message = TRUE)
   )
 
   # Test with FALSE for 2D plots
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(show_fdr_message = FALSE)
+      sccomp_plot_intervals_2D(show_fdr_message = FALSE)
   )
 })
 
 test_that("plot functions work with different significance thresholds", {
    skip_cmdstan()
 
-  # Test plot_1D_intervals with different thresholds
+  # Test sccomp_plot_intervals_1D with different thresholds
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(significance_threshold = 0.01)
+      sccomp_plot_intervals_1D(significance_threshold = 0.01)
   )
 
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(significance_threshold = 0.1)
+      sccomp_plot_intervals_1D(significance_threshold = 0.1)
   )
 
-  # Test plot_2D_intervals with different thresholds
+  # Test sccomp_plot_intervals_2D with different thresholds
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(significance_threshold = 0.01)
+      sccomp_plot_intervals_2D(significance_threshold = 0.01)
   )
 
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(significance_threshold = 0.1)
+      sccomp_plot_intervals_2D(significance_threshold = 0.1)
   )
 })
 
-test_that("significance_statistic argument works for plot_1D_intervals", {
+test_that("significance_statistic argument works for sccomp_plot_intervals_1D", {
    skip_cmdstan()
 
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(significance_statistic = "FDR")
+      sccomp_plot_intervals_1D(significance_statistic = "FDR")
   )
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(significance_statistic = "pH0")
+      sccomp_plot_intervals_1D(significance_statistic = "pH0")
   )
 })
 
-test_that("significance_statistic argument works for plot_2D_intervals", {
+test_that("significance_statistic argument works for sccomp_plot_intervals_2D", {
    skip_cmdstan()
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(significance_statistic = "FDR")
+      sccomp_plot_intervals_2D(significance_statistic = "FDR")
   )
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(significance_statistic = "pH0")
+      sccomp_plot_intervals_2D(significance_statistic = "pH0")
   )
 })
 
-test_that("show_fdr_message argument works for plot_1D_intervals and plot_2D_intervals", {
+test_that("show_fdr_message argument works for sccomp_plot_intervals_1D and sccomp_plot_intervals_2D", {
    skip_cmdstan()
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(significance_statistic = "FDR", show_fdr_message = TRUE)
+      sccomp_plot_intervals_1D(significance_statistic = "FDR", show_fdr_message = TRUE)
   )
   expect_no_error(
     my_estimate |>
       sccomp_test() |>
-      plot_1D_intervals(significance_statistic = "FDR", show_fdr_message = FALSE)
+      sccomp_plot_intervals_1D(significance_statistic = "FDR", show_fdr_message = FALSE)
   )
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(significance_statistic = "FDR", show_fdr_message = TRUE)
+      sccomp_plot_intervals_2D(significance_statistic = "FDR", show_fdr_message = TRUE)
   )
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(significance_statistic = "FDR", show_fdr_message = FALSE)
+      sccomp_plot_intervals_2D(significance_statistic = "FDR", show_fdr_message = FALSE)
   )
 })
 
@@ -324,12 +324,12 @@ test_that("significance_statistic and show_fdr_message work via plot() S3 method
     )
   )
   
-  fdr_plot <- plot_1D_intervals(
+  fdr_plot <- sccomp_plot_intervals_1D(
     my_estimate |> sccomp_test(),
     significance_statistic = "FDR",
     show_fdr_message = TRUE
   )
-  ph0_plot <- plot_1D_intervals(
+  ph0_plot <- sccomp_plot_intervals_1D(
     my_estimate |> sccomp_test(),
     significance_statistic = "pH0",
     show_fdr_message = TRUE
@@ -345,12 +345,12 @@ test_that("significance_statistic and show_fdr_message work via plot() S3 method
   expect_true(grepl("Bayesian FDR", patchwork_caption(fdr_plot)))
   expect_true(!grepl("Bayesian FDR", patchwork_caption(ph0_plot)))
 })
-test_that("plot_2D_intervals includes regression line from prec parameters", {
+test_that("sccomp_plot_intervals_2D includes regression line from prec parameters", {
   skip_cmdstan()
 
   plot_2d <- my_estimate_with_variance |>
     sccomp_test() |>
-    plot_2D_intervals(significance_threshold = 0.025)
+    sccomp_plot_intervals_2D(significance_threshold = 0.025)
 
   expect_s3_class(plot_2d, "patchwork")
 
@@ -366,13 +366,13 @@ test_that("plot_2D_intervals includes regression line from prec parameters", {
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(significance_threshold = 0.025, significance_statistic = "pH0")
+      sccomp_plot_intervals_2D(significance_threshold = 0.025, significance_statistic = "pH0")
   )
 
   expect_no_error(
     my_estimate_with_variance |>
       sccomp_test() |>
-      plot_2D_intervals(significance_threshold = 0.025, show_fdr_message = FALSE)
+      sccomp_plot_intervals_2D(significance_threshold = 0.025, show_fdr_message = FALSE)
   )
 })
 
