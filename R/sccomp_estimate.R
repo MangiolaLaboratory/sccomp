@@ -724,13 +724,9 @@ sccomp_estimate.data.frame <- function(.data,
     
     if (dir.exists(output_directory)) {
       files_deleted <- attr(res, "fit")$output_files(include_failed = TRUE)
-      files_deleted <- files_deleted[file.exists(files_deleted)]
       if (length(files_deleted) > 0) {
-        file.remove(files_deleted)
-        if (verbose) {
-          message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'", 
-                         length(files_deleted), output_directory))
-        }
+        suppressWarnings(unlink(files_deleted, force = TRUE))
+          message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'", length(files_deleted), output_directory))
       }
     }
   }

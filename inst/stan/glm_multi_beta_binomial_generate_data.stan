@@ -72,7 +72,7 @@ parameters {
   array[A] ordered[1 + bimodal_mean_variability_association] prec_intercept;
   array[A] real prec_slope_1;
   array[A * bimodal_mean_variability_association] real prec_slope_2;
-  real<lower=0> prec_sd;
+  array[A] real<lower=0> prec_sd;
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // Using regular vectors instead of sum_to_zero_vector to avoid floating-point precision issues
