@@ -87,6 +87,40 @@ test_that("plot_2d_intervals function works correctly", {
     expect_s3_class("patchwork")
 })
 
+test_that("plot_1D_intervals accepts factor argument", {
+  skip_cmdstan()
+
+  expect_no_error(
+    my_estimate |>
+      sccomp_test() |>
+      plot_1D_intervals(factor = "type")
+  )
+
+  expect_error(
+    my_estimate |>
+      sccomp_test() |>
+      plot_1D_intervals(factor = "not_a_factor"),
+    "is not among model factors"
+  )
+})
+
+test_that("plot_2D_intervals accepts factor argument", {
+  skip_cmdstan()
+
+  expect_no_error(
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      plot_2D_intervals(factor = "type")
+  )
+
+  expect_error(
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      plot_2D_intervals(factor = "not_a_factor"),
+    "is not among model factors"
+  )
+})
+
 # Test for show_fdr_message parameter in plot functions
 test_that("show_fdr_message parameter works correctly in plot_1D_intervals", {
    skip_cmdstan()

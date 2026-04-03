@@ -6,6 +6,7 @@
 \usage{
 plot_2D_intervals(
   .data,
+  factor = NULL,
   significance_threshold = 0.05,
   test_composition_above_logit_fold_change = attr(.data,
     "test_composition_above_logit_fold_change"),
@@ -16,6 +17,8 @@ plot_2D_intervals(
 }
 \arguments{
 \item{.data}{Data frame containing the main data.}
+
+\item{factor}{Optional character string selecting one model factor to plot. If provided, plots are restricted to that factor plus \code{(Intercept)}.}
 
 \item{significance_threshold}{Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.}
 

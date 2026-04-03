@@ -71,11 +71,13 @@ sccomp_boxplot = function(
   if(.data |> select(any_of(c(paste0("c_", selected_statistic), paste0("v_", selected_statistic)))) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
+  .data_filtered =
+    subset_results_by_factor(.data, factor, keep_intercept = FALSE)
+
   data_proportion =
-    .data |>
+    .data_filtered |>
     
     # Otherwise does not work
-    filter(factor == !!factor) |> 
     select(-`factor`)
   
   data_proportion = 

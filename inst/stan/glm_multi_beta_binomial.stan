@@ -536,11 +536,11 @@ model{
     }
   } else {
     if(intercept_in_design || A > 1){
-      for(a in 1:A_intercept_columns)  alpha[a] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
+      for(a in 1:A_intercept_columns)  alpha[a] ~ student_t( 3, prior_prec_intercept[1], prec_sd[a] );
       if(A > A_intercept_columns)
-        for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal(0, 2);
+        for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ student_t(3, 0, prec_sd[a]);
     } else {
-      alpha[1] ~ normal( prior_prec_intercept[1], prior_prec_intercept[2] );
+      alpha[1] ~ student_t( 3, prior_prec_intercept[1], prec_sd[a] );
     }
   }
 
