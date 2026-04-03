@@ -174,6 +174,7 @@ plot.sccomp_tbl <- function(
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
+#' @param factor Optional character string selecting one model factor to plot. If provided, plots are restricted to that factor plus `(Intercept)`.
 #' @param sort_by Character vector indicating how to sort taxa. Options are "none" (default), "effect" (by effect size), "significance" (by FDR/pH0), or "alphabetical".
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder
@@ -210,6 +211,7 @@ plot.sccomp_tbl <- function(
 #'
 plot_1D_intervals = function(
     .data,
+    factor = NULL,
     significance_threshold = 0.05,
     test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"),
     show_fdr_message = TRUE,
@@ -232,6 +234,8 @@ plot_1D_intervals = function(
   # Check if test have been done
   if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+
+  .data <- subset_results_by_factor(.data, factor, keep_intercept = TRUE)
 
   plot_list =
     .data |>
@@ -330,6 +334,7 @@ plot_1D_intervals = function(
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test.
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
+#' @param factor Optional character string selecting one model factor to plot. If provided, plots are restricted to that factor plus `(Intercept)`.
 #' @param add_marginal_density Logical. Whether to add marginal density plots on adjusted panels. Default is TRUE.
 #'
 #' @importFrom dplyr filter arrange mutate if_else row_number bind_rows distinct slice pull with_groups
@@ -370,6 +375,7 @@ plot_1D_intervals = function(
 #'
 plot_2D_intervals <- function(
     .data,
+    factor = NULL,
     significance_threshold = 0.05,
     test_composition_above_logit_fold_change =
       .data |> attr("test_composition_above_logit_fold_change"),
@@ -404,6 +410,8 @@ plot_2D_intervals <- function(
   if(.data |> select(ends_with("FDR")) |> ncol() == 0)
     stop("sccomp says: you need to run sccomp_test() first.")
 
+  .data <- subset_results_by_factor(.data, factor, keep_intercept = TRUE)
+
   # Extract fitted model and mean-variability regression coefficients
   fit <- attr(.data, "fit")
   prec_intercept_1_summary <- fit$summary("prec_intercept_1")
@@ -417,11 +425,15 @@ plot_2D_intervals <- function(
     error = function(e) tibble()
   )
 
-  # Get number of parameters (effects)
-  n_params <- .data |>
+  param_names <- .data |>
     filter(!is.na(v_effect)) |>
     distinct(parameter) |>
-    nrow()
+    pull(parameter)
+
+  param_idx <- match(param_names, colnames(attr(.data, "model_input")$Xa))
+  if (any(is.na(param_idx))) {
+    stop("sccomp says: could not map selected parameters to model coefficients.")
+  }
 
   # Derive model type from stored model metadata
   bimodal_flag <- attr(.data, "model_input")$bimodal_mean_variability_association
@@ -432,16 +444,13 @@ plot_2D_intervals <- function(
 
   # Extract parameters based on model type
   if (!bimodal_flag) {
-    params_list <- lapply(1:n_params, function(a) {
-      param_name <- .data |>
-        filter(!is.na(v_effect)) |>
-        distinct(parameter) |>
-        slice(a) |>
-        pull(parameter)
+    params_list <- lapply(seq_along(param_names), function(a) {
+      param_name <- param_names[a]
+      idx <- param_idx[a]
       list(
         parameter = param_name,
-        intercept = prec_intercept_1_summary$mean[a],
-        slope = prec_slope_1_summary$mean[a]
+        intercept = prec_intercept_1_summary$mean[idx],
+        slope = prec_slope_1_summary$mean[idx]
       )
     })
 
@@ -456,19 +465,16 @@ plot_2D_intervals <- function(
   } else {
     mix_p <- fit$summary("mix_p") |> pull(mean)
 
-    params_list <- lapply(1:n_params, function(a) {
-      param_name <- .data |>
-        filter(!is.na(v_effect)) |>
-        distinct(parameter) |>
-        slice(a) |>
-        pull(parameter)
+    params_list <- lapply(seq_along(param_names), function(a) {
+      param_name <- param_names[a]
+      idx <- param_idx[a]
 
       list(
         parameter = param_name,
-        intercept_1 = prec_intercept_1_summary$mean[a],
-        slope_1 = prec_slope_1_summary$mean[a],
-        slope_2 = prec_slope_2_summary$mean[a],
-        intercept_2 = prec_intercept_2_summary$mean[a]
+        intercept_1 = prec_intercept_1_summary$mean[idx],
+        slope_1 = prec_slope_1_summary$mean[idx],
+        slope_2 = prec_slope_2_summary$mean[idx],
+        intercept_2 = prec_intercept_2_summary$mean[idx]
       )
     })
 

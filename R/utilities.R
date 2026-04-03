@@ -48,6 +48,48 @@ add_attr = function(var, attribute, name) {
   var
 }
 
+#' Subset results by model factor
+#'
+#' @param .data A sccomp results tibble
+#' @param factor Optional character scalar factor name
+#' @param keep_intercept Logical; keep `(Intercept)` rows when subsetting
+#'
+#' @return Filtered results tibble
+#' @keywords internal
+#' @noRd
+subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE) {
+  # Define variables to avoid CRAN NOTES
+  parameter <- NULL
+
+  if (is.null(factor)) return(.data)
+
+  if (!is.character(factor) || length(factor) != 1 || is.na(factor)) {
+    stop("sccomp says: `factor` must be a single character string.")
+  }
+
+  available_factors = .data |>
+    filter(!is.na(`factor`)) |>
+    distinct(`factor`) |>
+    pull(`factor`)
+
+  if (!(factor %in% available_factors)) {
+    stop(
+      sprintf(
+        "sccomp says: factor `%s` is not among model factors: %s",
+        factor,
+        paste(available_factors, collapse = ", ")
+      )
+    )
+  }
+
+  if (keep_intercept)
+    .data |>
+      filter(`factor` == factor | parameter == "(Intercept)")
+  else
+    .data |>
+      filter(`factor` == factor)
+}
+
 #' Incorporate all Stan model parameters into fit object
 #'
 #' @description
