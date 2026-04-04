@@ -41,7 +41,9 @@
 #' @param output_directory A character string specifying the output directory for Stan draws.
 #' @param verbose Logical, whether to print progression details.
 #' @param enable_loo Logical, whether to enable model comparison using the LOO package.
-#' @param noise_model A character string specifying the noise model (e.g., 'multi_beta_binomial').
+#' @param noise_model A character string specifying the noise model: 'multi_beta_binomial' (default)
+#'   or 'dirichlet_multinomial'. With 'dirichlet_multinomial', counts use the
+#'   Dirichlet-multinomial likelihood and proportions use the Dirichlet likelihood.
 #' @param exclude_priors Logical, whether to run a prior-free model.
 #' @param use_data Logical, whether to run the model data-free.
 #' @param mcmc_seed An integer seed for MCMC reproducibility.
@@ -536,7 +538,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        output_directory = "sccomp_draws_files",
                                        verbose = TRUE,
                                        enable_loo = FALSE,
-                                       noise_model = "multi_beta_binomial",
+                                       noise_model = c("multi_beta_binomial", "dirichlet_multinomial"),
                                        exclude_priors = FALSE,
                                        use_data = TRUE,
                                        mcmc_seed = sample_seed(),
@@ -562,6 +564,7 @@ sccomp_estimate.data.frame <- function(.data,
   .abundance <- enquo(.abundance)
   
   .sample_cell_group_pairs_to_exclude <- enquo(.sample_cell_group_pairs_to_exclude)
+  noise_model <- match.arg(noise_model)
   
   
   # Handle deprecated inference method arguments
@@ -658,6 +661,7 @@ sccomp_estimate.data.frame <- function(.data,
       output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
+      noise_model = noise_model,
       exclude_priors = exclude_priors,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
@@ -680,6 +684,7 @@ sccomp_estimate.data.frame <- function(.data,
       
       # Secondary arguments
       cores = cores,
+      noise_model = noise_model,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       percent_false_positive = percent_false_positive,
       inference_method = inference_method,
@@ -742,6 +747,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      sample,
                                      cell_group,
                                      abundance = NULL,
+                                     noise_model = c("multi_beta_binomial", "dirichlet_multinomial"),
                                      
                                      
                                      # Secondary arguments
@@ -767,6 +773,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      cache_stan_model = sccomp_stan_models_cache_dir,
                                      ...) {
   
+  noise_model <- match.arg(noise_model)
   # See https://community.rstudio.com/t/how-to-make-complete-nesting-work-with-quosures-and-tidyeval/16473
   # See https://github.com/tidyverse/tidyr/issues/506
   
@@ -824,6 +831,7 @@ sccomp_glm_data_frame_raw = function(.data,
       sample = sample,
       cell_group = cell_group,
       abundance = "count",
+      noise_model = noise_model,
       
       contrasts = contrasts,
       #.grouping_for_random_effect = !! .grouping_for_random_effect,
@@ -858,6 +866,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         sample,
                                         cell_group,
                                         abundance = NULL,
+                                        noise_model = c("multi_beta_binomial", "dirichlet_multinomial"),
                                         
                                         # Secondary arguments
                                         contrasts = NULL,
@@ -900,10 +909,26 @@ sccomp_glm_data_frame_counts = function(.data,
   # Check that we have at least 2 cell groups for compositional analysis
   check_minimum_cell_groups(.data, !!.cell_group)
   
-  # Check that count is integer
-  if(.data %>% pull(!!.count) %>% is("integer")) message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))
-  else if(.data %>% pull(!!.count) %>% is("integer") |> not() & .data %>% pull(!!.count) |> dplyr::between(0, 1) |> all()) message(sprintf("sccomp says: %s column is a proportion. The sum-constrained beta model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).", quo_name(.count)))
-  else stop(sprintf("sccomp: `%s` column must be an integer or a proportion", quo_name(.count)))
+  noise_model <- match.arg(noise_model)
+  
+  # Check abundance input type
+  is_count_input = .data %>% pull(!!.count) %>% is("integer")
+  is_proportion_input = .data %>% pull(!!.count) %>% is("integer") |> not() &
+    .data %>% pull(!!.count) |> dplyr::between(0, 1) |> all()
+  
+  if(is_count_input) {
+    if(noise_model == "dirichlet_multinomial")
+      message(sprintf("sccomp says: %s column is an integer. The Dirichlet-multinomial model will be used", quo_name(.count)))
+    else
+      message(sprintf("sccomp says: %s column is an integer. The sum-constrained beta binomial model will be used", quo_name(.count)))
+  } else if(is_proportion_input) {
+    if (noise_model == "dirichlet_multinomial") {
+      proportion_model_label = "Dirichlet-multinomial"
+    } else {
+      proportion_model_label = "sum-constrained beta"
+    }
+    message(sprintf("sccomp says: %s column is a proportion. The %s model will be used. When possible using counts is preferred as the binomial noise component is often dominating for rare groups (e.g. rare cell types).", quo_name(.count), proportion_model_label))
+  } else stop(sprintf("sccomp: `%s` column must be an integer or a proportion", quo_name(.count)))
   
   # Check if columns exist
   check_columns_exist(.data, c(
@@ -1025,7 +1050,7 @@ sccomp_glm_data_frame_counts = function(.data,
   
   data_for_model$truncation_not_idx = data_for_model$user_forced_truncation_not_idx
   data_for_model$TNS = length(data_for_model$truncation_not_idx)
-  
+
   # Prior
   data_for_model$prior_prec_intercept = prior_overdispersion_mean_association$intercept
   data_for_model$prior_prec_slope  = prior_overdispersion_mean_association$slope
@@ -1039,12 +1064,20 @@ sccomp_glm_data_frame_counts = function(.data,
   # if(ncol(data_for_model$X)>20)
   #   message("sccomp says: the design matrix has more than 20 columns. Possibly some numerical factors are erroneously of type character/factor.")
   
+  stan_model_name = if (noise_model == "dirichlet_multinomial") "glm_dirichlet" else "glm_multi_beta_binomial"
+  fit_pars = c(
+    "beta", "alpha", "alpha_normalised",
+    "random_effect", "random_effect_2", "random_effect_sigma", "random_effect_sigma_2",
+    "log_lik"
+  )
+  if (noise_model == "multi_beta_binomial")
+    fit_pars = c("prec_coeff", "prec_sd", fit_pars)
   fit =
     data_for_model %>%
     
     # Run the first discovery phase with permissive false discovery rate
     fit_model(
-      "glm_multi_beta_binomial",
+      stan_model_name,
       cores= cores,
       quantile = CI,
       inference_method = inference_method,
@@ -1052,12 +1085,7 @@ sccomp_glm_data_frame_counts = function(.data,
       output_directory = output_directory,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
-      pars = c(
-        "beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", 
-        "random_effect", "random_effect_2", 
-        "random_effect_sigma", "random_effect_sigma_2", 
-        "log_lik"
-      ),
+      pars = fit_pars,
       sig_figs = sig_figs,
       cache_stan_model = cache_stan_model,
       ...
