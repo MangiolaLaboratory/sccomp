@@ -59,14 +59,15 @@
 <li><p><strong>cell_group</strong> - A character column representing the cell group identifiers.</p></li>
 <li><p><strong>residuals</strong> - A numeric column representing the residuals, calculated as the difference between observed and predicted proportions.</p></li>
 <li><p><strong>exposure</strong> - A numeric column representing the total counts (sum of counts across cell groups) for each sample.</p></li>
-<li><p><strong>residuals_unconstrained</strong> - A numeric column representing the unconstrained predictors (before softmax transformation), corresponding to the linear combination of design matrix and coefficients.</p></li>
+<li><p><strong>residuals_unconstrained</strong> - A numeric column representing the residuals on the unconstrained scale, calculated as the difference between the inverse softmax transform of observed proportions and the predicted unconstrained predictors.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function performs the following steps:</p><ol><li><p>Extracts the predicted mean proportions for each cell group and sample using <code><a href="sccomp_predict.html">sccomp_predict()</a></code>.</p></li>
+    <p>The function performs the following steps:</p><ol><li><p>Extracts the predicted mean proportions and unconstrained predictors for each cell group and sample using <code><a href="sccomp_predict.html">sccomp_predict()</a></code>.</p></li>
 <li><p>Calculates the observed proportions from the original count data.</p></li>
-<li><p>Computes residuals by subtracting the predicted proportions from the observed proportions.</p></li>
-<li><p>Returns a tibble containing the sample, cell group, residuals, and exposure (total counts per sample).</p></li>
+<li><p>Computes residuals on the proportion scale by subtracting the predicted proportions from the observed proportions.</p></li>
+<li><p>Computes residuals on the unconstrained (log-ratio) scale by: (1) applying inverse softmax (log-ratio transform with sum-to-zero normalization) to observed proportions, (2) subtracting the predicted unconstrained predictors.</p></li>
+<li><p>Returns a tibble containing the sample, cell group, residuals (proportion scale), residuals_unconstrained (log-ratio scale), and exposure (total counts per sample).</p></li>
 </ol></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -118,8 +119,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>   This procedure has not been thoroughly tested and may be unstable </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   or buggy. The interface is subject to change. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------ </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Gradient evaluation took 0.000374 seconds </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1000 transitions using 10 leapfrog steps per transition would take 3.74 seconds. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Gradient evaluation took 0.000368 seconds </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1000 transitions using 10 leapfrog steps per transition would take 3.68 seconds. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Adjust your expectations accordingly! </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Begin eta adaptation. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration:   1 / 250 [  0%]  (Adaptation) </span>
@@ -137,7 +138,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>    500        -3686.256             0.216            0.003   MEDIAN ELBO CONVERGED </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Drawing a sample of size 4000 from the approximate posterior...  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> COMPLETED. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  2.4 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  2.5 seconds.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Unknown or uninitialised column: `c_R_k_hat`.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no non-missing arguments to max; returning -Inf</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>

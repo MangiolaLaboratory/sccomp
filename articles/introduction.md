@@ -1012,7 +1012,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -1031,24 +1031,24 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] bayesplot_1.15.0  posterior_1.6.1   cmdstanr_0.9.0    loo_2.9.0        
+    ##  [1] bayesplot_1.15.0  posterior_1.7.0   cmdstanr_0.9.0    loo_2.9.0        
     ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.2     sccomp_2.1.29    
-    ##  [9] instantiate_0.2.3 dplyr_1.2.0      
+    ##  [9] instantiate_0.2.3 dplyr_1.2.1      
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] rlang_1.1.7                 magrittr_2.0.4             
+    ##  [1] rlang_1.1.7                 magrittr_2.0.5             
     ##  [3] otel_0.2.0                  matrixStats_1.5.0          
     ##  [5] compiler_4.5.3              systemfonts_1.3.2          
     ##  [7] callr_3.7.6                 vctrs_0.7.2                
     ##  [9] reshape2_1.4.5              stringr_1.6.0              
     ## [11] pkgconfig_2.0.3             crayon_1.5.3               
-    ## [13] fastmap_1.2.0               backports_1.5.0            
+    ## [13] fastmap_1.2.0               backports_1.5.1            
     ## [15] XVector_0.50.0              labeling_0.4.3             
-    ## [17] utf8_1.2.6                  rmarkdown_2.30             
-    ## [19] tzdb_0.5.0                  ps_1.9.1                   
+    ## [17] utf8_1.2.6                  rmarkdown_2.31             
+    ## [19] tzdb_0.5.0                  ps_1.9.2                   
     ## [21] ragg_1.5.2                  purrr_1.2.1                
     ## [23] xfun_0.57                   cachem_1.1.0               
-    ## [25] jsonlite_2.0.0              DelayedArray_0.36.0        
+    ## [25] jsonlite_2.0.0              DelayedArray_0.36.1        
     ## [27] parallel_4.5.3              R6_2.6.1                   
     ## [29] bslib_0.10.0                stringi_1.8.7              
     ## [31] RColorBrewer_1.1-3          parallelly_1.46.1          
@@ -1059,7 +1059,7 @@ sessionInfo()
     ## [41] IRanges_2.44.0              Matrix_1.7-4               
     ## [43] tidyselect_1.2.1            abind_1.4-8                
     ## [45] yaml_2.3.12                 codetools_0.2-20           
-    ## [47] processx_3.8.6              listenv_0.10.1             
+    ## [47] processx_3.8.7              listenv_0.10.1             
     ## [49] plyr_1.8.9                  lattice_0.22-9             
     ## [51] tibble_3.3.1                Biobase_2.70.0             
     ## [53] withr_3.0.2                 S7_0.2.1                   
@@ -1072,14 +1072,14 @@ sessionInfo()
     ## [67] hms_1.1.4                   scales_1.4.0               
     ## [69] globals_0.19.1              glue_1.8.0                 
     ## [71] tools_4.5.3                 data.table_1.18.2.1        
-    ## [73] fs_2.0.0                    dotCall64_1.2              
+    ## [73] fs_2.0.1                    dotCall64_1.2              
     ## [75] grid_4.5.3                  SingleCellExperiment_1.32.0
     ## [77] patchwork_1.3.2             cli_3.6.5                  
     ## [79] textshaping_1.0.5           spam_2.11-3                
     ## [81] S4Arrays_1.10.1             gtable_0.3.6               
     ## [83] sass_0.4.10                 digest_0.6.39              
-    ## [85] progressr_0.18.0            BiocGenerics_0.56.0        
-    ## [87] SparseArray_1.10.9          ggrepel_0.9.8              
+    ## [85] progressr_0.19.0            BiocGenerics_0.56.0        
+    ## [87] SparseArray_1.10.10         ggrepel_0.9.8              
     ## [89] htmlwidgets_1.6.4           SeuratObject_5.3.0         
     ## [91] farver_2.1.2                htmltools_0.5.9            
     ## [93] pkgdown_2.2.0               lifecycle_1.0.5            

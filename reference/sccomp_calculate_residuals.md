@@ -40,24 +40,30 @@ A tibble (`tbl`) with the following columns:
   counts across cell groups) for each sample.
 
 - **residuals_unconstrained** - A numeric column representing the
-  unconstrained predictors (before softmax transformation),
-  corresponding to the linear combination of design matrix and
-  coefficients.
+  residuals on the unconstrained scale, calculated as the difference
+  between the inverse softmax transform of observed proportions and the
+  predicted unconstrained predictors.
 
 ## Details
 
 The function performs the following steps:
 
-1.  Extracts the predicted mean proportions for each cell group and
-    sample using
+1.  Extracts the predicted mean proportions and unconstrained predictors
+    for each cell group and sample using
     [`sccomp_predict()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_predict.md).
 
 2.  Calculates the observed proportions from the original count data.
 
-3.  Computes residuals by subtracting the predicted proportions from the
-    observed proportions.
+3.  Computes residuals on the proportion scale by subtracting the
+    predicted proportions from the observed proportions.
 
-4.  Returns a tibble containing the sample, cell group, residuals, and
+4.  Computes residuals on the unconstrained (log-ratio) scale by: (1)
+    applying inverse softmax (log-ratio transform with sum-to-zero
+    normalization) to observed proportions, (2) subtracting the
+    predicted unconstrained predictors.
+
+5.  Returns a tibble containing the sample, cell group, residuals
+    (proportion scale), residuals_unconstrained (log-ratio scale), and
     exposure (total counts per sample).
 
 ## References
@@ -114,8 +120,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000374 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.74 seconds. 
+#> Gradient evaluation took 0.000368 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.68 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -133,7 +139,7 @@ print(residuals)
 #>    500        -3686.256             0.216            0.003   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
-#> Finished in  2.4 seconds.
+#> Finished in  2.5 seconds.
 #> Warning: Unknown or uninitialised column: `c_R_k_hat`.
 #> Warning: no non-missing arguments to max; returning -Inf
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
