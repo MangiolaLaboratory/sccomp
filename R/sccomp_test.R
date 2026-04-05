@@ -4,13 +4,6 @@
 #'
 #' @param .data A tibble. The result of sccomp_estimate.
 #' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
-#'
-#'   **Fast path:** If every contrast is a **single** design-matrix symbol (e.g. `"typecancer"`, or
-#'   `` "`(Intercept)`" ``) and all refer to parameters from one Stan block only (composition fixed
-#'   effects, or one random-effect matrix), then composition (and variability when those columns also
-#'   appear in the variability design matrix) are summarized via `fit$summary()` on the required indices
-#'   only—no full posterior-draw tensors. In that case `c_pH0`, `c_FDR`, `v_pH0`, and `v_FDR` are
-#'   set to `NA` (exact tail probabilities still require per-draw evaluation of the estimand).
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
