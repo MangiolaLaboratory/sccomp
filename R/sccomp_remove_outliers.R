@@ -40,18 +40,17 @@
 #'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
 #'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
 #'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
-#'   \item c_FDR - False discovery rate of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
-#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
-#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+#'   \item c_rhat - R-hat convergence diagnostic for the composition (c) parameter; values close to 1.0 indicate convergence.
+#'   \item c_ess_bulk - Bulk effective sample size for the composition (c) parameter; higher is better.
+#'   \item c_ess_tail - Tail effective sample size for the composition (c) parameter; higher is better.
 #'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
 #'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
 #'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
-#'   \item v_pH0 - Probability of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
-#'   \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
-#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#'   \item v_rhat - R-hat convergence diagnostic for the variability (v) parameter.
+#'   \item v_ess_bulk - Bulk effective sample size for the variability (v) parameter.
+#'   \item v_ess_tail - Tail effective sample size for the variability (v) parameter.
 #' }
+#' Note: pH0 and FDR columns are not computed by `sccomp_remove_outliers()`. Run `sccomp_test()` on the result to obtain hypothesis-test statistics.
 #'
 #' The function also attaches several attributes to the result:
 #' \itemize{
@@ -498,6 +497,13 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   # Auto-cleanup draw files if requested
   if (portable) {
     fit_obj <- attr(estimate_tibble, "fit")
+    # Incorporate all parameters into fit object BEFORE deleting CSV files
+    # This ensures parameters are cached in memory and remain accessible after cleanup
+    incorporate_parameters_into_fit_object(fit_obj)
+    
+    # Update the fit attribute with the modified fit object
+    attr(estimate_tibble, "fit") <- fit_obj
+    
     if (dir.exists(output_directory)) {
       files_deleted <- fit_obj$output_files(include_failed = TRUE)
       files_deleted <- files_deleted[file.exists(files_deleted)]
