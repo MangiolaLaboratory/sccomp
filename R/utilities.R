@@ -297,12 +297,15 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   
   base_parameter <- sub("\\[.*$", "", par[[1]])
 
-  fit$draws(variables = par, format = "draws_df") %>%
+  draws_df <- fit$draws(variables = par, format = "draws_df")
+  value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
+  
+  draws_df %>%
     mutate(.iteration = seq_len(n())) %>%
     
     pivot_longer(
       names_to = "parameter", # c( ".chain", ".variable", x, y),
-      cols = tidyselect::any_of(par),
+      cols = tidyselect::all_of(value_columns),
       #names_sep = "\\.?|\\[|,|\\]|:",
       # names_ptypes = list(
       #   ".variable" = character()),

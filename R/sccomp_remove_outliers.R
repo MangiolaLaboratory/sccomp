@@ -497,8 +497,10 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   # Auto-cleanup draw files if requested
   if (portable) {
+    fit_obj <- attr(estimate_tibble, "fit")
     if (dir.exists(output_directory)) {
-      files_deleted <- list.files(output_directory, pattern = "\\.csv$", full.names = TRUE)
+      files_deleted <- fit_obj$output_files(include_failed = TRUE)
+      files_deleted <- files_deleted[file.exists(files_deleted)]
       if (length(files_deleted) > 0) {
         file.remove(files_deleted)
         if (verbose) {

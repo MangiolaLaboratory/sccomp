@@ -216,7 +216,7 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   # .STAN raw model
   stan_model_path <- system.file("stan", paste0(name, ".stan"), package = "sccomp")
   
-  if (file.exists(cache_file) & !force) {
+  if (file.exists(cache_file) && !force) {
     mod <- readRDS(cache_file)
     stan_file <- tryCatch(mod$stan_file(), error = function(e) "")
     

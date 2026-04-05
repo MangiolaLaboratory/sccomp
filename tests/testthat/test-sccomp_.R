@@ -661,12 +661,22 @@ test_that("sccomp_proportional_fold_change",{
     expect_no_error()
   
   
-  my_estimate_inverse_factor |> 
-    sccomp_proportional_fold_change(formula_composition = ~  type, from =  "healthy", to = "cancer") |> 
-    pull(proportion_fold_change) |> 
-    unique() |> 
-    length() |> 
-    expect_equal(1)
+  original_fc <-
+    my_estimate |>
+    sccomp_proportional_fold_change(formula_composition = ~  type, from =  "healthy", to = "cancer") |>
+    arrange(cell_group)
+  
+  inverse_fc <-
+    my_estimate_inverse_factor |>
+    sccomp_proportional_fold_change(formula_composition = ~  type, from =  "healthy", to = "cancer") |>
+    arrange(cell_group)
+  
+  expect_equal(original_fc$cell_group, inverse_fc$cell_group)
+  expect_true(all(is.finite(inverse_fc$proportion_fold_change)))
+  sign_agreement <- mean(
+    sign(original_fc$proportion_fold_change) == sign(inverse_fc$proportion_fold_change)
+  )
+  expect_gte(sign_agreement, 0.9)
   
 })
 
