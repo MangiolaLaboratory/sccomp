@@ -50,7 +50,7 @@ test_that("incorporate_parameters_into_fit_object loads all parameters", {
   })
   
   expect_no_error({
-    prec_coeff_draws <- fit$draws(variables = "prec_coeff", format = "draws_df")
+    prec_intercept_draws <- fit$draws(variables = "prec_intercept_1", format = "draws_df")
   })
   
   # Now delete the CSV files to simulate cleanup

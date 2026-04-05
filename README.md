@@ -369,7 +369,7 @@ credible interval. Facets represent the covariates in the model.
 
 ``` r
 sccomp_result |> 
-  plot_1D_intervals()
+  sccomp_plot_intervals_1D()
 ```
 
 ![](inst/figures/unnamed-chunk-10-1.png)<!-- -->
@@ -382,7 +382,7 @@ modelled jointly, thanks to Bayesian inference.
 
 ``` r
 sccomp_result |> 
-  plot_2D_intervals()
+  sccomp_plot_intervals_2D()
 ```
 
 ![](inst/figures/unnamed-chunk-11-1.png)<!-- -->

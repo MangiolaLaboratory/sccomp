@@ -714,16 +714,10 @@ sccomp_estimate.data.frame <- function(.data,
     # Update the fit attribute with the modified fit object
     attr(res, "fit") <- fit_obj
     
-    if (dir.exists(output_directory)) {
-      files_deleted <- list.files(output_directory, pattern = "\\.csv$", full.names = TRUE)
-      if (length(files_deleted) > 0) {
-        file.remove(files_deleted)
-        if (verbose) {
-          message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'", 
-                         length(files_deleted), output_directory))
-        }
-      }
-    }
+    fit_csv_files <- fit_obj$output_files()
+    suppressWarnings(unlink(fit_csv_files, force = TRUE))
+    message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'",  length(fit_csv_files), output_directory))
+
   }
   
   res |>
@@ -1053,9 +1047,11 @@ sccomp_glm_data_frame_counts = function(.data,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pars = c(
-        "beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", 
-        "random_effect", "random_effect_2", 
-        "random_effect_sigma", "random_effect_sigma_2", 
+        "beta", "alpha",
+        "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2",
+        "prec_sd", "alpha_normalised",
+        "random_effect", "random_effect_2",
+        "random_effect_sigma", "random_effect_sigma_2",
         "log_lik"
       ),
       sig_figs = sig_figs,

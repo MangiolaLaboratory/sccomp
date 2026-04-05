@@ -48,6 +48,48 @@ add_attr = function(var, attribute, name) {
   var
 }
 
+#' Subset results by model factor
+#'
+#' @param .data A sccomp results tibble
+#' @param factor Optional character scalar factor name
+#' @param keep_intercept Logical; keep `(Intercept)` rows when subsetting
+#'
+#' @return Filtered results tibble
+#' @keywords internal
+#' @noRd
+subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE) {
+  # Define variables to avoid CRAN NOTES
+  parameter <- NULL
+
+  if (is.null(factor)) return(.data)
+
+  if (!is.character(factor) || length(factor) != 1 || is.na(factor)) {
+    stop("sccomp says: `factor` must be a single character string.")
+  }
+
+  available_factors = .data |>
+    filter(!is.na(`factor`)) |>
+    distinct(`factor`) |>
+    pull(`factor`)
+
+  if (!(factor %in% available_factors)) {
+    stop(
+      sprintf(
+        "sccomp says: factor `%s` is not among model factors: %s",
+        factor,
+        paste(available_factors, collapse = ", ")
+      )
+    )
+  }
+
+  if (keep_intercept)
+    .data |>
+      filter(`factor` == factor | parameter == "(Intercept)")
+  else
+    .data |>
+      filter(`factor` == factor)
+}
+
 #' Incorporate all Stan model parameters into fit object
 #'
 #' @description
@@ -76,7 +118,10 @@ incorporate_parameters_into_fit_object = function(fit) {
     # Parameters block
     "beta_raw",
     "alpha",
-    "prec_coeff",
+    "prec_intercept_1",
+    "prec_slope_1",
+    "prec_intercept_2",
+    "prec_slope_2",
     "prec_sd",
     "mix_p",
     "random_effect_raw",
@@ -675,6 +720,54 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
 #' @importFrom purrr map_int
 #' @importFrom stats as.formula
 #'
+#' Match variability to composition design columns
+#'
+#' Normally every column of `Xa` must appear in `X` (variability is a sub-formula of
+#' composition). **Exception:** `formula_variability = ~ 1` yields a single `(Intercept)`
+#' column in `Xa`. If the composition matrix has no `(Intercept)` (e.g.
+#' `formula_composition = ~ 0 + type`), that term has no name in `X`; we map it to
+#' composition column `1` so the single shared variability level uses one explicit
+#' `beta[1]` in the abundance-variability link in Stan.
+#'
+#' @param X Composition design matrix
+#' @param Xa Variability design matrix
+#'
+#' @return Integer vector indexing composition columns for each variability column
+#' @keywords internal
+#' @noRd
+get_variability_to_composition_map = function(X, Xa) {
+  comp_names = colnames(X)
+  var_names = colnames(Xa)
+  variability_to_composition_map = match(var_names, comp_names)
+  missing_idx = is.na(variability_to_composition_map)
+
+  if (any(missing_idx)) {
+    missing_terms = var_names[missing_idx]
+    only_intercept_variability =
+      length(var_names) == 1L && var_names[1] == "(Intercept)"
+    if (
+      only_intercept_variability &&
+        !("(Intercept)" %in% comp_names) &&
+        length(comp_names) >= 1L
+    ) {
+      variability_to_composition_map[missing_idx] = 1L
+    } else {
+      stop(
+        sprintf(
+          paste0(
+            "sccomp says: every variability design term must also be present ",
+            "in the composition design matrix. Missing terms: %s"
+          ),
+          paste(missing_terms, collapse = ", ")
+        )
+      )
+    }
+  }
+
+  as.integer(variability_to_composition_map)
+}
+
+#'
 #' @keywords internal
 #' @noRd
 #'
@@ -742,6 +835,8 @@ data_spread_to_model_input =
         !!.sample,
         accept_NA_as_average_effect = accept_NA_as_average_effect
       )
+
+    variability_to_composition_map = get_variability_to_composition_map(X, Xa)
     
     XA = Xa %>%
       as_tibble() %>%
@@ -882,6 +977,7 @@ data_spread_to_model_input =
         X = X,
         XA = XA,
         Xa = Xa,
+        variability_to_composition_map = variability_to_composition_map,
         C = ncol(X),
         A = A,
         Ar = Ar,
