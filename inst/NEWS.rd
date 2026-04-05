@@ -1,6 +1,12 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.30}{
+\itemize{
+    \item API update for draw-file cleanup control: use \code{portable} in \code{sccomp_estimate()} and \code{sccomp_remove_outliers()}.
+    \item The old \code{cleanup_draw_files} argument has been deprecated in favour of \code{portable} and removed from the exported function signatures in this release.
+}}
+
 \section{News in version 2.1.25}{
 \itemize{
     \item Improved plotting significance colouring controls. Added \code{significance_statistic} to \code{sccomp_boxplot()} with default \code{c("pH0", "FDR")}, so colouring now defaults to posterior probability while still supporting FDR-based colouring.

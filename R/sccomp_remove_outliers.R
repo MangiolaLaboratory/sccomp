@@ -26,9 +26,8 @@
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
 #'                        The sccomp version will be automatically appended to ensure version isolation.
 #'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
-#' @param cleanup_draw_files Logical, whether to automatically delete Stan draw CSV files after extracting results.
-#'                               These files can be large (MBs to GBs) and are typically only needed during the analysis session.
-#'                               Default is TRUE to save disk space. Set to FALSE if you need to inspect draw files for debugging.
+#' @param portable Logical, whether to keep the result portable by caching required draws in memory and removing Stan draw CSV files after fitting.
+#'                 Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.
 #' @param approximate_posterior_inference DEPRECATED, use the `variational_inference` argument.
 #' @param variational_inference DEPRECATED Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
@@ -41,18 +40,17 @@
 #'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
 #'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
 #'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
-#'   \item c_FDR - False discovery rate of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
-#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
-#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+#'   \item c_rhat - R-hat convergence diagnostic for the composition (c) parameter; values close to 1.0 indicate convergence.
+#'   \item c_ess_bulk - Bulk effective sample size for the composition (c) parameter; higher is better.
+#'   \item c_ess_tail - Tail effective sample size for the composition (c) parameter; higher is better.
 #'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
 #'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
 #'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
-#'   \item v_pH0 - Probability of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
-#'   \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
-#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#'   \item v_rhat - R-hat convergence diagnostic for the variability (v) parameter.
+#'   \item v_ess_bulk - Bulk effective sample size for the variability (v) parameter.
+#'   \item v_ess_tail - Tail effective sample size for the variability (v) parameter.
 #' }
+#' Note: pH0 and FDR columns are not computed by `sccomp_remove_outliers()`. Run `sccomp_test()` on the result to obtain hypothesis-test statistics.
 #'
 #' The function also attaches several attributes to the result:
 #' \itemize{
@@ -101,7 +99,7 @@ sccomp_remove_outliers <- function(.estimate,
                                    enable_loo = FALSE,
                                    sig_figs = 9,
                                    cache_stan_model = sccomp_stan_models_cache_dir,
-                                   cleanup_draw_files = TRUE,
+                                   portable = TRUE,
                                    
                                    # DEPRECATED
                                    approximate_posterior_inference = NULL,
@@ -134,7 +132,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              enable_loo = FALSE,
                                              sig_figs = 9,
                                              cache_stan_model = sccomp_stan_models_cache_dir,
-                                             cleanup_draw_files = TRUE,
+                                             portable = TRUE,
                                              
                                              # DEPRECATED
                                              approximate_posterior_inference = NULL,
@@ -475,38 +473,40 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   # file.remove(temp_rds_file)
   
   estimate_tibble =
-    tibble() |>
+    # Posterior means and intervals via fit$summary (no full draw tensors; no pH0/FDR)
+    sccomp_summarise_posterior_for_estimate(
+      fit = fit3,
+      model_input = data_for_model,
+      .cell_group = .cell_group,
+      percent_false_positive = 5
+    ) |> 
     add_attr(fit3, "fit") |>
     add_attr(data_for_model, "model_input") |>
     add_attr(.sample, ".sample") |>
     add_attr(.cell_group, ".cell_group") |>
     add_attr(.count, ".count") |>
-    
     add_attr(formula_composition, "formula_composition") |>
     add_attr(formula_variability, "formula_variability") |>
-    add_attr(parse_formula(formula_composition), "factors" ) |> 
-    add_attr(inference_method, "inference_method" ) |> 
-    
-    # Add count data as attribute
+    add_attr(inference_method, "inference_method" ) |>
     add_attr(.data, "count_data") |>
     add_attr(truncation_df2 |> select(!!.sample, !!.cell_group, outlier, contains_outliers), "outliers") |>
-    
-    # Add class to the tbl
-    add_class("sccomp_tbl") |> 
-    
-    # Print estimates
-    sccomp_test() |>
-    
-    # drop hypothesis testing as the estimation exists without probabilities.
-    # For hypothesis testing use sccomp_test
-    select(-contains("_FDR"), -contains("_pH0")) |> 
-    
-    add_attr(noise_model, "noise_model") 
+    add_attr(noise_model, "noise_model") |>
+    add_class("sccomp_tbl") |>
+    add_attr(parse_formula(formula_composition), "factors" ) 
   
   # Auto-cleanup draw files if requested
-  if (cleanup_draw_files) {
+  if (portable) {
+    fit_obj <- attr(estimate_tibble, "fit")
+    # Incorporate all parameters into fit object BEFORE deleting CSV files
+    # This ensures parameters are cached in memory and remain accessible after cleanup
+    incorporate_parameters_into_fit_object(fit_obj)
+    
+    # Update the fit attribute with the modified fit object
+    attr(estimate_tibble, "fit") <- fit_obj
+    
     if (dir.exists(output_directory)) {
-      files_deleted <- list.files(output_directory, pattern = "\\.csv$", full.names = TRUE)
+      files_deleted <- fit_obj$output_files(include_failed = TRUE)
+      files_deleted <- files_deleted[file.exists(files_deleted)]
       if (length(files_deleted) > 0) {
         file.remove(files_deleted)
         if (verbose) {
