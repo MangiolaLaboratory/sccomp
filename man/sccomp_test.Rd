@@ -15,7 +15,14 @@ sccomp_test(
 \arguments{
 \item{.data}{A tibble. The result of sccomp_estimate.}
 
-\item{contrasts}{A vector of character strings. For example if your formula is \code{~ 0 + treatment} and the factor treatment has values \code{yes} and \code{no}, your contrast could be "constrasts = c(treatmentyes - treatmentno)".}
+\item{contrasts}{A vector of character strings. For example if your formula is \code{~ 0 + treatment} and the factor treatment has values \code{yes} and \code{no}, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
+
+\strong{Fast path:} If every contrast is a \strong{single} design-matrix symbol (e.g. \code{"typecancer"}, or
+\code{"`(Intercept)`"}) and all refer to parameters from one Stan block only (composition fixed
+effects, or one random-effect matrix), then composition (and variability when those columns also
+appear in the variability design matrix) are summarized via \code{fit$summary()} on the required indices
+only—no full posterior-draw tensors. In that case \code{c_pH0}, \code{c_FDR}, \code{v_pH0}, and \code{v_FDR} are
+set to \code{NA} (exact tail probabilities still require per-draw evaluation of the estimand).}
 
 \item{percent_false_positive}{A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.}
 

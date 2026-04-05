@@ -475,33 +475,26 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   # file.remove(temp_rds_file)
   
   estimate_tibble =
-    tibble() |>
+    # Posterior means and intervals via fit$summary (no full draw tensors; no pH0/FDR)
+    sccomp_summarise_posterior_for_estimate(
+      fit = fit3,
+      model_input = data_for_model,
+      .cell_group = .cell_group,
+      percent_false_positive = 5
+    ) |> 
     add_attr(fit3, "fit") |>
     add_attr(data_for_model, "model_input") |>
     add_attr(.sample, ".sample") |>
     add_attr(.cell_group, ".cell_group") |>
     add_attr(.count, ".count") |>
-    
     add_attr(formula_composition, "formula_composition") |>
     add_attr(formula_variability, "formula_variability") |>
-    add_attr(parse_formula(formula_composition), "factors" ) |> 
-    add_attr(inference_method, "inference_method" ) |> 
-    
-    # Add count data as attribute
+    add_attr(inference_method, "inference_method" ) |>
     add_attr(.data, "count_data") |>
     add_attr(truncation_df2 |> select(!!.sample, !!.cell_group, outlier, contains_outliers), "outliers") |>
-    
-    # Add class to the tbl
-    add_class("sccomp_tbl") |> 
-    
-    # Print estimates
-    sccomp_test() |>
-    
-    # drop hypothesis testing as the estimation exists without probabilities.
-    # For hypothesis testing use sccomp_test
-    select(-contains("_FDR"), -contains("_pH0")) |> 
-    
-    add_attr(noise_model, "noise_model") 
+    add_attr(noise_model, "noise_model") |>
+    add_class("sccomp_tbl") |>
+    add_attr(parse_formula(formula_composition), "factors" ) 
   
   # Auto-cleanup draw files if requested
   if (cleanup_draw_files) {

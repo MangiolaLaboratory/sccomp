@@ -1070,41 +1070,36 @@ sccomp_glm_data_frame_counts = function(.data,
   # file.remove(temp_rds_file)
   
   estimate_tibble = 
-    # Create a dummy tibble
-    tibble() |>
-    # Attach association mean concentration
-    add_attr(fit, "fit") %>%
-    add_attr(data_for_model, "model_input") |> 
-
-    # Save data only taking the columns essential, including the ones use for the formulas 
-    add_attr(.data |> select(
-      !!.sample, !!.cell_group, !!.count, 
-      all_of(parse_formula(formula_composition)),
-      all_of(random_effect_elements |> pull(grouping) |> unique())
-      ), "count_data") |>
-    
+    # Posterior means and intervals via fit$summary (no full draw tensors; no pH0/FDR)
+    sccomp_summarise_posterior_for_estimate(
+      fit = fit,
+      model_input = data_for_model,
+      .cell_group = .cell_group |> drop_environment(),
+      percent_false_positive = 5
+    ) |>
+    add_attr(fit, "fit") |>
+    add_attr(data_for_model, "model_input") |>
     add_attr(.sample |> drop_environment(), ".sample") |>
     add_attr(.cell_group |> drop_environment(), ".cell_group") |>
     add_attr(.count |> drop_environment(), ".count") |>
-    add_attr(check_outliers, "check_outliers") |>
     add_attr(formula_composition |> drop_environment(), "formula_composition") |>
     add_attr(formula_variability |> drop_environment(), "formula_variability") |>
-    add_attr(parse_formula(formula_composition), "factors" ) |> 
-    add_attr(inference_method, "inference_method" ) |> 
+    add_attr(inference_method, "inference_method" ) |>
+    add_attr(.data |> select(
+        !!.sample, !!.cell_group, !!.count, 
+        all_of(parse_formula(formula_composition)),
+        all_of(random_effect_elements |> pull(grouping) |> unique())
+      ), "count_data") |>
+    # End of Selection
+
+    add_class("sccomp_tbl") |>
     
-    # Add class to the tbl
-    add_class("sccomp_tbl") |> 
     
-    # Print estimates
-    sccomp_test() |>
-    
-    # drop hypothesis testing as the estimation exists without probabilities.
-    # For hypothesis testing use sccomp_test
-    select(-contains("_FDR"), -contains("_pH0")) 
+    add_attr(parse_formula(formula_composition), "factors" )
   
   
-  if(inference_method %in% c("variational") && max(na.omit(estimate_tibble$c_R_k_hat)) > 4)
-    warning("sccomp says: using variational inference, c_R_k_hat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using inference_method = \"hmc\" to use the state-of-the-art (although slower) HMC sampler.")
+  if(inference_method %in% c("variational") && max(na.omit(estimate_tibble$c_rhat)) > 4)
+    warning("sccomp says: using variational inference, c_rhat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using inference_method = \"hmc\" to use the state-of-the-art (although slower) HMC sampler.")
   
   estimate_tibble
 }

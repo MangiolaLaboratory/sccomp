@@ -4,6 +4,13 @@
 #'
 #' @param .data A tibble. The result of sccomp_estimate.
 #' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
+#'
+#'   **Fast path:** If every contrast is a **single** design-matrix symbol (e.g. `"typecancer"`, or
+#'   `` "`(Intercept)`" ``) and all refer to parameters from one Stan block only (composition fixed
+#'   effects, or one random-effect matrix), then composition (and variability when those columns also
+#'   appear in the variability design matrix) are summarized via `fit$summary()` on the required indices
+#'   only—no full posterior-draw tensors. In that case `c_pH0`, `c_FDR`, `v_pH0`, and `v_FDR` are
+#'   set to `NA` (exact tail probabilities still require per-draw evaluation of the estimand).
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
 #' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
@@ -87,34 +94,97 @@ sccomp_test.sccomp_tbl = function(.data,
   truncation_df2 =  .data |>  attr("truncation_df2")
   inference_method = .data |>  attr("inference_method")
   
-  # Abundance
-  abundance_CI =
-    get_abundance_contrast_draws(.data, contrasts)
-  
-  # If my contrasts do not match my model. I have to do something more elegant.
-  if ("parameter" %in% colnames(abundance_CI))
-    abundance_CI =
-    abundance_CI |>
-    draws_to_statistics(
-      percent_false_positive/100,
-      test_composition_above_logit_fold_change,
-      !!.cell_group,
-      "c_"
-    )
-  
-  variability_CI =
-    get_variability_contrast_draws(.data, contrasts)
-  
-  # Variability
-  if ("parameter" %in% colnames(variability_CI))
-    variability_CI = 
-    variability_CI |>
-    draws_to_statistics(
-      percent_false_positive / 100,
-      test_composition_above_logit_fold_change,
-      !!.cell_group,
-      "v_"
-    )
+  fit <- .data |> attr("fit")
+  cg <- rlang::quo_name(.cell_group)
+  fp_rate <- percent_false_positive / 100
+  probs <- c(fp_rate / 2, 1 - fp_rate / 2)
+  cell_group_levels <- model_input$y |> colnames()
+
+  identified <- sccomp_identify_covariate_contrasts(contrasts, model_input)
+
+  # Fast path for direct covariate contrasts that can be summarized without draw algebra.
+  if (!is.null(identified)) {
+    abundance_CI <-
+      dplyr::bind_rows(lapply(seq_len(nrow(identified$contrast_mapping)), function(i) {
+        summarise_stan_matrix_for_estimate(
+          fit = fit,
+          par_name = identified$par_name,
+          design_colnames = identified$contrast_mapping$design_param[[i]],
+          cell_group_levels = cell_group_levels,
+          probs = probs,
+          cell_group_colname = cg,
+          prefix = "c_",
+          full_design_colnames = identified$full_design
+        ) |>
+          dplyr::mutate(parameter = identified$contrast_mapping$contrast[[i]])
+      })) |>
+      # pH0/FDR require per-draw contrast values, so they are undefined on this path.
+      dplyr::mutate(c_pH0 = NA_real_, c_FDR = NA_real_)
+
+    if (isTRUE(identified$variab_ok)) {
+      variability_CI <-
+        dplyr::bind_rows(lapply(seq_len(nrow(identified$contrast_mapping)), function(i) {
+          summarise_stan_matrix_for_estimate(
+            fit = fit,
+            par_name = "alpha_normalised",
+            design_colnames = identified$contrast_mapping$design_param[[i]],
+            cell_group_levels = cell_group_levels,
+            probs = probs,
+            cell_group_colname = cg,
+            prefix = "v_",
+            full_design_colnames = colnames(model_input$XA)
+          ) |>
+            dplyr::mutate(
+              v_lower = -v_lower,
+              v_effect = -v_effect,
+              v_upper = -v_upper,
+              parameter = identified$contrast_mapping$contrast[[i]]
+            ) |>
+            dplyr::rename(v_lower = v_upper, v_upper = v_lower)
+        })) |>
+        dplyr::mutate(v_pH0 = NA_real_, v_FDR = NA_real_)
+    } else {
+      # Variability fallback when the requested term is not present in XA.
+      variability_CI <- get_variability_contrast_draws(.data, contrasts)
+      if ("parameter" %in% colnames(variability_CI)) {
+        variability_CI <-
+          variability_CI |>
+          draws_to_statistics(
+            percent_false_positive / 100,
+            test_composition_above_logit_fold_change,
+            !!.cell_group,
+            "v_"
+          )
+      }
+    }
+  } else {
+    # General contrasts (e.g. a-b, weighted sums) keep the draw-based implementation.
+    abundance_CI <- get_abundance_contrast_draws(.data, contrasts)
+
+    if ("parameter" %in% colnames(abundance_CI)) {
+      abundance_CI <-
+        abundance_CI |>
+        draws_to_statistics(
+          percent_false_positive / 100,
+          test_composition_above_logit_fold_change,
+          !!.cell_group,
+          "c_"
+        )
+    }
+
+    variability_CI <- get_variability_contrast_draws(.data, contrasts)
+
+    if ("parameter" %in% colnames(variability_CI)) {
+      variability_CI <-
+        variability_CI |>
+        draws_to_statistics(
+          percent_false_positive / 100,
+          test_composition_above_logit_fold_change,
+          !!.cell_group,
+          "v_"
+        )
+    }
+  }
   
   # If I don't have factors (~1)
   if (!"factor" %in% colnames(model_input$factor_parameter_dictionary))
@@ -171,6 +241,201 @@ sccomp_test.sccomp_tbl = function(.data,
   
     # Add class to the tbl
     add_class("sccomp_tbl") 
+}
+
+#' Build per-parameter posterior summaries (mean, equal-tailed intervals, rhat, ESS)
+#' for default reporting from `sccomp_estimate()` / `sccomp_remove_outliers()` without
+#' loading full posterior draws. Does not compute pH0 / FDR (use [sccomp_test()]).
+#'
+#' `design_colnames` may be a subset of `full_design_colnames`; in that case only those
+#' Stan elements are passed to `fit$summary()`.
+#'
+#' @keywords internal
+#' @noRd
+summarise_stan_matrix_for_estimate <- function(
+    fit,
+    par_name,
+    design_colnames,
+    cell_group_levels,
+    probs,
+    cell_group_colname,
+    prefix,
+    full_design_colnames = NULL,
+    full_block_parameter = NULL) {
+  if (is.null(full_design_colnames)) {
+    full_design_colnames <- design_colnames
+  }
+  # Translate design-matrix column names to Stan matrix column indices (C).
+  C_idx <- match(design_colnames, full_design_colnames)
+  if (anyNA(C_idx)) {
+    stop(
+      "sccomp says: each name in design_colnames must appear in full_design_colnames.",
+      call. = FALSE
+    )
+  }
+  if (is.null(par_name)) {
+    summ <- summary_to_tibble(fit, full_block_parameter, "C", "M", probs = probs)
+  } else {
+    # Subset request uses explicit indexed Stan variable names for selected C across all M.
+    n_M <- length(cell_group_levels)
+    g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
+    variable_names <- sprintf("%s[%d,%d]", par_name, g$C, g$M)
+    summ <- summary_to_tibble(fit, variable_names, "C", "M", probs = probs)
+  }
+  qcols <- names(summ)[grepl("%$", names(summ))]
+  q_bounds <- qcols |>
+    tibble::enframe(value = "qcol") |>
+    dplyr::mutate(pct = as.numeric(gsub("%$", "", qcol, perl = TRUE))) |>
+    dplyr::arrange(pct) |>
+    dplyr::pull(qcol)
+  qlo <- q_bounds[[1]]
+  qhi <- q_bounds[[2]]
+
+  par_by_C <-
+    tibble::tibble(C = C_idx, parameter = design_colnames) |>
+    dplyr::distinct()
+
+  joined <- summ |>
+    dplyr::left_join(par_by_C, by = "C")
+
+  lower_col <- paste0(prefix, "lower")
+  effect_col <- paste0(prefix, "effect")
+  upper_col <- paste0(prefix, "upper")
+  rhat_col <- paste0(prefix, "rhat")
+  ess_bulk_col <- paste0(prefix, "ess_bulk")
+  ess_tail_col <- paste0(prefix, "ess_tail")
+
+  joined |>
+    dplyr::transmute(
+      !!rlang::sym(cell_group_colname) := cell_group_levels[M],
+      M,
+      parameter,
+      !!lower_col := .data[[qlo]],
+      !!effect_col := mean,
+      !!upper_col := .data[[qhi]],
+      !!rhat_col := rhat,
+      !!ess_bulk_col := ess_bulk,
+      !!ess_tail_col := ess_tail
+    )
+}
+
+#' @keywords internal
+#' @noRd
+sccomp_summarise_posterior_for_estimate <- function(
+    fit,
+    model_input,
+    .cell_group,
+    percent_false_positive = 5) {
+  check_and_install_cmdstanr()
+
+  cg <- rlang::quo_name(.cell_group)
+  fp <- percent_false_positive / 100
+  probs <- c(fp / 2, 1 - fp / 2)
+
+  cell_group_levels <- model_input$y |> colnames()
+
+  abundance_parts <- list(
+    summarise_stan_matrix_for_estimate(
+      fit, NULL, colnames(model_input$X), cell_group_levels,
+      probs, cg, "c_", full_block_parameter = "beta"
+    )
+  )
+  if (model_input$n_random_eff > 0) {
+    abundance_parts <- c(
+      abundance_parts,
+      list(summarise_stan_matrix_for_estimate(
+        fit, NULL, colnames(model_input$X_random_effect), cell_group_levels,
+        probs, cg, "c_", full_block_parameter = "random_effect"
+      ))
+    )
+  }
+  if (model_input$n_random_eff > 1) {
+    abundance_parts <- c(
+      abundance_parts,
+      list(summarise_stan_matrix_for_estimate(
+        fit, NULL, colnames(model_input$X_random_effect_2), cell_group_levels,
+        probs, cg, "c_", full_block_parameter = "random_effect_2"
+      ))
+    )
+  }
+
+  abundance <- dplyr::bind_rows(abundance_parts)
+
+  variability <- summarise_stan_matrix_for_estimate(
+    fit, NULL, colnames(model_input$XA), cell_group_levels,
+    probs, cg, "v_", full_block_parameter = "alpha_normalised"
+  ) |>
+    dplyr::mutate(
+      v_lower = -v_lower,
+      v_effect = -v_effect,
+      v_upper = -v_upper
+    ) |>
+    dplyr::rename(v_lower = v_upper, v_upper = v_lower)
+
+  if (!"factor" %in% colnames(model_input$factor_parameter_dictionary)) {
+    factor_parameter_dictionary <-
+      tibble::tibble(`factor` = character(), design_matrix_col = character())
+  } else {
+    factor_parameter_dictionary <-
+      model_input$factor_parameter_dictionary |>
+      dplyr::select(`factor`, design_matrix_col)
+  }
+
+  result <-
+    abundance |>
+    dplyr::left_join(variability, by = c(cg, "M", "parameter")) |>
+    suppressMessages() |>
+    dplyr::left_join(
+      factor_parameter_dictionary,
+      by = c("parameter" = "design_matrix_col")
+    ) |>
+    dplyr::select(parameter, `factor`, dplyr::everything()) |>
+    dplyr::select(!!.cell_group, dplyr::everything(), -M)
+
+  result
+}
+
+#' Identify direct covariate contrasts for the summary-only shortcut.
+#'
+#' For now, the shortcut is enabled only when each contrast maps to exactly one
+#' covariate and all covariates are present in the composition design matrix `X`.
+#' Otherwise the draw-based contrast arithmetic is used.
+#'
+#' @keywords internal
+#' @noRd
+sccomp_identify_covariate_contrasts <- function(contrasts, model_input) {
+  if (is.null(contrasts)) {
+    return(NULL)
+  }
+  if (is.null(names(contrasts))) {
+    names(contrasts) <- contrasts
+  }
+
+  contrast_mapping <- tibble::tibble(
+    contrast = names(contrasts),
+    design_param = vapply(
+      contrasts,
+      function(s) {
+        extracted <- contrasts_to_parameter_list(s)
+        if (length(extracted) != 1) return(NA_character_)
+        extracted[[1]]
+      },
+      character(1)
+    )
+  )
+
+  if (anyNA(contrast_mapping$design_param)) return(NULL)
+
+  if (!all(contrast_mapping$design_param %in% colnames(model_input$X))) return(NULL)
+
+  variab_ok <- all(contrast_mapping$design_param %in% colnames(model_input$XA))
+
+  list(
+    par_name = "beta",
+    full_design = colnames(model_input$X),
+    contrast_mapping = contrast_mapping,
+    variab_ok = variab_ok
+  )
 }
 
 # this can be helpful if we want to draw PCA with uncertainty
@@ -743,7 +1008,7 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     group_by(!!.cell_group, M, parameter, rhat, ess_bulk, ess_tail) %>%
     summarise(
       lower = quantile(.value, false_positive_rate / 2),
-      effect = quantile(.value, 0.5),
+      effect = mean(.value),
       upper = quantile(.value, 1 - (false_positive_rate / 2)),
       bigger_zero = sum(.value > test_composition_above_logit_fold_change),
       smaller_zero = sum(.value < -test_composition_above_logit_fold_change),
