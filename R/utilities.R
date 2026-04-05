@@ -57,7 +57,7 @@ add_attr = function(var, attribute, name) {
 #' 
 #' The function calls fit$draws() for all parameters, which forces cmdstanr
 #' to read the CSV files and cache the draws in memory. This way, when the
-#' CSV files are later deleted (via cleanup_draw_files = TRUE), the draws
+#' CSV files are later deleted (via portable = TRUE), the draws
 #' remain accessible through the fit object.
 #' 
 #' This function is really needed for LOO usage and outlier removal usage.
@@ -295,12 +295,14 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   .value <- NULL
 
   
+  base_parameter <- sub("\\[.*$", "", par[[1]])
+
   fit$draws(variables = par, format = "draws_df") %>%
     mutate(.iteration = seq_len(n())) %>%
     
     pivot_longer(
       names_to = "parameter", # c( ".chain", ".variable", x, y),
-      cols = contains(par),
+      cols = tidyselect::any_of(par),
       #names_sep = "\\.?|\\[|,|\\]|:",
       # names_ptypes = list(
       #   ".variable" = character()),
@@ -321,7 +323,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     mutate(.draw = seq_len(n())) %>%
     ungroup() %>%
     select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
-    filter(.variable == par)
+    filter(.variable == base_parameter)
   
 }
 

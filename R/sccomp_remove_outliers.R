@@ -26,9 +26,8 @@
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
 #'                        The sccomp version will be automatically appended to ensure version isolation.
 #'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
-#' @param cleanup_draw_files Logical, whether to automatically delete Stan draw CSV files after extracting results.
-#'                               These files can be large (MBs to GBs) and are typically only needed during the analysis session.
-#'                               Default is TRUE to save disk space. Set to FALSE if you need to inspect draw files for debugging.
+#' @param portable Logical, whether to keep the result portable by caching required draws in memory and removing Stan draw CSV files after fitting.
+#'                 Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.
 #' @param approximate_posterior_inference DEPRECATED, use the `variational_inference` argument.
 #' @param variational_inference DEPRECATED Logical, whether to use variational Bayes for posterior inference. It is faster and convenient. Setting this argument to `FALSE` runs full Bayesian (Hamiltonian Monte Carlo) inference, which is slower but the gold standard.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
@@ -101,7 +100,7 @@ sccomp_remove_outliers <- function(.estimate,
                                    enable_loo = FALSE,
                                    sig_figs = 9,
                                    cache_stan_model = sccomp_stan_models_cache_dir,
-                                   cleanup_draw_files = TRUE,
+                                   portable = TRUE,
                                    
                                    # DEPRECATED
                                    approximate_posterior_inference = NULL,
@@ -134,7 +133,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
                                              enable_loo = FALSE,
                                              sig_figs = 9,
                                              cache_stan_model = sccomp_stan_models_cache_dir,
-                                             cleanup_draw_files = TRUE,
+                                             portable = TRUE,
                                              
                                              # DEPRECATED
                                              approximate_posterior_inference = NULL,
@@ -497,7 +496,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     add_attr(parse_formula(formula_composition), "factors" ) 
   
   # Auto-cleanup draw files if requested
-  if (cleanup_draw_files) {
+  if (portable) {
     if (dir.exists(output_directory)) {
       files_deleted <- list.files(output_directory, pattern = "\\.csv$", full.names = TRUE)
       if (length(files_deleted) > 0) {

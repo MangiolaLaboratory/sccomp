@@ -94,96 +94,38 @@ sccomp_test.sccomp_tbl = function(.data,
   truncation_df2 =  .data |>  attr("truncation_df2")
   inference_method = .data |>  attr("inference_method")
   
-  fit <- .data |> attr("fit")
-  cg <- rlang::quo_name(.cell_group)
-  fp_rate <- percent_false_positive / 100
-  probs <- c(fp_rate / 2, 1 - fp_rate / 2)
-  cell_group_levels <- model_input$y |> colnames()
-
   identified <- sccomp_identify_covariate_contrasts(contrasts, model_input)
+  mapped_covariates <- if (is.null(identified)) NULL else unique(identified$contrast_mapping$design_param)
+  contrasts_parameters <- NULL
+  if (!is.null(contrasts)) {
+    contrasts_parameters <- contrasts_to_parameter_list(contrasts)
+  }
 
-  # Fast path for direct covariate contrasts that can be summarized without draw algebra.
-  if (!is.null(identified)) {
+  # sccomp_test always computes pH0/FDR from posterior draws.
+  abundance_CI <- get_abundance_contrast_draws(.data, contrasts, mapped_covariates, contrasts_parameters)
+
+  if ("parameter" %in% colnames(abundance_CI)) {
     abundance_CI <-
-      dplyr::bind_rows(lapply(seq_len(nrow(identified$contrast_mapping)), function(i) {
-        summarise_stan_matrix_for_estimate(
-          fit = fit,
-          par_name = identified$par_name,
-          design_colnames = identified$contrast_mapping$design_param[[i]],
-          cell_group_levels = cell_group_levels,
-          probs = probs,
-          cell_group_colname = cg,
-          prefix = "c_",
-          full_design_colnames = identified$full_design
-        ) |>
-          dplyr::mutate(parameter = identified$contrast_mapping$contrast[[i]])
-      })) |>
-      # pH0/FDR require per-draw contrast values, so they are undefined on this path.
-      dplyr::mutate(c_pH0 = NA_real_, c_FDR = NA_real_)
+      abundance_CI |>
+      draws_to_statistics(
+        percent_false_positive / 100,
+        test_composition_above_logit_fold_change,
+        !!.cell_group,
+        "c_"
+      )
+  }
 
-    if (isTRUE(identified$variab_ok)) {
-      variability_CI <-
-        dplyr::bind_rows(lapply(seq_len(nrow(identified$contrast_mapping)), function(i) {
-          summarise_stan_matrix_for_estimate(
-            fit = fit,
-            par_name = "alpha_normalised",
-            design_colnames = identified$contrast_mapping$design_param[[i]],
-            cell_group_levels = cell_group_levels,
-            probs = probs,
-            cell_group_colname = cg,
-            prefix = "v_",
-            full_design_colnames = colnames(model_input$XA)
-          ) |>
-            dplyr::mutate(
-              v_lower = -v_lower,
-              v_effect = -v_effect,
-              v_upper = -v_upper,
-              parameter = identified$contrast_mapping$contrast[[i]]
-            ) |>
-            dplyr::rename(v_lower = v_upper, v_upper = v_lower)
-        })) |>
-        dplyr::mutate(v_pH0 = NA_real_, v_FDR = NA_real_)
-    } else {
-      # Variability fallback when the requested term is not present in XA.
-      variability_CI <- get_variability_contrast_draws(.data, contrasts)
-      if ("parameter" %in% colnames(variability_CI)) {
-        variability_CI <-
-          variability_CI |>
-          draws_to_statistics(
-            percent_false_positive / 100,
-            test_composition_above_logit_fold_change,
-            !!.cell_group,
-            "v_"
-          )
-      }
-    }
-  } else {
-    # General contrasts (e.g. a-b, weighted sums) keep the draw-based implementation.
-    abundance_CI <- get_abundance_contrast_draws(.data, contrasts)
+  variability_CI <- get_variability_contrast_draws(.data, contrasts, mapped_covariates, contrasts_parameters)
 
-    if ("parameter" %in% colnames(abundance_CI)) {
-      abundance_CI <-
-        abundance_CI |>
-        draws_to_statistics(
-          percent_false_positive / 100,
-          test_composition_above_logit_fold_change,
-          !!.cell_group,
-          "c_"
-        )
-    }
-
-    variability_CI <- get_variability_contrast_draws(.data, contrasts)
-
-    if ("parameter" %in% colnames(variability_CI)) {
-      variability_CI <-
-        variability_CI |>
-        draws_to_statistics(
-          percent_false_positive / 100,
-          test_composition_above_logit_fold_change,
-          !!.cell_group,
-          "v_"
-        )
-    }
+  if ("parameter" %in% colnames(variability_CI)) {
+    variability_CI <-
+      variability_CI |>
+      draws_to_statistics(
+        percent_false_positive / 100,
+        test_composition_above_logit_fold_change,
+        !!.cell_group,
+        "v_"
+      )
   }
   
   # If I don't have factors (~1)
@@ -439,7 +381,7 @@ sccomp_identify_covariate_contrasts <- function(contrasts, model_input) {
 }
 
 # this can be helpful if we want to draw PCA with uncertainty
-get_abundance_contrast_draws = function(.data, contrasts){
+get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = NULL, contrasts_parameters = NULL){
   
   # Define the variables as NULL to avoid CRAN NOTES
   X <- NULL
@@ -464,6 +406,16 @@ get_abundance_contrast_draws = function(.data, contrasts){
   #   draws_to_tibble_x_y("beta", "C", "M") |>
   #   pivot_wider(names_from = C, values_from = .value) %>%
   #   setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
+  beta_variable_subset <- NULL
+  if (!is.null(design_param_subset)) {
+    needed <- intersect(design_param_subset, beta_factor_of_interest)
+    if (length(needed) > 0) {
+      n_M <- ncol(.data |> attr("model_input") %$% y)
+      C_idx <- match(needed, beta_factor_of_interest)
+      g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
+      beta_variable_subset <- sprintf("beta[%d,%d]", g$C, g$M)
+    }
+  }
   
   if(contrasts |> is.null())
     draws = 
@@ -473,19 +425,21 @@ get_abundance_contrast_draws = function(.data, contrasts){
     pivot_wider(names_from = C, values_from = .value) %>%
     setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
   
-  else if(
-    (beta_factor_of_interest %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
-  )
+  else if((beta_factor_of_interest %in% contrasts_parameters) |> which() |> length() > 0)
     
     draws =
-    .data |>
-    attr("fit") %>%
-    draws_to_tibble_x_y("beta", "C", "M") |> 
+      .data |>
+      attr("fit") %>%
+      draws_to_tibble_x_y(
+        if (is.null(beta_variable_subset)) "beta" else beta_variable_subset,
+        "C",
+        "M"
+      ) |> 
     left_join(
       beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
       by = "C"
     )  |> 
-    filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+    filter(parameters_name %in% contrasts_parameters) |> 
     select(-C) |> 
     pivot_wider(names_from = parameters_name, values_from = .value)
   
@@ -505,7 +459,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
     .data |> attr("model_input") %$% n_random_eff > 0 &&
     (
       contrasts |> is.null() || 
-      (beta_random_effect_factor_of_interest %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
+      (beta_random_effect_factor_of_interest %in% contrasts_parameters) |> which() |> length() > 0
     )  
   ){
     
@@ -520,29 +474,6 @@ get_abundance_contrast_draws = function(.data, contrasts){
       beta_random_effect |> 
       with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
       mutate(.value = -.value, M = beta_random_effect |> pull(M) |> max() + 1)
-    
-    # POST-MODEL CORRECTION COMMENTED OUT - Now using built-in sum_to_zero_vector in Stan
-    # I HAVE TO REGULARISE THE LAST COMPONENT
-    # mean_of_the_sd_of_the_point_estimates = 
-    #   beta_random_effect |> 
-    #   group_by(M, C) |> 
-    #   summarise(point_estimate = mean(.value)) |> 
-    #   group_by(M) |> 
-    #   summarise(sd_of_point_estimates = sd(point_estimate)) |> 
-    #   pull(sd_of_point_estimates) |> 
-    #   mean()
-    
-    # other_sd_of_the_point_estimates = 
-    #   other_group_random_effect |> 
-    #   group_by(M, C) |> 
-    #   summarise(point_estimate = mean(.value)) |> 
-    #   group_by(M) |> 
-    #   summarise(sd_of_point_estimates = sd(point_estimate)) |> 
-    #   pull(sd_of_point_estimates)
-    
-    # other_group_random_effect = 
-    #   other_group_random_effect |> 
-    #   mutate(.value = .value / (other_sd_of_the_point_estimates / mean_of_the_sd_of_the_point_estimates))
     
     
     beta_random_effect = 
@@ -570,7 +501,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
         beta_random_effect_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
         by = "C"
       )  |> 
-      filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+      filter(parameters_name %in% contrasts_parameters) |> 
       select(-C) |> 
       pivot_wider(names_from = parameters_name, values_from = .value)
     
@@ -600,7 +531,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
     .data |> attr("model_input") %$% n_random_eff > 1 &&
     (
       contrasts |> is.null() || 
-      (beta_random_effect_factor_of_interest_2 %in% contrasts_to_parameter_list(contrasts)) |> which() |> length() > 0
+      (beta_random_effect_factor_of_interest_2 %in% contrasts_parameters) |> which() |> length() > 0
     )
   ){
     
@@ -652,7 +583,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
         beta_random_effect_factor_of_interest_2 |> enframe(name = "C", value = "parameters_name"),
         by = "C"
       )  |> 
-      filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+      filter(parameters_name %in% contrasts_parameters) |> 
       select(-C) |> 
       pivot_wider(names_from = parameters_name, values_from = .value)
     
@@ -803,7 +734,7 @@ get_abundance_contrast_draws = function(.data, contrasts){
 
 #' @importFrom forcats fct_relevel
 #' @noRd
-get_variability_contrast_draws = function(.data, contrasts){
+get_variability_contrast_draws = function(.data, contrasts, design_param_subset = NULL, contrasts_parameters = NULL){
   
   # Define the variables as NULL to avoid CRAN NOTES
   XA <- NULL
@@ -818,12 +749,30 @@ get_variability_contrast_draws = function(.data, contrasts){
   .cell_group = .data |>  attr(".cell_group")
   
   variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()
+  alpha_variable_subset <- NULL
+  if (!is.null(design_param_subset)) {
+    needed <- intersect(design_param_subset, variability_factor_of_interest)
+    if (length(needed) == 0 && !is.null(contrasts)) {
+      return(
+        .data |>
+          attr("model_input") %$%
+          y %>%
+          colnames() |>
+          enframe(name = "M", value  = quo_name(.cell_group)) |>
+          dplyr::select(!!.cell_group, M)
+      )
+    }
+    n_M <- ncol(.data |> attr("model_input") %$% y)
+    C_idx <- match(needed, variability_factor_of_interest)
+    g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
+    alpha_variable_subset <- sprintf("alpha_normalised[%d,%d]", g$C, g$M)
+  }
   
   draws =
     
     .data |>
     attr("fit") %>%
-    draws_to_tibble_x_y("alpha_normalised", "C", "M") |>
+    draws_to_tibble_x_y(if (is.null(alpha_variable_subset)) "alpha_normalised" else alpha_variable_subset, "C", "M") |>
     
     # We want variability, not concentration
     mutate(.value = -.value) 
@@ -837,7 +786,7 @@ get_variability_contrast_draws = function(.data, contrasts){
       variability_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
       by = "C"
     )  |> 
-    filter(parameters_name %in% contrasts_to_parameter_list(contrasts)) |> 
+    filter(parameters_name %in% contrasts_parameters) |> 
     select(-C) |> 
     pivot_wider(names_from = parameters_name, values_from = .value) |> 
     select( -.variable) 

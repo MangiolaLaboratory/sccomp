@@ -1,6 +1,12 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.30}{
+\itemize{
+    \item API update for draw-file cleanup control: use \code{portable} in \code{sccomp_estimate()} and \code{sccomp_remove_outliers()}.
+    \item The old \code{cleanup_draw_files} argument has been deprecated in favour of \code{portable} and removed from the exported function signatures in this release.
+}}
+
 \section{News in version 2.1.25}{
 \itemize{
     \item Improved plotting significance colouring controls. Added \code{significance_statistic} to \code{sccomp_boxplot()} with default \code{c("pH0", "FDR")}, so colouring now defaults to posterior probability while still supporting FDR-based colouring.
@@ -20,7 +26,7 @@
 
 \section{News in version 2.1.22}{
 \itemize{
-    \item Added automatic cleanup of Stan draw CSV files. New \code{cleanup_draw_files} parameter (default TRUE) in \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} automatically removes large draw files after analysis completion, significantly reducing disk space usage.
+    \item Added automatic cleanup of Stan draw CSV files. New \code{portable} parameter (default TRUE) in \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} automatically removes large draw files after analysis completion, significantly reducing disk space usage.
     \item New \code{clear_draw_files()} function for manual cleanup of Stan draw CSV files. Provides flexible options to filter by age, size, with dry-run mode for preview and verbose output.
 }}
 
