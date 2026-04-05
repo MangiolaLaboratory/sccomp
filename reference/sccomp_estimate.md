@@ -38,7 +38,7 @@ sccomp_estimate(
   pass_fit = TRUE,
   sig_figs = 9,
   cache_stan_model = sccomp_stan_models_cache_dir,
-  cleanup_draw_files = TRUE,
+  portable = TRUE,
   ...,
   .count = NULL,
   approximate_posterior_inference = NULL,
@@ -162,13 +162,12 @@ sccomp_estimate(
   version isolation. Default is `sccomp_stan_models_cache_dir` which
   points to `~/.sccomp_models`.
 
-- cleanup_draw_files:
+- portable:
 
-  Logical, whether to automatically delete Stan draw CSV files after
-  extracting results. These files can be large (MBs to GBs) and are
-  typically only needed during the analysis session. Default is TRUE to
-  save disk space. Set to FALSE if you need to inspect draw files for
-  debugging.
+  Logical, whether to keep the result portable by caching required draws
+  in memory and removing Stan draw CSV files after fitting. Default is
+  TRUE to save disk space and move needed values into memory. Set to
+  FALSE to keep draw CSV files on disk.
 
 - ...:
 
@@ -221,19 +220,14 @@ A tibble (`tbl`), with the following columns:
 - c_upper - Upper (97.5%) quantile of the posterior distribution for a
   composition (c) parameter.
 
-- c_pH0 - Probability of the c_effect being smaller or bigger than the
-  `test_composition_above_logit_fold_change` argument.
+- c_rhat - R-hat convergence diagnostic for the composition (c)
+  parameter; values close to 1.0 indicate convergence.
 
-- c_FDR - False discovery rate of the c_effect being smaller or bigger
-  than the `test_composition_above_logit_fold_change` argument. False
-  discovery rate for Bayesian models is calculated differently from
-  frequentists models, as detailed in Mangiola et al, PNAS 2023.
+- c_ess_bulk - Bulk effective sample size for the composition (c)
+  parameter; higher is better.
 
-- c_n_eff - Effective sample size, the number of independent draws in
-  the sample. The higher, the better.
-
-- c_R_k_hat - R statistic, a measure of chain equilibrium, should be
-  within 0.05 of 1.0.
+- c_ess_tail - Tail effective sample size for the composition (c)
+  parameter; higher is better.
 
 - v_lower - Lower (2.5%) quantile of the posterior distribution for a
   variability (v) parameter.
@@ -244,18 +238,18 @@ A tibble (`tbl`), with the following columns:
 - v_upper - Upper (97.5%) quantile of the posterior distribution for a
   variability (v) parameter.
 
-- v_pH0 - Probability of the v_effect being smaller or bigger than the
-  `test_composition_above_logit_fold_change` argument.
+- v_rhat - R-hat convergence diagnostic for the variability (v)
+  parameter.
 
-- v_FDR - False discovery rate of the v_effect being smaller or bigger
-  than the `test_composition_above_logit_fold_change` argument. False
-  discovery rate for Bayesian models is calculated differently from
-  frequentists models, as detailed in Mangiola et al, PNAS 2023.
+- v_ess_bulk - Bulk effective sample size for the variability (v)
+  parameter.
 
-- v_n_eff - Effective sample size for a variability (v) parameter.
+- v_ess_tail - Tail effective sample size for the variability (v)
+  parameter.
 
-- v_R_k_hat - R statistic for a variability (v) parameter, a measure of
-  chain equilibrium.
+Note: pH0 and FDR columns are not computed by `sccomp_estimate()`. Run
+[`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md)
+on the result to obtain hypothesis-test statistics.
 
 The function also attaches several attributes to the result:
 
@@ -520,7 +514,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              61      -4.788e+05      6.048e-03   2.400e-01    7.387e-01  7.387e-01      3646 -3.685e+03 -3.697e+03                   
 #> Path [50] :Best Iter: [59] ELBO (-3684.887737) evaluations: (3646) 
-#> Finished in  13.6 seconds.
+#> Finished in  13.7 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -732,7 +726,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>             100       2.585e+03      7.832e-02   1.013e+04    1.406e-02  3.353e-02      8599  2.298e+03 -4.137e+08                   
 #> Path [50] :Best Iter: [25] ELBO (2297.984471) evaluations: (8599) 
-#> Finished in  15.9 seconds.
+#> Finished in  16.0 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.

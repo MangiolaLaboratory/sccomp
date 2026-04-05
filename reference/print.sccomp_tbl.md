@@ -281,17 +281,17 @@ if (instantiate::stan_cmdstan_exists()) {
 #>    cell_group parameter   factor  c_lower c_effect c_upper c_rhat c_ess_bulk
 #>    <chr>      <chr>       <chr>     <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
 #>  1 B1         (Intercept) NA      0.956      1.21   1.46    1.000      4193.
-#>  2 B1         typecancer  type   -0.936     -0.616 -0.307   1.00       3649.
-#>  3 B2         (Intercept) NA      0.507      0.775  1.03    1.00       3923.
+#>  2 B1         typecancer  type   -0.936     -0.618 -0.307   1.00       3649.
+#>  3 B2         (Intercept) NA      0.507      0.774  1.03    1.00       3923.
 #>  4 B2         typecancer  type   -0.961     -0.665 -0.362   1.00       3644.
-#>  5 B3         (Intercept) NA     -0.585     -0.326 -0.0743  1.00       3556.
+#>  5 B3         (Intercept) NA     -0.585     -0.327 -0.0743  1.00       3556.
 #>  6 B3         typecancer  type   -0.578     -0.277  0.0308  1.00       4158.
-#>  7 BM         (Intercept) NA     -1.22      -0.968 -0.702   1.00       4056.
-#>  8 BM         typecancer  type   -0.594     -0.282  0.0126  1.00       4156.
-#>  9 CD4 1      (Intercept) NA      0.201      0.370  0.534   1.000      3814.
+#>  7 BM         (Intercept) NA     -1.22      -0.967 -0.702   1.00       4056.
+#>  8 BM         typecancer  type   -0.594     -0.284  0.0126  1.00       4156.
+#>  9 CD4 1      (Intercept) NA      0.201      0.369  0.534   1.000      3814.
 #> 10 CD4 1      typecancer  type   -0.00472    0.209  0.425   1.00       4222.
 #> # ℹ 62 more rows
-#> # ℹ 7 more variables: c_ess_tail <dbl>, v_lower <dbl>, v_effect <dbl>,
-#> #   v_upper <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
+#> # ℹ 7 more variables: c_ess_tail <dbl>, v_upper <dbl>, v_effect <dbl>,
+#> #   v_lower <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
 # }
 ```

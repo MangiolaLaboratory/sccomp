@@ -23,7 +23,7 @@ sccomp_remove_outliers(
   enable_loo = FALSE,
   sig_figs = 9,
   cache_stan_model = sccomp_stan_models_cache_dir,
-  cleanup_draw_files = TRUE,
+  portable = TRUE,
   approximate_posterior_inference = NULL,
   variational_inference = NULL,
   ...
@@ -87,13 +87,12 @@ sccomp_remove_outliers(
   version isolation. Default is `sccomp_stan_models_cache_dir` which
   points to `~/.sccomp_models`.
 
-- cleanup_draw_files:
+- portable:
 
-  Logical, whether to automatically delete Stan draw CSV files after
-  extracting results. These files can be large (MBs to GBs) and are
-  typically only needed during the analysis session. Default is TRUE to
-  save disk space. Set to FALSE if you need to inspect draw files for
-  debugging.
+  Logical, whether to keep the result portable by caching required draws
+  in memory and removing Stan draw CSV files after fitting. Default is
+  TRUE to save disk space and move needed values into memory. Set to
+  FALSE to keep draw CSV files on disk.
 
 - approximate_posterior_inference:
 
@@ -133,19 +132,14 @@ A tibble (`tbl`), with the following columns:
 - c_upper - Upper (97.5%) quantile of the posterior distribution for a
   composition (c) parameter.
 
-- c_pH0 - Probability of the c_effect being smaller or bigger than the
-  `test_composition_above_logit_fold_change` argument.
+- c_rhat - R-hat convergence diagnostic for the composition (c)
+  parameter; values close to 1.0 indicate convergence.
 
-- c_FDR - False discovery rate of the c_effect being smaller or bigger
-  than the `test_composition_above_logit_fold_change` argument. False
-  discovery rate for Bayesian models is calculated differently from
-  frequentists models, as detailed in Mangiola et al, PNAS 2023.
+- c_ess_bulk - Bulk effective sample size for the composition (c)
+  parameter; higher is better.
 
-- c_n_eff - Effective sample size, the number of independent draws in
-  the sample. The higher, the better.
-
-- c_R_k_hat - R statistic, a measure of chain equilibrium, should be
-  within 0.05 of 1.0.
+- c_ess_tail - Tail effective sample size for the composition (c)
+  parameter; higher is better.
 
 - v_lower - Lower (2.5%) quantile of the posterior distribution for a
   variability (v) parameter.
@@ -156,18 +150,19 @@ A tibble (`tbl`), with the following columns:
 - v_upper - Upper (97.5%) quantile of the posterior distribution for a
   variability (v) parameter.
 
-- v_pH0 - Probability of the v_effect being smaller or bigger than the
-  `test_composition_above_logit_fold_change` argument.
+- v_rhat - R-hat convergence diagnostic for the variability (v)
+  parameter.
 
-- v_FDR - False discovery rate of the v_effect being smaller or bigger
-  than the `test_composition_above_logit_fold_change` argument. False
-  discovery rate for Bayesian models is calculated differently from
-  frequentists models, as detailed in Mangiola et al, PNAS 2023.
+- v_ess_bulk - Bulk effective sample size for the variability (v)
+  parameter.
 
-- v_n_eff - Effective sample size for a variability (v) parameter.
+- v_ess_tail - Tail effective sample size for the variability (v)
+  parameter.
 
-- v_R_k_hat - R statistic for a variability (v) parameter, a measure of
-  chain equilibrium.
+Note: pH0 and FDR columns are not computed by
+`sccomp_remove_outliers()`. Run
+[`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md)
+on the result to obtain hypothesis-test statistics.
 
 The function also attaches several attributes to the result:
 
@@ -630,7 +625,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>             100      -4.247e+05      5.763e-02   1.345e+03    3.071e-02  5.876e-02      8338 -3.277e+03 -1.992e+04                   
 #> Path [50] :Best Iter: [56] ELBO (-3276.600617) evaluations: (8338) 
-#> Finished in  30.6 seconds.
+#> Finished in  30.7 seconds.
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
 #> Chain 1 finished in 0.0 seconds.
@@ -838,7 +833,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>             100      -4.247e+05      5.763e-02   1.345e+03    3.071e-02  5.876e-02      8338 -3.277e+03 -1.992e+04                   
 #> Path [50] :Best Iter: [56] ELBO (-3276.600617) evaluations: (8338) 
-#> Finished in  27.5 seconds.
-#> sccomp says: auto-cleanup removed 2 draw files from 'sccomp_draws_files'
+#> Finished in  27.4 seconds.
+#> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 # }
 ```

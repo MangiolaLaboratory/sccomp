@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.29</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.30</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
 <span>  enable_loo <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sig_figs <span class="op">=</span> <span class="fl">9</span>,</span>
 <span>  cache_stan_model <span class="op">=</span> <span class="va">sccomp_stan_models_cache_dir</span>,</span>
-<span>  cleanup_draw_files <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  portable <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  approximate_posterior_inference <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  variational_inference <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -111,10 +111,9 @@ The sccomp version will be automatically appended to ensure version isolation.
 Default is <code>sccomp_stan_models_cache_dir</code> which points to <code>~/.sccomp_models</code>.</p></dd>
 
 
-<dt id="arg-cleanup-draw-files">cleanup_draw_files<a class="anchor" aria-label="anchor" href="#arg-cleanup-draw-files"></a></dt>
-<dd><p>Logical, whether to automatically delete Stan draw CSV files after extracting results.
-These files can be large (MBs to GBs) and are typically only needed during the analysis session.
-Default is TRUE to save disk space. Set to FALSE if you need to inspect draw files for debugging.</p></dd>
+<dt id="arg-portable">portable<a class="anchor" aria-label="anchor" href="#arg-portable"></a></dt>
+<dd><p>Logical, whether to keep the result portable by caching required draws in memory and removing Stan draw CSV files after fitting.
+Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.</p></dd>
 
 
 <dt id="arg-approximate-posterior-inference">approximate_posterior_inference<a class="anchor" aria-label="anchor" href="#arg-approximate-posterior-inference"></a></dt>
@@ -137,18 +136,17 @@ Default is TRUE to save disk space. Set to FALSE if you need to inspect draw fil
 <li><p>c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.</p></li>
 <li><p>c_effect - Mean of the posterior distribution for a composition (c) parameter.</p></li>
 <li><p>c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.</p></li>
-<li><p>c_pH0 - Probability of the c_effect being smaller or bigger than the <code>test_composition_above_logit_fold_change</code> argument.</p></li>
-<li><p>c_FDR - False discovery rate of the c_effect being smaller or bigger than the <code>test_composition_above_logit_fold_change</code> argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023.</p></li>
-<li><p>c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.</p></li>
-<li><p>c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.</p></li>
+<li><p>c_rhat - R-hat convergence diagnostic for the composition (c) parameter; values close to 1.0 indicate convergence.</p></li>
+<li><p>c_ess_bulk - Bulk effective sample size for the composition (c) parameter; higher is better.</p></li>
+<li><p>c_ess_tail - Tail effective sample size for the composition (c) parameter; higher is better.</p></li>
 <li><p>v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.</p></li>
 <li><p>v_effect - Mean of the posterior distribution for a variability (v) parameter.</p></li>
 <li><p>v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.</p></li>
-<li><p>v_pH0 - Probability of the v_effect being smaller or bigger than the <code>test_composition_above_logit_fold_change</code> argument.</p></li>
-<li><p>v_FDR - False discovery rate of the v_effect being smaller or bigger than the <code>test_composition_above_logit_fold_change</code> argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023.</p></li>
-<li><p>v_n_eff - Effective sample size for a variability (v) parameter.</p></li>
-<li><p>v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.</p></li>
-</ul><p>The function also attaches several attributes to the result:</p><ul><li><p>count_data - The original count data used in the analysis, stored as an attribute for efficient access.</p></li>
+<li><p>v_rhat - R-hat convergence diagnostic for the variability (v) parameter.</p></li>
+<li><p>v_ess_bulk - Bulk effective sample size for the variability (v) parameter.</p></li>
+<li><p>v_ess_tail - Tail effective sample size for the variability (v) parameter.</p></li>
+</ul><p>Note: pH0 and FDR columns are not computed by <code>sccomp_remove_outliers()</code>. Run <code><a href="sccomp_test.html">sccomp_test()</a></code> on the result to obtain hypothesis-test statistics.</p>
+<p>The function also attaches several attributes to the result:</p><ul><li><p>count_data - The original count data used in the analysis, stored as an attribute for efficient access.</p></li>
 <li><p>model_input - The model input data used for fitting.</p></li>
 <li><p>formula_composition - The formula used for composition modeling.</p></li>
 <li><p>formula_variability - The formula used for variability modeling.</p></li>
@@ -599,7 +597,7 @@ Default is TRUE to save disk space. Set to FALSE if you need to inspect draw fil
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             100      -4.247e+05      5.763e-02   1.345e+03    3.071e-02  5.876e-02      8338 -3.277e+03 -1.992e+04                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [56] ELBO (-3276.600617) evaluations: (8338) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  30.6 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  30.7 seconds.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 finished in 0.0 seconds.</span>
@@ -807,8 +805,8 @@ Default is TRUE to save disk space. Set to FALSE if you need to inspect draw fil
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             100      -4.247e+05      5.763e-02   1.345e+03    3.071e-02  5.876e-02      8338 -3.277e+03 -1.992e+04                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [56] ELBO (-3276.600617) evaluations: (8338) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  27.5 seconds.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 2 draw files from 'sccomp_draws_files'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  27.4 seconds.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -120,8 +120,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000368 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.68 seconds. 
+#> Gradient evaluation took 0.000379 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.79 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -140,8 +140,6 @@ print(residuals)
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
 #> Finished in  2.5 seconds.
-#> Warning: Unknown or uninitialised column: `c_R_k_hat`.
-#> Warning: no non-missing arguments to max; returning -Inf
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
