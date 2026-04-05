@@ -15,6 +15,29 @@ test_that("get_variability_to_composition_map matches by column name", {
   )
 })
 
+test_that("get_variability_to_composition_map maps ~1 variability when composition has no intercept", {
+  X <- matrix(0, nrow = 2, ncol = 2)
+  colnames(X) <- c("typehealthy", "typecancer")
+
+  Xa <- matrix(0, nrow = 2, ncol = 1)
+  colnames(Xa) <- "(Intercept)"
+
+  expect_equal(sccomp:::get_variability_to_composition_map(X, Xa), 1L)
+})
+
+test_that("get_variability_to_composition_map still errors if (Intercept) is extra among multiple variability columns", {
+  X <- matrix(0, nrow = 2, ncol = 2)
+  colnames(X) <- c("typehealthy", "typecancer")
+
+  Xa <- matrix(0, nrow = 2, ncol = 2)
+  colnames(Xa) <- c("(Intercept)", "typehealthy")
+
+  expect_error(
+    sccomp:::get_variability_to_composition_map(X, Xa),
+    "Missing terms: \\(Intercept\\)"
+  )
+})
+
 test_that("get_variability_to_composition_map errors on missing terms", {
   X <- matrix(0, nrow = 2, ncol = 2)
   colnames(X) <- c("(Intercept)", "typehealthy")
