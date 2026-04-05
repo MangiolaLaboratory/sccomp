@@ -542,6 +542,16 @@ test_that("plot test variability",{
 
 })
 
+test_that("estimate excludes pH0/FDR while sccomp_test includes them", {
+  skip_cmdstan()
+
+  estimate_cols <- colnames(my_estimate)
+  test_cols <- colnames(my_estimate |> sccomp_test())
+
+  expect_false(any(c("c_pH0", "c_FDR", "v_pH0", "v_FDR") %in% estimate_cols))
+  expect_true(all(c("c_pH0", "c_FDR", "v_pH0", "v_FDR") %in% test_cols))
+})
+
 # Test for plot_boxplot function
 test_that("plot_boxplot function works correctly", {
   
