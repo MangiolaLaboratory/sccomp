@@ -115,6 +115,7 @@ sccomp_calculate_residuals.sccomp_tbl = function(.data){
     ) |>
     # Calculate inverse softmax of observed proportions per sample
     mutate(
+      observed_proportion_safe = pmax(observed_proportion, .Machine$double.eps),
       observed_proportion_safe = observed_proportion_safe / sum(observed_proportion_safe),
       observed_unconstrained = inv_softmax(observed_proportion_safe),
       .by = quo_name(.sample)
