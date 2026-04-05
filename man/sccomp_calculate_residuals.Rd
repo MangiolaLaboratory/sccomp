@@ -16,7 +16,7 @@ A tibble (\code{tbl}) with the following columns:
 \item \strong{cell_group} - A character column representing the cell group identifiers.
 \item \strong{residuals} - A numeric column representing the residuals, calculated as the difference between observed and predicted proportions.
 \item \strong{exposure} - A numeric column representing the total counts (sum of counts across cell groups) for each sample.
-\item \strong{residuals_unconstrained} - A numeric column representing the unconstrained predictors (before softmax transformation), corresponding to the linear combination of design matrix and coefficients.
+\item \strong{residuals_unconstrained} - A numeric column representing the residuals on the unconstrained scale, calculated as the difference between the inverse softmax transform of observed proportions and the predicted unconstrained predictors.
 }
 }
 \description{
@@ -25,10 +25,11 @@ A tibble (\code{tbl}) with the following columns:
 \details{
 The function performs the following steps:
 \enumerate{
-\item Extracts the predicted mean proportions for each cell group and sample using \code{sccomp_predict()}.
+\item Extracts the predicted mean proportions and unconstrained predictors for each cell group and sample using \code{sccomp_predict()}.
 \item Calculates the observed proportions from the original count data.
-\item Computes residuals by subtracting the predicted proportions from the observed proportions.
-\item Returns a tibble containing the sample, cell group, residuals, and exposure (total counts per sample).
+\item Computes residuals on the proportion scale by subtracting the predicted proportions from the observed proportions.
+\item Computes residuals on the unconstrained (log-ratio) scale by: (1) applying inverse softmax (log-ratio transform with sum-to-zero normalization) to observed proportions, (2) subtracting the predicted unconstrained predictors.
+\item Returns a tibble containing the sample, cell group, residuals (proportion scale), residuals_unconstrained (log-ratio scale), and exposure (total counts per sample).
 }
 }
 \examples{
