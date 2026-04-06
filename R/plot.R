@@ -280,8 +280,6 @@ plot_1D_intervals = function(
       "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
       sep = ""
     )
-    combined_plot <- combined_plot + ggplot2::labs(caption = caption_text)
-    combined_plot <- combined_plot + theme(plot.caption = ggplot2::element_text(hjust = 0))
     combined_plot <- combined_plot + patchwork::plot_annotation(
       caption = caption_text
     )
@@ -516,9 +514,6 @@ plot_2D_intervals = function(
     )
     plot <- plot + ggplot2::labs(caption = caption_text)
     plot <- plot + theme(plot.caption = ggplot2::element_text(hjust = 0))
-    plot <- plot + patchwork::plot_annotation(
-      caption = caption_text
-    )
   }
   plot
 }
