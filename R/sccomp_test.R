@@ -410,38 +410,19 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
     }
   }
   
-  if(contrasts |> is.null())
-    draws = 
-    .data |>
-    attr("fit") %>%
-    draws_to_tibble_x_y("beta", "C", "M") |> 
-    pivot_wider(names_from = C, values_from = .value) %>%
-    setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
-  
-  else if((beta_factor_of_interest %in% contrasts_parameters) |> which() |> length() > 0)
+  has_contrast_parameter <- !is.null(contrasts) && any(beta_factor_of_interest %in% contrasts_parameters)
+    draw_parameter <- if (!is.null(contrasts) && !is.null(beta_variable_subset)) beta_variable_subset else "beta"
     
-    draws =
-      .data |>
+    draws <- .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y(
-        if (is.null(beta_variable_subset)) "beta" else beta_variable_subset,
-        "C",
-        "M"
-      ) |> 
-    left_join(
-      beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
-      by = "C"
-    )  |> 
-    filter(parameters_name %in% contrasts_parameters) |> 
-    select(-C) |> 
-    pivot_wider(names_from = parameters_name, values_from = .value)
-  
-  else 
-    draws = tibble()
-  
-  
-  # Abundance
-  draws = draws |> select(-.variable)
+      draws_to_tibble_x_y(draw_parameter, "C", "M") |>
+      left_join(
+        beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+        by = "C"
+      ) |>
+      select(-C) |>
+      pivot_wider(names_from = parameters_name, values_from = .value) |>
+      select(-.variable) 
   
   
   # Random effect
@@ -472,17 +453,6 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
     beta_random_effect = 
       beta_random_effect |> 
       bind_rows( other_group_random_effect )
-    
-    # mutate(is_treg = cell_type =="treg") |>
-    #   nest(data = -is_treg) |>
-    #   mutate(data = map2(
-    #     data, is_treg,
-    #     ~ {
-    #       if(.y) .x |> mutate(c_effect = c_effect/5 )
-    #       else(.x)
-    #     }
-    #   )) |>
-    #   unnest(data) |>
     
     
     # Reshape
@@ -538,30 +508,6 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
       beta_random_effect_2 |> 
       with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
       mutate(.value = -.value, M = beta_random_effect_2 |> pull(M) |> max() + 1)
-    
-    # POST-MODEL CORRECTION COMMENTED OUT - Now using built-in sum_to_zero_vector in Stan
-    # I HAVE TO REGULARISE THE LAST COMPONENT
-    # mean_of_the_sd_of_the_point_estimates = 
-    #   beta_random_effect_2 |> 
-    #   group_by(M, C) |> 
-    #   summarise(point_estimate = mean(.value)) |> 
-    #   group_by(M) |> 
-    #   summarise(sd_of_point_estimates = sd(point_estimate)) |> 
-    #   pull(sd_of_point_estimates) |> 
-    #   mean()
-    
-    # other_sd_of_the_point_estimates = 
-    #   other_group_random_effect |> 
-    #   group_by(M, C) |> 
-    #   summarise(point_estimate = mean(.value)) |> 
-    #   group_by(M) |> 
-    #   summarise(sd_of_point_estimates = sd(point_estimate)) |> 
-    #   pull(sd_of_point_estimates)
-    
-    # other_group_random_effect = 
-    #   other_group_random_effect |> 
-    #   mutate(.value = .value / (other_sd_of_the_point_estimates / mean_of_the_sd_of_the_point_estimates))
-    
     
     beta_random_effect_2 = 
       beta_random_effect_2 |> 
