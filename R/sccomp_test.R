@@ -410,19 +410,36 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
     }
   }
   
-  has_contrast_parameter <- !is.null(contrasts) && any(beta_factor_of_interest %in% contrasts_parameters)
-    draw_parameter <- if (!is.null(contrasts) && !is.null(beta_variable_subset)) beta_variable_subset else "beta"
-    
-    draws <- .data |>
+  if(contrasts |> is.null())
+    draws =
+    .data |>
+    attr("fit") %>%
+    draws_to_tibble_x_y("beta", "C", "M") |>
+    pivot_wider(names_from = C, values_from = .value) %>%
+    setNames(colnames(.)[1:5] |> c(beta_factor_of_interest)) |>
+    select(-.variable)
+
+  else if((beta_factor_of_interest %in% contrasts_parameters) |> which() |> length() > 0)
+
+    draws =
+      .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y(draw_parameter, "C", "M") |>
-      left_join(
-        beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
-        by = "C"
+      draws_to_tibble_x_y(
+        if (is.null(beta_variable_subset)) "beta" else beta_variable_subset,
+        "C",
+        "M"
       ) |>
-      select(-C) |>
-      pivot_wider(names_from = parameters_name, values_from = .value) |>
-      select(-.variable) 
+    left_join(
+      beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+      by = "C"
+    )  |>
+    filter(parameters_name %in% contrasts_parameters) |>
+    select(-C) |>
+    pivot_wider(names_from = parameters_name, values_from = .value) |>
+    select(-.variable)
+
+  else
+    draws = tibble()
   
   
   # Random effect
