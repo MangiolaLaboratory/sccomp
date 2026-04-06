@@ -274,14 +274,14 @@ plot_1D_intervals = function(
 
   # Only show the FDR message if significance_statistic == "FDR" and show_fdr_message is TRUE
   if (significance_statistic == "FDR" && show_fdr_message) {
-    combined_plot <- combined_plot + theme(plot.caption = ggplot2::element_text(hjust = 0))
+    caption_text <- paste(
+      "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
+      "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
+      "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
+      sep = ""
+    )
     combined_plot <- combined_plot + patchwork::plot_annotation(
-      caption = paste(
-        "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
-        "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
-        "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
-        sep = ""
-      )
+      caption = caption_text
     )
   }
   combined_plot
@@ -506,15 +506,14 @@ plot_2D_intervals = function(
 
   # Only show the FDR message if significance_statistic == "FDR" and show_fdr_message is TRUE
   if (significance_statistic == "FDR" && show_fdr_message) {
-    plot <- plot + theme(plot.caption = ggplot2::element_text(hjust = 0))
-    plot <- plot + patchwork::plot_annotation(
-      caption = paste(
-        "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
-        "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
-        "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
-        sep = ""
-      )
+    caption_text <- paste(
+      "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
+      "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
+      "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
+      sep = ""
     )
+    plot <- plot + ggplot2::labs(caption = caption_text)
+    plot <- plot + theme(plot.caption = ggplot2::element_text(hjust = 0))
   }
   plot
 }
