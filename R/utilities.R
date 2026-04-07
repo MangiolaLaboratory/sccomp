@@ -112,20 +112,11 @@ subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE
 #' @noRd
 incorporate_parameters_into_fit_object = function(fit, parameters_to_load) {
   
-
-  # Get list of available variables from the fit object
-  available_vars <- names(fit$draws(format = "draws_df"))
-  
-  # Filter to only include the parameters we care about that are available
-  parameters_to_load <- intersect(parameters_to_load, available_vars)
-  
   # Load parameters by calling draws()
   # This forces cmdstanr to read from CSV and store in memory
-  if (length(parameters_to_load) > 0) {
-    fit$draws(variables = parameters_to_load, format = "draws_df")
-  }
+  fit$draws(variables = parameters_to_load, format = "draws_df")
   
-  invisible(fit)
+  fit
 }
 
 
@@ -168,9 +159,6 @@ incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = c
   )) {
 
   fit <- attr(obj, "fit")
-  if (is.null(fit)) {
-    stop("sccomp says: expected a \"fit\" attribute on the sccomp object.", call. = FALSE)
-  }
   attr(obj, "fit") <- incorporate_parameters_into_fit_object(fit, parameters_to_load)
   attr(obj, "sccomp_draws_incorporated_for_portability") <- TRUE
   obj
