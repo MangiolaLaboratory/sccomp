@@ -51,9 +51,24 @@
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
 #'                        The sccomp version will be automatically appended to ensure version isolation.
 #'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
-#' @param cleanup_draw_files Logical, whether to automatically delete Stan draw CSV files after extracting results.
-#'                               These files can be large (MBs to GBs) and are typically only needed during the analysis session.
-#'                               Default is TRUE to save disk space. Set to FALSE if you need to inspect draw files for debugging.
+#' @param portable Logical, whether to keep the result **self-contained** after fitting. Default `TRUE`.
+#'                 \describe{
+#'                   \item{`TRUE`}{After fitting, sccomp calls `incorporate_parameters_into_sccomp_object()` to pull needed draws into the fit,
+#'                     then **deletes** the Stan CSV files under `output_directory` on **this** machine (only files that still exist are removed).}
+#'                   \item{`FALSE`}{sccomp **does not** delete draw files; CSVs stay on disk. The fit object stores **absolute paths** to those files.
+#'                     You must keep that directory alongside the object (or stay on the same filesystem) if you later need variables that
+#'                     were never loaded in this session.}
+#'                 }
+#'                 **Efficiency:** At `sccomp_estimate()` time sccomp only asks cmdstanr for **summaries** of `beta`, `alpha_normalised`,
+#'                 and random-effect blocks needed for the printed table, not full `draws()` tensors for every Stan parameter. CmdStanR still
+#'                 reads output files to compute those summaries (how much is cached in RAM is implementation-dependent).
+#'                 **Relocating the object:** If you save the tibble and open it elsewhere without the CSV directory (or paths point to another
+#'                 host), `attr(..., "fit")$summary()` can fail for variables that were never touched during estimate—for example the
+#'                 table uses **`alpha_normalised`**, not raw `alpha`, so `summary("alpha[1,1]")` may try to re-read CSVs whereas
+#'                 `summary("beta[1,1]")` may still work if that block was already loaded. Use `portable = TRUE` before archiving, or copy
+#'                 the whole draw folder so paths resolve.
+#'                 If you delete CSVs manually with `portable = FALSE`, call `sccomp_test()` before deletion, run `incorporate_parameters_into_sccomp_object()` first,
+#'                 or switch to `portable = TRUE`; otherwise `sccomp_test()` errors when recorded output paths are missing unless draws were incorporated.
 #' @param .count **DEPRECATED**. Use `abundance` instead.
 #' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
@@ -70,18 +85,17 @@
 #'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
 #'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
 #'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
-#'   \item c_FDR - False discovery rate of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
-#'   \item c_n_eff - Effective sample size, the number of independent draws in the sample. The higher, the better.
-#'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
+#'   \item c_rhat - R-hat convergence diagnostic for the composition (c) parameter; values close to 1.0 indicate convergence.
+#'   \item c_ess_bulk - Bulk effective sample size for the composition (c) parameter; higher is better.
+#'   \item c_ess_tail - Tail effective sample size for the composition (c) parameter; higher is better.
 #'   \item v_lower - Lower (2.5%) quantile of the posterior distribution for a variability (v) parameter.
 #'   \item v_effect - Mean of the posterior distribution for a variability (v) parameter.
 #'   \item v_upper - Upper (97.5%) quantile of the posterior distribution for a variability (v) parameter.
-#'   \item v_pH0 - Probability of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
-#'   \item v_FDR - False discovery rate of the v_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument. False discovery rate for Bayesian models is calculated differently from frequentists models, as detailed in Mangiola et al, PNAS 2023. 
-#'   \item v_n_eff - Effective sample size for a variability (v) parameter.
-#'   \item v_R_k_hat - R statistic for a variability (v) parameter, a measure of chain equilibrium.
+#'   \item v_rhat - R-hat convergence diagnostic for the variability (v) parameter.
+#'   \item v_ess_bulk - Bulk effective sample size for the variability (v) parameter.
+#'   \item v_ess_tail - Tail effective sample size for the variability (v) parameter.
 #' }
+#' Note: pH0 and FDR columns are not computed by `sccomp_estimate()`. Run `sccomp_test()` on the result to obtain hypothesis-test statistics.
 #'
 #' The function also attaches several attributes to the result:
 #' \itemize{
@@ -164,7 +178,7 @@ sccomp_estimate <- function(.data,
                             pass_fit = TRUE,
                             sig_figs = 9,
                             cache_stan_model = sccomp_stan_models_cache_dir,
-                            cleanup_draw_files = TRUE,
+                            portable = TRUE,
                             ...,
                             
                             # DEPRECATED
@@ -257,7 +271,7 @@ sccomp_estimate.Seurat <- function(.data,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
                                    cache_stan_model = sccomp_stan_models_cache_dir,
-                                   cleanup_draw_files = TRUE,
+                                   portable = TRUE,
                                    ...,
                                    
                                    # DEPRECATED
@@ -310,7 +324,7 @@ sccomp_estimate.Seurat <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
-      cleanup_draw_files = cleanup_draw_files,
+      portable = portable,
       cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
@@ -354,7 +368,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  pass_fit = TRUE,
                                                  sig_figs = 9,
                                                  cache_stan_model = sccomp_stan_models_cache_dir,
-                                                 cleanup_draw_files = TRUE,
+                                                 portable = TRUE,
                                                  ...,
                                                  
                                                  # DEPRECATED
@@ -408,7 +422,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
-      cleanup_draw_files = cleanup_draw_files,
+      portable = portable,
       cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
@@ -452,7 +466,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    pass_fit = TRUE,
                                    sig_figs = 9,
                                    cache_stan_model = sccomp_stan_models_cache_dir,
-                                   cleanup_draw_files = TRUE,
+                                   portable = TRUE,
                                    ...,
                                    
                                    # DEPRECATED
@@ -497,7 +511,7 @@ sccomp_estimate.DFrame <- function(.data,
       max_sampling_iterations = max_sampling_iterations,
       pass_fit = pass_fit,
       sig_figs = sig_figs,
-      cleanup_draw_files = cleanup_draw_files,
+      portable = portable,
       cache_stan_model = cache_stan_model,
       ...,
       .count = !!.count,
@@ -544,7 +558,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        pass_fit = TRUE,
                                        sig_figs = 9,
                                        cache_stan_model = sccomp_stan_models_cache_dir,
-                                       cleanup_draw_files = TRUE,
+                                       portable = TRUE,
                                        ...,
                                        
                                        # DEPRECATED
@@ -705,17 +719,12 @@ sccomp_estimate.data.frame <- function(.data,
   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).")
   
   # Auto-cleanup draw files if requested
-  if (cleanup_draw_files) {
-    # Incorporate all parameters into fit object BEFORE deleting CSV files
-    # This ensures parameters are cached in memory and remain accessible after cleanup
-    fit_obj <- attr(res, "fit")
-    incorporate_parameters_into_fit_object(fit_obj)
-    
-    # Update the fit attribute with the modified fit object
-    attr(res, "fit") <- fit_obj
+  if (portable) {
+    res <- incorporate_parameters_into_sccomp_object(res)
     
     if (dir.exists(output_directory)) {
-      files_deleted <- list.files(output_directory, pattern = "\\.csv$", full.names = TRUE)
+      files_deleted <- attr(res, "fit")$output_files(include_failed = TRUE)
+      files_deleted <- files_deleted[file.exists(files_deleted)]
       if (length(files_deleted) > 0) {
         file.remove(files_deleted)
         if (verbose) {
@@ -1070,41 +1079,36 @@ sccomp_glm_data_frame_counts = function(.data,
   # file.remove(temp_rds_file)
   
   estimate_tibble = 
-    # Create a dummy tibble
-    tibble() |>
-    # Attach association mean concentration
-    add_attr(fit, "fit") %>%
-    add_attr(data_for_model, "model_input") |> 
-
-    # Save data only taking the columns essential, including the ones use for the formulas 
-    add_attr(.data |> select(
-      !!.sample, !!.cell_group, !!.count, 
-      all_of(parse_formula(formula_composition)),
-      all_of(random_effect_elements |> pull(grouping) |> unique())
-      ), "count_data") |>
-    
+    # Posterior means and intervals via fit$summary (no full draw tensors; no pH0/FDR)
+    sccomp_summarise_posterior_for_estimate(
+      fit = fit,
+      model_input = data_for_model,
+      .cell_group = .cell_group |> drop_environment(),
+      percent_false_positive = 5
+    ) |>
+    add_attr(fit, "fit") |>
+    add_attr(data_for_model, "model_input") |>
     add_attr(.sample |> drop_environment(), ".sample") |>
     add_attr(.cell_group |> drop_environment(), ".cell_group") |>
     add_attr(.count |> drop_environment(), ".count") |>
-    add_attr(check_outliers, "check_outliers") |>
     add_attr(formula_composition |> drop_environment(), "formula_composition") |>
     add_attr(formula_variability |> drop_environment(), "formula_variability") |>
-    add_attr(parse_formula(formula_composition), "factors" ) |> 
-    add_attr(inference_method, "inference_method" ) |> 
+    add_attr(inference_method, "inference_method" ) |>
+    add_attr(.data |> select(
+        !!.sample, !!.cell_group, !!.count, 
+        all_of(parse_formula(formula_composition)),
+        all_of(random_effect_elements |> pull(grouping) |> unique())
+      ), "count_data") |>
+    # End of Selection
+
+    add_class("sccomp_tbl") |>
     
-    # Add class to the tbl
-    add_class("sccomp_tbl") |> 
     
-    # Print estimates
-    sccomp_test() |>
-    
-    # drop hypothesis testing as the estimation exists without probabilities.
-    # For hypothesis testing use sccomp_test
-    select(-contains("_FDR"), -contains("_pH0")) 
+    add_attr(parse_formula(formula_composition), "factors" )
   
   
-  if(inference_method %in% c("variational") && max(na.omit(estimate_tibble$c_R_k_hat)) > 4)
-    warning("sccomp says: using variational inference, c_R_k_hat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using inference_method = \"hmc\" to use the state-of-the-art (although slower) HMC sampler.")
+  if(inference_method %in% c("variational") && max(na.omit(estimate_tibble$c_rhat)) > 4)
+    warning("sccomp says: using variational inference, c_rhat resulted too high for some parameters, indicating lack of convergence of the model. We reccomend using inference_method = \"hmc\" to use the state-of-the-art (although slower) HMC sampler.")
   
   estimate_tibble
 }

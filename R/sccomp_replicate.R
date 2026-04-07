@@ -538,7 +538,18 @@ replicate_data = function(.data,
   # Load model
   mod_rng = load_model("glm_multi_beta_binomial_generate_data", threads = cores, cache_dir = cache_stan_model)
 
-  draws_matrix <- attr(.data, "fit")$draws(format = "matrix")
+  fit_obj <- attr(.data, "fit")
+  # For generate_quantities we must pass a fitted-parameter set that matches the
+  # target Stan model's parameter block. Formula-level slicing (like sccomp_test)
+  # can trigger "Mismatch between model and fitted_parameters csv file".
+  # Therefore, we load all model parameters, but still avoid transformed/generated
+  # quantities to reduce memory compared with fit$draws(format = "matrix").
+  parameter_variables <- fit_obj$metadata()$model_params
+  draws_matrix <- if (!is.null(parameter_variables) && length(parameter_variables) > 0) {
+    fit_obj$draws(variables = parameter_variables, format = "matrix")
+  } else {
+    fit_obj$draws(format = "matrix")
+  }
   
   if(number_of_draws > nrow(draws_matrix)) {
     number_of_draws <- nrow(draws_matrix)

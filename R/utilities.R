@@ -57,7 +57,7 @@ add_attr = function(var, attribute, name) {
 #' 
 #' The function calls fit$draws() for all parameters, which forces cmdstanr
 #' to read the CSV files and cache the draws in memory. This way, when the
-#' CSV files are later deleted (via cleanup_draw_files = TRUE), the draws
+#' CSV files are later deleted (via portable = TRUE), the draws
 #' remain accessible through the fit object.
 #' 
 #' This function is really needed for LOO usage and outlier removal usage.
@@ -108,6 +108,30 @@ incorporate_parameters_into_fit_object = function(fit) {
   }
   
   invisible(fit)
+}
+
+
+#' Load Stan draws into fit and write back to sccomp object
+#'
+#' Reads the \code{"fit"} attribute, calls \code{incorporate_parameters_into_fit_object()},
+#' and assigns the modified fit back. Callers must assign the return value, e.g.
+#' \code{res <- incorporate_parameters_into_sccomp_object(res)}, so the updated
+#' object (and attributes) are retained.
+#'
+#' @param obj An object with a \code{"fit"} attribute (typically a \code{sccomp_tbl}).
+#'
+#' @return \code{obj} with an updated \code{"fit"} attribute.
+#'
+#' @keywords internal
+#' @noRd
+incorporate_parameters_into_sccomp_object = function(obj) {
+  fit <- attr(obj, "fit")
+  if (is.null(fit)) {
+    stop("sccomp says: expected a \"fit\" attribute on the sccomp object.", call. = FALSE)
+  }
+  attr(obj, "fit") <- incorporate_parameters_into_fit_object(fit)
+  attr(obj, "sccomp_draws_incorporated_for_portability") <- TRUE
+  obj
 }
 
 
@@ -295,12 +319,17 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   .value <- NULL
 
   
-  fit$draws(variables = par, format = "draws_df") %>%
+  base_parameter <- sub("\\[.*$", "", par[[1]])
+
+  draws_df <- fit$draws(variables = par, format = "draws_df")
+  value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
+  
+  draws_df %>%
     mutate(.iteration = seq_len(n())) %>%
     
     pivot_longer(
       names_to = "parameter", # c( ".chain", ".variable", x, y),
-      cols = contains(par),
+      cols = tidyselect::all_of(value_columns),
       #names_sep = "\\.?|\\[|,|\\]|:",
       # names_ptypes = list(
       #   ".variable" = character()),
@@ -321,7 +350,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     mutate(.draw = seq_len(n())) %>%
     ungroup() %>%
     select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
-    filter(.variable == par)
+    filter(.variable == base_parameter)
   
 }
 
@@ -1320,6 +1349,44 @@ print_red_tibble <- function(tbl) {
 # This is needed because I have a `sample` argument, that when it is not defined affects the sample() function
 sample_seed = function(){
   sample(1e5, 1)
+}
+
+#' Inverse softmax transform (log-ratio transform with sum-to-zero normalization)
+#' 
+#' Transforms proportions to unconstrained (logit) scale by applying the inverse
+#' of the softmax function. This is the inverse operation of softmax, which converts
+#' a vector of real numbers to a probability distribution.
+#' 
+#' The function:
+#' 1. Applies log transform to proportions: log(p_i)
+#' 2. Normalizes to sum-to-zero: log(p_i) - mean(log(p))
+#' 
+#' This normalization matches Stan's `normalize_sum_to_zero()` function and ensures
+#' the result is on the same scale as the unconstrained predictors from the model.
+#' 
+#' @param proportions A numeric vector of proportions (should sum to approximately 1).
+#'   Values should be positive and non-zero (log(0) is undefined).
+#' 
+#' @return A numeric vector of the same length as `proportions`, containing the
+#'   unconstrained (logit) values normalized to sum-to-zero.
+#' 
+#' @examples
+#' # Example proportions
+#' props <- c(0.1, 0.3, 0.6)
+#' 
+#' # Inverse softmax
+#' unconstrained <- inv_softmax(props)
+#' 
+#' # Verify sum-to-zero property
+#' sum(unconstrained)  # Should be approximately 0
+#' 
+#' @keywords internal
+#' @noRd
+inv_softmax = function(proportions) {
+  # Apply log transform
+  log_props = log(proportions)
+  # Normalize to sum-to-zero (matching Stan's normalize_sum_to_zero)
+  log_props - mean(log_props)
 }
 
 #' Handle missing values in a data frame

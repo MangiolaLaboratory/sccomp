@@ -12,7 +12,7 @@ test_that("incorporate_parameters_into_fit_object loads all parameters", {
   test_output_dir <- tempfile("sccomp_test_draws_")
   dir.create(test_output_dir)
   
-  # Run sccomp_estimate with cleanup_draw_files = FALSE to keep CSV files temporarily
+  # Run sccomp_estimate with portable = FALSE to keep CSV files temporarily
   result <- counts_obj |>
     sccomp_estimate(
       formula_composition = ~ type,
@@ -25,7 +25,7 @@ test_that("incorporate_parameters_into_fit_object loads all parameters", {
       max_sampling_iterations = 500,
       verbose = FALSE,
       output_directory = test_output_dir,
-      cleanup_draw_files = FALSE  # Keep files to test manual incorporation
+      portable = FALSE  # Keep files to test manual incorporation
     )
   
   # Get the fit object
@@ -97,7 +97,7 @@ test_that("incorporate_parameters_into_fit_object handles models without random 
       max_sampling_iterations = 500,
       verbose = FALSE,
       output_directory = test_output_dir,
-      cleanup_draw_files = FALSE
+      portable = FALSE
     )
   
   fit <- attr(result, "fit")

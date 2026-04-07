@@ -8,7 +8,7 @@
 #' @param x A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.
 #' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
-#' @param significance_statistic Character vector indicating which statistic to highlight. Default is "FDR".
+#' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param add_marginal_density Logical. Whether to add marginal density plots on adjusted panels in 2D intervals. Default is TRUE.
 #' @param ... For internal use
@@ -233,14 +233,14 @@ plot_1D_intervals = function(
 
   # Only show the FDR message if significance_statistic == "FDR" and show_fdr_message is TRUE
   if (significance_statistic == "FDR" && show_fdr_message) {
-    combined_plot <- combined_plot + theme(plot.caption = ggplot2::element_text(hjust = 0))
+    caption_text <- paste(
+      "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
+      "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
+      "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
+      sep = ""
+    )
     combined_plot <- combined_plot + patchwork::plot_annotation(
-      caption = paste(
-        "Bayesian FDR: Stephens' method (doi: 10.1093/biostatistics/kxw041)",
-        "\nFDR-significant populations may cross fold change thresholds because Bayesian FDR considers posterior probabilities rather than p-values.",
-        "\nThe method sorts null hypothesis probabilities in ascending order and calculates cumulative averages for robust false discovery control.",
-        sep = ""
-      )
+      caption = caption_text
     )
   }
   combined_plot
