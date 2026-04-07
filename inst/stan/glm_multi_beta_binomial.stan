@@ -348,9 +348,9 @@ parameters{
   array[A * bimodal_mean_variability_association] ordered[2] intercept_pair; // i1, i2
   array[A * (1 - bimodal_mean_variability_association)] real intercept_single;
   // Slopes: per-effect for bimodal, global for single
-  array[A * bimodal_mean_variability_association] real<upper=0> slope_1;
-  array[A * bimodal_mean_variability_association] real<upper=0> slope_2;
-  array[A * (1 - bimodal_mean_variability_association)] real<upper=0> slope_single;
+  array[A * bimodal_mean_variability_association] real slope_1;
+  array[A * bimodal_mean_variability_association] real slope_2;
+  array[A * (1 - bimodal_mean_variability_association)] real slope_single;
   real<lower=0> prec_sd_1;  // c1
   array[bimodal_mean_variability_association] real<lower=0> prec_sd_2;  // c2
   real<lower=0, upper=1> mix_p;
@@ -567,8 +567,8 @@ model{
   for(a in 1:A){
     prec_coeff[1, a] ~ student_t(3, -1, 2);      // i1
     prec_coeff[4, a] ~ student_t(3, 0, 2);      // i2
-    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // s1
-    prec_coeff[3, a] ~ student_t(3, -0.5, 1.5); // s2
+    prec_coeff[2, a] ~ student_t(3, 0, 1.5); // s1
+    prec_coeff[3, a] ~ student_t(3, 0, 1.5); // s2
   }
    prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
    prec_sd_2[1] ~ normal(0, prior_prec_sd[1] * 1.5) T[0,];
@@ -577,7 +577,7 @@ model{
   // Single model priors (only 2 parameters)
   for(a in 1:A){
     prec_coeff[1, a] ~ student_t(3, 0, 2);      // intercept
-    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // slope
+    prec_coeff[2, a] ~ student_t(3, 0, 1.5); // slope
   }
   prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
 }
@@ -597,8 +597,8 @@ model{
   for(a in 1:A){
     prec_coeff[1, a] ~ student_t(3, -1, 2);      // i1
     prec_coeff[4, a] ~ student_t(3, 0, 2);      // i2
-    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // s1
-    prec_coeff[3, a] ~ student_t(3, -0.5, 1.5); // s2
+    prec_coeff[2, a] ~ student_t(3, 0, 1.5); // s1
+    prec_coeff[3, a] ~ student_t(3, 0, 1.5); // s2
   }
    prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
    prec_sd_2[1] ~ normal(0, prior_prec_sd[1] * 1.5) T[0,];
@@ -607,7 +607,7 @@ model{
   // Single model priors (only 2 parameters)
   for(a in 1:A){
     prec_coeff[1, a] ~ student_t(3, 0, 2);      // intercept
-    prec_coeff[2, a] ~ student_t(3, -0.5, 1.5); // slope
+    prec_coeff[2, a] ~ student_t(3, 0, 1.5); // slope
   }
   prec_sd_1 ~ normal(0, prior_prec_sd[1]) T[0,];
 }
