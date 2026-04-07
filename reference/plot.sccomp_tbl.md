@@ -90,18 +90,18 @@ print("cmdstanr is needed to run this example.")
 #> sccomp says: the composition design matrix has columns: (Intercept), typecancer
 #> sccomp says: the variability design matrix has columns: (Intercept)
 #> Precompiled model not found. Compiling the model...
-#> Running make /tmp/RtmpT5zwuv/model-3b264ed0c124 "STAN_THREADS=TRUE" \
-#>   "STANCFLAGS += --include-paths=/tmp/RtmpT5zwuv/temp_libpath3b26437ccd76/sccomp/stan --name='glm_multi_beta_binomial_model'"
+#> Running make /tmp/Rtmp3B3vvJ/model-3b836eb083f6 "STAN_THREADS=TRUE" \
+#>   "STANCFLAGS += --include-paths=/tmp/Rtmp3B3vvJ/temp_libpath3b8342d90e1b/sccomp/stan --name='glm_multi_beta_binomial_model'"
 #> 
 #> --- Translating Stan model to C++ code ---
-#> bin/stanc --include-paths=/tmp/RtmpT5zwuv/temp_libpath3b26437ccd76/sccomp/stan --name='glm_multi_beta_binomial_model' --o=/tmp/RtmpT5zwuv/model-3b264ed0c124.hpp /tmp/RtmpT5zwuv/model-3b264ed0c124.stan
+#> bin/stanc --include-paths=/tmp/Rtmp3B3vvJ/temp_libpath3b8342d90e1b/sccomp/stan --name='glm_multi_beta_binomial_model' --o=/tmp/Rtmp3B3vvJ/model-3b836eb083f6.hpp /tmp/Rtmp3B3vvJ/model-3b836eb083f6.stan
 #> 
 #> --- Compiling C++ code ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmpT5zwuv/model-3b264ed0c124.o /tmp/RtmpT5zwuv/model-3b264ed0c124.hpp
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/Rtmp3B3vvJ/model-3b836eb083f6.o /tmp/Rtmp3B3vvJ/model-3b836eb083f6.hpp
 #> 
 #> --- Linking model ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.38.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.38.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmpT5zwuv/model-3b264ed0c124.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmpT5zwuv/model-3b264ed0c124
-#> rm /tmp/RtmpT5zwuv/model-3b264ed0c124.o /tmp/RtmpT5zwuv/model-3b264ed0c124.hpp
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.38.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.38.0/stan/lib/stan_math/lib/tbb"      /tmp/Rtmp3B3vvJ/model-3b836eb083f6.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/Rtmp3B3vvJ/model-3b836eb083f6
+#> rm /tmp/Rtmp3B3vvJ/model-3b836eb083f6.o /tmp/Rtmp3B3vvJ/model-3b836eb083f6.hpp
 #> Model compiled and saved to cache successfully.
 #> Path [1] :Initial log joint density = -482696.034405 
 #> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
@@ -303,7 +303,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              56      -4.788e+05      6.155e-03   2.013e-01    1.000e+00  1.000e+00      3220 -3.689e+03 -3.690e+03                   
 #> Path [50] :Best Iter: [53] ELBO (-3688.555504) evaluations: (3220) 
-#> Finished in  13.5 seconds.
+#> Finished in  13.6 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.

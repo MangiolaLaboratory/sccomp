@@ -1068,7 +1068,7 @@ sessionInfo()
     ## [59] MatrixGenerics_1.22.0       tensorA_0.36.2.1           
     ## [61] checkmate_2.3.4             stats4_4.5.3               
     ## [63] distributional_0.7.0        generics_0.1.4             
-    ## [65] sp_2.2-1                    S4Vectors_0.48.0           
+    ## [65] sp_2.2-1                    S4Vectors_0.48.1           
     ## [67] hms_1.1.4                   scales_1.4.0               
     ## [69] globals_0.19.1              glue_1.8.0                 
     ## [71] tools_4.5.3                 data.table_1.18.2.1        

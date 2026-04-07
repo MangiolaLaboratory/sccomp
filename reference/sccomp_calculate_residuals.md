@@ -120,8 +120,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000345 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.45 seconds. 
+#> Gradient evaluation took 0.000351 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.51 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
