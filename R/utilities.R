@@ -110,35 +110,9 @@ subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE
 #'
 #' @keywords internal
 #' @noRd
-incorporate_parameters_into_fit_object = function(fit) {
+incorporate_parameters_into_fit_object = function(fit, params_to_load) {
   
-  # List of all parameters in the Stan model (glm_multi_beta_binomial)
-  # This includes parameters, transformed parameters, and generated quantities
-  parameters_to_load <- c(
-    # Parameters block
-    "beta_raw",
-    "alpha",
-    "prec_intercept_1",
-    "prec_slope_1",
-    "prec_intercept_2",
-    "prec_slope_2",
-    "prec_sd",
-    "mix_p",
-    "random_effect_raw",
-    "random_effect_raw_2",
-    "random_effect_sigma_mu",
-    "random_effect_sigma_sigma",
-    "random_effect_sigma_raw",
-    "sigma_correlation_factor",
-    "random_effect_sigma_raw_2",
-    "sigma_correlation_factor_2",
-    "zero_random_effect",
-    # Transformed parameters
-    "beta",
-    # Generated quantities
-    "log_lik"
-  )
-  
+
   # Get list of available variables from the fit object
   available_vars <- names(fit$draws(format = "draws_df"))
   
@@ -168,7 +142,31 @@ incorporate_parameters_into_fit_object = function(fit) {
 #'
 #' @keywords internal
 #' @noRd
-incorporate_parameters_into_sccomp_object = function(obj) {
+incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = c(
+    # Parameters block
+    "beta_raw",
+    "alpha",
+    "prec_intercept_1",
+    "prec_slope_1",
+    "prec_intercept_2",
+    "prec_slope_2",
+    "prec_sd",
+    "mix_p",
+    "random_effect_raw",
+    "random_effect_raw_2",
+    "random_effect_sigma_mu",
+    "random_effect_sigma_sigma",
+    "random_effect_sigma_raw",
+    "sigma_correlation_factor",
+    "random_effect_sigma_raw_2",
+    "sigma_correlation_factor_2",
+    "zero_random_effect",
+    # Transformed parameters
+    "beta",
+    # Generated quantities
+    "log_lik"
+  )) {
+
   fit <- attr(obj, "fit")
   if (is.null(fit)) {
     stop("sccomp says: expected a \"fit\" attribute on the sccomp object.", call. = FALSE)
