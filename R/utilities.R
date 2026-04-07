@@ -111,6 +111,30 @@ incorporate_parameters_into_fit_object = function(fit) {
 }
 
 
+#' Load Stan draws into fit and write back to sccomp object
+#'
+#' Reads the \code{"fit"} attribute, calls \code{incorporate_parameters_into_fit_object()},
+#' and assigns the modified fit back. Callers must assign the return value, e.g.
+#' \code{res <- incorporate_parameters_into_sccomp_object(res)}, so the updated
+#' object (and attributes) are retained.
+#'
+#' @param obj An object with a \code{"fit"} attribute (typically a \code{sccomp_tbl}).
+#'
+#' @return \code{obj} with an updated \code{"fit"} attribute.
+#'
+#' @keywords internal
+#' @noRd
+incorporate_parameters_into_sccomp_object = function(obj) {
+  fit <- attr(obj, "fit")
+  if (is.null(fit)) {
+    stop("sccomp says: expected a \"fit\" attribute on the sccomp object.", call. = FALSE)
+  }
+  attr(obj, "fit") <- incorporate_parameters_into_fit_object(fit)
+  attr(obj, "sccomp_draws_incorporated_for_portability") <- TRUE
+  obj
+}
+
+
 #' Formula parser
 #'
 #' @param fm A formula

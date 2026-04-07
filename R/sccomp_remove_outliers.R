@@ -496,16 +496,10 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   # Auto-cleanup draw files if requested
   if (portable) {
-    fit_obj <- attr(estimate_tibble, "fit")
-    # Incorporate all parameters into fit object BEFORE deleting CSV files
-    # This ensures parameters are cached in memory and remain accessible after cleanup
-    incorporate_parameters_into_fit_object(fit_obj)
-    
-    # Update the fit attribute with the modified fit object
-    attr(estimate_tibble, "fit") <- fit_obj
+    estimate_tibble <- incorporate_parameters_into_sccomp_object(estimate_tibble)
     
     if (dir.exists(output_directory)) {
-      files_deleted <- fit_obj$output_files(include_failed = TRUE)
+      files_deleted <- attr(estimate_tibble, "fit")$output_files(include_failed = TRUE)
       files_deleted <- files_deleted[file.exists(files_deleted)]
       if (length(files_deleted) > 0) {
         file.remove(files_deleted)

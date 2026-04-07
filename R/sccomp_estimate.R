@@ -51,8 +51,24 @@
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
 #'                        The sccomp version will be automatically appended to ensure version isolation.
 #'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
-#' @param portable Logical, whether to keep the result portable by caching required draws in memory and removing Stan draw CSV files after fitting.
-#'                 Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.
+#' @param portable Logical, whether to keep the result **self-contained** after fitting. Default `TRUE`.
+#'                 \describe{
+#'                   \item{`TRUE`}{After fitting, sccomp calls `incorporate_parameters_into_sccomp_object()` to pull needed draws into the fit,
+#'                     then **deletes** the Stan CSV files under `output_directory` on **this** machine (only files that still exist are removed).}
+#'                   \item{`FALSE`}{sccomp **does not** delete draw files; CSVs stay on disk. The fit object stores **absolute paths** to those files.
+#'                     You must keep that directory alongside the object (or stay on the same filesystem) if you later need variables that
+#'                     were never loaded in this session.}
+#'                 }
+#'                 **Efficiency:** At `sccomp_estimate()` time sccomp only asks cmdstanr for **summaries** of `beta`, `alpha_normalised`,
+#'                 and random-effect blocks needed for the printed table, not full `draws()` tensors for every Stan parameter. CmdStanR still
+#'                 reads output files to compute those summaries (how much is cached in RAM is implementation-dependent).
+#'                 **Relocating the object:** If you save the tibble and open it elsewhere without the CSV directory (or paths point to another
+#'                 host), `attr(..., "fit")$summary()` can fail for variables that were never touched during estimate—for example the
+#'                 table uses **`alpha_normalised`**, not raw `alpha`, so `summary("alpha[1,1]")` may try to re-read CSVs whereas
+#'                 `summary("beta[1,1]")` may still work if that block was already loaded. Use `portable = TRUE` before archiving, or copy
+#'                 the whole draw folder so paths resolve.
+#'                 If you delete CSVs manually with `portable = FALSE`, call `sccomp_test()` before deletion, run `incorporate_parameters_into_sccomp_object()` first,
+#'                 or switch to `portable = TRUE`; otherwise `sccomp_test()` errors when recorded output paths are missing unless draws were incorporated.
 #' @param .count **DEPRECATED**. Use `abundance` instead.
 #' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
@@ -704,16 +720,10 @@ sccomp_estimate.data.frame <- function(.data,
   
   # Auto-cleanup draw files if requested
   if (portable) {
-    # Incorporate all parameters into fit object BEFORE deleting CSV files
-    # This ensures parameters are cached in memory and remain accessible after cleanup
-    fit_obj <- attr(res, "fit")
-    incorporate_parameters_into_fit_object(fit_obj)
-    
-    # Update the fit attribute with the modified fit object
-    attr(res, "fit") <- fit_obj
+    res <- incorporate_parameters_into_sccomp_object(res)
     
     if (dir.exists(output_directory)) {
-      files_deleted <- fit_obj$output_files(include_failed = TRUE)
+      files_deleted <- attr(res, "fit")$output_files(include_failed = TRUE)
       files_deleted <- files_deleted[file.exists(files_deleted)]
       if (length(files_deleted) > 0) {
         file.remove(files_deleted)
