@@ -998,11 +998,11 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     draws %>%
     group_by(!!.cell_group, M, parameter, rhat, ess_bulk, ess_tail) %>%
     summarise(
-      lower = quantile(.value, false_positive_rate / 2),
-      effect = mean(.value),
-      upper = quantile(.value, 1 - (false_positive_rate / 2)),
-      bigger_zero = sum(.value > test_composition_above_logit_fold_change),
-      smaller_zero = sum(.value < -test_composition_above_logit_fold_change),
+      lower = quantile(.value, false_positive_rate / 2, na.rm = TRUE),
+      effect = mean(.value, na.rm = TRUE),
+      upper = quantile(.value, 1 - (false_positive_rate / 2), na.rm = TRUE),
+      bigger_zero = sum(.value > test_composition_above_logit_fold_change, na.rm = TRUE),
+      smaller_zero = sum(.value < -test_composition_above_logit_fold_change, na.rm = TRUE),
       # R_k_hat = unique(R_k_hat),
       # n_eff = unique(n_eff),
       n = n(),
