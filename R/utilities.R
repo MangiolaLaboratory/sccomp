@@ -136,7 +136,6 @@ incorporate_parameters_into_fit_object = function(fit) {
     # Transformed parameters
     "beta",
     # Generated quantities
-    "alpha_normalised",
     "log_lik"
   )
   
@@ -380,7 +379,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       #   ".variable" = character()),
       values_to = ".value"
     ) %>%
-    tidyr::extract(parameter, c(".chain", ".variable", x, y), "([1-9]+)?\\.?([a-zA-Z0-9_\\.]+)\\[([0-9]+),([0-9]+)") |> 
+    tidyr::extract(parameter, c(".variable", x, y), "(?:[1-9]+\\.)?([a-zA-Z0-9_\\.]+)\\[([0-9]+),([0-9]+)") |> 
     
     # Warning message:
     # Expected 5 pieces. Additional pieces discarded
@@ -394,9 +393,194 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
     mutate(.draw = seq_len(n())) %>%
     ungroup() %>%
-    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
+    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw, .variable, .value) %>%
     filter(.variable == base_parameter)
   
+}
+
+#' draws_to_tibble_x
+#'
+#' @param fit A fit object
+#' @param par A character vector. The parameters to extract.
+#' @param x A character. The index.
+#'
+#' @keywords internal
+#' @noRd
+draws_to_tibble_x = function(fit, par, x) {
+
+  # Define the variables as NULL to avoid CRAN NOTES
+  .variable <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .value <- NULL
+
+  base_parameter <- sub("\\[.*$", "", par[[1]])
+
+  draws_df <- fit$draws(variables = par, format = "draws_df")
+  value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
+
+  draws_df %>%
+    mutate(.iteration = seq_len(n())) %>%
+    pivot_longer(
+      names_to = "parameter",
+      cols = tidyselect::all_of(value_columns),
+      values_to = ".value"
+    ) %>%
+    tidyr::extract(parameter, c(".variable", x), "(?:[1-9]+\\.)?([a-zA-Z0-9_\\.]+)(?:\\[([0-9]+))?") |>
+    suppressWarnings() %>%
+    mutate(
+      !!as.symbol(x) := as.integer(!!as.symbol(x))
+    ) %>%
+    arrange(.variable, !!as.symbol(x), .chain) %>%
+    group_by(.variable, !!as.symbol(x)) %>%
+    mutate(.draw = seq_len(n())) %>%
+    ungroup() %>%
+    select(!!as.symbol(x), .chain, .iteration, .draw, .variable, .value) %>%
+    filter(.variable == base_parameter)
+}
+
+#' Compute alpha_normalised draws in R
+#'
+#' @param fit A cmdstanr fit object.
+#' @param model_input The model input list attached to sccomp results.
+#' @param alpha_variable_subset Optional character vector like
+#'   `alpha[a,m]` (or legacy `alpha_normalised[a,m]`) to limit extraction.
+#'
+#' @return A tibble with columns `C`, `M`, `.chain`, `.iteration`, `.draw`,
+#'   `.variable`, `.value`.
+#'
+#' @keywords internal
+#' @noRd
+compute_alpha_normalised_draws = function(fit, model_input, alpha_variable_subset = NULL) {
+
+  # Define the variables as NULL to avoid CRAN NOTES
+  C <- NULL
+  M <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .variable <- NULL
+  .value <- NULL
+  beta <- NULL
+  alpha <- NULL
+  prec_slope_1 <- NULL
+  prec_slope_2 <- NULL
+  prec_intercept_1 <- NULL
+  prec_intercept_2 <- NULL
+  prec_sd <- NULL
+  mix_p <- NULL
+  C_comp <- NULL
+  log_1 <- NULL
+  log_2 <- NULL
+  weight_1 <- NULL
+  slope_effective <- NULL
+  max_log <- NULL
+
+  variability_to_composition_map <- model_input$variability_to_composition_map
+  if (is.null(variability_to_composition_map)) {
+    stop("sccomp says: missing `variability_to_composition_map` in model metadata.")
+  }
+
+  bimodal_flag <- isTRUE(as.logical(model_input$bimodal_mean_variability_association))
+
+  if (is.null(alpha_variable_subset)) {
+    # Fast path: use all variability coefficients and all cell groups.
+    alpha_draws <- draws_to_tibble_x_y(fit, "alpha", "C", "M")
+  } else {
+    # Subset path: trust upstream subset names as-is.
+    alpha_draws <- draws_to_tibble_x_y(fit, alpha_variable_subset, "C", "M")
+  }
+
+  needed_C <- sort(unique(alpha_draws$C))
+  needed_C_comp <- sort(unique(variability_to_composition_map[needed_C]))
+  n_M <- ncol(model_input$y)
+
+  # Map variability coefficients (C in Xa) to composition coefficients (C in X),
+  # then load beta for all M so we can apply draw-wise correction.
+  beta_vars <- as.vector(
+    outer(
+      needed_C_comp,
+      seq_len(n_M),
+      FUN = function(c_idx, m_idx) sprintf("beta[%d,%d]", c_idx, m_idx)
+    )
+  )
+
+  beta_draws <- draws_to_tibble_x_y(fit, beta_vars, "C", "M") |>
+    rename(C_comp = C, beta = .value) |>
+    select(C_comp, M, .chain, .iteration, beta)
+
+  alpha_draws <- alpha_draws |>
+    rename(alpha = .value) |>
+    mutate(C_comp = variability_to_composition_map[C]) |>
+    left_join(beta_draws, by = c("C_comp", "M", ".chain", ".iteration"))
+
+
+  slope_1_vars <- sprintf("prec_slope_1[%d]", needed_C)
+  slope_1_draws <- draws_to_tibble_x(fit, slope_1_vars, "C") |>
+    transmute(C, .chain, .iteration, prec_slope_1 = .value)
+
+  alpha_draws <- alpha_draws |>
+    left_join(slope_1_draws, by = c("C", ".chain", ".iteration"))
+
+  if (!bimodal_flag) {
+    # Unimodal model: the effective slope is the single regression slope.
+    alpha_draws <- alpha_draws |>
+      mutate(slope_effective = prec_slope_1)
+  } else {
+    slope_2_vars <- sprintf("prec_slope_2[%d]", needed_C)
+    intercept_1_vars <- sprintf("prec_intercept_1[%d]", needed_C)
+    intercept_2_vars <- sprintf("prec_intercept_2[%d]", needed_C)
+    prec_sd_vars <- sprintf("prec_sd[%d]", needed_C)
+
+    slope_2_draws <- draws_to_tibble_x(fit, slope_2_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_slope_2 = .value)
+    intercept_1_draws <- draws_to_tibble_x(fit, intercept_1_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_intercept_1 = .value)
+    intercept_2_draws <- draws_to_tibble_x(fit, intercept_2_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_intercept_2 = .value)
+    prec_sd_draws <- draws_to_tibble_x(fit, prec_sd_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_sd = .value)
+
+    mix_p_draws <- fit$draws(variables = "mix_p", format = "draws_df") |>
+      transmute(
+        .chain = as.integer(.chain),
+        .iteration = as.integer(.iteration),
+        mix_p = mix_p
+      )
+
+    alpha_draws <- alpha_draws |>
+      left_join(slope_2_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(intercept_1_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(intercept_2_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(prec_sd_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(mix_p_draws, by = c(".chain", ".iteration")) |>
+      mutate(
+        # Soft assignment: compute draw-specific responsibility for component 1
+        # from mixture log-densities and use it to blend slopes.
+        # Here log_1/log_2 are:
+        #   log p(z = k) + log p(alpha | z = k, draw params)
+        # where p(alpha | z = k, ...) is Student-t(df = 3) with
+        # location beta * prec_slope_k + prec_intercept_k and scale prec_sd.
+        # The -log(prec_sd) term applies the scale correction.
+        log_1 = log(mix_p) +
+          stats::dt((alpha - (beta * prec_slope_1 + prec_intercept_1)) / prec_sd, df = 3, log = TRUE) -
+          log(prec_sd),
+        log_2 = log1p(-mix_p) +
+          stats::dt((alpha - (beta * prec_slope_2 + prec_intercept_2)) / prec_sd, df = 3, log = TRUE) -
+          log(prec_sd),
+        max_log = pmax(log_1, log_2),
+        weight_1 = exp(log_1 - max_log) / (exp(log_1 - max_log) + exp(log_2 - max_log)),
+        slope_effective = weight_1 * prec_slope_1 + (1 - weight_1) * prec_slope_2
+      )
+  }
+
+  alpha_draws |>
+    mutate(
+      .value = alpha - (beta * slope_effective),
+      .variable = "alpha_normalised"
+    ) |>
+    select(C, M, .chain, .iteration, .draw, .variable, .value)
 }
 
 

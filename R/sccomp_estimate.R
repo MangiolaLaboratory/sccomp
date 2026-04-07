@@ -55,7 +55,7 @@
 #'                 Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.
 #'                 With `portable = FALSE`, CSVs remain for you to inspect or archive, but cmdstanr typically **still holds posterior draws in RAM**
 #'                 after fitting and summarisation (`fit$summary()`). The printed estimate table only calls `fit$summary()` on composition
-#'                 (`beta`, …) and variability (`alpha_normalised`, …), not on every saved parameter (e.g. `prec_sd`), yet cmdstanr still
+#'                 (`beta`, …) and variability (`alpha`, …), not on every saved parameter (e.g. `prec_sd`), yet cmdstanr still
 #'                 exposes all saved parameters from memory once output has been read, so `fit$draws(variables = "prec_sd")` can work
 #'                 after CSV deletion just like `beta`. Deleting CSVs does **not** reliably invalidate the fit in the same R session.
 #'                 Call `sccomp_test()` before deleting draw files, use `portable = TRUE` (draws cached then files removed), or run
@@ -1056,7 +1056,7 @@ sccomp_glm_data_frame_counts = function(.data,
       pars = c(
         "beta", "alpha",
         "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2",
-        "prec_sd", "alpha_normalised",
+        "prec_sd",
         "random_effect", "random_effect_2",
         "random_effect_sigma", "random_effect_sigma_2",
         "log_lik"

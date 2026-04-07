@@ -592,14 +592,6 @@ model{
     }
   }
 generated quantities {
-  matrix[A, M] alpha_normalised = alpha;
-
-// Entanglement adjustment
-
-    for(a in 1:A)
-      alpha_normalised[a] = alpha[a] - (beta[variability_to_composition_map[a]] * prec_slope_1[a]);
-
-
   // LOO
   vector[TNS] log_lik = rep_vector(0, TNS);
 

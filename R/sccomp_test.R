@@ -189,50 +189,37 @@ sccomp_test.sccomp_tbl = function(.data,
 #' @noRd
 summarise_stan_matrix_for_estimate <- function(
     fit,
-    par_name,
-    design_colnames,
-    cell_group_levels,
+    model_input,
+    stan_parameter,
+    parameter_names,
     probs,
-    cell_group_colname,
-    prefix,
-    full_design_colnames = NULL,
-    full_block_parameter = NULL) {
-  if (is.null(full_design_colnames)) {
-    full_design_colnames <- design_colnames
-  }
-  # Translate design-matrix column names to Stan matrix column indices (C).
-  C_idx <- match(design_colnames, full_design_colnames)
-  if (anyNA(C_idx)) {
-    stop(
-      "sccomp says: each name in design_colnames must appear in full_design_colnames.",
-      call. = FALSE
-    )
-  }
-  if (is.null(par_name)) {
-    summ <- summary_to_tibble(fit, full_block_parameter, "C", "M", probs = probs)
-  } else {
-    # Subset request uses explicit indexed Stan variable names for selected C across all M.
-    n_M <- length(cell_group_levels)
-    g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
-    variable_names <- sprintf("%s[%d,%d]", par_name, g$C, g$M)
-    summ <- summary_to_tibble(fit, variable_names, "C", "M", probs = probs)
-  }
-  qcols <- names(summ)[grepl("%$", names(summ))]
-  q_bounds <- qcols |>
+    prefix) {
+  # Map Stan matrix column index M back to user-facing cell-group labels.
+  cell_group_levels <- colnames(model_input$y)
+
+  # Query Stan summaries for this parameter family (beta/random effects).
+  summ <- summary_to_tibble(fit, stan_parameter, "C", "M", probs = probs)
+
+  # Identify lower/upper quantile column names from the summary output.
+  quantile_columns <- names(summ)[grepl("%$", names(summ))]
+  ordered_quantile_columns <- quantile_columns |>
     tibble::enframe(value = "qcol") |>
     dplyr::mutate(pct = as.numeric(gsub("%$", "", qcol, perl = TRUE))) |>
     dplyr::arrange(pct) |>
     dplyr::pull(qcol)
-  qlo <- q_bounds[[1]]
-  qhi <- q_bounds[[2]]
+  lower_quantile_column <- ordered_quantile_columns[[1]]
+  upper_quantile_column <- ordered_quantile_columns[[2]]
 
+  # Provide a stable mapping from C indices to design-matrix parameter names.
   par_by_C <-
-    tibble::tibble(C = C_idx, parameter = design_colnames) |>
+    tibble::tibble(C = seq_along(parameter_names), parameter = parameter_names) |>
     dplyr::distinct()
 
+  # Attach parameter labels to each C/M summary row.
   joined <- summ |>
     dplyr::left_join(par_by_C, by = "C")
 
+  # Keep output column names configurable for c_/v_ style reuse.
   lower_col <- paste0(prefix, "lower")
   effect_col <- paste0(prefix, "effect")
   upper_col <- paste0(prefix, "upper")
@@ -240,14 +227,97 @@ summarise_stan_matrix_for_estimate <- function(
   ess_bulk_col <- paste0(prefix, "ess_bulk")
   ess_tail_col <- paste0(prefix, "ess_tail")
 
+  # Return compact, user-facing summary table with diagnostics.
+  joined |>
+    dplyr::transmute(
+      cell_group = cell_group_levels[M],
+      M,
+      parameter,
+      !!lower_col := .data[[lower_quantile_column]],
+      !!effect_col := mean,
+      !!upper_col := .data[[upper_quantile_column]],
+      !!rhat_col := rhat,
+      !!ess_bulk_col := ess_bulk,
+      !!ess_tail_col := ess_tail
+    )
+}
+
+#' Build variability summaries from R-side alpha normalisation draws.
+#'
+#' This mirrors `summarise_stan_matrix_for_estimate()` but computes quantiles for
+#' alpha_normalised from derived draws, while borrowing convergence diagnostics
+#' (rhat/ESS) from the corresponding `alpha` elements.
+#'
+#' @keywords internal
+#' @noRd
+summarise_alpha_normalised_for_estimate <- function(
+    fit,
+    model_input,
+    design_colnames,
+    probs,
+    cell_group_colname,
+    prefix) {
+  # Map Stan matrix column index M back to user-facing cell-group labels.
+  cell_group_levels <- colnames(model_input$y)
+
+  # Match variability design columns to Stan C indices.
+  C_idx <- match(design_colnames, colnames(model_input$XA))
+  if (anyNA(C_idx)) {
+    stop(
+      "sccomp says: each variability design column must appear in model_input$XA.",
+      call. = FALSE
+    )
+  }
+
+  n_M <- length(cell_group_levels)
+  g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
+  alpha_subset <- sprintf("alpha[%d,%d]", g$C, g$M)
+
+  # Compute alpha_normalised summaries from derived R-side draws.
+  draws_summary <- compute_alpha_normalised_draws(
+    fit = fit,
+    model_input = model_input,
+    alpha_variable_subset = alpha_subset
+  ) |>
+    dplyr::group_by(C, M) |>
+    dplyr::summarise(
+      effect = mean(.value),
+      lower_quantile = stats::quantile(.value, probs = probs[[1]], na.rm = TRUE),
+      upper_quantile = stats::quantile(.value, probs = probs[[2]], na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  # Pull diagnostics from the corresponding base alpha parameters in Stan.
+  alpha_diagnostics <- summary_to_tibble(fit, alpha_subset, "C", "M", probs = probs) |>
+    dplyr::select(C, M, rhat, ess_bulk, ess_tail) |>
+    dplyr::distinct()
+
+  # Combine derived summaries, diagnostics, and design parameter labels.
+  joined <- draws_summary |>
+    dplyr::left_join(alpha_diagnostics, by = c("C", "M")) |>
+    dplyr::left_join(
+      tibble::tibble(C = C_idx, parameter = design_colnames) |>
+        dplyr::distinct(),
+      by = "C"
+    )
+
+  # Keep output column names configurable for v_ style summaries.
+  lower_col <- paste0(prefix, "lower")
+  effect_col <- paste0(prefix, "effect")
+  upper_col <- paste0(prefix, "upper")
+  rhat_col <- paste0(prefix, "rhat")
+  ess_bulk_col <- paste0(prefix, "ess_bulk")
+  ess_tail_col <- paste0(prefix, "ess_tail")
+
+  # Return compact, user-facing summary table with diagnostics.
   joined |>
     dplyr::transmute(
       !!rlang::sym(cell_group_colname) := cell_group_levels[M],
       M,
       parameter,
-      !!lower_col := .data[[qlo]],
-      !!effect_col := mean,
-      !!upper_col := .data[[qhi]],
+      !!lower_col := lower_quantile,
+      !!effect_col := effect,
+      !!upper_col := upper_quantile,
       !!rhat_col := rhat,
       !!ess_bulk_col := ess_bulk,
       !!ess_tail_col := ess_tail
@@ -267,20 +337,26 @@ sccomp_summarise_posterior_for_estimate <- function(
   fp <- percent_false_positive / 100
   probs <- c(fp / 2, 1 - fp / 2)
 
-  cell_group_levels <- model_input$y |> colnames()
-
   abundance_parts <- list(
     summarise_stan_matrix_for_estimate(
-      fit, NULL, colnames(model_input$X), cell_group_levels,
-      probs, cg, "c_", full_block_parameter = "beta"
+      fit = fit,
+      model_input = model_input,
+      stan_parameter = "beta",
+      parameter_names = colnames(model_input$X),
+      probs = probs,
+      prefix = "c_"
     )
   )
   if (model_input$n_random_eff > 0) {
     abundance_parts <- c(
       abundance_parts,
       list(summarise_stan_matrix_for_estimate(
-        fit, NULL, colnames(model_input$X_random_effect), cell_group_levels,
-        probs, cg, "c_", full_block_parameter = "random_effect"
+        fit = fit,
+        model_input = model_input,
+        stan_parameter = "random_effect",
+        parameter_names = colnames(model_input$X_random_effect),
+        probs = probs,
+        prefix = "c_"
       ))
     )
   }
@@ -288,17 +364,26 @@ sccomp_summarise_posterior_for_estimate <- function(
     abundance_parts <- c(
       abundance_parts,
       list(summarise_stan_matrix_for_estimate(
-        fit, NULL, colnames(model_input$X_random_effect_2), cell_group_levels,
-        probs, cg, "c_", full_block_parameter = "random_effect_2"
+        fit = fit,
+        model_input = model_input,
+        stan_parameter = "random_effect_2",
+        parameter_names = colnames(model_input$X_random_effect_2),
+        probs = probs,
+        prefix = "c_"
       ))
     )
   }
 
-  abundance <- dplyr::bind_rows(abundance_parts)
+  abundance <- dplyr::bind_rows(abundance_parts) |>
+    dplyr::rename(!!cg := cell_group)
 
-  variability <- summarise_stan_matrix_for_estimate(
-    fit, NULL, colnames(model_input$XA), cell_group_levels,
-    probs, cg, "v_", full_block_parameter = "alpha_normalised"
+  variability <- summarise_alpha_normalised_for_estimate(
+    fit = fit,
+    model_input = model_input,
+    design_colnames = colnames(model_input$XA),
+    probs = probs,
+    cell_group_colname = cg,
+    prefix = "v_"
   ) |>
     dplyr::mutate(
       v_lower = -v_lower,
@@ -721,14 +806,15 @@ get_variability_contrast_draws = function(.data, contrasts, design_param_subset 
     n_M <- ncol(.data |> attr("model_input") %$% y)
     C_idx <- match(needed, variability_factor_of_interest)
     g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
-    alpha_variable_subset <- sprintf("alpha_normalised[%d,%d]", g$C, g$M)
+    alpha_variable_subset <- sprintf("alpha[%d,%d]", g$C, g$M)
   }
   
   draws =
-    
-    .data |>
-    attr("fit") %>%
-    draws_to_tibble_x_y(if (is.null(alpha_variable_subset)) "alpha_normalised" else alpha_variable_subset, "C", "M") |>
+    compute_alpha_normalised_draws(
+      fit = .data |> attr("fit"),
+      model_input = .data |> attr("model_input"),
+      alpha_variable_subset = alpha_variable_subset
+    ) |>
     
     # We want variability, not concentration
     mutate(.value = -.value) 
@@ -777,7 +863,7 @@ get_variability_contrast_draws = function(.data, contrasts, design_param_subset 
   convergence_df =
     .data |>
     attr("fit") |>
-    summary_to_tibble("alpha_normalised", "C", "M") |>
+    summary_to_tibble("alpha", "C", "M") |>
     
     # Add cell name
     left_join(

@@ -322,7 +322,7 @@ sccomp_plot_intervals_2D <- function(
     cat("\n")
   }
 
-  # v_effect already comes from alpha_normalised (adjusted in Stan)
+  # v_effect already comes from alpha_normalised (computed in R from draws)
   # "raw" panel: ADD BACK entanglement to show raw alpha
   # "adjusted" panel: USE v_effect AS-IS
 
