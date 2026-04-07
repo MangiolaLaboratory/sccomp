@@ -504,14 +504,17 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   # Auto-cleanup draw files if requested
   if (portable) {
-
     estimate_tibble <- incorporate_parameters_into_sccomp_object(estimate_tibble)
     
     if (dir.exists(output_directory)) {
       files_deleted <- attr(estimate_tibble, "fit")$output_files(include_failed = TRUE)
+      files_deleted <- files_deleted[file.exists(files_deleted)]
       if (length(files_deleted) > 0) {
-        suppressWarnings(unlink(files_deleted, force = TRUE))
-          message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'", length(files_deleted), output_directory))
+        file.remove(files_deleted)
+        if (verbose) {
+          message(sprintf("sccomp says: auto-cleanup removed %d draw files from '%s'", 
+                         length(files_deleted), output_directory))
+        }
       }
     }
   }

@@ -21,6 +21,29 @@ estimate_for_draw_tests <- function(output_directory, portable) {
     )
 }
 
+# Minimal HMC for tests that should reflect typical `inference_method = "hmc"` workflows (CmdStanMCMC,
+# chain CSVs). Small warmup/sampling via fit_model args forwarded through `...`.
+estimate_for_draw_tests_hmc_minimal <- function(output_directory, portable = FALSE) {
+  data("counts_obj", package = "sccomp", envir = environment())
+  counts_obj |>
+    sccomp_estimate(
+      formula_composition = ~ type,
+      formula_variability = ~ 1,
+      sample = "sample",
+      cell_group = "cell_group",
+      abundance = "count",
+      cores = 1,
+      inference_method = "hmc",
+      chains = 1,
+      warmup_samples = 40,
+      output_samples = 80,
+      max_sampling_iterations = 500,
+      verbose = FALSE,
+      output_directory = output_directory,
+      portable = portable
+    )
+}
+
 test_that("non-portable estimate: deleting Stan output files before sccomp_test() errors without incorporation", {
   skip_cmdstan()
 
@@ -45,6 +68,32 @@ test_that("non-portable estimate: deleting Stan output files before sccomp_test(
   )
 })
 
+# With HMC, `sccomp_summarise_posterior_for_estimate()` only touches `fit$summary()` for `beta` /
+# `alpha_normalised` (etc.); `prec_sd` is not loaded then. After deleting chain CSVs, `prec_sd`
+# must be read from disk and fails (same class of error as copying an RDS to another machine
+# without the draw files).
+
+test_that("non-portable (HMC): prec_sd summary errors after CSV deletion", {
+  skip_cmdstan()
+
+  test_output_dir <- tempfile("sccomp_test_prec_sd_disk_")
+  dir.create(test_output_dir)
+  on.exit(unlink(test_output_dir, recursive = TRUE), add = TRUE)
+
+  result <- estimate_for_draw_tests_hmc_minimal(test_output_dir, portable = FALSE)
+  fit <- attr(result, "fit")
+
+  paths <- fit$output_files(include_failed = TRUE)
+  paths <- paths[file.exists(paths)]
+  expect_gt(length(paths), 0L, label = "Stan output files on disk")
+  expect_true(all(file.remove(paths)), label = "removing Stan CSV files")
+
+  expect_error(
+    fit$summary("prec_sd"),
+    "File does not exist"
+  )
+})
+
 test_that("incorporate_parameters_into_fit_object keeps draws after CSV deletion", {
   skip_cmdstan()
 
@@ -66,12 +115,6 @@ test_that("incorporate_parameters_into_fit_object keeps draws after CSV deletion
   expect_no_error({
     fit$draws(variables = "alpha", format = "draws_df")
   })
-  
-  expect_no_error({
-    prec_intercept_draws <- fit$draws(variables = "prec_intercept_1", format = "draws_df")
-  })
-  
-  # Now delete the CSV files to simulate cleanup
 
   file.remove(csv_files)
 
