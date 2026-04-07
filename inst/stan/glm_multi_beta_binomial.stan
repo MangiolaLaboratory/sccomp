@@ -338,7 +338,8 @@ transformed data{
 parameters{
   // Use the new sum_to_zero_vector type instead of QR decomposition
   array[C] sum_to_zero_vector[M] beta_raw; // Each row is a sum_to_zero_vector of length M
-  matrix[A, M] alpha; // Variability
+  matrix[A_intercept_columns, M] alpha_intercept_raw; // Non-centered intercept block
+  matrix[(A - A_intercept_columns), M] alpha_non_intercept_raw; // Non-centered remaining rows
   // To exclude
   array[2] real prec_coeff;
   real<lower=0> prec_sd;
@@ -369,12 +370,42 @@ transformed parameters{
   
   // Initialisation
   matrix[C,M] beta;
-  matrix[M, N] precision = (Xa * alpha)';
+  matrix[A, M] alpha;
+  matrix[M, N] precision;
   
   // Convert sum_to_zero_vector to regular matrix
   for(c in 1:C) {
     beta[c,] = to_row_vector(beta_raw[c]);
   }
+
+  // Non-centered alpha transform with one exclude_priors branch
+  if (exclude_priors == 0) {
+    // Intercept block
+    for (a in 1:A_intercept_columns) {
+      alpha[a] = beta[a] * prec_coeff[2] + prec_coeff[1] + prec_sd * alpha_intercept_raw[a];
+    }
+
+    // Non-intercept block
+    if (A > A_intercept_columns) {
+      for (a in 1:(A - A_intercept_columns)) {
+        alpha[A_intercept_columns + a] = beta[A_intercept_columns + a] * prec_coeff[2] + 2 * alpha_non_intercept_raw[a];
+      }
+    }
+  } else {
+    // Intercept block
+    for (a in 1:A_intercept_columns) {
+      alpha[a] = prec_coeff[1] + prec_sd * alpha_intercept_raw[a];
+    }
+
+    // Non-intercept block
+    if (A > A_intercept_columns) {
+      for (a in 1:(A - A_intercept_columns)) {
+        alpha[A_intercept_columns + a] = 2 * alpha_non_intercept_raw[a];
+      }
+    }
+  }
+
+  precision = (Xa * alpha)';
   
   // Non centered parameterisation SD of random effects
   array[M * (ncol_X_random_eff[1]> 0)] vector[how_many_factors_in_random_design[1]] random_effect_sigma;
@@ -498,45 +529,34 @@ model{
     // This would include the models 
     // composition ~ 1 + ...; composition ~ 0 + ...; 
     // variability ~ 1
-    if(A == 1){
-      target += abundance_variability_regression(
-        alpha[1],
-        beta[1], // average_by_col(beta[1:B_intercept_columns,]),
-        prec_coeff,
-        prec_sd,
-        bimodal_mean_variability_association,
-        mix_p
-        );
+    // Intercept block:
+    // - non-bimodal: standard non-centered normal
+    // - bimodal: mixture in raw space (partial non-centering)
+    if (bimodal_mean_variability_association == 1) {
+      for (a in 1:A_intercept_columns) {
+        for (m in 1:M) {
+          real delta = (1 - prec_coeff[1]) / prec_sd;
+          target += log_mix(
+            mix_p,
+            normal_lpdf(alpha_intercept_raw[a, m] | 0, 1),
+            normal_lpdf(alpha_intercept_raw[a, m] | delta, 1)
+          );
+        }
+      }
+    } else {
+      for (a in 1:A_intercept_columns) to_vector(alpha_intercept_raw[a]) ~ std_normal();
     }
-    else {
-      // Loop across the intercept columns in case of a intercept-less design (covariate are intercepts)
-      for(a in 1:A_intercept_columns)
-      target += abundance_variability_regression(
-        alpha[a],
-        beta[a],
-        prec_coeff,
-        prec_sd,
-        bimodal_mean_variability_association,
-        mix_p
-        );
-        
-        // Variability effect if the formula is more complex
-        if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) alpha[a] ~ normal(beta[a] * prec_coeff[2], 2 );
-    }
+
+    // Non-intercept block (non-centered normal with sd=2)
+    if(A>A_intercept_columns) for(a in 1:(A - A_intercept_columns)) to_vector(alpha_non_intercept_raw[a]) ~ std_normal();
     
   }
   
   // If I don't have priors for overdispersion
   else{
     // Priors variability
-    if(intercept_in_design || A > 1){
-      for(a in 1:A_intercept_columns) alpha[a]  ~ normal( prec_coeff[1], prec_sd );
-      if(A>A_intercept_columns) for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ normal ( 0, 2 );
-    }
-    // if ~ 0 + covariuate
-    else {
-      alpha[1]  ~ normal( prec_coeff[1], prec_sd );
-    }
+    for(a in 1:A_intercept_columns) to_vector(alpha_intercept_raw[a]) ~ std_normal();
+    if(A>A_intercept_columns) for(a in 1:(A - A_intercept_columns)) to_vector(alpha_non_intercept_raw[a]) ~ std_normal();
   }
   
   // // Priors abundance - use correct scale for sum_to_zero_vector
@@ -547,7 +567,8 @@ model{
   mix_p ~ beta(1,5);
   prec_coeff[1] ~ normal(prior_prec_intercept[1], prior_prec_intercept[2]);
   prec_coeff[2] ~ normal(prior_prec_slope[1],prior_prec_slope[2]);
-  prec_sd ~ gamma(prior_prec_sd[1],prior_prec_sd[2]);
+  // Gamma prior with mean 2 and moderate concentration
+  prec_sd ~ gamma(10, 5);
   // prec_coeff ~ std_normal(); // prior imposed again for prec_coeff, should delete this line, and maybe the comment below
   // Note: sum_to_zero_vector has built-in priors, no need for explicit std_normal()
   

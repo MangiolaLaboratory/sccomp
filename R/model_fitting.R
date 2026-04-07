@@ -45,7 +45,12 @@ fit_model = function(
   init_list=list(
     prec_coeff = c(5,0),
     prec_sd = 1,
-    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
+    alpha_intercept_raw = matrix(0, nrow = data_for_model$A_intercept_columns, ncol = data_for_model$M),
+    alpha_non_intercept_raw = matrix(
+      0,
+      nrow = max(data_for_model$A - data_for_model$A_intercept_columns, 0),
+      ncol = data_for_model$M
+    ),
     beta_raw = matrix(0, data_for_model$C , data_for_model$M) ,
     mix_p = 0.1 
   )
