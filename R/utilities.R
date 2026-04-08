@@ -380,7 +380,6 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
     ) %>%
-    arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain, .iteration) %>%
     select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw, .variable, .value) 
   
 }
@@ -423,7 +422,6 @@ draws_to_tibble_x = function(fit, par, x) {
     mutate(
       !!as.symbol(x) := as.integer(!!as.symbol(x))
     ) %>%
-    arrange(.variable, !!as.symbol(x), .chain, .iteration) %>%
     select(!!as.symbol(x), .chain, .iteration, .draw, .variable, .value) %>%
     filter(.variable == base_parameter)
 }
