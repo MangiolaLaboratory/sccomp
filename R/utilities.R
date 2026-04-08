@@ -163,6 +163,9 @@ incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = c
   )) {
 
   fit <- attr(obj, "fit")
+  if (is.null(fit)) {
+    stop('expected a "fit" attribute on the sccomp object', call. = FALSE)
+  }
   attr(obj, "fit") <- incorporate_parameters_into_fit_object(fit, parameters_to_load)
   attr(obj, "sccomp_draws_incorporated_for_portability") <- TRUE
   obj
