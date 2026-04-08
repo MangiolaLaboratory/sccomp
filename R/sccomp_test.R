@@ -768,13 +768,13 @@ get_variability_contrast_draws = function(.data, contrasts){
     draws <- mutate_from_expr_list(draws, contrasts, ignore_errors = TRUE)
   
   # If no contrasts of interest just return an empty data frame
-  if(ncol(draws)==5) return(cell_index_map |> dplyr::select(!!.cell_group, M) |> distinct())
+  if(ncol(draws) <= 4) return(cell_index_map |> dplyr::select(!!.cell_group, M) |> distinct())
   
   draws = draws |>
-    pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
+    pivot_longer(-c(1:4), names_to = "parameter", values_to = ".value") |>
 
     # Reorder because pivot long is bad
-    mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
+    mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:4)])) |>
     arrange(parameter)
 
   draws = draws |> 
