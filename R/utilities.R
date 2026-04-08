@@ -111,7 +111,9 @@ subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE
 #' @keywords internal
 #' @noRd
 incorporate_parameters_into_fit_object = function(fit, parameters_to_load) {
-  parameters_present <- intersect(parameters_to_load, fit$metadata()$model_params)
+  model_params <- fit$metadata()$model_params
+  model_params_base <- unique(sub("(\\[.*\\])?$", "", model_params))
+  parameters_present <- intersect(parameters_to_load, model_params_base)
 
   
   # Load parameters by calling draws()
