@@ -87,63 +87,46 @@ sccomp_test.sccomp_tbl = function(.data,
   truncation_df2 =  .data |>  attr("truncation_df2")
   inference_method = .data |>  attr("inference_method")
   
-  identified <- sccomp_identify_covariate_contrasts(contrasts, model_input)
-  mapped_covariates <- if (is.null(identified)) NULL else unique(identified$contrast_mapping$design_param)
-  contrasts_parameters <- NULL
-  if (!is.null(contrasts)) {
-    contrasts_parameters <- contrasts_to_parameter_list(contrasts)
-  }
-
   # sccomp_test always computes pH0/FDR from posterior draws.
-  abundance_CI <- get_abundance_contrast_draws(.data, contrasts, mapped_covariates, contrasts_parameters)
-
-  if ("parameter" %in% colnames(abundance_CI)) {
-    abundance_CI <-
-      abundance_CI |>
+  result  <- 
+    get_abundance_contrast_draws(.data, contrasts) |>
       draws_to_statistics(
         percent_false_positive / 100,
         test_composition_above_logit_fold_change,
         !!.cell_group,
         "c_"
       )
-  }
-
-  variability_CI <- get_variability_contrast_draws(.data, contrasts, mapped_covariates, contrasts_parameters)
-
-  if ("parameter" %in% colnames(variability_CI)) {
-    variability_CI <-
-      variability_CI |>
-      draws_to_statistics(
-        percent_false_positive / 100,
-        test_composition_above_logit_fold_change,
-        !!.cell_group,
-        "v_"
-      )
-  }
   
-  # If I don't have factors (~1)
-  if (!"factor" %in% colnames(model_input$factor_parameter_dictionary))
-    factor_parameter_dictionary = tibble(`factor` = character(), design_matrix_col = character())
-  else
-    factor_parameter_dictionary =
+  variability_draws <- get_variability_contrast_draws(.data, contrasts)
+
+  # If I have variability draws for those contrasts, compute the variability CI
+  if ("parameter" %in% colnames(variability_draws)) {
+    result = 
+    result |>
+    left_join(
+      variability_draws |>
+        draws_to_statistics(
+          percent_false_positive / 100,
+          test_composition_above_logit_fold_change,
+          !!.cell_group,
+          "v_"
+        )
+    )
+  }
+
+  
+  factor_parameter_dictionary =
     model_input$factor_parameter_dictionary |>
     select(`factor`, design_matrix_col)
   
   # Merge and parse
   result =
-    abundance_CI |>
+   result |>
     
-    # Add ALPHA
-    left_join(variability_CI) |>
-    suppressMessages() |>
-    
-    # Add easy to understand factor labels
-    left_join(factor_parameter_dictionary,
-              by = c("parameter" = "design_matrix_col")) |>
-    select(parameter, `factor`, everything()) |>
-    
-    select(!!.cell_group, everything(),-M)
-  
+    # Keep factor labels in the result schema; plotting/subsetting helpers rely on this.
+    left_join(factor_parameter_dictionary, by = c("parameter" = "design_matrix_col")) |>
+    select(!!.cell_group, parameter, `factor`, everything(), -M) 
+      
   if(pass_fit)
     result =
     result |>
@@ -458,8 +441,53 @@ sccomp_identify_covariate_contrasts <- function(contrasts, model_input) {
   )
 }
 
+#' Build Stan indexed-variable subset from contrast terms.
+#'
+#' @param contrasts Character vector of contrast expressions. Can be `NULL`.
+#' @param design_columns Character vector of design-matrix column names for the target parameter block.
+#' @param stan_parameter Character scalar Stan parameter name (for example, `"beta"` or `"alpha"`).
+#' @param model_input Model input list containing `y`, used to infer the `M` index size.
+#'
+#' @keywords internal
+#' @noRd
+build_stan_parameter_subset <- function(contrasts, design_columns, stan_parameter, model_input) {
+  if (is.null(contrasts)) {
+    return(
+      tibble::tibble(
+        parameter = design_columns,
+        variable = rep(stan_parameter, length(design_columns))
+      )
+    )
+  }
+
+  candidate_terms <- contrasts_to_parameter_list(contrasts)
+  if (is.null(candidate_terms) || length(candidate_terms) == 0) {
+    return(tibble::tibble(parameter = character(), variable = character()))
+  }
+
+  candidate_terms <- unique(candidate_terms)
+  candidate_terms <- candidate_terms[!is.na(candidate_terms) & candidate_terms != ""]
+  if (length(candidate_terms) == 0) {
+    return(tibble::tibble(parameter = character(), variable = character()))
+  }
+
+  matched <- intersect(candidate_terms, design_columns)
+  if (length(matched) == 0) {
+    return(tibble::tibble(parameter = character(), variable = character()))
+  }
+
+  n_M <- ncol(model_input$y)
+  C_idx <- match(matched, design_columns)
+  g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
+
+  tibble::tibble(
+    parameter = matched[g$C],
+    variable = sprintf("%s[%d,%d]", stan_parameter, g$C, g$M)
+  )
+}
+
 # this can be helpful if we want to draw PCA with uncertainty
-get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = NULL, contrasts_parameters = NULL){
+get_abundance_contrast_draws = function(.data, contrasts = NULL){
   
   # Define the variables as NULL to avoid CRAN NOTES
   X <- NULL
@@ -475,67 +503,57 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
   
   
   .cell_group = .data |>  attr(".cell_group")
+  model_input <- .data |> attr("model_input")
+  cell_index_map <-
+    model_input %$%
+    y %>%
+    colnames() |>
+    enframe(name = "M", value  = quo_name(.cell_group))
   
   # Beta
-  beta_factor_of_interest = .data |> attr("model_input") %$% X |> colnames()
-  # beta =
-  #   .data |>
-  #   attr("fit") %>%
-  #   draws_to_tibble_x_y("beta", "C", "M") |>
-  #   pivot_wider(names_from = C, values_from = .value) %>%
-  #   setNames(colnames(.)[1:5] |> c(beta_factor_of_interest))
-  beta_variable_subset <- NULL
-  if (!is.null(design_param_subset)) {
-    needed <- intersect(design_param_subset, beta_factor_of_interest)
-    if (length(needed) > 0) {
-      n_M <- ncol(.data |> attr("model_input") %$% y)
-      C_idx <- match(needed, beta_factor_of_interest)
-      g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
-      beta_variable_subset <- sprintf("beta[%d,%d]", g$C, g$M)
-    }
-  }
-  
-  if(contrasts |> is.null())
-    draws =
-    .data |>
-    attr("fit") %>%
-    draws_to_tibble_x_y("beta", "C", "M") |>
-    pivot_wider(names_from = C, values_from = .value) %>%
-    setNames(colnames(.)[1:5] |> c(beta_factor_of_interest)) |>
-    select(-.variable)
+  beta_covariates = model_input %$% X |> colnames()
 
-  else if((beta_factor_of_interest %in% contrasts_parameters) |> which() |> length() > 0)
+  beta_subset <- build_stan_parameter_subset(
+    contrasts = contrasts,
+    design_columns = beta_covariates,
+    stan_parameter = "beta",
+    model_input = model_input
+  )
+  beta_parameters <- beta_subset |> dplyr::pull(parameter) |> unique()
+  beta_variable_subset <- beta_subset |> dplyr::pull(variable) |> unique()
+  
 
     draws =
       .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y(
-        if (is.null(beta_variable_subset)) "beta" else beta_variable_subset,
-        "C",
-        "M"
-      ) |>
+      draws_to_tibble_x_y( beta_variable_subset, "C", "M") |>
     left_join(
-      beta_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+      beta_covariates |> enframe(name = "C", value = "parameters_name"),
       by = "C"
     )  |>
-    filter(parameters_name %in% contrasts_parameters) |>
     select(-C) |>
     pivot_wider(names_from = parameters_name, values_from = .value) |>
     select(-.variable)
 
-  else
-    draws = tibble()
   
   
   # Random effect
   
-  beta_random_effect_factor_of_interest = .data |> attr("model_input") %$% X_random_effect |> colnames()
+  random_effect_covariates = model_input %$% X_random_effect |> colnames()
+  beta_random_effect_subset <- build_stan_parameter_subset(
+    contrasts = contrasts,
+    design_columns = random_effect_covariates,
+    stan_parameter = "random_effect",
+    model_input = model_input
+  )
+  beta_random_effect_parameters <- beta_random_effect_subset |> dplyr::pull(parameter) |> unique()
+  beta_random_effect_variables <- beta_random_effect_subset |> dplyr::pull(variable) |> unique()
   
   if(
     .data |> attr("model_input") %$% n_random_eff > 0 &&
     (
       contrasts |> is.null() || 
-      (beta_random_effect_factor_of_interest %in% contrasts_parameters) |> which() |> length() > 0
+      length(beta_random_effect_parameters) > 0
     )  
   ){
     
@@ -543,7 +561,7 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
     beta_random_effect =
       .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y("random_effect", "C", "M") 
+      draws_to_tibble_x_y(beta_random_effect_variables,  "C",  "M"  ) 
     
     # Add last component
     other_group_random_effect = 
@@ -563,10 +581,10 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
       beta_random_effect = 
       beta_random_effect |> 
       left_join(
-        beta_random_effect_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+        random_effect_covariates |> enframe(name = "C", value = "parameters_name"),
         by = "C"
       )  |> 
-      filter(parameters_name %in% contrasts_parameters) |> 
+      filter(parameters_name %in% beta_random_effect_parameters) |> 
       select(-C) |> 
       pivot_wider(names_from = parameters_name, values_from = .value)
     
@@ -574,8 +592,8 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
       beta_random_effect = 
       beta_random_effect |>
       pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest))
-    
+      setNames(colnames(.)[1:5] |> c(random_effect_covariates))
+
     # If I don't have fix nor 1st level random effect
     if(draws |> nrow() == 0)
       draws = select(beta_random_effect, -.variable)
@@ -586,24 +604,32 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
       )
     
   }  else {
-    beta_random_effect_factor_of_interest = ""
+    random_effect_covariates = ""
   }
   
   # Second random effect. IN THE FUTURE THIS WILL BE VECTORISED TO ARBUTRARY GRI+OUING
-  beta_random_effect_factor_of_interest_2 = .data |> attr("model_input") %$% X_random_effect_2 |> colnames()
+  random_effect_covariates_2 = model_input %$% X_random_effect_2 |> colnames()
+  beta_random_effect_subset_2 <- build_stan_parameter_subset(
+    contrasts = contrasts,
+    design_columns = random_effect_covariates_2,
+    stan_parameter = "random_effect_2",
+    model_input = model_input
+  )
+  beta_random_effect_parameters_2 <- beta_random_effect_subset_2 |> dplyr::pull(parameter) |> unique()
+  beta_random_effect_variables_2 <- beta_random_effect_subset_2 |> dplyr::pull(variable) |> unique()
   
   if(
     .data |> attr("model_input") %$% n_random_eff > 1 &&
     (
       contrasts |> is.null() || 
-      (beta_random_effect_factor_of_interest_2 %in% contrasts_parameters) |> which() |> length() > 0
+      length(beta_random_effect_parameters_2) > 0
     )
   ){
     
     beta_random_effect_2 =
       .data |>
       attr("fit") %>%
-      draws_to_tibble_x_y("random_effect_2", "C", "M") 
+      draws_to_tibble_x_y(  beta_random_effect_variables_2,   "C",    "M"   ) 
     
     # Add last component
     other_group_random_effect = 
@@ -621,10 +647,10 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
       beta_random_effect_2 = 
       beta_random_effect_2 |> 
       left_join(
-        beta_random_effect_factor_of_interest_2 |> enframe(name = "C", value = "parameters_name"),
+        random_effect_covariates_2 |> enframe(name = "C", value = "parameters_name"),
         by = "C"
       )  |> 
-      filter(parameters_name %in% contrasts_parameters) |> 
+      filter(parameters_name %in% beta_random_effect_parameters_2) |> 
       select(-C) |> 
       pivot_wider(names_from = parameters_name, values_from = .value)
     
@@ -632,7 +658,7 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
       beta_random_effect_2 = 
       beta_random_effect_2 |>
       pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(beta_random_effect_factor_of_interest_2))
+      setNames(colnames(.)[1:5] |> c(random_effect_covariates_2))
     
     # If I don't have fix nor 1st level random effect
     if(draws |> nrow() == 0)
@@ -643,7 +669,7 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
                 by = c("M", ".chain", ".iteration", ".draw")
       )
   } else {
-    beta_random_effect_factor_of_interest_2 = ""
+    random_effect_covariates_2 = ""
   }
   
   
@@ -652,130 +678,28 @@ get_abundance_contrast_draws = function(.data, contrasts, design_param_subset = 
     draws = 
     draws |> 
     mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
-    select(- any_of(c(beta_factor_of_interest, beta_random_effect_factor_of_interest) |> setdiff(contrasts)) ) 
+    select(- any_of(c(beta_covariates, random_effect_covariates) |> setdiff(contrasts)) )
   
-  # Add cell name
-  draws = draws |> 
-    left_join(
-      .data |>
-        attr("model_input") %$%
-        y %>%
-        colnames() |>
-        enframe(name = "M", value  = quo_name(.cell_group)),
-      by = "M"
-    ) %>%
-    select(!!.cell_group, everything())
-  
-  
-  # If no contrasts of interest just return an empty data frame
-  if(ncol(draws)==5) return(draws |> distinct(M, !!.cell_group))
-  
-  # Get convergence for fixed effects
-  convergence_df =
-    .data |>
-    attr("fit") |>
-    summary_to_tibble("beta", "C", "M") |>
-    
-    # Add cell name
-    left_join(
-      .data |>
-        attr("model_input") %$%
-        y %>%
-        colnames() |>
-        enframe(name = "M", value  = quo_name(.cell_group)),
-      by = "M"
-    ) |>
-    
-    # factor names
-    left_join(
-      beta_factor_of_interest |>
-        enframe(name = "C", value = "parameter"),
-      by = "C"
-    )
-  
-  # Get convergence for random effects if they exist
-  if(.data |> attr("model_input") %$% n_random_eff > 0) {
-    convergence_df_random =
-      .data |>
-      attr("fit") |>
-      summary_to_tibble("random_effect", "C", "M") |>
-      
-      # Add cell name
-      left_join(
-        .data |>
-          attr("model_input") %$%
-          y %>%
-          colnames() |>
-          enframe(name = "M", value  = quo_name(.cell_group)),
-        by = "M"
-      ) |>
-      
-      # factor names
-      left_join(
-        beta_random_effect_factor_of_interest |>
-          enframe(name = "C", value = "parameter"),
-        by = "C"
-      )
-    
-    # Combine fixed and random effects convergence
-    convergence_df = bind_rows(convergence_df, convergence_df_random)
-  }
-  
-  # Get convergence for second random effect if it exists
-  if(.data |> attr("model_input") %$% n_random_eff > 1) {
-    convergence_df_random_2 =
-      .data |>
-      attr("fit") |>
-      summary_to_tibble("random_effect_2", "C", "M") |>
-      
-      # Add cell name
-      left_join(
-        .data |>
-          attr("model_input") %$%
-          y %>%
-          colnames() |>
-          enframe(name = "M", value  = quo_name(.cell_group)),
-        by = "M"
-      ) |>
-      
-      # factor names
-      left_join(
-        beta_random_effect_factor_of_interest_2 |>
-          enframe(name = "C", value = "parameter"),
-        by = "C"
-      )
-    
-    # Combine with existing convergence data
-    convergence_df = bind_rows(convergence_df, convergence_df_random_2)
-  }
-  
-  # if ("Rhat" %in% colnames(convergence_df)) {
-  #   convergence_df <- rename(convergence_df, R_k_hat = Rhat)
-  # } else if ("khat" %in% colnames(convergence_df)) {
-  #   convergence_df <- rename(convergence_df, R_k_hat = khat)
-  # }
-  
-  
-  convergence_df =
-    convergence_df |> 
-    select(!!.cell_group, parameter, any_of(c("n_eff", "R_k_hat", "rhat", "ess_bulk", "ess_tail"))) |>
-    suppressWarnings()
-  
-  draws |>
-    pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
-    
-    # Attach convergence if I have no contrasts
-    left_join(convergence_df, by = c(quo_name(.cell_group), "parameter")) |>
+
+  draws = draws |>
+    pivot_longer(-c(1:4), names_to = "parameter", values_to = ".value") |>
     
     # Reorder because pivot long is bad
-    mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
+    mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:4)])) |>
     arrange(parameter)
+
+     # Add cell name
+  draws = draws |> 
+    left_join(cell_index_map, by = "M" ) %>%
+    select(!!.cell_group, everything())
+
+  draws
   
 }
 
 #' @importFrom forcats fct_relevel
 #' @noRd
-get_variability_contrast_draws = function(.data, contrasts, design_param_subset = NULL, contrasts_parameters = NULL){
+get_variability_contrast_draws = function(.data, contrasts){
   
   # Define the variables as NULL to avoid CRAN NOTES
   XA <- NULL
@@ -788,31 +712,31 @@ get_variability_contrast_draws = function(.data, contrasts, design_param_subset 
   R_k_hat <- NULL
   
   .cell_group = .data |>  attr(".cell_group")
+  model_input <- .data |> attr("model_input")
+  cell_index_map <-
+    model_input %$%
+    y %>%
+    colnames() |>
+    enframe(name = "M", value  = quo_name(.cell_group))
   
-  variability_factor_of_interest = .data |> attr("model_input") %$% XA |> colnames()
-  alpha_variable_subset <- NULL
-  if (!is.null(design_param_subset)) {
-    needed <- intersect(design_param_subset, variability_factor_of_interest)
-    if (length(needed) == 0 && !is.null(contrasts)) {
-      return(
-        .data |>
-          attr("model_input") %$%
-          y %>%
-          colnames() |>
-          enframe(name = "M", value  = quo_name(.cell_group)) |>
-          dplyr::select(!!.cell_group, M)
-      )
-    }
-    n_M <- ncol(.data |> attr("model_input") %$% y)
-    C_idx <- match(needed, variability_factor_of_interest)
-    g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
-    alpha_variable_subset <- sprintf("alpha[%d,%d]", g$C, g$M)
+  variability_covariates = model_input %$% XA |> colnames()
+  alpha_subset <- build_stan_parameter_subset(
+    contrasts = contrasts,
+    design_columns = variability_covariates,
+    stan_parameter = "alpha",
+    model_input = model_input
+  )
+  alpha_parameters <- alpha_subset |> dplyr::pull("parameter") |> unique()
+  alpha_variable_subset <- alpha_subset |> dplyr::pull("variable") |> unique()
+  if (length(alpha_variable_subset) == 0) alpha_variable_subset <- NULL
+  if (!is.null(contrasts) && length(alpha_parameters) == 0) {
+    return(cell_index_map |> dplyr::select(!!.cell_group, M))
   }
   
   draws =
     compute_alpha_normalised_draws(
       fit = .data |> attr("fit"),
-      model_input = .data |> attr("model_input"),
+      model_input = model_input,
       alpha_variable_subset = alpha_variable_subset
     ) |>
     
@@ -825,10 +749,9 @@ get_variability_contrast_draws = function(.data, contrasts, design_param_subset 
     draws = 
     draws |> 
     left_join(
-      variability_factor_of_interest |> enframe(name = "C", value = "parameters_name"),
+      variability_covariates |> enframe(name = "C", value = "parameters_name"),
       by = "C"
     )  |> 
-    filter(parameters_name %in% contrasts_parameters) |> 
     select(-C) |> 
     pivot_wider(names_from = parameters_name, values_from = .value) |> 
     select( -.variable) 
@@ -837,66 +760,28 @@ get_variability_contrast_draws = function(.data, contrasts, design_param_subset 
     draws =
     draws |>  
     pivot_wider(names_from = C, values_from = .value) %>%
-    setNames(colnames(.)[1:5] |> c(variability_factor_of_interest)) |>
+    setNames(colnames(.)[1:5] |> c(variability_covariates)) |>
     select( -.variable) 
   
   # If I have constrasts calculate
   if (!is.null(contrasts)) 
     draws <- mutate_from_expr_list(draws, contrasts, ignore_errors = TRUE)
   
-  draws =  draws |>
-    
-    # Add cell name
-    left_join(
-      .data |> attr("model_input") %$%
-        y %>%
-        colnames() |>
-        enframe(name = "M", value  = quo_name(.cell_group)),
-      by = "M"
-    ) %>%
-    select(!!.cell_group, everything())
-  
   # If no contrasts of interest just return an empty data frame
-  if(ncol(draws)==5) return(draws |> distinct(M, !!.cell_group))
+  if(ncol(draws)==5) return(cell_index_map |> dplyr::select(!!.cell_group, M) |> distinct())
   
-  # Get convergence
-  convergence_df =
-    .data |>
-    attr("fit") |>
-    summary_to_tibble("alpha", "C", "M") |>
-    
-    # Add cell name
-    left_join(
-      .data |>
-        attr("model_input") %$%
-        y %>%
-        colnames() |>
-        enframe(name = "M", value  = quo_name(.cell_group)),
-      by = "M"
-    ) |>
-    
-    # factor names
-    left_join(
-      variability_factor_of_interest |>
-        enframe(name = "C", value = "parameter"),
-      by = "C"
-    )
-  
-  convergence_df =
-    convergence_df |> 
-    select(!!.cell_group, parameter, any_of(c("n_eff", "R_k_hat", "rhat", "ess_bulk", "ess_tail"))) |>
-    suppressWarnings()
-  
-  
-  draws |>
+  draws = draws |>
     pivot_longer(-c(1:5), names_to = "parameter", values_to = ".value") |>
-    
-    # Attach convergence if I have no contrasts
-    left_join(convergence_df, by = c(quo_name(.cell_group), "parameter")) |>
-    
+
     # Reorder because pivot long is bad
     mutate(parameter = parameter |> fct_relevel(colnames(draws)[-c(1:5)])) |>
     arrange(parameter)
+
+  draws = draws |> 
+    left_join(cell_index_map, by = "M") %>%
+    select(!!.cell_group, everything())
+  
+  draws
   
 }
 
@@ -929,8 +814,10 @@ get_variability_contrast_draws = function(.data, contrasts, design_param_subset 
 #' 
 mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   
-  if(formula_expr |> names() |> is.null())
-    names(formula_expr) = formula_expr
+  # Preserve provided contrast names; for unnamed entries, use the expression itself.
+  names(formula_expr) =
+    ifelse(is.null(names(formula_expr)) || names(formula_expr) == "", formula_expr, names(formula_expr)) |>
+    make.unique()
   
   # Creating a named vector where the names are the strings to be replaced
   # and the values are empty strings
@@ -977,10 +864,17 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   
 }
 
+#' @importFrom dplyr pull
+#' @importFrom posterior as_draws_df summarise_draws rhat ess_bulk ess_tail
+#' @noRd
 draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
   
   # Define the variables as NULL to avoid CRAN NOTES
   M <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .value <- NULL
   parameter <- NULL
   bigger_zero <- NULL
   smaller_zero <- NULL
@@ -993,27 +887,55 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
   R_k_hat <- NULL
   
   .cell_group = enquo(.cell_group)
+  lower_prob = false_positive_rate / 2
+  upper_prob = 1 - lower_prob
   
-  draws =
+  draw_summaries =
+    draws |>
+    group_by(!!.cell_group, M, parameter) |>
+    group_modify(
+      ~ {
+        draws_df = 
+          .x |>
+          select(.chain, .iteration, .draw, value = .value) |> 
+          as_draws_df() |>
+          summarise_draws(
+            lower = function(.x) stats::quantile(.x, probs = lower_prob, na.rm = TRUE),
+            effect = function(.x) mean(.x, na.rm = TRUE),
+            upper = function(.x) stats::quantile(.x, probs = upper_prob, na.rm = TRUE),
+            rhat,
+            ess_bulk,
+            ess_tail
+          ) |>
+          select(-variable)
+
+        # Standardise CI column names when posterior returns percentage names (e.g. `5%`, `97.5%`).
+        quantile_cols = names(draws_df)[grepl("%$", names(draws_df))]
+        names(draws_df)[names(draws_df) %in% quantile_cols] = c("lower", "upper")
+
+        draws_df
+      }
+    ) |>
+    ungroup()
+
+  probability_stats =
     draws %>%
-    group_by(!!.cell_group, M, parameter, rhat, ess_bulk, ess_tail) %>%
+    group_by(!!.cell_group, M, parameter) %>%
     summarise(
-      lower = quantile(.value, false_positive_rate / 2, na.rm = TRUE),
-      effect = mean(.value, na.rm = TRUE),
-      upper = quantile(.value, 1 - (false_positive_rate / 2), na.rm = TRUE),
       bigger_zero = sum(.value > test_composition_above_logit_fold_change, na.rm = TRUE),
       smaller_zero = sum(.value < -test_composition_above_logit_fold_change, na.rm = TRUE),
-      # R_k_hat = unique(R_k_hat),
-      # n_eff = unique(n_eff),
       n = n(),
-      .groups = "drop"  # To ungroup the output if needed
-    ) |> 
-    
+      .groups = "drop"
+    )
+  
+  draws =
+    draw_summaries |>
+    left_join(probability_stats, by = c(quo_name(.cell_group), "M", "parameter")) |>
     # Calculate probability non 0
     mutate(pH0 =  (1 - (pmax(bigger_zero, smaller_zero) / n))) |>
     with_groups(parameter, ~ mutate(.x, FDR = get_FDR(pH0))) |>
     
-    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, any_of(c("n_eff", "R_k_hat", "rhat", "ess_bulk", "ess_tail"))) |>
+    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, any_of(c("rhat", "ess_bulk", "ess_tail"))) |>
     suppressWarnings()
   
   # Setting up names separately because |> is not flexible enough

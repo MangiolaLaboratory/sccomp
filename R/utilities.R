@@ -111,10 +111,12 @@ subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE
 #' @keywords internal
 #' @noRd
 incorporate_parameters_into_fit_object = function(fit, parameters_to_load) {
+  parameters_present <- intersect(parameters_to_load, fit$metadata()$model_params)
+
   
   # Load parameters by calling draws()
   # This forces cmdstanr to read from CSV and store in memory
-  fit$draws(variables = parameters_to_load, format = "draws_df")
+  fit$draws(variables = parameters_present, format = "draws_df")
   
   fit
 }
@@ -349,7 +351,6 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   .value <- NULL
 
   
-  base_parameter <- sub("\\[.*$", "", par[[1]])
 
   draws_df <- fit$draws(variables = par, format = "draws_df")
   value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
@@ -379,8 +380,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
     group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
     mutate(.draw = seq_len(n())) %>%
     ungroup() %>%
-    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw, .variable, .value) %>%
-    filter(.variable == base_parameter)
+    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw, .variable, .value) 
   
 }
 
