@@ -787,6 +787,19 @@ get_variability_contrast_draws = function(.data, contrasts){
 
 #' Mutate Data Frame Based on Expression List
 #'
+#' @noRd
+add_missing_contrast_names = function(formula_expr){
+  contrast_names = names(formula_expr)
+  if (is.null(contrast_names)) {
+    contrast_names = formula_expr
+  } else {
+    missing_names = is.na(contrast_names) | contrast_names == ""
+    contrast_names[missing_names] = formula_expr[missing_names]
+  }
+
+  make.unique(contrast_names)
+}
+
 #' @description
 #' `mutate_from_expr_list` takes a data frame and a list of formula expressions, 
 #' and mutates the data frame based on these expressions. It allows for ignoring 
@@ -814,10 +827,7 @@ get_variability_contrast_draws = function(.data, contrasts){
 #' 
 mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   
-  # Preserve provided contrast names; for unnamed entries, use the expression itself.
-  names(formula_expr) =
-    ifelse(is.null(names(formula_expr)) || names(formula_expr) == "", formula_expr, names(formula_expr)) |>
-    make.unique()
+  names(formula_expr) = add_missing_contrast_names(formula_expr)
   
   # Creating a named vector where the names are the strings to be replaced
   # and the values are empty strings
