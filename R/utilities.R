@@ -356,7 +356,11 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
   
   draws_df %>%
-    mutate(.iteration = seq_len(n())) %>%
+    mutate(
+      .chain = as.integer(.chain),
+      .iteration = as.integer(.iteration),
+      .draw = as.integer(.draw)
+    ) %>%
     
     pivot_longer(
       names_to = "parameter", # c( ".chain", ".variable", x, y),
@@ -376,10 +380,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
     ) %>%
-    arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
-    group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
-    mutate(.draw = seq_len(n())) %>%
-    ungroup() %>%
+    arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain, .iteration) %>%
     select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw, .variable, .value) 
   
 }
@@ -407,7 +408,11 @@ draws_to_tibble_x = function(fit, par, x) {
   value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
 
   draws_df %>%
-    mutate(.iteration = seq_len(n())) %>%
+    mutate(
+      .chain = as.integer(.chain),
+      .iteration = as.integer(.iteration),
+      .draw = as.integer(.draw)
+    ) %>%
     pivot_longer(
       names_to = "parameter",
       cols = tidyselect::all_of(value_columns),
@@ -418,10 +423,7 @@ draws_to_tibble_x = function(fit, par, x) {
     mutate(
       !!as.symbol(x) := as.integer(!!as.symbol(x))
     ) %>%
-    arrange(.variable, !!as.symbol(x), .chain) %>%
-    group_by(.variable, !!as.symbol(x)) %>%
-    mutate(.draw = seq_len(n())) %>%
-    ungroup() %>%
+    arrange(.variable, !!as.symbol(x), .chain, .iteration) %>%
     select(!!as.symbol(x), .chain, .iteration, .draw, .variable, .value) %>%
     filter(.variable == base_parameter)
 }
