@@ -10,27 +10,27 @@ fit_model = function(
     ...
 )
 {
-
+  
   # # if analysis approximated
   # # If posterior analysis is approximated I just need enough
   # how_many_posterior_draws_practical = ifelse(approximate_posterior_analysis, 1000, how_many_posterior_draws)
   # additional_parameters_to_save = additional_parameters_to_save %>% c("lambda_log_param", "sigma_raw") %>% unique
-
-
+  
+  
   # Find number of draws
   draws_supporting_quantile = 50
   if(is.null(output_samples)){
-
+    
     output_samples =
       (draws_supporting_quantile/((1-quantile)/2)) %>% # /2 because I have two tails
-      max(4000)
-
+      max(4000) 
+    
     if(output_samples > max_sampling_iterations) {
       # message("sccomp says: the number of draws used to defined quantiles of the posterior distribution is capped to 20K.") # This means that for very low probability threshold the quantile could become unreliable. We suggest to limit the probability threshold between 0.1 and 0.01")
       output_samples = max_sampling_iterations
-
+      
     }}
-
+  
   # Find optimal number of chains
   if(is.null(chains))
     chains =
@@ -40,7 +40,7 @@ fit_model = function(
         parallelisation_start_penalty = 100
       ) %>%
       min(cores)
-
+  
   # chains = 3
 
   init_list = list(
@@ -48,27 +48,24 @@ fit_model = function(
                      rep(0, (data_for_model$A - 1) * data_for_model$M)),
                    nrow = data_for_model$A, byrow = TRUE),
     beta_raw = matrix(0, data_for_model$C, data_for_model$M),
-    prec_sd = rep(1, data_for_model$A),
-    mix_p = 0.1
+    log_prec_sd = rep(0, data_for_model$A),
+    mix_p = 0.5
   )
 
   has_variability_intercept <- isTRUE(as.logical(data_for_model$intercept_in_design))
   bimodal <- data_for_model$bimodal_mean_variability_association == 1L
-  init_list$prec_intercept <- vector("list", data_for_model$A)
-  for (a in seq_len(data_for_model$A)) {
-    intercept_col <- has_variability_intercept && a == 1L
-    init_list$prec_intercept[[a]] <- if (bimodal) {
-      if (intercept_col) c(4, 5)
-      else if (has_variability_intercept) c(0, 1)
-      else c(4, 5)
+  intercept_init <- if (bimodal) c(4, 5) else c(4)
+  non_intercept_init <- if (bimodal) c(0, 1) else c(0)
+
+  init_list$prec_intercept <-
+    if (has_variability_intercept) {
+      c(list(intercept_init), rep(list(non_intercept_init), data_for_model$A - 1L))
     } else {
-      if (intercept_col) c(4)
-      else if (has_variability_intercept) c(0)
-      else c(4)
+      rep(list(intercept_init), data_for_model$A)
     }
-  }
+
   init_list$prec_slope_1 = rep(0, data_for_model$A)
-  if (data_for_model$bimodal_mean_variability_association == 1) {
+  if (bimodal) {
     init_list$prec_slope_2 = rep(0, data_for_model$A)
   }
 
@@ -76,23 +73,23 @@ fit_model = function(
     init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M)
     init_list$random_effect_sigma_raw = matrix(0, data_for_model$M , data_for_model$how_many_factors_in_random_design[1])
     init_list$sigma_correlation_factor = array(0, dim = c(
-      data_for_model$M,
-      data_for_model$how_many_factors_in_random_design[1],
+      data_for_model$M, 
+      data_for_model$how_many_factors_in_random_design[1], 
       data_for_model$how_many_factors_in_random_design[1]
     ))
 
     # init_list$random_effect_sigma_mu = 0.5 |> as.array()
     # init_list$random_effect_sigma_sigma = 0.2 |> as.array()
     init_list$zero_random_effect = rep(0, size = 1) |> as.array()
-
-  }
-
+    
+  } 
+  
   if(data_for_model$n_random_eff>1){
     init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M)
     init_list$random_effect_sigma_raw_2 = matrix(0, data_for_model$M , data_for_model$how_many_factors_in_random_design[2])
     init_list$sigma_correlation_factor_2 = array(0, dim = c(
-      data_for_model$M,
-      data_for_model$how_many_factors_in_random_design[2],
+      data_for_model$M, 
+      data_for_model$how_many_factors_in_random_design[2], 
       data_for_model$how_many_factors_in_random_design[2]
     ))
 
@@ -133,25 +130,15 @@ fit_model = function(
         sig_figs = sig_figs,
         show_exceptions = verbose,
         ...
-      )
+      ) 
+      
 
-    # },
-    # error = function(e) {
-    #
-    #   # I don't know why thi is needed nd why the model sometimes is not compliled correctly
-    #   if(e |> as.character() |>  str_detect("Model not compiled"))
-    #     model = load_model(model_name, force=TRUE, threads = cores)
-    #   else
-    #     stop(e)
-    #
-    # })
-
-
+    
   } else{
-
+    
     if(inference_method=="pathfinder") init = pf
     else if(inference_method=="variational") init = list(init_list)
-
+    
     vb_iterative(
       mod,
       model_name = model_name,
@@ -162,20 +149,20 @@ fit_model = function(
       seed = seed,
       output_dir = output_directory,
       init = init,
-      inference_method = inference_method,
+      inference_method = inference_method, 
       cores = cores,
-      psis_resample = FALSE,
+      psis_resample = FALSE, 
       verbose = verbose,
       sig_figs = sig_figs,
       cache_stan_model = cache_stan_model,
       show_exceptions = FALSE,
       ...
-    )
-
+    ) 
+    
   }
-
-
-
+  
+  
+  
 }
 
 get_model_from_data = function(file_compiled_model, model_code){
@@ -185,7 +172,7 @@ get_model_from_data = function(file_compiled_model, model_code){
     model_generate = stan_model(model_code = model_code)
     model_generate  %>% saveRDS(file_compiled_model)
     model_generate
-
+    
   }
 }
 
@@ -431,9 +418,9 @@ vb_iterative = function(model,
     })
     i = i + 1
   }
-
+  
   if(is.null(res)) stop(sprintf("sccomp says: variational Bayes did not converge after %s attempts. Please use variational_inference = FALSE for a HMC fitting.", i))
-
+  
   return(res)
 }
 
@@ -449,21 +436,21 @@ vb_iterative = function(model,
 #' @return A Stan fit object
 find_optimal_number_of_chains = function(how_many_posterior_draws = 100,
                                          max_number_to_check = 100, warmup = 200, parallelisation_start_penalty = 100) {
-
-
-
+  
+  
+  
   # Define the variables as NULL to avoid CRAN NOTES
   chains <- NULL
-
-
+  
+  
   chains_df =
     tibble(chains = seq_len(max_number_to_check)) %>%
     mutate(tot = (how_many_posterior_draws / chains) + warmup + (parallelisation_start_penalty * chains))
-
+  
   d1 <- diff(chains_df$tot) / diff(seq_len(nrow(chains_df))) # first derivative
   abs(d1) %>% order() %>% .[1] # Find derivative == 0
-
-
+  
+  
 }
 
 
