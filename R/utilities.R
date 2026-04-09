@@ -84,10 +84,10 @@ subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE
 
   if (keep_intercept)
     .data |>
-      filter(`factor` == .env$factor | parameter == "(Intercept)")
+      filter(`factor` == !!factor | parameter == "(Intercept)")
   else
     .data |>
-      filter(`factor` == .env$factor)
+      filter(`factor` == !!factor)
 }
 
 #' Incorporate all Stan model parameters into fit object
