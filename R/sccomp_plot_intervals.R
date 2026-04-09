@@ -11,7 +11,7 @@
 #' @param factor Optional character string selecting one model factor to plot. If provided, plots are restricted to that factor plus `(Intercept)`.
 #' @param sort_by Character vector indicating how to sort taxa. Options are "none" (default), "effect" (by effect size), "significance" (by FDR/pH0), or "alphabetical".
 #' @importFrom patchwork wrap_plots
-#' @importFrom forcats fct_reorder
+#' @importFrom forcats fct_reorder fct_inorder
 #' @importFrom tidyr drop_na
 #'
 #' @export
@@ -288,13 +288,13 @@ sccomp_plot_intervals_2D <- function(
       )
     })
 
-    cat("=== Single Model Parameters ===\n")
+    message("=== Single Model Parameters ===")
     for(i in 1:length(params_list)) {
       p <- params_list[[i]]
-      cat(sprintf("\n%s:\n", p$parameter))
-      cat(sprintf("  v = -(%.3f + %.3f × c)\n", p$intercept, p$slope))
+      message(sprintf("\n%s:", p$parameter))
+      message(sprintf("  v = -(%.3f + %.3f \u00d7 c)", p$intercept, p$slope))
     }
-    cat("\n")
+    message("")
 
   } else {
     mix_p <- fit$summary("mix_p") |> pull(mean)
@@ -312,14 +312,14 @@ sccomp_plot_intervals_2D <- function(
       )
     })
 
-    cat("=== Bimodal Model Parameters ===\n")
+    message("=== Bimodal Model Parameters ===")
     for(i in 1:length(params_list)) {
       p <- params_list[[i]]
-      cat(sprintf("\n%s:\n", p$parameter))
-      cat(sprintf("  Component 1: v = -(%.3f + %.3f × c)\n", p$intercept_1, p$slope_1))
-      cat(sprintf("  Component 2: v = -(%.3f + %.3f × c)\n", p$intercept_2, p$slope_2))
+      message(sprintf("\n%s:", p$parameter))
+      message(sprintf("  Component 1: v = -(%.3f + %.3f \u00d7 c)", p$intercept_1, p$slope_1))
+      message(sprintf("  Component 2: v = -(%.3f + %.3f \u00d7 c)", p$intercept_2, p$slope_2))
     }
-    cat("\n")
+    message("")
   }
 
   # v_effect already comes from alpha_normalised (computed in R from draws)
@@ -393,7 +393,7 @@ sccomp_plot_intervals_2D <- function(
             row_number() <= 3 &
               c_FDR < significance_threshold &
               str_detect(parameter, ", adjusted$"),
-            !!sym(.cell_group),
+            !!.cell_group,
             ""
           )
         )
@@ -408,7 +408,7 @@ sccomp_plot_intervals_2D <- function(
               v_FDR < significance_threshold &
               str_detect(parameter, ", adjusted$") &
               cell_type_label == "",
-            !!sym(.cell_group),
+            !!.cell_group,
             cell_type_label
           )
         )
