@@ -42,13 +42,22 @@ fit_model = function(
   
   # chains = 3
   
-  init_list=list(
-    prec_coeff = c(5,0),
-    prec_sd = 1,
-    alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A-1) *data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
-    beta_raw = matrix(0, data_for_model$C , data_for_model$M) ,
-    mix_p = 0.1 
+  init_list = list(
+    beta_raw = matrix(0, data_for_model$C, data_for_model$M)
   )
+  if (model_name == "glm_multi_beta_binomial") {
+    init_list <- c(
+      init_list,
+      list(
+        alpha = matrix(c(rep(5, data_for_model$M), rep(0, (data_for_model$A - 1) * data_for_model$M)), nrow = data_for_model$A, byrow = TRUE),
+        prec_coeff = c(5, 0),
+        prec_sd = 1,
+        mix_p = 0.1
+      )
+    )
+  } else if (model_name == "glm_dirichlet") {
+    init_list <- c(init_list, list(alpha = c(5, rep(0, max(data_for_model$A - 1, 0)))))
+  }
   
   if(data_for_model$n_random_eff>0){
     init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M)
@@ -90,6 +99,8 @@ fit_model = function(
     warning("sccomp says: your proportion values include 0. Assuming that 0s derive from a precision threshold (e.g. deconvolution), 0s are converted to the smaller non 0 proportion value.")
     data_for_model$y_proportion[data_for_model$y_proportion==0] =
       min(data_for_model$y_proportion[data_for_model$y_proportion>0])
+    # Renormalize rows after 0 replacement so they sum to 1
+    data_for_model$y_proportion <- data_for_model$y_proportion / rowSums(data_for_model$y_proportion)
   }
   
   if(inference_method == "hmc"){
