@@ -93,7 +93,15 @@ The sccomp version will be automatically appended to ensure version isolation.
 Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
 
 \item{portable}{Logical, whether to keep the result portable by caching required draws in memory and removing Stan draw CSV files after fitting.
-Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.}
+Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.
+With \code{portable = FALSE}, CSVs remain for you to inspect or archive, but cmdstanr typically \strong{still holds posterior draws in RAM}
+after fitting and summarisation (\code{fit$summary()}). The printed estimate table only calls \code{fit$summary()} on composition
+(\code{beta}, …) and variability (\code{alpha}, …), not on every saved parameter (e.g. \code{prec_sd}), yet cmdstanr still
+exposes all saved parameters from memory once output has been read, so \code{fit$draws(variables = "prec_sd")} can work
+after CSV deletion just like \code{beta}. Deleting CSVs does \strong{not} reliably invalidate the fit in the same R session.
+Call \code{sccomp_test()} before deleting draw files, use \code{portable = TRUE} (draws cached then files removed), or run
+\code{incorporate_parameters_into_sccomp_object()} before deletion if you remove files manually. \code{sccomp_test()} stops with a
+clear error when recorded Stan output paths are missing unless draws were incorporated for portability as above.}
 
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 
@@ -128,7 +136,6 @@ A tibble (\code{tbl}), with the following columns:
 \item v_ess_bulk - Bulk effective sample size for the variability (v) parameter.
 \item v_ess_tail - Tail effective sample size for the variability (v) parameter.
 }
-
 Note: pH0 and FDR columns are not computed by \code{sccomp_estimate()}. Run \code{sccomp_test()} on the result to obtain hypothesis-test statistics.
 
 The function also attaches several attributes to the result:
