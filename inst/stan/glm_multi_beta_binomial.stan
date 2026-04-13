@@ -31,24 +31,23 @@ functions{
     ){
 
       real lp = 0;
-      int nu = 3;
       // If mean-variability association is bimodal such as for single-cell RNA use mixed model
       if(bimodal_mean_variability_association == 1){
         for(m in 1:cols(variability))
         lp += log_mix(mix_p,
-        student_t_lpdf(variability[m] | nu,
-                       abundance[m] * prec_slope_1 + prec_intercept_1,
-                       prec_sd),
-        student_t_lpdf(variability[m] | nu,
-                       abundance[m] * prec_slope_2 + prec_intercept_2,
-                       prec_sd)
+        normal_lpdf(variability[m] |
+                    abundance[m] * prec_slope_1 + prec_intercept_1,
+                    prec_sd),
+        normal_lpdf(variability[m] |
+                    abundance[m] * prec_slope_2 + prec_intercept_2,
+                    prec_sd)
         );
 
         // If no bimodal
       } else {
-        lp = student_t_lpdf(variability | nu,
-                            abundance * prec_slope_1 + prec_intercept_1,
-                            prec_sd);
+        lp = normal_lpdf(variability |
+                         abundance * prec_slope_1 + prec_intercept_1,
+                         prec_sd);
       }
 
       return(lp);
@@ -569,7 +568,7 @@ model{
       prec_slope_2[a] ~ student_t(3, 0, 2); // s2
     }
   }
-  for(a in 1:A) prec_sd[a] ~ normal(0, 1) T[0,];
+  for(a in 1:A) log_prec_sd[a] ~ normal(1, 0.5);
 
   // // Priors abundance - use correct scale for sum_to_zero_vector
   for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
