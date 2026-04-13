@@ -75,7 +75,6 @@ A tibble (\code{tbl}), with the following columns:
 \item v_ess_bulk - Bulk effective sample size for the variability (v) parameter.
 \item v_ess_tail - Tail effective sample size for the variability (v) parameter.
 }
-
 Note: pH0 and FDR columns are not computed by \code{sccomp_remove_outliers()}. Run \code{sccomp_test()} on the result to obtain hypothesis-test statistics.
 
 The function also attaches several attributes to the result:

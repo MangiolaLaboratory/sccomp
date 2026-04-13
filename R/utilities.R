@@ -48,6 +48,48 @@ add_attr = function(var, attribute, name) {
   var
 }
 
+#' Subset results by model factor
+#'
+#' @param .data A sccomp results tibble
+#' @param factor Optional character scalar factor name
+#' @param keep_intercept Logical; keep `(Intercept)` rows when subsetting
+#'
+#' @return Filtered results tibble
+#' @keywords internal
+#' @noRd
+subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE) {
+  # Define variables to avoid CRAN NOTES
+  parameter <- NULL
+
+  if (is.null(factor)) return(.data)
+
+  if (!is.character(factor) || length(factor) != 1 || is.na(factor)) {
+    stop("sccomp says: `factor` must be a single character string.")
+  }
+
+  available_factors = .data |>
+    filter(!is.na(`factor`)) |>
+    distinct(`factor`) |>
+    pull(`factor`)
+
+  if (!(factor %in% available_factors)) {
+    stop(
+      sprintf(
+        "sccomp says: factor `%s` is not among model factors: %s",
+        factor,
+        paste(available_factors, collapse = ", ")
+      )
+    )
+  }
+
+  if (keep_intercept)
+    .data |>
+      filter(`factor` == !!factor | parameter == "(Intercept)")
+  else
+    .data |>
+      filter(`factor` == !!factor)
+}
+
 #' Incorporate all Stan model parameters into fit object
 #'
 #' @description
@@ -68,46 +110,17 @@ add_attr = function(var, attribute, name) {
 #'
 #' @keywords internal
 #' @noRd
-incorporate_parameters_into_fit_object = function(fit) {
-  
-  # List of all parameters in the Stan model (glm_multi_beta_binomial)
-  # This includes parameters, transformed parameters, and generated quantities
-  parameters_to_load <- c(
-    # Parameters block
-    "beta_raw",
-    "alpha",
-    "prec_coeff",
-    "prec_sd",
-    "mix_p",
-    "random_effect_raw",
-    "random_effect_raw_2",
-    "random_effect_sigma_mu",
-    "random_effect_sigma_sigma",
-    "random_effect_sigma_raw",
-    "sigma_correlation_factor",
-    "random_effect_sigma_raw_2",
-    "sigma_correlation_factor_2",
-    "zero_random_effect",
-    # Transformed parameters
-    "beta",
-    # Generated quantities
-    "alpha_normalised",
-    "log_lik"
-  )
-  
-  # Get list of available variables from the fit object
-  available_vars <- names(fit$draws(format = "draws_df"))
-  
-  # Filter to only include the parameters we care about that are available
-  params_to_load <- intersect(parameters_to_load, available_vars)
+incorporate_parameters_into_fit_object = function(fit, parameters_to_load) {
+  model_params <- fit$metadata()$model_params
+  model_params_base <- unique(sub("(\\[.*\\])?$", "", model_params))
+  parameters_present <- intersect(parameters_to_load, model_params_base)
+
   
   # Load parameters by calling draws()
   # This forces cmdstanr to read from CSV and store in memory
-  if (length(params_to_load) > 0) {
-    fit$draws(variables = params_to_load, format = "draws_df")
-  }
+  fit$draws(variables = parameters_present, format = "draws_df")
   
-  invisible(fit)
+  fit
 }
 
 
@@ -124,12 +137,36 @@ incorporate_parameters_into_fit_object = function(fit) {
 #'
 #' @keywords internal
 #' @noRd
-incorporate_parameters_into_sccomp_object = function(obj) {
+incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = c(
+    # Parameters block
+    "beta_raw",
+    "alpha",
+    "prec_intercept_1",
+    "prec_slope_1",
+    "prec_intercept_2",
+    "prec_slope_2",
+    "prec_sd",
+    "mix_p",
+    "random_effect_raw",
+    "random_effect_raw_2",
+    "random_effect_sigma_mu",
+    "random_effect_sigma_sigma",
+    "random_effect_sigma_raw",
+    "sigma_correlation_factor",
+    "random_effect_sigma_raw_2",
+    "sigma_correlation_factor_2",
+    "zero_random_effect",
+    # Transformed parameters
+    "beta",
+    # Generated quantities
+    "log_lik"
+  )) {
+
   fit <- attr(obj, "fit")
   if (is.null(fit)) {
-    stop("sccomp says: expected a \"fit\" attribute on the sccomp object.", call. = FALSE)
+    stop('expected a "fit" attribute on the sccomp object', call. = FALSE)
   }
-  attr(obj, "fit") <- incorporate_parameters_into_fit_object(fit)
+  attr(obj, "fit") <- incorporate_parameters_into_fit_object(fit, parameters_to_load)
   attr(obj, "sccomp_draws_incorporated_for_portability") <- TRUE
   obj
 }
@@ -319,13 +356,16 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   .value <- NULL
 
   
-  base_parameter <- sub("\\[.*$", "", par[[1]])
 
   draws_df <- fit$draws(variables = par, format = "draws_df")
   value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
   
   draws_df %>%
-    mutate(.iteration = seq_len(n())) %>%
+    mutate(
+      .chain = as.integer(.chain),
+      .iteration = as.integer(.iteration),
+      .draw = as.integer(.draw)
+    ) %>%
     
     pivot_longer(
       names_to = "parameter", # c( ".chain", ".variable", x, y),
@@ -335,7 +375,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       #   ".variable" = character()),
       values_to = ".value"
     ) %>%
-    tidyr::extract(parameter, c(".chain", ".variable", x, y), "([1-9]+)?\\.?([a-zA-Z0-9_\\.]+)\\[([0-9]+),([0-9]+)") |> 
+    tidyr::extract(parameter, c(".variable", x, y), "(?:[1-9]+\\.)?([a-zA-Z0-9_\\.]+)\\[([0-9]+),([0-9]+)") |> 
     
     # Warning message:
     # Expected 5 pieces. Additional pieces discarded
@@ -345,13 +385,193 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
     ) %>%
-    arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
-    group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
-    mutate(.draw = seq_len(n())) %>%
-    ungroup() %>%
-    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
-    filter(.variable == base_parameter)
+    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw, .variable, .value) 
   
+}
+
+#' draws_to_tibble_x
+#'
+#' @param fit A fit object
+#' @param par A character vector. The parameters to extract.
+#' @param x A character. The index.
+#'
+#' @keywords internal
+#' @noRd
+draws_to_tibble_x = function(fit, par, x) {
+
+  # Define the variables as NULL to avoid CRAN NOTES
+  .variable <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .value <- NULL
+
+  base_parameter <- sub("\\[.*$", "", par[[1]])
+
+  draws_df <- fit$draws(variables = par, format = "draws_df")
+  value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
+
+  draws_df %>%
+    mutate(
+      .chain = as.integer(.chain),
+      .iteration = as.integer(.iteration),
+      .draw = as.integer(.draw)
+    ) %>%
+    pivot_longer(
+      names_to = "parameter",
+      cols = tidyselect::all_of(value_columns),
+      values_to = ".value"
+    ) %>%
+    tidyr::extract(parameter, c(".variable", x), "(?:[1-9]+\\.)?([a-zA-Z0-9_\\.]+)(?:\\[([0-9]+))?") |>
+    suppressWarnings() %>%
+    mutate(
+      !!as.symbol(x) := as.integer(!!as.symbol(x))
+    ) %>%
+    select(!!as.symbol(x), .chain, .iteration, .draw, .variable, .value) %>%
+    filter(.variable == base_parameter)
+}
+
+#' Compute alpha_normalised draws in R
+#'
+#' @param fit A cmdstanr fit object.
+#' @param model_input The model input list attached to sccomp results.
+#' @param alpha_variable_subset Optional character vector like
+#'   `alpha[a,m]` (or legacy `alpha_normalised[a,m]`) to limit extraction.
+#'
+#' @return A tibble with columns `C`, `M`, `.chain`, `.iteration`, `.draw`,
+#'   `.variable`, `.value`.
+#'
+#' @keywords internal
+#' @noRd
+compute_alpha_normalised_draws = function(fit, model_input, alpha_variable_subset = NULL) {
+
+  # Define the variables as NULL to avoid CRAN NOTES
+  C <- NULL
+  M <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .variable <- NULL
+  .value <- NULL
+  beta <- NULL
+  alpha <- NULL
+  prec_slope_1 <- NULL
+  prec_slope_2 <- NULL
+  prec_intercept_1 <- NULL
+  prec_intercept_2 <- NULL
+  prec_sd <- NULL
+  mix_p <- NULL
+  C_comp <- NULL
+  log_1 <- NULL
+  log_2 <- NULL
+  weight_1 <- NULL
+  slope_effective <- NULL
+  max_log <- NULL
+
+  variability_to_composition_map <- model_input$variability_to_composition_map
+  if (is.null(variability_to_composition_map)) {
+    stop("sccomp says: missing `variability_to_composition_map` in model metadata.")
+  }
+
+  bimodal_flag <- isTRUE(as.logical(model_input$bimodal_mean_variability_association))
+
+  if (is.null(alpha_variable_subset)) {
+    # Fast path: use all variability coefficients and all cell groups.
+    alpha_draws <- draws_to_tibble_x_y(fit, "alpha", "C", "M")
+  } else {
+    # Subset path: trust upstream subset names as-is.
+    alpha_draws <- draws_to_tibble_x_y(fit, alpha_variable_subset, "C", "M")
+  }
+
+  needed_C <- sort(unique(alpha_draws$C))
+  needed_C_comp <- sort(unique(variability_to_composition_map[needed_C]))
+  n_M <- ncol(model_input$y)
+
+  # Map variability coefficients (C in Xa) to composition coefficients (C in X),
+  # then load beta for all M so we can apply draw-wise correction.
+  beta_vars <- as.vector(
+    outer(
+      needed_C_comp,
+      seq_len(n_M),
+      FUN = function(c_idx, m_idx) sprintf("beta[%d,%d]", c_idx, m_idx)
+    )
+  )
+
+  beta_draws <- draws_to_tibble_x_y(fit, beta_vars, "C", "M") |>
+    rename(C_comp = C, beta = .value) |>
+    select(C_comp, M, .chain, .iteration, beta)
+
+  alpha_draws <- alpha_draws |>
+    rename(alpha = .value) |>
+    mutate(C_comp = variability_to_composition_map[C]) |>
+    left_join(beta_draws, by = c("C_comp", "M", ".chain", ".iteration"))
+
+
+  slope_1_vars <- sprintf("prec_slope_1[%d]", needed_C)
+  slope_1_draws <- draws_to_tibble_x(fit, slope_1_vars, "C") |>
+    transmute(C, .chain, .iteration, prec_slope_1 = .value)
+
+  alpha_draws <- alpha_draws |>
+    left_join(slope_1_draws, by = c("C", ".chain", ".iteration"))
+
+  if (!bimodal_flag) {
+    # Unimodal model: the effective slope is the single regression slope.
+    alpha_draws <- alpha_draws |>
+      mutate(slope_effective = prec_slope_1)
+  } else {
+    slope_2_vars <- sprintf("prec_slope_2[%d]", needed_C)
+    intercept_1_vars <- sprintf("prec_intercept_1[%d]", needed_C)
+    intercept_2_vars <- sprintf("prec_intercept_2[%d]", needed_C)
+    prec_sd_vars <- sprintf("prec_sd[%d]", needed_C)
+
+    slope_2_draws <- draws_to_tibble_x(fit, slope_2_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_slope_2 = .value)
+    intercept_1_draws <- draws_to_tibble_x(fit, intercept_1_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_intercept_1 = .value)
+    intercept_2_draws <- draws_to_tibble_x(fit, intercept_2_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_intercept_2 = .value)
+    prec_sd_draws <- draws_to_tibble_x(fit, prec_sd_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_sd = .value)
+
+    mix_p_draws <- fit$draws(variables = "mix_p", format = "draws_df") |>
+      transmute(
+        .chain = as.integer(.chain),
+        .iteration = as.integer(.iteration),
+        mix_p = mix_p
+      )
+
+    alpha_draws <- alpha_draws |>
+      left_join(slope_2_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(intercept_1_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(intercept_2_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(prec_sd_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(mix_p_draws, by = c(".chain", ".iteration")) |>
+      mutate(
+        # Soft assignment: compute draw-specific responsibility for component 1
+        # from mixture log-densities and use it to blend slopes.
+        # Here log_1/log_2 are:
+        #   log p(z = k) + log p(alpha | z = k, draw params)
+        # where p(alpha | z = k, ...) is Student-t(df = 3) with
+        # location beta * prec_slope_k + prec_intercept_k and scale prec_sd.
+        # The -log(prec_sd) term applies the scale correction.
+        log_1 = log(mix_p) +
+          stats::dt((alpha - (beta * prec_slope_1 + prec_intercept_1)) / prec_sd, df = 3, log = TRUE) -
+          log(prec_sd),
+        log_2 = log1p(-mix_p) +
+          stats::dt((alpha - (beta * prec_slope_2 + prec_intercept_2)) / prec_sd, df = 3, log = TRUE) -
+          log(prec_sd),
+        max_log = pmax(log_1, log_2),
+        weight_1 = exp(log_1 - max_log) / (exp(log_1 - max_log) + exp(log_2 - max_log)),
+        slope_effective = weight_1 * prec_slope_1 + (1 - weight_1) * prec_slope_2
+      )
+  }
+
+  alpha_draws |>
+    mutate(
+      .value = alpha - (beta * slope_effective),
+      .variable = "alpha_normalised"
+    ) |>
+    select(C, M, .chain, .iteration, .draw, .variable, .value)
 }
 
 
@@ -704,6 +924,54 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
 #' @importFrom purrr map_int
 #' @importFrom stats as.formula
 #'
+#' Match variability to composition design columns
+#'
+#' Normally every column of `Xa` must appear in `X` (variability is a sub-formula of
+#' composition). **Exception:** `formula_variability = ~ 1` yields a single `(Intercept)`
+#' column in `Xa`. If the composition matrix has no `(Intercept)` (e.g.
+#' `formula_composition = ~ 0 + type`), that term has no name in `X`; we map it to
+#' composition column `1` so the single shared variability level uses one explicit
+#' `beta[1]` in the abundance-variability link in Stan.
+#'
+#' @param X Composition design matrix
+#' @param Xa Variability design matrix
+#'
+#' @return Integer vector indexing composition columns for each variability column
+#' @keywords internal
+#' @noRd
+get_variability_to_composition_map = function(X, Xa) {
+  comp_names = colnames(X)
+  var_names = colnames(Xa)
+  variability_to_composition_map = match(var_names, comp_names)
+  missing_idx = is.na(variability_to_composition_map)
+
+  if (any(missing_idx)) {
+    missing_terms = var_names[missing_idx]
+    only_intercept_variability =
+      length(var_names) == 1L && var_names[1] == "(Intercept)"
+    if (
+      only_intercept_variability &&
+        !("(Intercept)" %in% comp_names) &&
+        length(comp_names) >= 1L
+    ) {
+      variability_to_composition_map[missing_idx] = 1L
+    } else {
+      stop(
+        sprintf(
+          paste0(
+            "sccomp says: every variability design term must also be present ",
+            "in the composition design matrix. Missing terms: %s"
+          ),
+          paste(missing_terms, collapse = ", ")
+        )
+      )
+    }
+  }
+
+  as.integer(variability_to_composition_map)
+}
+
+#'
 #' @keywords internal
 #' @noRd
 #'
@@ -771,6 +1039,8 @@ data_spread_to_model_input =
         !!.sample,
         accept_NA_as_average_effect = accept_NA_as_average_effect
       )
+
+    variability_to_composition_map = get_variability_to_composition_map(X, Xa)
     
     XA = Xa %>%
       as_tibble() %>%
@@ -911,6 +1181,7 @@ data_spread_to_model_input =
         X = X,
         XA = XA,
         Xa = Xa,
+        variability_to_composition_map = variability_to_composition_map,
         C = ncol(X),
         A = A,
         Ar = Ar,
