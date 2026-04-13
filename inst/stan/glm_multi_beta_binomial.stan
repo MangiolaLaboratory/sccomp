@@ -360,7 +360,8 @@ parameters{
   // Mean-variability slopes
   array[A] real prec_slope_1; // s1, always present
   array[A * bimodal_mean_variability_association] real prec_slope_2; // s2, only for bimodal
-  array[A] real<lower=0> prec_sd;  // residual scale per effect for mean-variability association
+  // Log-scale residual SD avoids a hard boundary at 0 and reduces funnel neck pathologies.
+  array[A] real log_prec_sd;
   real<lower=0, upper=1> mix_p;
 
   // Random intercept // array of sum_to_zero_vector for each random effect
@@ -388,8 +389,10 @@ transformed parameters{
 
   array[A] real prec_intercept_1;
   array[A * bimodal_mean_variability_association] real prec_intercept_2;
+  array[A] real<lower=0> prec_sd;  // residual scale per effect for mean-variability association
   for (a in 1:A) {
     prec_intercept_1[a] = prec_intercept[a][1];
+    prec_sd[a] = exp(log_prec_sd[a]);
     if (bimodal_mean_variability_association == 1)
       prec_intercept_2[a] = prec_intercept[a][2];
   }

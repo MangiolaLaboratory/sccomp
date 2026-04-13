@@ -67,17 +67,17 @@ transformed data{
 
 parameters {
 
-  array[C] vector[M] beta_raw; // Each row is a vector of length M
+  // Keep names/dimensions compatible with fitted draws, but avoid strict
+  // sum_to_zero validation when reading rounded CSVs in generated quantities.
+  array[C] vector[M] beta_raw;
   matrix[A, M] alpha; // Variability
   array[A] ordered[1 + bimodal_mean_variability_association] prec_intercept;
   array[A] real prec_slope_1;
   array[A * bimodal_mean_variability_association] real prec_slope_2;
-  array[A] real<lower=0> prec_sd;
+  array[A] real log_prec_sd;
   real<lower=0, upper=1> mix_p;
 
-  // Random intercept // Using regular vectors instead of sum_to_zero_vector to avoid floating-point precision issues
-  // NOTE: Floating-point precision can cause sum_to_zero_vector to fail the strict sum-to-zero constraint
-  // We use regular vectors and apply the constraint manually where needed
+  // Random intercept
   array[ncol_X_random_eff[1] * (is_random_effect>0)] vector[M] random_effect_raw;
   array[ncol_X_random_eff[2] * (ncol_X_random_eff[2]>0)] vector[M] random_effect_raw_2;
 
@@ -120,13 +120,9 @@ generated quantities{
 
   matrix[C,M] beta;
 
-  // Convert vectors to matrix and apply sum-to-zero constraint manually
+  // Convert vectors to matrix and enforce sum-to-zero numerically.
   for(c in 1:C) {
-    vector[M] temp_beta = beta_raw[c];
-    // NOTE: Due to floating point precision, we must explicitly normalize to sum to zero
-    // instead of declating the sum_to_zero variabe
-    temp_beta = normalize_sum_to_zero(temp_beta);
-    beta[c,] = to_row_vector(temp_beta);
+    beta[c,] = to_row_vector(normalize_sum_to_zero(beta_raw[c]));
   }
 
   // Subset for mean and deviation
@@ -188,7 +184,7 @@ generated quantities{
   // For first random effect
   if(length_X_random_effect_which[1]>0) {
 
-    // Convert vector array and apply sum-to-zero constraint manually
+    // Convert vector array and enforce sum-to-zero numerically
     array[ncol_X_random_eff[1]] vector[M] random_effect_raw_vec;
     for(i in 1:ncol_X_random_eff[1]) {
       random_effect_raw_vec[i] = normalize_sum_to_zero(random_effect_raw[i]);
@@ -229,7 +225,7 @@ generated quantities{
   // For second random effect
   if(length_X_random_effect_which[2]>0) {
 
-    // Convert vector array and apply sum-to-zero constraint manually
+    // Convert vector array and enforce sum-to-zero numerically
     array[ncol_X_random_eff[2]] vector[M] random_effect_raw_2_vec;
     for(i in 1:ncol_X_random_eff[2]) {
       random_effect_raw_2_vec[i] = normalize_sum_to_zero(random_effect_raw_2[i]);
