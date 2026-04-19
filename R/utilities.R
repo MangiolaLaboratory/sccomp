@@ -48,6 +48,19 @@ add_attr = function(var, attribute, name) {
   var
 }
 
+#' Create an empty design matrix with stable column names
+#'
+#' `colnames()` on a bare 0-column matrix is `NULL`, which then propagates into
+#' downstream helpers that expect a character vector of design column names.
+#'
+#' @keywords internal
+#' @noRd
+empty_design_matrix = function(n_rows) {
+  x = matrix(0, nrow = n_rows, ncol = 0)
+  colnames(x) = character(0)
+  x
+}
+
 #' Subset results by model factor
 #'
 #' @param .data A sccomp results tibble
@@ -1105,7 +1118,7 @@ data_spread_to_model_input =
         X_random_effect_2 = X_random_effect_2[, !colnames(X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
       }
       
-      else X_random_effect_2 =  X_random_effect[,0,drop=FALSE]
+      else X_random_effect_2 = empty_design_matrix(nrow(X_random_effect))
       
       n_random_eff = random_effect_grouping |> nrow()
       
@@ -1145,8 +1158,8 @@ data_spread_to_model_input =
       
       
     } else {
-      X_random_effect = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
-      X_random_effect_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
+      X_random_effect = empty_design_matrix(nrow(.data_spread))
+      X_random_effect_2 = empty_design_matrix(nrow(.data_spread)) # This will be modularised with the new stan
       is_random_effect = 0
       ncol_X_random_eff = c(0,0)
       n_random_eff = 0

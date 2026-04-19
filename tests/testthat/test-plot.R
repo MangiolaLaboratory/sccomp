@@ -255,6 +255,28 @@ test_that("significance_statistic argument works for sccomp_plot_intervals_1D", 
   )
 })
 
+test_that("sccomp_test stores interval_summary backend for richer 1D intervals", {
+  skip_cmdstan()
+
+  tested <- my_estimate_with_variance |> sccomp_test()
+  interval_summary <- attr(tested, "interval_summary")
+
+  expect_true(!is.null(interval_summary))
+  expect_true(all(c(
+    "c_lower", "c_lower_inner", "c_effect", "c_median", "c_upper_inner", "c_upper",
+    "v_lower", "v_lower_inner", "v_effect", "v_median", "v_upper_inner", "v_upper"
+  ) %in% colnames(interval_summary)))
+})
+
+test_that("sccomp_plot_intervals_1D accepts point_estimate argument", {
+  skip_cmdstan()
+
+  tested <- my_estimate |> sccomp_test()
+
+  expect_no_error(sccomp_plot_intervals_1D(tested, point_estimate = "mean"))
+  expect_no_error(sccomp_plot_intervals_1D(tested, point_estimate = "median"))
+})
+
 test_that("significance_statistic argument works for sccomp_plot_intervals_2D", {
    skip_cmdstan()
   expect_no_error(

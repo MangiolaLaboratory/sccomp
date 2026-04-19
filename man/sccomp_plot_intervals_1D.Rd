@@ -12,7 +12,8 @@ sccomp_plot_intervals_1D(
     "test_composition_above_logit_fold_change"),
   show_fdr_message = TRUE,
   significance_statistic = c("pH0", "FDR"),
-  sort_by = c("none", "effect", "significance", "alphabetical")
+  sort_by = c("effect", "significance", "alphabetical", "none"),
+  point_estimate = c("mean", "median")
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ sccomp_plot_intervals_1D(
 \item{significance_statistic}{Character vector indicating which statistic to highlight. Default is "pH0".}
 
 \item{sort_by}{Character vector indicating how to sort taxa. Options are "none" (default), "effect" (by effect size), "significance" (by FDR/pH0), or "alphabetical".}
+
+\item{point_estimate}{Character string selecting the point estimate to plot: \code{"mean"} or \code{"median"}.}
 }
 \value{
 A combined plot of 1D interval plots.
@@ -60,6 +63,5 @@ print("cmdstanr is needed to run this example.")
 
   }
 }
-
 
 }

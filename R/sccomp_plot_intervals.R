@@ -10,6 +10,7 @@
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
 #' @param factor Optional character string selecting one model factor to plot. If provided, plots are restricted to that factor plus `(Intercept)`.
 #' @param sort_by Character vector indicating how to sort taxa. Options are "none" (default), "effect" (by effect size), "significance" (by FDR/pH0), or "alphabetical".
+#' @param point_estimate Character string selecting the point estimate to plot: `"mean"` or `"median"`.
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder fct_inorder
 #' @importFrom tidyr drop_na
@@ -42,7 +43,6 @@
 #'   }
 #' }
 #'
-#'
 sccomp_plot_intervals_1D = function(
     .data,
     factor = NULL,
@@ -50,18 +50,24 @@ sccomp_plot_intervals_1D = function(
     test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"),
     show_fdr_message = TRUE,
   significance_statistic = c("pH0", "FDR"),
-  sort_by = c("none", "effect", "significance", "alphabetical")
+  sort_by = c("effect", "significance", "alphabetical", "none"),
+  point_estimate = c("mean", "median")
 ) {
   significance_statistic <- match.arg(significance_statistic)
   sort_by <- match.arg(sort_by)
+  point_estimate <- match.arg(point_estimate)
 
   # Define the variables as NULL to avoid CRAN NOTES
   parameter <- NULL
-  estimate <- NULL
-  value <- NULL
   pH0 <- NULL
   FDR <- NULL
+  lower <- NULL
+  lower_inner <- NULL
   effect <- NULL
+  median <- NULL
+  upper <- NULL
+  upper_inner <- NULL
+  sig_flag <- NULL
 
   .cell_group = attr(.data, ".cell_group")
 
@@ -71,42 +77,53 @@ sccomp_plot_intervals_1D = function(
 
   .data <- subset_results_by_factor(.data, factor, keep_intercept = TRUE)
 
-  plot_list =
+  cell_group_name = rlang::quo_name(.cell_group)
+  interval_summary = attr(.data, "interval_summary")
+  if (is.null(interval_summary))
+    stop("sccomp says: re-run sccomp_test(); interval summaries for plotting are missing.", call. = FALSE)
+
+  plot_backend =
     .data |>
+    select(!!.cell_group, parameter, `factor`, matches("^[cv]_(pH0|FDR)$")) |>
+    left_join(interval_summary, by = c(cell_group_name, "parameter")) |>
+    pivot_longer(
+      cols = matches("^(c|v)_(lower_inner|effect|median|upper_inner|upper|lower|pH0|FDR)$"),
+      names_to = c("which", "stat"),
+      names_pattern = "^(c|v)_(.*)$"
+    ) |>
+    pivot_wider(names_from = stat, values_from = value)
 
-    # Reshape data
-    select(-contains("n_eff"), -contains("R_k_hat"), -contains("_ess"), -contains("_rhat")) |>
-    pivot_longer(c(contains("c_"), contains("v_")), names_sep = "_", names_to = c("which", "estimate")) |>
-    pivot_wider(names_from = estimate, values_from = value) |>
-
-    # Nest data by parameter and which
+  plot_list =
+    plot_backend |>
     nest(data = -c(parameter, which)) |>
     mutate(plot = pmap(
       list(data, which, parameter),
       function(plot_data, plot_which, plot_param) {
         # Check if there are any statistics to plot
-        if(plot_data |> filter(!is.na(effect)) |> nrow() |> equals(0))
+        if(plot_data |> filter(!is.na(effect) | !is.na(median)) |> nrow() |> equals(0))
           return(NA)
 
-        # Choose color variable and legend
+        plot_data =
+          plot_data |>
+          mutate(
+            effect = if (point_estimate == "mean") .data[["effect"]] else .data[["median"]],
+            sig_flag = if (significance_statistic == "FDR") FDR < significance_threshold else pH0 < significance_threshold
+          )
+
         if (significance_statistic == "FDR") {
-          color_aes <- aes(xmin = lower, xmax = upper, color = FDR < significance_threshold)
           color_scale <- scale_color_manual(values = c("grey40", "red"))
           legend_title <- "FDR < significance_threshold"
         } else {
-          color_aes <- aes(xmin = lower, xmax = upper, color = pH0 < significance_threshold)
           color_scale <- scale_color_manual(values = c("grey40", "red"))
           legend_title <- "pH0 < significance_threshold"
         }
 
         # Determine y-axis variable based on sort_by
-        # Use string-based column selection instead of NSE
         if (sort_by == "none") {
           # No sorting
           plot_data$y_var <- plot_data[[.cell_group]]
         } else if (sort_by == "effect") {
-          # Sort by absolute effect size
-          plot_data$y_var <- fct_reorder(plot_data[[.cell_group]], abs(plot_data$effect))
+          plot_data$y_var <- fct_reorder(plot_data[[.cell_group]], plot_data$effect,  .desc=T)
         } else if (sort_by == "significance") {
           # Sort by significance
           if (significance_statistic == "FDR") {
@@ -120,13 +137,24 @@ sccomp_plot_intervals_1D = function(
           plot_data$y_var <- fct_inorder(plot_data[[.cell_group]])
         }
 
-        ggplot(plot_data, aes(x = effect, y = y_var)) +
+        ggplot(plot_data, aes(x = effect, y = y_var, color = sig_flag)) +
           geom_vline(xintercept = test_composition_above_logit_fold_change, colour = "grey") +
           geom_vline(xintercept = -test_composition_above_logit_fold_change, colour = "grey") +
-          geom_errorbar(color_aes) +
-          geom_point() +
+          geom_segment(
+            aes(x = lower, xend = upper, y = y_var, yend = y_var),
+            linewidth = 0.35,
+            lineend = "round",
+            alpha = 0.45
+          ) +
+          geom_segment(
+            aes(x = lower_inner, xend = upper_inner, y = y_var, yend = y_var),
+            linewidth = 1.2,
+            lineend = "round",
+            alpha = 0.55
+          ) +
+          geom_point(size = 0.9) +
           color_scale +
-          xlab("Credible interval of the effect") +
+          xlab(sprintf("Posterior intervals of the effect (%s point estimate)", point_estimate)) +
           ylab("Cell group") +
           ggtitle(sprintf("%s %s", plot_which, plot_param)) +
           sccomp_theme() +
@@ -172,7 +200,7 @@ sccomp_plot_intervals_1D = function(
 #' @param add_marginal_density Logical. Whether to add marginal density plots on adjusted panels. Default is TRUE.
 #'
 #' @importFrom dplyr filter arrange mutate if_else row_number bind_rows distinct slice pull with_groups
-#' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point geom_line geom_area aes facet_wrap theme_bw theme labs guides guide_legend scale_color_manual scale_alpha_manual scale_fill_manual scale_y_continuous coord_flip theme_void element_rect element_text margin
+#' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point geom_line geom_area geom_segment aes facet_wrap theme_bw theme labs guides guide_legend scale_color_manual scale_alpha_manual scale_fill_manual scale_y_continuous coord_flip theme_void element_rect element_text margin
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom stringr str_detect
 #' @importFrom patchwork plot_annotation wrap_plots plot_layout

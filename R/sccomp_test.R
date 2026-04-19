@@ -96,7 +96,7 @@ sccomp_test.sccomp_tbl = function(.data,
         !!.cell_group,
         "c_"
       )
-  
+
   variability_draws <- get_variability_contrast_draws(.data, contrasts)
 
   # If I have variability draws for those contrasts, compute the variability CI
@@ -115,24 +115,37 @@ sccomp_test.sccomp_tbl = function(.data,
   }
 
   
-  factor_parameter_dictionary =
-    model_input$factor_parameter_dictionary |>
-    select(`factor`, design_matrix_col)
+  factor_parameter_dictionary = model_input$factor_parameter_dictionary
   
   # Merge and parse
-  result =
-   result |>
-    
-    # Keep factor labels in the result schema; plotting/subsetting helpers rely on this.
-    left_join(factor_parameter_dictionary, by = c("parameter" = "design_matrix_col")) |>
-    select(!!.cell_group, parameter, `factor`, everything(), -M) 
-      
-  if(pass_fit)
+  if ("design_matrix_col" %in% colnames(factor_parameter_dictionary))
     result =
+     result |>
+      
+      # Keep factor labels in the result schema; plotting/subsetting helpers rely on this.
+      left_join(factor_parameter_dictionary, by = c("parameter" = "design_matrix_col"))
+
+  if (!"factor" %in% colnames(result))
+    result = result |> mutate(`factor` = NA_character_)
+
+
+
     result |>
-    add_attr(.data |> attr("fit") , "fit")
+    select(
+      -any_of(c(
+        "c_lower_inner",
+        "c_median",
+        "c_upper_inner",
+        "v_lower_inner",
+        "v_median",
+        "v_upper_inner"
+      ))
+    ) |>
+    select(!!.cell_group, parameter, `factor`, everything(), -M)  |>
+      
+
+    add_attr(.data |> attr("fit") , "fit") |>
   
-  result |>
     
     # TEMPORARILY DROPPING KHAT
     # select(-contains("n_eff"), -contains("_hat")) |> 
@@ -155,6 +168,12 @@ sccomp_test.sccomp_tbl = function(.data,
     # Add count data as attribute
     add_attr(.data |> attr("count_data"), "count_data") |>
     add_attr(.data |> attr("outliers"), "outliers") |>
+    add_attr(
+    result |>
+    select(
+      -any_of("factor"),
+      -matches("^[cv]_(pH0|FDR|rhat|ess_bulk|ess_tail)$")
+    ), "interval_summary") |>
     
   
     # Add class to the tbl
@@ -375,23 +394,26 @@ sccomp_summarise_posterior_for_estimate <- function(
     ) |>
     dplyr::rename(v_lower = v_upper, v_upper = v_lower)
 
-  if (!"factor" %in% colnames(model_input$factor_parameter_dictionary)) {
-    factor_parameter_dictionary <-
-      tibble::tibble(`factor` = character(), design_matrix_col = character())
-  } else {
-    factor_parameter_dictionary <-
-      model_input$factor_parameter_dictionary |>
-      dplyr::select(`factor`, design_matrix_col)
-  }
+  factor_parameter_dictionary <- model_input$factor_parameter_dictionary
 
   result <-
     abundance |>
     dplyr::left_join(variability, by = c(cg, "M", "parameter")) |>
-    suppressMessages() |>
-    dplyr::left_join(
-      factor_parameter_dictionary,
-      by = c("parameter" = "design_matrix_col")
-    ) |>
+    suppressMessages()
+
+  if ("design_matrix_col" %in% colnames(factor_parameter_dictionary))
+    result <-
+      result |>
+      dplyr::left_join(
+        factor_parameter_dictionary,
+        by = c("parameter" = "design_matrix_col")
+      )
+
+  if (!"factor" %in% colnames(result))
+    result <- result |> dplyr::mutate(`factor` = NA_character_)
+
+  result <-
+    result |>
     dplyr::select(parameter, `factor`, dplyr::everything()) |>
     dplyr::select(!!.cell_group, dplyr::everything(), -M)
 
@@ -451,14 +473,6 @@ sccomp_identify_covariate_contrasts <- function(contrasts, model_input) {
 #' @keywords internal
 #' @noRd
 build_stan_parameter_subset <- function(contrasts, design_columns, stan_parameter, model_input) {
-  if (is.null(contrasts)) {
-    return(
-      tibble::tibble(
-        parameter = design_columns,
-        variable = rep(stan_parameter, length(design_columns))
-      )
-    )
-  }
 
   candidate_terms <- contrasts_to_parameter_list(contrasts)
   if (is.null(candidate_terms) || length(candidate_terms) == 0) {
@@ -513,15 +527,20 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
   # Beta
   beta_covariates = model_input %$% X |> colnames()
 
-  beta_subset <- build_stan_parameter_subset(
-    contrasts = contrasts,
-    design_columns = beta_covariates,
-    stan_parameter = "beta",
-    model_input = model_input
-  )
-  beta_parameters <- beta_subset |> dplyr::pull(parameter) |> unique()
-  beta_variable_subset <- beta_subset |> dplyr::pull(variable) |> unique()
-  
+  if (is.null(contrasts)) {
+    beta_variable_subset <- "beta"
+  } else {
+    beta_subset <- build_stan_parameter_subset(
+      contrasts = contrasts,
+      design_columns = beta_covariates,
+      stan_parameter = "beta",
+      model_input = model_input
+    )
+    beta_variable_subset <- beta_subset |> dplyr::pull(variable) |> unique()
+    if (length(beta_variable_subset) == 0L) {
+      stop("sccomp says: no composition (beta) parameters matched your contrasts.", call. = FALSE)
+    }
+  }
 
     draws =
       .data |>
@@ -540,6 +559,7 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
   # Random effect
   
   random_effect_covariates = model_input %$% X_random_effect |> colnames()
+  if (is.null(random_effect_covariates)) random_effect_covariates = character()
   beta_random_effect_subset <- build_stan_parameter_subset(
     contrasts = contrasts,
     design_columns = random_effect_covariates,
@@ -548,7 +568,14 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
   )
   beta_random_effect_parameters <- beta_random_effect_subset |> dplyr::pull(parameter) |> unique()
   beta_random_effect_variables <- beta_random_effect_subset |> dplyr::pull(variable) |> unique()
-  
+  if (
+    .data |> attr("model_input") %$% n_random_eff > 0 &&
+      length(beta_random_effect_variables) == 0L &&
+      is.null(contrasts)
+  ) {
+    beta_random_effect_variables <- "random_effect"
+  }
+
   if(
     .data |> attr("model_input") %$% n_random_eff > 0 &&
     (
@@ -609,6 +636,7 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
   
   # Second random effect. IN THE FUTURE THIS WILL BE VECTORISED TO ARBUTRARY GRI+OUING
   random_effect_covariates_2 = model_input %$% X_random_effect_2 |> colnames()
+  if (is.null(random_effect_covariates_2)) random_effect_covariates_2 = character()
   beta_random_effect_subset_2 <- build_stan_parameter_subset(
     contrasts = contrasts,
     design_columns = random_effect_covariates_2,
@@ -617,7 +645,14 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
   )
   beta_random_effect_parameters_2 <- beta_random_effect_subset_2 |> dplyr::pull(parameter) |> unique()
   beta_random_effect_variables_2 <- beta_random_effect_subset_2 |> dplyr::pull(variable) |> unique()
-  
+  if (
+    .data |> attr("model_input") %$% n_random_eff > 1 &&
+      length(beta_random_effect_variables_2) == 0L &&
+      is.null(contrasts)
+  ) {
+    beta_random_effect_variables_2 <- "random_effect_2"
+  }
+
   if(
     .data |> attr("model_input") %$% n_random_eff > 1 &&
     (
@@ -720,17 +755,23 @@ get_variability_contrast_draws = function(.data, contrasts){
     enframe(name = "M", value  = quo_name(.cell_group))
   
   variability_covariates = model_input %$% XA |> colnames()
-  alpha_subset <- build_stan_parameter_subset(
-    contrasts = contrasts,
-    design_columns = variability_covariates,
-    stan_parameter = "alpha",
-    model_input = model_input
-  )
-  alpha_parameters <- alpha_subset |> dplyr::pull("parameter") |> unique()
-  alpha_variable_subset <- alpha_subset |> dplyr::pull("variable") |> unique()
-  if (length(alpha_variable_subset) == 0) alpha_variable_subset <- NULL
-  if (!is.null(contrasts) && length(alpha_parameters) == 0) {
-    return(cell_index_map |> dplyr::select(!!.cell_group, M))
+  if (is.null(contrasts)) {
+    alpha_variable_subset <- "alpha"
+  } else {
+    alpha_variable_subset <- build_stan_parameter_subset(
+      contrasts = contrasts,
+      design_columns = variability_covariates,
+      stan_parameter = "alpha",
+      model_input = model_input
+    ) |>
+      dplyr::pull("variable") |>
+      unique()
+    # XA can omit names present in X; beta contrasts can still match. Fall back
+    # to all alpha draws (same as NULL-contrasts path) instead of empty extraction.
+    # This happens when I have ~ 0 + factor for abundance, and ~ 1 variability
+    if (length(alpha_variable_subset) == 0L) {
+      alpha_variable_subset <- "alpha"
+    }
   }
   
   draws =
@@ -874,7 +915,7 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   
 }
 
-#' @importFrom dplyr pull
+#' @importFrom dplyr pull rename_with all_of
 #' @importFrom posterior as_draws_df summarise_draws rhat ess_bulk ess_tail
 #' @noRd
 draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
@@ -889,30 +930,40 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
   bigger_zero <- NULL
   smaller_zero <- NULL
   lower <- NULL
+  lower_inner <- NULL
   effect <- NULL
+  median <- NULL
   upper <- NULL
+  upper_inner <- NULL
   pH0 <- NULL
   FDR <- NULL
   n_eff <- NULL
   R_k_hat <- NULL
   
   .cell_group = enquo(.cell_group)
-  lower_prob = false_positive_rate / 2
-  upper_prob = 1 - lower_prob
-  
+  lower_outer_prob = false_positive_rate / 2
+  upper_outer_prob = 1 - lower_outer_prob
+  lower_inner_prob = 0.25
+  upper_inner_prob = 0.75
+
+  interval_quantile_names = c("lower_outer", "lower_inner", "upper_inner", "upper_outer")
+
   draw_summaries =
     draws |>
     group_by(!!.cell_group, M, parameter) |>
     group_modify(
       ~ {
-        draws_df = 
+        draws_df =
           .x |>
-          select(.chain, .iteration, .draw, value = .value) |> 
+          select(.chain, .iteration, .draw, value = .value) |>
           as_draws_df() |>
           summarise_draws(
-            lower = function(.x) stats::quantile(.x, probs = lower_prob, na.rm = TRUE),
-            effect = function(.x) mean(.x, na.rm = TRUE),
-            upper = function(.x) stats::quantile(.x, probs = upper_prob, na.rm = TRUE),
+            lower_outer = function(.x) stats::quantile(.x, probs = lower_outer_prob, na.rm = TRUE),
+            lower_inner = function(.x) stats::quantile(.x, probs = lower_inner_prob, na.rm = TRUE),
+            mean = function(.x) mean(.x, na.rm = TRUE),
+            median = function(.x) stats::median(.x, na.rm = TRUE),
+            upper_inner = function(.x) stats::quantile(.x, probs = upper_inner_prob, na.rm = TRUE),
+            upper_outer = function(.x) stats::quantile(.x, probs = upper_outer_prob, na.rm = TRUE),
             rhat,
             ess_bulk,
             ess_tail
@@ -921,7 +972,14 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
 
         # Standardise CI column names when posterior returns percentage names (e.g. `5%`, `97.5%`).
         quantile_cols = names(draws_df)[grepl("%$", names(draws_df))]
-        names(draws_df)[names(draws_df) %in% quantile_cols] = c("lower", "upper")
+        ordered_quantile_cols =
+          quantile_cols |>
+          tibble::enframe(value = "qcol") |>
+          dplyr::mutate(pct = as.numeric(gsub("%$", "", qcol, perl = TRUE))) |>
+          dplyr::arrange(pct) |>
+          dplyr::pull(qcol)
+
+        names(draws_df)[names(draws_df) %in% ordered_quantile_cols] = interval_quantile_names
 
         draws_df
       }
@@ -944,13 +1002,26 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     # Calculate probability non 0
     mutate(pH0 =  (1 - (pmax(bigger_zero, smaller_zero) / n))) |>
     with_groups(parameter, ~ mutate(.x, FDR = get_FDR(pH0))) |>
-    
-    select(!!.cell_group, M, parameter, lower, effect, upper, pH0, FDR, any_of(c("rhat", "ess_bulk", "ess_tail"))) |>
-    suppressWarnings()
-  
-  # Setting up names separately because |> is not flexible enough
-  draws |>
-    setNames(c(colnames(draws)[1:3], sprintf("%s%s", prefix, colnames(draws)[4:ncol(draws)])))
+    transmute(
+      !!.cell_group,
+      M,
+      parameter,
+      lower = lower_outer,
+      lower_inner,
+      effect = .data[["mean"]],
+      median,
+      upper_inner,
+      upper = upper_outer,
+      pH0,
+      FDR,
+      rhat,
+      ess_bulk,
+      ess_tail
+    ) |>
+    suppressWarnings() |>
+    rename_with(~ paste0(prefix, .x), -all_of(c(quo_name(.cell_group), "M", "parameter")))
+
+  draws
 }
 
 mutate_ignore_error = function(x, ...){

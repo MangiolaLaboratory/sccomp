@@ -12,6 +12,7 @@
   significance_statistic = c("pH0", "FDR"),
   show_fdr_message = TRUE,
   add_marginal_density = TRUE,
+  point_estimate = c("mean", "median"),
   sort_by = c("none", "effect", "significance", "alphabetical"),
   ...
 )
@@ -28,6 +29,8 @@
 \item{show_fdr_message}{Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.}
 
 \item{add_marginal_density}{Logical. Whether to add marginal density plots on adjusted panels in 2D intervals. Default is TRUE.}
+
+\item{point_estimate}{Character string selecting the point estimate for 1D intervals: \code{"mean"} or \code{"median"}.}
 
 \item{...}{For internal use}
 }

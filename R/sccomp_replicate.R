@@ -298,12 +298,12 @@ prepare_replicate_data = function(X,
   random_effect_elements = parse_formula_random_effect(formula_composition)
   
   # Initialize unseen random effect variables
-  new_X_random_effect_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  new_X_random_effect_2_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  new_X_random_effect_unseen = empty_design_matrix(nrow_new_data)
+  new_X_random_effect_2_unseen = empty_design_matrix(nrow_new_data)
   
   # Set default random intercept
   X_random_effect_which = array()[0]
-  new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  new_X_random_effect = empty_design_matrix(nrow_new_data)
   
   # setup default unknown_grouping variable for generated quantities
   unknown_grouping = c(FALSE, FALSE)
@@ -362,7 +362,7 @@ prepare_replicate_data = function(X,
   
   # Set default X random intercept
   X_random_effect_which_2 = array()[0]
-  new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
+  new_X_random_effect_2 = empty_design_matrix(nrow_new_data)
   
   if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()){
     new_X_random_effect_2 =
