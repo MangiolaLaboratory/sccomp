@@ -141,6 +141,8 @@ incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = c
     # Parameters block
     "beta_raw",
     "alpha",
+    "prec_intercept",
+    "log_prec_sd",
     "prec_intercept_1",
     "prec_slope_1",
     "prec_intercept_2",
