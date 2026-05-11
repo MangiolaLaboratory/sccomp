@@ -564,20 +564,20 @@ model{
   for(a in 1:A){
     // If design has intercept, first column gets intercept-centred prior, others are centred at 0.
     if(intercept_in_design == 1 && a == 1){
-      prec_intercept[a][1] ~ student_t(3, 4, 2);
+      prec_intercept[a][1] ~ student_t(3, prior_prec_intercept[1], prior_prec_intercept[2]);
       if(bimodal_mean_variability_association == 1)
-        prec_intercept[a][2] ~ student_t(3, 4, 2);
+        prec_intercept[a][2] ~ student_t(3, prior_prec_intercept[1], prior_prec_intercept[2]);
     } else {
-      prec_intercept[a][1] ~ student_t(3, 0, 2);
+      prec_intercept[a][1] ~ student_t(3, 0, prior_prec_intercept[2]);
       if(bimodal_mean_variability_association == 1)
-        prec_intercept[a][2] ~ student_t(3, 0, 2);
+        prec_intercept[a][2] ~ student_t(3, 0, prior_prec_intercept[2]);
     }
-    prec_slope_1[a] ~ student_t(3, 0, 2); // s1
+    prec_slope_1[a] ~ student_t(3, prior_prec_slope[1], prior_prec_slope[2]); // s1
     if(bimodal_mean_variability_association == 1){
-      prec_slope_2[a] ~ student_t(3, 0, 2); // s2
+      prec_slope_2[a] ~ student_t(3, prior_prec_slope[1], prior_prec_slope[2]); // s2
     }
   }
-  for(a in 1:A) log_prec_sd[a] ~ normal(1, 0.5);
+  for(a in 1:A) log_prec_sd[a] ~ normal(prior_prec_sd[1], prior_prec_sd[2]);
 
   // // Priors abundance - use correct scale for sum_to_zero_vector
   for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
