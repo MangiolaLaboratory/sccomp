@@ -159,9 +159,9 @@ sccomp_estimate <- function(.data,
                             inference_method = "pathfinder",
                             prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                             prior_overdispersion_mean_association = list(
-                              intercept = c(5, 2),
-                              slope = c(0, 0.6),
-                              standard_deviation = c(10, 20)
+                              intercept = c(4, 2),
+                              slope = c(0, 2),
+                              standard_deviation = c(1, 0.5)
                             ),
                             .sample_cell_group_pairs_to_exclude = NULL,
                             output_directory = "sccomp_draws_files",
@@ -253,9 +253,9 @@ sccomp_estimate.Seurat <- function(.data,
                                    inference_method = "pathfinder",
                                    prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                                    prior_overdispersion_mean_association = list(
-                                     intercept = c(5, 2),
-                                     slope = c(0, 0.6),
-                                     standard_deviation = c(10, 20)
+                                     intercept = c(4, 2),
+                                     slope = c(0, 2),
+                                     standard_deviation = c(1, 0.5)
                                    ),
                                    .sample_cell_group_pairs_to_exclude = NULL,
                                    output_directory = "sccomp_draws_files",
@@ -352,9 +352,9 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  inference_method = "pathfinder",
                                                  prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                                                  prior_overdispersion_mean_association = list(
-                                                   intercept = c(5, 2),
-                                                   slope = c(0, 0.6),
-                                                   standard_deviation = c(10, 20)
+                                                   intercept = c(4, 2),
+                                                   slope = c(0, 2),
+                                                   standard_deviation = c(1, 0.5)
                                                  ),
                                                  .sample_cell_group_pairs_to_exclude = NULL,
                                                  output_directory = "sccomp_draws_files",
@@ -452,9 +452,9 @@ sccomp_estimate.DFrame <- function(.data,
                                    inference_method = "pathfinder",
                                    prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                                    prior_overdispersion_mean_association = list(
-                                     intercept = c(5, 2),
-                                     slope = c(0, 0.6),
-                                     standard_deviation = c(10, 20)
+                                     intercept = c(4, 2),
+                                     slope = c(0, 2),
+                                     standard_deviation = c(1, 0.5)
                                    ),
                                    .sample_cell_group_pairs_to_exclude = NULL,
                                    output_directory = "sccomp_draws_files",
@@ -546,9 +546,9 @@ sccomp_estimate.data.frame <- function(.data,
                                        inference_method = "pathfinder",
                                        prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                                        prior_overdispersion_mean_association = list(
-                                         intercept = c(5, 2),
-                                         slope = c(0, 0.6),
-                                         standard_deviation = c(10, 20)
+                                         intercept = c(4, 2),
+                                         slope = c(0, 2),
+                                         standard_deviation = c(1, 0.5)
                                        ),
                                        .sample_cell_group_pairs_to_exclude = NULL,
                                        output_directory = "sccomp_draws_files",
@@ -773,7 +773,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      # Secondary arguments
                                      contrasts = NULL,
                                      prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                     prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                     prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2), standard_deviation = c(1, 0.5)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      variational_inference = NULL,
@@ -889,7 +889,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         contrasts = NULL,
                                         #.grouping_for_random_effect = NULL,
                                         prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                        prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2), standard_deviation = c(1, 0.5)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         variational_inference = NULL,
