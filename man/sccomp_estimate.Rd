@@ -65,7 +65,12 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{prior_mean}{A list specifying prior knowledge about the mean distribution, including intercept and coefficients.}
 
-\item{prior_overdispersion_mean_association}{A list specifying prior knowledge about mean/variability association.}
+\item{prior_overdispersion_mean_association}{A named list with numeric length-2 vectors
+\code{intercept}, \code{slope}, and \code{standard_deviation} passed to the Stan Student-t / Normal
+hyperpriors on \code{prec_intercept}, \code{prec_slope}, and \code{log_prec_sd}. Use \code{NULL} for
+package defaults. A scalar logical such as \code{FALSE} is not meaningful here and is treated
+as \code{NULL} after a message; to disable abundance dependence in the variability prior,
+use \code{exclude_mean_variability_association = TRUE} instead.}
 
 \item{.sample_cell_group_pairs_to_exclude}{A column name indicating sample/cell-group pairs to exclude.}
 

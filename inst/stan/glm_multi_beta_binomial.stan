@@ -522,15 +522,6 @@ model{
 
       );
 
-      // print("2---", reduce_sum(
-        //   partial_sum_lupmf,
-        //   y_array[truncation_not_idx],
-        //   grainsize,
-        //   exposure_array[truncation_not_idx],
-        //   mu_array[truncation_not_idx],
-        //   precision_array[truncation_not_idx]
-        //   ));
-
 
   }
 

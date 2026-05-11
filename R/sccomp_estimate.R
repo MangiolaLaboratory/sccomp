@@ -34,7 +34,12 @@
 #' @param cores Number of cores to use for parallel calculations.
 #' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
 #' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
-#' @param prior_overdispersion_mean_association A list specifying prior knowledge about mean/variability association.
+#' @param prior_overdispersion_mean_association A named list with numeric length-2 vectors
+#'   `intercept`, `slope`, and `standard_deviation` passed to the Stan Student-t / Normal
+#'   hyperpriors on `prec_intercept`, `prec_slope`, and `log_prec_sd`. Use `NULL` for
+#'   package defaults. A scalar logical such as `FALSE` is not meaningful here and is treated
+#'   as `NULL` after a message; to disable abundance dependence in the variability prior,
+#'   use `exclude_mean_variability_association = TRUE` instead.
 #' @param percent_false_positive A real number between 0 and 100 for outlier identification.
 #' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational'). Replaces the deprecated `approximate_posterior_inference` and `variational_inference`.
 #' @param .sample_cell_group_pairs_to_exclude A column name indicating sample/cell-group pairs to exclude.
@@ -874,8 +879,6 @@ sccomp_glm_data_frame_raw = function(.data,
       ...
     )
 }
-
-
 
 sccomp_glm_data_frame_counts = function(.data,
                                         formula_composition = ~ 1 ,
