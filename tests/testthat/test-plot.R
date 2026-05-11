@@ -11,64 +11,7 @@ counts_obj =
   mutate(count = count+1) |>
   with_groups("sample", ~ .x |> mutate(proportion = count/sum(count)))
 
-set.seed(42)
-
-n_iterations = 1000
-
-if (instantiate::stan_cmdstan_exists()){
-
-  my_estimate =
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ continuous_covariate * type ,
-      formula_variability = ~ 1,
-      "sample", "cell_group",
-
-      cores = 1,
-      inference_method = "pathfinder",
-      max_sampling_iterations = n_iterations, verbose=FALSE
-    )
-
-  my_estimate_with_variance =
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ type,
-      formula_variability = ~ type,
-      "sample", "cell_group",
-
-      cores = 1,
-      inference_method = "pathfinder",
-      max_sampling_iterations = n_iterations, verbose=FALSE
-    )
-
-  # Bimodal mean-variability association: exercises the two-component code
-  # paths in sccomp_plot_intervals_2D (per-cell component assignment in the
-  # "raw" panel, two regression lines, two-component side densities).
-  my_estimate_with_variance_bimodal =
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ type,
-      formula_variability = ~ type,
-      "sample", "cell_group",
-      cores = 1,
-      inference_method = "pathfinder",
-      max_sampling_iterations = n_iterations,
-      bimodal_mean_variability_association = TRUE,
-      verbose = FALSE
-    )
-
-  my_estimate_intercept_only =
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ 1,
-      formula_variability = ~ 1,
-      "sample", "cell_group",
-      cores = 1,
-      inference_method = "pathfinder",
-      max_sampling_iterations = n_iterations,
-      verbose = FALSE
-    )
-}
+# Precomputed CmdStan fits: `helper-precomputed-estimates.R`
 
 # Test for plot_1d_intervals function
 test_that("plot_1d_intervals function works correctly", {

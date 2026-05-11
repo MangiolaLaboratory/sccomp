@@ -233,6 +233,26 @@ summarise_stan_matrix_for_estimate <- function(
 #'
 #' @keywords internal
 #' @noRd
+get_variability_draws_for_test <- function(fit, model_input, alpha_variable_subset = NULL) {
+
+  if (isTRUE(as.logical(model_input$exclude_mean_variability_association))) {
+    alpha_var <- if (is.null(alpha_variable_subset)) "alpha" else alpha_variable_subset
+    return(
+      draws_to_tibble_x_y(fit, alpha_var, "C", "M") |>
+        dplyr::mutate(.variable = "alpha_normalised")
+    )
+  }
+
+  compute_alpha_normalised_draws(
+    fit = fit,
+    model_input = model_input,
+    alpha_variable_subset = alpha_variable_subset
+  )
+}
+
+#'
+#' @keywords internal
+#' @noRd
 summarise_alpha_normalised_for_estimate <- function(
     fit,
     model_input,
@@ -256,8 +276,10 @@ summarise_alpha_normalised_for_estimate <- function(
   g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
   alpha_subset <- sprintf("alpha[%d,%d]", g$C, g$M)
 
-  # Compute alpha_normalised summaries from derived R-side draws.
-  draws_summary <- compute_alpha_normalised_draws(
+  # Compute variability summaries from derived R-side draws.
+  # If mean-variability association is excluded, this returns raw alpha draws
+  # (relabelled for downstream schema parity); otherwise alpha_normalised draws.
+  draws_summary <- get_variability_draws_for_test(
     fit = fit,
     model_input = model_input,
     alpha_variable_subset = alpha_subset
@@ -730,12 +752,12 @@ get_variability_contrast_draws = function(.data, contrasts){
   }
   
   draws =
-    compute_alpha_normalised_draws(
+    get_variability_draws_for_test(
       fit = .data |> attr("fit"),
       model_input = model_input,
       alpha_variable_subset = alpha_variable_subset
     ) |>
-    
+
     # We want variability, not concentration
     mutate(.value = -.value) 
   
