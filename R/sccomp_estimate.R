@@ -42,7 +42,11 @@
 #' @param verbose Logical, whether to print progression details.
 #' @param enable_loo Logical, whether to enable model comparison using the LOO package.
 #' @param noise_model A character string specifying the noise model (e.g., 'multi_beta_binomial').
-#' @param exclude_priors Logical, whether to run a prior-free model.
+#' @param exclude_mean_variability_association Logical. When `TRUE`, the prior
+#'   on the variability parameters does not depend on the abundance: the
+#'   mean-variability regression is reduced to an intercept-only Normal (or a
+#'   two-component mixture when `bimodal_mean_variability_association = TRUE`)
+#'   while the rest of the hierarchical prior structure stays unchanged.
 #' @param use_data Logical, whether to run the model data-free.
 #' @param mcmc_seed An integer seed for MCMC reproducibility.
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
@@ -67,6 +71,7 @@
 #' @param .sample **DEPRECATED**. Use `sample` instead.
 #' @param .cell_group **DEPRECATED**. Use `cell_group` instead.
 #' @param .abundance **DEPRECATED**. Use `abundance` instead.
+#' @param exclude_priors **DEPRECATED**. Use `exclude_mean_variability_association` instead.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #'
 #' @return A tibble (`tbl`), with the following columns:
@@ -163,7 +168,7 @@ sccomp_estimate <- function(.data,
                             verbose = TRUE,
                             enable_loo = FALSE,
                             noise_model = "multi_beta_binomial",
-                            exclude_priors = FALSE,
+                            exclude_mean_variability_association = FALSE,
                             use_data = TRUE,
                             mcmc_seed = sample_seed(),
                             max_sampling_iterations = 20000,
@@ -179,7 +184,8 @@ sccomp_estimate <- function(.data,
                             variational_inference = NULL,
                             .sample = NULL,
                             .cell_group = NULL,
-                            .abundance = NULL) {
+                            .abundance = NULL,
+                            exclude_priors = NULL) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -256,7 +262,7 @@ sccomp_estimate.Seurat <- function(.data,
                                    verbose = TRUE,
                                    enable_loo = FALSE,
                                    noise_model = "multi_beta_binomial",
-                                   exclude_priors = FALSE,
+                                   exclude_mean_variability_association = FALSE,
                                    use_data = TRUE,
                                    mcmc_seed = sample_seed(),
                                    max_sampling_iterations = 20000,
@@ -272,7 +278,8 @@ sccomp_estimate.Seurat <- function(.data,
                                    variational_inference = NULL,
                                    .sample = NULL,
                                    .cell_group = NULL,
-                                   .abundance = NULL) {
+                                   .abundance = NULL,
+                                   exclude_priors = NULL) {
   
   .count <- enquo(.count)
   .sample <- enquo(.sample)
@@ -310,7 +317,7 @@ sccomp_estimate.Seurat <- function(.data,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -324,7 +331,8 @@ sccomp_estimate.Seurat <- function(.data,
       variational_inference = variational_inference,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
-      .abundance = !!.abundance
+      .abundance = !!.abundance,
+      exclude_priors = exclude_priors
     )
 }
 
@@ -353,7 +361,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  verbose = TRUE,
                                                  enable_loo = FALSE,
                                                  noise_model = "multi_beta_binomial",
-                                                 exclude_priors = FALSE,
+                                                 exclude_mean_variability_association = FALSE,
                                                  use_data = TRUE,
                                                  mcmc_seed = sample_seed(),
                                                  max_sampling_iterations = 20000,
@@ -369,7 +377,8 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  variational_inference = NULL,
                                                  .sample = NULL,
                                                  .cell_group = NULL,
-                                                 .abundance = NULL) {
+                                                 .abundance = NULL,
+                                                 exclude_priors = NULL) {
   
   
   .count <- enquo(.count)
@@ -408,7 +417,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -422,7 +431,8 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       variational_inference = variational_inference,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
-      .abundance = !!.abundance
+      .abundance = !!.abundance,
+      exclude_priors = exclude_priors
     )
 }
 
@@ -451,7 +461,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    verbose = TRUE,
                                    enable_loo = FALSE,
                                    noise_model = "multi_beta_binomial",
-                                   exclude_priors = FALSE,
+                                   exclude_mean_variability_association = FALSE,
                                    use_data = TRUE,
                                    mcmc_seed = sample_seed(),
                                    max_sampling_iterations = 20000,
@@ -467,7 +477,8 @@ sccomp_estimate.DFrame <- function(.data,
                                    variational_inference = NULL,
                                    .sample = NULL,
                                    .cell_group = NULL,
-                                   .abundance = NULL) {
+                                   .abundance = NULL,
+                                   exclude_priors = NULL) {
   
   .count <- enquo(.count)
   .sample <- enquo(.sample)
@@ -497,7 +508,7 @@ sccomp_estimate.DFrame <- function(.data,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -511,7 +522,8 @@ sccomp_estimate.DFrame <- function(.data,
       variational_inference = variational_inference,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
-      .abundance = !!.abundance
+      .abundance = !!.abundance,
+      exclude_priors = exclude_priors
     )
 }
 
@@ -543,7 +555,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        verbose = TRUE,
                                        enable_loo = FALSE,
                                        noise_model = "multi_beta_binomial",
-                                       exclude_priors = FALSE,
+                                       exclude_mean_variability_association = FALSE,
                                        use_data = TRUE,
                                        mcmc_seed = sample_seed(),
                                        max_sampling_iterations = 20000,
@@ -559,7 +571,8 @@ sccomp_estimate.data.frame <- function(.data,
                                        variational_inference = NULL,
                                        .sample = NULL,
                                        .cell_group = NULL,
-                                       .abundance = NULL) {
+                                       .abundance = NULL,
+                                       exclude_priors = NULL) {
   
   
   .count <- enquo(.count)
@@ -581,6 +594,18 @@ sccomp_estimate.data.frame <- function(.data,
     lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", 
                               details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
     inference_method <- ifelse(variational_inference, "variational", "hmc")
+  }
+
+  # `exclude_priors` was renamed because it never actually excluded all priors —
+  # it disabled the abundance dependence in the variability prior. Forward the
+  # value to the new argument when supplied so old callers keep working.
+  if (lifecycle::is_present(exclude_priors) && !is.null(exclude_priors)) {
+    lifecycle::deprecate_soft(
+      "2.1.32",
+      "sccomp::sccomp_estimate(exclude_priors = )",
+      "sccomp::sccomp_estimate(exclude_mean_variability_association = )"
+    )
+    exclude_mean_variability_association <- exclude_priors
   }
   
   # Handle deprecated column arguments
@@ -664,7 +689,7 @@ sccomp_estimate.data.frame <- function(.data,
       output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -695,7 +720,7 @@ sccomp_estimate.data.frame <- function(.data,
       output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -756,7 +781,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                      output_directory = "sccomp_draws_files",
                                      verbose = FALSE,
-                                     exclude_priors = FALSE,
+                                     exclude_mean_variability_association = FALSE,
                                      bimodal_mean_variability_association = FALSE,
                                      enable_loo = FALSE,
                                      use_data = TRUE,
@@ -833,7 +858,7 @@ sccomp_glm_data_frame_raw = function(.data,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
       inference_method = inference_method,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       enable_loo = enable_loo,
       use_data = use_data,
@@ -872,7 +897,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                         output_directory = "sccomp_draws_files",
                                         verbose = FALSE,
-                                        exclude_priors = FALSE,
+                                        exclude_mean_variability_association = FALSE,
                                         bimodal_mean_variability_association = FALSE,
                                         enable_loo = FALSE,
                                         use_data = TRUE,
@@ -1033,7 +1058,7 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$prior_prec_sd = prior_overdispersion_mean_association$standard_deviation
   data_for_model$prior_mean_intercept = prior_mean$intercept
   data_for_model$prior_mean_coefficients = prior_mean$coefficients
-  data_for_model$exclude_priors = exclude_priors
+  data_for_model$exclude_mean_variability_association = exclude_mean_variability_association
   data_for_model$enable_loo = enable_loo
   
   # # Check that design matrix is not too big

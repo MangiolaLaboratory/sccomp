@@ -27,8 +27,22 @@ functions{
       real prec_intercept_2,
       real prec_sd,
       int bimodal_mean_variability_association,
-      real mix_p
+      real mix_p,
+      // 0: variability prior depends on abundance via the regression slope.
+      // 1: drop the abundance term; the prior reduces to an intercept-only
+      //    Normal (or two-component mixture in the bimodal case), which is
+      //    what callers want when the mean-variability association is to be
+      //    disabled without abandoning the rest of the hierarchical structure.
+      //    Same name and polarity as the user-facing flag, so no inversion
+      //    happens at the call site.
+      int exclude_mean_variability_association
     ){
+
+      // Zeroing the slopes when the association is excluded preserves the rest
+      // of the lpdf expression (including the bimodal mixture) unchanged, so we
+      // do not duplicate the likelihood for the two cases.
+      real eff_slope_1 = exclude_mean_variability_association == 1 ? 0 : prec_slope_1;
+      real eff_slope_2 = exclude_mean_variability_association == 1 ? 0 : prec_slope_2;
 
       real lp = 0;
       // If mean-variability association is bimodal such as for single-cell RNA use mixed model
@@ -36,17 +50,17 @@ functions{
         for(m in 1:cols(variability))
         lp += log_mix(mix_p,
         normal_lpdf(variability[m] |
-                    abundance[m] * prec_slope_1 + prec_intercept_1,
+                    abundance[m] * eff_slope_1 + prec_intercept_1,
                     prec_sd),
         normal_lpdf(variability[m] |
-                    abundance[m] * prec_slope_2 + prec_intercept_2,
+                    abundance[m] * eff_slope_2 + prec_intercept_2,
                     prec_sd)
         );
 
         // If no bimodal
       } else {
         lp = normal_lpdf(variability |
-                         abundance * prec_slope_1 + prec_intercept_1,
+                         abundance * eff_slope_1 + prec_intercept_1,
                          prec_sd);
       }
 
@@ -306,7 +320,7 @@ data{
   array[2] real prior_mean_coefficients;
 
   // Exclude priors for testing purposes
-  int<lower=0, upper=1> exclude_priors;
+  int<lower=0, upper=1> exclude_mean_variability_association;
   int<lower=0, upper=1> bimodal_mean_variability_association;
   int<lower=0, upper=1> use_data;
 
@@ -520,30 +534,25 @@ model{
 
   }
 
-  // Priors
-  // Per-effect regression (optional for testing)
-  if(exclude_priors == 0){
-    for(a in 1:A){
-      target += abundance_variability_regression(
-        alpha[a],
-        beta[variability_to_composition_map[a]],
-        prec_intercept_1[a],
-        prec_slope_1[a],
-        bimodal_mean_variability_association == 1 ? prec_slope_2[a] : 0,
-        bimodal_mean_variability_association == 1 ? prec_intercept_2[a] : 0,
-        prec_sd[a],
-        bimodal_mean_variability_association,
-        mix_p_scalar
-      );
-    }
-  } else {
-    if(intercept_in_design || A > 1){
-      for(a in 1:A_intercept_columns)  alpha[a] ~ student_t(3, prior_prec_intercept[1], prec_sd[a]);
-      if(A > A_intercept_columns)
-        for(a in (A_intercept_columns+1):A) to_vector(alpha[a]) ~ student_t(3, 0, prec_sd[a]);
-    } else {
-      alpha[1] ~ student_t(3, prior_prec_intercept[1], prec_sd[1]);
-    }
+  // Variability prior via the mean-variability regression.
+  // When `exclude_mean_variability_association = 1` the regression drops the
+  // abundance term but keeps the hierarchical hyperpriors on
+  // `prec_intercept_*`, `prec_slope_*` and `prec_sd` identical across both
+  // modes — only the slope contribution to alpha's prior gets zeroed. This
+  // avoids a parallel ad-hoc prior block.
+  for(a in 1:A){
+    target += abundance_variability_regression(
+      alpha[a],
+      beta[variability_to_composition_map[a]],
+      prec_intercept_1[a],
+      prec_slope_1[a],
+      bimodal_mean_variability_association == 1 ? prec_slope_2[a] : 0,
+      bimodal_mean_variability_association == 1 ? prec_intercept_2[a] : 0,
+      prec_sd[a],
+      bimodal_mean_variability_association,
+      mix_p_scalar,
+      exclude_mean_variability_association
+    );
   }
 
   // Hyper priors: i1/s1 (and prec_sd) shared; bimodal adds i2/s2 and mix_p shape

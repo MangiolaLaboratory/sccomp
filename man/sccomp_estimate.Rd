@@ -23,7 +23,7 @@ sccomp_estimate(
   verbose = TRUE,
   enable_loo = FALSE,
   noise_model = "multi_beta_binomial",
-  exclude_priors = FALSE,
+  exclude_mean_variability_association = FALSE,
   use_data = TRUE,
   mcmc_seed = sample_seed(),
   max_sampling_iterations = 20000,
@@ -37,7 +37,8 @@ sccomp_estimate(
   variational_inference = NULL,
   .sample = NULL,
   .cell_group = NULL,
-  .abundance = NULL
+  .abundance = NULL,
+  exclude_priors = NULL
 )
 }
 \arguments{
@@ -76,7 +77,12 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{noise_model}{A character string specifying the noise model (e.g., 'multi_beta_binomial').}
 
-\item{exclude_priors}{Logical, whether to run a prior-free model.}
+\item{exclude_mean_variability_association}{Logical. When \code{TRUE}, the prior
+on the variability parameters does not depend on the abundance: the
+mean-variability regression is reduced to an intercept-only Normal (or a
+two-component mixture when \code{bimodal_mean_variability_association = TRUE})
+while the rest of the hierarchical prior structure stays unchanged.
+Default is \code{FALSE}.}
 
 \item{use_data}{Logical, whether to run the model data-free.}
 
@@ -116,6 +122,8 @@ clear error when recorded Stan output paths are missing unless draws were incorp
 \item{.cell_group}{\strong{DEPRECATED}. Use \code{cell_group} instead.}
 
 \item{.abundance}{\strong{DEPRECATED}. Use \code{abundance} instead.}
+
+\item{exclude_priors}{\strong{DEPRECATED}. Use \code{exclude_mean_variability_association} instead.}
 }
 \value{
 A tibble (\code{tbl}), with the following columns:
