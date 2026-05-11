@@ -16,8 +16,8 @@ sccomp_estimate(
   percent_false_positive = 5,
   inference_method = "pathfinder",
   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
-  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0, 0.6),
-    standard_deviation = c(10, 20)),
+  prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2),
+    standard_deviation = c(1, 0.5)),
   .sample_cell_group_pairs_to_exclude = NULL,
   output_directory = "sccomp_draws_files",
   verbose = TRUE,
@@ -81,8 +81,7 @@ abundance column (counts or proportions), and factor columns.}
 on the variability parameters does not depend on the abundance: the
 mean-variability regression is reduced to an intercept-only Normal (or a
 two-component mixture when \code{bimodal_mean_variability_association = TRUE})
-while the rest of the hierarchical prior structure stays unchanged.
-Default is \code{FALSE}.}
+while the rest of the hierarchical prior structure stays unchanged.}
 
 \item{use_data}{Logical, whether to run the model data-free.}
 
