@@ -11,6 +11,7 @@
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param add_marginal_density Logical. Whether to add marginal density plots on adjusted panels in 2D intervals. Default is TRUE.
+#' @param omit_ci Logical. Whether to omit credible interval error bars from 2D interval plots. Default is FALSE.
 #' @param ... For internal use
 #'
 #' @return A list containing ggplot objects
@@ -48,6 +49,7 @@ plot.sccomp_tbl <- function(
     significance_statistic = c("pH0", "FDR"),
     show_fdr_message = TRUE,
     add_marginal_density = TRUE,
+    omit_ci = FALSE,
     sort_by = c("none", "effect", "significance", "alphabetical"),
     ...
 ) {
@@ -157,7 +159,8 @@ plot.sccomp_tbl <- function(
       test_composition_above_logit_fold_change = test_composition_above_logit_fold_change,
       significance_statistic = significance_statistic,
       show_fdr_message = show_fdr_message,
-      add_marginal_density = add_marginal_density
+      add_marginal_density = add_marginal_density,
+      omit_ci = omit_ci
     )
   }
 

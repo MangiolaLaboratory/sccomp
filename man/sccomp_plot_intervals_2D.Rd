@@ -12,7 +12,8 @@ sccomp_plot_intervals_2D(
     "test_composition_above_logit_fold_change"),
   show_fdr_message = TRUE,
   significance_statistic = c("pH0", "FDR"),
-  add_marginal_density = TRUE
+  add_marginal_density = TRUE,
+  omit_ci = FALSE
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ sccomp_plot_intervals_2D(
 \item{significance_statistic}{Character vector indicating which statistic to highlight. Default is "pH0".}
 
 \item{add_marginal_density}{Logical. Whether to add marginal density plots on adjusted panels. Default is TRUE.}
+
+\item{omit_ci}{Logical. Whether to omit credible interval error bars. Default is FALSE.}
 }
 \value{
 A ggplot object representing the 2D interval plot.

@@ -12,6 +12,7 @@
   significance_statistic = c("pH0", "FDR"),
   show_fdr_message = TRUE,
   add_marginal_density = TRUE,
+  omit_ci = FALSE,
   sort_by = c("none", "effect", "significance", "alphabetical"),
   ...
 )
@@ -28,6 +29,8 @@
 \item{show_fdr_message}{Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.}
 
 \item{add_marginal_density}{Logical. Whether to add marginal density plots on adjusted panels in 2D intervals. Default is TRUE.}
+
+\item{omit_ci}{Logical. Whether to omit credible interval error bars from 2D interval plots. Default is FALSE.}
 
 \item{...}{For internal use}
 }

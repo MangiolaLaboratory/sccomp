@@ -30,6 +30,7 @@ Imports:
     tibble,
     ggplot2,
     ggrepel,
+    ggside,
     patchwork,
     forcats,
     readr,

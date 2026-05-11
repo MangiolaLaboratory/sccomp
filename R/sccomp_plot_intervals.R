@@ -170,12 +170,13 @@ sccomp_plot_intervals_1D = function(
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
 #' @param factor Optional character string selecting one model factor to plot. If provided, plots are restricted to that factor plus `(Intercept)`.
 #' @param add_marginal_density Logical. Whether to add marginal density plots on adjusted panels. Default is TRUE.
+#' @param omit_ci Logical. Whether to omit credible interval error bars. Default is FALSE.
 #'
 #' @importFrom dplyr filter arrange mutate if_else row_number bind_rows distinct slice pull with_groups
-#' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point geom_line geom_area aes facet_wrap theme_bw theme labs guides guide_legend scale_color_manual scale_alpha_manual scale_fill_manual scale_y_continuous coord_flip theme_void element_rect element_text margin
+#' @importFrom ggplot2 ggplot geom_vline geom_hline geom_errorbar geom_point geom_line geom_blank aes xlab ylab facet_wrap theme_bw theme labs guides guide_legend scale_color_manual scale_alpha_manual scale_fill_manual element_rect element_blank element_text
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom stringr str_detect
-#' @importFrom patchwork plot_annotation wrap_plots plot_layout
+#' @importFrom ggside geom_ysidedensity theme_ggside_void scale_ysidex_continuous
 #'
 #' @export
 #'
@@ -215,12 +216,14 @@ sccomp_plot_intervals_2D <- function(
       .data |> attr("test_composition_above_logit_fold_change"),
     show_fdr_message = TRUE,
     significance_statistic = c("pH0", "FDR"),
-    add_marginal_density = TRUE
+    add_marginal_density = TRUE,
+    omit_ci = FALSE
 ) {
 
   significance_statistic <- match.arg(significance_statistic)
 
-  # Define variables to avoid CRAN NOTES
+  # Locals declared as NULL to silence R CMD check NOTEs about "no visible binding"
+  # for tidyverse NSE references (dplyr/ggplot evaluate these as column names).
   v_effect <- NULL
   parameter <- NULL
   c_effect <- NULL
@@ -237,46 +240,52 @@ sccomp_plot_intervals_2D <- function(
   v_pH0 <- NULL
   component <- NULL
   assigned_component <- NULL
+  v_value <- NULL
 
   .cell_group <- attr(.data, ".cell_group")
 
-  # Check if test has been done
+  # The plot relies on FDR / pH0 columns that only exist after sccomp_test();
+  # fail fast with a user-meaningful message rather than later with a cryptic NSE error.
   if(.data |> select(ends_with("FDR")) |> ncol() == 0)
     stop("sccomp says: you need to run sccomp_test() first.")
 
+  # Intercept is kept even when subsetting to a single factor because the Intercept
+  # panel acts as the visual baseline against which factor-specific effects are read.
   .data <- subset_results_by_factor(.data, factor, keep_intercept = TRUE)
 
-  # Extract fitted model and mean-variability regression coefficients
   fit <- attr(.data, "fit")
+
+  # Determine model topology *before* pulling Stan summaries: `prec_*_2` variables
+  # are only declared in the bimodal Stan program, so blindly requesting them
+  # would error on single-component fits.
+  bimodal_flag <- attr(.data, "model_input")$bimodal_mean_variability_association
+  # no check needed; bimodal_flag should always be present
+  bimodal_flag <- isTRUE(as.logical(bimodal_flag))
+
+  # Posterior summaries of the mean-variability regression coefficients
+  #   v_pred = -(prec_intercept + prec_slope * c_effect)
+  # These are pulled once and reused per-parameter via `param_idx`.
   prec_intercept_1_summary <- fit$summary("prec_intercept_1")
   prec_slope_1_summary <- fit$summary("prec_slope_1")
-  prec_intercept_2_summary <- tryCatch(
-    fit$summary("prec_intercept_2"),
-    error = function(e) tibble()
-  )
-  prec_slope_2_summary <- tryCatch(
-    fit$summary("prec_slope_2"),
-    error = function(e) tibble()
-  )
 
+  # Only parameters that actually have a v_effect (i.e. are estimated under the
+  # variability design Xa) can be plotted on the 2D space.
   param_names <- .data |>
     filter(!is.na(v_effect)) |>
     distinct(parameter) |>
-    pull(parameter)
+    pull("parameter")
 
+  # Map each parameter name to its column index in the variability design matrix
+  # `Xa` because Stan stores `prec_*` indexed by Xa column position, not by name.
   param_idx <- match(param_names, colnames(attr(.data, "model_input")$Xa))
   if (any(is.na(param_idx))) {
     stop("sccomp says: could not map selected parameters to model coefficients.")
   }
 
-  # Derive model type from stored model metadata
-  bimodal_flag <- attr(.data, "model_input")$bimodal_mean_variability_association
-  if (is.null(bimodal_flag)) {
-    stop("sccomp says: cannot infer model type because `bimodal_mean_variability_association` is missing from model metadata.")
-  }
-  bimodal_flag <- isTRUE(as.logical(bimodal_flag))
-
-  # Extract parameters based on model type
+  # `params_list` flattens the Stan posterior summaries into one entry per parameter,
+  # carrying only the scalars (`intercept`, `slope`, or per-component variants)
+  # required by downstream geometry, so the heavy `fit$summary` tibbles are not
+  # re-scanned inside per-row mutate() / lapply() calls.
   if (!bimodal_flag) {
     params_list <- lapply(seq_along(param_names), function(a) {
       param_name <- param_names[a]
@@ -288,6 +297,8 @@ sccomp_plot_intervals_2D <- function(
       )
     })
 
+    # Print the fitted lines so users can sanity-check the regression underlying
+    # the visual adjustment (especially useful when comparing across fits).
     message("=== Single Model Parameters ===")
     for(i in 1:length(params_list)) {
       p <- params_list[[i]]
@@ -297,6 +308,10 @@ sccomp_plot_intervals_2D <- function(
     message("")
 
   } else {
+    prec_intercept_2_summary <- fit$summary("prec_intercept_2")
+    prec_slope_2_summary <- fit$summary("prec_slope_2")
+    # `mix_p` is the posterior mixing weight of component 1; reported in the
+    # caption so users can judge which component dominates the population.
     mix_p <- fit$summary("mix_p") |> pull(mean)
 
     params_list <- lapply(seq_along(param_names), function(a) {
@@ -322,10 +337,15 @@ sccomp_plot_intervals_2D <- function(
     message("")
   }
 
-  # v_effect already comes from alpha_normalised (computed in R from draws)
-  # "raw" panel: ADD BACK entanglement to show raw alpha
-  # "adjusted" panel: USE v_effect AS-IS
-
+  # The 2D plot juxtaposes two views of v_effect for each parameter:
+  #   - "raw":      v_effect with the mean-variability association reintroduced,
+  #                 i.e. the data as it would look *without* the model's correction;
+  #                 the fitted regression line should pass through this cloud.
+  #   - "adjusted": v_effect with the association removed (what sccomp uses for
+  #                 inference). Cells off-axis here are the genuine outliers.
+  # Since `.data$v_effect` is already the adjusted form (it comes from the
+  # `alpha_normalised` draws), we *reverse the adjustment* to construct "raw"
+  # and we use v_effect verbatim for "adjusted".
   if (!bimodal_flag) {
     .data_raw_list <- lapply(params_list, function(params) {
       .data %>%
@@ -338,6 +358,13 @@ sccomp_plot_intervals_2D <- function(
         )
     })
   } else {
+    # Bimodal case: each cell type's "raw" position is generated by *one* of the
+    # two mixture components, but the latent assignment is not directly observed.
+    # We hard-assign by nearest predicted v_effect (smallest residual against
+    # each component's regression line), then reverse the adjustment using only
+    # that component's slope. This produces a visually coherent "raw" scatter
+    # in which each point lies near its parent regression line rather than at
+    # an arbitrary average of the two.
     .data_raw_list <- lapply(params_list, function(params) {
       .data %>%
         filter(parameter == params$parameter) %>%
@@ -363,7 +390,8 @@ sccomp_plot_intervals_2D <- function(
 
   .data_raw <- bind_rows(.data_raw_list)
 
-  # Adjusted panel: v_effect as-is (already from alpha_normalised)
+  # "adjusted" rows are the original v_effect, only the parameter label changes
+  # so facet_wrap can place them in a separate panel.
   .data_adjusted_list <- lapply(params_list, function(params) {
     .data %>%
       filter(parameter == params$parameter) %>%
@@ -373,7 +401,10 @@ sccomp_plot_intervals_2D <- function(
 
   .data_plot <- bind_rows(.data_raw, .data_adjusted)
 
-  # Set parameter factor levels
+  # Interleave "raw" before "adjusted" for each parameter so the facets read
+  # left-to-right as "before -> after the model's adjustment". param_order is
+  # also reused by the helper to ensure stable panel order across patchwork and
+  # facet_wrap callers.
   param_order <- c()
   for(p in params_list) {
     param_order <- c(param_order, paste0(p$parameter, ", raw"), paste0(p$parameter, ", adjusted"))
@@ -381,7 +412,12 @@ sccomp_plot_intervals_2D <- function(
 
   .data_plot$parameter <- factor(.data_plot$parameter, levels = param_order)
 
-  # Add labels for significant cell groups
+  # Label only the top-3 cell groups by significance per panel, and only in
+  # ", adjusted" panels because the "raw" panel is meant to show the underlying
+  # association (labels there would clutter without adding analytical value).
+  # Two sequential passes — first by c_FDR (abundance), then by v_FDR
+  # (variability) — guarantee a cell is labeled if it is significant on
+  # *either* axis, while preserving the abundance label when both apply.
   .data_plot <- .data_plot %>%
     filter(!is.na(v_effect)) %>%
     with_groups(
@@ -414,7 +450,11 @@ sccomp_plot_intervals_2D <- function(
         )
     )
 
-  # Choose color aesthetics based on significance statistic
+  # Encode significance in the errorbar aesthetics so the plot is readable
+  # without consulting the underlying table. Significance is only meaningful on
+  # ", adjusted" panels — raw panels are unconditionally desaturated to convey
+  # "descriptive, not inferential". FDR (Stephens) uses red, pH0 (posterior
+  # tail probability) uses blue, mirroring their distinct meanings.
   if (significance_statistic == "FDR") {
     color_c_aes <- aes(
       xmin = c_lower, xmax = c_upper,
@@ -481,6 +521,8 @@ sccomp_plot_intervals_2D <- function(
     }) %>% bind_rows()
 
   } else {
+    # Bimodal: two regression lines and two horizontal references per panel.
+    # The `component` column lets the plot helper colour them distinctly.
     regression_data_all <- lapply(params_list, function(params) {
       raw_param <- paste0(params$parameter, ", raw")
       param_data <- .data_plot %>% filter(parameter == raw_param)
@@ -521,7 +563,9 @@ sccomp_plot_intervals_2D <- function(
     }) %>% bind_rows()
   }
 
-  # Add caption based on model type
+  # Caption is reserved for FDR mode: users that opt into FDR-based inference
+  # benefit from the explicit citation/interpretation reminder; pH0 users are
+  # assumed to already understand the posterior-tail interpretation.
   if (significance_statistic == "FDR" && show_fdr_message) {
     if (!bimodal_flag) {
       caption_text <- paste(
@@ -546,203 +590,37 @@ sccomp_plot_intervals_2D <- function(
     caption_text <- NULL
   }
 
-  # Add marginal density plots if requested
-  if (add_marginal_density) {
+  # Both modes (with and without marginal density) produce a single faceted plot; the only difference is
+  # whether ggside's y-side area layer is added on top. We rely on ggside
+  # rather than patchwork-of-per-panel-plots so axis titles are not duplicated
+  # and panel widths stay grid-aligned.
+  build_2d_interval_plot <- function(plot_data, regression_data, adjusted_lines, density_data = NULL) {
 
-    plot_list <- lapply(param_order, function(param) {
+    # Force the canonical factor order on every input: the data preparation
+    # above does it on `.data_plot`, but `regression_data` / `adjusted_lines` /
+    # `density_data` come from separate pipelines and must agree on level order
+    # for facet_wrap to keep panels in sync.
+    plot_data <- plot_data %>%
+      mutate(parameter = factor(as.character(parameter), levels = param_order))
 
-      param_data <- .data_plot %>% filter(parameter == param)
-      if(nrow(param_data) == 0) return(NULL)
-
-      # Create main plot
-      p_param <- ggplot(param_data, aes(c_effect, v_effect)) +
-        geom_vline(
-          xintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change),
-          colour = "grey", linetype = "dashed", linewidth = 0.3
-        ) +
-        geom_hline(
-          yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change),
-          colour = "grey", linetype = "dashed", linewidth = 0.3
-        )
-
-      # Add regression lines
-      if (!bimodal_flag) {
-        reg_data <- regression_data_all %>% filter(parameter == param)
-        if(!is.null(reg_data) && nrow(reg_data) > 0) {
-          p_param <- p_param +
-            geom_line(data = reg_data, mapping = aes(c_effect, v_effect),
-                      color = "#0072B2", linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE)
-        }
-
-        adj_line <- adjusted_lines_all %>% filter(parameter == param)
-        if(!is.null(adj_line) && nrow(adj_line) > 0) {
-          p_param <- p_param +
-            geom_line(data = adj_line, mapping = aes(c_effect, v_effect),
-                      color = "#0072B2", linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE)
-        }
-
-      } else {
-        reg_data <- regression_data_all %>% filter(parameter == param)
-        if(!is.null(reg_data) && nrow(reg_data) > 0) {
-          p_param <- p_param +
-            geom_line(data = reg_data %>% filter(component == "Component 1"),
-                      mapping = aes(c_effect, v_effect), color = "#0072B2",
-                      linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE) +
-            geom_line(data = reg_data %>% filter(component == "Component 2"),
-                      mapping = aes(c_effect, v_effect), color = "#D55E00",
-                      linewidth = 0.5, alpha = 0.8, linetype = "dashed", inherit.aes = FALSE)
-        }
-
-        adj_line <- adjusted_lines_all %>% filter(parameter == param)
-        if(!is.null(adj_line) && nrow(adj_line) > 0) {
-          p_param <- p_param +
-            geom_line(data = adj_line %>% filter(component == "Component 1"),
-                      mapping = aes(c_effect, v_effect), color = "#0072B2",
-                      linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE) +
-            geom_line(data = adj_line %>% filter(component == "Component 2"),
-                      mapping = aes(c_effect, v_effect), color = "#D55E00",
-                      linewidth = 0.5, alpha = 0.8, linetype = "dashed", inherit.aes = FALSE)
-        }
-      }
-
-      # Add error bars, points, and labels
-      p_param <- p_param +
-        geom_errorbar(color_c_aes, linewidth = 0.2) +
-        geom_errorbar(color_v_aes, linewidth = 0.2) +
-        geom_point(size = 0.2) +
-        geom_text_repel(
-          aes(c_effect, -v_effect, label = cell_type_label),
-          size = 2.5,
-          data = param_data %>% filter(cell_type_label != ""),
-          max.overlaps = 20
-        ) +
-        color_scale +
-        alpha_scale +
-        xlab("c_effect (Abundance effect)") +
-        ylab("v_effect (Variability effect)") +
-        ggtitle(param) +
-        theme_bw() +
-        theme(
-          legend.position = "bottom",
-          strip.background = element_rect(fill = "white"),
-          panel.grid.minor = element_blank()
-        ) +
-        guides(color = guide_legend(title = legend_title), alpha = "none")
-
-      # Add marginal density for adjusted panels (not Intercept)
-      if (str_detect(param, ", adjusted$") && !str_detect(param, "Intercept")) {
-
-        if (!bimodal_flag) {
-          param_idx <- which(sapply(params_list, function(p) paste0(p$parameter, ", adjusted") == param))
-
-          if (length(param_idx) > 0) {
-            intercept_var_name <- paste0("prec_intercept_1[", param_idx, "]")
-
-            tryCatch({
-              intercept_draws <- fit$draws(variables = intercept_var_name, format = "draws_df")
-              intercept_values <- as.vector(intercept_draws[[intercept_var_name]])
-
-              dens <- density(-intercept_values, na.rm = TRUE)
-              dens_df <- data.frame(x = dens$x, y = dens$y)
-
-
-              y_range <- ggplot_build(p_param)$layout$panel_params[[1]]$y.range
-
-              p_density <- ggplot(dens_df, aes(x = x, y = y)) +
-                geom_area(alpha = 0.5, position = "identity") +
-                geom_vline(xintercept = 0, linetype = "dashed", color = "black", linewidth = 0.3) +
-                coord_flip(xlim = y_range) +
-                scale_y_continuous(expand = c(0, 0)) +
-                xlab("Posterior Probability") +
-                theme_void() +
-                theme(
-                  plot.margin = margin(t = 0, r = 0, b = 0, l = 6),
-                  axis.title.y = element_text(angle = 90, size = 7, vjust = 0.5)
-                )
-
-              p_combined <- p_param + p_density +
-                plot_layout(ncol = 2, widths = c(5, 0.6), guides = "collect") &
-                theme(legend.position = "bottom")
-
-              return(p_combined)
-            }, error = function(e) {
-              warning(sprintf("Could not extract intercept draws for %s: %s", intercept_var_name, e$message))
-              return(p_param)
-            })
-          }
-
-        } else {
-          param_idx <- which(sapply(params_list, function(p) paste0(p$parameter, ", adjusted") == param))
-
-          if (length(param_idx) > 0) {
-            intercept1_var_name <- paste0("prec_intercept_1[", param_idx, "]")
-            intercept2_var_name <- paste0("prec_intercept_2[", param_idx, "]")
-
-            tryCatch({
-              intercept1_draws <- fit$draws(variables = intercept1_var_name, format = "draws_df")
-              intercept2_draws <- fit$draws(variables = intercept2_var_name, format = "draws_df")
-
-              intercept1_values <- as.vector(intercept1_draws[[intercept1_var_name]])
-              intercept2_values <- as.vector(intercept2_draws[[intercept2_var_name]])
-
-              dens1 <- density(-intercept1_values, na.rm = TRUE)
-              dens2 <- density(-intercept2_values, na.rm = TRUE)
-
-              dens_df <- bind_rows(
-                data.frame(x = dens1$x, y = dens1$y, component = "Component 1"),
-                data.frame(x = dens2$x, y = dens2$y, component = "Component 2")
-              )
-
-
-              y_range <- ggplot_build(p_param)$layout$panel_params[[1]]$y.range
-
-              p_density <- ggplot(dens_df, aes(x = x, y = y, fill = component)) +
-                geom_area(alpha = 0.5, position = "identity") +
-                geom_vline(xintercept = 0, linetype = "dashed", color = "black", linewidth = 0.3) +
-                scale_fill_manual(values = c("Component 1" = "#0072B2", "Component 2" = "#D55E00")) +
-                coord_flip(xlim = y_range) +
-                scale_y_continuous(expand = c(0, 0)) +
-                xlab("Posterior Probability") +
-                theme_void() +
-                theme(
-                  plot.margin = margin(t = 0, r = 0, b = 0, l = 5),
-                  legend.position = "none",
-                  axis.title.y = element_text(angle = 90, size = 7, vjust = 0.5)
-                )
-
-              p_combined <- p_param + p_density +
-                plot_layout(ncol = 2, widths = c(5, 0.6), guides = "collect") &
-                theme(legend.position = "bottom")
-
-              return(p_combined)
-            }, error = function(e) {
-              warning(sprintf("Could not extract intercept draws: %s", e$message))
-              return(p_param)
-            })
-          }
-        }
-      }
-
-      return(p_param)
-    })
-
-
-    plot_list <- plot_list[!sapply(plot_list, is.null)]
-    combined_plot <- patchwork::wrap_plots(plot_list, ncol = 2)
-
-    if (!is.null(caption_text)) {
-      combined_plot <- combined_plot +
-        plot_annotation(
-          caption = caption_text,
-          theme = theme(plot.caption = element_text(hjust = 0, size = 9))
-        )
+    if (!is.null(regression_data) && nrow(regression_data) > 0) {
+      regression_data <- regression_data %>%
+        mutate(parameter = factor(as.character(parameter), levels = param_order))
     }
 
-    return(combined_plot)
+    if (!is.null(adjusted_lines) && nrow(adjusted_lines) > 0) {
+      adjusted_lines <- adjusted_lines %>%
+        mutate(parameter = factor(as.character(parameter), levels = param_order))
+    }
 
-  } else {
-    # Return faceted plot without marginal densities
-    p <- ggplot(.data_plot, aes(c_effect, v_effect)) +
+    if (!is.null(density_data) && nrow(density_data) > 0) {
+      density_data <- density_data %>%
+        mutate(parameter = factor(as.character(parameter), levels = param_order))
+    }
+
+    # Decision boundary at ± test_composition_above_logit_fold_change: cells
+    # outside this box are the only ones a hypothesis test could call significant.
+    p <- ggplot(plot_data, aes(c_effect, v_effect)) +
       geom_vline(
         xintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change),
         colour = "grey", linetype = "dashed", linewidth = 0.3
@@ -752,50 +630,73 @@ sccomp_plot_intervals_2D <- function(
         colour = "grey", linetype = "dashed", linewidth = 0.3
       )
 
-    # Add regression lines
+    # Regression / reference lines.
+    # `inherit.aes = FALSE` shields these geoms from the top-level
+    # aes(c_effect, v_effect) mapping so the lines use their own data verbatim
+    # — important because their tibbles have a different row schema (no CI
+    # columns, no cell_group, etc.) than `plot_data`.
+    # In bimodal mode the two components get distinct visual treatment so the
+    # eye can separate them without consulting the caption.
     if (!bimodal_flag) {
-      if(!is.null(regression_data_all) && nrow(regression_data_all) > 0) {
-        p <- p + geom_line(data = regression_data_all, mapping = aes(c_effect, v_effect),
+      if(!is.null(regression_data) && nrow(regression_data) > 0) {
+        p <- p + geom_line(data = regression_data, mapping = aes(c_effect, v_effect),
                            color = "#0072B2", linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE)
       }
-      if(!is.null(adjusted_lines_all) && nrow(adjusted_lines_all) > 0) {
-        p <- p + geom_line(data = adjusted_lines_all, mapping = aes(c_effect, v_effect),
+      if(!is.null(adjusted_lines) && nrow(adjusted_lines) > 0) {
+        p <- p + geom_line(data = adjusted_lines, mapping = aes(c_effect, v_effect),
                            color = "#0072B2", linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE)
       }
     } else {
-      if(!is.null(regression_data_all) && nrow(regression_data_all) > 0) {
+      if(!is.null(regression_data) && nrow(regression_data) > 0) {
         p <- p +
-          geom_line(data = regression_data_all %>% filter(component == "Component 1"),
+          geom_line(data = regression_data %>% filter(component == "Component 1"),
                     mapping = aes(c_effect, v_effect), color = "#0072B2",
                     linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE) +
-          geom_line(data = regression_data_all %>% filter(component == "Component 2"),
+          geom_line(data = regression_data %>% filter(component == "Component 2"),
                     mapping = aes(c_effect, v_effect), color = "#D55E00",
                     linewidth = 0.5, alpha = 0.8, linetype = "dashed", inherit.aes = FALSE)
       }
-      if(!is.null(adjusted_lines_all) && nrow(adjusted_lines_all) > 0) {
+      if(!is.null(adjusted_lines) && nrow(adjusted_lines) > 0) {
         p <- p +
-          geom_line(data = adjusted_lines_all %>% filter(component == "Component 1"),
+          geom_line(data = adjusted_lines %>% filter(component == "Component 1"),
                     mapping = aes(c_effect, v_effect), color = "#0072B2",
                     linewidth = 0.5, alpha = 0.8, inherit.aes = FALSE) +
-          geom_line(data = adjusted_lines_all %>% filter(component == "Component 2"),
+          geom_line(data = adjusted_lines %>% filter(component == "Component 2"),
                     mapping = aes(c_effect, v_effect), color = "#D55E00",
                     linewidth = 0.5, alpha = 0.8, linetype = "dashed", inherit.aes = FALSE)
       }
     }
 
+    # Credible intervals. When omitted, we substitute invisible `geom_blank`
+    # layers at the CI bounds so the plot's coordinate system is still trained
+    # by the same data range — keeping axes identical whether errorbars are
+    # drawn or not (otherwise the no-CI plot would zoom in onto just the points).
+    if (!omit_ci) {
+      p <- p +
+        geom_errorbar(color_c_aes, linewidth = 0.2) +
+        geom_errorbar(color_v_aes, linewidth = 0.2) +
+        color_scale +
+        alpha_scale +
+        guides(color = guide_legend(title = legend_title), alpha = "none")
+    } else {
+      p <- p +
+        geom_blank(aes(x = c_lower, y = v_lower)) +
+        geom_blank(aes(x = c_upper, y = v_upper))
+    }
+
+    # Points are drawn *after* the errorbars/lines so they sit on top and
+    # remain readable when CIs overlap; labels go last for highest z-order.
+    # Note `geom_text_repel` uses `-v_effect` (y-axis flip) because labels are
+    # placed relative to the inverted visual reading where higher v means
+    # higher dispersion — this matches users' mental model of "outlier upward".
     p <- p +
-      geom_errorbar(color_c_aes, linewidth = 0.2) +
-      geom_errorbar(color_v_aes, linewidth = 0.2) +
       geom_point(size = 0.2) +
       geom_text_repel(
         aes(c_effect, -v_effect, label = cell_type_label),
         size = 2.5,
-        data = .data_plot %>% filter(cell_type_label != ""),
+        data = plot_data %>% filter(cell_type_label != ""),
         max.overlaps = 20
       ) +
-      color_scale +
-      alpha_scale +
-      facet_wrap(~ parameter, scales = "free", ncol = 2) +
       xlab("c_effect (Abundance effect)") +
       ylab("v_effect (Variability effect)") +
       theme_bw() +
@@ -803,17 +704,100 @@ sccomp_plot_intervals_2D <- function(
         legend.position = "bottom",
         strip.background = element_rect(fill = "white"),
         panel.grid.minor = element_blank()
-      ) +
-      guides(color = guide_legend(title = legend_title), alpha = "none")
+      )
 
-    if (!is.null(caption_text)) {
+    # Marginal posterior densities, drawn via ggside so they participate in the
+    # same facet system as the main scatter (no patchwork → no duplicated axis
+    # titles, no panel-width misalignment). We pass raw posterior draws (one
+    # row per draw, with `parameter` set to the panel they belong to) and let
+    # `geom_ysidedensity` compute the kernel density per facet. ggside lays
+    # the result on the y-side, mapping the data's `y` aesthetic to the main
+    # panel's y-axis. `scales = "free"` propagates so each panel's density
+    # rescales to fit its own y-range.
+    if (!is.null(density_data) && nrow(density_data) > 0) {
+      density_aes <- if (bimodal_flag) {
+        aes(y = v_value, fill = component)
+      } else {
+        aes(y = v_value)
+      }
       p <- p +
-        theme(plot.caption = element_text(hjust = 0, size = 9)) +
-        labs(caption = caption_text)
+        geom_ysidedensity(
+          data = density_data,
+          mapping = density_aes,
+          alpha = 0.5,
+          position = "identity",
+          inherit.aes = FALSE
+        ) +
+        # Drop ggside's own axis decorations: the density value axis is
+        # uninformative on its own (relative scale per panel) and would
+        # otherwise clutter the strip.
+        theme_ggside_void() +
+        scale_ysidex_continuous(expand = c(0, 0))
+
+      if (bimodal_flag) {
+        p <- p + scale_fill_manual(values = c("Component 1" = "#0072B2", "Component 2" = "#D55E00"))
+      }
     }
 
-    return(p)
+    # `scales = "free"` is intentional: raw and adjusted panels live on
+    # different natural scales (raw v_effect can span much wider than adjusted
+    # residuals), and the same applies across parameters.
+    p + facet_wrap(~ parameter, scales = "free", ncol = 2)
   }
+
+  # Posterior draws of `-prec_intercept_*[param_idx]` for every parameter,
+  # replicated across both that parameter's facets (", raw" and ", adjusted").
+  # The intercept density is a property of the parameter, not of the visual
+  # mode, so showing it on every facet is both honest and what ggside requires
+  # to attach a side layer per panel (omitting a facet's density would leave
+  # that side panel empty, breaking visual rhythm).
+  # The sign flip mirrors the parameterisation v = -(prec_intercept + slope·c)
+  # so the density lies on the same axis orientation as v_effect. We pass raw
+  # draws (not pre-computed densities) because ggside's density geom computes
+  # the kernel per facet itself.
+  density_data_all <- if (add_marginal_density) {
+    bind_rows(lapply(seq_along(param_names), function(i) {
+      param_name <- param_names[i]
+      idx <- param_idx[i]
+
+      component_vars <- if (bimodal_flag) {
+        c("Component 1" = paste0("prec_intercept_1[", idx, "]"),
+          "Component 2" = paste0("prec_intercept_2[", idx, "]"))
+      } else {
+        c("Component 1" = paste0("prec_intercept_1[", idx, "]"))
+      }
+
+      bind_rows(lapply(seq_along(component_vars), function(j) {
+        var_name <- component_vars[[j]]
+        values <- as.vector(fit$draws(variables = var_name, format = "draws_df")[[var_name]])
+        draws_per_param <- tibble(
+          component = names(component_vars)[j],
+          v_value = -values
+        )
+        bind_rows(
+          draws_per_param %>% mutate(parameter = paste0(param_name, ", raw")),
+          draws_per_param %>% mutate(parameter = paste0(param_name, ", adjusted"))
+        )
+      }))
+    }))
+  } else {
+    NULL
+  }
+
+  p <- build_2d_interval_plot(
+    .data_plot,
+    regression_data_all,
+    adjusted_lines_all,
+    density_data = density_data_all
+  )
+
+  if (!is.null(caption_text)) {
+    p <- p +
+      theme(plot.caption = element_text(hjust = 0, size = 9)) +
+      labs(caption = caption_text)
+  }
+
+  p
 }
 
 #' Soft-deprecated aliases (call [sccomp_plot_intervals_1D()] / [sccomp_plot_intervals_2D()] instead).
