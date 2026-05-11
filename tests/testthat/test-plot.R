@@ -41,6 +41,22 @@ if (instantiate::stan_cmdstan_exists()){
       max_sampling_iterations = n_iterations, verbose=FALSE
     )
 
+  # Bimodal mean-variability association: exercises the two-component code
+  # paths in sccomp_plot_intervals_2D (per-cell component assignment in the
+  # "raw" panel, two regression lines, two-component side densities).
+  my_estimate_with_variance_bimodal =
+    seurat_obj |>
+    sccomp_estimate(
+      formula_composition = ~ type,
+      formula_variability = ~ type,
+      "sample", "cell_group",
+      cores = 1,
+      inference_method = "pathfinder",
+      max_sampling_iterations = n_iterations,
+      bimodal_mean_variability_association = TRUE,
+      verbose = FALSE
+    )
+
   my_estimate_intercept_only =
     seurat_obj |>
     sccomp_estimate(
@@ -84,7 +100,93 @@ test_that("plot_2d_intervals function works correctly", {
     sccomp_plot_intervals_2D(
       significance_threshold = 0.025
     ) |>
-    expect_s3_class("patchwork")
+    expect_s3_class("ggplot")
+})
+
+test_that("sccomp_plot_intervals_2D can omit credible interval error bars", {
+  skip_cmdstan()
+
+  count_errorbar_layers <- function(plot) {
+    sum(vapply(
+      plot$layers,
+      function(layer) inherits(layer$geom, "GeomErrorbar"),
+      logical(1)
+    ))
+  }
+
+  estimate_with_tests <- my_estimate_with_variance |>
+    sccomp_test()
+
+  plot_with_ci <- estimate_with_tests |>
+    sccomp_plot_intervals_2D(add_marginal_density = FALSE)
+
+  plot_without_ci <- estimate_with_tests |>
+    sccomp_plot_intervals_2D(add_marginal_density = FALSE, omit_ci = TRUE)
+
+  plot_without_ci_density <- estimate_with_tests |>
+    sccomp_plot_intervals_2D(omit_ci = TRUE)
+
+  expect_s3_class(plot_with_ci, "ggplot")
+  expect_s3_class(plot_without_ci, "ggplot")
+  expect_s3_class(plot_without_ci_density, "ggplot")
+  expect_equal(count_errorbar_layers(plot_with_ci), 2)
+  expect_equal(count_errorbar_layers(plot_without_ci), 0)
+  expect_true("omit_ci" %in% names(formals(getS3method("plot", "sccomp_tbl"))))
+})
+
+test_that("sccomp_plot_intervals_2D works with bimodal mean-variability association", {
+  skip_cmdstan()
+
+  estimate_bimodal <- my_estimate_with_variance_bimodal |> sccomp_test()
+
+  # Sanity: the model metadata advertises bimodality so the plotter takes the
+  # two-component branch (otherwise this test would silently exercise the
+  # single-component path and miss the intended coverage).
+  expect_true(isTRUE(as.logical(
+    attr(estimate_bimodal, "model_input")$bimodal_mean_variability_association
+  )))
+
+  # Both modes must render without error and stay on the single-faceted-ggplot
+  # contract that the non-bimodal tests above rely on.
+  plot_no_density <- estimate_bimodal |>
+    sccomp_plot_intervals_2D(add_marginal_density = FALSE)
+  plot_with_density <- estimate_bimodal |>
+    sccomp_plot_intervals_2D(add_marginal_density = TRUE)
+
+  expect_s3_class(plot_no_density, "ggplot")
+  expect_s3_class(plot_with_density, "ggplot")
+
+  # Per parameter the bimodal "raw" panel draws *two* component lines (solid +
+  # dashed) and the "adjusted" panel draws two horizontal references — i.e.
+  # at least 4 line geoms total for a two-parameter model. The single-component
+  # path would have at most 2. Use this as a structural marker that the bimodal
+  # branch ran end-to-end.
+  count_line_layers <- function(plot) {
+    sum(vapply(
+      plot$layers,
+      function(layer) inherits(layer$geom, "GeomLine"),
+      logical(1)
+    ))
+  }
+  expect_gte(count_line_layers(plot_no_density), 4)
+
+  # ggside attaches a density side panel for every facet when density mode is
+  # on; assert at least one ysidedensity layer present.
+  count_ysidedensity_layers <- function(plot) {
+    sum(vapply(
+      plot$layers,
+      function(layer) inherits(layer$geom, "GeomYsidedensity"),
+      logical(1)
+    ))
+  }
+  expect_gte(count_ysidedensity_layers(plot_with_density), 1)
+
+  # Bimodal models report `mix_p` (component-1 weight) in the FDR caption;
+  # verify the caption pipeline is connected for this branch.
+  fdr_plot <- estimate_bimodal |>
+    sccomp_plot_intervals_2D(significance_statistic = "FDR", show_fdr_message = TRUE)
+  caption <- fdr_plot$labels$caption
+  expect_true(!is.null(caption) && grepl("mix_p", caption))
 })
 
 test_that("sccomp_plot_intervals_1D accepts factor argument", {
@@ -161,7 +263,9 @@ test_that("show_fdr_message parameter works correctly in sccomp_plot_intervals_2
       show_fdr_message = TRUE
     )
 
-  expect_s3_class(plot_with_message, "patchwork")
+  # 2D output is now a single faceted ggplot (with optional ggside layer)
+  # rather than a patchwork composition.
+  expect_s3_class(plot_with_message, "ggplot")
 
   # Test with show_fdr_message = FALSE
   plot_without_message <- my_estimate_with_variance |>
@@ -171,7 +275,7 @@ test_that("show_fdr_message parameter works correctly in sccomp_plot_intervals_2
       show_fdr_message = FALSE
     )
 
-  expect_s3_class(plot_without_message, "patchwork")
+  expect_s3_class(plot_without_message, "ggplot")
 
   # Verify that both plots are created successfully (no errors)
   expect_no_error(plot_with_message)
@@ -352,7 +456,7 @@ test_that("sccomp_plot_intervals_2D includes regression line from prec parameter
     sccomp_test() |>
     sccomp_plot_intervals_2D(significance_threshold = 0.025)
 
-  expect_s3_class(plot_2d, "patchwork")
+  expect_s3_class(plot_2d, "ggplot")
 
   fit <- attr(my_estimate_with_variance |> sccomp_test(), "fit")
   prec_intercept_summary <- fit$summary("prec_intercept_1")

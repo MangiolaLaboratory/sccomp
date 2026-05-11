@@ -375,19 +375,13 @@ sccomp_summarise_posterior_for_estimate <- function(
     ) |>
     dplyr::rename(v_lower = v_upper, v_upper = v_lower)
 
-  if (!"factor" %in% colnames(model_input$factor_parameter_dictionary)) {
-    factor_parameter_dictionary <-
-      tibble::tibble(`factor` = character(), design_matrix_col = character())
-  } else {
-    factor_parameter_dictionary <-
-      model_input$factor_parameter_dictionary |>
-      dplyr::select(`factor`, design_matrix_col)
-  }
+  factor_parameter_dictionary <-
+    model_input$factor_parameter_dictionary |>
+    dplyr::select(`factor`, design_matrix_col)
 
   result <-
     abundance |>
     dplyr::left_join(variability, by = c(cg, "M", "parameter")) |>
-    suppressMessages() |>
     dplyr::left_join(
       factor_parameter_dictionary,
       by = c("parameter" = "design_matrix_col")
@@ -451,6 +445,8 @@ sccomp_identify_covariate_contrasts <- function(contrasts, model_input) {
 #' @keywords internal
 #' @noRd
 build_stan_parameter_subset <- function(contrasts, design_columns, stan_parameter, model_input) {
+  design_columns <- as.character(design_columns)
+
   if (is.null(contrasts)) {
     return(
       tibble::tibble(
@@ -519,8 +515,8 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
     stan_parameter = "beta",
     model_input = model_input
   )
-  beta_parameters <- beta_subset |> dplyr::pull(parameter) |> unique()
-  beta_variable_subset <- beta_subset |> dplyr::pull(variable) |> unique()
+  beta_parameters <- beta_subset |> dplyr::pull("parameter") |> unique()
+  beta_variable_subset <- beta_subset |> dplyr::pull("variable") |> unique()
   
 
     draws =
@@ -546,8 +542,8 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
     stan_parameter = "random_effect",
     model_input = model_input
   )
-  beta_random_effect_parameters <- beta_random_effect_subset |> dplyr::pull(parameter) |> unique()
-  beta_random_effect_variables <- beta_random_effect_subset |> dplyr::pull(variable) |> unique()
+  beta_random_effect_parameters <- beta_random_effect_subset |> dplyr::pull("parameter") |> unique()
+  beta_random_effect_variables <- beta_random_effect_subset |> dplyr::pull("variable") |> unique()
   
   if(
     .data |> attr("model_input") %$% n_random_eff > 0 &&
@@ -615,8 +611,8 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
     stan_parameter = "random_effect_2",
     model_input = model_input
   )
-  beta_random_effect_parameters_2 <- beta_random_effect_subset_2 |> dplyr::pull(parameter) |> unique()
-  beta_random_effect_variables_2 <- beta_random_effect_subset_2 |> dplyr::pull(variable) |> unique()
+  beta_random_effect_parameters_2 <- beta_random_effect_subset_2 |> dplyr::pull("parameter") |> unique()
+  beta_random_effect_variables_2 <- beta_random_effect_subset_2 |> dplyr::pull("variable") |> unique()
   
   if(
     .data |> attr("model_input") %$% n_random_eff > 1 &&

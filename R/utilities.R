@@ -1220,7 +1220,8 @@ data_spread_to_model_input =
     data_for_model$TNIM = 0
     
     # Add parameter factor dictionary
-    data_for_model$factor_parameter_dictionary = tibble()
+    data_for_model$factor_parameter_dictionary =
+      tibble(`factor` = character(), design_matrix_col = character())
     
     if(.data_spread  |> select(any_of(parse_formula(formula))) |> lapply(class) %in% c("factor", "character") |> any())
       data_for_model$factor_parameter_dictionary =
