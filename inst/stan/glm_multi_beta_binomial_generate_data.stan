@@ -1,6 +1,26 @@
 functions{
     #include common_functions.stan
 
+    // Linear predictor contributions for random-effect design blocks; mu is M × N (types × samples).
+    matrix add_seen_random_effect_contribution(matrix mu_mn,
+                                               matrix x_n_times_k,
+                                               matrix re_all_rows_times_m,
+                                               array[] int re_row_index) {
+      return mu_mn + (x_n_times_k * re_all_rows_times_m[re_row_index, ])';
+    }
+
+    matrix add_unseen_random_effect_contribution_rng(matrix mu_mn,
+                                                     matrix x_unseen_n_times_u,
+                                                     int ncol_u,
+                                                     int M_param) {
+      matrix[ncol_u, M_param] unseen =
+          to_matrix(rep_vector(std_normal_rng(), ncol_u * M_param),
+                    ncol_u, M_param);
+      for (i in 1:ncol_u)
+        unseen[i, ] = to_row_vector(normalize_sum_to_zero(to_vector(unseen[i, ])));
+      return mu_mn + (x_unseen_n_times_u * unseen)';
+    }
+
 }
 data {
   int<lower=0, upper=1> bimodal_mean_variability_association;
@@ -206,48 +226,32 @@ generated quantities {
   }
 
   if (ncol_X_random_eff[1] > 0) {
-    mu = mu + (X_random_effect_1 * random_effect_1[X_random_effect_which_1, ])';
-    if (ncol_X_random_eff_unseen[1] > 0) {
-      matrix[ncol_X_random_eff_unseen[1], M] unseen =
-        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[1] * M),
-                 ncol_X_random_eff_unseen[1], M);
-      for (i in 1:ncol_X_random_eff_unseen[1])
-        unseen[i, ] = to_row_vector(normalize_sum_to_zero(to_vector(unseen[i, ])));
-      mu = mu + (X_random_effect_1_unseen * unseen)';
-    }
+    mu = add_seen_random_effect_contribution(mu, X_random_effect_1, random_effect_1,
+                                             X_random_effect_which_1);
+    if (ncol_X_random_eff_unseen[1] > 0)
+      mu = add_unseen_random_effect_contribution_rng(mu, X_random_effect_1_unseen,
+                                                    ncol_X_random_eff_unseen[1], M);
   }
   if (ncol_X_random_eff[2] > 0) {
-    mu = mu + (X_random_effect_2 * random_effect_2[X_random_effect_which_2, ])';
-    if (ncol_X_random_eff_unseen[2] > 0) {
-      matrix[ncol_X_random_eff_unseen[2], M] unseen =
-        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[2] * M),
-                 ncol_X_random_eff_unseen[2], M);
-      for (i in 1:ncol_X_random_eff_unseen[2])
-        unseen[i, ] = to_row_vector(normalize_sum_to_zero(to_vector(unseen[i, ])));
-      mu = mu + (X_random_effect_2_unseen * unseen)';
-    }
+    mu = add_seen_random_effect_contribution(mu, X_random_effect_2, random_effect_2,
+                                             X_random_effect_which_2);
+    if (ncol_X_random_eff_unseen[2] > 0)
+      mu = add_unseen_random_effect_contribution_rng(mu, X_random_effect_2_unseen,
+                                                    ncol_X_random_eff_unseen[2], M);
   }
   if (ncol_X_random_eff[3] > 0) {
-    mu = mu + (X_random_effect_3 * random_effect_3[X_random_effect_which_3, ])';
-    if (ncol_X_random_eff_unseen[3] > 0) {
-      matrix[ncol_X_random_eff_unseen[3], M] unseen =
-        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[3] * M),
-                 ncol_X_random_eff_unseen[3], M);
-      for (i in 1:ncol_X_random_eff_unseen[3])
-        unseen[i, ] = to_row_vector(normalize_sum_to_zero(to_vector(unseen[i, ])));
-      mu = mu + (X_random_effect_3_unseen * unseen)';
-    }
+    mu = add_seen_random_effect_contribution(mu, X_random_effect_3, random_effect_3,
+                                             X_random_effect_which_3);
+    if (ncol_X_random_eff_unseen[3] > 0)
+      mu = add_unseen_random_effect_contribution_rng(mu, X_random_effect_3_unseen,
+                                                    ncol_X_random_eff_unseen[3], M);
   }
   if (ncol_X_random_eff[4] > 0) {
-    mu = mu + (X_random_effect_4 * random_effect_4[X_random_effect_which_4, ])';
-    if (ncol_X_random_eff_unseen[4] > 0) {
-      matrix[ncol_X_random_eff_unseen[4], M] unseen =
-        to_matrix(rep_vector(std_normal_rng(), ncol_X_random_eff_unseen[4] * M),
-                 ncol_X_random_eff_unseen[4], M);
-      for (i in 1:ncol_X_random_eff_unseen[4])
-        unseen[i, ] = to_row_vector(normalize_sum_to_zero(to_vector(unseen[i, ])));
-      mu = mu + (X_random_effect_4_unseen * unseen)';
-    }
+    mu = add_seen_random_effect_contribution(mu, X_random_effect_4, random_effect_4,
+                                             X_random_effect_which_4);
+    if (ncol_X_random_eff_unseen[4] > 0)
+      mu = add_unseen_random_effect_contribution_rng(mu, X_random_effect_4_unseen,
+                                                    ncol_X_random_eff_unseen[4], M);
   }
 
   matrix[M, N] mu_unconstrained = mu;
