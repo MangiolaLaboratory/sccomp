@@ -16,14 +16,14 @@ sccomp_estimate(
   percent_false_positive = 5,
   inference_method = "pathfinder",
   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
-  prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0, 0.6),
-    standard_deviation = c(10, 20)),
+  prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2),
+    standard_deviation = c(1, 0.5)),
   .sample_cell_group_pairs_to_exclude = NULL,
   output_directory = "sccomp_draws_files",
   verbose = TRUE,
   enable_loo = FALSE,
   noise_model = "multi_beta_binomial",
-  exclude_priors = FALSE,
+  exclude_mean_variability_association = FALSE,
   use_data = TRUE,
   mcmc_seed = sample_seed(),
   max_sampling_iterations = 20000,
@@ -37,7 +37,8 @@ sccomp_estimate(
   variational_inference = NULL,
   .sample = NULL,
   .cell_group = NULL,
-  .abundance = NULL
+  .abundance = NULL,
+  exclude_priors = NULL
 )
 }
 \arguments{
@@ -64,7 +65,12 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{prior_mean}{A list specifying prior knowledge about the mean distribution, including intercept and coefficients.}
 
-\item{prior_overdispersion_mean_association}{A list specifying prior knowledge about mean/variability association.}
+\item{prior_overdispersion_mean_association}{A named list with numeric length-2 vectors
+\code{intercept}, \code{slope}, and \code{standard_deviation} passed to the Stan Student-t / Normal
+hyperpriors on \code{prec_intercept}, \code{prec_slope}, and \code{log_prec_sd}. Use \code{NULL} for
+package defaults. A scalar logical such as \code{FALSE} is not meaningful here and is treated
+as \code{NULL} after a message; to disable abundance dependence in the variability prior,
+use \code{exclude_mean_variability_association = TRUE} instead.}
 
 \item{.sample_cell_group_pairs_to_exclude}{A column name indicating sample/cell-group pairs to exclude.}
 
@@ -76,7 +82,11 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{noise_model}{A character string specifying the noise model (e.g., 'multi_beta_binomial').}
 
-\item{exclude_priors}{Logical, whether to run a prior-free model.}
+\item{exclude_mean_variability_association}{Logical. When \code{TRUE}, the prior
+on the variability parameters does not depend on the abundance: the
+mean-variability regression is reduced to an intercept-only Normal (or a
+two-component mixture when \code{bimodal_mean_variability_association = TRUE})
+while the rest of the hierarchical prior structure stays unchanged.}
 
 \item{use_data}{Logical, whether to run the model data-free.}
 
@@ -93,7 +103,15 @@ The sccomp version will be automatically appended to ensure version isolation.
 Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
 
 \item{portable}{Logical, whether to keep the result portable by caching required draws in memory and removing Stan draw CSV files after fitting.
-Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.}
+Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.
+With \code{portable = FALSE}, CSVs remain for you to inspect or archive, but cmdstanr typically \strong{still holds posterior draws in RAM}
+after fitting and summarisation (\code{fit$summary()}). The printed estimate table only calls \code{fit$summary()} on composition
+(\code{beta}, …) and variability (\code{alpha}, …), not on every saved parameter (e.g. \code{prec_sd}), yet cmdstanr still
+exposes all saved parameters from memory once output has been read, so \code{fit$draws(variables = "prec_sd")} can work
+after CSV deletion just like \code{beta}. Deleting CSVs does \strong{not} reliably invalidate the fit in the same R session.
+Call \code{sccomp_test()} before deleting draw files, use \code{portable = TRUE} (draws cached then files removed), or run
+\code{incorporate_parameters_into_sccomp_object()} before deletion if you remove files manually. \code{sccomp_test()} stops with a
+clear error when recorded Stan output paths are missing unless draws were incorporated for portability as above.}
 
 \item{...}{Additional arguments passed to the \code{cmdstanr::sample} function.}
 
@@ -108,6 +126,8 @@ Default is TRUE to save disk space and move needed values into memory. Set to FA
 \item{.cell_group}{\strong{DEPRECATED}. Use \code{cell_group} instead.}
 
 \item{.abundance}{\strong{DEPRECATED}. Use \code{abundance} instead.}
+
+\item{exclude_priors}{\strong{DEPRECATED}. Use \code{exclude_mean_variability_association} instead.}
 }
 \value{
 A tibble (\code{tbl}), with the following columns:
@@ -128,7 +148,6 @@ A tibble (\code{tbl}), with the following columns:
 \item v_ess_bulk - Bulk effective sample size for the variability (v) parameter.
 \item v_ess_tail - Tail effective sample size for the variability (v) parameter.
 }
-
 Note: pH0 and FDR columns are not computed by \code{sccomp_estimate()}. Run \code{sccomp_test()} on the result to obtain hypothesis-test statistics.
 
 The function also attaches several attributes to the result:

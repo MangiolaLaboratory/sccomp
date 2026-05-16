@@ -7,17 +7,20 @@
 \method{plot}{sccomp_tbl}(
   x,
   significance_threshold = 0.05,
-  test_composition_above_logit_fold_change = attr(.data,
+  test_composition_above_logit_fold_change = attr(x,
     "test_composition_above_logit_fold_change"),
   significance_statistic = c("pH0", "FDR"),
   show_fdr_message = TRUE,
+  add_marginal_density = TRUE,
+  omit_ci = FALSE,
+  sort_by = c("none", "effect", "significance", "alphabetical"),
   ...
 )
 }
 \arguments{
 \item{x}{A tibble including a cell_group name column | sample name column | read counts column | factor columns | Pvalue column | a significance column}
 
-\item{significance_threshold}{Numeric value specifying the significance threshold for highlighting differences. Default is 0.025.}
+\item{significance_threshold}{Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.}
 
 \item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
 
@@ -25,10 +28,14 @@
 
 \item{show_fdr_message}{Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.}
 
+\item{add_marginal_density}{Logical. Whether to add marginal density plots on adjusted panels in 2D intervals. Default is TRUE.}
+
+\item{omit_ci}{Logical. Whether to omit credible interval error bars from 2D interval plots. Default is FALSE.}
+
 \item{...}{For internal use}
 }
 \value{
-A \code{ggplot}
+A list containing ggplot objects
 }
 \description{
 This function plots a summary of the results of the model.
@@ -47,9 +54,10 @@ print("cmdstanr is needed to run this example.")
       counts_obj,
       ~ type, ~1, "sample", "cell_group", "count",
       cores = 1
-    )
+    ) |>
+    sccomp_test()
 
-    # estimate |> plot()
+    plots = estimate |> plot()
   }
 }
 

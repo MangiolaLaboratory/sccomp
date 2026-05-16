@@ -34,7 +34,12 @@
 #' @param cores Number of cores to use for parallel calculations.
 #' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
 #' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
-#' @param prior_overdispersion_mean_association A list specifying prior knowledge about mean/variability association.
+#' @param prior_overdispersion_mean_association A named list with numeric length-2 vectors
+#'   `intercept`, `slope`, and `standard_deviation` passed to the Stan Student-t / Normal
+#'   hyperpriors on `prec_intercept`, `prec_slope`, and `log_prec_sd`. Use `NULL` for
+#'   package defaults. A scalar logical such as `FALSE` is not meaningful here and is treated
+#'   as `NULL` after a message; to disable abundance dependence in the variability prior,
+#'   use `exclude_mean_variability_association = TRUE` instead.
 #' @param percent_false_positive A real number between 0 and 100 for outlier identification.
 #' @param inference_method Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational'). Replaces the deprecated `approximate_posterior_inference` and `variational_inference`.
 #' @param .sample_cell_group_pairs_to_exclude A column name indicating sample/cell-group pairs to exclude.
@@ -42,7 +47,11 @@
 #' @param verbose Logical, whether to print progression details.
 #' @param enable_loo Logical, whether to enable model comparison using the LOO package.
 #' @param noise_model A character string specifying the noise model (e.g., 'multi_beta_binomial').
-#' @param exclude_priors Logical, whether to run a prior-free model.
+#' @param exclude_mean_variability_association Logical. When `TRUE`, the prior
+#'   on the variability parameters does not depend on the abundance: the
+#'   mean-variability regression is reduced to an intercept-only Normal (or a
+#'   two-component mixture when `bimodal_mean_variability_association = TRUE`)
+#'   while the rest of the hierarchical prior structure stays unchanged.
 #' @param use_data Logical, whether to run the model data-free.
 #' @param mcmc_seed An integer seed for MCMC reproducibility.
 #' @param max_sampling_iterations Integer to limit the maximum number of iterations for large datasets.
@@ -51,30 +60,23 @@
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
 #'                        The sccomp version will be automatically appended to ensure version isolation.
 #'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
-#' @param portable Logical, whether to keep the result **self-contained** after fitting. Default `TRUE`.
-#'                 \describe{
-#'                   \item{`TRUE`}{After fitting, sccomp calls `incorporate_parameters_into_sccomp_object()` to pull needed draws into the fit,
-#'                     then **deletes** the Stan CSV files under `output_directory` on **this** machine (only files that still exist are removed).}
-#'                   \item{`FALSE`}{sccomp **does not** delete draw files; CSVs stay on disk. The fit object stores **absolute paths** to those files.
-#'                     You must keep that directory alongside the object (or stay on the same filesystem) if you later need variables that
-#'                     were never loaded in this session.}
-#'                 }
-#'                 **Efficiency:** At `sccomp_estimate()` time sccomp only asks cmdstanr for **summaries** of `beta`, `alpha_normalised`,
-#'                 and random-effect blocks needed for the printed table, not full `draws()` tensors for every Stan parameter. CmdStanR still
-#'                 reads output files to compute those summaries (how much is cached in RAM is implementation-dependent).
-#'                 **Relocating the object:** If you save the tibble and open it elsewhere without the CSV directory (or paths point to another
-#'                 host), `attr(..., "fit")$summary()` can fail for variables that were never touched during estimate—for example the
-#'                 table uses **`alpha_normalised`**, not raw `alpha`, so `summary("alpha[1,1]")` may try to re-read CSVs whereas
-#'                 `summary("beta[1,1]")` may still work if that block was already loaded. Use `portable = TRUE` before archiving, or copy
-#'                 the whole draw folder so paths resolve.
-#'                 If you delete CSVs manually with `portable = FALSE`, call `sccomp_test()` before deletion, run `incorporate_parameters_into_sccomp_object()` first,
-#'                 or switch to `portable = TRUE`; otherwise `sccomp_test()` errors when recorded output paths are missing unless draws were incorporated.
+#' @param portable Logical, whether to keep the result portable by caching required draws in memory and removing Stan draw CSV files after fitting.
+#'                 Default is TRUE to save disk space and move needed values into memory. Set to FALSE to keep draw CSV files on disk.
+#'                 With `portable = FALSE`, CSVs remain for you to inspect or archive, but cmdstanr typically **still holds posterior draws in RAM**
+#'                 after fitting and summarisation (`fit$summary()`). The printed estimate table only calls `fit$summary()` on composition
+#'                 (`beta`, …) and variability (`alpha`, …), not on every saved parameter (e.g. `prec_sd`), yet cmdstanr still
+#'                 exposes all saved parameters from memory once output has been read, so `fit$draws(variables = "prec_sd")` can work
+#'                 after CSV deletion just like `beta`. Deleting CSVs does **not** reliably invalidate the fit in the same R session.
+#'                 Call `sccomp_test()` before deleting draw files, use `portable = TRUE` (draws cached then files removed), or run
+#'                 `incorporate_parameters_into_sccomp_object()` before deletion if you remove files manually. `sccomp_test()` stops with a
+#'                 clear error when recorded Stan output paths are missing unless draws were incorporated for portability as above.
 #' @param .count **DEPRECATED**. Use `abundance` instead.
 #' @param approximate_posterior_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param variational_inference **DEPRECATED**. Use `inference_method` instead.
 #' @param .sample **DEPRECATED**. Use `sample` instead.
 #' @param .cell_group **DEPRECATED**. Use `cell_group` instead.
 #' @param .abundance **DEPRECATED**. Use `abundance` instead.
+#' @param exclude_priors **DEPRECATED**. Use `exclude_mean_variability_association` instead.
 #' @param ... Additional arguments passed to the `cmdstanr::sample` function.
 #'
 #' @return A tibble (`tbl`), with the following columns:
@@ -162,16 +164,16 @@ sccomp_estimate <- function(.data,
                             inference_method = "pathfinder",
                             prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                             prior_overdispersion_mean_association = list(
-                              intercept = c(5, 2),
-                              slope = c(0, 0.6),
-                              standard_deviation = c(10, 20)
+                              intercept = c(4, 2),
+                              slope = c(0, 2),
+                              standard_deviation = c(1, 0.5)
                             ),
                             .sample_cell_group_pairs_to_exclude = NULL,
                             output_directory = "sccomp_draws_files",
                             verbose = TRUE,
                             enable_loo = FALSE,
                             noise_model = "multi_beta_binomial",
-                            exclude_priors = FALSE,
+                            exclude_mean_variability_association = FALSE,
                             use_data = TRUE,
                             mcmc_seed = sample_seed(),
                             max_sampling_iterations = 20000,
@@ -187,7 +189,8 @@ sccomp_estimate <- function(.data,
                             variational_inference = NULL,
                             .sample = NULL,
                             .cell_group = NULL,
-                            .abundance = NULL) {
+                            .abundance = NULL,
+                            exclude_priors = NULL) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -255,16 +258,16 @@ sccomp_estimate.Seurat <- function(.data,
                                    inference_method = "pathfinder",
                                    prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                                    prior_overdispersion_mean_association = list(
-                                     intercept = c(5, 2),
-                                     slope = c(0, 0.6),
-                                     standard_deviation = c(10, 20)
+                                     intercept = c(4, 2),
+                                     slope = c(0, 2),
+                                     standard_deviation = c(1, 0.5)
                                    ),
                                    .sample_cell_group_pairs_to_exclude = NULL,
                                    output_directory = "sccomp_draws_files",
                                    verbose = TRUE,
                                    enable_loo = FALSE,
                                    noise_model = "multi_beta_binomial",
-                                   exclude_priors = FALSE,
+                                   exclude_mean_variability_association = FALSE,
                                    use_data = TRUE,
                                    mcmc_seed = sample_seed(),
                                    max_sampling_iterations = 20000,
@@ -280,7 +283,8 @@ sccomp_estimate.Seurat <- function(.data,
                                    variational_inference = NULL,
                                    .sample = NULL,
                                    .cell_group = NULL,
-                                   .abundance = NULL) {
+                                   .abundance = NULL,
+                                   exclude_priors = NULL) {
   
   .count <- enquo(.count)
   .sample <- enquo(.sample)
@@ -318,7 +322,7 @@ sccomp_estimate.Seurat <- function(.data,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -332,7 +336,8 @@ sccomp_estimate.Seurat <- function(.data,
       variational_inference = variational_inference,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
-      .abundance = !!.abundance
+      .abundance = !!.abundance,
+      exclude_priors = exclude_priors
     )
 }
 
@@ -352,16 +357,16 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  inference_method = "pathfinder",
                                                  prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                                                  prior_overdispersion_mean_association = list(
-                                                   intercept = c(5, 2),
-                                                   slope = c(0, 0.6),
-                                                   standard_deviation = c(10, 20)
+                                                   intercept = c(4, 2),
+                                                   slope = c(0, 2),
+                                                   standard_deviation = c(1, 0.5)
                                                  ),
                                                  .sample_cell_group_pairs_to_exclude = NULL,
                                                  output_directory = "sccomp_draws_files",
                                                  verbose = TRUE,
                                                  enable_loo = FALSE,
                                                  noise_model = "multi_beta_binomial",
-                                                 exclude_priors = FALSE,
+                                                 exclude_mean_variability_association = FALSE,
                                                  use_data = TRUE,
                                                  mcmc_seed = sample_seed(),
                                                  max_sampling_iterations = 20000,
@@ -377,7 +382,8 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  variational_inference = NULL,
                                                  .sample = NULL,
                                                  .cell_group = NULL,
-                                                 .abundance = NULL) {
+                                                 .abundance = NULL,
+                                                 exclude_priors = NULL) {
   
   
   .count <- enquo(.count)
@@ -416,7 +422,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -430,7 +436,8 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
       variational_inference = variational_inference,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
-      .abundance = !!.abundance
+      .abundance = !!.abundance,
+      exclude_priors = exclude_priors
     )
 }
 
@@ -450,16 +457,16 @@ sccomp_estimate.DFrame <- function(.data,
                                    inference_method = "pathfinder",
                                    prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                                    prior_overdispersion_mean_association = list(
-                                     intercept = c(5, 2),
-                                     slope = c(0, 0.6),
-                                     standard_deviation = c(10, 20)
+                                     intercept = c(4, 2),
+                                     slope = c(0, 2),
+                                     standard_deviation = c(1, 0.5)
                                    ),
                                    .sample_cell_group_pairs_to_exclude = NULL,
                                    output_directory = "sccomp_draws_files",
                                    verbose = TRUE,
                                    enable_loo = FALSE,
                                    noise_model = "multi_beta_binomial",
-                                   exclude_priors = FALSE,
+                                   exclude_mean_variability_association = FALSE,
                                    use_data = TRUE,
                                    mcmc_seed = sample_seed(),
                                    max_sampling_iterations = 20000,
@@ -475,7 +482,8 @@ sccomp_estimate.DFrame <- function(.data,
                                    variational_inference = NULL,
                                    .sample = NULL,
                                    .cell_group = NULL,
-                                   .abundance = NULL) {
+                                   .abundance = NULL,
+                                   exclude_priors = NULL) {
   
   .count <- enquo(.count)
   .sample <- enquo(.sample)
@@ -505,7 +513,7 @@ sccomp_estimate.DFrame <- function(.data,
       verbose = verbose,
       enable_loo = enable_loo,
       noise_model = noise_model,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -519,7 +527,8 @@ sccomp_estimate.DFrame <- function(.data,
       variational_inference = variational_inference,
       .sample = !!.sample,
       .cell_group = !!.cell_group,
-      .abundance = !!.abundance
+      .abundance = !!.abundance,
+      exclude_priors = exclude_priors
     )
 }
 
@@ -542,16 +551,16 @@ sccomp_estimate.data.frame <- function(.data,
                                        inference_method = "pathfinder",
                                        prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
                                        prior_overdispersion_mean_association = list(
-                                         intercept = c(5, 2),
-                                         slope = c(0, 0.6),
-                                         standard_deviation = c(10, 20)
+                                         intercept = c(4, 2),
+                                         slope = c(0, 2),
+                                         standard_deviation = c(1, 0.5)
                                        ),
                                        .sample_cell_group_pairs_to_exclude = NULL,
                                        output_directory = "sccomp_draws_files",
                                        verbose = TRUE,
                                        enable_loo = FALSE,
                                        noise_model = "multi_beta_binomial",
-                                       exclude_priors = FALSE,
+                                       exclude_mean_variability_association = FALSE,
                                        use_data = TRUE,
                                        mcmc_seed = sample_seed(),
                                        max_sampling_iterations = 20000,
@@ -567,7 +576,8 @@ sccomp_estimate.data.frame <- function(.data,
                                        variational_inference = NULL,
                                        .sample = NULL,
                                        .cell_group = NULL,
-                                       .abundance = NULL) {
+                                       .abundance = NULL,
+                                       exclude_priors = NULL) {
   
   
   .count <- enquo(.count)
@@ -589,6 +599,18 @@ sccomp_estimate.data.frame <- function(.data,
     lifecycle::deprecate_warn("1.7.11", "sccomp::sccomp_estimate(variational_inference = )", 
                               details = "The argument variational_inference is now deprecated. Please use inference_method. By default, inference_method value is inferred from variational_inference")
     inference_method <- ifelse(variational_inference, "variational", "hmc")
+  }
+
+  # `exclude_priors` was renamed because it never actually excluded all priors —
+  # it disabled the abundance dependence in the variability prior. Forward the
+  # value to the new argument when supplied so old callers keep working.
+  if (lifecycle::is_present(exclude_priors) && !is.null(exclude_priors)) {
+    lifecycle::deprecate_soft(
+      "2.1.32",
+      "sccomp::sccomp_estimate(exclude_priors = )",
+      "sccomp::sccomp_estimate(exclude_mean_variability_association = )"
+    )
+    exclude_mean_variability_association <- exclude_priors
   }
   
   # Handle deprecated column arguments
@@ -672,7 +694,7 @@ sccomp_estimate.data.frame <- function(.data,
       output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -703,7 +725,7 @@ sccomp_estimate.data.frame <- function(.data,
       output_directory = output_directory,
       verbose = verbose,
       enable_loo = enable_loo,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       use_data = use_data,
       mcmc_seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
@@ -756,7 +778,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      # Secondary arguments
                                      contrasts = NULL,
                                      prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                     prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                     prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2), standard_deviation = c(1, 0.5)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
                                      variational_inference = NULL,
@@ -764,7 +786,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                      output_directory = "sccomp_draws_files",
                                      verbose = FALSE,
-                                     exclude_priors = FALSE,
+                                     exclude_mean_variability_association = FALSE,
                                      bimodal_mean_variability_association = FALSE,
                                      enable_loo = FALSE,
                                      use_data = TRUE,
@@ -841,7 +863,7 @@ sccomp_glm_data_frame_raw = function(.data,
       percent_false_positive =  percent_false_positive,
       check_outliers = check_outliers,
       inference_method = inference_method,
-      exclude_priors = exclude_priors,
+      exclude_mean_variability_association = exclude_mean_variability_association,
       bimodal_mean_variability_association = bimodal_mean_variability_association,
       enable_loo = enable_loo,
       use_data = use_data,
@@ -858,8 +880,6 @@ sccomp_glm_data_frame_raw = function(.data,
     )
 }
 
-
-
 sccomp_glm_data_frame_counts = function(.data,
                                         formula_composition = ~ 1 ,
                                         formula_variability = ~ 1,
@@ -872,7 +892,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         contrasts = NULL,
                                         #.grouping_for_random_effect = NULL,
                                         prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
-                                        prior_overdispersion_mean_association = list(intercept = c(5, 2), slope = c(0,  0.6), standard_deviation = c(20, 40)),
+                                        prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2), standard_deviation = c(1, 0.5)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,
                                         variational_inference = NULL,
@@ -880,7 +900,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                         output_directory = "sccomp_draws_files",
                                         verbose = FALSE,
-                                        exclude_priors = FALSE,
+                                        exclude_mean_variability_association = FALSE,
                                         bimodal_mean_variability_association = FALSE,
                                         enable_loo = FALSE,
                                         use_data = TRUE,
@@ -1041,7 +1061,7 @@ sccomp_glm_data_frame_counts = function(.data,
   data_for_model$prior_prec_sd = prior_overdispersion_mean_association$standard_deviation
   data_for_model$prior_mean_intercept = prior_mean$intercept
   data_for_model$prior_mean_coefficients = prior_mean$coefficients
-  data_for_model$exclude_priors = exclude_priors
+  data_for_model$exclude_mean_variability_association = exclude_mean_variability_association
   data_for_model$enable_loo = enable_loo
   
   # # Check that design matrix is not too big
@@ -1062,9 +1082,11 @@ sccomp_glm_data_frame_counts = function(.data,
       seed = mcmc_seed,
       max_sampling_iterations = max_sampling_iterations,
       pars = c(
-        "beta", "alpha", "prec_coeff","prec_sd",   "alpha_normalised", 
-        "random_effect", "random_effect_2", 
-        "random_effect_sigma", "random_effect_sigma_2", 
+        "beta", "alpha",
+        "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2",
+        "prec_sd",
+        "random_effect", "random_effect_2",
+        "random_effect_sigma", "random_effect_sigma_2",
         "log_lik"
       ),
       sig_figs = sig_figs,
