@@ -120,6 +120,9 @@ functions{
           vector[N*M] precision_array = to_vector(exp(precision));
           int W = count_filtered_indices(truncation_not_idx_minimal, idx_y);
 
+         // Debug
+         print(to_array_1d(y[idx_y,]));
+
           // truncation
           if(W == 0){
 
