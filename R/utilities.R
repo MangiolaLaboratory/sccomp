@@ -1304,8 +1304,8 @@ data_spread_to_model_input =
         nrow()
     }
     
-    # Default all grouping known. This is used for data generation to estimate unknown groupings.
-    data_for_model$unknown_grouping = c(FALSE, FALSE)
+    # Default all grouping known (four RE slots; see glm_multi_beta_binomial_generate_data.stan)
+    data_for_model$unknown_grouping = rep(0L, 4L)
     
     
     # Return

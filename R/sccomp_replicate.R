@@ -364,7 +364,7 @@ prepare_replicate_data = function(X,
   replicate_slots = map(seq_len(4L), build_replicate_slot)
   
   # setup default unknown_grouping variable for generated quantities
-  unknown_grouping = c(FALSE, FALSE, FALSE, FALSE)
+  unknown_grouping = rep(0L, 4L)
   
   list(
     X        = new_X,

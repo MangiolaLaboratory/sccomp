@@ -238,7 +238,10 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       attr(.estimate , "fit")$num_chains()
     ), 
     threads_per_chain = cores,
-    sig_figs = sig_figs
+    sig_figs = sig_figs,
+    # GQ uses RNG (beta_binomial_rng). Seed with the posterior's sampling run so the
+    # predictive path is reproducible for a given `sccomp_estimate` draw set.
+    seed = attr(.estimate, "fit")$metadata()$seed
     
     
   )
@@ -381,7 +384,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     
     parallel_chains = ifelse(inference_method %in% c("variational", "pathfinder"), 1, fit2$num_chains()), 
     threads_per_chain = cores,
-    sig_figs = sig_figs
+    sig_figs = sig_figs,
+    seed = fit2$metadata()$seed
     
   )
   
