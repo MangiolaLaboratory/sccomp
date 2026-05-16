@@ -126,8 +126,8 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' @param Xa Original variability design matrix
 #' @param N Original number of samples
 #' @param intercept_in_design Whether intercept is in design
-#' @param X_random_effect Original random effect design matrix
-#' @param X_random_effect_2 Original second random effect design matrix
+#' @param X_random_effect_slots Length-4 list of original random-effect design
+#'   matrices (one per slot). Empty slots are zero-column matrices.
 #' @param .sample Quosure for the sample identifier column
 #' @param .cell_group Quosure for the cell group column
 #' @param .count Quosure for the count column
@@ -140,8 +140,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' - model_input: The prepared model input data
 #' - X_which: Indices for the composition design matrix
 #' - XA_which: Indices for the variability design matrix
-#' - X_random_effect_which: Indices for the first random effect design matrix
-#' - X_random_effect_which_2: Indices for the second random effect design matrix
+#' - X_random_effect_which_1..4: per-slot indices into the original RE design matrix
 #' - create_intercept: Boolean indicating if intercept should be created
 #' 
 #' @noRd
@@ -149,8 +148,7 @@ prepare_replicate_data = function(X,
                                   Xa,
                                   N,
                                   intercept_in_design,
-                                  X_random_effect,
-                                  X_random_effect_2,
+                                  X_random_effect_slots,
                                   .sample,
                                   .cell_group,
                                   .count,
@@ -291,137 +289,111 @@ prepare_replicate_data = function(X,
     "(Intercept)" %in% colnames(new_X)
   if(create_intercept) warning("sccomp says: your estimated model is intercept free, while your desired replicated data do have an intercept term. The intercept estimate will be calculated averaging your first factor in your formula ~ 0 + <factor>. If you don't know the meaning of this warning, this is likely undesired, and please reconsider your formula for replicate_data()")
   
-  # Original grouping
-  original_grouping_names = original_formula_composition |> formula_to_random_effect_formulae() |> pull(grouping)
+  # Original grouping (one entry per RE clause in the original formula)
+  original_grouping_names = original_formula_composition |>
+    formula_to_random_effect_formulae() |>
+    pull(grouping)
   
-  # Random intercept
+  # Parse the (possibly new) composition formula to find RE clauses in new_data
   random_effect_elements = parse_formula_random_effect(formula_composition)
-  
-  # Initialize unseen random effect variables
-  new_X_random_effect_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  new_X_random_effect_2_unseen = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  
-  # Set default random intercept
-  X_random_effect_which = array()[0]
-  new_X_random_effect = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  
-  # setup default unknown_grouping variable for generated quantities
-  unknown_grouping = c(FALSE, FALSE)
-  
-  #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
-  random_effect_grouping = 
+  random_effect_grouping =
     formula_composition |>
     formula_to_random_effect_formulae() |>
     mutate(design = map2(
       formula, grouping,
-      ~  get_random_effect_design3(new_data, .x, .y, !!.sample,
-                                   accept_NA_as_average_effect = TRUE )
+      ~ get_random_effect_design3(new_data, .x, .y, !!.sample,
+                                  accept_NA_as_average_effect = TRUE)
     ))
   
+  # ----------------------------------------------------------------------
+  # Build the per-slot replicate design matrices.
+  #
+  # For each of the 4 slots: if the slot was active in the original fit
+  # (original_grouping_names[k] exists) and the new formula references it,
+  # build a new design matrix restricted to the columns the model saw, and
+  # an index vector mapping new columns back to those of the original matrix.
+  # Otherwise emit an empty placeholder.
+  # ----------------------------------------------------------------------
+  empty_mat_new   = matrix(rep(0, nrow_new_data))[, 0, drop = FALSE]
+  empty_which_new = array()[0]
   
-  
-  if((random_effect_grouping$grouping %in% original_grouping_names[1]) |> any() && !unknown_grouping[1]) {
-    new_X_random_effect =
-      random_effect_grouping |>
-      filter(grouping==original_grouping_names[1]) |> 
+  build_replicate_slot = function(slot_idx) {
+    grouping_for_slot = original_grouping_names[slot_idx]   # NA if slot wasn't used originally
+    X_original_slot   = X_random_effect_slots[[slot_idx]]
+    
+    slot_is_active = !is.na(grouping_for_slot) &&
+      any(random_effect_grouping$grouping %in% grouping_for_slot)
+    
+    if (!slot_is_active) {
+      return(list(
+        X        = empty_mat_new,
+        X_unseen = empty_mat_new,
+        which    = empty_which_new
+      ))
+    }
+    
+    X_new = random_effect_grouping |>
+      filter(grouping == grouping_for_slot) |>
       mutate(design_matrix = map(
         design,
         ~ ..1 |>
           select(!!.sample, group___label, value) |>
-          
-          # Some combinations might not have been present in a specific group so the parameter does not exist
-          filter(group___label %in% colnames(X_random_effect)) |> 
-          
+          # Combinations not present in the original fit have no parameters
+          filter(group___label %in% colnames(X_original_slot)) |>
           pivot_wider(names_from = group___label, values_from = value) |>
           mutate(across(everything(), ~ .x |> replace_na(0)))
       )) |>
-      # Merge
-      pull(design_matrix) |> 
-      _[[1]] |> 
-      column_to_rownames(quo_name(.sample))  |>
-      tail(nrow_new_data) 
-    
-    # Separate NA group column into new_X_random_effect_unseen
-    new_X_random_effect_unseen = new_X_random_effect[, colnames(new_X_random_effect) |> str_detect("___NA$"), drop = FALSE]
-    new_X_random_effect = new_X_random_effect[, !colnames(new_X_random_effect) |> str_detect("___NA$"), drop = FALSE]
-    
-    # Check that all effect combination were present when the model was fitted
-    check_missing_parameters(
-      new_X_random_effect |> colnames(), 
-      X_random_effect |> colnames()
-    ) 
-    
-    X_random_effect_which =
-      colnames(new_X_random_effect) |>
-      match(
-        X_random_effect %>%
-          colnames()
-      ) |>
-      as.array()
-  }
-  
-  # Set default X random intercept
-  X_random_effect_which_2 = array()[0]
-  new_X_random_effect_2 = matrix(rep(0, nrow_new_data))[,0, drop=FALSE]
-  
-  if((random_effect_grouping$grouping %in% original_grouping_names[2]) |> any()){
-    new_X_random_effect_2 =
-      random_effect_grouping |>
-      filter(grouping==original_grouping_names[2]) |> 
-      mutate(design_matrix = map(
-        design,
-        ~ ..1 |>
-          select(!!.sample, group___label, value) |>
-          
-          # Some combinations might not have been present in a specific group so the parameter does not exist
-          filter(group___label %in% colnames(X_random_effect_2)) |> 
-          
-          pivot_wider(names_from = group___label, values_from = value) |>
-          mutate(across(everything(), ~ .x |> replace_na(0)))
-      )) |>
-      # Merge
-      pull(design_matrix) |> 
-      _[[1]] |> 
-      column_to_rownames(quo_name(.sample))  |>
+      pull(design_matrix) |>
+      _[[1]] |>
+      column_to_rownames(quo_name(.sample)) |>
       tail(nrow_new_data)
     
-    # Separate NA group column into new_X_random_effect_2_unseen
-    new_X_random_effect_2_unseen = new_X_random_effect_2[, colnames(new_X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
-    new_X_random_effect_2 = new_X_random_effect_2[, !colnames(new_X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
+    is_NA_col = str_detect(colnames(X_new), "___NA$")
+    X_new_unseen = X_new[,  is_NA_col, drop = FALSE]
+    X_new        = X_new[, !is_NA_col, drop = FALSE]
     
-    # Check that all effect combination were present when the model was fitted
-    check_missing_parameters(
-      new_X_random_effect_2 |> colnames(), 
-      X_random_effect_2 |> colnames()
-    )
+    check_missing_parameters(colnames(X_new), colnames(X_original_slot))
     
-    X_random_effect_which_2 =
-      colnames(new_X_random_effect_2) |>
-      match(
-        X_random_effect_2 %>%
-          colnames()
-      ) |>
+    which_idx = colnames(X_new) |>
+      match(colnames(X_original_slot)) |>
       as.array()
+    
+    list(X = X_new, X_unseen = X_new_unseen, which = which_idx)
   }
   
-  # Prepare the list of inputs to the model
+  replicate_slots = map(seq_len(4L), build_replicate_slot)
+  
+  # setup default unknown_grouping variable for generated quantities
+  unknown_grouping = c(FALSE, FALSE, FALSE, FALSE)
+  
   list(
-    X = new_X,
-    Xa = new_Xa,
-    N = nrow_new_data,  
+    X        = new_X,
+    Xa       = new_Xa,
+    N        = nrow_new_data,
     exposure = new_exposure,
-    X_random_effect = new_X_random_effect,
-    X_random_effect_2 = new_X_random_effect_2,
-    X_random_effect_unseen = new_X_random_effect_unseen,
-    X_random_effect_2_unseen = new_X_random_effect_2_unseen,
-    ncol_X_random_eff_new = c(ncol(new_X_random_effect), ncol(new_X_random_effect_2)),  
-    unknown_grouping = unknown_grouping,
-    ncol_X_random_eff_unseen = c(ncol(new_X_random_effect_unseen), ncol(new_X_random_effect_2_unseen)),
     
-    X_which = X_which,
-    XA_which = XA_which,
-    X_random_effect_which = X_random_effect_which,
-    X_random_effect_which_2 = X_random_effect_which_2,
+    # Per-slot design + unseen-column matrices + index vectors
+    X_random_effect_1 = replicate_slots[[1]]$X,
+    X_random_effect_2 = replicate_slots[[2]]$X,
+    X_random_effect_3 = replicate_slots[[3]]$X,
+    X_random_effect_4 = replicate_slots[[4]]$X,
+    
+    X_random_effect_1_unseen = replicate_slots[[1]]$X_unseen,
+    X_random_effect_2_unseen = replicate_slots[[2]]$X_unseen,
+    X_random_effect_3_unseen = replicate_slots[[3]]$X_unseen,
+    X_random_effect_4_unseen = replicate_slots[[4]]$X_unseen,
+    
+    X_random_effect_which_1 = replicate_slots[[1]]$which,
+    X_random_effect_which_2 = replicate_slots[[2]]$which,
+    X_random_effect_which_3 = replicate_slots[[3]]$which,
+    X_random_effect_which_4 = replicate_slots[[4]]$which,
+    
+    ncol_X_random_eff_new    = map_int(replicate_slots, ~ ncol(.x$X)),
+    ncol_X_random_eff_unseen = map_int(replicate_slots, ~ ncol(.x$X_unseen)),
+    unknown_grouping         = unknown_grouping,
+    
+    X_which          = X_which,
+    XA_which         = XA_which,
     create_intercept = create_intercept
   )
   
@@ -474,14 +446,14 @@ replicate_data = function(.data,
   # create model input 
   model_input = attr(.data, "model_input")
   
-  # Prepare data
+  # Prepare data - pass the per-slot original RE design matrices as a list
   prepared_data = prepare_replicate_data(
     X = model_input$X,
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = lapply(seq_len(4L), function(k)
+      model_input[[paste0("X_random_effect_", k)]]),
     .sample = !!.sample,
     .cell_group = !!.cell_group,
     .count = !!.count,
@@ -495,37 +467,35 @@ replicate_data = function(.data,
       .subset(!!.sample) 
   )
   
-  # Original input 
+  # Original input
   model_input$X_original = model_input$X
   model_input$N_original = model_input$N
   
   # New input
-  model_input$X = prepared_data$X
-  model_input$Xa = prepared_data$Xa 
-  model_input$N = prepared_data$N
+  model_input$X        = prepared_data$X
+  model_input$Xa       = prepared_data$Xa
+  model_input$N        = prepared_data$N
   model_input$exposure = prepared_data$exposure
-  model_input$X_random_effect = prepared_data$X_random_effect
-  model_input$X_random_effect_2 = prepared_data$X_random_effect_2
-  model_input$X_random_effect_unseen = prepared_data$X_random_effect_unseen
-  model_input$X_random_effect_2_unseen = prepared_data$X_random_effect_2_unseen
-  model_input$ncol_X_random_eff_new = prepared_data$ncol_X_random_eff_new
-  model_input$unknown_grouping = prepared_data$unknown_grouping
+  
+  # Per-slot RE design + unseen + which-indices (4 slots)
+  for (k in seq_len(4L)) {
+    model_input[[paste0("X_random_effect_", k)]]            = prepared_data[[paste0("X_random_effect_", k)]]
+    model_input[[paste0("X_random_effect_", k, "_unseen")]] = prepared_data[[paste0("X_random_effect_", k, "_unseen")]]
+    model_input[[paste0("X_random_effect_which_", k)]]      = prepared_data[[paste0("X_random_effect_which_", k)]]
+  }
+  model_input$ncol_X_random_eff_new    = prepared_data$ncol_X_random_eff_new
   model_input$ncol_X_random_eff_unseen = prepared_data$ncol_X_random_eff_unseen
+  model_input$unknown_grouping         = prepared_data$unknown_grouping
   
-  # Add subset of coefficients
-  # Add subset of coefficients
-  model_input$length_X_which = length(prepared_data$X_which)
+  # Subset of coefficients
+  model_input$length_X_which  = length(prepared_data$X_which)
   model_input$length_XA_which = length(prepared_data$XA_which)
-  model_input$X_which = prepared_data$X_which
-  model_input$XA_which = prepared_data$XA_which
+  model_input$X_which         = prepared_data$X_which
+  model_input$XA_which        = prepared_data$XA_which
   
-  # Add random effect coefficients
-  model_input$X_random_effect_which = prepared_data$X_random_effect_which
-  model_input$X_random_effect_which_2 = prepared_data$X_random_effect_which_2
-  model_input$length_X_random_effect_which = c(
-    length(prepared_data$X_random_effect_which),
-    length(prepared_data$X_random_effect_which_2)
-  )
+  # Length-4 vector of which-index lengths for the random-effect slots
+  model_input$length_X_random_effect_which =
+    map_int(seq_len(4L), ~ length(prepared_data[[paste0("X_random_effect_which_", .x)]]))
   
   # Should I create an intercept for generate quantities?
   model_input$create_intercept = prepared_data$create_intercept
