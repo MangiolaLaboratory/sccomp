@@ -352,27 +352,17 @@ sccomp_summarise_posterior_for_estimate <- function(
       prefix = "c_"
     )
   )
-  if (model_input$n_random_eff > 0) {
+  # Random effect blocks: append a summary for each non-empty slot (1..4).
+  for (k in seq_len(4L)) {
+    if (model_input$ncol_X_random_eff[k] == 0) next
+    X_slot <- model_input[[paste0("X_random_effect_", k)]]
     abundance_parts <- c(
       abundance_parts,
       list(summarise_stan_matrix_for_estimate(
         fit = fit,
         model_input = model_input,
-        stan_parameter = "random_effect",
-        parameter_names = colnames(model_input$X_random_effect),
-        probs = probs,
-        prefix = "c_"
-      ))
-    )
-  }
-  if (model_input$n_random_eff > 1) {
-    abundance_parts <- c(
-      abundance_parts,
-      list(summarise_stan_matrix_for_estimate(
-        fit = fit,
-        model_input = model_input,
-        stan_parameter = "random_effect_2",
-        parameter_names = colnames(model_input$X_random_effect_2),
+        stan_parameter = paste0("random_effect_", k),
+        parameter_names = colnames(X_slot),
         probs = probs,
         prefix = "c_"
       ))
@@ -555,148 +545,81 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
 
   
   
-  # Random effect
-  
-  random_effect_covariates = model_input %$% X_random_effect |> colnames()
-  beta_random_effect_subset <- build_stan_parameter_subset(
-    contrasts = contrasts,
-    design_columns = random_effect_covariates,
-    stan_parameter = "random_effect",
-    model_input = model_input
-  )
-  beta_random_effect_parameters <- beta_random_effect_subset |> dplyr::pull("parameter") |> unique()
-  beta_random_effect_variables <- beta_random_effect_subset |> dplyr::pull("variable") |> unique()
-  
-  if(
-    .data |> attr("model_input") %$% n_random_eff > 0 &&
-    (
-      contrasts |> is.null() || 
-      length(beta_random_effect_parameters) > 0
-    )  
-  ){
+  # ----------------------------------------------------------------------
+  # Random effect draws: extract one slot at a time (1..4) and left-join into
+  # `draws`. Per-slot logic is identical, so we loop over a helper instead of
+  # duplicating the block once per slot.
+  # ----------------------------------------------------------------------
+  extract_random_effect_slot = function(slot_idx) {
+    if (model_input$ncol_X_random_eff[slot_idx] == 0)
+      return(list(draws = draws, covariates = character(0)))
     
-    
-    beta_random_effect =
-      .data |>
-      attr("fit") %>%
-      draws_to_tibble_x_y(beta_random_effect_variables,  "C",  "M"  ) 
-    
-    # Add last component
-    other_group_random_effect = 
-      beta_random_effect |> 
-      with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
-      mutate(.value = -.value, M = beta_random_effect |> pull(M) |> max() + 1)
-    
-    
-    beta_random_effect = 
-      beta_random_effect |> 
-      bind_rows( other_group_random_effect )
-    
-    
-    # Reshape
-    # Speed up if I have contrasts
-    if(!contrasts |> is.null())
-      beta_random_effect = 
-      beta_random_effect |> 
-      left_join(
-        random_effect_covariates |> enframe(name = "C", value = "parameters_name"),
-        by = "C"
-      )  |> 
-      filter(parameters_name %in% beta_random_effect_parameters) |> 
-      select(-C) |> 
-      pivot_wider(names_from = parameters_name, values_from = .value)
-    
-    else
-      beta_random_effect = 
-      beta_random_effect |>
-      pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(random_effect_covariates))
-
-    # If I don't have fix nor 1st level random effect
-    if(draws |> nrow() == 0)
-      draws = select(beta_random_effect, -.variable)
-    else 
-      draws = draws |> 
-      left_join(select(beta_random_effect, -.variable),
-                by = c("M", ".chain", ".iteration", ".draw")
-      )
-    
-  }  else {
-    random_effect_covariates = ""
-  }
-  
-  # Second random effect. IN THE FUTURE THIS WILL BE VECTORISED TO ARBUTRARY GRI+OUING
-  random_effect_covariates_2 = model_input %$% X_random_effect_2 |> colnames()
-  beta_random_effect_subset_2 <- build_stan_parameter_subset(
-    contrasts = contrasts,
-    design_columns = random_effect_covariates_2,
-    stan_parameter = "random_effect_2",
-    model_input = model_input
-  )
-  beta_random_effect_parameters_2 <- beta_random_effect_subset_2 |> dplyr::pull("parameter") |> unique()
-  beta_random_effect_variables_2 <- beta_random_effect_subset_2 |> dplyr::pull("variable") |> unique()
-  
-  if(
-    .data |> attr("model_input") %$% n_random_eff > 1 &&
-    (
-      contrasts |> is.null() || 
-      length(beta_random_effect_parameters_2) > 0
+    re_covariates = model_input[[paste0("X_random_effect_", slot_idx)]] |> colnames()
+    re_subset = build_stan_parameter_subset(
+      contrasts      = contrasts,
+      design_columns = re_covariates,
+      stan_parameter = paste0("random_effect_", slot_idx),
+      model_input    = model_input
     )
-  ){
+    re_parameters = re_subset |> dplyr::pull("parameter") |> unique()
+    re_variables  = re_subset |> dplyr::pull("variable")  |> unique()
     
-    beta_random_effect_2 =
-      .data |>
-      attr("fit") %>%
-      draws_to_tibble_x_y(  beta_random_effect_variables_2,   "C",    "M"   ) 
+    # No-op when contrasts filter out everything in this slot
+    if (!is.null(contrasts) && length(re_parameters) == 0)
+      return(list(draws = draws, covariates = re_covariates))
     
-    # Add last component
-    other_group_random_effect = 
-      beta_random_effect_2 |> 
-      with_groups(c(C, .chain, .iteration, .draw, .variable ), ~ .x |> summarise(.value = sum(.value))) |> 
-      mutate(.value = -.value, M = beta_random_effect_2 |> pull(M) |> max() + 1)
+    re_draws =
+      .data |> attr("fit") %>%
+      draws_to_tibble_x_y(re_variables, "C", "M")
     
-    beta_random_effect_2 = 
-      beta_random_effect_2 |> 
-      bind_rows( other_group_random_effect )
+    # Reconstruct the omitted last cell-group (sum-to-zero closure)
+    other_group_re =
+      re_draws |>
+      with_groups(c(C, .chain, .iteration, .draw, .variable),
+                  ~ .x |> summarise(.value = sum(.value))) |>
+      mutate(.value = -.value, M = re_draws |> pull(M) |> max() + 1)
     
-    # Reshape
-    # Speed up if I have contrasts
-    if(!contrasts |> is.null())
-      beta_random_effect_2 = 
-      beta_random_effect_2 |> 
-      left_join(
-        random_effect_covariates_2 |> enframe(name = "C", value = "parameters_name"),
-        by = "C"
-      )  |> 
-      filter(parameters_name %in% beta_random_effect_parameters_2) |> 
-      select(-C) |> 
-      pivot_wider(names_from = parameters_name, values_from = .value)
+    re_draws = bind_rows(re_draws, other_group_re)
     
-    else
-      beta_random_effect_2 = 
-      beta_random_effect_2 |>
-      pivot_wider(names_from = C, values_from = .value) %>%
-      setNames(colnames(.)[1:5] |> c(random_effect_covariates_2))
+    if (!is.null(contrasts)) {
+      re_draws = re_draws |>
+        left_join(
+          re_covariates |> enframe(name = "C", value = "parameters_name"),
+          by = "C"
+        ) |>
+        filter(parameters_name %in% re_parameters) |>
+        select(-C) |>
+        pivot_wider(names_from = parameters_name, values_from = .value)
+    } else {
+      re_draws = re_draws |>
+        pivot_wider(names_from = C, values_from = .value) %>%
+        setNames(colnames(.)[1:5] |> c(re_covariates))
+    }
     
-    # If I don't have fix nor 1st level random effect
-    if(draws |> nrow() == 0)
-      draws = select(beta_random_effect_2, -.variable)
-    else 
-      draws = draws |> 
-      left_join(select(beta_random_effect_2, -.variable),
-                by = c("M", ".chain", ".iteration", ".draw")
-      )
-  } else {
-    random_effect_covariates_2 = ""
+    new_draws =
+      if (nrow(draws) == 0)
+        select(re_draws, -.variable)
+      else
+        draws |>
+        left_join(select(re_draws, -.variable),
+                  by = c("M", ".chain", ".iteration", ".draw"))
+    
+    list(draws = new_draws, covariates = re_covariates)
   }
   
+  random_effect_covariates_all = character(0)
+  for (k in seq_len(4L)) {
+    res = extract_random_effect_slot(k)
+    draws = res$draws
+    random_effect_covariates_all = c(random_effect_covariates_all, res$covariates)
+  }
   
-  # If I have constrasts calculate
-  if(!is.null(contrasts))
-    draws = 
-    draws |> 
+  # If I have contrasts, calculate
+  if (!is.null(contrasts))
+    draws =
+    draws |>
     mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
-    select(- any_of(c(beta_covariates, random_effect_covariates) |> setdiff(contrasts)) )
+    select(- any_of(c(beta_covariates, random_effect_covariates_all) |> setdiff(contrasts)))
   
 
   draws = draws |>

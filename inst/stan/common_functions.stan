@@ -90,6 +90,41 @@
         );
       }
 
+    /**
+    * Build the per-category random-effect matrix for one block (slot).
+    *
+    * Combines: (a) hierarchical non-centered build of the per-category SD vector
+    * from `(sigma_mu, sigma_sigma, sigma_raw[m])`, and (b) `get_random_effect_matrix(...)`
+    * to apply the LKJ-Cholesky x SD covariance structure to the raw effects.
+    * One call replaces ~12 lines of per-block code in `transformed parameters`.
+    *
+    * Works uniformly for any `n_factors >= 1`. When `n_factors == 1` the
+    * Cholesky factor is 1x1 = [[1]], the LKJ prior contributes 0 free params,
+    * and the construction collapses to a per-category scalar `sigma_m * raw`.
+    */
+    matrix build_re_block(
+      int M,                                              // # of categories/outcomes
+      int n_groups,                                       // # of groups in this block
+      int n_factors,                                      // # of factors (>=1)
+      int ncol,                                           // # cols in this block's design matrix
+      array[,] int group_factor_indexes,                  // factor x group -> col index
+      array[] vector raw_vec,                             // length ncol, each length M
+      real sigma_mu,                                      // hierarchical hyperprior mean
+      real sigma_sigma,                                   // hierarchical hyperprior SD
+      array[] vector sigma_raw,                           // length M, each length n_factors
+      array[] matrix corr_chol                            // length M, each n_factors x n_factors
+    ) {
+      // Per-category SD vector via non-centered hierarchical parameterisation
+      array[M] vector[n_factors] sigma_vec;
+      for (m in 1:M)
+        sigma_vec[m] = exp((sigma_mu + sigma_sigma * sigma_raw[m]) / 3.0);
+
+      return get_random_effect_matrix(
+        M, n_groups, n_factors, 1, ncol,
+        group_factor_indexes, raw_vec, sigma_vec, corr_chol
+      );
+    }
+
   // QR-based sum-to-zero functions removed - now using sum_to_zero_vector[K] type
 
       row_vector average_by_col(matrix X) {

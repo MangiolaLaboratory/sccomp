@@ -69,30 +69,22 @@ fit_model = function(
     init_list$prec_slope_2 = rep(0, data_for_model$A)
   }
 
-  if(data_for_model$n_random_eff>0){
-    init_list$random_effect_raw = matrix(0, data_for_model$ncol_X_random_eff[1]  , data_for_model$M)
-    init_list$random_effect_sigma_raw = matrix(0, data_for_model$M , data_for_model$how_many_factors_in_random_design[1])
-    init_list$sigma_correlation_factor = array(0, dim = c(
-      data_for_model$M, 
-      data_for_model$how_many_factors_in_random_design[1], 
-      data_for_model$how_many_factors_in_random_design[1]
-    ))
-
-    # init_list$random_effect_sigma_mu = 0.5 |> as.array()
-    # init_list$random_effect_sigma_sigma = 0.2 |> as.array()
+  # Random effect inits - 4 uniform slots (one per non-empty random-effect block).
+  # Each slot gets zero-initialised raws + an identity-like correlation Cholesky.
+  if (data_for_model$n_random_eff > 0) {
     init_list$zero_random_effect = rep(0, size = 1) |> as.array()
     
-  } 
-  
-  if(data_for_model$n_random_eff>1){
-    init_list$random_effect_raw_2 = matrix(0, data_for_model$ncol_X_random_eff[2]  , data_for_model$M)
-    init_list$random_effect_sigma_raw_2 = matrix(0, data_for_model$M , data_for_model$how_many_factors_in_random_design[2])
-    init_list$sigma_correlation_factor_2 = array(0, dim = c(
-      data_for_model$M, 
-      data_for_model$how_many_factors_in_random_design[2], 
-      data_for_model$how_many_factors_in_random_design[2]
-    ))
-
+    for (k in seq_len(4L)) {
+      if (data_for_model$ncol_X_random_eff[k] == 0) next
+      K = data_for_model$how_many_factors_in_random_design[k]
+      
+      init_list[[paste0("random_effect_raw_", k)]] =
+        matrix(0, data_for_model$ncol_X_random_eff[k], data_for_model$M)
+      init_list[[paste0("random_effect_sigma_raw_", k)]] =
+        matrix(0, data_for_model$M, K)
+      init_list[[paste0("sigma_correlation_factor_", k)]] =
+        array(0, dim = c(data_for_model$M, K, K))
+    }
   }
 
   init = map(1:chains, ~ init_list) %>%

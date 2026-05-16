@@ -149,14 +149,12 @@ incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = c
     "prec_slope_2",
     "prec_sd",
     "mix_p",
-    "random_effect_raw",
-    "random_effect_raw_2",
+    # Random effect parameters - one set per slot (1..4)
+    "random_effect_raw_1",        "random_effect_raw_2",        "random_effect_raw_3",        "random_effect_raw_4",
+    "random_effect_sigma_raw_1",  "random_effect_sigma_raw_2",  "random_effect_sigma_raw_3",  "random_effect_sigma_raw_4",
+    "sigma_correlation_factor_1", "sigma_correlation_factor_2", "sigma_correlation_factor_3", "sigma_correlation_factor_4",
     "random_effect_sigma_mu",
     "random_effect_sigma_sigma",
-    "random_effect_sigma_raw",
-    "sigma_correlation_factor",
-    "random_effect_sigma_raw_2",
-    "sigma_correlation_factor_2",
     "zero_random_effect",
     # Transformed parameters
     "beta",
@@ -1055,108 +1053,117 @@ data_spread_to_model_input =
     factor_names_variability = parse_formula(formula_variability)
     cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% colnames()
     
-    # Random intercept
-    if(nrow(random_effect_elements)>0 ) {
+    # ----------------------------------------------------------------------
+    # Random effect blocks: 4 uniform "slots", one block per slot.
+    #
+    # Each random-effect clause in the formula (e.g. `(1 + age | tissue)` and
+    # `(1 | dataset)`) becomes one slot. Slots are independent: each has its
+    # own n_factors and its own group structure, so no padding across slots.
+    #
+    # `prepare_re_slot()` builds one slot from the per-clause design tibble;
+    # we then map over the parsed clauses and pad to N_RE_SLOTS empty slots,
+    # so the Stan-side data list is uniformly shaped regardless of how many
+    # clauses the user wrote.
+    # ----------------------------------------------------------------------
+    N_RE_SLOTS = 4L
+    n_rows_design = nrow(.data_spread)
+    
+    empty_re_slot = list(
+      X        = matrix(0, nrow = n_rows_design, ncol = 0),
+      X_unseen = matrix(0, nrow = n_rows_design, ncol = 0),
+      ncol     = 0L,
+      gfi      = matrix(integer(0), nrow = 0, ncol = 0),
+      n_groups = 0L,
+      n_factors = 0L
+    )
+    
+    prepare_re_slot = function(design_matrix_tbl, sample_name) {
+      X = design_matrix_tbl |> column_to_rownames(sample_name)
       
+      is_NA_col = str_detect(colnames(X), "___NA$")
+      X_unseen  = X[,  is_NA_col, drop = FALSE]
+      X         = X[, !is_NA_col, drop = FALSE]
       
-      #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
+      if (ncol(X) == 0) return(empty_re_slot)
+      
+      gfi = colnames(X) |>
+        enframe(value = "parameter", name = "order") |>
+        separate(parameter, c("factor", "group"), "___", remove = FALSE) |>
+        complete(factor, group, fill = list(order = 0)) |>
+        select(-parameter) |>
+        pivot_wider(names_from = group, values_from = order) |>
+        column_to_rownames("factor") |>
+        as.matrix()
+      
+      list(
+        X         = X,
+        X_unseen  = X_unseen,
+        ncol      = ncol(X),
+        gfi       = gfi,
+        n_groups  = ncol(gfi),
+        n_factors = nrow(gfi)
+      )
+    }
+    
+    if (nrow(random_effect_elements) > 0) {
+      
       random_effect_grouping = formula |>
         formula_to_random_effect_formulae() |>
         mutate(design = map2(
           formula, grouping,
-          ~ {
-            get_random_effect_design3(.data_spread, .x, .y, !!.sample )
-          }))
+          ~ get_random_effect_design3(.data_spread, .x, .y, !!.sample)
+        ))
       
-      # Actual parameters, excluding for the sum to one parameters
+      if (nrow(random_effect_grouping) > N_RE_SLOTS) {
+        stop(sprintf(
+          "sccomp says: at the moment sccomp supports up to %d random-effect groupings; the formula has %d. Combine related clauses or split the model.",
+          N_RE_SLOTS, nrow(random_effect_grouping)
+        ))
+      }
+      
       is_random_effect = 1
+      n_random_eff = nrow(random_effect_grouping)
       
-      random_effect_grouping =
-        random_effect_grouping |>
+      random_effect_grouping = random_effect_grouping |>
         mutate(design_matrix = map(
           design,
           ~ ..1 |>
             select(!!.sample, group___label, value) |>
             pivot_wider(names_from = group___label, values_from = value) |>
             mutate(across(everything(), ~ .x |> replace_na(0)))
-        )) 
+        ))
       
-      
-      X_random_effect = 
-        random_effect_grouping |> 
-        pull(design_matrix) |> 
-        _[[1]]  |>  
-        column_to_rownames(quo_name(.sample))
-      
-      # Separate NA group column into X_random_effect_unseen
-      X_random_effect_unseen = X_random_effect[, colnames(X_random_effect) |> str_detect("___NA$"), drop = FALSE]
-      X_random_effect = X_random_effect[, !colnames(X_random_effect) |> str_detect("___NA$"), drop = FALSE]
-      
-      # For now that stan does not have tuples, I just allow max two levels
-      if(random_effect_grouping |> nrow() > 2) stop("sccomp says: at the moment sccomp allow max two groupings")
-      # This will be modularised with the new stan
-      if(random_effect_grouping |> nrow() > 1){
-        X_random_effect_2 =   
-          random_effect_grouping |> 
-          pull(design_matrix) |> 
-          _[[2]] |>  
-          column_to_rownames(quo_name(.sample))
-        
-        # Separate NA group column into X_random_effect_2_unseen  
-        X_random_effect_2_unseen = X_random_effect_2[, colnames(X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
-        X_random_effect_2 = X_random_effect_2[, !colnames(X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
-      }
-      
-      else X_random_effect_2 =  X_random_effect[,0,drop=FALSE]
-      
-      n_random_eff = random_effect_grouping |> nrow()
-      
-      ncol_X_random_eff = c(ncol(X_random_effect), ncol(X_random_effect_2))
-      
-      # TEMPORARY
-      group_factor_indexes_for_covariance = 
-        X_random_effect |> 
-        colnames() |> 
-        enframe(value = "parameter", name = "order")  |> 
-        separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
-        complete(factor, group, fill = list(order=0)) |> 
-        select(-parameter) |> 
-        pivot_wider(names_from = group, values_from = order)  |> 
-        column_to_rownames("factor") |> as.matrix()
-
-      
-      
-      n_groups = group_factor_indexes_for_covariance |> ncol()
-      
-      # This will be modularised with the new stan
-      if(random_effect_grouping |> nrow() > 1)
-        group_factor_indexes_for_covariance_2 = 
-        X_random_effect_2 |> 
-        colnames() |> 
-        enframe(value = "parameter", name = "order")  |> 
-        separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
-        complete(factor, group, fill = list(order=0)) |> 
-        select(-parameter) |> 
-        pivot_wider(names_from = group, values_from = order)  |> 
-        column_to_rownames("factor") |> as.matrix()
-      else group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE]
-      
-      n_groups = n_groups |> c(group_factor_indexes_for_covariance_2 |> ncol())
-      
-      how_many_factors_in_random_design = list(group_factor_indexes_for_covariance, group_factor_indexes_for_covariance_2) |> map_int(nrow)
-      
+      re_slots = random_effect_grouping$design_matrix |>
+        map(prepare_re_slot, sample_name = quo_name(.sample))
       
     } else {
-      X_random_effect = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
-      X_random_effect_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
       is_random_effect = 0
-      ncol_X_random_eff = c(0,0)
-      n_random_eff = 0
-      n_groups = c(0,0)
-      how_many_factors_in_random_design = c(0,0)
-      group_factor_indexes_for_covariance = matrix()[0,0, drop=FALSE]
-      group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE] # This will be modularised with the new stan
+      n_random_eff     = 0
+      re_slots         = list()
     }
+    
+    # Pad to exactly N_RE_SLOTS so the Stan data list is uniformly shaped
+    while (length(re_slots) < N_RE_SLOTS) re_slots = c(re_slots, list(empty_re_slot))
+    
+    # Per-slot variables. Kept as separate names (mirroring the Stan side)
+    # so each slot is locally inspectable; no clever data structure required.
+    X_random_effect_1 = re_slots[[1]]$X
+    X_random_effect_2 = re_slots[[2]]$X
+    X_random_effect_3 = re_slots[[3]]$X
+    X_random_effect_4 = re_slots[[4]]$X
+    
+    # NOTE: per-slot $X_unseen matrices are available in `re_slots[[k]]$X_unseen`
+    # but are not shipped via data_for_model (downstream replicate / outlier
+    # pipelines build their own from new_data).
+    
+    group_factor_indexes_for_covariance_1 = re_slots[[1]]$gfi
+    group_factor_indexes_for_covariance_2 = re_slots[[2]]$gfi
+    group_factor_indexes_for_covariance_3 = re_slots[[3]]$gfi
+    group_factor_indexes_for_covariance_4 = re_slots[[4]]$gfi
+    
+    ncol_X_random_eff                 = map_int(re_slots, "ncol")
+    n_groups                          = map_int(re_slots, "n_groups")
+    how_many_factors_in_random_design = map_int(re_slots, "n_factors")
     
     
     y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% column_to_rownames(quo_name(.sample)) %>% as.matrix()
@@ -1192,16 +1199,20 @@ data_spread_to_model_input =
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
         
-        # Random intercept
+        # Random intercept - 4 uniform slots (see Stan glm_multi_beta_binomial.stan)
         is_random_effect = is_random_effect,
-        ncol_X_random_eff = ncol_X_random_eff,
-        n_random_eff = n_random_eff,
-        n_groups  = n_groups,
-        X_random_effect = X_random_effect,
+        n_random_eff     = n_random_eff,
+        ncol_X_random_eff = ncol_X_random_eff,                # length 4
+        n_groups          = n_groups,                          # length 4
+        how_many_factors_in_random_design = how_many_factors_in_random_design,  # length 4
+        X_random_effect_1 = X_random_effect_1,
         X_random_effect_2 = X_random_effect_2,
-        group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
+        X_random_effect_3 = X_random_effect_3,
+        X_random_effect_4 = X_random_effect_4,
+        group_factor_indexes_for_covariance_1 = group_factor_indexes_for_covariance_1,
         group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
-        how_many_factors_in_random_design = how_many_factors_in_random_design,
+        group_factor_indexes_for_covariance_3 = group_factor_indexes_for_covariance_3,
+        group_factor_indexes_for_covariance_4 = group_factor_indexes_for_covariance_4,
         
         # For parallel chains
         grainsize = 1,
@@ -1293,8 +1304,8 @@ data_spread_to_model_input =
         nrow()
     }
     
-    # Default all grouping known. This is used for data generation to estimate unknown groupings.
-    data_for_model$unknown_grouping = c(FALSE, FALSE)
+    # Default all grouping known (four RE slots; see glm_multi_beta_binomial_generate_data.stan)
+    data_for_model$unknown_grouping = rep(0L, 4L)
     
     
     # Return

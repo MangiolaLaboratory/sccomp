@@ -198,33 +198,38 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     data = 
       .estimate |>
       attr("model_input") |> 
-      c(list(
-        
-        # Add subset of coefficients
-        X_original = data_for_model$X,
-        N_original = data_for_model$N,
-        length_X_which = ncol(data_for_model$X),
-        length_XA_which = ncol(data_for_model$XA),
-        X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
-        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
-        
-        # Random intercept common variable between grouping 1 and 2
-        ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
-        length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
-        
-        # Grouping 1
-        X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
-        
-        # Grouping 2 - Random intercept DUPLICATED
-        X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
-        
-        # Initialize unseen random effect variables
-        ncol_X_random_eff_unseen = c(0, 0),
-        X_random_effect_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
-        X_random_effect_2_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
-        
-        create_intercept = FALSE
-      )),
+      c(
+        list(
+          # Add subset of coefficients
+          X_original = data_for_model$X,
+          N_original = data_for_model$N,
+          length_X_which = ncol(data_for_model$X),
+          length_XA_which = ncol(data_for_model$XA),
+          X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
+          XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
+          
+          # Per-slot random-effect pass-throughs (the outlier model uses the
+          # same design, so X_random_effect_which_k is just an identity over
+          # the slot's columns; unseen matrices are empty).
+          ncol_X_random_eff_new        = data_for_model$ncol_X_random_eff,
+          length_X_random_effect_which = data_for_model$ncol_X_random_eff,
+          ncol_X_random_eff_unseen     = rep(0L, 4L),
+          
+          create_intercept = FALSE
+        ),
+        # Identity which-indices per slot, generated programmatically
+        setNames(
+          lapply(seq_len(4L), function(k)
+            seq_len(data_for_model$ncol_X_random_eff[k]) |> as.array()),
+          paste0("X_random_effect_which_", seq_len(4L))
+        ),
+        # Empty unseen design matrices per slot
+        setNames(
+          replicate(4L, matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+                    simplify = FALSE),
+          paste0("X_random_effect_", seq_len(4L), "_unseen")
+        )
+      ),
     
     parallel_chains = ifelse(
       inference_method %in% c("variational", "pathfinder") | 
@@ -233,7 +238,10 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       attr(.estimate , "fit")$num_chains()
     ), 
     threads_per_chain = cores,
-    sig_figs = sig_figs
+    sig_figs = sig_figs,
+    # GQ uses RNG (beta_binomial_rng). Seed with the posterior's sampling run so the
+    # predictive path is reproducible for a given `sccomp_estimate` draw set.
+    seed = attr(.estimate, "fit")$metadata()$seed
     
     
   )
@@ -332,7 +340,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       pars = c(
         "beta", "alpha",
         "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2", "prec_sd",
-        "random_effect", "random_effect_2"
+        "random_effect_1", "random_effect_2", "random_effect_3", "random_effect_4"
       ),
       sig_figs = sig_figs,
       cache_stan_model = cache_stan_model,
@@ -345,38 +353,39 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     fit2$draws(format = "matrix"),
     
     # This is for the new data generation with selected factors to do adjustment
-    data = data_for_model |> c(list(
-      
-      # Add subset of coefficients
-      X_original = data_for_model$X,
-      N_original = data_for_model$N,
-      length_X_which = ncol(data_for_model$X),
-      length_XA_which = ncol(data_for_model$XA),
-      X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
-      XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
-      
-      # Random intercept common variable between grouping 1 and 2
-      ncol_X_random_eff_new = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2) ), # I could put this in the intial data
-      length_X_random_effect_which = ncol(data_for_model$X_random_effect) |> c(ncol(data_for_model$X_random_effect_2)),
-      
-      # Grouping 1
-      X_random_effect_which = seq_len(ncol(data_for_model$X_random_effect)) |> as.array(),
-      
-      # Grouping 2 - Random intercept DUPLICATED
-      X_random_effect_which_2 = seq_len(ncol(data_for_model$X_random_effect_2)) |> as.array(),
-      
-      # Initialize unseen random effect variables
-      ncol_X_random_eff_unseen = c(0, 0),
-      X_random_effect_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
-      X_random_effect_2_unseen = matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
-      
-      create_intercept = FALSE
-      
-    )),
+    data = data_for_model |> c(
+      list(
+        # Add subset of coefficients
+        X_original = data_for_model$X,
+        N_original = data_for_model$N,
+        length_X_which = ncol(data_for_model$X),
+        length_XA_which = ncol(data_for_model$XA),
+        X_which = seq_len(ncol(data_for_model$X)) |> as.array(),
+        XA_which = seq_len(ncol(data_for_model$Xa)) |> as.array(),
+        
+        # Per-slot random-effect pass-throughs (see notes in the first call site)
+        ncol_X_random_eff_new        = data_for_model$ncol_X_random_eff,
+        length_X_random_effect_which = data_for_model$ncol_X_random_eff,
+        ncol_X_random_eff_unseen     = rep(0L, 4L),
+        
+        create_intercept = FALSE
+      ),
+      setNames(
+        lapply(seq_len(4L), function(k)
+          seq_len(data_for_model$ncol_X_random_eff[k]) |> as.array()),
+        paste0("X_random_effect_which_", seq_len(4L))
+      ),
+      setNames(
+        replicate(4L, matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+                  simplify = FALSE),
+        paste0("X_random_effect_", seq_len(4L), "_unseen")
+      )
+    ),
     
     parallel_chains = ifelse(inference_method %in% c("variational", "pathfinder"), 1, fit2$num_chains()), 
     threads_per_chain = cores,
-    sig_figs = sig_figs
+    sig_figs = sig_figs,
+    seed = fit2$metadata()$seed
     
   )
   
@@ -468,7 +477,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       pars = c(
         "beta", "alpha",
         "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2", "prec_sd",
-        "random_effect", "random_effect_2", "log_lik"
+        "random_effect_1", "random_effect_2", "random_effect_3", "random_effect_4", "log_lik"
       ),
       cache_stan_model = cache_stan_model,
       ...
