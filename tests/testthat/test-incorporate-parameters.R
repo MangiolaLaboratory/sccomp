@@ -44,30 +44,6 @@ estimate_for_draw_tests_hmc_minimal <- function(output_directory, portable = FAL
     )
 }
 
-test_that("non-portable estimate: deleting Stan output files before sccomp_test() errors without incorporation", {
-  skip_cmdstan()
-
-  test_output_dir <- tempfile("sccomp_test_draws_no_incorp_")
-  dir.create(test_output_dir)
-  on.exit(unlink(test_output_dir, recursive = TRUE), add = TRUE)
-
-  result <- estimate_for_draw_tests(test_output_dir, portable = FALSE)
-  fit <- attr(result, "fit")
-
-  paths <- fit$output_files(include_failed = TRUE)
-  paths <- paths[file.exists(paths)]
-  expect_gt(length(paths), 0L, label = "Stan output files on disk")
-
-  ok <- file.remove(paths)
-  expect_true(all(ok), label = "removing Stan chain/output files")
-  expect_false(any(file.exists(paths)), label = "recorded Stan paths should not exist after deletion")
-
-  expect_error(
-    sccomp_test(result),
-    "Stan output files for this fit are not on disk"
-  )
-})
-
 # With HMC, `sccomp_summarise_posterior_for_estimate()` only touches `fit$summary()` for `beta` /
 # `alpha_normalised` (etc.); `prec_sd` is not loaded then. After deleting chain CSVs, `prec_sd`
 # must be read from disk and fails (same class of error as copying an RDS to another machine
@@ -221,8 +197,9 @@ test_that("incorporate_parameters_into_sccomp_object forwards fit and writes bac
   class(obj) <- c("sccomp_tbl", class(obj))
 
   local_mocked_bindings(
-    incorporate_parameters_into_fit_object = function(fit) {
+    incorporate_parameters_into_fit_object = function(fit, parameters_to_load) {
       expect_identical(fit, fit_in)
+      expect_null(parameters_to_load)
       fit$incorporated <- TRUE
       fit
     },

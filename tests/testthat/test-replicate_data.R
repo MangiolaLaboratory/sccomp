@@ -3,6 +3,11 @@ library(dplyr)
 library(tidyr)
 library(sccomp)
 
+# Four-slot RE design (see prepare_replicate_data(X_random_effect_slots = ))
+re_slots_from_mi <- function(mi) {
+  lapply(seq_len(4L), function(k) mi[[paste0("X_random_effect_", k)]])
+}
+
 test_that("replicate_data works correctly", {
   skip_cmdstan()
   # Load test data
@@ -44,8 +49,7 @@ test_that("replicate_data works correctly", {
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -75,16 +79,16 @@ test_that("replicate_data works correctly", {
   expect_equal(ncol(result$X), ncol(model_input$X))
 
   # Print key objects for debugging
-  print("colnames(result$X_random_effect):")
-  print(colnames(result$X_random_effect))
-  print("rownames(result$X_random_effect):")
-  print(rownames(result$X_random_effect))
-  print("result$X_random_effect:")
-  print(result$X_random_effect)
-  print("colnames(result$X_random_effect_unseen):")
-  print(colnames(result$X_random_effect_unseen))
-  print("result$X_random_effect_unseen:")
-  print(result$X_random_effect_unseen)
+  print("colnames(result$X_random_effect_1):")
+  print(colnames(result$X_random_effect_1))
+  print("rownames(result$X_random_effect_1):")
+  print(rownames(result$X_random_effect_1))
+  print("result$X_random_effect_1:")
+  print(result$X_random_effect_1)
+  print("colnames(result$X_random_effect_1_unseen):")
+  print(colnames(result$X_random_effect_1_unseen))
+  print("result$X_random_effect_1_unseen:")
+  print(result$X_random_effect_1_unseen)
 })
 
 test_that("replicate_data works with random intercept model", {
@@ -134,8 +138,7 @@ test_that("replicate_data works with random intercept model", {
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -158,22 +161,22 @@ test_that("replicate_data works with random intercept model", {
   expect_true("create_intercept" %in% names(result))
   
   # Check random effect design matrix
-  print('is.null(result$X_random_effect):'); print(is.null(result$X_random_effect))
-  expect_true(!is.null(result$X_random_effect))
-  print('ncol(result$X_random_effect):'); print(ncol(result$X_random_effect))
-  expect_true(ncol(result$X_random_effect) > 0)
+  print('is.null(result$X_random_effect_1):'); print(is.null(result$X_random_effect_1))
+  expect_true(!is.null(result$X_random_effect_1))
+  print('ncol(result$X_random_effect_1):'); print(ncol(result$X_random_effect_1))
+  expect_true(ncol(result$X_random_effect_1) > 0)
 
   # Print key objects for debugging
-  print("colnames(result$X_random_effect):")
-  print(colnames(result$X_random_effect))
-  print("rownames(result$X_random_effect):")
-  print(rownames(result$X_random_effect))
-  print("result$X_random_effect:")
-  print(result$X_random_effect)
-  print("colnames(result$X_random_effect_unseen):")
-  print(colnames(result$X_random_effect_unseen))
-  print("result$X_random_effect_unseen:")
-  print(result$X_random_effect_unseen)
+  print("colnames(result$X_random_effect_1):")
+  print(colnames(result$X_random_effect_1))
+  print("rownames(result$X_random_effect_1):")
+  print(rownames(result$X_random_effect_1))
+  print("result$X_random_effect_1:")
+  print(result$X_random_effect_1)
+  print("colnames(result$X_random_effect_1_unseen):")
+  print(colnames(result$X_random_effect_1_unseen))
+  print("result$X_random_effect_1_unseen:")
+  print(result$X_random_effect_1_unseen)
 })
 
 test_that("replicate_data works with random slope model", {
@@ -229,8 +232,7 @@ test_that("replicate_data works with random slope model", {
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -253,22 +255,22 @@ test_that("replicate_data works with random slope model", {
   expect_true("create_intercept" %in% names(result))
   
   # Check random effect design matrix
-  print('is.null(result$X_random_effect):'); print(is.null(result$X_random_effect))
-  expect_true(!is.null(result$X_random_effect))
-  print('ncol(result$X_random_effect):'); print(ncol(result$X_random_effect))
-  expect_true(ncol(result$X_random_effect) > 0)
+  print('is.null(result$X_random_effect_1):'); print(is.null(result$X_random_effect_1))
+  expect_true(!is.null(result$X_random_effect_1))
+  print('ncol(result$X_random_effect_1):'); print(ncol(result$X_random_effect_1))
+  expect_true(ncol(result$X_random_effect_1) > 0)
 
   # Print key objects for debugging
-  print("colnames(result$X_random_effect):")
-  print(colnames(result$X_random_effect))
-  print("rownames(result$X_random_effect):")
-  print(rownames(result$X_random_effect))
-  print("result$X_random_effect:")
-  print(result$X_random_effect)
-  print("colnames(result$X_random_effect_unseen):")
-  print(colnames(result$X_random_effect_unseen))
-  print("result$X_random_effect_unseen:")
-  print(result$X_random_effect_unseen)
+  print("colnames(result$X_random_effect_1):")
+  print(colnames(result$X_random_effect_1))
+  print("rownames(result$X_random_effect_1):")
+  print(rownames(result$X_random_effect_1))
+  print("result$X_random_effect_1:")
+  print(result$X_random_effect_1)
+  print("colnames(result$X_random_effect_1_unseen):")
+  print(colnames(result$X_random_effect_1_unseen))
+  print("result$X_random_effect_1_unseen:")
+  print(result$X_random_effect_1_unseen)
 })
 
 test_that("replicate_data works with random slope model and type NA", {
@@ -340,8 +342,7 @@ new_data =
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -364,22 +365,22 @@ new_data =
   expect_true("create_intercept" %in% names(result))
   
   # Check random effect design matrix
-  print('is.null(result$X_random_effect):'); print(is.null(result$X_random_effect))
-  expect_true(!is.null(result$X_random_effect))
+  print('is.null(result$X_random_effect_1):'); print(is.null(result$X_random_effect_1))
+  expect_true(!is.null(result$X_random_effect_1))
 
   # Find a column with 'type' in its name
-  col_type <- grep("type", colnames(result$X_random_effect), value = TRUE)[1]
-  col_intercept <- grep("Intercept", colnames(result$X_random_effect), value = TRUE)[1]
-  print(paste('result$X_random_effect[1,', col_type, ']:')); print(result$X_random_effect[1, col_type])
-  print(paste('result$X_random_effect[1,', col_intercept, ']:')); print(result$X_random_effect[1, col_intercept])
-  expect_equal(result$X_random_effect[1, col_type], 0.5)
-  expect_equal(result$X_random_effect[1, col_intercept], 1)
+  col_type <- grep("type", colnames(result$X_random_effect_1), value = TRUE)[1]
+  col_intercept <- grep("Intercept", colnames(result$X_random_effect_1), value = TRUE)[1]
+  print(paste('result$X_random_effect_1[1,', col_type, ']:')); print(result$X_random_effect_1[1, col_type])
+  print(paste('result$X_random_effect_1[1,', col_intercept, ']:')); print(result$X_random_effect_1[1, col_intercept])
+  expect_equal(result$X_random_effect_1[1, col_type], 0.5)
+  expect_equal(result$X_random_effect_1[1, col_intercept], 1)
 
   # Check that X_random_effect_unseen has the expected number of 1s
-  print('result$X_random_effect_unseen[rownames(result$X_random_effect_unseen) == sample_with_na, "(Intercept)___NA"]:')
+  print('result$X_random_effect_1_unseen[rownames(result$X_random_effect_1_unseen) == sample_with_na, "(Intercept)___NA"]:')
   
   # Check if X_random_effect_unseen has the expected column
-  expect_equal(ncol(result$X_random_effect_unseen), 0)
+  expect_equal(ncol(result$X_random_effect_1_unseen), 0)
 })
 
 test_that("replicate_data works with nested random effects", {
@@ -435,8 +436,7 @@ test_that("replicate_data works with nested random effects", {
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -459,26 +459,26 @@ test_that("replicate_data works with nested random effects", {
   expect_true("create_intercept" %in% names(result))
   
   # Check random effect design matrices
-  print('is.null(result$X_random_effect):'); print(is.null(result$X_random_effect))
-  expect_true(!is.null(result$X_random_effect))
+  print('is.null(result$X_random_effect_1):'); print(is.null(result$X_random_effect_1))
+  expect_true(!is.null(result$X_random_effect_1))
   print('is.null(result$X_random_effect_2):'); print(is.null(result$X_random_effect_2))
   expect_true(!is.null(result$X_random_effect_2))
-  print('ncol(result$X_random_effect):'); print(ncol(result$X_random_effect))
-  expect_true(ncol(result$X_random_effect) > 0)
+  print('ncol(result$X_random_effect_1):'); print(ncol(result$X_random_effect_1))
+  expect_true(ncol(result$X_random_effect_1) > 0)
   print('ncol(result$X_random_effect_2):'); print(ncol(result$X_random_effect_2))
   expect_true(ncol(result$X_random_effect_2) > 0)
 
   # Print key objects for debugging
-  print("colnames(result$X_random_effect):")
-  print(colnames(result$X_random_effect))
-  print("rownames(result$X_random_effect):")
-  print(rownames(result$X_random_effect))
-  print("result$X_random_effect:")
-  print(result$X_random_effect)
-  print("colnames(result$X_random_effect_unseen):")
-  print(colnames(result$X_random_effect_unseen))
-  print("result$X_random_effect_unseen:")
-  print(result$X_random_effect_unseen)
+  print("colnames(result$X_random_effect_1):")
+  print(colnames(result$X_random_effect_1))
+  print("rownames(result$X_random_effect_1):")
+  print(rownames(result$X_random_effect_1))
+  print("result$X_random_effect_1:")
+  print(result$X_random_effect_1)
+  print("colnames(result$X_random_effect_1_unseen):")
+  print(colnames(result$X_random_effect_1_unseen))
+  print("result$X_random_effect_1_unseen:")
+  print(result$X_random_effect_1_unseen)
 })
 
 test_that("replicate_data works with NA values in grouping", {
@@ -546,8 +546,7 @@ test_that("replicate_data works with NA values in grouping", {
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -570,45 +569,45 @@ test_that("replicate_data works with NA values in grouping", {
   expect_true("create_intercept" %in% names(result))
   
   # Check random effect design matrix
-  print('is.null(result$X_random_effect):'); print(is.null(result$X_random_effect))
-  expect_true(!is.null(result$X_random_effect))
-  print('ncol(result$X_random_effect):'); print(ncol(result$X_random_effect))
-  expect_true(ncol(result$X_random_effect) > 0)
+  print('is.null(result$X_random_effect_1):'); print(is.null(result$X_random_effect_1))
+  expect_true(!is.null(result$X_random_effect_1))
+  print('ncol(result$X_random_effect_1):'); print(ncol(result$X_random_effect_1))
+  expect_true(ncol(result$X_random_effect_1) > 0)
   
   # Check that NA values are handled correctly
-  print('all(!is.na(result$X_random_effect))'); print(all(!is.na(result$X_random_effect)))
-  expect_true(all(!is.na(result$X_random_effect)))
+  print('all(!is.na(result$X_random_effect_1))'); print(all(!is.na(result$X_random_effect_1)))
+  expect_true(all(!is.na(result$X_random_effect_1)))
   
   # Check that the design matrix dimensions are correct
-  print('nrow(result$X_random_effect):'); print(nrow(result$X_random_effect))
+  print('nrow(result$X_random_effect_1):'); print(nrow(result$X_random_effect_1))
   print('nrow(distinct(test_data, sample))'); print(nrow(test_data |> distinct(sample)))
-  expect_equal(nrow(result$X_random_effect), nrow(test_data |> distinct(sample)))
+  expect_equal(nrow(result$X_random_effect_1), nrow(test_data |> distinct(sample)))
 
   # Check that X_random_effect has only one 0 for the expected sample
   group1_samples <- test_data |> filter(group__ == "GROUP1") |> distinct(sample) |> pull(sample)
-  if ("(Intercept)___GROUP1" %in% colnames(result$X_random_effect)) {
-    print('result$X_random_effect[group1_samples, "(Intercept)___GROUP1"]:')
-    print(result$X_random_effect[group1_samples, "(Intercept)___GROUP1"])
-    expect_true(all(result$X_random_effect[group1_samples, "(Intercept)___GROUP1"] == 1))
+  if ("(Intercept)___GROUP1" %in% colnames(result$X_random_effect_1)) {
+    print('result$X_random_effect_1[group1_samples, "(Intercept)___GROUP1"]:')
+    print(result$X_random_effect_1[group1_samples, "(Intercept)___GROUP1"])
+    expect_true(all(result$X_random_effect_1[group1_samples, "(Intercept)___GROUP1"] == 1))
   }
   
   # Check that X_random_effect_unseen has the expected number of 1s
-  print('result$X_random_effect_unseen[rownames(result$X_random_effect_unseen) == sample_with_na, "(Intercept)___NA"]:')
+  print('result$X_random_effect_1_unseen[rownames(result$X_random_effect_1_unseen) == sample_with_na, "(Intercept)___NA"]:')
   
   # Check if X_random_effect_unseen has the expected column
-  expect_equal(ncol(result$X_random_effect_unseen), 0)
+  expect_equal(ncol(result$X_random_effect_1_unseen), 0)
 
   # Print key objects for debugging
-  print("colnames(result$X_random_effect):")
-  print(colnames(result$X_random_effect))
-  print("rownames(result$X_random_effect):")
-  print(rownames(result$X_random_effect))
-  print("result$X_random_effect:")
-  print(result$X_random_effect)
-  print("colnames(result$X_random_effect_unseen):")
-  print(colnames(result$X_random_effect_unseen))
-  print("result$X_random_effect_unseen:")
-  print(result$X_random_effect_unseen)
+  print("colnames(result$X_random_effect_1):")
+  print(colnames(result$X_random_effect_1))
+  print("rownames(result$X_random_effect_1):")
+  print(rownames(result$X_random_effect_1))
+  print("result$X_random_effect_1:")
+  print(result$X_random_effect_1)
+  print("colnames(result$X_random_effect_1_unseen):")
+  print(colnames(result$X_random_effect_1_unseen))
+  print("result$X_random_effect_1_unseen:")
+  print(result$X_random_effect_1_unseen)
 })
 
 test_that("replicate_data works with NA values in grouping and random effects", {
@@ -679,8 +678,7 @@ test_that("replicate_data works with NA values in grouping and random effects", 
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -702,90 +700,90 @@ test_that("replicate_data works with NA values in grouping and random effects", 
   expect_true("create_intercept" %in% names(result))
   
   # Check random effect design matrix
-  print('is.null(result$X_random_effect):'); print(is.null(result$X_random_effect))
-  expect_true(!is.null(result$X_random_effect))
-  print('ncol(result$X_random_effect):'); print(ncol(result$X_random_effect))
-  expect_true(ncol(result$X_random_effect) > 0)
+  print('is.null(result$X_random_effect_1):'); print(is.null(result$X_random_effect_1))
+  expect_true(!is.null(result$X_random_effect_1))
+  print('ncol(result$X_random_effect_1):'); print(ncol(result$X_random_effect_1))
+  expect_true(ncol(result$X_random_effect_1) > 0)
   
   # Check that NA values are handled correctly in random effects
-  print('all(!is.na(result$X_random_effect))'); print(all(!is.na(result$X_random_effect)))
-  expect_true(all(!is.na(result$X_random_effect)))
+  print('all(!is.na(result$X_random_effect_1))'); print(all(!is.na(result$X_random_effect_1)))
+  expect_true(all(!is.na(result$X_random_effect_1)))
   
   # Check that the design matrix dimensions are correct
-  print('nrow(result$X_random_effect):'); print(nrow(result$X_random_effect))
+  print('nrow(result$X_random_effect_1):'); print(nrow(result$X_random_effect_1))
   print('nrow(distinct(test_data, sample))'); print(nrow(test_data |> distinct(sample)))
-  expect_equal(nrow(result$X_random_effect), nrow(test_data |> distinct(sample)))
+  expect_equal(nrow(result$X_random_effect_1), nrow(test_data |> distinct(sample)))
   
   # Check that the random effect design matrix has the correct structure
-  print('any(grepl("type", colnames(result$X_random_effect)))'); print(any(grepl("type", colnames(result$X_random_effect))))
-  expect_true(any(grepl("type", colnames(result$X_random_effect))))
-  print('any(grepl("Intercept", colnames(result$X_random_effect)))'); print(any(grepl("Intercept", colnames(result$X_random_effect))))
-  expect_true(any(grepl("Intercept", colnames(result$X_random_effect))))
+  print('any(grepl("type", colnames(result$X_random_effect_1)))'); print(any(grepl("type", colnames(result$X_random_effect_1))))
+  expect_true(any(grepl("type", colnames(result$X_random_effect_1))))
+  print('any(grepl("Intercept", colnames(result$X_random_effect_1)))'); print(any(grepl("Intercept", colnames(result$X_random_effect_1))))
+  expect_true(any(grepl("Intercept", colnames(result$X_random_effect_1))))
   
   # Test the properties of X_random_effect_unseen
-  print('all(!is.na(result$X_random_effect_unseen))'); print(all(!is.na(result$X_random_effect_unseen)))
-  expect_true(all(!is.na(result$X_random_effect_unseen)))
-  print('nrow(result$X_random_effect_unseen):'); print(nrow(result$X_random_effect_unseen))
+  print('all(!is.na(result$X_random_effect_1_unseen))'); print(all(!is.na(result$X_random_effect_1_unseen)))
+  expect_true(all(!is.na(result$X_random_effect_1_unseen)))
+  print('nrow(result$X_random_effect_1_unseen):'); print(nrow(result$X_random_effect_1_unseen))
   print('nrow(distinct(test_data, sample)):'); print(nrow(test_data |> distinct(sample)))
-  expect_equal(nrow(result$X_random_effect_unseen), nrow(test_data |> distinct(sample)))
-  print('ncol(result$X_random_effect_unseen):'); print(ncol(result$X_random_effect_unseen))
+  expect_equal(nrow(result$X_random_effect_1_unseen), nrow(test_data |> distinct(sample)))
+  print('ncol(result$X_random_effect_1_unseen):'); print(ncol(result$X_random_effect_1_unseen))
   
   # When new_data is NULL, X_random_effect_unseen should be empty (0 columns)
   # even if the original data has NA values in grouping
-  expect_equal(ncol(result$X_random_effect_unseen), 0)
-  print('rownames(result$X_random_effect_unseen):'); print(rownames(result$X_random_effect_unseen))
-  print('rownames(result$X_random_effect):'); print(rownames(result$X_random_effect))
-  expect_equal(rownames(result$X_random_effect_unseen), rownames(result$X_random_effect))
+  expect_equal(ncol(result$X_random_effect_1_unseen), 0)
+  print('rownames(result$X_random_effect_1_unseen):'); print(rownames(result$X_random_effect_1_unseen))
+  print('rownames(result$X_random_effect_1):'); print(rownames(result$X_random_effect_1))
+  expect_equal(rownames(result$X_random_effect_1_unseen), rownames(result$X_random_effect_1))
   
   # Since X_random_effect_unseen is empty, we can't check for NA columns
-  # print('all(grepl("___NA$", colnames(result$X_random_effect_unseen)))'); print(all(grepl("___NA$", colnames(result$X_random_effect_unseen))))
-  # expect_true(all(grepl("___NA$", colnames(result$X_random_effect_unseen))))
-  print('all(grepl("___GROUP", colnames(result$X_random_effect)))'); print(all(grepl("___GROUP", colnames(result$X_random_effect))))
-  expect_true(all(grepl("___GROUP", colnames(result$X_random_effect))))
+  # print('all(grepl("___NA$", colnames(result$X_random_effect_1_unseen)))'); print(all(grepl("___NA$", colnames(result$X_random_effect_1_unseen))))
+  # expect_true(all(grepl("___NA$", colnames(result$X_random_effect_1_unseen))))
+  print('all(grepl("___GROUP", colnames(result$X_random_effect_1)))'); print(all(grepl("___GROUP", colnames(result$X_random_effect_1))))
+  expect_true(all(grepl("___GROUP", colnames(result$X_random_effect_1))))
   
   # Since X_random_effect_unseen is empty, we can't check sums of NA columns
-  # print('sum(result$X_random_effect_unseen[, "typecancer___NA"]):'); print(sum(as.vector(result$X_random_effect_unseen[, "typecancer___NA"])))
+  # print('sum(result$X_random_effect_1_unseen[, "typecancer___NA"]):'); print(sum(as.vector(result$X_random_effect_1_unseen[, "typecancer___NA"])))
   # expect_equal(
-  #   as.vector(result$X_random_effect_unseen[, "typecancer___NA"]) |> sum(),
+  #   as.vector(result$X_random_effect_1_unseen[, "typecancer___NA"]) |> sum(),
   #   1
   # )
   # 
-  # print('sum(result$X_random_effect_unseen[, "(Intercept)___NA"]):'); print(sum(as.vector(result$X_random_effect_unseen[, "(Intercept)___NA"])))
+  # print('sum(result$X_random_effect_1_unseen[, "(Intercept)___NA"]):'); print(sum(as.vector(result$X_random_effect_1_unseen[, "(Intercept)___NA"])))
   # expect_equal(
-  #   as.vector(result$X_random_effect_unseen[, "(Intercept)___NA"]) |> sum(),
+  #   as.vector(result$X_random_effect_1_unseen[, "(Intercept)___NA"]) |> sum(),
   #   2
   # )
 
   # Robust per-sample checks for random effect matrices
-  for (s in rownames(result$X_random_effect)) {
+  for (s in rownames(result$X_random_effect_1)) {
     group_val <- test_data |> filter(sample == s) |> distinct(group__) |> pull(group__)
     if (length(group_val) > 0 && !is.na(group_val)) {
       colname <- paste0("(Intercept)___", group_val)
-      if (colname %in% colnames(result$X_random_effect)) {
-        expect_equal(result$X_random_effect[s, colname], 1)
+      if (colname %in% colnames(result$X_random_effect_1)) {
+        expect_equal(result$X_random_effect_1[s, colname], 1)
       }
     }
   }
   
   # Since X_random_effect_unseen is empty, we can't check for NA samples
-  # for (s in rownames(result$X_random_effect_unseen)) {
+  # for (s in rownames(result$X_random_effect_1_unseen)) {
   #   group_val <- test_data |> filter(sample == s) |> distinct(group__) |> pull(group__)
   #   if (length(group_val) > 0 && is.na(group_val)) {
-  #     expect_equal(result$X_random_effect_unseen[s, "(Intercept)___NA"], 1)
+  #     expect_equal(result$X_random_effect_1_unseen[s, "(Intercept)___NA"], 1)
   #   }
   # }
 
   # Print key objects for debugging
-  print("colnames(result$X_random_effect):")
-  print(colnames(result$X_random_effect))
-  print("rownames(result$X_random_effect):")
-  print(rownames(result$X_random_effect))
-  print("result$X_random_effect:")
-  print(result$X_random_effect)
-  print("colnames(result$X_random_effect_unseen):")
-  print(colnames(result$X_random_effect_unseen))
-  print("result$X_random_effect_unseen:")
-  print(result$X_random_effect_unseen)
+  print("colnames(result$X_random_effect_1):")
+  print(colnames(result$X_random_effect_1))
+  print("rownames(result$X_random_effect_1):")
+  print(rownames(result$X_random_effect_1))
+  print("result$X_random_effect_1:")
+  print(result$X_random_effect_1)
+  print("colnames(result$X_random_effect_1_unseen):")
+  print(colnames(result$X_random_effect_1_unseen))
+  print("result$X_random_effect_1_unseen:")
+  print(result$X_random_effect_1_unseen)
 }) 
 
 test_that("replicate_data works with type NA and group__ NA", {
@@ -854,8 +852,7 @@ test_that("replicate_data works with type NA and group__ NA", {
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -874,20 +871,20 @@ test_that("replicate_data works with type NA and group__ NA", {
   expect_true("create_intercept" %in% names(result))
   
   # Check random effect design matrix
-  expect_true(!is.null(result$X_random_effect))
-  expect_true(ncol(result$X_random_effect) > 0)
+  expect_true(!is.null(result$X_random_effect_1))
+  expect_true(ncol(result$X_random_effect_1) > 0)
   
   # Check that NA values are handled correctly
-  expect_true(all(!is.na(result$X_random_effect)))
+  expect_true(all(!is.na(result$X_random_effect_1)))
   
   # Check that the design matrix dimensions are correct
-  expect_equal(nrow(result$X_random_effect), nrow(new_data |> distinct(sample)))
+  expect_equal(nrow(result$X_random_effect_1), nrow(new_data |> distinct(sample)))
   
   # Check that X_random_effect_unseen has the expected structure
-  expect_true(!is.null(result$X_random_effect_unseen))
-  expect_true(all(!is.na(result$X_random_effect_unseen)))
-  expect_equal(nrow(result$X_random_effect_unseen), nrow(new_data |> distinct(sample)))
-  expect_true(all(grepl("___NA$", colnames(result$X_random_effect_unseen))))
+  expect_true(!is.null(result$X_random_effect_1_unseen))
+  expect_true(all(!is.na(result$X_random_effect_1_unseen)))
+  expect_equal(nrow(result$X_random_effect_1_unseen), nrow(new_data |> distinct(sample)))
+  expect_true(all(grepl("___NA$", colnames(result$X_random_effect_1_unseen))))
 }) 
 
 test_that("replicate_data works with new data containing only NA groups", {
@@ -1019,8 +1016,7 @@ test_that("prepare_replicate_data handles complex design with NAs and prints new
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect = model_input$X_random_effect,
-    X_random_effect_2 = model_input$X_random_effect_2,
+    X_random_effect_slots = re_slots_from_mi(model_input),
     .sample = !!rlang::quo(sample),
     .cell_group = !!rlang::quo(cell_group),
     .count = !!rlang::quo(count),
@@ -1037,7 +1033,7 @@ test_that("prepare_replicate_data handles complex design with NAs and prints new
 
   # Print the new random effect design matrix (X_random_effect)
   cat("\nNew random effect design matrix (X_random_effect):\n")
-  print(result$X_random_effect)
+  print(result$X_random_effect_1)
 
   # Print the new random effect design matrix 2 (if present)
   if (!is.null(result$X_random_effect_2)) {
@@ -1047,12 +1043,12 @@ test_that("prepare_replicate_data handles complex design with NAs and prints new
 
   # Evaluate structure
   expect_true(is.matrix(result$X) || is.data.frame(result$X))
-  expect_true(is.matrix(result$X_random_effect) || is.data.frame(result$X_random_effect))
+  expect_true(is.matrix(result$X_random_effect_1) || is.data.frame(result$X_random_effect_1))
   expect_equal(nrow(result$X), nrow(original_count_data))
-  expect_equal(nrow(result$X_random_effect), nrow(original_count_data))
+  expect_equal(nrow(result$X_random_effect_1), nrow(original_count_data))
   # Check that NAs are handled (no NA in design matrices)
   expect_true(all(!is.na(result$X)))
-  expect_true(all(!is.na(result$X_random_effect)))
+  expect_true(all(!is.na(result$X_random_effect_1)))
 })
 
 test_that("prepare_replicate_data throws error for duplicate sample names", {
@@ -1106,8 +1102,7 @@ test_that("prepare_replicate_data throws error for duplicate sample names", {
       Xa = model_input$Xa,
       N = model_input$N,
       intercept_in_design = model_input$intercept_in_design,
-      X_random_effect = model_input$X_random_effect,
-      X_random_effect_2 = model_input$X_random_effect_2,
+      X_random_effect_slots = re_slots_from_mi(model_input),
       .sample = !!rlang::quo(sample),
       .cell_group = !!rlang::quo(cell_group),
       .count = !!rlang::quo(count),
@@ -1134,8 +1129,7 @@ test_that("prepare_replicate_data throws error for duplicate sample names", {
       Xa = model_input$Xa,
       N = model_input$N,
       intercept_in_design = model_input$intercept_in_design,
-      X_random_effect = model_input$X_random_effect,
-      X_random_effect_2 = model_input$X_random_effect_2,
+      X_random_effect_slots = re_slots_from_mi(model_input),
       .sample = !!rlang::quo(sample),
       .cell_group = !!rlang::quo(cell_group),
       .count = !!rlang::quo(count),

@@ -50,3 +50,4 @@ docs
 **/*.quarto_ipynb
 .Renviron
 *.exe
+sccomp.Rcheck*
