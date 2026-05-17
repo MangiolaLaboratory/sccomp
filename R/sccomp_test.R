@@ -494,6 +494,68 @@ build_stan_parameter_subset <- function(contrasts, design_columns, stan_paramete
   )
 }
 
+# ----------------------------------------------------------------------
+# Random effect draws: extract one slot at a time (1..4) and left-join into
+# `draws`. Per-slot logic is identical, so we loop over a helper instead of
+# duplicating the block once per slot.
+# ----------------------------------------------------------------------
+# This is still inefficient as it is drawing all random effects regardless of the ciontrasts
+add_random_effect_draws = function(draws, contrasts, model_input, slot_idx, fit) {
+
+  re_covariates = model_input[[paste0("X_random_effect_", slot_idx)]] |> colnames()
+  re_subset = build_stan_parameter_subset(
+    contrasts      = contrasts,
+    design_columns = re_covariates,
+    stan_parameter = paste0("random_effect_", slot_idx),
+    model_input    = model_input
+  )
+  re_parameters = re_subset |> dplyr::pull("parameter") |> unique()
+  re_variables  = re_subset |> dplyr::pull("variable")  |> unique()
+  
+  # No-op when contrasts filter out everything in this slot
+  if (!is.null(contrasts) && length(re_parameters) == 0)
+    return(list(draws = draws, covariates = re_covariates))
+  
+  re_draws =
+    fit |>
+    draws_to_tibble_x_y(re_variables, "C", "M")
+  
+  # Reconstruct the omitted last cell-group (sum-to-zero closure)
+  other_group_re =
+    re_draws |>
+    with_groups(c(C, .chain, .iteration, .draw, .variable),
+                ~ .x |> summarise(.value = sum(.value))) |>
+    mutate(.value = -.value, M = re_draws |> pull(M) |> max() + 1)
+  
+  re_draws = bind_rows(re_draws, other_group_re)
+  
+  if (!is.null(contrasts)) {
+    re_draws = re_draws |>
+      left_join(
+        re_covariates |> enframe(name = "C", value = "parameters_name"),
+        by = "C"
+      ) |>
+      filter(parameters_name %in% re_parameters) |>
+      select(-C) |>
+      pivot_wider(names_from = parameters_name, values_from = .value)
+  } else {
+    re_draws = re_draws |>
+      pivot_wider(names_from = C, values_from = .value) %>%
+      setNames(colnames(.)[1:5] |> c(re_covariates))
+  }
+  
+  new_draws =
+    if (nrow(draws) == 0)
+      select(re_draws, -.variable)
+  else
+    draws |>
+    left_join(select(re_draws, -.variable),
+              by = c("M", ".chain", ".iteration", ".draw"))
+  
+  list(draws = new_draws, covariates = re_covariates)
+}
+
+
 # this can be helpful if we want to draw PCA with uncertainty
 get_abundance_contrast_draws = function(.data, contrasts = NULL){
   
@@ -530,7 +592,9 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
   beta_parameters <- beta_subset |> dplyr::pull("parameter") |> unique()
   beta_variable_subset <- beta_subset |> dplyr::pull("variable") |> unique()
   
-
+  if(length(beta_variable_subset) == 0 )
+    warning(sprintf("sccomp says: These components of your contrasts are not present in the model as parameters: %s. Factors including special characters, e.g. \"(Intercept)\" require backquotes e.g. \"`(Intercept)`\" ", paste(contrasts, sep = ", ")))
+  
     draws =
       .data |>
       attr("fit") %>%
@@ -543,85 +607,27 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
     pivot_wider(names_from = parameters_name, values_from = .value) |>
     select(-.variable)
 
-  
-  
-  # ----------------------------------------------------------------------
-  # Random effect draws: extract one slot at a time (1..4) and left-join into
-  # `draws`. Per-slot logic is identical, so we loop over a helper instead of
-  # duplicating the block once per slot.
-  # ----------------------------------------------------------------------
-  extract_random_effect_slot = function(slot_idx) {
-    if (model_input$ncol_X_random_eff[slot_idx] == 0)
-      return(list(draws = draws, covariates = character(0)))
+  # RANDOM EFFECTS
     
-    re_covariates = model_input[[paste0("X_random_effect_", slot_idx)]] |> colnames()
-    re_subset = build_stan_parameter_subset(
-      contrasts      = contrasts,
-      design_columns = re_covariates,
-      stan_parameter = paste0("random_effect_", slot_idx),
-      model_input    = model_input
-    )
-    re_parameters = re_subset |> dplyr::pull("parameter") |> unique()
-    re_variables  = re_subset |> dplyr::pull("variable")  |> unique()
-    
-    # No-op when contrasts filter out everything in this slot
-    if (!is.null(contrasts) && length(re_parameters) == 0)
-      return(list(draws = draws, covariates = re_covariates))
-    
-    re_draws =
-      .data |> attr("fit") %>%
-      draws_to_tibble_x_y(re_variables, "C", "M")
-    
-    # Reconstruct the omitted last cell-group (sum-to-zero closure)
-    other_group_re =
-      re_draws |>
-      with_groups(c(C, .chain, .iteration, .draw, .variable),
-                  ~ .x |> summarise(.value = sum(.value))) |>
-      mutate(.value = -.value, M = re_draws |> pull(M) |> max() + 1)
-    
-    re_draws = bind_rows(re_draws, other_group_re)
-    
-    if (!is.null(contrasts)) {
-      re_draws = re_draws |>
-        left_join(
-          re_covariates |> enframe(name = "C", value = "parameters_name"),
-          by = "C"
-        ) |>
-        filter(parameters_name %in% re_parameters) |>
-        select(-C) |>
-        pivot_wider(names_from = parameters_name, values_from = .value)
-    } else {
-      re_draws = re_draws |>
-        pivot_wider(names_from = C, values_from = .value) %>%
-        setNames(colnames(.)[1:5] |> c(re_covariates))
-    }
-    
-    new_draws =
-      if (nrow(draws) == 0)
-        select(re_draws, -.variable)
-      else
-        draws |>
-        left_join(select(re_draws, -.variable),
-                  by = c("M", ".chain", ".iteration", ".draw"))
-    
-    list(draws = new_draws, covariates = re_covariates)
-  }
-  
   random_effect_covariates_all = character(0)
+
   for (k in seq_len(4L)) {
-    res = extract_random_effect_slot(k)
-    draws = res$draws
-    random_effect_covariates_all = c(random_effect_covariates_all, res$covariates)
+    if (model_input$ncol_X_random_eff[k] == 0) next
+    res <- add_random_effect_draws(draws, contrasts, model_input, k, attr(.data, "fit"))
+    draws <- res$draws
+    random_effect_covariates_all <- c(random_effect_covariates_all, res$covariates)
   }
   
-  # If I have contrasts, calculate
-  if (!is.null(contrasts))
+  # CALCULATE CONTRAST
+  if (!is.null(contrasts)){
     draws =
-    draws |>
-    mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
-    select(- any_of(c(beta_covariates, random_effect_covariates_all) |> setdiff(contrasts)))
-  
+      draws |>
+      mutate_from_expr_list(contrasts, ignore_errors = FALSE) |>
+      select(- any_of(c(beta_covariates, random_effect_covariates_all) |> setdiff(contrasts)))
+    
+  }
 
+  # RESHAPE
   draws = draws |>
     pivot_longer(-c(1:4), names_to = "parameter", values_to = ".value") |>
     
@@ -776,7 +782,7 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   
   # Check if all elements of contrasts are in the parameter
   parameter_names = x |> colnames()
-  
+ 
   # Check is backquoted are not used
   require_back_quotes = !contrasts_elements |>  str_remove_all("`") |> contains_only_valid_chars_for_column() 
   has_left_back_quotes = contrasts_elements |>  str_detect("^`") 
@@ -796,6 +802,7 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
   
   if(length(contrasts_not_in_the_model) > 0 & !ignore_errors)
     warning(sprintf("sccomp says: These components of your contrasts are not present in the model as parameters: %s. Factors including special characters, e.g. \"(Intercept)\" require backquotes e.g. \"`(Intercept)`\" ", paste(contrasts_not_in_the_model, sep = ", ")))
+  
   
   # Calculate
   if(ignore_errors) my_mutate = mutate_ignore_error
