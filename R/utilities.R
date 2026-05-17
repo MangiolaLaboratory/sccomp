@@ -90,36 +90,36 @@ subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE
       filter(`factor` == !!factor)
 }
 
-#' Incorporate all Stan model parameters into fit object
+#' Incorporate Stan draws into fit object
 #'
 #' @description
-#' This function loads all parameters from the Stan model into the fit object.
-#' This is necessary before cleaning up CSV draw files to ensure all parameters
-#' are available for later retrieval even after the CSV files are deleted.
-#' 
-#' The function calls fit$draws() for all parameters, which forces cmdstanr
-#' to read the CSV files and cache the draws in memory. This way, when the
-#' CSV files are later deleted (via portable = TRUE), the draws
-#' remain accessible through the fit object.
-#' 
-#' This function is really needed for LOO usage and outlier removal usage.
+#' Loads parameters (and generated quantities in the CSV) into the fit object by
+#' calling \code{fit$draws()}, so CmdStanR reads chain files and caches draws in memory.
+#' Needed before deleting draw CSVs (\code{portable = TRUE}) and for downstream uses
+#' such as \code{fit$draws(format = "matrix")} in outlier removal.
 #'
 #' @param fit A cmdstanr fit object
+#' @param parameters_to_load Character vector of Stan \emph{base} names (no indices), or
+#'   \code{NULL} (default) to load every variable reported in \code{fit$metadata()$model_params}.
 #'
-#' @return The same fit object (invisibly), with all parameters loaded into memory
+#' @return The same fit object, with requested draws loaded into memory
 #'
 #' @keywords internal
 #' @noRd
-incorporate_parameters_into_fit_object = function(fit, parameters_to_load) {
+incorporate_parameters_into_fit_object = function(fit, parameters_to_load = NULL) {
   model_params <- fit$metadata()$model_params
   model_params_base <- unique(sub("(\\[.*\\])?$", "", model_params))
-  parameters_present <- intersect(parameters_to_load, model_params_base)
 
-  
-  # Load parameters by calling draws()
-  # This forces cmdstanr to read from CSV and store in memory
-  fit$draws(variables = parameters_present, format = "draws_df")
-  
+  parameters_present <- if (is.null(parameters_to_load)) {
+    model_params_base
+  } else {
+    intersect(parameters_to_load, model_params_base)
+  }
+
+  if (length(parameters_present) > 0L) {
+    fit$draws(variables = parameters_present, format = "draws_df")
+  }
+
   fit
 }
 
@@ -132,35 +132,14 @@ incorporate_parameters_into_fit_object = function(fit, parameters_to_load) {
 #' object (and attributes) are retained.
 #'
 #' @param obj An object with a \code{"fit"} attribute (typically a \code{sccomp_tbl}).
+#' @param parameters_to_load Passed to \code{incorporate_parameters_into_fit_object()};
+#'   use \code{NULL} (default) to load all variables from the fit metadata.
 #'
 #' @return \code{obj} with an updated \code{"fit"} attribute.
 #'
 #' @keywords internal
 #' @noRd
-incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = c(
-    # Parameters block
-    "beta_raw",
-    "alpha",
-    "prec_intercept",
-    "log_prec_sd",
-    "prec_intercept_1",
-    "prec_slope_1",
-    "prec_intercept_2",
-    "prec_slope_2",
-    "prec_sd",
-    "mix_p",
-    # Random effect parameters - one set per slot (1..4)
-    "random_effect_raw_1",        "random_effect_raw_2",        "random_effect_raw_3",        "random_effect_raw_4",
-    "random_effect_sigma_raw_1",  "random_effect_sigma_raw_2",  "random_effect_sigma_raw_3",  "random_effect_sigma_raw_4",
-    "sigma_correlation_factor_1", "sigma_correlation_factor_2", "sigma_correlation_factor_3", "sigma_correlation_factor_4",
-    "random_effect_sigma_mu",
-    "random_effect_sigma_sigma",
-    "zero_random_effect",
-    # Transformed parameters
-    "beta",
-    # Generated quantities
-    "log_lik"
-  )) {
+incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = NULL) {
 
   fit <- attr(obj, "fit")
   if (is.null(fit)) {
