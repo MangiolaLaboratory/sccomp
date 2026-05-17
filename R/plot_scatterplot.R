@@ -147,7 +147,7 @@ plot_scatterplot = function(
       geom_smooth(
         aes(!!as.symbol(factor_of_interest), proportion, fill = name),
         data = data_proportion ,
-        fatten = 0.5,
+        linewidth = 0.5,
         lwd=0.5,
         color = "black",
         span = 1
