@@ -34,7 +34,12 @@ parameters{
   
   // sd of random intercept
   array[is_random_effect>0] real random_effect_sigma_mu;
-  array[is_random_effect>0] real random_effect_sigma_sigma;
+  // <lower=0> mirrors the fitting model in glm_multi_beta_binomial.stan: it
+  // breaks the (+sigma_sigma, +sigma_raw) / (-sigma_sigma, -sigma_raw) sign
+  // redundancy so prior-predictive draws match the constrained parameterisation
+  // the fit actually uses. It is not a minimum-variance assumption: sigma_sigma
+  // = 0 (homogeneous RE-SDs across categories) remains the prior mode.
+  array[is_random_effect>0] real<lower=0> random_effect_sigma_sigma;
 
 	// Covariance
   array[M-1 * (is_random_effect>0)] vector[how_many_factors_in_random_design[1]]  random_effect_sigma_raw;

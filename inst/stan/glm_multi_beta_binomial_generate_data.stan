@@ -117,6 +117,12 @@ parameters {
   array[M * (ncol_X_random_eff[4]>0)] cholesky_factor_corr[how_many_factors_in_random_design[4] * (ncol_X_random_eff[4]>0)] sigma_correlation_factor_4;
 
   array[4 * (is_random_effect>0)] real random_effect_sigma_mu;
+  // NOTE: deliberately *not* declared <lower=0> here even though the fitting
+  // model in glm_multi_beta_binomial.stan now constrains it. This program
+  // binds parameter values from previously-saved fits via generate_quantities;
+  // adding the constraint would reject fits produced before the sign-flip
+  // fix was introduced. The constraint only matters during sampling, so
+  // leaving this permissive is sound and preserves backward compatibility.
   array[4 * (is_random_effect>0)] real random_effect_sigma_sigma;
   array[is_random_effect>0] real zero_random_effect;
 }

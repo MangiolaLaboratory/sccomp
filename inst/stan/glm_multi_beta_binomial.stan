@@ -430,7 +430,14 @@ parameters{
 
   // Shared hyperprior scalars (one mu, one sigma per slot)
   array[4 * (is_random_effect>0)] real random_effect_sigma_mu;
-  array[4 * (is_random_effect>0)] real random_effect_sigma_sigma;
+  // Constrained to be non-negative to break the sign-flip redundancy in
+  // sigma_vec[m] = exp((sigma_mu + sigma_sigma * sigma_raw[m]) / 3.0):
+  // (+sigma_sigma, +sigma_raw) and (-sigma_sigma, -sigma_raw) describe the
+  // same model, producing a bimodal posterior that HMC has to traverse
+  // through the degenerate region at 0 to mix. This is a reparameterisation,
+  // not a prior change: sigma_sigma = 0 (all cell types share one RE-SD) is
+  // still the mode of the half-normal prior below.
+  array[4 * (is_random_effect>0)] real<lower=0> random_effect_sigma_sigma;
 
   // For models with a single group (kept from the original design)
   array[is_random_effect>0] real zero_random_effect;
