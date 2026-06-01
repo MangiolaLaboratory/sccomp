@@ -34,11 +34,7 @@ parameters{
   
   // sd of random intercept
   array[is_random_effect>0] real random_effect_sigma_mu;
-  // <lower=0> mirrors the fitting model in glm_multi_beta_binomial.stan: it
-  // breaks the (+sigma_sigma, +sigma_raw) / (-sigma_sigma, -sigma_raw) sign
-  // redundancy so prior-predictive draws match the constrained parameterisation
-  // the fit actually uses. It is not a minimum-variance assumption: sigma_sigma
-  // = 0 (homogeneous RE-SDs across categories) remains the prior mode.
+  // Retained for backward compatibility; fitting model fixes sigma_sigma at 1.0.
   array[is_random_effect>0] real<lower=0> random_effect_sigma_sigma;
 
 	// Covariance

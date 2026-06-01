@@ -110,7 +110,7 @@
       array[,] int group_factor_indexes,                  // factor x group -> col index
       array[] vector raw_vec,                             // length ncol, each length M
       real sigma_mu,                                      // hierarchical hyperprior mean
-      real sigma_sigma,                                   // hierarchical hyperprior SD
+      real sigma_sigma,                                   // hierarchical hyperprior SD (callers pass 1.0; see fitting model)
       array[] vector sigma_raw,                           // length M, each length n_factors
       array[] matrix corr_chol                            // length M, each n_factors x n_factors
     ) {
