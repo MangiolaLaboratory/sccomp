@@ -118,8 +118,8 @@ parameters {
 
   array[4 * (is_random_effect>0)] real random_effect_sigma_mu;
   // Retained for backward compatibility when binding saved draws; build_re_block
-  // uses sigma_sigma = 1.0 (same as the fitting model). Unconstrained so old fits
-  // with arbitrary stored values still load.
+  // uses sigma_sigma = 1.0 (same as the fitting model). <lower=0> matches the
+  // fitting model; values from saved draws are bound but not used in the build.
   array[4 * (is_random_effect>0)] real<lower=0> random_effect_sigma_sigma;
   array[is_random_effect>0] real zero_random_effect;
 }

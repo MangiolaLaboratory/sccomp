@@ -433,8 +433,8 @@ parameters{
   array[4 * (is_random_effect>0)] real random_effect_sigma_mu;
   // Retained for backward compatibility with saved fits / R interfaces; not
   // used in the likelihood (build_re_block is called with sigma_sigma = 1.0).
-  // Pinned so draws still expose the name at 1.0 without a prior.
-  array[4 * (is_random_effect>0)] real<lower=1, upper=1> random_effect_sigma_sigma;
+  // Still sampled via half-normal prior below so the name stays in draws.
+  array[4 * (is_random_effect>0)] real<lower=0> random_effect_sigma_sigma;
 
   // For models with a single group (kept from the original design)
   array[is_random_effect>0] real zero_random_effect;
@@ -620,6 +620,7 @@ model{
   // ----------------------------------------------------------------------
   if (is_random_effect > 0) {
     random_effect_sigma_mu ~ std_normal();
+    random_effect_sigma_sigma ~ std_normal();  // half-normal via <lower=0>
     zero_random_effect ~ std_normal();
   }
 
