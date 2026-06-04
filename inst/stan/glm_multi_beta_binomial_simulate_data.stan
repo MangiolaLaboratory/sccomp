@@ -34,8 +34,8 @@ parameters{
   
   // sd of random intercept
   array[is_random_effect>0] real random_effect_sigma_mu;
-  // Retained for backward compatibility; fitting model fixes sigma_sigma at 1.0
-  // in build_re_block but keeps this parameter with <lower=0> for draw structure.
+  // Retained for backward compatibility; fitting model fixes sigma_mu = 0.0 and
+  // sigma_sigma = 1.0 in build_re_block but keeps these parameters for draw structure.
   array[is_random_effect>0] real<lower=0> random_effect_sigma_sigma;
 
 	// Covariance

@@ -118,8 +118,7 @@ parameters {
 
   array[4 * (is_random_effect>0)] real random_effect_sigma_mu;
   // Retained for backward compatibility when binding saved draws; build_re_block
-  // uses sigma_sigma = 1.0 (same as the fitting model). <lower=0> matches the
-  // fitting model; values from saved draws are bound but not used in the build.
+  // uses sigma_mu = 0.0 and sigma_sigma = 1.0 (same as the fitting model).
   array[4 * (is_random_effect>0)] real<lower=0> random_effect_sigma_sigma;
   array[is_random_effect>0] real zero_random_effect;
 }
@@ -152,7 +151,7 @@ transformed parameters {
     random_effect_1 = build_re_block(
       M, n_groups[1], how_many_factors_in_random_design[1], ncol_X_random_eff[1],
       group_factor_indexes_for_covariance_1, raw_vec,
-      random_effect_sigma_mu[1], 1.0,
+      0.0, 1.0,
       random_effect_sigma_raw_1, sigma_correlation_factor_1
     );
   }
@@ -162,7 +161,7 @@ transformed parameters {
     random_effect_2 = build_re_block(
       M, n_groups[2], how_many_factors_in_random_design[2], ncol_X_random_eff[2],
       group_factor_indexes_for_covariance_2, raw_vec,
-      random_effect_sigma_mu[2], 1.0,
+      0.0, 1.0,
       random_effect_sigma_raw_2, sigma_correlation_factor_2
     );
   }
@@ -172,7 +171,7 @@ transformed parameters {
     random_effect_3 = build_re_block(
       M, n_groups[3], how_many_factors_in_random_design[3], ncol_X_random_eff[3],
       group_factor_indexes_for_covariance_3, raw_vec,
-      random_effect_sigma_mu[3], 1.0,
+      0.0, 1.0,
       random_effect_sigma_raw_3, sigma_correlation_factor_3
     );
   }
@@ -182,7 +181,7 @@ transformed parameters {
     random_effect_4 = build_re_block(
       M, n_groups[4], how_many_factors_in_random_design[4], ncol_X_random_eff[4],
       group_factor_indexes_for_covariance_4, raw_vec,
-      random_effect_sigma_mu[4], 1.0,
+      0.0, 1.0,
       random_effect_sigma_raw_4, sigma_correlation_factor_4
     );
   }
