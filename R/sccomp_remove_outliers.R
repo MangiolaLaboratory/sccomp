@@ -233,6 +233,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       attr(.estimate , "fit")$num_chains()
     ), 
     threads_per_chain = cores,
+    seed = mcmc_seed,
     sig_figs = sig_figs
     
     
@@ -372,6 +373,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     
     parallel_chains = ifelse(inference_method %in% c("variational", "pathfinder"), 1, fit2$num_chains()), 
     threads_per_chain = cores,
+    seed = mcmc_seed,
     sig_figs = sig_figs
     
   )
