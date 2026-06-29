@@ -1,5 +1,6 @@
 library(sccomp)
 data("counts_obj")
+n_iterations = 1000
 
 test_that("sccomp_remove_outliers is reproducible with fixed mcmc_seed", {
   skip_cmdstan()
@@ -14,7 +15,7 @@ test_that("sccomp_remove_outliers is reproducible with fixed mcmc_seed", {
       inference_method = "pathfinder",
       cores = 1,
       mcmc_seed = 12345,
-      max_sampling_iterations = 1000,
+      max_sampling_iterations = n_iterations,
       verbose = FALSE
     )
   
@@ -24,7 +25,7 @@ test_that("sccomp_remove_outliers is reproducible with fixed mcmc_seed", {
       inference_method = "pathfinder",
       cores = 1,
       mcmc_seed = 67890,
-      max_sampling_iterations = 1000,
+      max_sampling_iterations = n_iterations,
       verbose = FALSE
     )
   
@@ -34,7 +35,7 @@ test_that("sccomp_remove_outliers is reproducible with fixed mcmc_seed", {
       inference_method = "pathfinder",
       cores = 1,
       mcmc_seed = 67890,
-      max_sampling_iterations = 1000,
+      max_sampling_iterations = n_iterations,
       verbose = FALSE
     )
   
