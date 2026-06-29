@@ -1,6 +1,6 @@
 library(sccomp)
 data("counts_obj")
-n_iterations = 1000
+n_iterations <- 1000
 
 test_that("sccomp_remove_outliers is reproducible with fixed mcmc_seed", {
   skip_cmdstan()
