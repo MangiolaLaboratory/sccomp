@@ -52,7 +52,10 @@ jobs:
       - name: Install CmdStan  
         shell: Rscript {0}
         run: |
-          install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+          # sccomp requires cmdstanr >= 0.9.0; the mc-stan.org repo currently
+          # only serves 0.8.0, so install from the stan-dev r-universe which
+          # provides 0.9.0 (matching the fallback used in model_fitting.R).
+          install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev", getOption("repos")))
           cmdstanr::check_cmdstan_toolchain(fix = TRUE)
           cmdstanr::install_cmdstan(cores = 2)
           cmdstanr::cmdstan_version()
