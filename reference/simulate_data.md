@@ -131,6 +131,7 @@ https://doi.org/10.1073/pnas.2203828120 (2023).
 ## Examples
 
 ``` r
+
 # print("cmdstanr is needed to run this example.")
 # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
 # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))

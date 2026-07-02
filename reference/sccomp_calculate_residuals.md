@@ -120,8 +120,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000351 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.51 seconds. 
+#> Gradient evaluation took 0.000352 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.52 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -148,6 +148,7 @@ print(residuals)
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
+#> Chain 1  Elapsed Time: 0.566 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 720 × 5
 #>    sample cell_group residuals exposure residuals_unconstrained

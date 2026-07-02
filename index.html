@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Differential Composition and Variability Analysis for Single-Cell Data • sccomp</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Differential Composition and Variability Analysis for Single-Cell Data">
 <meta name="description" content="Comprehensive R package for differential composition and variability analysis in single-cell RNA sequencing, CyTOF, and microbiome data. Provides robust Bayesian modeling with outlier detection, random effects, and advanced statistical methods for cell type proportion analysis. Features include probabilistic outlier identification, mixed-effect modeling, differential variability testing, and comprehensive visualization tools. Perfect for cancer research, immunology, developmental biology, and single-cell genomics applications.">
@@ -99,7 +99,7 @@
 <col width="9%">
 <col width="9%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Method</th>
 <th>Year</th>
 <th>Model</th>
@@ -113,7 +113,7 @@
 <th>VIII</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>sccomp</strong></td>
 <td>2023</td>
 <td>Sum-constrained Beta-binomial</td>
@@ -126,7 +126,7 @@
 <td>●</td>
 <td>●</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>scCODA</strong></td>
 <td>2021</td>
 <td>Dirichlet-multinomial</td>
@@ -139,7 +139,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>quasi-binom.</strong></td>
 <td>2021</td>
 <td>Quasi-binomial</td>
@@ -152,7 +152,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>rlm</strong></td>
 <td>2021</td>
 <td>Robust-log-linear</td>
@@ -165,7 +165,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>propeller</strong></td>
 <td>2021</td>
 <td>Logit-linear + limma</td>
@@ -178,7 +178,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>ANCOM-BC</strong></td>
 <td>2020</td>
 <td>Log-linear</td>
@@ -191,7 +191,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>corncob</strong></td>
 <td>2020</td>
 <td>Beta-binomial</td>
@@ -204,7 +204,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>scDC</strong></td>
 <td>2019</td>
 <td>Log-linear</td>
@@ -217,7 +217,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>dmbvs</strong></td>
 <td>2017</td>
 <td>Dirichlet-multinomial</td>
@@ -230,7 +230,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>MixMC</strong></td>
 <td>2016</td>
 <td>Zero-inflated Log-linear</td>
@@ -243,7 +243,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>ALDEx2</strong></td>
 <td>2014</td>
 <td>Dirichlet-multinomial</td>
@@ -353,36 +353,36 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>sccomp_estimate</code></td>
 <td>Fit the model onto the data, and estimate the coefficients</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>sccomp_remove_outliers</code></td>
 <td>Identify outliers probabilistically based on the model fit, and exclude them from the estimation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sccomp_test</code></td>
 <td>Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>sccomp_replicate</code></td>
 <td>Simulate data from the model, or part of the model</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sccomp_predict</code></td>
 <td>Predicts proportions, based on the model, or part of the model</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>sccomp_remove_unwanted_effects</code></td>
 <td>Removes the variability for unwanted factors</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>plot</code></td>
 <td>Plots summary plots to assess significance</td>
 </tr>

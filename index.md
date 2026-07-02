@@ -31,19 +31,19 @@ proportion mean-variability association, while being robust to outliers.
 - **VII** Mixed effect modelling
 - **VIII** Removal unwanted effects
 
-| Method           | Year | Model                         | I   | II  | III | IV  | V   | VI  | VII | VIII |
-|------------------|------|-------------------------------|-----|-----|-----|-----|-----|-----|-----|------|
-| **sccomp**       | 2023 | Sum-constrained Beta-binomial | ●   | ●   | ●   | ●   | ●   | ●   | ●   | ●    |
-| **scCODA**       | 2021 | Dirichlet-multinomial         | ●   | ●   |     |     |     |     |     |      |
-| **quasi-binom.** | 2021 | Quasi-binomial                | ●   |     | ●   |     |     |     |     |      |
-| **rlm**          | 2021 | Robust-log-linear             |     | ●   |     |     | ●   |     |     |      |
-| **propeller**    | 2021 | Logit-linear + limma          |     | ●   | ●   | ●   |     |     |     |      |
-| **ANCOM-BC**     | 2020 | Log-linear                    |     | ●   | ●   |     |     |     |     |      |
-| **corncob**      | 2020 | Beta-binomial                 | ●   |     | ●   |     |     |     |     |      |
-| **scDC**         | 2019 | Log-linear                    |     | ●   | ●   |     |     |     |     |      |
-| **dmbvs**        | 2017 | Dirichlet-multinomial         | ●   | ●   |     |     |     |     |     |      |
-| **MixMC**        | 2016 | Zero-inflated Log-linear      |     | ●   | ●   |     |     |     |     |      |
-| **ALDEx2**       | 2014 | Dirichlet-multinomial         | ●   | ●   |     |     |     |     |     |      |
+| Method | Year | Model | I | II | III | IV | V | VI | VII | VIII |
+|----|----|----|----|----|----|----|----|----|----|----|
+| **sccomp** | 2023 | Sum-constrained Beta-binomial | ● | ● | ● | ● | ● | ● | ● | ● |
+| **scCODA** | 2021 | Dirichlet-multinomial | ● | ● |  |  |  |  |  |  |
+| **quasi-binom.** | 2021 | Quasi-binomial | ● |  | ● |  |  |  |  |  |
+| **rlm** | 2021 | Robust-log-linear |  | ● |  |  | ● |  |  |  |
+| **propeller** | 2021 | Logit-linear + limma |  | ● | ● | ● |  |  |  |  |
+| **ANCOM-BC** | 2020 | Log-linear |  | ● | ● |  |  |  |  |  |
+| **corncob** | 2020 | Beta-binomial | ● |  | ● |  |  |  |  |  |
+| **scDC** | 2019 | Log-linear |  | ● | ● |  |  |  |  |  |
+| **dmbvs** | 2017 | Dirichlet-multinomial | ● | ● |  |  |  |  |  |  |
+| **MixMC** | 2016 | Zero-inflated Log-linear |  | ● | ● |  |  |  |  |  |
+| **ALDEx2** | 2014 | Dirichlet-multinomial | ● | ● |  |  |  |  |  |  |
 
 ### Scientific Citation
 
@@ -76,6 +76,7 @@ forgot).
 **Bioconductor**
 
 ``` r
+
 if (!requireNamespace("BiocManager")) install.packages("BiocManager")
 
 # Step 1
@@ -92,6 +93,7 @@ cmdstanr::install_cmdstan()
 **Github**
 
 ``` r
+
 # Step 1
 devtools::install_github("MangiolaLaboratory/sccomp")
 
@@ -120,6 +122,7 @@ If your administrator has pre-compiled models in a shared directory
 **before** calling any sccomp function:
 
 ``` r
+
 library(sccomp)
 
 cache_stan_model_dir <- "/opt/sccomp_models"
@@ -141,6 +144,7 @@ sccomp_result |> sccomp_boxplot(factor = "type")
 Alternatively, pass `cache_stan_model` explicitly in each call:
 
 ``` r
+
 sccomp_result <- 
   counts_obj |>
   sccomp_estimate(..., cache_stan_model = "/opt/sccomp_models") |>
@@ -152,19 +156,20 @@ sccomp_result |> sccomp_boxplot(factor = "type", cache_stan_model = "/opt/sccomp
 
 ## Core Functions
 
-| Function                         | Description                                                                                                                 |
-|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| `sccomp_estimate`                | Fit the model onto the data, and estimate the coefficients                                                                  |
-| `sccomp_remove_outliers`         | Identify outliers probabilistically based on the model fit, and exclude them from the estimation                            |
-| `sccomp_test`                    | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change) |
-| `sccomp_replicate`               | Simulate data from the model, or part of the model                                                                          |
-| `sccomp_predict`                 | Predicts proportions, based on the model, or part of the model                                                              |
-| `sccomp_remove_unwanted_effects` | Removes the variability for unwanted factors                                                                                |
-| `plot`                           | Plots summary plots to assess significance                                                                                  |
+| Function | Description |
+|----|----|
+| `sccomp_estimate` | Fit the model onto the data, and estimate the coefficients |
+| `sccomp_remove_outliers` | Identify outliers probabilistically based on the model fit, and exclude them from the estimation |
+| `sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change) |
+| `sccomp_replicate` | Simulate data from the model, or part of the model |
+| `sccomp_predict` | Predicts proportions, based on the model, or part of the model |
+| `sccomp_remove_unwanted_effects` | Removes the variability for unwanted factors |
+| `plot` | Plots summary plots to assess significance |
 
 # Analysis Tutorial
 
 ``` r
+
 library(dplyr)
 library(sccomp)
 library(ggplot2)
@@ -184,6 +189,7 @@ formula_variability is set).
 ### From Seurat, SingleCellExperiment, metadata objects
 
 ``` r
+
 sccomp_result = 
   sce_obj |>
   sccomp_estimate( 
@@ -199,6 +205,7 @@ sccomp_result =
 ### From counts
 
 ``` r
+
 sccomp_result = 
   counts_obj |>
   sccomp_estimate( 
@@ -245,6 +252,7 @@ The output is a tibble containing the **Following columns**
 - `count_data` - Nested input count data.
 
 ``` r
+
 sccomp_result
 ```
 
@@ -291,6 +299,7 @@ sccomp_result
 the estimation.
 
 ``` r
+
 sccomp_result = 
   counts_obj |>
   sccomp_estimate( 
@@ -327,6 +336,7 @@ covariate present in formula_composition. The colour coding represents
 the significant associations for composition and/or variability.
 
 ``` r
+
 sccomp_result |> 
   sccomp_boxplot(factor = "type")
 ```
@@ -344,6 +354,7 @@ especially for complex models, where multiple factors can significantly
 impact the proportions.
 
 ``` r
+
 sccomp_result |> 
   sccomp_boxplot(factor = "type", remove_unwanted_effects = TRUE)
 ```
@@ -372,6 +383,7 @@ significant if it exceeds the minimal effect according to the 95%
 credible interval. Facets represent the covariates in the model.
 
 ``` r
+
 sccomp_result |> 
   plot_1D_intervals()
 ```
@@ -385,6 +397,7 @@ abundance and the variability. This shrinkage is adaptive as it is
 modelled jointly, thanks to Bayesian inference.
 
 ``` r
+
 sccomp_result |> 
   plot_2D_intervals()
 ```
@@ -394,6 +407,7 @@ sccomp_result |>
 You can produce the series of plots calling the `plot` method.
 
 ``` r
+
 sccomp_result |> plot() 
 ```
 
@@ -412,6 +426,7 @@ precision threshold (e.g., deconvolution), zeros are converted to the
 smallest non-zero value.
 
 ``` r
+
 sccomp_result = 
   counts_obj |>
   sccomp_estimate( 
@@ -430,6 +445,7 @@ sccomp_result =
 have a continuous and binary covariate.
 
 ``` r
+
 res =
     seurat_obj |>
     sccomp_estimate(
@@ -498,6 +514,7 @@ variability).
 Here is the input data
 
 ``` r
+
 seurat_obj[[]] |> as_tibble()
 ```
 
@@ -520,6 +537,7 @@ seurat_obj[[]] |> as_tibble()
 ```
 
 ``` r
+
 res = 
   seurat_obj |>
   sccomp_estimate( 
@@ -574,6 +592,7 @@ res
 `sccomp` can model random slopes. We provide an example below.
 
 ``` r
+
 res = 
   seurat_obj |>
   sccomp_estimate(
@@ -630,6 +649,7 @@ subjects and subjects nested within batches, you can include multiple
 grouping variables. Here `group2__` is nested within `group__`.
 
 ``` r
+
 res = 
   seurat_obj |>
   sccomp_estimate(
@@ -702,6 +722,7 @@ In the case of a categorical variable, the starting and ending points
 are categories.
 
 ``` r
+
 res |> 
    sccomp_proportional_fold_change(
      formula_composition = ~  type,
@@ -735,6 +756,7 @@ res |>
 ## Contrasts Analysis
 
 ``` r
+
 seurat_obj |>
   sccomp_estimate( 
     formula_composition = ~ 0 + type, 
@@ -797,6 +819,7 @@ In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model
 one, the one with factor association, is better than model two.
 
 ``` r
+
 library(loo)
 
 # Fit first model
@@ -842,6 +865,7 @@ We can model the cell-group variability also dependent on the type, and
 so test differences in variability
 
 ``` r
+
 res = 
   seurat_obj |>
   sccomp_estimate( 
@@ -894,6 +918,7 @@ res
 **Plot 1D significance plot**
 
 ``` r
+
 plots = res |> sccomp_test() |> plot()
 ```
 
@@ -904,6 +929,7 @@ plots = res |> sccomp_test() |> plot()
 ```
 
 ``` r
+
 plots$credible_intervals_1D
 ```
 
@@ -924,6 +950,7 @@ the composition and variability effects should be generally
 uncorrelated.
 
 ``` r
+
 plots$credible_intervals_2D
 ```
 
@@ -950,6 +977,7 @@ first cell type. We can see that it has converged and is negative with
 probability 1.
 
 ``` r
+
 library(cmdstanr)
 library(posterior)
 library(bayesplot)
@@ -967,6 +995,7 @@ mcmc_trace(draws, pars = "beta[2,1]") + theme_bw()
 ![](inst/figures/unnamed-chunk-25-1.png)
 
 ``` r
+
 sessionInfo()
 ```
 
