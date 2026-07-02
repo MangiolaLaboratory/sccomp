@@ -298,7 +298,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              61      -4.788e+05      9.114e-03   2.056e-01    1.000e+00  1.000e+00      3647 -3.680e+03 -3.682e+03                   
 #> Path [50] :Best Iter: [57] ELBO (-3680.485444) evaluations: (3647) 
-#> Finished in  13.8 seconds.
+#> Finished in  13.7 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.

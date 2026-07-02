@@ -328,12 +328,12 @@ sccomp_result =
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.299 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 2.329 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.317 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 2.299 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ### Visualization and Summary Plots
@@ -371,17 +371,17 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.569 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.568 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.565 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.566 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.113 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ![](introduction_files/figure-html/boxplot-adjusted-1.png)
@@ -429,7 +429,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.114 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.113 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ![](introduction_files/figure-html/boxplot-pvalue-labels-1.png)
@@ -977,7 +977,7 @@ plots = res |> sccomp_test() |> plot()
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.097 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.096 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ``` r
@@ -1073,7 +1073,7 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] bayesplot_1.15.0  posterior_1.7.0   cmdstanr_0.9.0    loo_2.10.0       
-    ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.3     sccomp_2.1.30    
+    ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.3     sccomp_2.1.31    
     ##  [9] instantiate_0.2.3 dplyr_1.2.1      
     ## 
     ## loaded via a namespace (and not attached):
