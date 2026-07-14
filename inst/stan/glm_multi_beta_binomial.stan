@@ -405,7 +405,8 @@ parameters{
   //   * sigma_correlation_factor_k: per-category Cholesky of correlation matrix
   //                                  (n_factors[k] x n_factors[k]; 1x1 = no LKJ work)
   //
-  // Hyperprior scalars sigma_mu / sigma_sigma are shared in length-4 arrays.
+  // Hyperprior scalars retained for backward compatibility. build_re_block uses
+  // fixed sigma_mu = 0.0 and sigma_sigma = 1.0 (see transformed parameters).
   // ----------------------------------------------------------------------
 
   // Slot 1
@@ -429,8 +430,11 @@ parameters{
   array[M * (ncol_X_random_eff[4]>0)] cholesky_factor_corr[how_many_factors_in_random_design[4] * (ncol_X_random_eff[4]>0)] sigma_correlation_factor_4;
 
   // Shared hyperprior scalars (one mu, one sigma per slot)
+  // Retained for backward compatibility; not used in the likelihood
+  // (build_re_block is called with sigma_mu = 0.0, sigma_sigma = 1.0).
+  // Priors below keep both names in draws.
   array[4 * (is_random_effect>0)] real random_effect_sigma_mu;
-  array[4 * (is_random_effect>0)] real random_effect_sigma_sigma;
+  array[4 * (is_random_effect>0)] real<lower=0> random_effect_sigma_sigma;
 
   // For models with a single group (kept from the original design)
   array[is_random_effect>0] real zero_random_effect;
@@ -479,7 +483,7 @@ transformed parameters{
     random_effect_1 = build_re_block(
       M, n_groups[1], how_many_factors_in_random_design[1], ncol_X_random_eff[1],
       group_factor_indexes_for_covariance_1, raw_vec,
-      random_effect_sigma_mu[1], random_effect_sigma_sigma[1],
+      0.0, 1.0,
       random_effect_sigma_raw_1, sigma_correlation_factor_1
     );
   }
@@ -490,7 +494,7 @@ transformed parameters{
     random_effect_2 = build_re_block(
       M, n_groups[2], how_many_factors_in_random_design[2], ncol_X_random_eff[2],
       group_factor_indexes_for_covariance_2, raw_vec,
-      random_effect_sigma_mu[2], random_effect_sigma_sigma[2],
+      0.0, 1.0,
       random_effect_sigma_raw_2, sigma_correlation_factor_2
     );
   }
@@ -501,7 +505,7 @@ transformed parameters{
     random_effect_3 = build_re_block(
       M, n_groups[3], how_many_factors_in_random_design[3], ncol_X_random_eff[3],
       group_factor_indexes_for_covariance_3, raw_vec,
-      random_effect_sigma_mu[3], random_effect_sigma_sigma[3],
+      0.0, 1.0,
       random_effect_sigma_raw_3, sigma_correlation_factor_3
     );
   }
@@ -512,7 +516,7 @@ transformed parameters{
     random_effect_4 = build_re_block(
       M, n_groups[4], how_many_factors_in_random_design[4], ncol_X_random_eff[4],
       group_factor_indexes_for_covariance_4, raw_vec,
-      random_effect_sigma_mu[4], random_effect_sigma_sigma[4],
+      0.0, 1.0,
       random_effect_sigma_raw_4, sigma_correlation_factor_4
     );
   }
@@ -616,7 +620,7 @@ model{
   // ----------------------------------------------------------------------
   if (is_random_effect > 0) {
     random_effect_sigma_mu ~ std_normal();
-    random_effect_sigma_sigma ~ std_normal();
+    random_effect_sigma_sigma ~ std_normal();  // half-normal via <lower=0>
     zero_random_effect ~ std_normal();
   }
 
