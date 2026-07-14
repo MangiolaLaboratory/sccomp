@@ -1159,4 +1159,3 @@ test_that("sccomp_estimate fails with only 1 cell group", {
   )
 })
 
-
