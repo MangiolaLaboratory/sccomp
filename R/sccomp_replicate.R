@@ -135,6 +135,16 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' @param formula_variability Formula for the variability model
 #' @param new_data New data to generate predictions for. If NULL, uses the original data
 #' @param original_count_data Original count data from the model
+#' @param smooth_results Optional named list of smooth-term metadata captured
+#'   at fit time. In the standard call path this is read from
+#'   `get_smooth_results(.data)` (an attribute on `model_input`, not Stan data).
+#'   Contains
+#'   `smooth_specs`, the `mgcv::smoothCon()` objects used to evaluate bases at
+#'   `new_data`; `smooth_re_objs`, the parallel `mgcv::smooth2random()` results
+#'   used to recover the fitted `Xf` / `Xr` parameterisation; and
+#'   `smooth_labels`, the original term labels used to name generated smooth
+#'   columns so they match the fit-time design. `NULL` when the composition
+#'   formula has no smooths.
 #' 
 #' @return A list containing:
 #' - model_input: The prepared model input data
@@ -156,7 +166,8 @@ prepare_replicate_data = function(X,
                                   original_formula_composition,
                                   formula_variability,
                                   new_data = NULL,
-                                  original_count_data) {
+                                  original_count_data,
+                                  smooth_results = NULL) {
   
   
   .sample = enquo(.sample)
@@ -226,13 +237,17 @@ prepare_replicate_data = function(X,
   
   new_data =  old_data |> bind_rows( new_data ) 
   
+  # Smooth columns are evaluated separately via PredictMat below; keep the
+  # random-effect clauses so the later RE parsing still sees the same formula.
+  formula_composition = strip_smooth_terms(formula_composition)
+  
   new_X =
     new_data |>
     get_design_matrix(
       # Drop random intercept
       formula_composition |>
+        strip_random_effect_terms() |>
         as.character() |>
-        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
@@ -241,6 +256,17 @@ prepare_replicate_data = function(X,
     tail(nrow_new_data) %>%
     # Remove columns that are not in the original design matrix
     .[,colnames(.) %in% colnames(X), drop=FALSE]
+  
+  # Evaluate any smooth bases on the replicate rows and merge the resulting
+  # design pieces (unpenalised columns appended to `new_X`, one RE slot per
+  # penalised block) using the fit-time `smoothCon` / `smooth2random` objects.
+  smooth_design = build_smooth_replicate_design(
+    parametric_X   = new_X,
+    new_data_tail  = new_data |> tail(nrow_new_data),
+    smooth_results = smooth_results
+  )
+  new_X                  = smooth_design$new_X
+  smooth_replicate_slots = smooth_design$smooth_replicate_slots
   
   # Check that all effect combination were present when the model was fitted
   check_missing_parameters(
@@ -263,8 +289,8 @@ prepare_replicate_data = function(X,
     get_design_matrix(
       # Drop random intercept
       formula_variability |>
+        strip_random_effect_terms() |>
         as.character() |>
-        str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
@@ -362,6 +388,25 @@ prepare_replicate_data = function(X,
   }
   
   replicate_slots = map(seq_len(4L), build_replicate_slot)
+  
+  # Append smooth-derived replicate slots (one per smooth term in the
+  # composition formula). They occupy whichever slots come after the
+  # explicit RE clauses, mirroring the slot ordering used at fit time.
+  if (length(smooth_replicate_slots) > 0) {
+    n_explicit_re = length(original_grouping_names)
+    n_smooth      = length(smooth_replicate_slots)
+    n_used        = n_explicit_re + n_smooth
+    if (n_used > 4L) {
+      stop(sprintf(
+        "sccomp says: the replicate model needs %d RE slot(s) but only 4 are available.",
+        n_used
+      ))
+    }
+    # Replace placeholder slots `[n_explicit_re + 1 .. n_used]` with smooths.
+    for (k in seq_len(n_smooth)) {
+      replicate_slots[[n_explicit_re + k]] = smooth_replicate_slots[[k]]
+    }
+  }
   
   # setup default unknown_grouping variable for generated quantities
   unknown_grouping = rep(0L, 4L)
@@ -464,7 +509,8 @@ replicate_data = function(.data,
     original_count_data =
       .data |>
       attr("count_data") |>
-      .subset(!!.sample) 
+      .subset(!!.sample),
+    smooth_results = get_smooth_results(.data)
   )
   
   # Original input

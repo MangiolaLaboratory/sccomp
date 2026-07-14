@@ -65,6 +65,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Stefano Mangiola \email{stefano.mangiola@unimelb.edu.au}
   \item Alexandra J. Roth-Schulze
   \item Marie Trussart
   \item Enrique Zozaya-Valdés

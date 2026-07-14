@@ -196,8 +196,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
     
     # This is for the new data generation with selected factors to do adjustment
     data = 
-      .estimate |>
-      attr("model_input") |> 
+      data_for_model |> 
       c(
         list(
           # Add subset of coefficients

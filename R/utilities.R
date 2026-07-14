@@ -48,6 +48,25 @@ add_attr = function(var, attribute, name) {
   var
 }
 
+#' Ensure optional CRAN packages are installed (lazy dependency pattern)
+#'
+#' Used for features that need extra packages (e.g. `mgcv` for smooth terms)
+#' without listing them in `Imports:`. Mirrors the tidybulk pattern:
+#' `rlang::check_installed()` with a non-interactive install action.
+#'
+#' @param packages Character vector of package names.
+#' @keywords internal
+#' @noRd
+check_and_install_packages <- function(packages) {
+  rlang::check_installed(
+    pkg = packages,
+    action = function(...) {
+      install.packages(..., repos = getOption("repos"))
+    }
+  )
+}
+
+
 #' Subset results by model factor
 #'
 #' @param .data A sccomp results tibble
@@ -153,10 +172,16 @@ incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = N
 
 #' Formula parser
 #'
+#' Returns the names of data columns referenced by a formula. Random-effect
+#' grouping terms (anything containing `|`) are excluded. Smooth specials
+#' produced by mgcv (`s()` and `t2()`) are expanded to their underlying
+#' variable names so that, e.g., `~ type + s(pseudotime, k = 5)` returns
+#' `c("type", "pseudotime")` rather than the raw term label.
+#'
 #' @param fm A formula
 #'
 #' @importFrom stringr str_subset
-#' @importFrom magrittr extract2
+#' @importFrom purrr map
 #' @importFrom stats terms
 #'
 #' @return A character vector
@@ -165,14 +190,20 @@ incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = N
 #' @noRd
 parse_formula <- function(fm) {
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
-  
-  as.character(attr(terms(fm), "variables")) |>
-    str_subset("\\|", negate = TRUE) %>%
-    
-    # Does not work the following
-    # |>
-    # extract2(-1)
-    .[-1]
+
+  # `variables` attribute lists each top-level term (interactions like `a:b`
+  # are not listed, which is the behaviour callers rely on). We drop the
+  # `list` call-head and any `(... | g)` random-effect clauses, then expand
+  # smooth wrappers (`s()`, `t2()`) to their underlying column names so
+  # downstream `select(all_of(...))` resolves against real columns.
+  attr(terms(fm), "variables") |>
+    as.character() |>
+    _[-1] |>
+    str_subset("\\|", negate = TRUE) |>
+    map(~ if (grepl("^(s|t2)\\(", .x)) all.vars(parse(text = .x)) else .x) |>
+    unlist() |>
+    as.character() |>
+    unique()
 }
 
 
@@ -991,28 +1022,55 @@ data_spread_to_model_input =
     
     if (length(.grouping_for_random_effect)==0 ) .grouping_for_random_effect = "random_effect"
     
+    # ----------------------------------------------------------------------
+    # Smooth terms: parse `s()` / `t2()` out of the composition formula so
+    # the parametric design `X` can be built from a smooth-free formula and
+    # the smooth basis pieces (`Xf`, `Xr_k`) are wired in explicitly below.
+    # Smooths in the variability formula are not supported yet — see TODO
+    # in `dev/splines_exploration/PLAN_sccomp_splines.md`.
+    # ----------------------------------------------------------------------
+    if (has_smooth_terms(formula_variability)) {
+      stop(
+        "sccomp says: smooth terms s()/t2() in `formula_variability` are not yet supported."
+      )
+    }
+    smooth_pieces = parse_formula_smooths(formula, .data_spread)
+    formula_parametric = smooth_pieces$parametric_formula
+    
     
     X  =
       
       .data_spread |>
       get_design_matrix(
         # Drop random intercept
-        formula |>
+        formula_parametric |>
+          strip_random_effect_terms() |>
           as.character() |>
-          str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
           paste(collapse="") |>
           as.formula(),
         !!.sample,
         accept_NA_as_average_effect = accept_NA_as_average_effect
       )
     
+    # Append unpenalised (null-space) spline columns to the parametric X.
+    # These are estimated as ordinary `beta` rows by the existing Stan model
+    # — sccomp's `prior_mean_coefficients` already applies to non-intercept
+    # columns, which is what we want.
+    if (length(smooth_pieces$Xf_list) > 0) {
+      Xf_all = do.call(cbind, smooth_pieces$Xf_list)
+      if (ncol(Xf_all) > 0) {
+        rownames(Xf_all) = rownames(X)
+        X = cbind(X, Xf_all)
+      }
+    }
+    
     Xa  =
       .data_spread |>
       get_design_matrix(
         # Drop random intercept
         formula_variability |>
+          strip_random_effect_terms() |>
           as.character() |>
-          str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
           paste(collapse="") |>
           as.formula() ,
         !!.sample,
@@ -1093,13 +1151,6 @@ data_spread_to_model_input =
           ~ get_random_effect_design3(.data_spread, .x, .y, !!.sample)
         ))
       
-      if (nrow(random_effect_grouping) > N_RE_SLOTS) {
-        stop(sprintf(
-          "sccomp says: at the moment sccomp supports up to %d random-effect groupings; the formula has %d. Combine related clauses or split the model.",
-          N_RE_SLOTS, nrow(random_effect_grouping)
-        ))
-      }
-      
       is_random_effect = 1
       n_random_eff = nrow(random_effect_grouping)
       
@@ -1119,6 +1170,38 @@ data_spread_to_model_input =
       is_random_effect = 0
       n_random_eff     = 0
       re_slots         = list()
+    }
+    
+    # Each smooth term occupies one additional RE slot. `n_factors = 1` and
+    # `n_groups = ncol(Xr_k)` so the slot's per-cell-group SD plays the role
+    # of brms's `sds_*`. No Stan-side change is needed — the smooth slot is
+    # structurally identical to any other RE block from the Stan model's
+    # point of view.
+    # Each penalised basis block becomes one RE slot. `parse_formula_smooths()`
+    # already computed the per-block slot label (`<label>` for single-penalty
+    # smooths, `<label>__b<b>` for multi-penalty ones) so we just zip the two
+    # parallel lists. Smooth terms also flip `is_random_effect = 1` because
+    # they reuse the Stan RE machinery even when the user wrote no (... | g).
+    if (length(smooth_pieces$Xr_list) > 0) {
+      smooth_slots = map2(
+        smooth_pieces$Xr_list,
+        smooth_pieces$Xr_slot_labels,
+        build_smooth_slot
+      )
+      re_slots         = c(re_slots, smooth_slots)
+      is_random_effect = 1L
+      n_random_eff     = n_random_eff + length(smooth_slots)
+    }
+    
+    if (length(re_slots) > N_RE_SLOTS) {
+      stop(sprintf(
+        "sccomp says: the formula needs %d random-effect slot(s) (%d explicit clause(s) + %d smooth block(s) across %d smooth term(s); multi-penalty smooths such as t2() / bs=\"fs\" produce several blocks). The Stan model has %d. Reduce the number of smooths or merge RE clauses.",
+        length(re_slots),
+        length(re_slots) - length(smooth_pieces$Xr_list),
+        length(smooth_pieces$Xr_list),
+        length(smooth_pieces$smooth_labels),
+        N_RE_SLOTS
+      ))
     }
     
     # Pad to exactly N_RE_SLOTS so the Stan data list is uniformly shaped
@@ -1286,6 +1369,17 @@ data_spread_to_model_input =
     # Default all grouping known (four RE slots; see glm_multi_beta_binomial_generate_data.stan)
     data_for_model$unknown_grouping = rep(0L, 4L)
     
+    # Smooth-term metadata is R-only (mgcv `smoothCon` / `smooth2random`
+    # objects, used by prediction / replicate helpers). It is NOT shipped to
+    # Stan, so we store it as an attribute on `model_input` (not a list element).
+    # Downstream code reads it via `get_smooth_results()`.
+    if (length(smooth_pieces$smooth_specs) > 0) {
+      attr(data_for_model, "smooth_results") <- list(
+        smooth_specs   = smooth_pieces$smooth_specs,
+        smooth_re_objs = smooth_pieces$smooth_re_objs,
+        smooth_labels  = smooth_pieces$smooth_labels
+      )
+    }
     
     # Return
     data_for_model
