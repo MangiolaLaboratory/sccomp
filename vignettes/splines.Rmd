@@ -1,0 +1,500 @@
+---
+title: "Smooth (spline) terms in sccomp"
+author: "sccomp authors"
+date: "`r Sys.Date()`"
+package: sccomp
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    toc: yes
+    toc_depth: 2
+    number_sections: yes
+    fig_caption: yes
+    df_print: paged
+abstract: >
+  This vignette introduces `brms`-style smooth terms (`s()`, `t2()`) in
+  `sccomp`. Smooths let you model non-linear effects of a continuous
+  covariate — pseudotime, age, dose, time-since-treatment — on cell-type
+  proportions, while keeping the rest of the `sccomp` modelling pipeline
+  (compositional likelihood, variability modelling, outlier detection,
+  random effects) unchanged. We start from the bundled `counts_obj`
+  dataset, add a synthetic continuous covariate, fit a smooth, predict on
+  a dense grid, and visualise both the fitted curves and the underlying
+  basis decomposition.
+vignette: >
+  %\VignetteIndexEntry{Smooth (spline) terms in sccomp}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.width  = 7,
+  fig.height = 4.5,
+  dpi = 110
+)
+# Smooth vignette chunks need mgcv (Suggests) and CmdStan.
+run_smooth_vignette <-
+  requireNamespace("mgcv", quietly = TRUE) &&
+  instantiate::stan_cmdstan_exists()
+```
+
+# Why smooth terms?
+
+`sccomp` fits a (logit-)linear model on the unconstrained scale and then maps
+it to the simplex via softmax. If you only have categorical covariates this is
+all you need. But with a **continuous covariate** — pseudotime, age, dose,
+days since treatment — the relationship between covariate and proportion is
+rarely linear. A spline (`s()` from `mgcv`) replaces a single linear column
+with a small, flexible basis that lets the curve bend, while a penalty keeps
+the bend honest.
+
+`sccomp` adopts the same syntax as `brms` / `mgcv`:
+
+```{r show-formulae, eval=FALSE}
+~ type + s(pseudotime, k = 5)        # smooth of one variable
+~ type + t2(pseudotime, dose)        # tensor product of two variables
+```
+
+Under the hood every smooth is split into two pieces:
+
+* an unpenalised **null-space** block `Xf` (the linear "trend" part), and
+* a penalised **wiggly** block `Xr` (the bend-y part).
+
+`Xf` joins the design matrix as ordinary fixed-effect columns; `Xr` joins one
+of `sccomp`'s random-effect slots and is governed by a single smoothing
+parameter `sds`. This is exactly how `brms` handles smooths, and it means the
+Stan model does **not** change — only the R-side data assembly.
+
+# What is supported
+
+| Feature                                            | Status                                                |
+|----------------------------------------------------|-------------------------------------------------------|
+| `s(x, k = ...)` in `formula_composition`           | yes (1 slot)                                          |
+| `s(x, z, bs = "fs", k = ...)` (factor smooth)      | yes (3 slots: 1 wiggly + 2 per-level deviation blocks)|
+| Multiple smooth terms in the same formula          | yes (each penalty block consumes one RE slot)         |
+| Mix smooths with parametric terms (`~ type + s(x)`)| yes                                                   |
+| Mix smooths with explicit `(... | g)` random effects | yes (total ≤ 4 slots)                              |
+| Smooths in `formula_variability`                   | not yet                                               |
+| `t2(x, y, ...)` (tensor-product smooth)            | fits, but `sccomp_predict()` not yet supported        |
+| `s(x, by = factor)` (independent smooths per level) | works but consumes one slot **per level**            |
+
+The 4-slot budget comes from the existing `sccomp` Stan model. If your
+formula needs more than 4 random-effect slots in total (explicit `( | g)`
+clauses + smooth penalty blocks), `sccomp_estimate()` will stop with an
+informative error. Note that multi-penalty smooth types like `bs = "fs"`
+emit several blocks; in mgcv / brms these correspond to several `sds_*`
+parameters.
+
+# Worked example
+
+```{r load-libs, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(sccomp)
+data("counts_obj")
+```
+
+## 1. Synthetic continuous covariate
+
+`counts_obj` has no continuous covariate, so we attach one — a *pseudotime*
+between 0 and 6 — that varies across samples but is constant within a
+sample (a covariate must always be sample-level in `sccomp`).
+
+```{r make-pseudotime}
+set.seed(1)
+samples <- levels(counts_obj$sample)
+pt_map <- tibble(
+  sample     = samples,
+  pseudotime = seq(0, 6, length.out = length(samples)) +
+                 rnorm(length(samples), 0, 0.05)
+)
+
+counts_pt <- counts_obj |> left_join(pt_map, by = "sample")
+counts_pt |> distinct(sample, type, pseudotime) |> head()
+```
+
+## 2. Fit `~ type + s(pseudotime, k = 5)`
+
+```{r fit-smooth, message=FALSE, warning=FALSE, eval = run_smooth_vignette}
+fit <- counts_pt |>
+  sccomp_estimate(
+    formula_composition = ~ type + s(pseudotime, k = 5),
+    formula_variability = ~ 1,
+    sample              = "sample",
+    cell_group          = "cell_group",
+    abundance           = "count",
+    cores               = 1,
+    verbose             = FALSE,
+    max_sampling_iterations = 2000
+  )
+```
+
+Look at the design-matrix column names that `sccomp_estimate()` prints. You
+should see one new fixed column
+
+```
+s(pseudotime, k = 5)__lin1
+```
+
+and three penalised basis columns living in an RE slot
+
+```
+s(pseudotime, k = 5)___basis01
+s(pseudotime, k = 5)___basis02
+s(pseudotime, k = 5)___basis03
+```
+
+The `__lin*` columns are the null-space block (`Xf`); the `___basis*` columns
+are the wiggly block (`Xr`). The single smoothing parameter `sds` for this
+smooth controls how much the `___basis*` coefficients are pulled toward
+zero — exactly the role of `sds_*` in `brms`.
+
+## 3. Tabular output
+
+`sccomp_test()` works unchanged. It returns one row per (cell_group,
+parameter), and smooth basis columns appear like any other coefficient:
+
+```{r test-table, eval = run_smooth_vignette}
+fit |>
+  sccomp_test() |>
+  select(cell_group, parameter, c_lower, c_effect, c_upper, c_FDR) |>
+  head(10)
+```
+
+`c_effect` on the `___basis*` rows is rarely interpreted directly — the
+basis is internal — but the linear `__lin1` row is a clean "is there an
+overall monotone trend in pseudotime for this cell group?" test, and the
+basis-level `c_FDR` values let you spot non-linear effects.
+
+## 4. Predict on a dense grid
+
+To draw the fitted curve, predict at a regular grid of `pseudotime` values
+(remember to also supply any other covariates the formula needs — here,
+`type`):
+
+```{r predict-grid, message=FALSE, warning=FALSE, eval = run_smooth_vignette}
+grid <- expand.grid(
+  pseudotime = seq(min(pt_map$pseudotime), max(pt_map$pseudotime), length.out = 60),
+  type       = levels(counts_obj$type)
+) |>
+  as_tibble() |>
+  mutate(sample = sprintf("grid_%03d", row_number()))
+
+pred <- fit |>
+  sccomp_predict(new_data = grid, number_of_draws = 200)
+
+head(pred)
+```
+
+`sccomp_predict()` already returns the `new_data` columns (`pseudotime`,
+`type`, `sample`) alongside `proportion_mean` and the 95% credible interval
+`proportion_lower` / `proportion_upper`.
+
+## 5. Plot: fitted curves over the raw proportions
+
+We show the six cell groups with the largest pseudotime range in the
+posterior mean.
+
+```{r plot-curves, fig.width=8, fig.height=5, eval = run_smooth_vignette}
+top_cgs <- pred |>
+  group_by(cell_group) |>
+  summarise(rng = max(proportion_mean) - min(proportion_mean)) |>
+  arrange(desc(rng)) |>
+  slice_head(n = 6) |>
+  pull(cell_group)
+
+raw <- counts_pt |>
+  group_by(sample) |>
+  mutate(prop = count / sum(count)) |>
+  ungroup() |>
+  filter(cell_group %in% top_cgs)
+
+pred |>
+  filter(cell_group %in% top_cgs) |>
+  ggplot(aes(pseudotime, proportion_mean, colour = type, fill = type)) +
+  geom_ribbon(aes(ymin = proportion_lower, ymax = proportion_upper),
+              alpha = 0.15, linewidth = 0) +
+  geom_line(linewidth = 0.7) +
+  geom_point(data = raw, aes(y = prop), alpha = 0.5, size = 1.2) +
+  facet_wrap(~ cell_group, scales = "free_y", ncol = 3) +
+  labs(x = "pseudotime", y = "proportion",
+       title = "Fitted compositional curves vs pseudotime") +
+  theme_minimal(base_size = 10)
+```
+
+The blue/red curves are posterior means, ribbons are 95% credible intervals,
+points are observed sample proportions. Note the wiggle — e.g. CD8 1 peaks
+around pseudotime ≈ 4 — which a purely linear `~ type + pseudotime` model
+could not capture.
+
+## 6. Same model with a smaller basis (`k = 3`)
+
+The same parametric + smooth layout works with a lower `k`. Fewer basis
+functions mean a smoother curve and less risk of over-fitting when sample
+size is modest — here `k = 3` yields one unpenalised linear column and a
+single wiggly basis column (instead of three with `k = 5`).
+
+```{r fit-smooth-k3, message=FALSE, warning=FALSE, eval = run_smooth_vignette}
+fit_k3 <- counts_pt |>
+  sccomp_estimate(
+    formula_composition = ~ type + s(pseudotime, k = 3),
+    formula_variability = ~ 1,
+    sample              = "sample",
+    cell_group          = "cell_group",
+    abundance           = "count",
+    cores               = 1,
+    verbose             = FALSE,
+    max_sampling_iterations = 2000
+  )
+```
+
+The printed design matrix should list `(Intercept)`, `typecancer`, one
+`__lin` column, and a single `___basis01` column for the smooth.
+
+```{r predict-grid-k3, message=FALSE, warning=FALSE, eval = run_smooth_vignette}
+pred_k3 <- fit_k3 |>
+  sccomp_predict(new_data = grid, number_of_draws = 200)
+```
+
+```{r plot-curves-k3, fig.width=8, fig.height=5, eval = run_smooth_vignette}
+pred_k3 |>
+  filter(cell_group %in% top_cgs) |>
+  ggplot(aes(pseudotime, proportion_mean, colour = type, fill = type)) +
+  geom_ribbon(aes(ymin = proportion_lower, ymax = proportion_upper),
+              alpha = 0.15, linewidth = 0) +
+  geom_line(linewidth = 0.7) +
+  geom_point(data = raw, aes(y = prop, colour = type), alpha = 0.5, size = 1.2) +
+  facet_wrap(~ cell_group, scales = "free_y", ncol = 3) +
+  labs(x = "pseudotime", y = "proportion",
+       title = "Fitted curves: ~ type + s(pseudotime, k = 3)",
+       subtitle = "One wiggly basis column — smoother than k = 5") +
+  theme_minimal(base_size = 10)
+```
+
+Compared with the `k = 5` figure above, the credible bands are often a
+little tighter and the lines less wiggly: the model has less capacity to
+bend, which is appropriate when you want a gentle pseudotime trend on top
+of the `type` effect.
+
+# What `s()` actually decomposes into
+
+The smooth metadata used to fit the model is stored on the result, so we
+can re-evaluate the basis at any new pseudotime value. This is exactly what
+`sccomp_predict()` does internally; we can also do it by hand to *see* the
+basis.
+
+```{r basis-decomp, fig.width=8, fig.height=6, eval = run_smooth_vignette}
+smooth_meta    <- sccomp:::get_smooth_results(fit)
+smooth_specs   <- smooth_meta$smooth_specs
+smooth_re_objs <- smooth_meta$smooth_re_objs
+
+grid_basis <- tibble(
+  pseudotime = seq(min(pt_map$pseudotime), max(pt_map$pseudotime),
+                   length.out = 200),
+  type = levels(counts_obj$type)[1]  # any constant works; smooth ignores it
+)
+
+basis <- sccomp:::predict_smooth_at_newdata(
+  smooth_specs[[1]], smooth_re_objs[[1]], grid_basis
+)
+# Plain s() has one penalised block — for multi-penalty smooths
+# (e.g. bs = "fs", t2(...)) `Xr_blocks` would contain several matrices.
+Xr_single <- basis$Xr_blocks[[1]]
+
+basis_long <- bind_rows(
+  as.data.frame(basis$Xf) |>
+    setNames(sprintf("lin%d", seq_len(ncol(basis$Xf)))) |>
+    mutate(pseudotime = grid_basis$pseudotime) |>
+    pivot_longer(-pseudotime, names_to = "column", values_to = "value") |>
+    mutate(block = "Xf  (unpenalised, joins fixed effects)"),
+  as.data.frame(Xr_single) |>
+    setNames(sprintf("basis%d", seq_len(ncol(Xr_single)))) |>
+    mutate(pseudotime = grid_basis$pseudotime) |>
+    pivot_longer(-pseudotime, names_to = "column", values_to = "value") |>
+    mutate(block = "Xr  (penalised, joins one RE slot, shared sds)")
+)
+
+ggplot(basis_long, aes(pseudotime, value, colour = column)) +
+  geom_line(linewidth = 0.7) +
+  facet_wrap(~ block, scales = "free_y", ncol = 1) +
+  labs(x = "pseudotime", y = "basis value",
+       title = "Decomposition of s(pseudotime, k = 5)",
+       subtitle = "Linear null-space (Xf) is a fixed effect; wiggly basis (Xr) is one RE slot") +
+  theme_minimal(base_size = 10)
+```
+
+The top panel is the **null-space**: for a default thin-plate `s()` this is
+just the linear term in `pseudotime`. The bottom panel is the **wiggly
+basis**: each of these columns gets one coefficient per cell group, and a
+*single* smoothing standard deviation `sds` per cell group controls how
+much wiggle is allowed. Increasing `k` would add more wiggly basis columns;
+the penalty would then keep the extra capacity from over-fitting.
+
+# Factor smooths: per-group curves with shared structure
+
+A common ask is: "fit a smooth per tissue (or per condition, per donor, ...)
+but partial-pool across groups". The `mgcv` shorthand for this is
+`s(x, factor, bs = "fs")` — a *factor smooth*. It builds one common
+wiggly curve and a per-level deviation, governed jointly by a small set of
+smoothing parameters (three, in mgcv's standard reparameterisation: the
+common wiggly part and two per-level deviation blocks). In `sccomp` each
+of these blocks occupies its own RE slot.
+
+## A worked example
+
+We extend `counts_obj` with a synthetic `tissue` factor (3 levels) on top of
+the existing `pseudotime`:
+
+```{r make-tissue, message=FALSE}
+set.seed(11)
+samples <- levels(counts_obj$sample)
+covs <- tibble::tibble(
+  sample     = samples,
+  pseudotime = seq(0, 6, length.out = length(samples)) +
+                 rnorm(length(samples), 0, 0.05),
+  tissue     = factor(rep(c("blood", "lymph", "tumor"),
+                          length.out = length(samples)))
+)
+counts_tissue <- counts_obj |> dplyr::left_join(covs, by = "sample")
+counts_tissue |> dplyr::distinct(sample, type, pseudotime, tissue) |> head()
+```
+
+Fit `~ s(pseudotime, tissue, bs = "fs", k = 5)`:
+
+```{r fs-fit, message=FALSE, warning=FALSE, eval = run_smooth_vignette}
+fit_fs <- counts_tissue |>
+  sccomp_estimate(
+    formula_composition = ~ s(pseudotime, tissue, bs = "fs", k = 5),
+    formula_variability = ~ 1,
+    sample              = "sample",
+    cell_group          = "cell_group",
+    abundance           = "count",
+    cores               = 1,
+    verbose             = FALSE,
+    max_sampling_iterations = 2000
+  )
+
+# This one smooth occupies 3 RE slots (one per mgcv penalty block);
+# you can confirm via:
+attr(fit_fs, "model_input")$ncol_X_random_eff
+```
+
+The three non-zero entries correspond to the wiggly main block (9 columns
+for `k = 5` × 3 tissues) and two smaller per-level deviation blocks.
+
+## Predict and plot per-tissue curves
+
+`sccomp_predict()` takes a grid that crosses `pseudotime` with `tissue`:
+
+```{r fs-predict, message=FALSE, warning=FALSE, eval = run_smooth_vignette}
+grid_fs <- expand.grid(
+  pseudotime = seq(min(covs$pseudotime), max(covs$pseudotime),
+                   length.out = 60),
+  tissue     = levels(covs$tissue)
+) |>
+  as_tibble() |>
+  mutate(sample = sprintf("fs_grid_%03d", row_number()))
+
+pred_fs <- fit_fs |>
+  sccomp_predict(new_data = grid_fs, number_of_draws = 200)
+
+head(pred_fs)
+```
+
+Pick the most pseudotime-responsive cell groups and plot one curve per tissue:
+
+```{r fs-plot, fig.width=8.5, fig.height=5.5, eval = run_smooth_vignette}
+top_cgs_fs <- pred_fs |>
+  group_by(cell_group) |>
+  summarise(rng = max(proportion_mean) - min(proportion_mean)) |>
+  arrange(desc(rng)) |>
+  slice_head(n = 6) |>
+  pull(cell_group)
+
+raw_fs <- counts_tissue |>
+  group_by(sample) |>
+  mutate(prop = count / sum(count)) |>
+  ungroup() |>
+  filter(cell_group %in% top_cgs_fs)
+
+pred_fs |>
+  filter(cell_group %in% top_cgs_fs) |>
+  ggplot(aes(pseudotime, proportion_mean,
+             colour = tissue, fill = tissue)) +
+  geom_ribbon(aes(ymin = proportion_lower, ymax = proportion_upper),
+              alpha = 0.15, linewidth = 0) +
+  geom_line(linewidth = 0.7) +
+  geom_point(data = raw_fs, aes(y = prop, colour = tissue),
+             alpha = 0.5, size = 1.2) +
+  facet_wrap(~ cell_group, scales = "free_y", ncol = 3) +
+  labs(x = "pseudotime", y = "proportion",
+       title = "Factor smooth s(pseudotime, tissue, bs = 'fs', k = 5)",
+       subtitle = "Per-tissue curves sharing one factor-smooth structure") +
+  theme_minimal(base_size = 10)
+```
+
+The three coloured curves are the same smooth applied to different tissues,
+allowed to deviate at each pseudotime point. Where the deviations are small
+(e.g. CD8 1) the curves track each other; where they are large
+(e.g. CD8 2) one tissue diverges. Whether the deviations are "real" is
+expressed by the credible-interval ribbons — overlap means the data
+don't support a difference.
+
+## fs vs `s(x, by = tissue)`
+
+`s(x, by = tissue)` is an alternative spelling that *also* gives a per-tissue
+curve, but it treats each tissue's smooth as independent: each level gets
+its own smoothing parameter, and the curves can have totally unrelated
+shape. With L tissue levels this consumes L sccomp slots (one per level).
+Use `bs = "fs"` when you want a single shared smoothness scale and partial
+pooling across levels; use `by =` when the tissues are clearly heterogeneous
+and a shared smoothness assumption would be misleading.
+
+
+# Multiple smooths and mixing with random effects
+
+`sccomp_estimate()` is happy with several smooths, and you can also keep
+explicit `(... | g)` random-effect clauses:
+
+```{r multi-smooth-formula, eval=FALSE}
+~ type +
+  s(pseudotime, k = 5) +
+  s(age,        k = 4) +
+  (1 | donor)
+```
+
+Each `s()` / `t2()` term consumes one of the four available RE slots.
+The remaining slots are shared with any explicit `( | g)` clauses, so the
+total must stay ≤ 4. If you exceed it, `sccomp_estimate()` will stop with
+a message naming the smooth and the slot budget.
+
+# Caveats and current limitations
+
+* **No smooths in `formula_variability`** yet. `sccomp_estimate()` errors
+  out if you try.
+* **`t2()` tensor smooths** fit fine but `sccomp_predict()` is not yet
+  supported for them: `mgcv::PredictMat()` applies the `t2` constraint
+  differently from `smoothCon()`, producing a basis that doesn't line up
+  with the fitted coefficients. The predict call errors out cleanly. Use
+  `s(x, z, bs = "fs")` (shown above) when you want a smooth indexed by a
+  factor, or stack univariate `s(x) + s(y)` smooths for additive
+  multivariate effects.
+* **`s(x, by = factor)`** decomposes into one independent smooth per factor
+  level, each costing a separate RE slot. With many levels you will run
+  out of the 4-slot budget. For partial-pooling across factor levels use
+  `bs = "fs"` (shown above) — it fits in 3 slots regardless of the number
+  of levels.
+* The smooth columns are part of `sccomp_test()`'s output. The basis-level
+  `c_effect` / `c_FDR` are diagnostics, not biological effect sizes;
+  interpret the *curve* (predicted proportions) rather than individual
+  basis coefficients.
+
+# Session info
+
+```{r session-info, echo=FALSE}
+sessionInfo()
+```

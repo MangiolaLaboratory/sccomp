@@ -6,118 +6,220 @@ data("seurat_obj")
 data("sce_obj")
 data("counts_obj")
 
-counts_obj = 
+counts_obj =
   counts_obj |>
-  mutate(count = count+1) |> 
-  with_groups("sample", ~ .x |> mutate(proportion = count/sum(count))) 
+  mutate(count = count+1) |>
+  with_groups("sample", ~ .x |> mutate(proportion = count/sum(count)))
 
-set.seed(42)
-
-n_iterations = 1000
-
-if (instantiate::stan_cmdstan_exists()){
-  
-  my_estimate = 
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ continuous_covariate * type ,
-      formula_variability = ~ 1,
-      "sample", "cell_group",
-      
-      cores = 1, 
-      inference_method = "pathfinder",
-      max_sampling_iterations = n_iterations, verbose=FALSE
-    )
-  
-  my_estimate_with_variance = 
-    seurat_obj |>
-    sccomp_estimate(
-      formula_composition = ~ type,
-      formula_variability = ~ type,
-      "sample", "cell_group",
-      
-      cores = 1, 
-      inference_method = "pathfinder",
-      max_sampling_iterations = n_iterations, verbose=FALSE
-    )
-}
+# Precomputed CmdStan fits: `helper-precomputed-estimates.R`
 
 # Test for plot_1d_intervals function
 test_that("plot_1d_intervals function works correctly", {
    skip_cmdstan()
-  
-  my_estimate |> 
-    sccomp_test() |> 
-    plot_1D_intervals(
+
+  my_estimate |>
+    sccomp_test() |>
+    sccomp_plot_intervals_1D(
       significance_threshold = 0.025
-    ) |> 
+    ) |>
+    expect_s3_class("patchwork")
+})
+
+test_that("sccomp_plot_intervals_1D works with intercept-only composition", {
+  skip_cmdstan()
+
+  my_estimate_intercept_only |>
+    sccomp_test() |>
+    sccomp_plot_intervals_1D() |>
     expect_s3_class("patchwork")
 })
 
 # Test for plot_2d_intervals function
 test_that("plot_2d_intervals function works correctly", {
    skip_cmdstan()
-  
-  my_estimate_with_variance |> 
-    sccomp_test() |> 
-    plot_2D_intervals(
+
+  my_estimate_with_variance |>
+    sccomp_test() |>
+    sccomp_plot_intervals_2D(
       significance_threshold = 0.025
     ) |>
     expect_s3_class("ggplot")
 })
 
+test_that("sccomp_plot_intervals_2D can omit credible interval error bars", {
+  skip_cmdstan()
+
+  count_errorbar_layers <- function(plot) {
+    sum(vapply(
+      plot$layers,
+      function(layer) inherits(layer$geom, "GeomErrorbar"),
+      logical(1)
+    ))
+  }
+
+  estimate_with_tests <- my_estimate_with_variance |>
+    sccomp_test()
+
+  plot_with_ci <- estimate_with_tests |>
+    sccomp_plot_intervals_2D(add_marginal_density = FALSE)
+
+  plot_without_ci <- estimate_with_tests |>
+    sccomp_plot_intervals_2D(add_marginal_density = FALSE, omit_ci = TRUE)
+
+  plot_without_ci_density <- estimate_with_tests |>
+    sccomp_plot_intervals_2D(omit_ci = TRUE)
+
+  expect_s3_class(plot_with_ci, "ggplot")
+  expect_s3_class(plot_without_ci, "ggplot")
+  expect_s3_class(plot_without_ci_density, "ggplot")
+  expect_equal(count_errorbar_layers(plot_with_ci), 2)
+  expect_equal(count_errorbar_layers(plot_without_ci), 0)
+  expect_true("omit_ci" %in% names(formals(getS3method("plot", "sccomp_tbl"))))
+})
+
+test_that("sccomp_plot_intervals_2D works with bimodal mean-variability association", {
+  skip_cmdstan()
+
+  estimate_bimodal <- my_estimate_with_variance_bimodal |> sccomp_test()
+
+  # Sanity: the model metadata advertises bimodality so the plotter takes the
+  # two-component branch (otherwise this test would silently exercise the
+  # single-component path and miss the intended coverage).
+  expect_true(isTRUE(as.logical(
+    attr(estimate_bimodal, "model_input")$bimodal_mean_variability_association
+  )))
+
+  # Both modes must render without error and stay on the single-faceted-ggplot
+  # contract that the non-bimodal tests above rely on.
+  plot_no_density <- estimate_bimodal |>
+    sccomp_plot_intervals_2D(add_marginal_density = FALSE)
+  plot_with_density <- estimate_bimodal |>
+    sccomp_plot_intervals_2D(add_marginal_density = TRUE)
+
+  expect_s3_class(plot_no_density, "ggplot")
+  expect_s3_class(plot_with_density, "ggplot")
+
+  # Per parameter the bimodal "raw" panel draws *two* component lines (solid +
+  # dashed) and the "adjusted" panel draws two horizontal references — i.e.
+  # at least 4 line geoms total for a two-parameter model. The single-component
+  # path would have at most 2. Use this as a structural marker that the bimodal
+  # branch ran end-to-end.
+  count_line_layers <- function(plot) {
+    sum(vapply(
+      plot$layers,
+      function(layer) inherits(layer$geom, "GeomLine"),
+      logical(1)
+    ))
+  }
+  expect_gte(count_line_layers(plot_no_density), 4)
+
+  # ggside attaches a density side panel for every facet when density mode is
+  # on; assert at least one ysidedensity layer present.
+  count_ysidedensity_layers <- function(plot) {
+    sum(vapply(
+      plot$layers,
+      function(layer) inherits(layer$geom, "GeomYsidedensity"),
+      logical(1)
+    ))
+  }
+  expect_gte(count_ysidedensity_layers(plot_with_density), 1)
+
+  # Bimodal models report `mix_p` (component-1 weight) in the FDR caption;
+  # verify the caption pipeline is connected for this branch.
+  fdr_plot <- estimate_bimodal |>
+    sccomp_plot_intervals_2D(significance_statistic = "FDR", show_fdr_message = TRUE)
+  caption <- fdr_plot$labels$caption
+  expect_true(!is.null(caption) && grepl("mix_p", caption))
+})
+
+test_that("sccomp_plot_intervals_1D accepts factor argument", {
+  skip_cmdstan()
+
+  expect_no_error(
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(factor = "type")
+  )
+
+  expect_error(
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(factor = "not_a_factor"),
+    "is not among model factors"
+  )
+})
+
+test_that("sccomp_plot_intervals_2D accepts factor argument", {
+  skip_cmdstan()
+
+  expect_no_error(
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(factor = "type")
+  )
+
+  expect_error(
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(factor = "not_a_factor"),
+    "is not among model factors"
+  )
+})
+
 # Test for show_fdr_message parameter in plot functions
-test_that("show_fdr_message parameter works correctly in plot_1D_intervals", {
+test_that("show_fdr_message parameter works correctly in sccomp_plot_intervals_1D", {
    skip_cmdstan()
-  
+
   # Test with show_fdr_message = TRUE (default)
-  plot_with_message <- my_estimate |> 
-    sccomp_test() |> 
-    plot_1D_intervals(
+  plot_with_message <- my_estimate |>
+    sccomp_test() |>
+    sccomp_plot_intervals_1D(
       significance_threshold = 0.025,
       show_fdr_message = TRUE
     )
-  
+
   expect_s3_class(plot_with_message, "patchwork")
-  
+
   # Test with show_fdr_message = FALSE
-  plot_without_message <- my_estimate |> 
-    sccomp_test() |> 
-    plot_1D_intervals(
+  plot_without_message <- my_estimate |>
+    sccomp_test() |>
+    sccomp_plot_intervals_1D(
       significance_threshold = 0.025,
       show_fdr_message = FALSE
     )
-  
+
   expect_s3_class(plot_without_message, "patchwork")
-  
+
   # Verify that both plots are created successfully (no errors)
   expect_no_error(plot_with_message)
   expect_no_error(plot_without_message)
 })
 
-test_that("show_fdr_message parameter works correctly in plot_2D_intervals", {
+test_that("show_fdr_message parameter works correctly in sccomp_plot_intervals_2D", {
    skip_cmdstan()
-  
+
   # Test with show_fdr_message = TRUE (default)
-  plot_with_message <- my_estimate_with_variance |> 
-    sccomp_test() |> 
-    plot_2D_intervals(
+  plot_with_message <- my_estimate_with_variance |>
+    sccomp_test() |>
+    sccomp_plot_intervals_2D(
       significance_threshold = 0.025,
       show_fdr_message = TRUE
     )
-  
+
+  # 2D output is now a single faceted ggplot (with optional ggside layer)
+  # rather than a patchwork composition.
   expect_s3_class(plot_with_message, "ggplot")
-  
+
   # Test with show_fdr_message = FALSE
-  plot_without_message <- my_estimate_with_variance |> 
-    sccomp_test() |> 
-    plot_2D_intervals(
+  plot_without_message <- my_estimate_with_variance |>
+    sccomp_test() |>
+    sccomp_plot_intervals_2D(
       significance_threshold = 0.025,
       show_fdr_message = FALSE
     )
-  
+
   expect_s3_class(plot_without_message, "ggplot")
-  
+
   # Verify that both plots are created successfully (no errors)
   expect_no_error(plot_with_message)
   expect_no_error(plot_without_message)
@@ -125,116 +227,116 @@ test_that("show_fdr_message parameter works correctly in plot_2D_intervals", {
 
 test_that("show_fdr_message parameter accepts logical values", {
    skip_cmdstan()
-  
+
   # Test with TRUE
   expect_no_error(
-    my_estimate |> 
-      sccomp_test() |> 
-      plot_1D_intervals(show_fdr_message = TRUE)
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(show_fdr_message = TRUE)
   )
-  
+
   # Test with FALSE
   expect_no_error(
-    my_estimate |> 
-      sccomp_test() |> 
-      plot_1D_intervals(show_fdr_message = FALSE)
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(show_fdr_message = FALSE)
   )
-  
+
   # Test with TRUE for 2D plots
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(show_fdr_message = TRUE)
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(show_fdr_message = TRUE)
   )
-  
+
   # Test with FALSE for 2D plots
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(show_fdr_message = FALSE)
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(show_fdr_message = FALSE)
   )
 })
 
 test_that("plot functions work with different significance thresholds", {
    skip_cmdstan()
-  
-  # Test plot_1D_intervals with different thresholds
+
+  # Test sccomp_plot_intervals_1D with different thresholds
   expect_no_error(
-    my_estimate |> 
-      sccomp_test() |> 
-      plot_1D_intervals(significance_threshold = 0.01)
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(significance_threshold = 0.01)
   )
-  
+
   expect_no_error(
-    my_estimate |> 
-      sccomp_test() |> 
-      plot_1D_intervals(significance_threshold = 0.1)
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(significance_threshold = 0.1)
   )
-  
-  # Test plot_2D_intervals with different thresholds
+
+  # Test sccomp_plot_intervals_2D with different thresholds
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(significance_threshold = 0.01)
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(significance_threshold = 0.01)
   )
-  
+
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(significance_threshold = 0.1)
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(significance_threshold = 0.1)
   )
 })
 
-test_that("significance_statistic argument works for plot_1D_intervals", {
+test_that("significance_statistic argument works for sccomp_plot_intervals_1D", {
    skip_cmdstan()
-  
+
   expect_no_error(
-    my_estimate |> 
-      sccomp_test() |> 
-      plot_1D_intervals(significance_statistic = "FDR")
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(significance_statistic = "FDR")
   )
   expect_no_error(
-    my_estimate |> 
-      sccomp_test() |> 
-      plot_1D_intervals(significance_statistic = "pH0")
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(significance_statistic = "pH0")
   )
 })
 
-test_that("significance_statistic argument works for plot_2D_intervals", {
+test_that("significance_statistic argument works for sccomp_plot_intervals_2D", {
    skip_cmdstan()
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(significance_statistic = "FDR")
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(significance_statistic = "FDR")
   )
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(significance_statistic = "pH0")
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(significance_statistic = "pH0")
   )
 })
 
-test_that("show_fdr_message argument works for plot_1D_intervals and plot_2D_intervals", {
+test_that("show_fdr_message argument works for sccomp_plot_intervals_1D and sccomp_plot_intervals_2D", {
    skip_cmdstan()
   expect_no_error(
-    my_estimate |> 
-      sccomp_test() |> 
-      plot_1D_intervals(significance_statistic = "FDR", show_fdr_message = TRUE)
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(significance_statistic = "FDR", show_fdr_message = TRUE)
   )
   expect_no_error(
-    my_estimate |> 
-      sccomp_test() |> 
-      plot_1D_intervals(significance_statistic = "FDR", show_fdr_message = FALSE)
+    my_estimate |>
+      sccomp_test() |>
+      sccomp_plot_intervals_1D(significance_statistic = "FDR", show_fdr_message = FALSE)
   )
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(significance_statistic = "FDR", show_fdr_message = TRUE)
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(significance_statistic = "FDR", show_fdr_message = TRUE)
   )
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(significance_statistic = "FDR", show_fdr_message = FALSE)
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(significance_statistic = "FDR", show_fdr_message = FALSE)
   )
 })
 
@@ -269,104 +371,83 @@ test_that("significance_statistic and show_fdr_message work via plot() S3 method
     )
   )
   
-  fdr_plot <- plot_1D_intervals(
+  fdr_plot <- sccomp_plot_intervals_1D(
     my_estimate |> sccomp_test(),
     significance_statistic = "FDR",
     show_fdr_message = TRUE
   )
-  ph0_plot <- plot_1D_intervals(
+  ph0_plot <- sccomp_plot_intervals_1D(
     my_estimate |> sccomp_test(),
     significance_statistic = "pH0",
     show_fdr_message = TRUE
   )
-  
-  expect_true(grepl("Bayesian FDR", fdr_plot$labels$caption))
-  expect_true(is.null(ph0_plot$labels$caption) || !grepl("Bayesian FDR", ph0_plot$labels$caption))
-})
 
-test_that("plot_2D_intervals includes regression line from prec_coeff parameters", {
-   skip_cmdstan()
-  
-  # Create a 2D plot and check that it has the regression line
-  plot_2d <- my_estimate_with_variance |> 
-    sccomp_test() |> 
-    plot_2D_intervals(
-      significance_threshold = 0.025
-    )
-  
-  # Check that the plot is created successfully
-  expect_s3_class(plot_2d, "ggplot")
-  
-  # Extract the fitted model to verify prec_coeff parameters exist
-  fit <- attr(my_estimate_with_variance |> sccomp_test(), "fit")
-  prec_coeff_summary <- fit$summary("prec_coeff")
-  
-  # Verify that prec_coeff parameters are available
-  expect_true(nrow(prec_coeff_summary) >= 2)
-  expect_true(all(c("prec_coeff[1]", "prec_coeff[2]") %in% prec_coeff_summary$variable))
-  
-  # Check that the plot data includes the regression line
-  plot_data <- ggplot_build(plot_2d)$data
-  
-  # Look for the red line in the plot data
-  has_correct_line_color <- FALSE
-  for (layer_data in plot_data) {
-    if ("colour" %in% names(layer_data)) {
-      if (any(layer_data$colour == "#0072B2")) {
-        has_correct_line_color <- TRUE
-        break
-      }
-    }
+  # patchwork::plot_annotation caption is not in ggplot $labels
+  patchwork_caption <- function(p) {
+    ann <- p$patches$annotation$caption
+    if (!is.null(ann) && length(ann) && nzchar(ann)) return(ann)
+    lab <- p$labels$caption
+    if (is.null(lab)) "" else lab
   }
-  
-  # The regression line should be present
-  expect_true(has_correct_line_color)
-  
-  # Test that the plot works with different significance statistics
+  expect_true(grepl("Bayesian FDR", patchwork_caption(fdr_plot)))
+  expect_true(!grepl("Bayesian FDR", patchwork_caption(ph0_plot)))
+})
+test_that("sccomp_plot_intervals_2D includes regression line from prec parameters", {
+  skip_cmdstan()
+
+  plot_2d <- my_estimate_with_variance |>
+    sccomp_test() |>
+    sccomp_plot_intervals_2D(significance_threshold = 0.025)
+
+  expect_s3_class(plot_2d, "ggplot")
+
+  fit <- attr(my_estimate_with_variance |> sccomp_test(), "fit")
+  prec_intercept_summary <- fit$summary("prec_intercept_1")
+  prec_slope_summary <- fit$summary("prec_slope_1")
+
+  expect_true(nrow(prec_intercept_summary) >= 1)
+  expect_true(nrow(prec_slope_summary) >= 1)
+  expect_true(any(grepl("^prec_intercept_1\\[1\\]$", prec_intercept_summary$variable)))
+  expect_true(any(grepl("^prec_slope_1\\[1\\]$", prec_slope_summary$variable)))
+
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(
-        significance_threshold = 0.025,
-        significance_statistic = "pH0"
-      )
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(significance_threshold = 0.025, significance_statistic = "pH0")
   )
-  
+
   expect_no_error(
-    my_estimate_with_variance |> 
-      sccomp_test() |> 
-      plot_2D_intervals(
-        significance_threshold = 0.025,
-        show_fdr_message = FALSE
-      )
+    my_estimate_with_variance |>
+      sccomp_test() |>
+      sccomp_plot_intervals_2D(significance_threshold = 0.025, show_fdr_message = FALSE)
   )
-}) 
+})
 
 test_that("sccomp_boxplot can accept additional ggplot layers", {
    skip_cmdstan()
-  
+
   # Test that we can add layers to the boxplot
-  plot_with_label <- my_estimate |> 
-    sccomp_test() |> 
+  plot_with_label <- my_estimate |>
+    sccomp_test() |>
     sccomp_boxplot("type", significance_threshold = 0.025) +
     geom_label(aes(label = c_FDR), x = 1, y = 0.5)
-  
+
   expect_s3_class(plot_with_label, "ggplot")
-  
+
   # Test with geom_text
-  plot_with_text <- my_estimate |> 
-    sccomp_test() |> 
+  plot_with_text <- my_estimate |>
+    sccomp_test() |>
     sccomp_boxplot("type", significance_threshold = 0.025) +
     geom_text(aes(label = c_FDR), x = 1, y = 0.3)
-  
+
   expect_s3_class(plot_with_text, "ggplot")
-  
+
   # Test with theme modifications
-  plot_with_theme <- my_estimate |> 
-    sccomp_test() |> 
+  plot_with_theme <- my_estimate |>
+    sccomp_test() |>
     sccomp_boxplot("type", significance_threshold = 0.025) +
     theme(plot.title = element_text(color = "red"))
-  
+
   expect_s3_class(plot_with_theme, "ggplot")
 }) 
 

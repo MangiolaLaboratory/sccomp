@@ -1,10 +1,52 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.33}{
+\itemize{
+    \item **New feature: smooth terms (splines) in formulas.** Added support for \code{s()} and \code{t2()} smooth terms in \code{sccomp} formulas, enabling flexible non-linear modelling of continuous covariates. Introduced utility functions for parsing smooth terms and a dedicated vignette demonstrating their use.
+    \item Support for up to N random effects (currently up to 4), providing the foundation for spline modelling, which is implemented via random effects.
+    \item Added random-effect draws extraction and improved contrast handling across sccomp functions.
+    \item Modularised random-effect contributions in the \code{glm_multi_beta_binomial_generate_data} Stan model, and improved reproducibility and data handling.
+    \item Between commits: f07b2b2..3201197 (PRs #276, #277, #278).
+}}
+
+\section{News in version 2.1.32}{
+\itemize{
+    \item Added \code{ggside} package support and a new \code{omit_ci} parameter for interval plots, giving finer control over credible-interval and density display.
+    \item Replaced the Student's t likelihood with a Normal likelihood in the Stan model for improved numerical stability.
+    \item Refactored parameter incorporation (\code{incorporate_parameters_into_fit_object()} and \code{incorporate_parameters_into_sccomp_object()}) to allow optional parameter loading, adding flexibility when handling Stan model parameters.
+    \item Streamlined contrast calculation and \code{draws_to_tibble} handling for cleaner output and better performance.
+    \item Added precision parameters to the parameter-incorporation functions.
+    \item Between commits: 4d6d429..f07b2b2 (PR #275).
+}}
+
+\section{News in version 2.1.31}{
+\itemize{
+    \item Refactored the mean-variability association in the Stan model: replaced \code{prec_coeff} with separate \code{prec_intercept} and \code{prec_slope} parameters, consolidated intercepts into a single array, removed hyper priors, and limited \code{prec_sd} to a single parameter for both modes.
+    \item Alpha normalisation now includes the intercept.
+    \item New \code{plot_scatterplot()} function for visualising cell-group proportions, and a new \code{factor} argument to subset plotting results by factor.
+    \item Added variability-to-composition mapping functionality.
+    \item Replaced "unadjusted" terminology with "raw" in \code{plot_2D_intervals()} for clarity, and added support for intercept-only models in plotting.
+    \item Refined portable caching and draw-extraction logic.
+    \item Between commits: 5cdbc00..4d6d429.
+}}
+
 \section{News in version 2.1.30}{
 \itemize{
     \item API update for draw-file cleanup control: use \code{portable} in \code{sccomp_estimate()} and \code{sccomp_remove_outliers()}.
     \item The old \code{cleanup_draw_files} argument has been deprecated in favour of \code{portable} and removed from the exported function signatures in this release.
+}}
+
+\section{News in version 2.1.29}{
+\itemize{
+    \item Version bump with no functional changes.
+    \item Commit ID: 343b493
+}}
+
+\section{News in version 2.1.28}{
+\itemize{
+    \item Updates to the \code{glm_multi_beta_binomial} Stan model.
+    \item Between commits: abe77bc..066d2d0
 }}
 
 \section{News in version 2.1.25}{

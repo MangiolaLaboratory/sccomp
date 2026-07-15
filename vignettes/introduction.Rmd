@@ -307,7 +307,7 @@ A plot of estimates of differential composition (c_) on the x-axis and different
 
 ```{r plot-1d-intervals, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 sccomp_result |> 
-  plot_1D_intervals()
+  sccomp_plot_intervals_1D()
 ```
 
 
@@ -316,7 +316,7 @@ We can plot the relationship between abundance and variability. As we can see be
 
 ```{r plot-2d-intervals, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 sccomp_result |> 
-  plot_2D_intervals()
+  sccomp_plot_intervals_2D()
 ```
 
 You can produce the series of plots calling the `plot` method.

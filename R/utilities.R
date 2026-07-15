@@ -48,66 +48,98 @@ add_attr = function(var, attribute, name) {
   var
 }
 
-#' Incorporate all Stan model parameters into fit object
+#' Ensure optional CRAN packages are installed (lazy dependency pattern)
+#'
+#' Used for features that need extra packages (e.g. `mgcv` for smooth terms)
+#' without listing them in `Imports:`. Mirrors the tidybulk pattern:
+#' `rlang::check_installed()` with a non-interactive install action.
+#'
+#' @param packages Character vector of package names.
+#' @keywords internal
+#' @noRd
+check_and_install_packages <- function(packages) {
+  rlang::check_installed(
+    pkg = packages,
+    action = function(...) {
+      install.packages(..., repos = getOption("repos"))
+    }
+  )
+}
+
+
+#' Subset results by model factor
+#'
+#' @param .data A sccomp results tibble
+#' @param factor Optional character scalar factor name
+#' @param keep_intercept Logical; keep `(Intercept)` rows when subsetting
+#'
+#' @return Filtered results tibble
+#' @keywords internal
+#' @noRd
+subset_results_by_factor = function(.data, factor = NULL, keep_intercept = FALSE) {
+  # Define variables to avoid CRAN NOTES
+  parameter <- NULL
+
+  if (is.null(factor)) return(.data)
+
+  if (!is.character(factor) || length(factor) != 1 || is.na(factor)) {
+    stop("sccomp says: `factor` must be a single character string.")
+  }
+
+  available_factors = .data |>
+    filter(!is.na(`factor`)) |>
+    distinct(`factor`) |>
+    pull(`factor`)
+
+  if (!(factor %in% available_factors)) {
+    stop(
+      sprintf(
+        "sccomp says: factor `%s` is not among model factors: %s",
+        factor,
+        paste(available_factors, collapse = ", ")
+      )
+    )
+  }
+
+  if (keep_intercept)
+    .data |>
+      filter(`factor` == !!factor | parameter == "(Intercept)")
+  else
+    .data |>
+      filter(`factor` == !!factor)
+}
+
+#' Incorporate Stan draws into fit object
 #'
 #' @description
-#' This function loads all parameters from the Stan model into the fit object.
-#' This is necessary before cleaning up CSV draw files to ensure all parameters
-#' are available for later retrieval even after the CSV files are deleted.
-#' 
-#' The function calls fit$draws() for all parameters, which forces cmdstanr
-#' to read the CSV files and cache the draws in memory. This way, when the
-#' CSV files are later deleted (via portable = TRUE), the draws
-#' remain accessible through the fit object.
-#' 
-#' This function is really needed for LOO usage and outlier removal usage.
+#' Loads parameters (and generated quantities in the CSV) into the fit object by
+#' calling \code{fit$draws()}, so CmdStanR reads chain files and caches draws in memory.
+#' Needed before deleting draw CSVs (\code{portable = TRUE}) and for downstream uses
+#' such as \code{fit$draws(format = "matrix")} in outlier removal.
 #'
 #' @param fit A cmdstanr fit object
+#' @param parameters_to_load Character vector of Stan \emph{base} names (no indices), or
+#'   \code{NULL} (default) to load every variable reported in \code{fit$metadata()$model_params}.
 #'
-#' @return The same fit object (invisibly), with all parameters loaded into memory
+#' @return The same fit object, with requested draws loaded into memory
 #'
 #' @keywords internal
 #' @noRd
-incorporate_parameters_into_fit_object = function(fit) {
-  
-  # List of all parameters in the Stan model (glm_multi_beta_binomial)
-  # This includes parameters, transformed parameters, and generated quantities
-  parameters_to_load <- c(
-    # Parameters block
-    "beta_raw",
-    "alpha",
-    "prec_coeff",
-    "prec_sd",
-    "mix_p",
-    "random_effect_raw",
-    "random_effect_raw_2",
-    "random_effect_sigma_mu",
-    "random_effect_sigma_sigma",
-    "random_effect_sigma_raw",
-    "sigma_correlation_factor",
-    "random_effect_sigma_raw_2",
-    "sigma_correlation_factor_2",
-    "zero_random_effect",
-    # Transformed parameters
-    "beta",
-    # Generated quantities
-    "alpha_normalised",
-    "log_lik"
-  )
-  
-  # Get list of available variables from the fit object
-  available_vars <- names(fit$draws(format = "draws_df"))
-  
-  # Filter to only include the parameters we care about that are available
-  params_to_load <- intersect(parameters_to_load, available_vars)
-  
-  # Load parameters by calling draws()
-  # This forces cmdstanr to read from CSV and store in memory
-  if (length(params_to_load) > 0) {
-    fit$draws(variables = params_to_load, format = "draws_df")
+incorporate_parameters_into_fit_object = function(fit, parameters_to_load = NULL) {
+  model_params <- fit$metadata()$model_params
+  model_params_base <- unique(sub("(\\[.*\\])?$", "", model_params))
+
+  parameters_present <- if (is.null(parameters_to_load)) {
+    model_params_base
+  } else {
+    intersect(parameters_to_load, model_params_base)
   }
-  
-  invisible(fit)
+
+  if (length(parameters_present) > 0L) {
+    fit$draws(variables = parameters_present, format = "draws_df")
+  }
+
+  fit
 }
 
 
@@ -119,17 +151,20 @@ incorporate_parameters_into_fit_object = function(fit) {
 #' object (and attributes) are retained.
 #'
 #' @param obj An object with a \code{"fit"} attribute (typically a \code{sccomp_tbl}).
+#' @param parameters_to_load Passed to \code{incorporate_parameters_into_fit_object()};
+#'   use \code{NULL} (default) to load all variables from the fit metadata.
 #'
 #' @return \code{obj} with an updated \code{"fit"} attribute.
 #'
 #' @keywords internal
 #' @noRd
-incorporate_parameters_into_sccomp_object = function(obj) {
+incorporate_parameters_into_sccomp_object = function(obj, parameters_to_load = NULL) {
+
   fit <- attr(obj, "fit")
   if (is.null(fit)) {
-    stop("sccomp says: expected a \"fit\" attribute on the sccomp object.", call. = FALSE)
+    stop('expected a "fit" attribute on the sccomp object', call. = FALSE)
   }
-  attr(obj, "fit") <- incorporate_parameters_into_fit_object(fit)
+  attr(obj, "fit") <- incorporate_parameters_into_fit_object(fit, parameters_to_load)
   attr(obj, "sccomp_draws_incorporated_for_portability") <- TRUE
   obj
 }
@@ -137,10 +172,16 @@ incorporate_parameters_into_sccomp_object = function(obj) {
 
 #' Formula parser
 #'
+#' Returns the names of data columns referenced by a formula. Random-effect
+#' grouping terms (anything containing `|`) are excluded. Smooth specials
+#' produced by mgcv (`s()` and `t2()`) are expanded to their underlying
+#' variable names so that, e.g., `~ type + s(pseudotime, k = 5)` returns
+#' `c("type", "pseudotime")` rather than the raw term label.
+#'
 #' @param fm A formula
 #'
 #' @importFrom stringr str_subset
-#' @importFrom magrittr extract2
+#' @importFrom purrr map
 #' @importFrom stats terms
 #'
 #' @return A character vector
@@ -149,14 +190,20 @@ incorporate_parameters_into_sccomp_object = function(obj) {
 #' @noRd
 parse_formula <- function(fm) {
   stopifnot("The formula must be of the kind \"~ factors\" " = attr(terms(fm), "response") == 0)
-  
-  as.character(attr(terms(fm), "variables")) |>
-    str_subset("\\|", negate = TRUE) %>%
-    
-    # Does not work the following
-    # |>
-    # extract2(-1)
-    .[-1]
+
+  # `variables` attribute lists each top-level term (interactions like `a:b`
+  # are not listed, which is the behaviour callers rely on). We drop the
+  # `list` call-head and any `(... | g)` random-effect clauses, then expand
+  # smooth wrappers (`s()`, `t2()`) to their underlying column names so
+  # downstream `select(all_of(...))` resolves against real columns.
+  attr(terms(fm), "variables") |>
+    as.character() |>
+    _[-1] |>
+    str_subset("\\|", negate = TRUE) |>
+    map(~ if (grepl("^(s|t2)\\(", .x)) all.vars(parse(text = .x)) else .x) |>
+    unlist() |>
+    as.character() |>
+    unique()
 }
 
 
@@ -319,13 +366,16 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
   .value <- NULL
 
   
-  base_parameter <- sub("\\[.*$", "", par[[1]])
 
   draws_df <- fit$draws(variables = par, format = "draws_df")
   value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
   
   draws_df %>%
-    mutate(.iteration = seq_len(n())) %>%
+    mutate(
+      .chain = as.integer(.chain),
+      .iteration = as.integer(.iteration),
+      .draw = as.integer(.draw)
+    ) %>%
     
     pivot_longer(
       names_to = "parameter", # c( ".chain", ".variable", x, y),
@@ -335,7 +385,7 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       #   ".variable" = character()),
       values_to = ".value"
     ) %>%
-    tidyr::extract(parameter, c(".chain", ".variable", x, y), "([1-9]+)?\\.?([a-zA-Z0-9_\\.]+)\\[([0-9]+),([0-9]+)") |> 
+    tidyr::extract(parameter, c(".variable", x, y), "(?:[1-9]+\\.)?([a-zA-Z0-9_\\.]+)\\[([0-9]+),([0-9]+)") |> 
     
     # Warning message:
     # Expected 5 pieces. Additional pieces discarded
@@ -345,13 +395,193 @@ draws_to_tibble_x_y = function(fit, par, x, y, number_of_draws = NULL) {
       !!as.symbol(x) := as.integer(!!as.symbol(x)),
       !!as.symbol(y) := as.integer(!!as.symbol(y))
     ) %>%
-    arrange(.variable, !!as.symbol(x), !!as.symbol(y), .chain) %>%
-    group_by(.variable, !!as.symbol(x), !!as.symbol(y)) %>%
-    mutate(.draw = seq_len(n())) %>%
-    ungroup() %>%
-    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw ,.variable ,     .value) %>%
-    filter(.variable == base_parameter)
+    select(!!as.symbol(x), !!as.symbol(y), .chain, .iteration, .draw, .variable, .value) 
   
+}
+
+#' draws_to_tibble_x
+#'
+#' @param fit A fit object
+#' @param par A character vector. The parameters to extract.
+#' @param x A character. The index.
+#'
+#' @keywords internal
+#' @noRd
+draws_to_tibble_x = function(fit, par, x) {
+
+  # Define the variables as NULL to avoid CRAN NOTES
+  .variable <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .value <- NULL
+
+  base_parameter <- sub("\\[.*$", "", par[[1]])
+
+  draws_df <- fit$draws(variables = par, format = "draws_df")
+  value_columns <- setdiff(colnames(draws_df), c(".chain", ".iteration", ".draw"))
+
+  draws_df %>%
+    mutate(
+      .chain = as.integer(.chain),
+      .iteration = as.integer(.iteration),
+      .draw = as.integer(.draw)
+    ) %>%
+    pivot_longer(
+      names_to = "parameter",
+      cols = tidyselect::all_of(value_columns),
+      values_to = ".value"
+    ) %>%
+    tidyr::extract(parameter, c(".variable", x), "(?:[1-9]+\\.)?([a-zA-Z0-9_\\.]+)(?:\\[([0-9]+))?") |>
+    suppressWarnings() %>%
+    mutate(
+      !!as.symbol(x) := as.integer(!!as.symbol(x))
+    ) %>%
+    select(!!as.symbol(x), .chain, .iteration, .draw, .variable, .value) %>%
+    filter(.variable == base_parameter)
+}
+
+#' Compute alpha_normalised draws in R
+#'
+#' @param fit A cmdstanr fit object.
+#' @param model_input The model input list attached to sccomp results.
+#' @param alpha_variable_subset Optional character vector like
+#'   `alpha[a,m]` (or legacy `alpha_normalised[a,m]`) to limit extraction.
+#'
+#' @return A tibble with columns `C`, `M`, `.chain`, `.iteration`, `.draw`,
+#'   `.variable`, `.value`.
+#'
+#' @keywords internal
+#' @noRd
+compute_alpha_normalised_draws = function(fit, model_input, alpha_variable_subset = NULL) {
+
+  # Define the variables as NULL to avoid CRAN NOTES
+  C <- NULL
+  M <- NULL
+  .chain <- NULL
+  .iteration <- NULL
+  .draw <- NULL
+  .variable <- NULL
+  .value <- NULL
+  beta <- NULL
+  alpha <- NULL
+  prec_slope_1 <- NULL
+  prec_slope_2 <- NULL
+  prec_intercept_1 <- NULL
+  prec_intercept_2 <- NULL
+  prec_sd <- NULL
+  mix_p <- NULL
+  C_comp <- NULL
+  log_1 <- NULL
+  log_2 <- NULL
+  weight_1 <- NULL
+  slope_effective <- NULL
+  max_log <- NULL
+
+  variability_to_composition_map <- model_input$variability_to_composition_map
+  if (is.null(variability_to_composition_map)) {
+    stop("sccomp says: missing `variability_to_composition_map` in model metadata.")
+  }
+
+  bimodal_flag <- isTRUE(as.logical(model_input$bimodal_mean_variability_association))
+
+  if (is.null(alpha_variable_subset)) {
+    # Fast path: use all variability coefficients and all cell groups.
+    alpha_draws <- draws_to_tibble_x_y(fit, "alpha", "C", "M")
+  } else {
+    # Subset path: trust upstream subset names as-is.
+    alpha_draws <- draws_to_tibble_x_y(fit, alpha_variable_subset, "C", "M")
+  }
+
+  needed_C <- sort(unique(alpha_draws$C))
+  needed_C_comp <- sort(unique(variability_to_composition_map[needed_C]))
+  n_M <- ncol(model_input$y)
+
+  # Map variability coefficients (C in Xa) to composition coefficients (C in X),
+  # then load beta for all M so we can apply draw-wise correction.
+  beta_vars <- as.vector(
+    outer(
+      needed_C_comp,
+      seq_len(n_M),
+      FUN = function(c_idx, m_idx) sprintf("beta[%d,%d]", c_idx, m_idx)
+    )
+  )
+
+  beta_draws <- draws_to_tibble_x_y(fit, beta_vars, "C", "M") |>
+    rename(C_comp = C, beta = .value) |>
+    select(C_comp, M, .chain, .iteration, beta)
+
+  alpha_draws <- alpha_draws |>
+    rename(alpha = .value) |>
+    mutate(C_comp = variability_to_composition_map[C]) |>
+    left_join(beta_draws, by = c("C_comp", "M", ".chain", ".iteration"))
+
+
+  slope_1_vars <- sprintf("prec_slope_1[%d]", needed_C)
+  slope_1_draws <- draws_to_tibble_x(fit, slope_1_vars, "C") |>
+    transmute(C, .chain, .iteration, prec_slope_1 = .value)
+
+  alpha_draws <- alpha_draws |>
+    left_join(slope_1_draws, by = c("C", ".chain", ".iteration"))
+
+  if (!bimodal_flag) {
+    # Unimodal model: the effective slope is the single regression slope.
+    alpha_draws <- alpha_draws |>
+      mutate(slope_effective = prec_slope_1)
+  } else {
+    slope_2_vars <- sprintf("prec_slope_2[%d]", needed_C)
+    intercept_1_vars <- sprintf("prec_intercept_1[%d]", needed_C)
+    intercept_2_vars <- sprintf("prec_intercept_2[%d]", needed_C)
+    prec_sd_vars <- sprintf("prec_sd[%d]", needed_C)
+
+    slope_2_draws <- draws_to_tibble_x(fit, slope_2_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_slope_2 = .value)
+    intercept_1_draws <- draws_to_tibble_x(fit, intercept_1_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_intercept_1 = .value)
+    intercept_2_draws <- draws_to_tibble_x(fit, intercept_2_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_intercept_2 = .value)
+    prec_sd_draws <- draws_to_tibble_x(fit, prec_sd_vars, "C") |>
+      transmute(C, .chain, .iteration, prec_sd = .value)
+
+    mix_p_draws <- fit$draws(variables = "mix_p", format = "draws_df") |>
+      transmute(
+        .chain = as.integer(.chain),
+        .iteration = as.integer(.iteration),
+        mix_p = mix_p
+      )
+
+    alpha_draws <- alpha_draws |>
+      left_join(slope_2_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(intercept_1_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(intercept_2_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(prec_sd_draws, by = c("C", ".chain", ".iteration")) |>
+      left_join(mix_p_draws, by = c(".chain", ".iteration")) |>
+      mutate(
+        # Soft assignment: compute draw-specific responsibility for component 1
+        # from mixture log-densities and use it to blend slopes.
+        # Here log_1/log_2 are:
+        #   log p(z = k) + log p(alpha | z = k, draw params)
+        # where p(alpha | z = k, ...) is Student-t(df = 3) with
+        # location beta * prec_slope_k + prec_intercept_k and scale prec_sd.
+        # The -log(prec_sd) term applies the scale correction.
+        log_1 = log(mix_p) +
+          stats::dt((alpha - (beta * prec_slope_1 + prec_intercept_1)) / prec_sd, df = 3, log = TRUE) -
+          log(prec_sd),
+        log_2 = log1p(-mix_p) +
+          stats::dt((alpha - (beta * prec_slope_2 + prec_intercept_2)) / prec_sd, df = 3, log = TRUE) -
+          log(prec_sd),
+        max_log = pmax(log_1, log_2),
+        weight_1 = exp(log_1 - max_log) / (exp(log_1 - max_log) + exp(log_2 - max_log)),
+        slope_effective = weight_1 * prec_slope_1 + (1 - weight_1) * prec_slope_2
+      )
+  }
+
+  alpha_draws |>
+    mutate(
+      .value = alpha - (beta * slope_effective),
+      .variable = "alpha_normalised"
+    ) |>
+    select(C, M, .chain, .iteration, .draw, .variable, .value)
 }
 
 
@@ -704,6 +934,54 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
 #' @importFrom purrr map_int
 #' @importFrom stats as.formula
 #'
+#' Match variability to composition design columns
+#'
+#' Normally every column of `Xa` must appear in `X` (variability is a sub-formula of
+#' composition). **Exception:** `formula_variability = ~ 1` yields a single `(Intercept)`
+#' column in `Xa`. If the composition matrix has no `(Intercept)` (e.g.
+#' `formula_composition = ~ 0 + type`), that term has no name in `X`; we map it to
+#' composition column `1` so the single shared variability level uses one explicit
+#' `beta[1]` in the abundance-variability link in Stan.
+#'
+#' @param X Composition design matrix
+#' @param Xa Variability design matrix
+#'
+#' @return Integer vector indexing composition columns for each variability column
+#' @keywords internal
+#' @noRd
+get_variability_to_composition_map = function(X, Xa) {
+  comp_names = colnames(X)
+  var_names = colnames(Xa)
+  variability_to_composition_map = match(var_names, comp_names)
+  missing_idx = is.na(variability_to_composition_map)
+
+  if (any(missing_idx)) {
+    missing_terms = var_names[missing_idx]
+    only_intercept_variability =
+      length(var_names) == 1L && var_names[1] == "(Intercept)"
+    if (
+      only_intercept_variability &&
+        !("(Intercept)" %in% comp_names) &&
+        length(comp_names) >= 1L
+    ) {
+      variability_to_composition_map[missing_idx] = 1L
+    } else {
+      stop(
+        sprintf(
+          paste0(
+            "sccomp says: every variability design term must also be present ",
+            "in the composition design matrix. Missing terms: %s"
+          ),
+          paste(missing_terms, collapse = ", ")
+        )
+      )
+    }
+  }
+
+  as.integer(variability_to_composition_map)
+}
+
+#'
 #' @keywords internal
 #' @noRd
 #'
@@ -744,33 +1022,62 @@ data_spread_to_model_input =
     
     if (length(.grouping_for_random_effect)==0 ) .grouping_for_random_effect = "random_effect"
     
+    # ----------------------------------------------------------------------
+    # Smooth terms: parse `s()` / `t2()` out of the composition formula so
+    # the parametric design `X` can be built from a smooth-free formula and
+    # the smooth basis pieces (`Xf`, `Xr_k`) are wired in explicitly below.
+    # Smooths in the variability formula are not supported yet — see TODO
+    # in `dev/splines_exploration/PLAN_sccomp_splines.md`.
+    # ----------------------------------------------------------------------
+    if (has_smooth_terms(formula_variability)) {
+      stop(
+        "sccomp says: smooth terms s()/t2() in `formula_variability` are not yet supported."
+      )
+    }
+    smooth_pieces = parse_formula_smooths(formula, .data_spread)
+    formula_parametric = smooth_pieces$parametric_formula
+    
     
     X  =
       
       .data_spread |>
       get_design_matrix(
         # Drop random intercept
-        formula |>
+        formula_parametric |>
+          strip_random_effect_terms() |>
           as.character() |>
-          str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
           paste(collapse="") |>
           as.formula(),
         !!.sample,
         accept_NA_as_average_effect = accept_NA_as_average_effect
       )
     
+    # Append unpenalised (null-space) spline columns to the parametric X.
+    # These are estimated as ordinary `beta` rows by the existing Stan model
+    # — sccomp's `prior_mean_coefficients` already applies to non-intercept
+    # columns, which is what we want.
+    if (length(smooth_pieces$Xf_list) > 0) {
+      Xf_all = do.call(cbind, smooth_pieces$Xf_list)
+      if (ncol(Xf_all) > 0) {
+        rownames(Xf_all) = rownames(X)
+        X = cbind(X, Xf_all)
+      }
+    }
+    
     Xa  =
       .data_spread |>
       get_design_matrix(
         # Drop random intercept
         formula_variability |>
+          strip_random_effect_terms() |>
           as.character() |>
-          str_remove_all("\\+ ?\\(.+\\|.+\\)") |>
           paste(collapse="") |>
           as.formula() ,
         !!.sample,
         accept_NA_as_average_effect = accept_NA_as_average_effect
       )
+
+    variability_to_composition_map = get_variability_to_composition_map(X, Xa)
     
     XA = Xa %>%
       as_tibble() %>%
@@ -783,108 +1090,142 @@ data_spread_to_model_input =
     factor_names_variability = parse_formula(formula_variability)
     cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% colnames()
     
-    # Random intercept
-    if(nrow(random_effect_elements)>0 ) {
+    # ----------------------------------------------------------------------
+    # Random effect blocks: 4 uniform "slots", one block per slot.
+    #
+    # Each random-effect clause in the formula (e.g. `(1 + age | tissue)` and
+    # `(1 | dataset)`) becomes one slot. Slots are independent: each has its
+    # own n_factors and its own group structure, so no padding across slots.
+    #
+    # `prepare_re_slot()` builds one slot from the per-clause design tibble;
+    # we then map over the parsed clauses and pad to N_RE_SLOTS empty slots,
+    # so the Stan-side data list is uniformly shaped regardless of how many
+    # clauses the user wrote.
+    # ----------------------------------------------------------------------
+    N_RE_SLOTS = 4L
+    n_rows_design = nrow(.data_spread)
+    
+    empty_re_slot = list(
+      X        = matrix(0, nrow = n_rows_design, ncol = 0),
+      X_unseen = matrix(0, nrow = n_rows_design, ncol = 0),
+      ncol     = 0L,
+      gfi      = matrix(integer(0), nrow = 0, ncol = 0),
+      n_groups = 0L,
+      n_factors = 0L
+    )
+    
+    prepare_re_slot = function(design_matrix_tbl, sample_name) {
+      X = design_matrix_tbl |> column_to_rownames(sample_name)
       
+      is_NA_col = str_detect(colnames(X), "___NA$")
+      X_unseen  = X[,  is_NA_col, drop = FALSE]
+      X         = X[, !is_NA_col, drop = FALSE]
       
-      #check_random_effect_design(.data_spread, any_of(factor_names), random_effect_elements, formula, X)
+      if (ncol(X) == 0) return(empty_re_slot)
+      
+      gfi = colnames(X) |>
+        enframe(value = "parameter", name = "order") |>
+        separate(parameter, c("factor", "group"), "___", remove = FALSE) |>
+        complete(factor, group, fill = list(order = 0)) |>
+        select(-parameter) |>
+        pivot_wider(names_from = group, values_from = order) |>
+        column_to_rownames("factor") |>
+        as.matrix()
+      
+      list(
+        X         = X,
+        X_unseen  = X_unseen,
+        ncol      = ncol(X),
+        gfi       = gfi,
+        n_groups  = ncol(gfi),
+        n_factors = nrow(gfi)
+      )
+    }
+    
+    if (nrow(random_effect_elements) > 0) {
+      
       random_effect_grouping = formula |>
         formula_to_random_effect_formulae() |>
         mutate(design = map2(
           formula, grouping,
-          ~ {
-            get_random_effect_design3(.data_spread, .x, .y, !!.sample )
-          }))
+          ~ get_random_effect_design3(.data_spread, .x, .y, !!.sample)
+        ))
       
-      # Actual parameters, excluding for the sum to one parameters
       is_random_effect = 1
+      n_random_eff = nrow(random_effect_grouping)
       
-      random_effect_grouping =
-        random_effect_grouping |>
+      random_effect_grouping = random_effect_grouping |>
         mutate(design_matrix = map(
           design,
           ~ ..1 |>
             select(!!.sample, group___label, value) |>
             pivot_wider(names_from = group___label, values_from = value) |>
             mutate(across(everything(), ~ .x |> replace_na(0)))
-        )) 
+        ))
       
-      
-      X_random_effect = 
-        random_effect_grouping |> 
-        pull(design_matrix) |> 
-        _[[1]]  |>  
-        column_to_rownames(quo_name(.sample))
-      
-      # Separate NA group column into X_random_effect_unseen
-      X_random_effect_unseen = X_random_effect[, colnames(X_random_effect) |> str_detect("___NA$"), drop = FALSE]
-      X_random_effect = X_random_effect[, !colnames(X_random_effect) |> str_detect("___NA$"), drop = FALSE]
-      
-      # For now that stan does not have tuples, I just allow max two levels
-      if(random_effect_grouping |> nrow() > 2) stop("sccomp says: at the moment sccomp allow max two groupings")
-      # This will be modularised with the new stan
-      if(random_effect_grouping |> nrow() > 1){
-        X_random_effect_2 =   
-          random_effect_grouping |> 
-          pull(design_matrix) |> 
-          _[[2]] |>  
-          column_to_rownames(quo_name(.sample))
-        
-        # Separate NA group column into X_random_effect_2_unseen  
-        X_random_effect_2_unseen = X_random_effect_2[, colnames(X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
-        X_random_effect_2 = X_random_effect_2[, !colnames(X_random_effect_2) |> str_detect("___NA$"), drop = FALSE]
-      }
-      
-      else X_random_effect_2 =  X_random_effect[,0,drop=FALSE]
-      
-      n_random_eff = random_effect_grouping |> nrow()
-      
-      ncol_X_random_eff = c(ncol(X_random_effect), ncol(X_random_effect_2))
-      
-      # TEMPORARY
-      group_factor_indexes_for_covariance = 
-        X_random_effect |> 
-        colnames() |> 
-        enframe(value = "parameter", name = "order")  |> 
-        separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
-        complete(factor, group, fill = list(order=0)) |> 
-        select(-parameter) |> 
-        pivot_wider(names_from = group, values_from = order)  |> 
-        column_to_rownames("factor") |> as.matrix()
-
-      
-      
-      n_groups = group_factor_indexes_for_covariance |> ncol()
-      
-      # This will be modularised with the new stan
-      if(random_effect_grouping |> nrow() > 1)
-        group_factor_indexes_for_covariance_2 = 
-        X_random_effect_2 |> 
-        colnames() |> 
-        enframe(value = "parameter", name = "order")  |> 
-        separate(parameter, c("factor", "group"), "___", remove = FALSE) |> 
-        complete(factor, group, fill = list(order=0)) |> 
-        select(-parameter) |> 
-        pivot_wider(names_from = group, values_from = order)  |> 
-        column_to_rownames("factor") |> as.matrix()
-      else group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE]
-      
-      n_groups = n_groups |> c(group_factor_indexes_for_covariance_2 |> ncol())
-      
-      how_many_factors_in_random_design = list(group_factor_indexes_for_covariance, group_factor_indexes_for_covariance_2) |> map_int(nrow)
-      
+      re_slots = random_effect_grouping$design_matrix |>
+        map(prepare_re_slot, sample_name = quo_name(.sample))
       
     } else {
-      X_random_effect = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE]
-      X_random_effect_2 = matrix(rep(1, nrow(.data_spread)))[,0, drop=FALSE] # This will be modularised with the new stan
       is_random_effect = 0
-      ncol_X_random_eff = c(0,0)
-      n_random_eff = 0
-      n_groups = c(0,0)
-      how_many_factors_in_random_design = c(0,0)
-      group_factor_indexes_for_covariance = matrix()[0,0, drop=FALSE]
-      group_factor_indexes_for_covariance_2 = matrix()[0,0, drop=FALSE] # This will be modularised with the new stan
+      n_random_eff     = 0
+      re_slots         = list()
     }
+    
+    # Each smooth term occupies one additional RE slot. `n_factors = 1` and
+    # `n_groups = ncol(Xr_k)` so the slot's per-cell-group SD plays the role
+    # of brms's `sds_*`. No Stan-side change is needed — the smooth slot is
+    # structurally identical to any other RE block from the Stan model's
+    # point of view.
+    # Each penalised basis block becomes one RE slot. `parse_formula_smooths()`
+    # already computed the per-block slot label (`<label>` for single-penalty
+    # smooths, `<label>__b<b>` for multi-penalty ones) so we just zip the two
+    # parallel lists. Smooth terms also flip `is_random_effect = 1` because
+    # they reuse the Stan RE machinery even when the user wrote no (... | g).
+    if (length(smooth_pieces$Xr_list) > 0) {
+      smooth_slots = map2(
+        smooth_pieces$Xr_list,
+        smooth_pieces$Xr_slot_labels,
+        build_smooth_slot
+      )
+      re_slots         = c(re_slots, smooth_slots)
+      is_random_effect = 1L
+      n_random_eff     = n_random_eff + length(smooth_slots)
+    }
+    
+    if (length(re_slots) > N_RE_SLOTS) {
+      stop(sprintf(
+        "sccomp says: the formula needs %d random-effect slot(s) (%d explicit clause(s) + %d smooth block(s) across %d smooth term(s); multi-penalty smooths such as t2() / bs=\"fs\" produce several blocks). The Stan model has %d. Reduce the number of smooths or merge RE clauses.",
+        length(re_slots),
+        length(re_slots) - length(smooth_pieces$Xr_list),
+        length(smooth_pieces$Xr_list),
+        length(smooth_pieces$smooth_labels),
+        N_RE_SLOTS
+      ))
+    }
+    
+    # Pad to exactly N_RE_SLOTS so the Stan data list is uniformly shaped
+    while (length(re_slots) < N_RE_SLOTS) re_slots = c(re_slots, list(empty_re_slot))
+    
+    # Per-slot variables. Kept as separate names (mirroring the Stan side)
+    # so each slot is locally inspectable; no clever data structure required.
+    X_random_effect_1 = re_slots[[1]]$X
+    X_random_effect_2 = re_slots[[2]]$X
+    X_random_effect_3 = re_slots[[3]]$X
+    X_random_effect_4 = re_slots[[4]]$X
+    
+    # NOTE: per-slot $X_unseen matrices are available in `re_slots[[k]]$X_unseen`
+    # but are not shipped via data_for_model (downstream replicate / outlier
+    # pipelines build their own from new_data).
+    
+    group_factor_indexes_for_covariance_1 = re_slots[[1]]$gfi
+    group_factor_indexes_for_covariance_2 = re_slots[[2]]$gfi
+    group_factor_indexes_for_covariance_3 = re_slots[[3]]$gfi
+    group_factor_indexes_for_covariance_4 = re_slots[[4]]$gfi
+    
+    ncol_X_random_eff                 = map_int(re_slots, "ncol")
+    n_groups                          = map_int(re_slots, "n_groups")
+    how_many_factors_in_random_design = map_int(re_slots, "n_factors")
     
     
     y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% column_to_rownames(quo_name(.sample)) %>% as.matrix()
@@ -911,6 +1252,7 @@ data_spread_to_model_input =
         X = X,
         XA = XA,
         Xa = Xa,
+        variability_to_composition_map = variability_to_composition_map,
         C = ncol(X),
         A = A,
         Ar = Ar,
@@ -919,16 +1261,20 @@ data_spread_to_model_input =
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
         
-        # Random intercept
+        # Random intercept - 4 uniform slots (see Stan glm_multi_beta_binomial.stan)
         is_random_effect = is_random_effect,
-        ncol_X_random_eff = ncol_X_random_eff,
-        n_random_eff = n_random_eff,
-        n_groups  = n_groups,
-        X_random_effect = X_random_effect,
+        n_random_eff     = n_random_eff,
+        ncol_X_random_eff = ncol_X_random_eff,                # length 4
+        n_groups          = n_groups,                          # length 4
+        how_many_factors_in_random_design = how_many_factors_in_random_design,  # length 4
+        X_random_effect_1 = X_random_effect_1,
         X_random_effect_2 = X_random_effect_2,
-        group_factor_indexes_for_covariance = group_factor_indexes_for_covariance,
+        X_random_effect_3 = X_random_effect_3,
+        X_random_effect_4 = X_random_effect_4,
+        group_factor_indexes_for_covariance_1 = group_factor_indexes_for_covariance_1,
         group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
-        how_many_factors_in_random_design = how_many_factors_in_random_design,
+        group_factor_indexes_for_covariance_3 = group_factor_indexes_for_covariance_3,
+        group_factor_indexes_for_covariance_4 = group_factor_indexes_for_covariance_4,
         
         # For parallel chains
         grainsize = 1,
@@ -947,7 +1293,8 @@ data_spread_to_model_input =
     data_for_model$TNIM = 0
     
     # Add parameter factor dictionary
-    data_for_model$factor_parameter_dictionary = tibble()
+    data_for_model$factor_parameter_dictionary =
+      tibble(`factor` = character(), design_matrix_col = character())
     
     if(.data_spread  |> select(any_of(parse_formula(formula))) |> lapply(class) %in% c("factor", "character") |> any())
       data_for_model$factor_parameter_dictionary =
@@ -1019,9 +1366,20 @@ data_spread_to_model_input =
         nrow()
     }
     
-    # Default all grouping known. This is used for data generation to estimate unknown groupings.
-    data_for_model$unknown_grouping = c(FALSE, FALSE)
+    # Default all grouping known (four RE slots; see glm_multi_beta_binomial_generate_data.stan)
+    data_for_model$unknown_grouping = rep(0L, 4L)
     
+    # Smooth-term metadata is R-only (mgcv `smoothCon` / `smooth2random`
+    # objects, used by prediction / replicate helpers). It is NOT shipped to
+    # Stan, so we store it as an attribute on `model_input` (not a list element).
+    # Downstream code reads it via `get_smooth_results()`.
+    if (length(smooth_pieces$smooth_specs) > 0) {
+      attr(data_for_model, "smooth_results") <- list(
+        smooth_specs   = smooth_pieces$smooth_specs,
+        smooth_re_objs = smooth_pieces$smooth_re_objs,
+        smooth_labels  = smooth_pieces$smooth_labels
+      )
+    }
     
     # Return
     data_for_model

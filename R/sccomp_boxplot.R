@@ -71,11 +71,13 @@ sccomp_boxplot = function(
   if(.data |> select(any_of(c(paste0("c_", selected_statistic), paste0("v_", selected_statistic)))) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
   
+  .data_filtered =
+    subset_results_by_factor(.data, factor, keep_intercept = FALSE)
+
   data_proportion =
-    .data |>
+    .data_filtered |>
     
     # Otherwise does not work
-    filter(factor == !!factor) |> 
     select(-`factor`)
   
   data_proportion = 
@@ -281,7 +283,7 @@ plot_boxplot = function(
         aes(!!as.symbol(factor_of_interest), generated_proportions),
         fun.data = calc_boxplot_stat,
         geom = "boxplot",
-        fatten = 0.5,
+        median.linewidth = 0.5,
         lwd = 0.2,
         data = simulated_proportion %>%
           inner_join(data_proportion %>% distinct(!!as.symbol(factor_of_interest), !!.cell_group)),
@@ -305,7 +307,7 @@ plot_boxplot = function(
         data =
           data_proportion |>
           mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) ,
-        fatten = 0.5,
+        median.linewidth = 0.5,
         lwd=0.5
       )
   } else {
@@ -319,7 +321,7 @@ plot_boxplot = function(
           data_proportion |>
           mutate(!!as.symbol(factor_of_interest) := as.character(!!as.symbol(factor_of_interest))) %>%
           left_join(significance_colors, by = c(quo_name(.cell_group), factor_of_interest)),
-        fatten = 0.5,
+        median.linewidth = 0.5,
         lwd=0.5
       )
   }

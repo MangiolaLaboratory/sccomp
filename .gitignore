@@ -46,7 +46,8 @@ Rplot.pdf
 sccomp_draws_files
 .DS_Store
 docs
-
 /.quarto/
 **/*.quarto_ipynb
 .Renviron
+*.exe
+sccomp.Rcheck*
