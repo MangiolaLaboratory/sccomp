@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.31</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.33</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/introduction.html">sccomp: Differential Composition and Variability Analysis for Single-Cell Data</a></li>
+    <li><a class="dropdown-item" href="articles/splines.html">Smooth (spline) terms in sccomp</a></li>
   </ul>
 </li>
       </ul>
@@ -561,12 +562,12 @@
 <p>A plot of estimates of differential composition (c_) on the x-axis and differential variability (v_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if it exceeds the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="reference/plot_1D_intervals.html">plot_1D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="reference/sccomp_plot_intervals_1D.html">sccomp_plot_intervals_1D</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-10-1.png"><!-- --></p>
 <p>We can plot the relationship between abundance and variability. As we can see below, they are positively correlated. sccomp models this relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks to Bayesian inference.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="reference/plot_2D_intervals.html">plot_2D_intervals</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="reference/sccomp_plot_intervals_2D.html">sccomp_plot_intervals_2D</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="inst/figures/unnamed-chunk-11-1.png"><!-- --></p>
 <p>You can produce the series of plots calling the <code>plot</code> method.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">

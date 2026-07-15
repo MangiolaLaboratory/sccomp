@@ -112,7 +112,7 @@ print(residuals)
 #> Loading model from cache...
 #> Init values were only set for a subset of parameters. 
 #> Missing init values for the following parameters:
-#> random_effect_raw, random_effect_raw_2, random_effect_sigma_mu, random_effect_sigma_sigma, random_effect_sigma_raw, sigma_correlation_factor, random_effect_sigma_raw_2, sigma_correlation_factor_2, zero_random_effect
+#> prec_slope_2, random_effect_raw_1, random_effect_sigma_raw_1, sigma_correlation_factor_1, random_effect_raw_2, random_effect_sigma_raw_2, sigma_correlation_factor_2, random_effect_raw_3, random_effect_sigma_raw_3, sigma_correlation_factor_3, random_effect_raw_4, random_effect_sigma_raw_4, sigma_correlation_factor_4, random_effect_sigma_mu, random_effect_sigma_sigma, zero_random_effect
 #> 
 #> To disable this message use options(cmdstanr_warn_inits = FALSE).
 #> ------------------------------------------------------------ 
@@ -120,8 +120,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000373 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.73 seconds. 
+#> Gradient evaluation took 0.00035 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.5 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -132,11 +132,13 @@ print(residuals)
 #> Success! Found best value [eta = 1] earlier than expected. 
 #> Begin stochastic gradient ascent. 
 #>   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes  
-#>    100        -3977.155             1.000            1.000 
-#>    200        -3710.165             0.536            1.000 
-#>    300        -3698.763             0.358            0.072 
-#>    400        -3694.202             0.269            0.072 
-#>    500        -3686.256             0.216            0.003   MEDIAN ELBO CONVERGED 
+#>    100        -4668.733             1.000            1.000 
+#>    200        -3777.042             0.618            1.000 
+#>    300        -3704.740             0.419            0.236 
+#>    400        -3698.475             0.314            0.236 
+#>    500        -3694.261             0.252            0.020 
+#>    600        -3694.743             0.210            0.020 
+#>    700        -3699.562             0.180            0.002   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
 #> Finished in  2.5 seconds.
@@ -148,20 +150,20 @@ print(residuals)
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.567 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.556 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 720 × 5
 #>    sample cell_group residuals exposure residuals_unconstrained
 #>    <chr>  <chr>          <dbl>    <int>                   <dbl>
-#>  1 10x_6K B1          0.0129       5030                  0.222 
-#>  2 10x_6K B2         -0.0286       5030                 -1.24  
-#>  3 10x_6K B3         -0.00436      5030                 -0.413 
-#>  4 10x_6K BM          0.00164      5030                  0.243 
-#>  5 10x_6K CD4 1      -0.001000     5030                 -0.0175
-#>  6 10x_6K CD4 2      -0.0156       5030                 -0.345 
-#>  7 10x_6K CD4 3       0.0672       5030                  0.682 
-#>  8 10x_6K CD4 4      -0.00104      5030                 -0.980 
-#>  9 10x_6K CD4 5      -0.00264      5030                 -0.0619
-#> 10 10x_6K CD8 1      -0.0252       5030                 -0.237 
+#>  1 10x_6K B1          0.0158       5030                 0.286  
+#>  2 10x_6K B2         -0.0289       5030                -1.23   
+#>  3 10x_6K B3         -0.00521      5030                -0.466  
+#>  4 10x_6K BM          0.00159      5030                 0.248  
+#>  5 10x_6K CD4 1      -0.000806     5030                 0.00530
+#>  6 10x_6K CD4 2      -0.0128       5030                -0.272  
+#>  7 10x_6K CD4 3       0.0588       5030                 0.586  
+#>  8 10x_6K CD4 4      -0.00107      5030                -0.991  
+#>  9 10x_6K CD4 5       0.00235      5030                 0.120  
+#> 10 10x_6K CD8 1      -0.0204       5030                -0.179  
 #> # ℹ 710 more rows
 ```

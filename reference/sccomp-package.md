@@ -41,8 +41,8 @@ The main functions are:
 - Plotting functions:
   [`plot.sccomp_tbl`](https://mangiolalaboratory.github.io/sccomp/reference/plot.sccomp_tbl.md),
   [`sccomp_boxplot`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_boxplot.md),
-  [`plot_1D_intervals`](https://mangiolalaboratory.github.io/sccomp/reference/plot_1D_intervals.md),
-  [`plot_2D_intervals`](https://mangiolalaboratory.github.io/sccomp/reference/plot_2D_intervals.md)
+  [`sccomp_plot_intervals_1D`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_plot_intervals_1D.md),
+  [`sccomp_plot_intervals_2D`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_plot_intervals_2D.md)
 
 For detailed information on usage, see the package vignettes:
 
@@ -87,6 +87,8 @@ Useful links:
 **Maintainer**: Stefano Mangiola <stefano.mangiola@unimelb.edu.au>
 
 Authors:
+
+- Stefano Mangiola <stefano.mangiola@unimelb.edu.au>
 
 - Alexandra J. Roth-Schulze
 

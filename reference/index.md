@@ -14,12 +14,6 @@
   : no_significance_df
 - [`plot(`*`<sccomp_tbl>`*`)`](https://mangiolalaboratory.github.io/sccomp/reference/plot.sccomp_tbl.md)
   : plot
-- [`plot_1D_intervals()`](https://mangiolalaboratory.github.io/sccomp/reference/plot_1D_intervals.md)
-  : Plot 1D Intervals for Cell-group Effects
-- [`plot_2D_intervals()`](https://mangiolalaboratory.github.io/sccomp/reference/plot_2D_intervals.md)
-  : Plot 2D Intervals for Mean-Variance Association
-- [`plot_scatterplot()`](https://mangiolalaboratory.github.io/sccomp/reference/plot_scatterplot.md)
-  : Plot Scatterplot of Cell-group Proportion
 - [`print(`*`<sccomp_tbl>`*`)`](https://mangiolalaboratory.github.io/sccomp/reference/print.sccomp_tbl.md)
   : Print method for sccomp objects
 - [`sccomp_boxplot()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_boxplot.md)
@@ -28,6 +22,10 @@
   : Calculate Residuals Between Observed and Predicted Proportions
 - [`sccomp_estimate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_estimate.md)
   : Main Function for SCCOMP Estimate
+- [`sccomp_plot_intervals_1D()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_plot_intervals_1D.md)
+  : Plot 1D Intervals for Cell-group Effects
+- [`sccomp_plot_intervals_2D()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_plot_intervals_2D.md)
+  : Plot 2D Intervals for Mean-Variance Association
 - [`sccomp_predict()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_predict.md)
   : sccomp_predict
 - [`sccomp_proportional_fold_change()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_proportional_fold_change.md)

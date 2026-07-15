@@ -10,10 +10,6 @@ compiled Stan models to avoid recompilation on subsequent runs.
 sccomp_stan_models_cache_dir
 ```
 
-## Format
-
-An object of class `character` of length 1.
-
 ## Value
 
 A character string containing the path to the default cache directory.
