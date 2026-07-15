@@ -32,6 +32,8 @@
 
 \item{omit_ci}{Logical. Whether to omit credible interval error bars from 2D interval plots. Default is FALSE.}
 
+\item{sort_by}{Character vector indicating how to sort taxa. Options are "none" (default), "effect" (by effect size), "significance" (by FDR/pH0), or "alphabetical".}
+
 \item{...}{For internal use}
 }
 \value{

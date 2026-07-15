@@ -800,18 +800,28 @@ sccomp_plot_intervals_2D <- function(
   p
 }
 
-#' Soft-deprecated aliases (call [sccomp_plot_intervals_1D()] / [sccomp_plot_intervals_2D()] instead).
+#' Deprecated interval-plot aliases
 #'
+#' These soft-deprecated aliases forward to [sccomp_plot_intervals_1D()] and
+#' [sccomp_plot_intervals_2D()]. Use those functions directly instead.
+#'
+#' @param ... Arguments passed on to [sccomp_plot_intervals_1D()] or
+#'   [sccomp_plot_intervals_2D()].
+#' @return A `ggplot` object, as returned by the target function.
+#' @keywords internal
+#' @name deprecated-interval-plots
+NULL
+
+#' @rdname deprecated-interval-plots
 #' @importFrom lifecycle deprecate_soft
 #' @export
-#' @noRd
 plot_1D_intervals <- function(...) {
   deprecate_soft("2.1.29", "plot_1D_intervals()", "sccomp_plot_intervals_1D()")
   sccomp_plot_intervals_1D(...)
 }
 
+#' @rdname deprecated-interval-plots
 #' @export
-#' @noRd
 plot_2D_intervals <- function(...) {
   deprecate_soft("2.1.29", "plot_2D_intervals()", "sccomp_plot_intervals_2D()")
   sccomp_plot_intervals_2D(...)

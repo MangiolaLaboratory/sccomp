@@ -12,6 +12,7 @@
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param add_marginal_density Logical. Whether to add marginal density plots on adjusted panels in 2D intervals. Default is TRUE.
 #' @param omit_ci Logical. Whether to omit credible interval error bars from 2D interval plots. Default is FALSE.
+#' @param sort_by Character vector indicating how to sort taxa. Options are "none" (default), "effect" (by effect size), "significance" (by FDR/pH0), or "alphabetical".
 #' @param ... For internal use
 #'
 #' @return A list containing ggplot objects

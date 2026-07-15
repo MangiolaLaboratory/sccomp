@@ -288,8 +288,9 @@ can re-evaluate the basis at any new pseudotime value. This is exactly what
 basis.
 
 ```{r basis-decomp, fig.width=8, fig.height=6, eval = run_smooth_vignette}
-smooth_specs   <- attr(fit, "smooth_specs")
-smooth_re_objs <- attr(fit, "smooth_re_objs")
+smooth_meta    <- sccomp:::get_smooth_results(fit)
+smooth_specs   <- smooth_meta$smooth_specs
+smooth_re_objs <- smooth_meta$smooth_re_objs
 
 grid_basis <- tibble(
   pseudotime = seq(min(pt_map$pseudotime), max(pt_map$pseudotime),
