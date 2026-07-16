@@ -261,7 +261,7 @@ sccomp_result =
 
 ## Visualization and Summary Plots
 
-A plot of group proportions, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is descriptively adequate for the data, the blue boxplots should roughly overlay the black boxplots, which represent the observed data. The outliers are coloured in red. A boxplot will be returned for every (discrete) covariate present in formula_composition. The colour coding represents the significant associations for composition and/or variability.
+A plot of group proportions, faceted by groups. The blue boxplots represent the posterior predictive check. If the model is descriptively adequate for the data, the blue boxplots should roughly overlay the black boxplots, which represent the observed data. The outliers are coloured in red. A boxplot will be returned for every (discrete) covariate present in formula_composition; continuous covariates are visualised with `sccomp_scatterplot()` instead (see Continuous Factor Analysis below). The colour coding represents the significant associations for composition and/or variability.
 
 ```{r boxplot-basic, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
 sccomp_result |> 
@@ -363,9 +363,17 @@ res =
       cell_group = "cell_group",
       cores = 1, verbose=FALSE,
       max_sampling_iterations = 2000
-    )
+    ) |>
+    sccomp_test()
 
 res
+```
+
+For continuous covariates, use `sccomp_scatterplot()` instead of `sccomp_boxplot()`. Points are observed proportions; the black line is a smooth of the data and the blue ribbon is the posterior predictive trend.
+
+```{r continuous-scatterplot, eval = instantiate::stan_cmdstan_exists(), message=FALSE}
+res |>
+  sccomp_scatterplot(factor = "continuous_covariate")
 ```
 
 ## Random Effect Modeling (Mixed-Effect Modeling)

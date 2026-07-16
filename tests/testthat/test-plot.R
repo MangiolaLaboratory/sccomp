@@ -423,6 +423,24 @@ test_that("sccomp_plot_intervals_2D includes regression line from prec parameter
   )
 })
 
+test_that("sccomp_scatterplot works for continuous covariates", {
+  skip_cmdstan()
+
+  my_estimate |>
+    sccomp_test() |>
+    sccomp_scatterplot(factor = "continuous_covariate", significance_threshold = 0.025) |>
+    expect_s3_class("ggplot")
+
+  my_estimate |>
+    sccomp_test() |>
+    sccomp_scatterplot(
+      factor = "continuous_covariate",
+      significance_threshold = 0.025,
+      remove_unwanted_effects = TRUE
+    ) |>
+    expect_s3_class("ggplot")
+})
+
 test_that("sccomp_boxplot can accept additional ggplot layers", {
    skip_cmdstan()
 
