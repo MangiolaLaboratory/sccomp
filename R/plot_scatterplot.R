@@ -1,3 +1,123 @@
+#' sccomp_scatterplot
+#'
+#' @description
+#' Creates a scatterplot of cell-group proportions against a continuous covariate,
+#' optionally overlaying the posterior predictive trend from the fitted model.
+#' Use this visualisation when the factor of interest is numeric; for discrete
+#' factors prefer [sccomp_boxplot()].
+#'
+#' @import ggplot2
+#' @importFrom tidyr pivot_longer pivot_wider unite unnest
+#' @importFrom dplyr select with_groups mutate left_join rename
+#'
+#' @param .data A tibble containing the results from `sccomp_estimate` and
+#'   `sccomp_test`, including the columns: cell_group name, sample name, read
+#'   counts, factor(s), p-values, and significance indicators.
+#' @param factor A character string specifying the continuous covariate of
+#'   interest included in the model.
+#' @param significance_threshold A numeric value indicating the threshold for
+#'   highlighting significant cell-groups. Defaults to 0.05.
+#' @param remove_unwanted_effects A logical value indicating whether to remove
+#'   unwanted variation from the data before plotting. Defaults to `FALSE`.
+#'
+#' @return A `ggplot` object representing the scatterplot of cell proportions
+#'   against the continuous covariate, faceted by cell group.
+#'
+#' @export
+#'
+#' @examples
+#'
+#' print("cmdstanr is needed to run this example.")
+#' # Note: Before running the example, ensure that the 'cmdstanr' package is installed:
+#' # install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
+#'
+#' \donttest{
+#' if (instantiate::stan_cmdstan_exists()) {
+#'     data("seurat_obj")
+#'
+#'     estimate <- sccomp_estimate(
+#'       seurat_obj,
+#'       formula_composition = ~ continuous_covariate,
+#'       formula_variability = ~ 1,
+#'       sample = "sample",
+#'       cell_group = "cell_group",
+#'       cores = 1
+#'     ) |>
+#'     sccomp_test()
+#'
+#'     # Plot proportions against the continuous covariate
+#'     sccomp_scatterplot(
+#'         .data = estimate,
+#'         factor = "continuous_covariate",
+#'         significance_threshold = 0.05
+#'     )
+#' }
+#' }
+#' @references
+#' S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z. Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust differential composition and variability analysis for single-cell data, Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120, https://doi.org/10.1073/pnas.2203828120 (2023).
+sccomp_scatterplot = function(
+    .data,
+    factor,
+    significance_threshold = 0.05,
+    remove_unwanted_effects = FALSE
+){
+
+  .cell_group = attr(.data, ".cell_group")
+  .count = attr(.data, ".count")
+  .sample = attr(.data, ".sample")
+
+  # Check if test have been done
+  if(.data |> select(ends_with("FDR")) |> ncol() |> equals(0))
+    stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
+
+  .data_filtered =
+    subset_results_by_factor(.data, factor, keep_intercept = FALSE)
+
+  data_proportion =
+    .data_filtered |>
+
+    # Otherwise does not work
+    select(-`factor`) |>
+
+    pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) |>
+    left_join(
+      attr(.data, "count_data") ,
+      by = quo_name(.cell_group)
+    ) |>
+    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) )
+
+  if(remove_unwanted_effects){
+    .data_adjusted =
+      .data |>
+      sccomp_remove_unwanted_effects(formula_composition_keep = as.formula("~ " |> paste(factor))) |>
+      rename(proportion = adjusted_proportion)
+
+    data_proportion =
+      data_proportion |>
+      select(-proportion) |>
+      left_join(.data_adjusted, by = join_by(!!.cell_group, !!.sample))
+  }
+  else
+    message( "sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.")
+
+  # If I don't have outliers add them
+  if(.data |> attr("outliers") |> is.null() |> not())
+    data_proportion =
+    data_proportion |>
+    left_join(.data |> attr("outliers"), by = c(quo_name(.sample), quo_name(.cell_group)))
+ else
+  data_proportion = data_proportion |> mutate(outlier = FALSE)
+
+  plot_scatterplot(
+    .data = .data,
+    data_proportion = data_proportion,
+    factor_of_interest = factor,
+    significance_threshold = significance_threshold,
+    my_theme = sccomp_theme()
+  ) +
+    ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", factor))
+
+}
 
 #' Plot Scatterplot of Cell-group Proportion
 #'

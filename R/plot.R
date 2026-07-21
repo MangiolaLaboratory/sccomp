@@ -58,11 +58,6 @@ plot.sccomp_tbl <- function(
   significance_statistic <- match.arg(significance_statistic)
   sort_by <- match.arg(sort_by)
 
-  # Quosures from estimate (same names as legacy `.cell_group` args; stored on tbl attributes)
-  .sample <- attr(x, ".sample")
-  .cell_group <- attr(x, ".cell_group")
-  .count <- attr(x, ".count")
-
   # Define the variables as NULL to avoid CRAN NOTES
   v_effect <- NULL
 
@@ -71,30 +66,6 @@ plot.sccomp_tbl <- function(
   # Check if test have been done
   if(x |> select(ends_with("FDR")) |> ncol() |> equals(0))
     stop("sccomp says: to produce plots, you need to run the function sccomp_test() on your estimates.")
-
-  data_proportion =
-    x |>
-    
-    # Otherwise does not work
-    select(-`factor`) |>
-    
-    pivot_wider(names_from = parameter, values_from = c(contains("c_"), contains("v_"))) |>
-    left_join(
-      attr(x, "count_data"),
-      by = join_by(!!.cell_group)
-    ) |> 
-    with_groups(!!.sample, ~ mutate(.x, proportion = (!!.count)/sum(!!.count)) )
-  
-  
-  # If I don't have outliers add them
-  if(x |> attr("outliers") |> is.null() |> not())
-    data_proportion = 
-    data_proportion |> 
-    left_join(x |> attr("outliers"), by = join_by(!!.sample, !!.cell_group))
- else 
-  data_proportion = data_proportion |> mutate(outlier = FALSE) 
-  
- 
 
   # Select the factors to plot  
   my_factors =
@@ -114,14 +85,12 @@ plot.sccomp_tbl <- function(
         ~ {
           
           # If variable is continuous
-          if(data_proportion |> select(all_of(.x)) |> pull(1) |> is("numeric"))
+          if(attr(x, "count_data") |> select(all_of(.x)) |> pull(1) |> is("numeric"))
             my_plot =
-              plot_scatterplot(
+              sccomp_scatterplot(
                 .data = x,
-                data_proportion = data_proportion,
-                factor_of_interest = .x,
-                significance_threshold = significance_threshold,
-                my_theme = sccomp_theme()
+                factor = .x,
+                significance_threshold = significance_threshold
               )
           
           # If discrete
@@ -135,8 +104,7 @@ plot.sccomp_tbl <- function(
               ) 
           
           # Return
-          my_plot +
-            ggtitle(sprintf("Grouped by %s (for multi-factor models, associations could be hardly observable with unidimensional data stratification)", .x))
+          my_plot
         } )
     
   }

@@ -1,6 +1,12 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.1.34}{
+\itemize{
+    \item Exported \code{sccomp_scatterplot()} for visualising cell-group proportions against a continuous covariate, complementing \code{sccomp_boxplot()} for discrete factors. The function accepts \code{.data}, \code{factor}, \code{significance_threshold}, and \code{remove_unwanted_effects}, and is used by the \code{plot()} method for numeric covariates.
+    \item Documented \code{sccomp_scatterplot()} in the introduction vignette (Continuous Factor Analysis section).
+}}
+
 \section{News in version 2.1.33}{
 \itemize{
     \item **New feature: smooth terms (splines) in formulas.** Added support for \code{s()} and \code{t2()} smooth terms in \code{sccomp} formulas, enabling flexible non-linear modelling of continuous covariates. Introduced utility functions for parsing smooth terms and a dedicated vignette demonstrating their use.
