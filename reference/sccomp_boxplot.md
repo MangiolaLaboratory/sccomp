@@ -325,7 +325,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.111 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> Joining with `by = join_by(cell_group, sample)`
 #> Joining with `by = join_by(cell_group, type)`

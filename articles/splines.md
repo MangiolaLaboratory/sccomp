@@ -207,7 +207,7 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.314 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.238 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
@@ -300,7 +300,7 @@ pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.31 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.239 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -470,7 +470,7 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.985 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.863 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)
@@ -609,7 +609,7 @@ will stop with a message naming the smooth and the slot budget.
     #> [1] stats     graphics  grDevices utils     datasets  methods   base     
     #> 
     #> other attached packages:
-    #> [1] sccomp_2.1.33     instantiate_0.2.3 ggplot2_4.0.3     tidyr_1.3.2      
+    #> [1] sccomp_2.1.34     instantiate_0.2.3 ggplot2_4.0.3     tidyr_1.3.2      
     #> [5] dplyr_1.2.1      
     #> 
     #> loaded via a namespace (and not attached):

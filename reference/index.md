@@ -38,6 +38,8 @@
   : DEPRECATED: Remove Unwanted Variation from sccomp Estimates
 - [`sccomp_replicate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_replicate.md)
   : sccomp_replicate
+- [`sccomp_scatterplot()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_scatterplot.md)
+  : sccomp_scatterplot
 - [`sccomp_stan_models_cache_dir`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_stan_models_cache_dir.md)
   : Default cache directory for Stan models
 - [`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md)

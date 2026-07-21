@@ -111,18 +111,18 @@ print("cmdstanr is needed to run this example.")
 #> sccomp says: the composition design matrix has columns: (Intercept), typecancer
 #> sccomp says: the variability design matrix has columns: (Intercept)
 #> Precompiled model not found. Compiling the model...
-#> Running make /tmp/RtmpQXk4vD/model-3beb65992471 "STAN_THREADS=TRUE" \
-#>   "STANCFLAGS += --include-paths=/tmp/RtmpQXk4vD/temp_libpath3beb2d08daf/sccomp/stan --name='glm_multi_beta_binomial_model'"
+#> Running make /tmp/Rtmp9NpqYX/model-3c5f450f6f9f "STAN_THREADS=TRUE" \
+#>   "STANCFLAGS += --include-paths=/tmp/Rtmp9NpqYX/temp_libpath3c5f51bcedf7/sccomp/stan --name='glm_multi_beta_binomial_model'"
 #> 
 #> --- Translating Stan model to C++ code ---
-#> bin/stanc --include-paths=/tmp/RtmpQXk4vD/temp_libpath3beb2d08daf/sccomp/stan --name='glm_multi_beta_binomial_model' --o=/tmp/RtmpQXk4vD/model-3beb65992471.hpp /tmp/RtmpQXk4vD/model-3beb65992471.stan
+#> bin/stanc --include-paths=/tmp/Rtmp9NpqYX/temp_libpath3c5f51bcedf7/sccomp/stan --name='glm_multi_beta_binomial_model' --o=/tmp/Rtmp9NpqYX/model-3c5f450f6f9f.hpp /tmp/Rtmp9NpqYX/model-3c5f450f6f9f.stan
 #> 
 #> --- Compiling C++ code ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmpQXk4vD/model-3beb65992471.o /tmp/RtmpQXk4vD/model-3beb65992471.hpp
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/Rtmp9NpqYX/model-3c5f450f6f9f.o /tmp/Rtmp9NpqYX/model-3c5f450f6f9f.hpp
 #> 
 #> --- Linking model ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmpQXk4vD/model-3beb65992471.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmpQXk4vD/model-3beb65992471
-#> rm /tmp/RtmpQXk4vD/model-3beb65992471.o /tmp/RtmpQXk4vD/model-3beb65992471.hpp
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"      /tmp/Rtmp9NpqYX/model-3c5f450f6f9f.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/Rtmp9NpqYX/model-3c5f450f6f9f
+#> rm /tmp/Rtmp9NpqYX/model-3c5f450f6f9f.hpp /tmp/Rtmp9NpqYX/model-3c5f450f6f9f.o
 #> Model compiled and saved to cache successfully.
 #> Path [1] :Initial log joint density = -482684.608336 
 #> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
@@ -334,22 +334,22 @@ print("cmdstanr is needed to run this example.")
 #> sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.
 #> sccomp says: from version 2.1.25, the default `significance_statistic` for boxplots is `pH0` (previously `FDR`). Set `significance_statistic = "FDR"` to use the previous default.
 #> Precompiled model not found. Compiling the model...
-#> Running make /tmp/RtmpQXk4vD/model-3beb46b58797 "STAN_THREADS=TRUE" \
-#>   "STANCFLAGS += --include-paths=/tmp/RtmpQXk4vD/temp_libpath3beb2d08daf/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model'"
+#> Running make /tmp/Rtmp9NpqYX/model-3c5f27ebe699 "STAN_THREADS=TRUE" \
+#>   "STANCFLAGS += --include-paths=/tmp/Rtmp9NpqYX/temp_libpath3c5f51bcedf7/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model'"
 #> 
 #> --- Translating Stan model to C++ code ---
-#> bin/stanc --include-paths=/tmp/RtmpQXk4vD/temp_libpath3beb2d08daf/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model' --o=/tmp/RtmpQXk4vD/model-3beb46b58797.hpp /tmp/RtmpQXk4vD/model-3beb46b58797.stan
+#> bin/stanc --include-paths=/tmp/Rtmp9NpqYX/temp_libpath3c5f51bcedf7/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model' --o=/tmp/Rtmp9NpqYX/model-3c5f27ebe699.hpp /tmp/Rtmp9NpqYX/model-3c5f27ebe699.stan
 #> 
 #> --- Compiling C++ code ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmpQXk4vD/model-3beb46b58797.o /tmp/RtmpQXk4vD/model-3beb46b58797.hpp
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/Rtmp9NpqYX/model-3c5f27ebe699.o /tmp/Rtmp9NpqYX/model-3c5f27ebe699.hpp
 #> 
 #> --- Linking model ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmpQXk4vD/model-3beb46b58797.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmpQXk4vD/model-3beb46b58797
-#> rm /tmp/RtmpQXk4vD/model-3beb46b58797.hpp /tmp/RtmpQXk4vD/model-3beb46b58797.o
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"      /tmp/Rtmp9NpqYX/model-3c5f27ebe699.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/Rtmp9NpqYX/model-3c5f27ebe699
+#> rm /tmp/Rtmp9NpqYX/model-3c5f27ebe699.o /tmp/Rtmp9NpqYX/model-3c5f27ebe699.hpp
 #> Model compiled and saved to cache successfully.
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.111 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.102 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> Joining with `by = join_by(cell_group, sample)`
 #> Joining with `by = join_by(cell_group, type)`

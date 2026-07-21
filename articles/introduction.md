@@ -328,12 +328,12 @@ sccomp_result =
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.281 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 2.088 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.281 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 2.119 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ### Visualization and Summary Plots
@@ -343,8 +343,12 @@ represent the posterior predictive check. If the model is descriptively
 adequate for the data, the blue boxplots should roughly overlay the
 black boxplots, which represent the observed data. The outliers are
 coloured in red. A boxplot will be returned for every (discrete)
-covariate present in formula_composition. The colour coding represents
-the significant associations for composition and/or variability.
+covariate present in formula_composition; continuous covariates are
+visualised with
+[`sccomp_scatterplot()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_scatterplot.md)
+instead (see Continuous Factor Analysis below). The colour coding
+represents the significant associations for composition and/or
+variability.
 
 ``` r
 
@@ -354,7 +358,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.111 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.102 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -375,17 +379,17 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.567 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.512 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.559 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.511 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -416,7 +420,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.102 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -441,7 +445,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -546,7 +550,8 @@ res =
       cell_group = "cell_group",
       cores = 1, verbose=FALSE,
       max_sampling_iterations = 2000
-    )
+    ) |>
+    sccomp_test()
 
 res
 ```
@@ -568,22 +573,74 @@ res
     ##   For each parameter, n_eff is the effective sample size and R_k_hat is the potential
     ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
     ## 
-    ## # A tibble: 90 × 15
-    ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
-    ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… NA      0.554    0.836    1.12   1.000      1914.
-    ##  2 B immature        typeheal… type    1.03     1.36     1.68   1.00       1891.
-    ##  3 B immature        continuo… conti… -0.278    0.0483   0.355  1.00       2090.
-    ##  4 B mem             (Interce… NA     -0.992   -0.674   -0.354  1.00       1867.
-    ##  5 B mem             typeheal… type    1.24     1.60     1.99   1.00       1863.
-    ##  6 B mem             continuo… conti… -0.281    0.0605   0.401  1.000      1942.
-    ##  7 CD4 cm high cyto… (Interce… NA     -0.922   -0.589   -0.229  1.00       1566.
-    ##  8 CD4 cm high cyto… typeheal… type   -2.20    -1.74    -1.24   1.000      1991.
-    ##  9 CD4 cm high cyto… continuo… conti… -0.531   -0.168    0.212  1.000      1762.
-    ## 10 CD4 cm ribosome   (Interce… NA     -0.0637   0.285    0.609  1.000      1968.
+    ## # A tibble: 90 × 19
+    ##    cell_group   parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
+    ##    <chr>        <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
+    ##  1 B immature   (Interce… NA      0.554    0.836    1.12  0       0        1.000
+    ##  2 B immature   typeheal… type    1.03     1.36     1.68  0       0        1.00 
+    ##  3 B immature   continuo… conti… -0.278    0.0483   0.355 0.633   4.20e-1  1.00 
+    ##  4 B mem        (Interce… NA     -0.992   -0.674   -0.354 0       0        1.00 
+    ##  5 B mem        typeheal… type    1.24     1.60     1.99  0       0        1.00 
+    ##  6 B mem        continuo… conti… -0.281    0.0605   0.401 0.584   3.87e-1  1.000
+    ##  7 CD4 cm S100… (Interce… NA      1.32     1.56     1.79  0       0        1.00 
+    ##  8 CD4 cm S100… typeheal… type    0.842    1.13     1.40  0       0        1.00 
+    ##  9 CD4 cm S100… continuo… conti… -0.0975   0.171    0.445 0.3     1.79e-1  1.000
+    ## 10 CD4 cm high… (Interce… NA     -0.922   -0.589   -0.229 0.00400 4.77e-4  1.00 
     ## # ℹ 80 more rows
-    ## # ℹ 7 more variables: c_ess_tail <dbl>, v_upper <dbl>, v_effect <dbl>,
-    ## #   v_lower <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
+    ## # ℹ 10 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>, v_lower <dbl>,
+    ## #   v_effect <dbl>, v_upper <dbl>, v_pH0 <dbl>, v_FDR <dbl>, v_rhat <dbl>,
+    ## #   v_ess_bulk <dbl>, v_ess_tail <dbl>
+
+For continuous covariates, use
+[`sccomp_scatterplot()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_scatterplot.md)
+instead of
+[`sccomp_boxplot()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_boxplot.md).
+Points are observed proportions; the black line is a smooth of the data
+and the blue ribbon is the posterior predictive trend.
+
+``` r
+
+res |>
+  sccomp_scatterplot(factor = "continuous_covariate")
+```
+
+    ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
+    ## 
+    ## Chain 1  Elapsed Time: 0.92 seconds (Generated Quantities) 
+    ## Chain 1 finished in 0.0 seconds.
+
+    ## Warning: `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+    ## `position_jitterdodge()` requires non-overlapping x intervals.
+
+![](introduction_files/figure-html/continuous-scatterplot-1.png)
 
 ### Random Effect Modeling (Mixed-Effect Modeling)
 
@@ -666,16 +723,16 @@ res
     ## # A tibble: 180 × 15
     ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… NA       0.501    0.851  1.17     1.00      107. 
-    ##  2 B immature        typeheal… type     0.754    1.24   1.69     1.01       96.1
-    ##  3 B mem             (Interce… NA      -0.866   -0.459  0.0151   1.01       80.9
-    ##  4 B mem             typeheal… type     0.810    1.30   1.79     1.02       91.1
-    ##  5 CD4 cm high cyto… (Interce… NA      -1.05    -0.667 -0.282    1.00      209. 
-    ##  6 CD4 cm high cyto… typeheal… type    -2.08    -1.62  -1.18     1.01      135. 
-    ##  7 CD4 cm ribosome   (Interce… NA      -0.170    0.169  0.543    1.00      205. 
-    ##  8 CD4 cm ribosome   typeheal… type    -1.25    -0.753 -0.304    1.00      112. 
-    ##  9 CD4 cm S100A4     (Interce… NA       1.23     1.52   1.85     1.02      125. 
-    ## 10 CD4 cm S100A4     typeheal… type     0.610    0.999  1.31     1.02       89.0
+    ##  1 B immature        (Interce… NA       0.490    0.846  1.16    1.01       217. 
+    ##  2 B immature        typeheal… type     0.854    1.26   1.62    1.02       154. 
+    ##  3 B mem             (Interce… NA      -0.881   -0.457  0.0326  1.05        55.0
+    ##  4 B mem             typeheal… type     0.735    1.31   1.82    1.09        11.8
+    ##  5 CD4 cm high cyto… (Interce… NA      -1.04    -0.668 -0.266   1.00       209. 
+    ##  6 CD4 cm high cyto… typeheal… type    -2.06    -1.63  -1.22    1.000      113. 
+    ##  7 CD4 cm ribosome   (Interce… NA      -0.204    0.162  0.545   1.02       206. 
+    ##  8 CD4 cm ribosome   typeheal… type    -1.19    -0.735 -0.249   1.00       184. 
+    ##  9 CD4 cm S100A4     (Interce… NA       1.23     1.51   1.80    1.01       149. 
+    ## 10 CD4 cm S100A4     typeheal… type     0.660    1.00   1.34    1.02       142. 
     ## # ℹ 170 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_upper <dbl>, v_effect <dbl>,
     ## #   v_lower <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -725,16 +782,16 @@ res
     ## # A tibble: 240 × 15
     ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… NA       0.463    0.819  1.18    1.00       218. 
-    ##  2 B immature        typeheal… type     0.772    1.24   1.68    1.00        96.4
-    ##  3 B mem             (Interce… NA      -0.895   -0.515 -0.0808  1.02       112. 
-    ##  4 B mem             typeheal… type     0.789    1.29   1.77    1.01        62.7
-    ##  5 CD4 cm high cyto… (Interce… NA      -1.08    -0.685 -0.285   1.000      223. 
-    ##  6 CD4 cm high cyto… typeheal… type    -2.13    -1.62  -1.13    1.00        92.2
-    ##  7 CD4 cm ribosome   (Interce… NA      -0.206    0.187  0.595   1.01       221. 
-    ##  8 CD4 cm ribosome   typeheal… type    -1.20    -0.700 -0.205   1.01        96.5
-    ##  9 CD4 cm S100A4     (Interce… NA       1.26     1.55   1.86    1.01       104. 
-    ## 10 CD4 cm S100A4     typeheal… type     0.621    0.970  1.36    1.01       122. 
+    ##  1 B immature        (Interce… NA       0.451    0.836  1.22    1.00       153. 
+    ##  2 B immature        typeheal… type     0.790    1.27   1.78    1.01       115. 
+    ##  3 B mem             (Interce… NA      -0.948   -0.532 -0.0853  1.01        98.3
+    ##  4 B mem             typeheal… type     0.735    1.35   1.90    1.01       103. 
+    ##  5 CD4 cm high cyto… (Interce… NA      -1.13    -0.686 -0.247   1.01       167. 
+    ##  6 CD4 cm high cyto… typeheal… type    -2.17    -1.67  -1.14    1.00       115. 
+    ##  7 CD4 cm ribosome   (Interce… NA      -0.183    0.202  0.595   1.000      249. 
+    ##  8 CD4 cm ribosome   typeheal… type    -1.14    -0.679 -0.216   1.00       158. 
+    ##  9 CD4 cm S100A4     (Interce… NA       1.26     1.57   1.89    1.01       106. 
+    ## 10 CD4 cm S100A4     typeheal… type     0.601    0.966  1.40    1.00       125. 
     ## # ℹ 230 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_upper <dbl>, v_effect <dbl>,
     ## #   v_lower <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -784,18 +841,18 @@ res
     ##   scale reduction factor on split chains (at convergence, R_k_hat = 1).
     ## 
     ## # A tibble: 300 × 15
-    ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
-    ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… NA       0.445   0.849   1.34     1.01       91.0
-    ##  2 B immature        typeheal… type     0.784   1.24    1.77     1.01       78.5
-    ##  3 B mem             (Interce… NA      -0.942  -0.471  -0.0559   1.01       91.1
-    ##  4 B mem             typeheal… type     0.930   1.39    1.94     1.01      108. 
-    ##  5 CD4 cm high cyto… (Interce… NA      -1.03   -0.632  -0.188    1.00      146. 
-    ##  6 CD4 cm high cyto… typeheal… type    -2.12   -1.66   -1.19     1.00      116. 
-    ##  7 CD4 cm ribosome   (Interce… NA      -0.304   0.0926  0.546    1.01      113. 
-    ##  8 CD4 cm ribosome   typeheal… type    -1.34   -0.787  -0.251    1.03      116. 
-    ##  9 CD4 cm S100A4     (Interce… NA       1.07    1.46    1.88     1.01       85.5
-    ## 10 CD4 cm S100A4     typeheal… type     0.557   0.969   1.42     1.00       84.0
+    ##    cell_group       parameter factor c_lower c_effect  c_upper c_rhat c_ess_bulk
+    ##    <chr>            <chr>     <chr>    <dbl>    <dbl>    <dbl>  <dbl>      <dbl>
+    ##  1 B immature       (Interce… NA       0.434    0.783  1.23      1.01       97.8
+    ##  2 B immature       typeheal… type     0.710    1.24   1.66      1.04       67.2
+    ##  3 B mem            (Interce… NA      -1.06    -0.473  0.00432   1.00       99.7
+    ##  4 B mem            typeheal… type     0.839    1.38   2.00      1.00       92.8
+    ##  5 CD4 cm high cyt… (Interce… NA      -1.00    -0.617 -0.187     1.00      180. 
+    ##  6 CD4 cm high cyt… typeheal… type    -2.11    -1.67  -1.21      1.02      114. 
+    ##  7 CD4 cm ribosome  (Interce… NA      -0.235    0.157  0.576     1.00      171. 
+    ##  8 CD4 cm ribosome  typeheal… type    -1.47    -0.817 -0.302     1.00       59.8
+    ##  9 CD4 cm S100A4    (Interce… NA       1.09     1.43   1.83      1.00       88.9
+    ## 10 CD4 cm S100A4    typeheal… type     0.640    0.966  1.36      1.01      111. 
     ## # ℹ 290 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_upper <dbl>, v_effect <dbl>,
     ## #   v_lower <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -835,22 +892,22 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.092 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.09 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## # A tibble: 30 × 2
     ##    cell_group           statement                                
     ##    <chr>                <glue>                                   
-    ##  1 B immature           2.1-fold decrease (from 0.1091 to 0.0526)
-    ##  2 B mem                2.4-fold decrease (from 0.0337 to 0.0142)
-    ##  3 CD4 cm high cytokine 8.4-fold increase (from 0.0014 to 0.0119)
-    ##  4 CD4 cm ribosome      3.6-fold increase (from 0.0068 to 0.0247)
-    ##  5 CD4 cm S100A4        1.6-fold decrease (from 0.1504 to 0.0955)
-    ##  6 CD4 em high cytokine 5.2-fold increase (from 0.0021 to 0.0107)
-    ##  7 CD4 naive            1.4-fold decrease (from 0.1207 to 0.0833)
-    ##  8 CD4 ribosome         2.8-fold decrease (from 0.0799 to 0.0281)
-    ##  9 CD8 em 1             1.2-fold increase (from 0.0478 to 0.059) 
-    ## 10 CD8 em 2             4.1-fold increase (from 0.005 to 0.0203) 
+    ##  1 B immature           2.1-fold decrease (from 0.104 to 0.0496) 
+    ##  2 B mem                2.4-fold decrease (from 0.0347 to 0.0144)
+    ##  3 CD4 cm high cytokine 8.6-fold increase (from 0.0014 to 0.0121)
+    ##  4 CD4 cm ribosome      3.7-fold increase (from 0.0072 to 0.0264)
+    ##  5 CD4 cm S100A4        1.6-fold decrease (from 0.1477 to 0.0942)
+    ##  6 CD4 em high cytokine 4.9-fold increase (from 0.0021 to 0.01)  
+    ##  7 CD4 naive            1.4-fold decrease (from 0.1184 to 0.0826)
+    ##  8 CD4 ribosome         3.1-fold decrease (from 0.0862 to 0.0278)
+    ##  9 CD8 em 1             1.2-fold increase (from 0.0479 to 0.059) 
+    ## 10 CD8 em 2             4.2-fold increase (from 0.0047 to 0.02)  
     ## # ℹ 20 more rows
 
 ### Contrasts Analysis
@@ -888,16 +945,16 @@ seurat_obj |>
     ## # A tibble: 60 × 11
     ##    cell_group   parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat
     ##    <chr>        <chr>     <chr>    <dbl>    <dbl>   <dbl>   <dbl>   <dbl>  <dbl>
-    ##  1 B immature   typecanc… NA      -1.90     -1.37  -0.816 0       0        1.000
-    ##  2 B immature   typeheal… NA       0.816     1.37   1.90  0       0        1.000
-    ##  3 B mem        typecanc… NA      -2.23     -1.67  -1.10  0       0        1.000
-    ##  4 B mem        typeheal… NA       1.10      1.67   2.23  0       0        1.000
-    ##  5 CD4 cm S100… typecanc… NA      -1.44     -1.00  -0.569 0       0        1.00 
-    ##  6 CD4 cm S100… typeheal… NA       0.569     1.00   1.44  0       0        1.00 
-    ##  7 CD4 cm high… typecanc… NA       0.904     1.55   2.18  0       0        1.00 
-    ##  8 CD4 cm high… typeheal… NA      -2.18     -1.55  -0.904 0       0        1.00 
-    ##  9 CD4 cm ribo… typecanc… NA       0.437     1.00   1.58  0.00250 5.00e-4  1.000
-    ## 10 CD4 cm ribo… typeheal… NA      -1.58     -1.00  -0.437 0.00250 5.00e-4  1.000
+    ##  1 B immature   typecanc… NA      -1.93    -1.36   -0.833 0       0         1.00
+    ##  2 B immature   typeheal… NA       0.833    1.36    1.93  0       0         1.00
+    ##  3 B mem        typecanc… NA      -2.26    -1.68   -1.11  0       0         1.00
+    ##  4 B mem        typeheal… NA       1.11     1.68    2.26  0       0         1.00
+    ##  5 CD4 cm S100… typecanc… NA      -1.47    -1.00   -0.538 0       0         1.00
+    ##  6 CD4 cm S100… typeheal… NA       0.538    1.00    1.47  0       0         1.00
+    ##  7 CD4 cm high… typecanc… NA       0.890    1.57    2.20  0       0         1.00
+    ##  8 CD4 cm high… typeheal… NA      -2.20    -1.57   -0.890 0       0         1.00
+    ##  9 CD4 cm ribo… typecanc… NA       0.404    0.987   1.60  0.00250 6.67e-4   1.00
+    ## 10 CD4 cm ribo… typeheal… NA      -1.60    -0.987  -0.404 0.00250 6.67e-4   1.00
     ## # ℹ 50 more rows
     ## # ℹ 2 more variables: c_ess_bulk <dbl>, c_ess_tail <dbl>
 
@@ -956,9 +1013,9 @@ loo_compare(
 )
 ```
 
-    ##   model elpd_diff se_diff p_worse diag_diff       diag_elpd
-    ##  model1       0.0     0.0      NA           10 k_psis > 0.7
-    ##  model2     -82.2    10.8    1.00            4 k_psis > 0.7
+    ##   model elpd_diff se_diff p_worse diag_diff      diag_elpd
+    ##  model1       0.0     0.0      NA           7 k_psis > 0.7
+    ##  model2     -80.5    10.9    1.00           6 k_psis > 0.7
 
 ### Differential Variability Analysis
 
@@ -1001,16 +1058,16 @@ res
     ## # A tibble: 60 × 15
     ##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk
     ##    <chr>             <chr>     <chr>    <dbl>    <dbl>   <dbl>  <dbl>      <dbl>
-    ##  1 B immature        (Interce… NA      0.551     0.846   1.16   1.00      1566. 
-    ##  2 B immature        typeheal… type    1.05      1.39    1.75   1.00       323. 
-    ##  3 B mem             (Interce… NA     -1.01     -0.643  -0.267  1.00       162. 
-    ##  4 B mem             typeheal… type    1.13      1.57    1.97   1.00       199. 
-    ##  5 CD4 cm high cyto… (Interce… NA     -0.996    -0.616  -0.258  1.00       893. 
-    ##  6 CD4 cm high cyto… typeheal… type   -2.10     -1.50   -0.706  1.05        50.4
-    ##  7 CD4 cm ribosome   (Interce… NA     -0.0587    0.290   0.636  1.00      1657. 
-    ##  8 CD4 cm ribosome   typeheal… type   -1.33     -0.923  -0.523  1.000      430. 
-    ##  9 CD4 cm S100A4     (Interce… NA      1.45      1.71    1.97   1.00       328. 
-    ## 10 CD4 cm S100A4     typeheal… type    0.603     0.921   1.23   1.00       200. 
+    ##  1 B immature        (Interce… NA      0.554     0.843   1.13   1.00      1723. 
+    ##  2 B immature        typeheal… type    1.06      1.40    1.74   1.01       527. 
+    ##  3 B mem             (Interce… NA     -1.03     -0.665  -0.317  1.00       338. 
+    ##  4 B mem             typeheal… type    1.21      1.61    2.02   1.00       332. 
+    ##  5 CD4 cm high cyto… (Interce… NA     -0.999    -0.631  -0.256  1.01      1008. 
+    ##  6 CD4 cm high cyto… typeheal… type   -2.02     -1.48   -0.831  1.01        93.7
+    ##  7 CD4 cm ribosome   (Interce… NA     -0.0396    0.296   0.640  1.000     1829. 
+    ##  8 CD4 cm ribosome   typeheal… type   -1.34     -0.919  -0.503  1.00       353. 
+    ##  9 CD4 cm S100A4     (Interce… NA      1.48      1.73    1.98   1.00       799. 
+    ## 10 CD4 cm S100A4     typeheal… type    0.630     0.913   1.19   1.01       293. 
     ## # ℹ 50 more rows
     ## # ℹ 7 more variables: c_ess_tail <dbl>, v_upper <dbl>, v_effect <dbl>,
     ## #   v_lower <dbl>, v_rhat <dbl>, v_ess_bulk <dbl>, v_ess_tail <dbl>
@@ -1024,7 +1081,7 @@ plots = res |> sccomp_test() |> plot()
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.095 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.088 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -1156,55 +1213,57 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] bayesplot_1.15.0  posterior_1.7.0   cmdstanr_0.9.0    loo_2.10.0       
-    ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.3     sccomp_2.1.33    
+    ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.3     sccomp_2.1.34    
     ##  [9] instantiate_0.2.3 dplyr_1.2.1      
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] rlang_1.3.0                 magrittr_2.0.5             
     ##  [3] otel_0.2.0                  matrixStats_1.5.0          
-    ##  [5] compiler_4.6.1              systemfonts_1.3.2          
-    ##  [7] callr_3.8.0                 vctrs_0.7.3                
-    ##  [9] reshape2_1.4.5              stringr_1.6.0              
-    ## [11] pkgconfig_2.0.3             crayon_1.5.3               
-    ## [13] fastmap_1.2.0               backports_1.5.1            
-    ## [15] XVector_0.52.0              labeling_0.4.3             
-    ## [17] utf8_1.2.6                  rmarkdown_2.31             
-    ## [19] tzdb_0.5.0                  ps_1.9.3                   
-    ## [21] ragg_1.5.2                  purrr_1.2.2                
-    ## [23] xfun_0.60                   cachem_1.1.0               
-    ## [25] jsonlite_2.0.0              DelayedArray_0.38.2        
-    ## [27] parallel_4.6.1              R6_2.6.1                   
-    ## [29] bslib_0.11.0                stringi_1.8.7              
-    ## [31] RColorBrewer_1.1-3          parallelly_1.48.0          
-    ## [33] GenomicRanges_1.64.0        jquerylib_0.1.4            
-    ## [35] Rcpp_1.1.2                  Seqinfo_1.2.0              
-    ## [37] SummarizedExperiment_1.42.0 knitr_1.51                 
-    ## [39] future.apply_1.20.2         readr_2.2.0                
-    ## [41] IRanges_2.46.0              Matrix_1.7-5               
-    ## [43] tidyselect_1.2.1            abind_1.4-8                
-    ## [45] yaml_2.3.12                 codetools_0.2-20           
-    ## [47] processx_3.9.0              listenv_1.0.0              
-    ## [49] plyr_1.8.9                  lattice_0.22-9             
-    ## [51] tibble_3.3.1                Biobase_2.72.0             
-    ## [53] withr_3.0.3                 S7_0.2.2                   
-    ## [55] evaluate_1.0.5              future_1.70.0              
-    ## [57] desc_1.4.3                  pillar_1.11.1              
-    ## [59] MatrixGenerics_1.24.0       tensorA_0.36.2.1           
-    ## [61] checkmate_2.3.4             stats4_4.6.1               
-    ## [63] distributional_0.8.1        generics_0.1.4             
-    ## [65] sp_2.2-1                    S4Vectors_0.50.1           
-    ## [67] hms_1.1.4                   scales_1.4.0               
-    ## [69] globals_0.19.1              glue_1.8.1                 
-    ## [71] tools_4.6.1                 data.table_1.18.4          
-    ## [73] ggside_0.4.1                fs_2.1.0                   
-    ## [75] dotCall64_1.2               grid_4.6.1                 
-    ## [77] SingleCellExperiment_1.34.0 patchwork_1.3.2            
-    ## [79] cli_3.6.6                   textshaping_1.0.5          
-    ## [81] spam_2.11-4                 S4Arrays_1.12.0            
-    ## [83] gtable_0.3.6                sass_0.4.10                
-    ## [85] digest_0.6.39               progressr_1.0.0            
-    ## [87] BiocGenerics_0.58.1         SparseArray_1.12.2         
-    ## [89] ggrepel_0.9.8               htmlwidgets_1.6.4          
-    ## [91] SeuratObject_5.4.0          farver_2.1.2               
-    ## [93] htmltools_0.5.9             pkgdown_2.2.1              
-    ## [95] lifecycle_1.0.5             prettydoc_0.4.1
+    ##  [5] compiler_4.6.1              mgcv_1.9-4                 
+    ##  [7] reshape2_1.4.5              systemfonts_1.3.2          
+    ##  [9] callr_3.8.0                 vctrs_0.7.3                
+    ## [11] stringr_1.6.0               pkgconfig_2.0.3            
+    ## [13] crayon_1.5.3                fastmap_1.2.0              
+    ## [15] backports_1.5.1             XVector_0.52.0             
+    ## [17] labeling_0.4.3              utf8_1.2.6                 
+    ## [19] rmarkdown_2.31              tzdb_0.5.0                 
+    ## [21] ps_1.9.3                    ragg_1.5.2                 
+    ## [23] purrr_1.2.2                 xfun_0.60                  
+    ## [25] cachem_1.1.0                jsonlite_2.0.0             
+    ## [27] DelayedArray_0.38.2         parallel_4.6.1             
+    ## [29] R6_2.6.1                    bslib_0.11.0               
+    ## [31] stringi_1.8.7               RColorBrewer_1.1-3         
+    ## [33] parallelly_1.48.0           GenomicRanges_1.64.0       
+    ## [35] jquerylib_0.1.4             Rcpp_1.1.2                 
+    ## [37] Seqinfo_1.2.0               SummarizedExperiment_1.42.0
+    ## [39] knitr_1.51                  future.apply_1.20.2        
+    ## [41] readr_2.2.0                 IRanges_2.46.0             
+    ## [43] Matrix_1.7-5                splines_4.6.1              
+    ## [45] tidyselect_1.2.1            abind_1.4-8                
+    ## [47] yaml_2.3.12                 codetools_0.2-20           
+    ## [49] processx_3.9.0              listenv_1.0.0              
+    ## [51] plyr_1.8.9                  lattice_0.22-9             
+    ## [53] tibble_3.3.1                Biobase_2.72.0             
+    ## [55] withr_3.0.3                 S7_0.2.2                   
+    ## [57] evaluate_1.0.5              future_1.75.0              
+    ## [59] desc_1.4.3                  pillar_1.11.1              
+    ## [61] MatrixGenerics_1.24.0       tensorA_0.36.2.1           
+    ## [63] checkmate_2.3.4             stats4_4.6.1               
+    ## [65] distributional_0.8.1        generics_0.1.4             
+    ## [67] sp_2.2-3                    S4Vectors_0.50.1           
+    ## [69] hms_1.1.4                   scales_1.4.0               
+    ## [71] globals_0.19.1              glue_1.8.1                 
+    ## [73] tools_4.6.1                 data.table_1.18.4          
+    ## [75] ggside_0.4.1                fs_2.1.0                   
+    ## [77] dotCall64_1.2               grid_4.6.1                 
+    ## [79] SingleCellExperiment_1.34.0 nlme_3.1-169               
+    ## [81] patchwork_1.3.2             cli_3.6.6                  
+    ## [83] textshaping_1.0.5           spam_2.11-4                
+    ## [85] S4Arrays_1.12.0             gtable_0.3.6               
+    ## [87] sass_0.4.10                 digest_0.6.39              
+    ## [89] progressr_1.0.0             BiocGenerics_0.58.1        
+    ## [91] SparseArray_1.12.2          ggrepel_0.9.8              
+    ## [93] htmlwidgets_1.6.4           SeuratObject_5.4.0         
+    ## [95] farver_2.1.2                htmltools_0.5.9            
+    ## [97] pkgdown_2.2.1               lifecycle_1.0.5            
+    ## [99] prettydoc_0.4.1

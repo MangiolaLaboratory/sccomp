@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.33</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.34</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2026-07-15</h4>
+            <h4 data-toc-skip class="date">2026-07-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/introduction.Rmd" class="external-link"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="d-none name"><code>introduction.Rmd</code></div>
@@ -608,11 +608,11 @@ exclude them from the estimation.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 2.281 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 2.088 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 2.281 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 2.119 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 </div>
 <div class="section level3">
@@ -623,14 +623,16 @@ represent the posterior predictive check. If the model is descriptively
 adequate for the data, the blue boxplots should roughly overlay the
 black boxplots, which represent the observed data. The outliers are
 coloured in red. A boxplot will be returned for every (discrete)
-covariate present in formula_composition. The colour coding represents
-the significant associations for composition and/or variability.</p>
+covariate present in formula_composition; continuous covariates are
+visualised with <code><a href="../reference/sccomp_scatterplot.html">sccomp_scatterplot()</a></code> instead (see
+Continuous Factor Analysis below). The colour coding represents the
+significant associations for composition and/or variability.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.111 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.102 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
@@ -644,15 +646,15 @@ significantly impact the proportions.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span>, remove_unwanted_effects <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.567 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.512 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.559 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.511 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
@@ -675,7 +677,7 @@ labels showing FDR values or other statistics:</p>
 <span>             size <span class="op">=</span> <span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.102 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
@@ -693,7 +695,7 @@ labels showing FDR values or other statistics:</p>
 <span>             size <span class="op">=</span> <span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
@@ -771,7 +773,8 @@ example we have a continuous and binary covariate.</p>
 <span>      cell_group <span class="op">=</span> <span class="st">"cell_group"</span>,</span>
 <span>      cores <span class="op">=</span> <span class="fl">1</span>, verbose<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>      max_sampling_iterations <span class="op">=</span> <span class="fl">2000</span></span>
-<span>    <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">## sccomp model</span></span>
@@ -791,22 +794,65 @@ example we have a continuous and binary covariate.</p>
 <span><span class="co">##   For each parameter, n_eff is the effective sample size and R_k_hat is the potential</span></span>
 <span><span class="co">##   scale reduction factor on split chains (at convergence, R_k_hat = 1).</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## <span style="color: #949494;"># A tibble: 90 × 15</span></span></span>
-<span><span class="co">##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>      0.554    0.836    1.12   1.000      <span style="text-decoration: underline;">1</span>914.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type    1.03     1.36     1.68   1.00       <span style="text-decoration: underline;">1</span>891.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B immature        continuo… conti… -<span style="color: #BB0000;">0.278</span>    0.048<span style="text-decoration: underline;">3</span>   0.355  1.00       <span style="text-decoration: underline;">2</span>090.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.992</span>   -<span style="color: #BB0000;">0.674</span>   -<span style="color: #BB0000;">0.354</span>  1.00       <span style="text-decoration: underline;">1</span>867.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> B mem             typeheal… type    1.24     1.60     1.99   1.00       <span style="text-decoration: underline;">1</span>863.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B mem             continuo… conti… -<span style="color: #BB0000;">0.281</span>    0.060<span style="text-decoration: underline;">5</span>   0.401  1.000      <span style="text-decoration: underline;">1</span>942.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.922</span>   -<span style="color: #BB0000;">0.589</span>   -<span style="color: #BB0000;">0.229</span>  1.00       <span style="text-decoration: underline;">1</span>566.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm high cyto… typeheal… type   -<span style="color: #BB0000;">2.20</span>    -<span style="color: #BB0000;">1.74</span>    -<span style="color: #BB0000;">1.24</span>   1.000      <span style="text-decoration: underline;">1</span>991.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm high cyto… continuo… conti… -<span style="color: #BB0000;">0.531</span>   -<span style="color: #BB0000;">0.168</span>    0.212  1.000      <span style="text-decoration: underline;">1</span>762.</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.063</span><span style="color: #BB0000; text-decoration: underline;">7</span>   0.285    0.609  1.000      <span style="text-decoration: underline;">1</span>968.</span></span>
+<span><span class="co">## <span style="color: #949494;"># A tibble: 90 × 19</span></span></span>
+<span><span class="co">##    cell_group   parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature   (Interce… <span style="color: #BB0000;">NA</span>      0.554    0.836    1.12  0       0   <span style="color: #949494;"> </span>    1.000</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature   typeheal… type    1.03     1.36     1.68  0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B immature   continuo… conti… -<span style="color: #BB0000;">0.278</span>    0.048<span style="text-decoration: underline;">3</span>   0.355 0.633   4.20<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>  1.00 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem        (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.992</span>   -<span style="color: #BB0000;">0.674</span>   -<span style="color: #BB0000;">0.354</span> 0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> B mem        typeheal… type    1.24     1.60     1.99  0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> B mem        continuo… conti… -<span style="color: #BB0000;">0.281</span>    0.060<span style="text-decoration: underline;">5</span>   0.401 0.584   3.87<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>  1.000</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm S100… (Interce… <span style="color: #BB0000;">NA</span>      1.32     1.56     1.79  0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm S100… typeheal… type    0.842    1.13     1.40  0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100… continuo… conti… -<span style="color: #BB0000;">0.097</span><span style="color: #BB0000; text-decoration: underline;">5</span>   0.171    0.445 0.3     1.79<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>  1.000</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm high… (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.922</span>   -<span style="color: #BB0000;">0.589</span>   -<span style="color: #BB0000;">0.229</span> 0.004<span style="text-decoration: underline;">00</span> 4.77<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>  1.00 </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 80 more rows</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 7 more variables: c_ess_tail &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span></span>
-<span><span class="co">## <span style="color: #949494;">#   v_lower &lt;dbl&gt;, v_rhat &lt;dbl&gt;, v_ess_bulk &lt;dbl&gt;, v_ess_tail &lt;dbl&gt;</span></span></span></code></pre>
+<span><span class="co">## <span style="color: #949494;"># ℹ 10 more variables: c_ess_bulk &lt;dbl&gt;, c_ess_tail &lt;dbl&gt;, v_lower &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   v_effect &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_pH0 &lt;dbl&gt;, v_FDR &lt;dbl&gt;, v_rhat &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   v_ess_bulk &lt;dbl&gt;, v_ess_tail &lt;dbl&gt;</span></span></span></code></pre>
+<p>For continuous covariates, use <code><a href="../reference/sccomp_scatterplot.html">sccomp_scatterplot()</a></code>
+instead of <code><a href="../reference/sccomp_boxplot.html">sccomp_boxplot()</a></code>. Points are observed
+proportions; the black line is a smooth of the data and the blue ribbon
+is the posterior predictive trend.</p>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_scatterplot.html">sccomp_scatterplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"continuous_covariate"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.92 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
+<pre><code><span><span class="co">## Warning: `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
+<span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span></code></pre>
+<p><img src="introduction_files/figure-html/continuous-scatterplot-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="random-effect-modeling-mixed-effect-modeling">Random Effect Modeling (Mixed-Effect Modeling)<a class="anchor" aria-label="anchor" href="#random-effect-modeling-mixed-effect-modeling"></a>
@@ -826,7 +872,7 @@ using sccomp. We’ll model the cell-type proportions with both fixed
 effects (e.g., treatment) and random effects (e.g., subject-specific
 variability).</p>
 <p>Here is the input data</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 106,297 × 9</span></span></span>
 <span><span class="co">##    cell_group nCount_RNA nFeature_RNA group__ group__wrong sample type  group2__</span></span>
@@ -843,7 +889,7 @@ variability).</p>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> B immature          0            0 GROUP1  1            SI-GA… canc… GROUP21 </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 106,287 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: continuous_covariate &lt;dbl&gt;</span></span></span></code></pre>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -855,7 +901,7 @@ variability).</p>
 <span>    max_sampling_iterations <span class="op">=</span> <span class="fl">2000</span></span>
 <span>  <span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Dropping 'draws_df' class as required metadata was removed.</span></span></code></pre>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">## sccomp model</span></span>
 <span><span class="co">## ============</span></span>
@@ -877,16 +923,16 @@ variability).</p>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 180 × 15</span></span></span>
 <span><span class="co">##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>       0.501    0.851  1.17     1.00      107. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type     0.754    1.24   1.69     1.01       96.1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.866</span>   -<span style="color: #BB0000;">0.459</span>  0.015<span style="text-decoration: underline;">1</span>   1.01       80.9</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type     0.810    1.30   1.79     1.02       91.1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.05</span>    -<span style="color: #BB0000;">0.667</span> -<span style="color: #BB0000;">0.282</span>    1.00      209. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high cyto… typeheal… type    -<span style="color: #BB0000;">2.08</span>    -<span style="color: #BB0000;">1.62</span>  -<span style="color: #BB0000;">1.18</span>     1.01      135. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.170</span>    0.169  0.543    1.00      205. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm ribosome   typeheal… type    -<span style="color: #BB0000;">1.25</span>    -<span style="color: #BB0000;">0.753</span> -<span style="color: #BB0000;">0.304</span>    1.00      112. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>       1.23     1.52   1.85     1.02      125. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4     typeheal… type     0.610    0.999  1.31     1.02       89.0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>       0.490    0.846  1.16    1.01       217. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type     0.854    1.26   1.62    1.02       154. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.881</span>   -<span style="color: #BB0000;">0.457</span>  0.032<span style="text-decoration: underline;">6</span>  1.05        55.0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type     0.735    1.31   1.82    1.09        11.8</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.04</span>    -<span style="color: #BB0000;">0.668</span> -<span style="color: #BB0000;">0.266</span>   1.00       209. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high cyto… typeheal… type    -<span style="color: #BB0000;">2.06</span>    -<span style="color: #BB0000;">1.63</span>  -<span style="color: #BB0000;">1.22</span>    1.000      113. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.204</span>    0.162  0.545   1.02       206. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm ribosome   typeheal… type    -<span style="color: #BB0000;">1.19</span>    -<span style="color: #BB0000;">0.735</span> -<span style="color: #BB0000;">0.249</span>   1.00       184. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>       1.23     1.51   1.80    1.01       149. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4     typeheal… type     0.660    1.00   1.34    1.02       142. </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 170 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 7 more variables: c_ess_tail &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_lower &lt;dbl&gt;, v_rhat &lt;dbl&gt;, v_ess_bulk &lt;dbl&gt;, v_ess_tail &lt;dbl&gt;</span></span></span></code></pre>
@@ -896,7 +942,7 @@ variability).</p>
 </h4>
 <p><code>sccomp</code> can model random slopes. We provide an example
 below.</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -908,7 +954,7 @@ below.</p>
 <span>      max_sampling_iterations <span class="op">=</span> <span class="fl">2000</span></span>
 <span>    <span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Dropping 'draws_df' class as required metadata was removed.</span></span></code></pre>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">## sccomp model</span></span>
 <span><span class="co">## ============</span></span>
@@ -930,16 +976,16 @@ below.</p>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 240 × 15</span></span></span>
 <span><span class="co">##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>       0.463    0.819  1.18    1.00       218. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type     0.772    1.24   1.68    1.00        96.4</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.895</span>   -<span style="color: #BB0000;">0.515</span> -<span style="color: #BB0000;">0.080</span><span style="color: #BB0000; text-decoration: underline;">8</span>  1.02       112. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type     0.789    1.29   1.77    1.01        62.7</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.08</span>    -<span style="color: #BB0000;">0.685</span> -<span style="color: #BB0000;">0.285</span>   1.000      223. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high cyto… typeheal… type    -<span style="color: #BB0000;">2.13</span>    -<span style="color: #BB0000;">1.62</span>  -<span style="color: #BB0000;">1.13</span>    1.00        92.2</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.206</span>    0.187  0.595   1.01       221. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm ribosome   typeheal… type    -<span style="color: #BB0000;">1.20</span>    -<span style="color: #BB0000;">0.700</span> -<span style="color: #BB0000;">0.205</span>   1.01        96.5</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>       1.26     1.55   1.86    1.01       104. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4     typeheal… type     0.621    0.970  1.36    1.01       122. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>       0.451    0.836  1.22    1.00       153. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type     0.790    1.27   1.78    1.01       115. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.948</span>   -<span style="color: #BB0000;">0.532</span> -<span style="color: #BB0000;">0.085</span><span style="color: #BB0000; text-decoration: underline;">3</span>  1.01        98.3</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type     0.735    1.35   1.90    1.01       103. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.13</span>    -<span style="color: #BB0000;">0.686</span> -<span style="color: #BB0000;">0.247</span>   1.01       167. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high cyto… typeheal… type    -<span style="color: #BB0000;">2.17</span>    -<span style="color: #BB0000;">1.67</span>  -<span style="color: #BB0000;">1.14</span>    1.00       115. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.183</span>    0.202  0.595   1.000      249. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm ribosome   typeheal… type    -<span style="color: #BB0000;">1.14</span>    -<span style="color: #BB0000;">0.679</span> -<span style="color: #BB0000;">0.216</span>   1.00       158. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>       1.26     1.57   1.89    1.01       106. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4     typeheal… type     0.601    0.966  1.40    1.00       125. </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 230 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 7 more variables: c_ess_tail &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_lower &lt;dbl&gt;, v_rhat &lt;dbl&gt;, v_ess_bulk &lt;dbl&gt;, v_ess_tail &lt;dbl&gt;</span></span></span></code></pre>
@@ -951,7 +997,7 @@ below.</p>
 within subjects and subjects nested within batches, you can include
 multiple grouping variables. Here <code>group2__</code> is nested within
 <code>group__</code>.</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -963,7 +1009,7 @@ multiple grouping variables. Here <code>group2__</code> is nested within
 <span>      max_sampling_iterations <span class="op">=</span> <span class="fl">2000</span></span>
 <span>    <span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Dropping 'draws_df' class as required metadata was removed.</span></span></code></pre>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span></span></code></pre></div>
 <pre><code><span><span class="co">## sccomp model</span></span>
 <span><span class="co">## ============</span></span>
@@ -983,18 +1029,18 @@ multiple grouping variables. Here <code>group2__</code> is nested within
 <span><span class="co">##   scale reduction factor on split chains (at convergence, R_k_hat = 1).</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 300 × 15</span></span></span>
-<span><span class="co">##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>       0.445   0.849   1.34     1.01       91.0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type     0.784   1.24    1.77     1.01       78.5</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.942</span>  -<span style="color: #BB0000;">0.471</span>  -<span style="color: #BB0000;">0.055</span><span style="color: #BB0000; text-decoration: underline;">9</span>   1.01       91.1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type     0.930   1.39    1.94     1.01      108. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.03</span>   -<span style="color: #BB0000;">0.632</span>  -<span style="color: #BB0000;">0.188</span>    1.00      146. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high cyto… typeheal… type    -<span style="color: #BB0000;">2.12</span>   -<span style="color: #BB0000;">1.66</span>   -<span style="color: #BB0000;">1.19</span>     1.00      116. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.304</span>   0.092<span style="text-decoration: underline;">6</span>  0.546    1.01      113. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm ribosome   typeheal… type    -<span style="color: #BB0000;">1.34</span>   -<span style="color: #BB0000;">0.787</span>  -<span style="color: #BB0000;">0.251</span>    1.03      116. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>       1.07    1.46    1.88     1.01       85.5</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4     typeheal… type     0.557   0.969   1.42     1.00       84.0</span></span>
+<span><span class="co">##    cell_group       parameter factor c_lower c_effect  c_upper c_rhat c_ess_bulk</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature       (Interce… <span style="color: #BB0000;">NA</span>       0.434    0.783  1.23      1.01       97.8</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature       typeheal… type     0.710    1.24   1.66      1.04       67.2</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem            (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.06</span>    -<span style="color: #BB0000;">0.473</span>  0.004<span style="text-decoration: underline;">32</span>   1.00       99.7</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem            typeheal… type     0.839    1.38   2.00      1.00       92.8</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high cyt… (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.00</span>    -<span style="color: #BB0000;">0.617</span> -<span style="color: #BB0000;">0.187</span>     1.00      180. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high cyt… typeheal… type    -<span style="color: #BB0000;">2.11</span>    -<span style="color: #BB0000;">1.67</span>  -<span style="color: #BB0000;">1.21</span>      1.02      114. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm ribosome  (Interce… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">0.235</span>    0.157  0.576     1.00      171. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm ribosome  typeheal… type    -<span style="color: #BB0000;">1.47</span>    -<span style="color: #BB0000;">0.817</span> -<span style="color: #BB0000;">0.302</span>     1.00       59.8</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4    (Interce… <span style="color: #BB0000;">NA</span>       1.09     1.43   1.83      1.00       88.9</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4    typeheal… type     0.640    0.966  1.36      1.01      111. </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 290 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 7 more variables: c_ess_tail &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_lower &lt;dbl&gt;, v_rhat &lt;dbl&gt;, v_ess_bulk &lt;dbl&gt;, v_ess_tail &lt;dbl&gt;</span></span></span></code></pre>
@@ -1019,7 +1065,7 @@ in (this can be a subset of the full model if you wish to exclude
 unwanted effects), and the two points you would like to compare.</p>
 <p>In the case of a categorical variable, the starting and ending points
 are categories.</p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">|&gt;</span> </span>
 <span>   <span class="fu"><a href="../reference/sccomp_proportional_fold_change.html">sccomp_proportional_fold_change</a></span><span class="op">(</span></span>
 <span>     formula_composition <span class="op">=</span> <span class="op">~</span>  <span class="va">type</span>,</span>
@@ -1029,27 +1075,27 @@ are categories.</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">cell_group</span>, <span class="va">statement</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.092 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.09 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 30 × 2</span></span></span>
 <span><span class="co">##    cell_group           statement                                </span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;glue&gt;</span>                                   </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature           2.1-fold decrease (from 0.1091 to 0.0526)</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B mem                2.4-fold decrease (from 0.0337 to 0.0142)</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> CD4 cm high cytokine 8.4-fold increase (from 0.0014 to 0.0119)</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> CD4 cm ribosome      3.6-fold increase (from 0.0068 to 0.0247)</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S100A4        1.6-fold decrease (from 0.1504 to 0.0955)</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 em high cytokine 5.2-fold increase (from 0.0021 to 0.0107)</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 naive            1.4-fold decrease (from 0.1207 to 0.0833)</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 ribosome         2.8-fold decrease (from 0.0799 to 0.0281)</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD8 em 1             1.2-fold increase (from 0.0478 to 0.059) </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD8 em 2             4.1-fold increase (from 0.005 to 0.0203) </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature           2.1-fold decrease (from 0.104 to 0.0496) </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B mem                2.4-fold decrease (from 0.0347 to 0.0144)</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> CD4 cm high cytokine 8.6-fold increase (from 0.0014 to 0.0121)</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> CD4 cm ribosome      3.7-fold increase (from 0.0072 to 0.0264)</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S100A4        1.6-fold decrease (from 0.1477 to 0.0942)</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 em high cytokine 4.9-fold increase (from 0.0021 to 0.01)  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 naive            1.4-fold decrease (from 0.1184 to 0.0826)</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 ribosome         3.1-fold decrease (from 0.0862 to 0.0278)</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD8 em 1             1.2-fold increase (from 0.0479 to 0.059) </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD8 em 2             4.2-fold increase (from 0.0047 to 0.02)  </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 20 more rows</span></span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="contrasts-analysis">Contrasts Analysis<a class="anchor" aria-label="anchor" href="#contrasts-analysis"></a>
 </h3>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">type</span>, </span>
@@ -1079,16 +1125,16 @@ are categories.</p>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 60 × 11</span></span></span>
 <span><span class="co">##    cell_group   parameter factor c_lower c_effect c_upper   c_pH0   c_FDR c_rhat</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature   typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.90</span>     -<span style="color: #BB0000;">1.37</span>  -<span style="color: #BB0000;">0.816</span> 0       0   <span style="color: #949494;"> </span>    1.000</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature   typeheal… <span style="color: #BB0000;">NA</span>       0.816     1.37   1.90  0       0   <span style="color: #949494;"> </span>    1.000</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem        typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.23</span>     -<span style="color: #BB0000;">1.67</span>  -<span style="color: #BB0000;">1.10</span>  0       0   <span style="color: #949494;"> </span>    1.000</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem        typeheal… <span style="color: #BB0000;">NA</span>       1.10      1.67   2.23  0       0   <span style="color: #949494;"> </span>    1.000</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S100… typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.44</span>     -<span style="color: #BB0000;">1.00</span>  -<span style="color: #BB0000;">0.569</span> 0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S100… typeheal… <span style="color: #BB0000;">NA</span>       0.569     1.00   1.44  0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm high… typecanc… <span style="color: #BB0000;">NA</span>       0.904     1.55   2.18  0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm high… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.18</span>     -<span style="color: #BB0000;">1.55</span>  -<span style="color: #BB0000;">0.904</span> 0       0   <span style="color: #949494;"> </span>    1.00 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm ribo… typecanc… <span style="color: #BB0000;">NA</span>       0.437     1.00   1.58  0.002<span style="text-decoration: underline;">50</span> 5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>  1.000</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm ribo… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.58</span>     -<span style="color: #BB0000;">1.00</span>  -<span style="color: #BB0000;">0.437</span> 0.002<span style="text-decoration: underline;">50</span> 5.00<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>  1.000</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature   typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.93</span>    -<span style="color: #BB0000;">1.36</span>   -<span style="color: #BB0000;">0.833</span> 0       0   <span style="color: #949494;"> </span>     1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature   typeheal… <span style="color: #BB0000;">NA</span>       0.833    1.36    1.93  0       0   <span style="color: #949494;"> </span>     1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem        typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.26</span>    -<span style="color: #BB0000;">1.68</span>   -<span style="color: #BB0000;">1.11</span>  0       0   <span style="color: #949494;"> </span>     1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem        typeheal… <span style="color: #BB0000;">NA</span>       1.11     1.68    2.26  0       0   <span style="color: #949494;"> </span>     1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm S100… typecanc… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.47</span>    -<span style="color: #BB0000;">1.00</span>   -<span style="color: #BB0000;">0.538</span> 0       0   <span style="color: #949494;"> </span>     1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm S100… typeheal… <span style="color: #BB0000;">NA</span>       0.538    1.00    1.47  0       0   <span style="color: #949494;"> </span>     1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm high… typecanc… <span style="color: #BB0000;">NA</span>       0.890    1.57    2.20  0       0   <span style="color: #949494;"> </span>     1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm high… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">2.20</span>    -<span style="color: #BB0000;">1.57</span>   -<span style="color: #BB0000;">0.890</span> 0       0   <span style="color: #949494;"> </span>     1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm ribo… typecanc… <span style="color: #BB0000;">NA</span>       0.404    0.987   1.60  0.002<span style="text-decoration: underline;">50</span> 6.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   1.00</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm ribo… typeheal… <span style="color: #BB0000;">NA</span>      -<span style="color: #BB0000;">1.60</span>    -<span style="color: #BB0000;">0.987</span>  -<span style="color: #BB0000;">0.404</span> 0.002<span style="text-decoration: underline;">50</span> 6.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   1.00</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 50 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 2 more variables: c_ess_bulk &lt;dbl&gt;, c_ess_tail &lt;dbl&gt;</span></span></span></code></pre>
 </div>
@@ -1106,7 +1152,7 @@ while outlier elimination does not guarantee it.</p>
 better than the other <a href="https://discourse.mc-stan.org/t/interpreting-elpd-diff-loo-package/1628/2?u=stemangiola" class="external-link">reference</a>.
 In this case, -79.9 / 11.5 = -6.9, therefore we can conclude that model
 one, the one with factor association, is better than model two.</p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/loo/" class="external-link">loo</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fit first model</span></span>
@@ -1142,16 +1188,16 @@ one, the one with factor association, is better than model two.</p>
 <span>   <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">model_with_factor_association</span>, <span class="st">"fit"</span><span class="op">)</span><span class="op">$</span><span class="fu">loo</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>   <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">model_without_association</span>, <span class="st">"fit"</span><span class="op">)</span><span class="op">$</span><span class="fu">loo</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   model elpd_diff se_diff p_worse diag_diff       diag_elpd</span></span>
-<span><span class="co">##  model1       0.0     0.0      NA           10 k_psis &gt; 0.7</span></span>
-<span><span class="co">##  model2     -82.2    10.8    1.00            4 k_psis &gt; 0.7</span></span></code></pre>
+<pre><code><span><span class="co">##   model elpd_diff se_diff p_worse diag_diff      diag_elpd</span></span>
+<span><span class="co">##  model1       0.0     0.0      NA           7 k_psis &gt; 0.7</span></span>
+<span><span class="co">##  model2     -80.5    10.9    1.00           6 k_psis &gt; 0.7</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="differential-variability-analysis">Differential Variability Analysis<a class="anchor" aria-label="anchor" href="#differential-variability-analysis"></a>
 </h3>
 <p>We can model the cell-group variability also dependent on the type,
 and so test differences in variability</p>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">=</span> </span>
 <span>  <span class="va">seurat_obj</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span> </span>
@@ -1184,30 +1230,30 @@ and so test differences in variability</p>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 60 × 15</span></span></span>
 <span><span class="co">##    cell_group        parameter factor c_lower c_effect c_upper c_rhat c_ess_bulk</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>      0.551     0.846   1.16   1.00      <span style="text-decoration: underline;">1</span>566. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type    1.05      1.39    1.75   1.00       323. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.01</span>     -<span style="color: #BB0000;">0.643</span>  -<span style="color: #BB0000;">0.267</span>  1.00       162. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type    1.13      1.57    1.97   1.00       199. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.996</span>    -<span style="color: #BB0000;">0.616</span>  -<span style="color: #BB0000;">0.258</span>  1.00       893. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high cyto… typeheal… type   -<span style="color: #BB0000;">2.10</span>     -<span style="color: #BB0000;">1.50</span>   -<span style="color: #BB0000;">0.706</span>  1.05        50.4</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.058</span><span style="color: #BB0000; text-decoration: underline;">7</span>    0.290   0.636  1.00      <span style="text-decoration: underline;">1</span>657. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm ribosome   typeheal… type   -<span style="color: #BB0000;">1.33</span>     -<span style="color: #BB0000;">0.923</span>  -<span style="color: #BB0000;">0.523</span>  1.000      430. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>      1.45      1.71    1.97   1.00       328. </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4     typeheal… type    0.603     0.921   1.23   1.00       200. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> B immature        (Interce… <span style="color: #BB0000;">NA</span>      0.554     0.843   1.13   1.00      <span style="text-decoration: underline;">1</span>723. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> B immature        typeheal… type    1.06      1.40    1.74   1.01       527. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> B mem             (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">1.03</span>     -<span style="color: #BB0000;">0.665</span>  -<span style="color: #BB0000;">0.317</span>  1.00       338. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> B mem             typeheal… type    1.21      1.61    2.02   1.00       332. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> CD4 cm high cyto… (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.999</span>    -<span style="color: #BB0000;">0.631</span>  -<span style="color: #BB0000;">0.256</span>  1.01      <span style="text-decoration: underline;">1</span>008. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> CD4 cm high cyto… typeheal… type   -<span style="color: #BB0000;">2.02</span>     -<span style="color: #BB0000;">1.48</span>   -<span style="color: #BB0000;">0.831</span>  1.01        93.7</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> CD4 cm ribosome   (Interce… <span style="color: #BB0000;">NA</span>     -<span style="color: #BB0000;">0.039</span><span style="color: #BB0000; text-decoration: underline;">6</span>    0.296   0.640  1.000     <span style="text-decoration: underline;">1</span>829. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> CD4 cm ribosome   typeheal… type   -<span style="color: #BB0000;">1.34</span>     -<span style="color: #BB0000;">0.919</span>  -<span style="color: #BB0000;">0.503</span>  1.00       353. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> CD4 cm S100A4     (Interce… <span style="color: #BB0000;">NA</span>      1.48      1.73    1.98   1.00       799. </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> CD4 cm S100A4     typeheal… type    0.630     0.913   1.19   1.01       293. </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 50 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 7 more variables: c_ess_tail &lt;dbl&gt;, v_upper &lt;dbl&gt;, v_effect &lt;dbl&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   v_lower &lt;dbl&gt;, v_rhat &lt;dbl&gt;, v_ess_bulk &lt;dbl&gt;, v_ess_tail &lt;dbl&gt;</span></span></span></code></pre>
 <p><strong>Plot 1D significance plot</strong></p>
-<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.095 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.088 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
 <span><span class="co">## `median.linewidth`</span></span></code></pre>
-<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/plot-1d-significance-1.png" class="r-plt" alt="" width="700"></p>
 <p><strong>Plot 2D significance plot</strong> Data points are cell
@@ -1222,7 +1268,7 @@ linear association between mean and variability for
 scatterplot (besides the Intercept) is provided for each category of
 interest. For each category of interest, the composition and variability
 effects should be generally uncorrelated.</p>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning in min(x): no non-missing arguments to min; returning Inf</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in max(x): no non-missing arguments to max; returning -Inf</span></span></code></pre>
@@ -1268,7 +1314,7 @@ plots$credible_intervals_2D (see below).</p>
 this example, we plot the Monte Carlo chain for the slope parameter of
 the first cell type. We can see that it has converged and is negative
 with probability 1.</p>
-<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/cmdstanr/" class="external-link">cmdstanr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/posterior/" class="external-link">posterior</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mc-stan.org/bayesplot/" class="external-link">bayesplot</a></span><span class="op">)</span></span>
@@ -1282,7 +1328,7 @@ with probability 1.</p>
 <span><span class="co"># Create a traceplot for 'beta[2,1]'</span></span>
 <span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/MCMC-traces.html" class="external-link">mcmc_trace</a></span><span class="op">(</span><span class="va">draws</span>, pars <span class="op">=</span> <span class="st">"beta[2,1]"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/mcmc-traceplot-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -1306,58 +1352,60 @@ with probability 1.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
 <span><span class="co">##  [1] bayesplot_1.15.0  posterior_1.7.0   cmdstanr_0.9.0    loo_2.10.0       </span></span>
-<span><span class="co">##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.3     sccomp_2.1.33    </span></span>
+<span><span class="co">##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.3     sccomp_2.1.34    </span></span>
 <span><span class="co">##  [9] instantiate_0.2.3 dplyr_1.2.1      </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] rlang_1.3.0                 magrittr_2.0.5             </span></span>
 <span><span class="co">##  [3] otel_0.2.0                  matrixStats_1.5.0          </span></span>
-<span><span class="co">##  [5] compiler_4.6.1              systemfonts_1.3.2          </span></span>
-<span><span class="co">##  [7] callr_3.8.0                 vctrs_0.7.3                </span></span>
-<span><span class="co">##  [9] reshape2_1.4.5              stringr_1.6.0              </span></span>
-<span><span class="co">## [11] pkgconfig_2.0.3             crayon_1.5.3               </span></span>
-<span><span class="co">## [13] fastmap_1.2.0               backports_1.5.1            </span></span>
-<span><span class="co">## [15] XVector_0.52.0              labeling_0.4.3             </span></span>
-<span><span class="co">## [17] utf8_1.2.6                  rmarkdown_2.31             </span></span>
-<span><span class="co">## [19] tzdb_0.5.0                  ps_1.9.3                   </span></span>
-<span><span class="co">## [21] ragg_1.5.2                  purrr_1.2.2                </span></span>
-<span><span class="co">## [23] xfun_0.60                   cachem_1.1.0               </span></span>
-<span><span class="co">## [25] jsonlite_2.0.0              DelayedArray_0.38.2        </span></span>
-<span><span class="co">## [27] parallel_4.6.1              R6_2.6.1                   </span></span>
-<span><span class="co">## [29] bslib_0.11.0                stringi_1.8.7              </span></span>
-<span><span class="co">## [31] RColorBrewer_1.1-3          parallelly_1.48.0          </span></span>
-<span><span class="co">## [33] GenomicRanges_1.64.0        jquerylib_0.1.4            </span></span>
-<span><span class="co">## [35] Rcpp_1.1.2                  Seqinfo_1.2.0              </span></span>
-<span><span class="co">## [37] SummarizedExperiment_1.42.0 knitr_1.51                 </span></span>
-<span><span class="co">## [39] future.apply_1.20.2         readr_2.2.0                </span></span>
-<span><span class="co">## [41] IRanges_2.46.0              Matrix_1.7-5               </span></span>
-<span><span class="co">## [43] tidyselect_1.2.1            abind_1.4-8                </span></span>
-<span><span class="co">## [45] yaml_2.3.12                 codetools_0.2-20           </span></span>
-<span><span class="co">## [47] processx_3.9.0              listenv_1.0.0              </span></span>
-<span><span class="co">## [49] plyr_1.8.9                  lattice_0.22-9             </span></span>
-<span><span class="co">## [51] tibble_3.3.1                Biobase_2.72.0             </span></span>
-<span><span class="co">## [53] withr_3.0.3                 S7_0.2.2                   </span></span>
-<span><span class="co">## [55] evaluate_1.0.5              future_1.70.0              </span></span>
-<span><span class="co">## [57] desc_1.4.3                  pillar_1.11.1              </span></span>
-<span><span class="co">## [59] MatrixGenerics_1.24.0       tensorA_0.36.2.1           </span></span>
-<span><span class="co">## [61] checkmate_2.3.4             stats4_4.6.1               </span></span>
-<span><span class="co">## [63] distributional_0.8.1        generics_0.1.4             </span></span>
-<span><span class="co">## [65] sp_2.2-1                    S4Vectors_0.50.1           </span></span>
-<span><span class="co">## [67] hms_1.1.4                   scales_1.4.0               </span></span>
-<span><span class="co">## [69] globals_0.19.1              glue_1.8.1                 </span></span>
-<span><span class="co">## [71] tools_4.6.1                 data.table_1.18.4          </span></span>
-<span><span class="co">## [73] ggside_0.4.1                fs_2.1.0                   </span></span>
-<span><span class="co">## [75] dotCall64_1.2               grid_4.6.1                 </span></span>
-<span><span class="co">## [77] SingleCellExperiment_1.34.0 patchwork_1.3.2            </span></span>
-<span><span class="co">## [79] cli_3.6.6                   textshaping_1.0.5          </span></span>
-<span><span class="co">## [81] spam_2.11-4                 S4Arrays_1.12.0            </span></span>
-<span><span class="co">## [83] gtable_0.3.6                sass_0.4.10                </span></span>
-<span><span class="co">## [85] digest_0.6.39               progressr_1.0.0            </span></span>
-<span><span class="co">## [87] BiocGenerics_0.58.1         SparseArray_1.12.2         </span></span>
-<span><span class="co">## [89] ggrepel_0.9.8               htmlwidgets_1.6.4          </span></span>
-<span><span class="co">## [91] SeuratObject_5.4.0          farver_2.1.2               </span></span>
-<span><span class="co">## [93] htmltools_0.5.9             pkgdown_2.2.1              </span></span>
-<span><span class="co">## [95] lifecycle_1.0.5             prettydoc_0.4.1</span></span></code></pre>
+<span><span class="co">##  [5] compiler_4.6.1              mgcv_1.9-4                 </span></span>
+<span><span class="co">##  [7] reshape2_1.4.5              systemfonts_1.3.2          </span></span>
+<span><span class="co">##  [9] callr_3.8.0                 vctrs_0.7.3                </span></span>
+<span><span class="co">## [11] stringr_1.6.0               pkgconfig_2.0.3            </span></span>
+<span><span class="co">## [13] crayon_1.5.3                fastmap_1.2.0              </span></span>
+<span><span class="co">## [15] backports_1.5.1             XVector_0.52.0             </span></span>
+<span><span class="co">## [17] labeling_0.4.3              utf8_1.2.6                 </span></span>
+<span><span class="co">## [19] rmarkdown_2.31              tzdb_0.5.0                 </span></span>
+<span><span class="co">## [21] ps_1.9.3                    ragg_1.5.2                 </span></span>
+<span><span class="co">## [23] purrr_1.2.2                 xfun_0.60                  </span></span>
+<span><span class="co">## [25] cachem_1.1.0                jsonlite_2.0.0             </span></span>
+<span><span class="co">## [27] DelayedArray_0.38.2         parallel_4.6.1             </span></span>
+<span><span class="co">## [29] R6_2.6.1                    bslib_0.11.0               </span></span>
+<span><span class="co">## [31] stringi_1.8.7               RColorBrewer_1.1-3         </span></span>
+<span><span class="co">## [33] parallelly_1.48.0           GenomicRanges_1.64.0       </span></span>
+<span><span class="co">## [35] jquerylib_0.1.4             Rcpp_1.1.2                 </span></span>
+<span><span class="co">## [37] Seqinfo_1.2.0               SummarizedExperiment_1.42.0</span></span>
+<span><span class="co">## [39] knitr_1.51                  future.apply_1.20.2        </span></span>
+<span><span class="co">## [41] readr_2.2.0                 IRanges_2.46.0             </span></span>
+<span><span class="co">## [43] Matrix_1.7-5                splines_4.6.1              </span></span>
+<span><span class="co">## [45] tidyselect_1.2.1            abind_1.4-8                </span></span>
+<span><span class="co">## [47] yaml_2.3.12                 codetools_0.2-20           </span></span>
+<span><span class="co">## [49] processx_3.9.0              listenv_1.0.0              </span></span>
+<span><span class="co">## [51] plyr_1.8.9                  lattice_0.22-9             </span></span>
+<span><span class="co">## [53] tibble_3.3.1                Biobase_2.72.0             </span></span>
+<span><span class="co">## [55] withr_3.0.3                 S7_0.2.2                   </span></span>
+<span><span class="co">## [57] evaluate_1.0.5              future_1.75.0              </span></span>
+<span><span class="co">## [59] desc_1.4.3                  pillar_1.11.1              </span></span>
+<span><span class="co">## [61] MatrixGenerics_1.24.0       tensorA_0.36.2.1           </span></span>
+<span><span class="co">## [63] checkmate_2.3.4             stats4_4.6.1               </span></span>
+<span><span class="co">## [65] distributional_0.8.1        generics_0.1.4             </span></span>
+<span><span class="co">## [67] sp_2.2-3                    S4Vectors_0.50.1           </span></span>
+<span><span class="co">## [69] hms_1.1.4                   scales_1.4.0               </span></span>
+<span><span class="co">## [71] globals_0.19.1              glue_1.8.1                 </span></span>
+<span><span class="co">## [73] tools_4.6.1                 data.table_1.18.4          </span></span>
+<span><span class="co">## [75] ggside_0.4.1                fs_2.1.0                   </span></span>
+<span><span class="co">## [77] dotCall64_1.2               grid_4.6.1                 </span></span>
+<span><span class="co">## [79] SingleCellExperiment_1.34.0 nlme_3.1-169               </span></span>
+<span><span class="co">## [81] patchwork_1.3.2             cli_3.6.6                  </span></span>
+<span><span class="co">## [83] textshaping_1.0.5           spam_2.11-4                </span></span>
+<span><span class="co">## [85] S4Arrays_1.12.0             gtable_0.3.6               </span></span>
+<span><span class="co">## [87] sass_0.4.10                 digest_0.6.39              </span></span>
+<span><span class="co">## [89] progressr_1.0.0             BiocGenerics_0.58.1        </span></span>
+<span><span class="co">## [91] SparseArray_1.12.2          ggrepel_0.9.8              </span></span>
+<span><span class="co">## [93] htmlwidgets_1.6.4           SeuratObject_5.4.0         </span></span>
+<span><span class="co">## [95] farver_2.1.2                htmltools_0.5.9            </span></span>
+<span><span class="co">## [97] pkgdown_2.2.1               lifecycle_1.0.5            </span></span>
+<span><span class="co">## [99] prettydoc_0.4.1</span></span></code></pre>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
