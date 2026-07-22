@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   introduction: introduction.html
   splines: splines.html
-last_built: 2026-07-21T07:05Z
+last_built: 2026-07-22T01:49Z
 urls:
   reference: https://mangiolalaboratory.github.io/sccomp/reference
   article: https://mangiolalaboratory.github.io/sccomp/articles

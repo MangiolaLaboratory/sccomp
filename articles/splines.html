@@ -57,10 +57,10 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Smooth (spline) terms in sccomp</h1>
-                        <h4 data-toc-skip class="author">sccomp
-authors</h4>
+                        <h4 data-toc-skip class="author">Stefano
+Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2026-07-21</h4>
+            <h4 data-toc-skip class="date">2026-07-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/splines.Rmd" class="external-link"><code>vignettes/splines.Rmd</code></a></small>
       <div class="d-none name"><code>splines.Rmd</code></div>
@@ -69,48 +69,30 @@ authors</h4>
     
         <div class="abstract">
       <p class="abstract">Abstract</p>
-      <p>This vignette introduces <code>brms</code>-style smooth terms
-      (<code>s()</code>, <code>t2()</code>) in <code>sccomp</code>.
-      Smooths let you model non-linear effects of a continuous covariate
-      — pseudotime, age, dose, time-since-treatment — on cell-type
-      proportions, while keeping the rest of the <code>sccomp</code>
-      modelling pipeline (compositional likelihood, variability
-      modelling, outlier detection, random effects) unchanged. We start
-      from the bundled <code>counts_obj</code> dataset, add a synthetic
-      continuous covariate, fit a smooth, predict on a dense grid, and
-      visualise both the fitted curves and the underlying basis
-      decomposition.</p>
+      <p>Splines let you model non-linear compositional effects of a
+      continuous covariate. For example, pseudotime, age, dose,
+      time-since-treatment, on cell-type proportions.</p>
     </div>
     
 <div class="section level2">
 <h2 id="why-smooth-terms">Why smooth terms?<a class="anchor" aria-label="anchor" href="#why-smooth-terms"></a>
 </h2>
-<p><code>sccomp</code> fits a (logit-)linear model on the unconstrained
-scale and then maps it to the simplex via softmax. If you only have
-categorical covariates this is all you need. But with a
-<strong>continuous covariate</strong> — pseudotime, age, dose, days
-since treatment — the relationship between covariate and proportion is
-rarely linear. A spline (<code>s()</code> from <code>mgcv</code>)
-replaces a single linear column with a small, flexible basis that lets
-the curve bend, while a penalty keeps the bend honest.</p>
+<p>Continuous factors in linear models are tricky, becausegenerally you
+need to make assumptions about their linearity of higher polinomial
+trend. A spline replaces a single linear column with a small, flexible
+basis that lets the curve bend, while a penalty keeps the bend
+conservative</p>
 <p><code>sccomp</code> adopts the same syntax as <code>brms</code> /
 <code>mgcv</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">~</span> <span class="va">type</span> <span class="op">+</span> <span class="fu">s</span><span class="op">(</span><span class="va">pseudotime</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>        <span class="co"># smooth of one variable</span></span>
-<span><span class="op">~</span> <span class="va">type</span> <span class="op">+</span> <span class="fu">t2</span><span class="op">(</span><span class="va">pseudotime</span>, <span class="va">dose</span><span class="op">)</span>        <span class="co"># tensor product of two variables</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="op">~</span> <span class="va">type</span> <span class="op">+</span> <span class="fu">s</span><span class="op">(</span><span class="va">pseudotime</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>        </span></code></pre></div>
 <p>Under the hood every smooth is split into two pieces:</p>
 <ul>
-<li>an unpenalised <strong>null-space</strong> block <code>Xf</code>
-(the linear “trend” part), and</li>
-<li>a penalised <strong>wiggly</strong> block <code>Xr</code> (the
-bend-y part).</li>
+<li>an unpenalised <strong>linear trend</strong> block <code>Xf</code>,
+and</li>
+<li>a penalised <strong>wiggly</strong> block <code>Xr</code> (the non
+linear part).</li>
 </ul>
-<p><code>Xf</code> joins the design matrix as ordinary fixed-effect
-columns; <code>Xr</code> joins one of <code>sccomp</code>’s
-random-effect slots and is governed by a single smoothing parameter
-<code>sds</code>. This is exactly how <code>brms</code> handles smooths,
-and it means the Stan model does <strong>not</strong> change — only the
-R-side data assembly.</p>
 </div>
 <div class="section level2">
 <h2 id="what-is-supported">What is supported<a class="anchor" aria-label="anchor" href="#what-is-supported"></a>
@@ -122,74 +104,49 @@ R-side data assembly.</p>
 </colgroup>
 <thead><tr class="header">
 <th>Feature</th>
-<th>Status</th>
+<th>Notes</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td>
 <code>s(x, k = ...)</code> in <code>formula_composition</code>
 </td>
-<td>yes (1 slot)</td>
+<td></td>
 </tr>
 <tr class="even">
 <td>
 <code>s(x, z, bs = "fs", k = ...)</code> (factor smooth)</td>
-<td>yes (3 slots: 1 wiggly + 2 per-level deviation blocks)</td>
+<td></td>
 </tr>
 <tr class="odd">
 <td>Multiple smooth terms in the same formula</td>
-<td>yes (each penalty block consumes one RE slot)</td>
+<td></td>
 </tr>
 <tr class="even">
 <td>Mix smooths with parametric terms (<code>~ type + s(x)</code>)</td>
-<td>yes</td>
+<td></td>
 </tr>
 <tr class="odd">
 <td>Mix smooths with explicit <code>(... | g)</code> random effects</td>
-<td>yes (total ≤ 4 slots)</td>
-</tr>
-<tr class="even">
-<td>Smooths in <code>formula_variability</code>
-</td>
-<td>not yet</td>
-</tr>
-<tr class="odd">
-<td>
-<code>t2(x, y, ...)</code> (tensor-product smooth)</td>
-<td>fits, but <code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> not yet supported</td>
+<td></td>
 </tr>
 <tr class="even">
 <td>
 <code>s(x, by = factor)</code> (independent smooths per level)</td>
-<td>works but consumes one slot <strong>per level</strong>
-</td>
+<td>Max 2 smooth terms allowed</td>
 </tr>
 </tbody>
 </table>
-<p>The 4-slot budget comes from the existing <code>sccomp</code> Stan
-model. If your formula needs more than 4 random-effect slots in total
-(explicit <code>( | g)</code> clauses + smooth penalty blocks),
-<code><a href="../reference/sccomp_estimate.html">sccomp_estimate()</a></code> will stop with an informative error. Note
-that multi-penalty smooth types like <code>bs = "fs"</code> emit several
-blocks; in mgcv / brms these correspond to several <code>sds_*</code>
-parameters.</p>
-</div>
-<div class="section level2">
-<h2 id="worked-example">Worked example<a class="anchor" aria-label="anchor" href="#worked-example"></a>
-</h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/MangiolaLaboratory/sccomp" class="external-link">sccomp</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"counts_obj"</span><span class="op">)</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="synthetic-continuous-covariate">1. Synthetic continuous covariate<a class="anchor" aria-label="anchor" href="#synthetic-continuous-covariate"></a>
-</h3>
-<p><code>counts_obj</code> has no continuous covariate, so we attach one
-— a <em>pseudotime</em> between 0 and 6 — that varies across samples but
-is constant within a sample (a covariate must always be sample-level in
-<code>sccomp</code>).</p>
+</div>
+<div class="section level2">
+<h2 id="continuous-covariate">Continuous covariate<a class="anchor" aria-label="anchor" href="#continuous-covariate"></a>
+</h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">counts_obj</span><span class="op">$</span><span class="va">sample</span><span class="op">)</span></span>
@@ -210,9 +167,8 @@ is constant within a sample (a covariate must always be sample-level in
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> SCP345_580   benign     1.03  </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> SCP345_860   benign     1.28  </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> SCP424_pbmc1 benign     1.54</span></span></code></pre></div>
-</div>
 <div class="section level3">
-<h3 id="fit-type-spseudotime-k-5">2. Fit <code>~ type + s(pseudotime, k = 5)</code><a class="anchor" aria-label="anchor" href="#fit-type-spseudotime-k-5"></a>
+<h3 id="fit-type-spseudotime-k-5">1. Fit <code>~ type + s(pseudotime, k = 5)</code><a class="anchor" aria-label="anchor" href="#fit-type-spseudotime-k-5"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">counts_pt</span> <span class="op">|&gt;</span></span>
@@ -226,32 +182,16 @@ is constant within a sample (a covariate must always be sample-level in
 <span>    verbose             <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    max_sampling_iterations <span class="op">=</span> <span class="fl">2000</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p>Look at the design-matrix column names that
-<code><a href="../reference/sccomp_estimate.html">sccomp_estimate()</a></code> prints. You should see one new fixed
-column</p>
+<p>The output will include one new linear parameter</p>
 <pre><code>s(pseudotime, k = 5)__lin1</code></pre>
-<p>and three penalised basis columns living in an RE slot</p>
+<p>and three penalised basis</p>
 <pre><code>s(pseudotime, k = 5)___basis01
 s(pseudotime, k = 5)___basis02
 s(pseudotime, k = 5)___basis03</code></pre>
-<p>The <code>__lin*</code> columns are the null-space block
-(<code>Xf</code>); the <code>___basis*</code> columns are the wiggly
-block (<code>Xr</code>). The single smoothing parameter <code>sds</code>
-for this smooth controls how much the <code>___basis*</code>
-coefficients are pulled toward zero — exactly the role of
-<code>sds_*</code> in <code>brms</code>.</p>
-</div>
-<div class="section level3">
-<h3 id="tabular-output">3. Tabular output<a class="anchor" aria-label="anchor" href="#tabular-output"></a>
-</h3>
-<p><code><a href="../reference/sccomp_test.html">sccomp_test()</a></code> works unchanged. It returns one row per
-(cell_group, parameter), and smooth basis columns appear like any other
-coefficient:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">cell_group</span>, <span class="va">parameter</span>, <span class="va">c_lower</span>, <span class="va">c_effect</span>, <span class="va">c_upper</span>, <span class="va">c_FDR</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">cell_group</span>, <span class="va">parameter</span>, <span class="va">c_lower</span>, <span class="va">c_effect</span>, <span class="va">c_upper</span>, <span class="va">c_FDR</span><span class="op">)</span> </span>
 <span><span class="co">#&gt; Joining with `by = join_by(cell_group, M, parameter)`</span></span>
 <span><span class="co">#&gt; sccomp model</span></span>
 <span><span class="co">#&gt; ============</span></span>
@@ -270,7 +210,7 @@ coefficient:</p>
 <span><span class="co">#&gt;   For each parameter, n_eff is the effective sample size and R_k_hat is the potential</span></span>
 <span><span class="co">#&gt;   scale reduction factor on split chains (at convergence, R_k_hat = 1).</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 6</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 216 × 6</span></span></span>
 <span><span class="co">#&gt;    cell_group parameter                      c_lower c_effect c_upper    c_FDR</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> B1         (Intercept)                      0.918   1.19     1.46  0       </span></span>
@@ -282,15 +222,13 @@ coefficient:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> B2         (Intercept)                      0.534   0.849    1.15  0       </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> B2         typecancer                      -<span style="color: #BB0000;">1.16</span>   -<span style="color: #BB0000;">0.811</span>   -<span style="color: #BB0000;">0.445</span> 0       </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> B2         s(pseudotime, k = 5)__lin1      -<span style="color: #BB0000;">0.256</span>   0.211    0.603 0.068<span style="text-decoration: underline;">4</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> B2         s(pseudotime, k = 5)___basis01  -<span style="color: #BB0000;">2.22</span>   -<span style="color: #BB0000;">1.10</span>    -<span style="color: #BB0000;">0.165</span> 0.011<span style="text-decoration: underline;">3</span></span></span></code></pre></div>
-<p><code>c_effect</code> on the <code>___basis*</code> rows is rarely
-interpreted directly — the basis is internal — but the linear
-<code>__lin1</code> row is a clean “is there an overall monotone trend
-in pseudotime for this cell group?” test, and the basis-level
-<code>c_FDR</code> values let you spot non-linear effects.</p>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> B2         s(pseudotime, k = 5)___basis01  -<span style="color: #BB0000;">2.22</span>   -<span style="color: #BB0000;">1.10</span>    -<span style="color: #BB0000;">0.165</span> 0.011<span style="text-decoration: underline;">3</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 206 more rows</span></span></span></code></pre></div>
+<p>These parameters cannot be interpreted directly, on the contrary of
+other parameter in the linear model.</p>
 </div>
 <div class="section level3">
-<h3 id="predict-on-a-dense-grid">4. Predict on a dense grid<a class="anchor" aria-label="anchor" href="#predict-on-a-dense-grid"></a>
+<h3 id="visualise-the-curve">2. Visualise the curve<a class="anchor" aria-label="anchor" href="#visualise-the-curve"></a>
 </h3>
 <p>To draw the fitted curve, predict at a regular grid of
 <code>pseudotime</code> values (remember to also supply any other
@@ -307,7 +245,7 @@ covariates the formula needs — here, <code>type</code>):</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.238 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.333 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span>
@@ -327,10 +265,6 @@ covariates the formula needs — here, <code>type</code>):</p>
 <code>type</code>, <code>sample</code>) alongside
 <code>proportion_mean</code> and the 95% credible interval
 <code>proportion_lower</code> / <code>proportion_upper</code>.</p>
-</div>
-<div class="section level3">
-<h3 id="plot-fitted-curves-over-the-raw-proportions">5. Plot: fitted curves over the raw proportions<a class="anchor" aria-label="anchor" href="#plot-fitted-curves-over-the-raw-proportions"></a>
-</h3>
 <p>We show the six cell groups with the largest pseudotime range in the
 posterior mean.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -355,8 +289,6 @@ posterior mean.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">raw</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">prop</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.5</span>, size <span class="op">=</span> <span class="fl">1.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span> <span class="va">cell_group</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"pseudotime"</span>, y <span class="op">=</span> <span class="st">"proportion"</span>,</span>
-<span>       title <span class="op">=</span> <span class="st">"Fitted compositional curves vs pseudotime"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 <p><img src="splines_files/figure-html/plot-curves-1.png" class="r-plt" alt="" width="880"></p>
 <p>The blue/red curves are posterior means, ribbons are 95% credible
@@ -365,13 +297,13 @@ e.g. CD8 1 peaks around pseudotime ≈ 4 — which a purely linear
 <code>~ type + pseudotime</code> model could not capture.</p>
 </div>
 <div class="section level3">
-<h3 id="same-model-with-a-smaller-basis-k-3">6. Same model with a smaller basis (<code>k = 3</code>)<a class="anchor" aria-label="anchor" href="#same-model-with-a-smaller-basis-k-3"></a>
+<h3 id="lets-use-a-smaller-basis-k-3">3. Let’s use a smaller basis (<code>k = 3</code>)<a class="anchor" aria-label="anchor" href="#lets-use-a-smaller-basis-k-3"></a>
 </h3>
 <p>The same parametric + smooth layout works with a lower
 <code>k</code>. Fewer basis functions mean a smoother curve and less
-risk of over-fitting when sample size is modest — here
-<code>k = 3</code> yields one unpenalised linear column and a single
-wiggly basis column (instead of three with <code>k = 5</code>).</p>
+risk of over-fitting when sample size is modest. Here <code>k = 3</code>
+yields one unpenalised linear column and a single wiggly basis
+column.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_k3</span> <span class="op">&lt;-</span> <span class="va">counts_pt</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -384,15 +316,12 @@ wiggly basis column (instead of three with <code>k = 5</code>).</p>
 <span>    verbose             <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    max_sampling_iterations <span class="op">=</span> <span class="fl">2000</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p>The printed design matrix should list <code>(Intercept)</code>,
-<code>typecancer</code>, one <code>__lin</code> column, and a single
-<code>___basis01</code> column for the smooth.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_k3</span> <span class="op">&lt;-</span> <span class="va">fit_k3</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.239 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.317 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_k3</span> <span class="op">|&gt;</span></span>
@@ -403,9 +332,6 @@ wiggly basis column (instead of three with <code>k = 5</code>).</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">raw</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">prop</span>, colour <span class="op">=</span> <span class="va">type</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.5</span>, size <span class="op">=</span> <span class="fl">1.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span> <span class="va">cell_group</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"pseudotime"</span>, y <span class="op">=</span> <span class="st">"proportion"</span>,</span>
-<span>       title <span class="op">=</span> <span class="st">"Fitted curves: ~ type + s(pseudotime, k = 3)"</span>,</span>
-<span>       subtitle <span class="op">=</span> <span class="st">"One wiggly basis column — smoother than k = 5"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 <p><img src="splines_files/figure-html/plot-curves-k3-1.png" class="r-plt" alt="" width="880"></p>
 <p>Compared with the <code>k = 5</code> figure above, the credible bands
@@ -413,22 +339,20 @@ are often a little tighter and the lines less wiggly: the model has less
 capacity to bend, which is appropriate when you want a gentle pseudotime
 trend on top of the <code>type</code> effect.</p>
 </div>
-</div>
-<div class="section level2">
-<h2 id="what-s-actually-decomposes-into">What <code>s()</code> actually decomposes into<a class="anchor" aria-label="anchor" href="#what-s-actually-decomposes-into"></a>
-</h2>
+<div class="section level3">
+<h3 id="under-the-hood-what-s-actually-decomposes-into">4. Under the hood: What <code>s()</code> actually decomposes
+into<a class="anchor" aria-label="anchor" href="#under-the-hood-what-s-actually-decomposes-into"></a>
+</h3>
 <p>The smooth metadata used to fit the model is stored on the result, so
 we can re-evaluate the basis at any new pseudotime value. This is
-exactly what <code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> does internally; we can also
-do it by hand to <em>see</em> the basis.</p>
+exactly what <code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> does internally.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">smooth_meta</span>    <span class="op">&lt;-</span> <span class="fu">sccomp</span><span class="fu">:::</span><span class="fu">get_smooth_results</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="va">smooth_specs</span>   <span class="op">&lt;-</span> <span class="va">smooth_meta</span><span class="op">$</span><span class="va">smooth_specs</span></span>
 <span><span class="va">smooth_re_objs</span> <span class="op">&lt;-</span> <span class="va">smooth_meta</span><span class="op">$</span><span class="va">smooth_re_objs</span></span>
 <span></span>
 <span><span class="va">grid_basis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
-<span>  pseudotime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">pt_map</span><span class="op">$</span><span class="va">pseudotime</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">pt_map</span><span class="op">$</span><span class="va">pseudotime</span><span class="op">)</span>,</span>
-<span>                   length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span>,</span>
+<span>  pseudotime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">pt_map</span><span class="op">$</span><span class="va">pseudotime</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">pt_map</span><span class="op">$</span><span class="va">pseudotime</span><span class="op">)</span>,  length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">counts_obj</span><span class="op">$</span><span class="va">type</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>  <span class="co"># any constant works; smooth ignores it</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -460,28 +384,24 @@ do it by hand to <em>see</em> the basis.</p>
 <span>       subtitle <span class="op">=</span> <span class="st">"Linear null-space (Xf) is a fixed effect; wiggly basis (Xr) is one RE slot"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 <p><img src="splines_files/figure-html/basis-decomp-1.png" class="r-plt" alt="" width="880"></p>
-<p>The top panel is the <strong>null-space</strong>: for a default
-thin-plate <code>s()</code> this is just the linear term in
-<code>pseudotime</code>. The bottom panel is the <strong>wiggly
-basis</strong>: each of these columns gets one coefficient per cell
-group, and a <em>single</em> smoothing standard deviation
-<code>sds</code> per cell group controls how much wiggle is allowed.
-Increasing <code>k</code> would add more wiggly basis columns; the
-penalty would then keep the extra capacity from over-fitting.</p>
+<p>The top panel is the <strong>linear trend</strong>, the bottom panel
+is the <strong>wiggly basis</strong>: each of these columns gets one
+coefficient per cell group, and a <em>single</em> smoothing standard
+deviation <code>sds</code> per cell group controls how much wiggle is
+allowed. Increasing <code>k</code> would add more wiggly basis columns;
+the penalty would then keep the extra capacity from over-fitting.</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="factor-smooths-per-group-curves-with-shared-structure">Factor smooths: per-group curves with shared structure<a class="anchor" aria-label="anchor" href="#factor-smooths-per-group-curves-with-shared-structure"></a>
+<h2 id="hierarchical-smooths-per-group-curves-with-shared-structure">Hierarchical smooths: per-group curves with shared structure<a class="anchor" aria-label="anchor" href="#hierarchical-smooths-per-group-curves-with-shared-structure"></a>
 </h2>
 <p>A common ask is: “fit a smooth per tissue (or per condition, per
-donor, …) but partial-pool across groups”. The <code>mgcv</code>
-shorthand for this is <code>s(x, factor, bs = "fs")</code> — a
-<em>factor smooth</em>. It builds one common wiggly curve and a
-per-level deviation, governed jointly by a small set of smoothing
-parameters (three, in mgcv’s standard reparameterisation: the common
-wiggly part and two per-level deviation blocks). In <code>sccomp</code>
-each of these blocks occupies its own RE slot.</p>
+donor, …) but partial-pool across groups”. The shorthand for this (also
+used in <code>mgcv</code>) is <code>s(x, factor, bs = "fs")</code>. It
+builds one common wiggly curve and a per-level deviation, governed
+jointly by a small set of smoothing parameters.</p>
 <div class="section level3">
-<h3 id="a-worked-example">A worked example<a class="anchor" aria-label="anchor" href="#a-worked-example"></a>
+<h3 id="fit-spseudotime-tissue-bs-fs-k-5">1. Fit ~ s(pseudotime, tissue, bs = “fs”, k = 5)<a class="anchor" aria-label="anchor" href="#fit-spseudotime-tissue-bs-fs-k-5"></a>
 </h3>
 <p>We extend <code>counts_obj</code> with a synthetic
 <code>tissue</code> factor (3 levels) on top of the existing
@@ -507,7 +427,6 @@ each of these blocks occupies its own RE slot.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> SCP345_580   benign     0.879  blood </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> SCP345_860   benign     1.32   lymph </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> SCP424_pbmc1 benign     1.53   tumor</span></span></code></pre></div>
-<p>Fit <code>~ s(pseudotime, tissue, bs = "fs", k = 5)</code>:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_fs</span> <span class="op">&lt;-</span> <span class="va">counts_tissue</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
@@ -530,7 +449,7 @@ columns for <code>k = 5</code> × 3 tissues) and two smaller per-level
 deviation blocks.</p>
 </div>
 <div class="section level3">
-<h3 id="predict-and-plot-per-tissue-curves">Predict and plot per-tissue curves<a class="anchor" aria-label="anchor" href="#predict-and-plot-per-tissue-curves"></a>
+<h3 id="predict-and-plot-per-tissue-curves">2. Predict and plot per-tissue curves<a class="anchor" aria-label="anchor" href="#predict-and-plot-per-tissue-curves"></a>
 </h3>
 <p><code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> takes a grid that crosses
 <code>pseudotime</code> with <code>tissue</code>:</p>
@@ -547,7 +466,7 @@ deviation blocks.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid_fs</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.863 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 2.027 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred_fs</span><span class="op">)</span></span>
@@ -606,56 +525,23 @@ the data don’t support a difference.</p>
 <p><code>s(x, by = tissue)</code> is an alternative spelling that
 <em>also</em> gives a per-tissue curve, but it treats each tissue’s
 smooth as independent: each level gets its own smoothing parameter, and
-the curves can have totally unrelated shape. With L tissue levels this
-consumes L sccomp slots (one per level). Use <code>bs = "fs"</code> when
-you want a single shared smoothness scale and partial pooling across
-levels; use <code>by =</code> when the tissues are clearly heterogeneous
-and a shared smoothness assumption would be misleading.</p>
+the curves can have totally unrelated shape. Use <code>bs = "fs"</code>
+when you want a single shared smoothness scale and partial pooling
+across levels; use <code>by =</code> when the tissues are clearly
+heterogeneous and a shared smoothness assumption would be
+misleading.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="multiple-smooths-and-mixing-with-random-effects">Multiple smooths and mixing with random effects<a class="anchor" aria-label="anchor" href="#multiple-smooths-and-mixing-with-random-effects"></a>
 </h2>
-<p><code><a href="../reference/sccomp_estimate.html">sccomp_estimate()</a></code> is happy with several smooths, and you
-can also keep explicit <code>(... | g)</code> random-effect clauses:</p>
+<p><code>sccomp</code> can model up to two splines together with random
+effects.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">~</span> <span class="va">type</span> <span class="op">+</span></span>
 <span>  <span class="fu">s</span><span class="op">(</span><span class="va">pseudotime</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">s</span><span class="op">(</span><span class="va">age</span>,        k <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">donor</span><span class="op">)</span></span></code></pre></div>
-<p>Each <code>s()</code> / <code>t2()</code> term consumes one of the
-four available RE slots. The remaining slots are shared with any
-explicit <code>( | g)</code> clauses, so the total must stay ≤ 4. If you
-exceed it, <code><a href="../reference/sccomp_estimate.html">sccomp_estimate()</a></code> will stop with a message
-naming the smooth and the slot budget.</p>
-</div>
-<div class="section level2">
-<h2 id="caveats-and-current-limitations">Caveats and current limitations<a class="anchor" aria-label="anchor" href="#caveats-and-current-limitations"></a>
-</h2>
-<ul>
-<li>
-<strong>No smooths in <code>formula_variability</code></strong> yet.
-<code><a href="../reference/sccomp_estimate.html">sccomp_estimate()</a></code> errors out if you try.</li>
-<li>
-<strong><code>t2()</code> tensor smooths</strong> fit fine but
-<code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> is not yet supported for them:
-<code><a href="https://rdrr.io/pkg/mgcv/man/smoothCon.html" class="external-link">mgcv::PredictMat()</a></code> applies the <code>t2</code> constraint
-differently from <code>smoothCon()</code>, producing a basis that
-doesn’t line up with the fitted coefficients. The predict call errors
-out cleanly. Use <code>s(x, z, bs = "fs")</code> (shown above) when you
-want a smooth indexed by a factor, or stack univariate
-<code>s(x) + s(y)</code> smooths for additive multivariate effects.</li>
-<li>
-<strong><code>s(x, by = factor)</code></strong> decomposes into one
-independent smooth per factor level, each costing a separate RE slot.
-With many levels you will run out of the 4-slot budget. For
-partial-pooling across factor levels use <code>bs = "fs"</code> (shown
-above) — it fits in 3 slots regardless of the number of levels.</li>
-<li>The smooth columns are part of <code><a href="../reference/sccomp_test.html">sccomp_test()</a></code>’s output.
-The basis-level <code>c_effect</code> / <code>c_FDR</code> are
-diagnostics, not biological effect sizes; interpret the <em>curve</em>
-(predicted proportions) rather than individual basis coefficients.</li>
-</ul>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
@@ -710,8 +596,8 @@ diagnostics, not biological effect sizes; interpret the <em>curve</em>
 <span><span class="co">#&gt; [45] parallel_4.6.1              XVector_0.52.0             </span></span>
 <span><span class="co">#&gt; [47] matrixStats_1.5.0           vctrs_0.7.3                </span></span>
 <span><span class="co">#&gt; [49] Matrix_1.7-5                jsonlite_2.0.0             </span></span>
-<span><span class="co">#&gt; [51] callr_3.8.0                 hms_1.1.4                  </span></span>
-<span><span class="co">#&gt; [53] patchwork_1.3.2             IRanges_2.46.0             </span></span>
+<span><span class="co">#&gt; [51] callr_3.8.0                 IRanges_2.46.0             </span></span>
+<span><span class="co">#&gt; [53] hms_1.1.4                   patchwork_1.3.2            </span></span>
 <span><span class="co">#&gt; [55] S4Vectors_0.50.1            ggrepel_0.9.8              </span></span>
 <span><span class="co">#&gt; [57] systemfonts_1.3.2           jquerylib_0.1.4            </span></span>
 <span><span class="co">#&gt; [59] glue_1.8.1                  ggside_0.4.1               </span></span>
@@ -721,11 +607,11 @@ diagnostics, not biological effect sizes; interpret the <em>curve</em>
 <span><span class="co">#&gt; [67] tibble_3.3.1                pillar_1.11.1              </span></span>
 <span><span class="co">#&gt; [69] htmltools_0.5.9             Seqinfo_1.2.0              </span></span>
 <span><span class="co">#&gt; [71] R6_2.6.1                    textshaping_1.0.5          </span></span>
-<span><span class="co">#&gt; [73] evaluate_1.0.5              lattice_0.22-9             </span></span>
-<span><span class="co">#&gt; [75] Biobase_2.72.0              readr_2.2.0                </span></span>
+<span><span class="co">#&gt; [73] evaluate_1.0.5              Biobase_2.72.0             </span></span>
+<span><span class="co">#&gt; [75] lattice_0.22-9              readr_2.2.0                </span></span>
 <span><span class="co">#&gt; [77] backports_1.5.1             bslib_0.11.0               </span></span>
-<span><span class="co">#&gt; [79] Rcpp_1.1.2                  SparseArray_1.12.2         </span></span>
-<span><span class="co">#&gt; [81] nlme_3.1-169                checkmate_2.3.4            </span></span>
+<span><span class="co">#&gt; [79] Rcpp_1.1.2                  nlme_3.1-169               </span></span>
+<span><span class="co">#&gt; [81] SparseArray_1.12.2          checkmate_2.3.4            </span></span>
 <span><span class="co">#&gt; [83] mgcv_1.9-4                  xfun_0.60                  </span></span>
 <span><span class="co">#&gt; [85] fs_2.1.0                    MatrixGenerics_1.24.0      </span></span>
 <span><span class="co">#&gt; [87] forcats_1.0.1               prettydoc_0.4.1            </span></span>

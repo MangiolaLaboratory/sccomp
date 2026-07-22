@@ -2,68 +2,40 @@
 
 Abstract
 
-This vignette introduces `brms`-style smooth terms (`s()`, `t2()`) in
-`sccomp`. Smooths let you model non-linear effects of a continuous
-covariate — pseudotime, age, dose, time-since-treatment — on cell-type
-proportions, while keeping the rest of the `sccomp` modelling pipeline
-(compositional likelihood, variability modelling, outlier detection,
-random effects) unchanged. We start from the bundled `counts_obj`
-dataset, add a synthetic continuous covariate, fit a smooth, predict on
-a dense grid, and visualise both the fitted curves and the underlying
-basis decomposition.
+Splines let you model non-linear compositional effects of a continuous
+covariate. For example, pseudotime, age, dose, time-since-treatment, on
+cell-type proportions.
 
 ## Why smooth terms?
 
-`sccomp` fits a (logit-)linear model on the unconstrained scale and then
-maps it to the simplex via softmax. If you only have categorical
-covariates this is all you need. But with a **continuous covariate** —
-pseudotime, age, dose, days since treatment — the relationship between
-covariate and proportion is rarely linear. A spline (`s()` from `mgcv`)
-replaces a single linear column with a small, flexible basis that lets
-the curve bend, while a penalty keeps the bend honest.
+Continuous factors in linear models are tricky, becausegenerally you
+need to make assumptions about their linearity of higher polinomial
+trend. A spline replaces a single linear column with a small, flexible
+basis that lets the curve bend, while a penalty keeps the bend
+conservative
 
 `sccomp` adopts the same syntax as `brms` / `mgcv`:
 
 ``` r
 
-~ type + s(pseudotime, k = 5)        # smooth of one variable
-~ type + t2(pseudotime, dose)        # tensor product of two variables
+~ type + s(pseudotime, k = 5)        
 ```
 
 Under the hood every smooth is split into two pieces:
 
-- an unpenalised **null-space** block `Xf` (the linear “trend” part),
-  and
-- a penalised **wiggly** block `Xr` (the bend-y part).
-
-`Xf` joins the design matrix as ordinary fixed-effect columns; `Xr`
-joins one of `sccomp`’s random-effect slots and is governed by a single
-smoothing parameter `sds`. This is exactly how `brms` handles smooths,
-and it means the Stan model does **not** change — only the R-side data
-assembly.
+- an unpenalised **linear trend** block `Xf`, and
+- a penalised **wiggly** block `Xr` (the non linear part).
 
 ## What is supported
 
-| Feature | Status |
+| Feature | Notes |
 |----|----|
-| `s(x, k = ...)` in `formula_composition` | yes (1 slot) |
-| `s(x, z, bs = "fs", k = ...)` (factor smooth) | yes (3 slots: 1 wiggly + 2 per-level deviation blocks) |
-| Multiple smooth terms in the same formula | yes (each penalty block consumes one RE slot) |
-| Mix smooths with parametric terms (`~ type + s(x)`) | yes |
-| Mix smooths with explicit `(... | g)` random effects | yes (total ≤ 4 slots) |
-| Smooths in `formula_variability` | not yet |
-| `t2(x, y, ...)` (tensor-product smooth) | fits, but [`sccomp_predict()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_predict.md) not yet supported |
-| `s(x, by = factor)` (independent smooths per level) | works but consumes one slot **per level** |
-
-The 4-slot budget comes from the existing `sccomp` Stan model. If your
-formula needs more than 4 random-effect slots in total (explicit
-`( | g)` clauses + smooth penalty blocks),
-[`sccomp_estimate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_estimate.md)
-will stop with an informative error. Note that multi-penalty smooth
-types like `bs = "fs"` emit several blocks; in mgcv / brms these
-correspond to several `sds_*` parameters.
-
-## Worked example
+| `s(x, k = ...)` in `formula_composition` |  |
+| `s(x, z, bs = "fs", k = ...)` (factor smooth) |  |
+| Multiple smooth terms in the same formula |  |
+| Mix smooths with parametric terms (`~ type + s(x)`) |  |
+| Mix smooths with explicit `(... | g)` random effects |  |
+| `s(x, by = factor)` (independent smooths per level) | Max 2 smooth terms allowed |
 
 ``` r
 
@@ -74,12 +46,7 @@ library(sccomp)
 data("counts_obj")
 ```
 
-### 1. Synthetic continuous covariate
-
-`counts_obj` has no continuous covariate, so we attach one — a
-*pseudotime* between 0 and 6 — that varies across samples but is
-constant within a sample (a covariate must always be sample-level in
-`sccomp`).
+## Continuous covariate
 
 ``` r
 
@@ -104,7 +71,7 @@ counts_pt |> distinct(sample, type, pseudotime) |> head()
 #> 6 SCP424_pbmc1 benign     1.54
 ```
 
-### 2. Fit `~ type + s(pseudotime, k = 5)`
+### 1. Fit `~ type + s(pseudotime, k = 5)`
 
 ``` r
 
@@ -121,35 +88,21 @@ fit <- counts_pt |>
   )
 ```
 
-Look at the design-matrix column names that
-[`sccomp_estimate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_estimate.md)
-prints. You should see one new fixed column
+The output will include one new linear parameter
 
     s(pseudotime, k = 5)__lin1
 
-and three penalised basis columns living in an RE slot
+and three penalised basis
 
     s(pseudotime, k = 5)___basis01
     s(pseudotime, k = 5)___basis02
     s(pseudotime, k = 5)___basis03
 
-The `__lin*` columns are the null-space block (`Xf`); the `___basis*`
-columns are the wiggly block (`Xr`). The single smoothing parameter
-`sds` for this smooth controls how much the `___basis*` coefficients are
-pulled toward zero — exactly the role of `sds_*` in `brms`.
-
-### 3. Tabular output
-
-[`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md)
-works unchanged. It returns one row per (cell_group, parameter), and
-smooth basis columns appear like any other coefficient:
-
 ``` r
 
 fit |>
   sccomp_test() |>
-  select(cell_group, parameter, c_lower, c_effect, c_upper, c_FDR) |>
-  head(10)
+  select(cell_group, parameter, c_lower, c_effect, c_upper, c_FDR) 
 #> Joining with `by = join_by(cell_group, M, parameter)`
 #> sccomp model
 #> ============
@@ -168,7 +121,7 @@ fit |>
 #>   For each parameter, n_eff is the effective sample size and R_k_hat is the potential
 #>   scale reduction factor on split chains (at convergence, R_k_hat = 1).
 #> 
-#> # A tibble: 10 × 6
+#> # A tibble: 216 × 6
 #>    cell_group parameter                      c_lower c_effect c_upper    c_FDR
 #>    <chr>      <chr>                            <dbl>    <dbl>   <dbl>    <dbl>
 #>  1 B1         (Intercept)                      0.918   1.19     1.46  0       
@@ -180,15 +133,14 @@ fit |>
 #>  7 B2         (Intercept)                      0.534   0.849    1.15  0       
 #>  8 B2         typecancer                      -1.16   -0.811   -0.445 0       
 #>  9 B2         s(pseudotime, k = 5)__lin1      -0.256   0.211    0.603 0.0684  
-#> 10 B2         s(pseudotime, k = 5)___basis01  -2.22   -1.10    -0.165 0.0113
+#> 10 B2         s(pseudotime, k = 5)___basis01  -2.22   -1.10    -0.165 0.0113  
+#> # ℹ 206 more rows
 ```
 
-`c_effect` on the `___basis*` rows is rarely interpreted directly — the
-basis is internal — but the linear `__lin1` row is a clean “is there an
-overall monotone trend in pseudotime for this cell group?” test, and the
-basis-level `c_FDR` values let you spot non-linear effects.
+These parameters cannot be interpreted directly, on the contrary of
+other parameter in the linear model.
 
-### 4. Predict on a dense grid
+### 2. Visualise the curve
 
 To draw the fitted curve, predict at a regular grid of `pseudotime`
 values (remember to also supply any other covariates the formula needs —
@@ -207,7 +159,7 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.238 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.333 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
@@ -228,8 +180,6 @@ head(pred)
 already returns the `new_data` columns (`pseudotime`, `type`, `sample`)
 alongside `proportion_mean` and the 95% credible interval
 `proportion_lower` / `proportion_upper`.
-
-### 5. Plot: fitted curves over the raw proportions
 
 We show the six cell groups with the largest pseudotime range in the
 posterior mean.
@@ -257,8 +207,6 @@ pred |>
   geom_line(linewidth = 0.7) +
   geom_point(data = raw, aes(y = prop), alpha = 0.5, size = 1.2) +
   facet_wrap(~ cell_group, scales = "free_y", ncol = 3) +
-  labs(x = "pseudotime", y = "proportion",
-       title = "Fitted compositional curves vs pseudotime") +
   theme_minimal(base_size = 10)
 ```
 
@@ -269,12 +217,12 @@ intervals, points are observed sample proportions. Note the wiggle —
 e.g. CD8 1 peaks around pseudotime ≈ 4 — which a purely linear
 `~ type + pseudotime` model could not capture.
 
-### 6. Same model with a smaller basis (`k = 3`)
+### 3. Let’s use a smaller basis (`k = 3`)
 
 The same parametric + smooth layout works with a lower `k`. Fewer basis
 functions mean a smoother curve and less risk of over-fitting when
-sample size is modest — here `k = 3` yields one unpenalised linear
-column and a single wiggly basis column (instead of three with `k = 5`).
+sample size is modest. Here `k = 3` yields one unpenalised linear column
+and a single wiggly basis column.
 
 ``` r
 
@@ -291,16 +239,13 @@ fit_k3 <- counts_pt |>
   )
 ```
 
-The printed design matrix should list `(Intercept)`, `typecancer`, one
-`__lin` column, and a single `___basis01` column for the smooth.
-
 ``` r
 
 pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.239 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.317 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -314,9 +259,6 @@ pred_k3 |>
   geom_line(linewidth = 0.7) +
   geom_point(data = raw, aes(y = prop, colour = type), alpha = 0.5, size = 1.2) +
   facet_wrap(~ cell_group, scales = "free_y", ncol = 3) +
-  labs(x = "pseudotime", y = "proportion",
-       title = "Fitted curves: ~ type + s(pseudotime, k = 3)",
-       subtitle = "One wiggly basis column — smoother than k = 5") +
   theme_minimal(base_size = 10)
 ```
 
@@ -327,13 +269,13 @@ little tighter and the lines less wiggly: the model has less capacity to
 bend, which is appropriate when you want a gentle pseudotime trend on
 top of the `type` effect.
 
-## What `s()` actually decomposes into
+### 4. Under the hood: What `s()` actually decomposes into
 
 The smooth metadata used to fit the model is stored on the result, so we
 can re-evaluate the basis at any new pseudotime value. This is exactly
 what
 [`sccomp_predict()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_predict.md)
-does internally; we can also do it by hand to *see* the basis.
+does internally.
 
 ``` r
 
@@ -342,8 +284,7 @@ smooth_specs   <- smooth_meta$smooth_specs
 smooth_re_objs <- smooth_meta$smooth_re_objs
 
 grid_basis <- tibble(
-  pseudotime = seq(min(pt_map$pseudotime), max(pt_map$pseudotime),
-                   length.out = 200),
+  pseudotime = seq(min(pt_map$pseudotime), max(pt_map$pseudotime),  length.out = 200),
   type = levels(counts_obj$type)[1]  # any constant works; smooth ignores it
 )
 
@@ -378,25 +319,22 @@ ggplot(basis_long, aes(pseudotime, value, colour = column)) +
 
 ![](splines_files/figure-html/basis-decomp-1.png)
 
-The top panel is the **null-space**: for a default thin-plate `s()` this
-is just the linear term in `pseudotime`. The bottom panel is the
-**wiggly basis**: each of these columns gets one coefficient per cell
-group, and a *single* smoothing standard deviation `sds` per cell group
-controls how much wiggle is allowed. Increasing `k` would add more
-wiggly basis columns; the penalty would then keep the extra capacity
-from over-fitting.
+The top panel is the **linear trend**, the bottom panel is the **wiggly
+basis**: each of these columns gets one coefficient per cell group, and
+a *single* smoothing standard deviation `sds` per cell group controls
+how much wiggle is allowed. Increasing `k` would add more wiggly basis
+columns; the penalty would then keep the extra capacity from
+over-fitting.
 
-## Factor smooths: per-group curves with shared structure
+## Hierarchical smooths: per-group curves with shared structure
 
 A common ask is: “fit a smooth per tissue (or per condition, per donor,
-…) but partial-pool across groups”. The `mgcv` shorthand for this is
-`s(x, factor, bs = "fs")` — a *factor smooth*. It builds one common
-wiggly curve and a per-level deviation, governed jointly by a small set
-of smoothing parameters (three, in mgcv’s standard reparameterisation:
-the common wiggly part and two per-level deviation blocks). In `sccomp`
-each of these blocks occupies its own RE slot.
+…) but partial-pool across groups”. The shorthand for this (also used in
+`mgcv`) is `s(x, factor, bs = "fs")`. It builds one common wiggly curve
+and a per-level deviation, governed jointly by a small set of smoothing
+parameters.
 
-### A worked example
+### 1. Fit ~ s(pseudotime, tissue, bs = “fs”, k = 5)
 
 We extend `counts_obj` with a synthetic `tissue` factor (3 levels) on
 top of the existing `pseudotime`:
@@ -425,8 +363,6 @@ counts_tissue |> dplyr::distinct(sample, type, pseudotime, tissue) |> head()
 #> 6 SCP424_pbmc1 benign     1.53   tumor
 ```
 
-Fit `~ s(pseudotime, tissue, bs = "fs", k = 5)`:
-
 ``` r
 
 fit_fs <- counts_tissue |>
@@ -451,7 +387,7 @@ The three non-zero entries correspond to the wiggly main block (9
 columns for `k = 5` × 3 tissues) and two smaller per-level deviation
 blocks.
 
-### Predict and plot per-tissue curves
+### 2. Predict and plot per-tissue curves
 
 [`sccomp_predict()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_predict.md)
 takes a grid that crosses `pseudotime` with `tissue`:
@@ -470,7 +406,7 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.863 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 2.027 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)
@@ -535,17 +471,14 @@ the data don’t support a difference.
 `s(x, by = tissue)` is an alternative spelling that *also* gives a
 per-tissue curve, but it treats each tissue’s smooth as independent:
 each level gets its own smoothing parameter, and the curves can have
-totally unrelated shape. With L tissue levels this consumes L sccomp
-slots (one per level). Use `bs = "fs"` when you want a single shared
+totally unrelated shape. Use `bs = "fs"` when you want a single shared
 smoothness scale and partial pooling across levels; use `by =` when the
 tissues are clearly heterogeneous and a shared smoothness assumption
 would be misleading.
 
 ## Multiple smooths and mixing with random effects
 
-[`sccomp_estimate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_estimate.md)
-is happy with several smooths, and you can also keep explicit
-`(... | g)` random-effect clauses:
+`sccomp` can model up to two splines together with random effects.
 
 ``` r
 
@@ -554,37 +487,6 @@ is happy with several smooths, and you can also keep explicit
   s(age,        k = 4) +
   (1 | donor)
 ```
-
-Each `s()` / `t2()` term consumes one of the four available RE slots.
-The remaining slots are shared with any explicit `( | g)` clauses, so
-the total must stay ≤ 4. If you exceed it,
-[`sccomp_estimate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_estimate.md)
-will stop with a message naming the smooth and the slot budget.
-
-## Caveats and current limitations
-
-- **No smooths in `formula_variability`** yet.
-  [`sccomp_estimate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_estimate.md)
-  errors out if you try.
-- **`t2()` tensor smooths** fit fine but
-  [`sccomp_predict()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_predict.md)
-  is not yet supported for them:
-  [`mgcv::PredictMat()`](https://rdrr.io/pkg/mgcv/man/smoothCon.html)
-  applies the `t2` constraint differently from `smoothCon()`, producing
-  a basis that doesn’t line up with the fitted coefficients. The predict
-  call errors out cleanly. Use `s(x, z, bs = "fs")` (shown above) when
-  you want a smooth indexed by a factor, or stack univariate
-  `s(x) + s(y)` smooths for additive multivariate effects.
-- **`s(x, by = factor)`** decomposes into one independent smooth per
-  factor level, each costing a separate RE slot. With many levels you
-  will run out of the 4-slot budget. For partial-pooling across factor
-  levels use `bs = "fs"` (shown above) — it fits in 3 slots regardless
-  of the number of levels.
-- The smooth columns are part of
-  [`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md)’s
-  output. The basis-level `c_effect` / `c_FDR` are diagnostics, not
-  biological effect sizes; interpret the *curve* (predicted proportions)
-  rather than individual basis coefficients.
 
 ## Session info
 
@@ -638,8 +540,8 @@ will stop with a message naming the smooth and the slot budget.
     #> [45] parallel_4.6.1              XVector_0.52.0             
     #> [47] matrixStats_1.5.0           vctrs_0.7.3                
     #> [49] Matrix_1.7-5                jsonlite_2.0.0             
-    #> [51] callr_3.8.0                 hms_1.1.4                  
-    #> [53] patchwork_1.3.2             IRanges_2.46.0             
+    #> [51] callr_3.8.0                 IRanges_2.46.0             
+    #> [53] hms_1.1.4                   patchwork_1.3.2            
     #> [55] S4Vectors_0.50.1            ggrepel_0.9.8              
     #> [57] systemfonts_1.3.2           jquerylib_0.1.4            
     #> [59] glue_1.8.1                  ggside_0.4.1               
@@ -649,11 +551,11 @@ will stop with a message naming the smooth and the slot budget.
     #> [67] tibble_3.3.1                pillar_1.11.1              
     #> [69] htmltools_0.5.9             Seqinfo_1.2.0              
     #> [71] R6_2.6.1                    textshaping_1.0.5          
-    #> [73] evaluate_1.0.5              lattice_0.22-9             
-    #> [75] Biobase_2.72.0              readr_2.2.0                
+    #> [73] evaluate_1.0.5              Biobase_2.72.0             
+    #> [75] lattice_0.22-9              readr_2.2.0                
     #> [77] backports_1.5.1             bslib_0.11.0               
-    #> [79] Rcpp_1.1.2                  SparseArray_1.12.2         
-    #> [81] nlme_3.1-169                checkmate_2.3.4            
+    #> [79] Rcpp_1.1.2                  nlme_3.1-169               
+    #> [81] SparseArray_1.12.2          checkmate_2.3.4            
     #> [83] mgcv_1.9-4                  xfun_0.60                  
     #> [85] fs_2.1.0                    MatrixGenerics_1.24.0      
     #> [87] forcats_1.0.1               prettydoc_0.4.1            
