@@ -180,7 +180,57 @@ points are observed sample proportions. Note the wiggle — e.g. CD8 1 peaks
 around pseudotime ≈ 4 — which a purely linear `~ type + pseudotime` model
 could not capture.
 
-## 3. Let's use a smaller basis (`k = 3`)
+## 3. Test differences along the curve
+
+The individual `s(pseudotime, k = 5)__*` parameters from `sccomp_test()`
+cannot be interpreted one-by-one. The scientific question is usually "does
+composition differ between two points (or intervals) of pseudotime?".
+`sccomp_test_smooth()` answers exactly that: it predicts the **mean**
+composition (logit scale) at the two positions, forms the per-draw contrast
+`mu(to) - mu(from)`, and runs it through the same probability-of-null /
+FDR machinery as `sccomp_test()` — so `c_effect`, `c_pH0` and `c_FDR` mean
+the same thing here as everywhere else in sccomp.
+
+Because the linear predictor is additive, any covariate held constant
+between the two positions (e.g. `type`) cancels out of the contrast, so the
+test isolates the pseudotime effect.
+
+```{r test-smooth-endpoints, eval = run_smooth_vignette}
+fit |>
+  sccomp_test_smooth(
+    smooth = "pseudotime",
+    from   = 1,
+    to     = 5
+  ) |>
+  arrange(c_FDR) |>
+  select(cell_group, from, to, c_effect, c_lower, c_upper, c_FDR)
+```
+
+A positive `c_effect` means the cell group is (on the logit scale) more
+abundant at pseudotime 5 than at pseudotime 1; `c_FDR` controls the
+false-discovery rate across cell groups.
+
+Because the curve can wiggle, comparing two single points can be sensitive
+to the exact positions. Use `comparison = "average"` to contrast the average
+of the curve over two **intervals** instead (each sampled at `resolution`
+points):
+
+```{r test-smooth-average, eval = run_smooth_vignette}
+fit |>
+  sccomp_test_smooth(
+    smooth     = "pseudotime",
+    from       = c(0, 2),   # early interval
+    to         = c(4, 6),   # late interval
+    comparison = "average"
+  ) |>
+  arrange(c_FDR) |>
+  select(cell_group, from, to, c_effect, c_lower, c_upper, c_FDR)
+```
+
+For factor smooths (next section) the grouping factor selects *which* curve
+is tested — pass it via `at`, e.g. `at = list(tissue = "tumor")`.
+
+## 4. Let's use a smaller basis (`k = 3`)
 
 The same parametric + smooth layout works with a lower `k`. Fewer basis
 functions mean a smoother curve and less risk of over-fitting when sample
@@ -223,7 +273,7 @@ little tighter and the lines less wiggly: the model has less capacity to
 bend, which is appropriate when you want a gentle pseudotime trend on top
 of the `type` effect.
 
-## 4. Under the hood: What `s()` actually decomposes into
+## 5. Under the hood: What `s()` actually decomposes into
 
 The smooth metadata used to fit the model is stored on the result, so we
 can re-evaluate the basis at any new pseudotime value. This is exactly what
