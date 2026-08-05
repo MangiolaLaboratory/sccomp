@@ -159,7 +159,7 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.333 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.317 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
@@ -245,7 +245,7 @@ pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.317 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.311 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -406,7 +406,7 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 2.027 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.988 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)
@@ -546,14 +546,14 @@ would be misleading.
     #> [57] systemfonts_1.3.2           jquerylib_0.1.4            
     #> [59] glue_1.8.1                  ggside_0.4.1               
     #> [61] pkgdown_2.2.1               ps_1.9.3                   
-    #> [63] distributional_0.8.1        stringi_1.8.7              
+    #> [63] distributional_0.8.1        stringi_1.8.9              
     #> [65] gtable_0.3.6                GenomicRanges_1.64.0       
     #> [67] tibble_3.3.1                pillar_1.11.1              
     #> [69] htmltools_0.5.9             Seqinfo_1.2.0              
     #> [71] R6_2.6.1                    textshaping_1.0.5          
     #> [73] evaluate_1.0.5              Biobase_2.72.0             
     #> [75] lattice_0.22-9              readr_2.2.0                
-    #> [77] backports_1.5.1             bslib_0.11.0               
+    #> [77] backports_1.5.1             bslib_0.12.0               
     #> [79] Rcpp_1.1.2                  nlme_3.1-169               
     #> [81] SparseArray_1.12.2          checkmate_2.3.4            
     #> [83] mgcv_1.9-4                  xfun_0.60                  

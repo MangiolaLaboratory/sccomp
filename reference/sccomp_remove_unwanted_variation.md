@@ -316,7 +316,7 @@ print("cmdstanr is needed to run this example.")
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.557 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.558 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 # }
 ```

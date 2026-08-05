@@ -328,12 +328,12 @@ sccomp_result =
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.29 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 2.294 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.294 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 2.286 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ### Visualization and Summary Plots
@@ -358,7 +358,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.113 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -379,12 +379,12 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.562 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.564 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.564 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.56 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
@@ -606,7 +606,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.968 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.962 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning: `position_jitterdodge()` requires non-overlapping x intervals.
@@ -892,7 +892,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.101 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.093 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## # A tibble: 30 × 2
@@ -1081,7 +1081,7 @@ plots = res |> sccomp_test() |> plot()
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.096 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.095 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -1212,7 +1212,7 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] bayesplot_1.15.0  posterior_1.7.0   cmdstanr_0.9.0    loo_2.10.0       
+    ##  [1] bayesplot_1.15.0  posterior_1.7.0   cmdstanr_0.9.0    loo_2.10.1       
     ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.3     sccomp_2.1.34    
     ##  [9] instantiate_0.2.3 dplyr_1.2.1      
     ## 
@@ -1231,8 +1231,8 @@ sessionInfo()
     ## [23] purrr_1.2.2                 xfun_0.60                  
     ## [25] cachem_1.1.0                jsonlite_2.0.0             
     ## [27] DelayedArray_0.38.2         parallel_4.6.1             
-    ## [29] R6_2.6.1                    bslib_0.11.0               
-    ## [31] stringi_1.8.7               RColorBrewer_1.1-3         
+    ## [29] R6_2.6.1                    bslib_0.12.0               
+    ## [31] stringi_1.8.9               RColorBrewer_1.1-3         
     ## [33] parallelly_1.48.0           GenomicRanges_1.64.0       
     ## [35] jquerylib_0.1.4             Rcpp_1.1.2                 
     ## [37] Seqinfo_1.2.0               SummarizedExperiment_1.42.0
