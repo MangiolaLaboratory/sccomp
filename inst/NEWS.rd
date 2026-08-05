@@ -57,8 +57,9 @@
 
 \section{News in version 2.1.25}{
 \itemize{
-    \item Improved plotting significance colouring controls. Added \code{significance_statistic} to \code{sccomp_boxplot()} with default \code{c("pH0", "FDR")}, so colouring now defaults to posterior probability while still supporting FDR-based colouring.
-    \item Bayesian FDR messaging is now shown only when FDR is selected, avoiding FDR-specific text when probability-based significance is used.
+    \item \strong{Breaking plotting-default change: significance colouring now uses pH0 instead of FDR by default.} This applies consistently to \code{plot()}, \code{sccomp_plot_intervals_1D()}, \code{sccomp_plot_intervals_2D()}, and \code{sccomp_boxplot()}. In each plot, an effect is highlighted when its posterior null-hypothesis probability satisfies \code{pH0 < significance_threshold}.
+    \item To retain the previous FDR-based colouring, explicitly set \code{significance_statistic = "FDR"}. The plot will then highlight effects satisfying \code{FDR < significance_threshold}. Set \code{significance_statistic = "pH0"} explicitly when reproducible plotting behaviour across package versions is required.
+    \item Bayesian FDR explanatory text is shown only when \code{significance_statistic = "FDR"} (and \code{show_fdr_message = TRUE}); it is not shown for the default pH0-based colouring.
     \item Fixed the package version dot-numbering (\url{https://github.com/MangiolaLaboratory/sccomp/issues/256}).
 }}
 
