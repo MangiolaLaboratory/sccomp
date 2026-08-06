@@ -30,7 +30,7 @@ test_that("sccomp_estimate gives the same results for DuckDB tables", {
   )
   duckdb_estimate <- do.call(
     sccomp_estimate,
-    c(list(dbplyr::tbl(con, "counts_obj")), estimate_args)
+    c(list(dplyr::tbl(con, "counts_obj")), estimate_args)
   )
 
   expect_equal(
@@ -39,6 +39,7 @@ test_that("sccomp_estimate gives the same results for DuckDB tables", {
       dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper),
     duckdb_estimate |>
       dplyr::arrange(cell_group, parameter) |>
-      dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper)
+      dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper),
+      tolerance = 1e-8
   )
 })
