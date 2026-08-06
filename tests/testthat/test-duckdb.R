@@ -35,10 +35,12 @@ test_that("sccomp_estimate gives the same results for DuckDB tables", {
 
   data_frame_results <- data_frame_estimate |>
       dplyr::arrange(cell_group, parameter) |>
-      dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper)
+      dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper) |>
+      as.data.frame()
   duckdb_results <- duckdb_estimate |>
       dplyr::arrange(cell_group, parameter) |>
-      dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper)
+      dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper) |>
+      as.data.frame()
 
   expect_equal(data_frame_results, duckdb_results, tolerance = 1e-8)
 })
