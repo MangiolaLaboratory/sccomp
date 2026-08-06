@@ -536,7 +536,7 @@ sccomp_estimate.DFrame <- function(.data,
 sccomp_estimate.tbl_duckdb_connection <- function(.data, ...) {
   check_and_install_packages(c("duckdb", "dbplyr"))
 
-  sccomp_estimate.data.frame(dbplyr::collect(.data), ...)
+  sccomp_estimate.data.frame(dplyr::collect(.data), ...)
 }
 
 
