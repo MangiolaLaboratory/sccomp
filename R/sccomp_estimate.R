@@ -536,7 +536,7 @@ sccomp_estimate.DFrame <- function(.data,
 sccomp_estimate.tbl_duckdb_connection <- function(.data, ...) {
   check_and_install_packages(c("duckdb", "dbplyr"))
 
-  sccomp_estimate.data.frame(dplyr::collect(.data), ...)
+  sccomp_estimate.data.frame(.data, .collect_after_count = TRUE, ...)
 }
 
 
@@ -915,8 +915,9 @@ sccomp_glm_data_frame_counts = function(.data,
                                         mcmc_seed = sample_seed(),
                                         max_sampling_iterations = 20000,
                                                                                  pass_fit = TRUE,
-                                         sig_figs = 9,
-                                         cache_stan_model = sccomp_stan_models_cache_dir,
+                                                                                 sig_figs = 9,
+                                                                                 cache_stan_model = sccomp_stan_models_cache_dir,
+                                                                                 .collect_after_count = FALSE,
                                         ...) {
   
   # Prepare column same enquo
@@ -955,7 +956,13 @@ sccomp_glm_data_frame_counts = function(.data,
   
   
   # Make rectangular data
-  .data = .data |> make_rectangular_data(!!.sample, !!.cell_group, !!.count, formula_composition)
+  .data = .data |> make_rectangular_data(
+    !!.sample,
+    !!.cell_group,
+    !!.count,
+    formula_composition,
+    collect_after_count = .collect_after_count
+  )
   
   # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
   if(test_composition_above_logit_fold_change <= 0)
@@ -1158,16 +1165,17 @@ sccomp_glm_data_frame_counts = function(.data,
 #' @return A rectangular data frame with zeros added for missing combinations
 #' @keywords internal
 #' @noRd
-make_rectangular_data = function(.data, .sample, .cell_group, .count, formula_composition) {
+make_rectangular_data = function(.data, .sample, .cell_group, .count, formula_composition, collect_after_count = FALSE) {
   
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
   
-  if(
-    .data |> count(!!.sample) |> distinct(n) |> nrow() > 1 || 
-    .data |> count(!!.cell_group) |> distinct(n) |> nrow() > 1 
-  ){
+  sample_counts <- .data |> count(!!.sample) |> distinct(n)
+  cell_group_counts <- .data |> count(!!.cell_group) |> distinct(n)
+  if (collect_after_count) .data <- dplyr::collect(.data)
+
+  if (sample_counts |> nrow() > 1 || cell_group_counts |> nrow() > 1) {
     warning(sprintf("sccomp says: the input data frame does not have the same number of `%s`, for all `%s`. We have made it so, adding 0s for the missing sample/feature pairs.", quo_name(.cell_group), quo_name(.sample)))
     
     .data |> 
