@@ -195,6 +195,13 @@ parse_formula_smooths <- function(fm, data) {
     eval_env$s  <- mgcv::s
     eval_env$t2 <- mgcv::t2
     sm_spec <- eval(smooth_calls[[k]], envir = as.list(data), enclos = eval_env)
+    smooth_data <- as.data.frame(data)
+    if (identical(sm_spec$bs, "fs")) {
+      grouping_var <- sm_spec$term[[length(sm_spec$term)]]
+      if (is.character(smooth_data[[grouping_var]])) {
+        smooth_data[[grouping_var]] <- factor(smooth_data[[grouping_var]])
+      }
+    }
     
     # absorb.cons = TRUE removes the constant function from the basis so the
     # smooth doesn't fight the intercept (matches brms).
@@ -203,7 +210,7 @@ parse_formula_smooths <- function(fm, data) {
     sm <- tryCatch(
       mgcv::smoothCon(
         sm_spec,
-        data            = as.data.frame(data),
+        data            = smooth_data,
         absorb.cons     = TRUE,
         diagonal.penalty = TRUE
       )[[1]],
