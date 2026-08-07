@@ -183,17 +183,17 @@ test_that("parse_formula_smooths flattens t2 / fs into multiple Xr blocks", {
 
 test_that("parse_formula_smooths accepts character fs grouping columns", {
   skip_if_not_installed("mgcv")
-  
+
   dat <- data.frame(
     x = seq(0, 6, length.out = 24),
     tissue = rep(c("blood", "lymph", "tumor"), length.out = 24)
   )
-  
+
   res <- sccomp:::parse_formula_smooths(
     ~ s(x, tissue, bs = "fs", k = 5),
     dat
   )
-  
+
   expect_length(res$Xr_list, 3L)
   expect_true(is.factor(res$smooth_specs[[1]]$fac))
 })
