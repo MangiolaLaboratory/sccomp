@@ -4,6 +4,9 @@
 \section{News in version 2.5.2}{
 \itemize{
     \item Increased the random-effect slot budget from 5 to 6. This admits models combining a factor-smooth with several explicit RE clauses, such as \code{s(x, g, bs = "fs")} (which alone expands into three penalty blocks, one per slot) together with three \code{(... | group)} terms.
+    \item \strong{Clearer design-matrix reporting.} \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} now report the composition and variability design matrices with their parameter count followed by a preview of the first 10 parameters, so wide designs no longer flood the console.
+    \item Random-effect design matrices are now reported as well, one per line, each labelled with what it models: the clause the user wrote (e.g. \code{(1 + type | donor)}), a smooth term, or a single penalty block of a grouped smooth such as \code{s(x, group, bs = "fs")}. This makes it visible how many random-effect slots a formula consumes.
+    \item \code{model_input} gained a \code{random_effect_design_terms} table mapping each occupied random-effect slot to the term it models.
 }}
 
 \section{News in version 2.5.1}{
