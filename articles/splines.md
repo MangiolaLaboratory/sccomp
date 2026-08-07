@@ -159,7 +159,7 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.317 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.267 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
@@ -245,7 +245,7 @@ pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.311 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.265 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -406,7 +406,7 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.988 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.912 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)
@@ -511,7 +511,7 @@ would be misleading.
     #> [1] stats     graphics  grDevices utils     datasets  methods   base     
     #> 
     #> other attached packages:
-    #> [1] sccomp_2.1.34     instantiate_0.2.3 ggplot2_4.0.3     tidyr_1.3.2      
+    #> [1] sccomp_2.5.0      instantiate_0.2.3 ggplot2_4.0.3     tidyr_1.3.2      
     #> [5] dplyr_1.2.1      
     #> 
     #> loaded via a namespace (and not attached):
