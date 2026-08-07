@@ -457,9 +457,8 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
   
   message("sccomp says: outlier-free model fitting - step 2/2")
   
-  # Print design matrix
-  message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X |> colnames() |> paste(collapse=", ")))
-  message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa |> colnames() |> paste(collapse=", ")))
+  # Preview fixed- and random-effect design matrices.
+  message_design_matrices(data_for_model)
   
   fit3 =
     data_for_model |>

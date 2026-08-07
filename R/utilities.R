@@ -258,6 +258,83 @@ formula_to_random_effect_formulae <- function(fm) {
   
 }
 
+#' Format a compact preview of design-matrix parameters
+#'
+#' @param x A matrix-like object with column names.
+#' @param max_parameters Maximum number of parameter names to display.
+#'
+#' @return A single character string.
+#' @keywords internal
+#' @noRd
+format_design_matrix_preview <- function(x, max_parameters = 10L) {
+  parameters <- colnames(x)
+  n_parameters <- length(parameters)
+  shown <- utils::head(parameters, max_parameters)
+  suffix <- if (n_parameters > max_parameters) {
+    sprintf(", ... (+%d more)", n_parameters - max_parameters)
+  } else {
+    ""
+  }
+
+  sprintf(
+    "%d parameter%s: %s%s",
+    n_parameters,
+    if (n_parameters == 1L) "" else "s",
+    paste(shown, collapse = ", "),
+    suffix
+  )
+}
+
+
+#' Report the fixed- and random-effect design matrices
+#'
+#' @param model_input The list returned by `data_spread_to_model_input()`.
+#' @param max_parameters Maximum number of parameter names shown per matrix.
+#'
+#' @return `model_input`, invisibly.
+#' @keywords internal
+#' @noRd
+message_design_matrices <- function(model_input, max_parameters = 10L) {
+  lines <- c(
+    "sccomp says: model design matrices",
+    sprintf(
+      "  composition X - %s",
+      format_design_matrix_preview(model_input$X, max_parameters)
+    ),
+    sprintf(
+      "  variability Xa - %s",
+      format_design_matrix_preview(model_input$Xa, max_parameters)
+    )
+  )
+  
+  active_slots <- which(model_input$ncol_X_random_eff > 0L)
+  
+  if (length(active_slots) == 0L) {
+    lines <- c(lines, "  random effects - none")
+  } else {
+    # Fits produced before the design terms were recorded still report their
+    # matrices, just without the originating formula clause.
+    recorded <- model_input$random_effect_design_terms
+    slot_terms <- rep(NA_character_, length(model_input$ncol_X_random_eff))
+    if (!is.null(recorded)) slot_terms[recorded$slot] <- recorded$term
+    slot_terms[is.na(slot_terms)] <- sprintf("slot %d", which(is.na(slot_terms)))
+    
+    lines <- c(lines, sprintf(
+      "  random effect X%d [%s] - %s",
+      active_slots,
+      slot_terms[active_slots],
+      map_chr(
+        sprintf("X_random_effect_%d", active_slots),
+        ~ format_design_matrix_preview(model_input[[.x]], max_parameters)
+      )
+    ))
+  }
+  
+  message(paste(lines, collapse = "\n"))
+  invisible(model_input)
+}
+
+
 #' Formula parser
 #'
 #' @param fm A formula
@@ -932,6 +1009,9 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
 #' @importFrom stringr str_remove_all
 #' @importFrom purrr reduce
 #' @importFrom purrr map_int
+#' @importFrom purrr map_chr
+#' @importFrom purrr map2_chr
+#' @importFrom purrr pmap
 #' @importFrom stats as.formula
 #'
 #' Match variability to composition design columns
@@ -1111,10 +1191,11 @@ data_spread_to_model_input =
       ncol     = 0L,
       gfi      = matrix(integer(0), nrow = 0, ncol = 0),
       n_groups = 0L,
-      n_factors = 0L
+      n_factors = 0L,
+      term     = NA_character_
     )
     
-    prepare_re_slot = function(design_matrix_tbl, sample_name) {
+    prepare_re_slot = function(design_matrix_tbl, sample_name, term) {
       X = design_matrix_tbl |> column_to_rownames(sample_name)
       
       is_NA_col = str_detect(colnames(X), "___NA$")
@@ -1138,7 +1219,8 @@ data_spread_to_model_input =
         ncol      = ncol(X),
         gfi       = gfi,
         n_groups  = ncol(gfi),
-        n_factors = nrow(gfi)
+        n_factors = nrow(gfi),
+        term      = term
       )
     }
     
@@ -1149,6 +1231,13 @@ data_spread_to_model_input =
         mutate(design = map2(
           formula, grouping,
           ~ get_random_effect_design3(.data_spread, .x, .y, !!.sample)
+        )) |>
+        
+        # Keep the clause the user wrote, e.g. `(1 + age | donor)`, next to the
+        # slot it produces, so reporting never re-parses the formula.
+        mutate(term = map2_chr(
+          formula, grouping,
+          ~ sprintf("(%s | %s)", deparse1(.x[[2]]), .y)
         ))
       
       is_random_effect = 1
@@ -1163,8 +1252,11 @@ data_spread_to_model_input =
             mutate(across(everything(), ~ .x |> replace_na(0)))
         ))
       
-      re_slots = random_effect_grouping$design_matrix |>
-        map(prepare_re_slot, sample_name = quo_name(.sample))
+      re_slots = map2(
+        random_effect_grouping$design_matrix,
+        random_effect_grouping$term,
+        ~ prepare_re_slot(.x, quo_name(.sample), .y)
+      )
       
     } else {
       is_random_effect = 0
@@ -1179,13 +1271,17 @@ data_spread_to_model_input =
     # point of view.
     # Each penalised basis block becomes one RE slot. `parse_formula_smooths()`
     # already computed the per-block slot label (`<label>` for single-penalty
-    # smooths, `<label>__b<b>` for multi-penalty ones) so we just zip the two
-    # parallel lists. Smooth terms also flip `is_random_effect = 1` because
-    # they reuse the Stan RE machinery even when the user wrote no (... | g).
+    # smooths, `<label>__b<b>` for multi-penalty ones) and its plain-words
+    # description, so we just zip the parallel lists. Smooth terms also flip
+    # `is_random_effect = 1` because they reuse the Stan RE machinery even
+    # when the user wrote no (... | g).
     if (length(smooth_pieces$Xr_list) > 0) {
-      smooth_slots = map2(
-        smooth_pieces$Xr_list,
-        smooth_pieces$Xr_slot_labels,
+      smooth_slots = pmap(
+        list(
+          smooth_pieces$Xr_list,
+          smooth_pieces$Xr_slot_labels,
+          smooth_pieces$Xr_slot_terms
+        ),
         build_smooth_slot
       )
       re_slots         = c(re_slots, smooth_slots)
@@ -1226,6 +1322,12 @@ data_spread_to_model_input =
     ncol_X_random_eff                 = map_int(re_slots, "ncol")
     n_groups                          = map_int(re_slots, "n_groups")
     how_many_factors_in_random_design = map_int(re_slots, "n_factors")
+    
+    # What each occupied slot models, in the user's own words. Empty padding
+    # slots model nothing, so they are dropped.
+    random_effect_design_terms =
+      tibble(slot = seq_along(re_slots), term = map_chr(re_slots, "term")) |>
+      filter(!is.na(term))
     
     
     y = .data_spread %>% select(-any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% column_to_rownames(quo_name(.sample)) %>% as.matrix()
@@ -1275,6 +1377,7 @@ data_spread_to_model_input =
         group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
         group_factor_indexes_for_covariance_3 = group_factor_indexes_for_covariance_3,
         group_factor_indexes_for_covariance_4 = group_factor_indexes_for_covariance_4,
+        random_effect_design_terms = random_effect_design_terms,
         
         # For parallel chains
         grainsize = 1,
