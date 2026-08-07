@@ -197,9 +197,10 @@ parse_formula_smooths <- function(fm, data) {
     sm_spec <- eval(smooth_calls[[k]], envir = as.list(data), enclos = eval_env)
     smooth_data <- as.data.frame(data)
     if (identical(sm_spec$bs, "fs")) {
-      grouping_var <- sm_spec$term[[length(sm_spec$term)]]
-      if (is.character(smooth_data[[grouping_var]])) {
-        smooth_data[[grouping_var]] <- factor(smooth_data[[grouping_var]])
+      for (term in sm_spec$term) {
+        if (is.character(smooth_data[[term]])) {
+          smooth_data[[term]] <- factor(smooth_data[[term]])
+        }
       }
     }
     
