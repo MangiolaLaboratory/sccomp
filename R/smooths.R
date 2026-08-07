@@ -195,9 +195,8 @@ parse_formula_smooths <- function(fm, data) {
     eval_env$s  <- mgcv::s
     eval_env$t2 <- mgcv::t2
     sm_spec <- eval(smooth_calls[[k]], envir = as.list(data), enclos = eval_env)
-    smooth_data <- data
+    smooth_data <- as.data.frame(data)
     if (identical(sm_spec$bs, "fs")) {
-      smooth_data <- as.data.frame(data)
       for (term in sm_spec$term) {
         if (is.character(smooth_data[[term]])) {
           smooth_data[[term]] <- factor(smooth_data[[term]])
