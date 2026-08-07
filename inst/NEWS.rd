@@ -1,6 +1,11 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.5.1}{
+\itemize{
+    \item Increased the random-effect slot budget from 4 to 5 so multiple smooth terms (e.g. a global \code{s()} plus a factor-smooth \code{bs = "fs"}) can coexist with an explicit RE clause.
+}}
+
 \section{News in version 2.1.34}{
 \itemize{
     \item Exported \code{sccomp_scatterplot()} for visualising cell-group proportions against a continuous covariate, complementing \code{sccomp_boxplot()} for discrete factors. The function accepts \code{.data}, \code{factor}, \code{significance_threshold}, and \code{remove_unwanted_effects}, and is used by the \code{plot()} method for numeric covariates.

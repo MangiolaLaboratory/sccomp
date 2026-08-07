@@ -1102,7 +1102,7 @@ data_spread_to_model_input =
     # so the Stan-side data list is uniformly shaped regardless of how many
     # clauses the user wrote.
     # ----------------------------------------------------------------------
-    N_RE_SLOTS = 4L
+    N_RE_SLOTS = 5L
     n_rows_design = nrow(.data_spread)
     
     empty_re_slot = list(
@@ -1213,6 +1213,7 @@ data_spread_to_model_input =
     X_random_effect_2 = re_slots[[2]]$X
     X_random_effect_3 = re_slots[[3]]$X
     X_random_effect_4 = re_slots[[4]]$X
+    X_random_effect_5 = re_slots[[5]]$X
     
     # NOTE: per-slot $X_unseen matrices are available in `re_slots[[k]]$X_unseen`
     # but are not shipped via data_for_model (downstream replicate / outlier
@@ -1222,6 +1223,7 @@ data_spread_to_model_input =
     group_factor_indexes_for_covariance_2 = re_slots[[2]]$gfi
     group_factor_indexes_for_covariance_3 = re_slots[[3]]$gfi
     group_factor_indexes_for_covariance_4 = re_slots[[4]]$gfi
+    group_factor_indexes_for_covariance_5 = re_slots[[5]]$gfi
     
     ncol_X_random_eff                 = map_int(re_slots, "ncol")
     n_groups                          = map_int(re_slots, "n_groups")
@@ -1261,20 +1263,22 @@ data_spread_to_model_input =
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
         
-        # Random intercept - 4 uniform slots (see Stan glm_multi_beta_binomial.stan)
+        # Random intercept - 5 uniform slots (see Stan glm_multi_beta_binomial.stan)
         is_random_effect = is_random_effect,
         n_random_eff     = n_random_eff,
-        ncol_X_random_eff = ncol_X_random_eff,                # length 4
-        n_groups          = n_groups,                          # length 4
-        how_many_factors_in_random_design = how_many_factors_in_random_design,  # length 4
+        ncol_X_random_eff = ncol_X_random_eff,                # length 5
+        n_groups          = n_groups,                          # length 5
+        how_many_factors_in_random_design = how_many_factors_in_random_design,  # length 5
         X_random_effect_1 = X_random_effect_1,
         X_random_effect_2 = X_random_effect_2,
         X_random_effect_3 = X_random_effect_3,
         X_random_effect_4 = X_random_effect_4,
+        X_random_effect_5 = X_random_effect_5,
         group_factor_indexes_for_covariance_1 = group_factor_indexes_for_covariance_1,
         group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
         group_factor_indexes_for_covariance_3 = group_factor_indexes_for_covariance_3,
         group_factor_indexes_for_covariance_4 = group_factor_indexes_for_covariance_4,
+        group_factor_indexes_for_covariance_5 = group_factor_indexes_for_covariance_5,
         
         # For parallel chains
         grainsize = 1,
@@ -1366,8 +1370,8 @@ data_spread_to_model_input =
         nrow()
     }
     
-    # Default all grouping known (four RE slots; see glm_multi_beta_binomial_generate_data.stan)
-    data_for_model$unknown_grouping = rep(0L, 4L)
+    # Default all grouping known (five RE slots; see glm_multi_beta_binomial_generate_data.stan)
+    data_for_model$unknown_grouping = rep(0L, 5L)
     
     # Smooth-term metadata is R-only (mgcv `smoothCon` / `smooth2random`
     # objects, used by prediction / replicate helpers). It is NOT shipped to

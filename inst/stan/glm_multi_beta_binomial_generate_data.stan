@@ -45,40 +45,44 @@ data {
 
   int is_random_effect;
 
-  // Four uniform random-effect slots (same layout as glm_multi_beta_binomial.stan)
-  array[4] int ncol_X_random_eff;
-  array[4] int ncol_X_random_eff_new;
+  // Five uniform random-effect slots (same layout as glm_multi_beta_binomial.stan)
+  array[5] int ncol_X_random_eff;
+  array[5] int ncol_X_random_eff_new;
 
   matrix[N, ncol_X_random_eff_new[1]] X_random_effect_1;
   matrix[N, ncol_X_random_eff_new[2]] X_random_effect_2;
   matrix[N, ncol_X_random_eff_new[3]] X_random_effect_3;
   matrix[N, ncol_X_random_eff_new[4]] X_random_effect_4;
+  matrix[N, ncol_X_random_eff_new[5]] X_random_effect_5;
 
-  array[4] int n_groups;
-  array[4] int how_many_factors_in_random_design;
+  array[5] int n_groups;
+  array[5] int how_many_factors_in_random_design;
 
   array[how_many_factors_in_random_design[1], n_groups[1]] int group_factor_indexes_for_covariance_1;
   array[how_many_factors_in_random_design[2], n_groups[2]] int group_factor_indexes_for_covariance_2;
   array[how_many_factors_in_random_design[3], n_groups[3]] int group_factor_indexes_for_covariance_3;
   array[how_many_factors_in_random_design[4], n_groups[4]] int group_factor_indexes_for_covariance_4;
+  array[how_many_factors_in_random_design[5], n_groups[5]] int group_factor_indexes_for_covariance_5;
 
   // Per-slot column counts for X_random_effect_which_* arrays (from R: ncol per slot)
-  array[4] int length_X_random_effect_which;
+  array[5] int length_X_random_effect_which;
   array[length_X_random_effect_which[1]] int X_random_effect_which_1;
   array[length_X_random_effect_which[2]] int X_random_effect_which_2;
   array[length_X_random_effect_which[3]] int X_random_effect_which_3;
   array[length_X_random_effect_which[4]] int X_random_effect_which_4;
+  array[length_X_random_effect_which[5]] int X_random_effect_which_5;
 
   int<lower=0, upper=1> create_intercept;
   int<lower=0> A_intercept_columns;
 
-  array[4] int<lower=0, upper=1> unknown_grouping;
+  array[5] int<lower=0, upper=1> unknown_grouping;
 
-  array[4] int ncol_X_random_eff_unseen;
+  array[5] int ncol_X_random_eff_unseen;
   matrix[N, ncol_X_random_eff_unseen[1]] X_random_effect_1_unseen;
   matrix[N, ncol_X_random_eff_unseen[2]] X_random_effect_2_unseen;
   matrix[N, ncol_X_random_eff_unseen[3]] X_random_effect_3_unseen;
   matrix[N, ncol_X_random_eff_unseen[4]] X_random_effect_4_unseen;
+  matrix[N, ncol_X_random_eff_unseen[5]] X_random_effect_5_unseen;
 }
 transformed data {
   matrix[N,1] X_intercept;
@@ -88,6 +92,7 @@ transformed data {
   int ncol_X_random_eff_safe_2 = max(ncol_X_random_eff[2], 1);
   int ncol_X_random_eff_safe_3 = max(ncol_X_random_eff[3], 1);
   int ncol_X_random_eff_safe_4 = max(ncol_X_random_eff[4], 1);
+  int ncol_X_random_eff_safe_5 = max(ncol_X_random_eff[5], 1);
 }
 parameters {
   // Unconstrained vectors so posterior CSVs (rounded sig_figs) still validate;
@@ -116,8 +121,12 @@ parameters {
   array[M * (ncol_X_random_eff[4]>0)] vector[how_many_factors_in_random_design[4]] random_effect_sigma_raw_4;
   array[M * (ncol_X_random_eff[4]>0)] cholesky_factor_corr[how_many_factors_in_random_design[4] * (ncol_X_random_eff[4]>0)] sigma_correlation_factor_4;
 
-  array[4 * (is_random_effect>0)] real random_effect_sigma_mu;
-  array[4 * (is_random_effect>0)] real random_effect_sigma_sigma;
+  array[ncol_X_random_eff[5] * (ncol_X_random_eff[5]>0)] vector[M] random_effect_raw_5;
+  array[M * (ncol_X_random_eff[5]>0)] vector[how_many_factors_in_random_design[5]] random_effect_sigma_raw_5;
+  array[M * (ncol_X_random_eff[5]>0)] cholesky_factor_corr[how_many_factors_in_random_design[5] * (ncol_X_random_eff[5]>0)] sigma_correlation_factor_5;
+
+  array[5 * (is_random_effect>0)] real random_effect_sigma_mu;
+  array[5 * (is_random_effect>0)] real random_effect_sigma_sigma;
   array[is_random_effect>0] real zero_random_effect;
 }
 transformed parameters {
@@ -142,6 +151,7 @@ transformed parameters {
   matrix[ncol_X_random_eff_safe_2 * (is_random_effect>0), M] random_effect_2;
   matrix[ncol_X_random_eff_safe_3 * (is_random_effect>0), M] random_effect_3;
   matrix[ncol_X_random_eff_safe_4 * (is_random_effect>0), M] random_effect_4;
+  matrix[ncol_X_random_eff_safe_5 * (is_random_effect>0), M] random_effect_5;
 
   if (ncol_X_random_eff[1] > 0) {
     array[ncol_X_random_eff[1]] vector[M] raw_vec;
@@ -181,6 +191,16 @@ transformed parameters {
       group_factor_indexes_for_covariance_4, raw_vec,
       random_effect_sigma_mu[4], random_effect_sigma_sigma[4],
       random_effect_sigma_raw_4, sigma_correlation_factor_4
+    );
+  }
+  if (ncol_X_random_eff[5] > 0) {
+    array[ncol_X_random_eff[5]] vector[M] raw_vec;
+    for (i in 1:ncol_X_random_eff[5]) raw_vec[i] = normalize_sum_to_zero(random_effect_raw_5[i]);
+    random_effect_5 = build_re_block(
+      M, n_groups[5], how_many_factors_in_random_design[5], ncol_X_random_eff[5],
+      group_factor_indexes_for_covariance_5, raw_vec,
+      random_effect_sigma_mu[5], random_effect_sigma_sigma[5],
+      random_effect_sigma_raw_5, sigma_correlation_factor_5
     );
   }
 }
@@ -252,6 +272,13 @@ generated quantities {
     if (ncol_X_random_eff_unseen[4] > 0)
       mu = add_unseen_random_effect_contribution_rng(mu, X_random_effect_4_unseen,
                                                     ncol_X_random_eff_unseen[4], M);
+  }
+  if (ncol_X_random_eff[5] > 0) {
+    mu = add_seen_random_effect_contribution(mu, X_random_effect_5, random_effect_5,
+                                             X_random_effect_which_5);
+    if (ncol_X_random_eff_unseen[5] > 0)
+      mu = add_unseen_random_effect_contribution_rng(mu, X_random_effect_5_unseen,
+                                                    ncol_X_random_eff_unseen[5], M);
   }
 
   matrix[M, N] mu_unconstrained = mu;
