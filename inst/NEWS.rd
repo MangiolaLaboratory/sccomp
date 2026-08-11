@@ -4,6 +4,7 @@
 \section{News in version 2.5.1}{
 \itemize{
     \item Increased the random-effect slot budget from 4 to 5 so multiple smooth terms (e.g. a global \code{s()} plus a factor-smooth \code{bs = "fs"}) can coexist with an explicit RE clause.
+    \item Fixed the scaling of continuous covariates in \code{sccomp_predict()} and \code{sccomp_replicate()}. Continuous covariates were being z-scored using the fitted samples and the new data pooled together, so the prediction at a given covariate value shifted with the range and the density of the requested grid. The centre and scale of the fitted samples are now used, making predictions a function of the model and the covariate value alone. Smooth terms were never affected, as they are evaluated against the fit-time basis.
 }}
 
 \section{News in version 2.1.34}{

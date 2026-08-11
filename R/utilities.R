@@ -670,13 +670,18 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 #' @noRd
 get_random_effect_design3 = function(
   .data_, formula, grouping, .sample, 
-  accept_NA_as_average_effect = FALSE 
+  accept_NA_as_average_effect = FALSE,
+  scaling_reference = NULL
 ){
   
   # Define the variables as NULL to avoid CRAN NOTES
   .sample = enquo(.sample)
   
-  mydesign = .data_ |> get_design_matrix(formula, !!.sample, accept_NA_as_average_effect = accept_NA_as_average_effect)
+  mydesign = .data_ |> get_design_matrix(
+    formula, !!.sample, 
+    accept_NA_as_average_effect = accept_NA_as_average_effect,
+    scaling_reference = scaling_reference
+  )
   
   # Create a matrix of group assignments
   group_matrix = .data_ |> 
@@ -731,6 +736,83 @@ get_random_effect_design3 = function(
   result_long
 }
 
+#' Z-score the continuous covariates of a design
+#'
+#' Continuous covariates are z-scored before the design matrix is built. When
+#' the design matrix is built for new data, the centre and the scale have to be
+#' those of the fitted samples, otherwise the columns end up on a different
+#' scale from the one the coefficients were estimated against. `reference` is
+#' the data frame those two statistics are taken from, and defaults to the data
+#' being scaled, which is the right choice at fit time.
+#'
+#' @details
+#' Only the numeric columns named in `variables` are touched; factors, the
+#' sample column and anything absent from `reference` are returned untouched. A
+#' covariate that is constant in `reference` becomes zeros rather than `NaN`.
+#'
+#' ```
+#' training = tibble(sample = c("S1", "S2", "S3"), age = c(30, 40, 50))
+#'
+#' scale_numeric_covariates(training, "age")
+#' # # A tibble: 3 x 2
+#' #   sample   age
+#' #   <chr>  <dbl>
+#' # 1 S1        -1
+#' # 2 S2         0
+#' # 3 S3         1
+#'
+#' # The same age is given the same column value whatever else is in the grid
+#' scale_numeric_covariates(
+#'   tibble(sample = "g1", age = c(40)), "age", reference = training
+#' )
+#' # # A tibble: 1 x 2
+#' #   sample   age
+#' #   <chr>  <dbl>
+#' # 1 g1         0
+#' ```
+#'
+#' @param .data_spread A data frame with one row per sample.
+#' @param variables Character vector of covariate names to consider.
+#' @param reference Data frame the centre and scale are computed from. When
+#'   `NULL` they are computed from `.data_spread` itself.
+#'
+#' @return `.data_spread`, with its numeric covariates z-scored.
+#'
+#' @importFrom dplyr select
+#' @importFrom dplyr where
+#' @importFrom dplyr any_of
+#' @importFrom stats sd
+#' @noRd
+scale_numeric_covariates = function(.data_spread, variables, reference = NULL){
+  
+  if(is.null(reference)) reference = .data_spread
+  
+  columns =
+    .data_spread |>
+    select(any_of(variables)) |>
+    select(where(is.numeric)) |>
+    colnames() |>
+    intersect(colnames(reference))
+  
+  for(column in columns){
+    centre = mean(reference[[column]], na.rm = TRUE)
+    spread = sd(reference[[column]], na.rm = TRUE)
+    
+    # A covariate constant across samples carries no information; keep it
+    # finite rather than dividing by zero
+    if(is.na(spread) || spread == 0) spread = 1
+    
+    .data_spread[[column]] = (.data_spread[[column]] - centre) / spread
+  }
+  
+  .data_spread
+}
+
+#' @param scaling_reference Data frame whose continuous covariates give the
+#'   centre and the scale, passed to [scale_numeric_covariates()]. When `NULL`
+#'   they come from `.data_spread` itself; supply the fitted samples when
+#'   building a design matrix for new data.
+#'
 #' @importFrom glue glue
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate
@@ -739,14 +821,14 @@ get_random_effect_design3 = function(
 #' @importFrom dplyr where
 #' @importFrom rlang enquo
 #' @noRd
-get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE){
+get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE, scaling_reference = NULL){
   
   .sample = enquo(.sample)
   
   .data_spread = .data_spread %>%
     
     select(!!.sample, parse_formula(formula)) |>
-    mutate(across(where(is.numeric),  scale)) 
+    scale_numeric_covariates(parse_formula(formula), reference = scaling_reference)
 
   # Check for NAs in the data
   has_na = any(is.na(.data_spread |> select(parse_formula(formula))))

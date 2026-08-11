@@ -251,7 +251,12 @@ prepare_replicate_data = function(X,
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
-      accept_NA_as_average_effect = TRUE
+      accept_NA_as_average_effect = TRUE,
+      # Continuous covariates are z-scored here. The centre and the scale have
+      # to come from the fitted samples alone: taking them from `new_data`,
+      # which carries the old rows too, would make the prediction at a given
+      # covariate value depend on the range and density of the requested grid.
+      scaling_reference = old_data
     ) |>
     tail(nrow_new_data) %>%
     # Remove columns that are not in the original design matrix
@@ -294,7 +299,8 @@ prepare_replicate_data = function(X,
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
-      accept_NA_as_average_effect = TRUE
+      accept_NA_as_average_effect = TRUE,
+      scaling_reference = old_data
     ) |>
     tail(nrow_new_data) %>%
     # Remove columns that are not in the original design matrix
@@ -328,7 +334,8 @@ prepare_replicate_data = function(X,
     mutate(design = map2(
       formula, grouping,
       ~ get_random_effect_design3(new_data, .x, .y, !!.sample,
-                                  accept_NA_as_average_effect = TRUE)
+                                  accept_NA_as_average_effect = TRUE,
+                                  scaling_reference = old_data)
     ))
   
   # ----------------------------------------------------------------------
