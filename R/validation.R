@@ -54,7 +54,7 @@ check_if_any_NA = function(.data, ...){
     nrow() < ( .data |> nrow() )
 
   )
-    stop(sprintf("There are NA values in you tibble for any of the column %s", paste(columns, collapse=", ")))
+    stop(sprintf("sccomp says: There are NA values in you tibble for any of the column %s", paste(columns, collapse=", ")))
 }
 
 check_if_within_posterior = function(.data, my_df, .do_check, .count){

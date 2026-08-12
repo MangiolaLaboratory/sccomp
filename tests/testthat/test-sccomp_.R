@@ -121,7 +121,7 @@ test_that("NA values in sample and formula columns are reported", {
       sample = "sample",
       cell_group = "cell_group"
     ),
-    regexp = "There are NA values.*sample"
+    regexp = "^sccomp says: There are NA values.*sample"
   )
 
   test_data$sample[2] <- "sample1"
@@ -134,7 +134,7 @@ test_that("NA values in sample and formula columns are reported", {
       sample = "sample",
       cell_group = "cell_group"
     ),
-    regexp = "There are NA values.*type"
+    regexp = "^sccomp says: There are NA values.*type"
   )
 })
 
