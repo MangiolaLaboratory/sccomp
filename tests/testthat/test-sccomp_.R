@@ -107,6 +107,37 @@ test_that("correct columns",{
   
 })
 
+test_that("NA values in sample and formula columns are reported", {
+  test_data <- tibble(
+    sample = c("sample1", NA, "sample2", "sample2"),
+    cell_group = c("A", "B", "A", "B"),
+    type = c("control", "control", "treatment", "treatment")
+  )
+
+  expect_error(
+    sccomp:::sccomp_glm_data_frame_raw(
+      test_data,
+      formula_composition = ~ type,
+      sample = "sample",
+      cell_group = "cell_group"
+    ),
+    regexp = "There are NA values.*sample"
+  )
+
+  test_data$sample[2] <- "sample1"
+  test_data$type[2] <- NA
+
+  expect_error(
+    sccomp:::sccomp_glm_data_frame_raw(
+      test_data,
+      formula_composition = ~ type,
+      sample = "sample",
+      cell_group = "cell_group"
+    ),
+    regexp = "There are NA values.*type"
+  )
+})
+
 test_that("Generate data",{
   skip_cmdstan()
 
@@ -1158,4 +1189,3 @@ test_that("sccomp_estimate fails with only 1 cell group", {
     regexp = "softmax"
   )
 })
-

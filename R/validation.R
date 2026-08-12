@@ -45,11 +45,12 @@ check_if_count_integer = function(.data, .count){
 #' @noRd
 check_if_any_NA = function(.data, ...){
 
+  columns = .data |> select(...) |> colnames()
 
   if(
 
     .data |>
-    drop_na(...) |>
+    drop_na(all_of(columns)) |>
     nrow() < ( .data |> nrow() )
 
   )
