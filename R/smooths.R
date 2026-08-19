@@ -196,7 +196,7 @@ parse_formula_smooths <- function(fm, data) {
     eval_env$t2 <- mgcv::t2
     sm_spec <- eval(smooth_calls[[k]], envir = as.list(data), enclos = eval_env)
     smooth_data <- as.data.frame(data)
-    if (identical(sm_spec$bs, "fs")) {
+    if (inherits(sm_spec, "fs.smooth.spec")) {
       smooth_data <- dplyr::mutate(
         smooth_data,
         dplyr::across(
