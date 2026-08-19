@@ -205,7 +205,8 @@ parse_formula_smooths <- function(fm, data) {
               dplyr::all_of(sm_spec$term) & dplyr::where(is.character),
               factor
             )
-          )
+          ),
+        ~ .x
       )
     
     # absorb.cons = TRUE removes the constant function from the basis so the
