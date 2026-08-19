@@ -196,18 +196,15 @@ parse_formula_smooths <- function(fm, data) {
     eval_env$t2 <- mgcv::t2
     sm_spec <- eval(smooth_calls[[k]], envir = as.list(data), enclos = eval_env)
     smooth_data <- as.data.frame(data)
-    smooth_data <- smooth_data |>
-      purrr::when(
-        identical(sm_spec$bs, "fs") ~
-          dplyr::mutate(
-            .x,
-            dplyr::across(
-              dplyr::all_of(sm_spec$term) & dplyr::where(is.character),
-              factor
-            )
-          ),
-        ~ .x
+    if (identical(sm_spec$bs, "fs")) {
+      smooth_data <- dplyr::mutate(
+        smooth_data,
+        dplyr::across(
+          dplyr::all_of(sm_spec$term),
+          ~ if (is.character(.x)) factor(.x) else .x
+        )
       )
+    }
     
     # absorb.cons = TRUE removes the constant function from the basis so the
     # smooth doesn't fight the intercept (matches brms).
