@@ -50,7 +50,9 @@ Suggests:
     tidyseurat,
     tidySingleCellExperiment,
     bayesplot,
-    remotes
+    remotes,
+    duckdb,
+    dbplyr
 Additional_repositories:
     https://mc-stan.org/r-packages/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan), C++14
