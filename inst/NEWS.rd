@@ -1,6 +1,13 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.5.1}{
+\itemize{
+    \item \strong{Clearer design-matrix reporting.} \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} now report the composition and variability design matrices with their parameter count followed by a preview of the first 10 parameters, so wide designs no longer flood the console.
+    \item Random-effect design matrices are now reported as well, one per line, each labelled with what it models: the clause the user wrote (e.g. \code{(1 + type | donor)}), a smooth term, or a single penalty block of a grouped smooth such as \code{s(x, group, bs = "fs")}. This makes it visible how many random-effect slots a formula consumes.
+    \item \code{model_input} gained a \code{random_effect_design_terms} table mapping each occupied random-effect slot to the term it models.
+}}
+
 \section{News in version 2.1.34}{
 \itemize{
     \item Exported \code{sccomp_scatterplot()} for visualising cell-group proportions against a continuous covariate, complementing \code{sccomp_boxplot()} for discrete factors. The function accepts \code{.data}, \code{factor}, \code{significance_threshold}, and \code{remove_unwanted_effects}, and is used by the \code{plot()} method for numeric covariates.

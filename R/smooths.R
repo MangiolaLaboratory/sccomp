@@ -141,6 +141,8 @@ strip_random_effect_terms <- function(fm) {
 #'     each block its sccomp RE-slot label: just the smooth's label for
 #'     single-penalty smooths, or `<label>__b<b>` for multi-penalty smooths
 #'     (so per-block `gfi` rownames stay unique).
+#'   * `Xr_slot_terms`      — character vector parallel to `Xr_list` describing
+#'     in plain words what each block models, for user-facing messaging.
 #'   * `smooth_specs`       — list of mgcv `smoothCon` objects (for predict).
 #'   * `smooth_re_objs`     — list of mgcv `smooth2random` objects (rotations).
 #'   When `fm` has no smooth specials, lists are length-0 and
@@ -156,6 +158,7 @@ parse_formula_smooths <- function(fm, data) {
     Xr_list            = list(),
     Xr_to_smooth       = integer(0),
     Xr_slot_labels     = character(0),
+    Xr_slot_terms      = character(0),
     smooth_specs       = list(),
     smooth_re_objs     = list()
   )
@@ -182,6 +185,7 @@ parse_formula_smooths <- function(fm, data) {
   Xr_list        <- list()   # flat across smooths × blocks
   Xr_to_smooth   <- integer(0)
   Xr_slot_labels <- character(0)
+  Xr_slot_terms  <- character(0)
   
   for (k in seq_along(smooth_calls)) {
     label <- smooth_labels[k]
@@ -242,6 +246,11 @@ parse_formula_smooths <- function(fm, data) {
     block_names    <- names(re$rand)
     n_blocks_smooth <- length(block_names)
     
+    # `bs = "fs"` and `by = <factor>` both fit one curve per level of a
+    # grouping factor, which is worth spelling out to the user.
+    is_grouped <- inherits(sm, "fs.interaction") ||
+      !identical(as.character(sm$by), "NA")
+    
     for (b in seq_along(block_names)) {
       Xr_b <- re$rand[[block_names[b]]]
       attr(Xr_b, "s.label") <- NULL
@@ -250,10 +259,15 @@ parse_formula_smooths <- function(fm, data) {
       # disambiguate with `<label>__b<b>`.
       slot_label <- if (n_blocks_smooth == 1L) label
                     else sprintf("%s__b%d", label, b)
+      slot_term <- sprintf("%s %s", if (is_grouped) "grouped smooth" else "smooth", label)
+      if (n_blocks_smooth > 1L) {
+        slot_term <- sprintf("%s, penalty block %d/%d", slot_term, b, n_blocks_smooth)
+      }
       colnames(Xr_b) <- sprintf("%s___basis%02d", slot_label, seq_len(ncol(Xr_b)))
       Xr_list[[length(Xr_list) + 1L]] <- Xr_b
       Xr_to_smooth                    <- c(Xr_to_smooth, k)
       Xr_slot_labels                  <- c(Xr_slot_labels, slot_label)
+      Xr_slot_terms                   <- c(Xr_slot_terms, slot_term)
     }
     
     Xf_list[[k]]        <- Xf
@@ -268,6 +282,7 @@ parse_formula_smooths <- function(fm, data) {
     Xr_list            = Xr_list,
     Xr_to_smooth       = Xr_to_smooth,
     Xr_slot_labels     = Xr_slot_labels,
+    Xr_slot_terms      = Xr_slot_terms,
     smooth_specs       = smooth_specs,
     smooth_re_objs     = smooth_re_objs
   )
@@ -395,12 +410,14 @@ predict_smooth_at_newdata <- function(sm, re_obj, newdata) {
 #'
 #' @param Xr     A numeric matrix (N rows × K wiggly basis columns).
 #' @param label  Smooth label, used as the slot's single "factor" name.
+#' @param term   Plain-words description of what the slot models, used when
+#'   reporting the design to the user.
 #' @return A list with the same fields as `empty_re_slot` in
 #'   `data_spread_to_model_input()`.
 #'
 #' @keywords internal
 #' @noRd
-build_smooth_slot <- function(Xr, label) {
+build_smooth_slot <- function(Xr, label, term = label) {
   stopifnot(is.matrix(Xr) || is.data.frame(Xr))
   Xr <- as.matrix(Xr)
   K  <- ncol(Xr)
@@ -412,7 +429,8 @@ build_smooth_slot <- function(Xr, label) {
       ncol      = 0L,
       gfi       = matrix(integer(0), nrow = 0L, ncol = 0L),
       n_groups  = 0L,
-      n_factors = 0L
+      n_factors = 0L,
+      term      = term
     ))
   }
   
@@ -430,7 +448,8 @@ build_smooth_slot <- function(Xr, label) {
     ncol      = K,
     gfi       = gfi,
     n_groups  = K,
-    n_factors = 1L
+    n_factors = 1L,
+    term      = term
   )
 }
 
