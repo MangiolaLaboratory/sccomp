@@ -352,8 +352,8 @@ sccomp_summarise_posterior_for_estimate <- function(
       prefix = "c_"
     )
   )
-  # Random effect blocks: append a summary for each non-empty slot (1..5).
-  for (k in seq_len(5L)) {
+  # Random effect blocks: append a summary for each non-empty slot.
+  for (k in seq_len(N_RE_SLOTS)) {
     if (model_input$ncol_X_random_eff[k] == 0) next
     X_slot <- model_input[[paste0("X_random_effect_", k)]]
     abundance_parts <- c(
@@ -611,7 +611,7 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
     
   random_effect_covariates_all = character(0)
 
-  for (k in seq_len(5L)) {
+  for (k in seq_len(N_RE_SLOTS)) {
     if (model_input$ncol_X_random_eff[k] == 0) next
     res <- add_random_effect_draws(draws, contrasts, model_input, k, attr(.data, "fit"))
     draws <- res$draws

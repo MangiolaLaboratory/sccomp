@@ -212,21 +212,21 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
           # the slot's columns; unseen matrices are empty).
           ncol_X_random_eff_new        = data_for_model$ncol_X_random_eff,
           length_X_random_effect_which = data_for_model$ncol_X_random_eff,
-          ncol_X_random_eff_unseen     = rep(0L, 5L),
+          ncol_X_random_eff_unseen     = rep(0L, N_RE_SLOTS),
           
           create_intercept = FALSE
         ),
         # Identity which-indices per slot, generated programmatically
         setNames(
-          lapply(seq_len(5L), function(k)
+          lapply(seq_len(N_RE_SLOTS), function(k)
             seq_len(data_for_model$ncol_X_random_eff[k]) |> as.array()),
-          paste0("X_random_effect_which_", seq_len(5L))
+          paste0("X_random_effect_which_", seq_len(N_RE_SLOTS))
         ),
         # Empty unseen design matrices per slot
         setNames(
-          replicate(5L, matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+          replicate(N_RE_SLOTS, matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
                     simplify = FALSE),
-          paste0("X_random_effect_", seq_len(5L), "_unseen")
+          paste0("X_random_effect_", seq_len(N_RE_SLOTS), "_unseen")
         )
       ),
     
@@ -339,7 +339,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       pars = c(
         "beta", "alpha",
         "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2", "prec_sd",
-        "random_effect_1", "random_effect_2", "random_effect_3", "random_effect_4", "random_effect_5"
+        paste0("random_effect_", seq_len(N_RE_SLOTS))
       ),
       sig_figs = sig_figs,
       cache_stan_model = cache_stan_model,
@@ -365,19 +365,19 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
         # Per-slot random-effect pass-throughs (see notes in the first call site)
         ncol_X_random_eff_new        = data_for_model$ncol_X_random_eff,
         length_X_random_effect_which = data_for_model$ncol_X_random_eff,
-        ncol_X_random_eff_unseen     = rep(0L, 5L),
+        ncol_X_random_eff_unseen     = rep(0L, N_RE_SLOTS),
         
         create_intercept = FALSE
       ),
       setNames(
-        lapply(seq_len(5L), function(k)
+        lapply(seq_len(N_RE_SLOTS), function(k)
           seq_len(data_for_model$ncol_X_random_eff[k]) |> as.array()),
-        paste0("X_random_effect_which_", seq_len(5L))
+        paste0("X_random_effect_which_", seq_len(N_RE_SLOTS))
       ),
       setNames(
-        replicate(5L, matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
+        replicate(N_RE_SLOTS, matrix(0, nrow = nrow(data_for_model$X), ncol = 0),
                   simplify = FALSE),
-        paste0("X_random_effect_", seq_len(5L), "_unseen")
+        paste0("X_random_effect_", seq_len(N_RE_SLOTS), "_unseen")
       )
     ),
     
@@ -476,7 +476,7 @@ sccomp_remove_outliers.sccomp_tbl = function(.estimate,
       pars = c(
         "beta", "alpha",
         "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2", "prec_sd",
-        "random_effect_1", "random_effect_2", "random_effect_3", "random_effect_4", "random_effect_5", "log_lik"
+        paste0("random_effect_", seq_len(N_RE_SLOTS)), "log_lik"
       ),
       cache_stan_model = cache_stan_model,
       ...

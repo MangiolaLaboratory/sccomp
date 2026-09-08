@@ -394,7 +394,7 @@ prepare_replicate_data = function(X,
     list(X = X_new, X_unseen = X_new_unseen, which = which_idx)
   }
   
-  replicate_slots = map(seq_len(5L), build_replicate_slot)
+  replicate_slots = map(seq_len(N_RE_SLOTS), build_replicate_slot)
   
   # Append smooth-derived replicate slots (one per smooth term in the
   # composition formula). They occupy whichever slots come after the
@@ -403,10 +403,10 @@ prepare_replicate_data = function(X,
     n_explicit_re = length(original_grouping_names)
     n_smooth      = length(smooth_replicate_slots)
     n_used        = n_explicit_re + n_smooth
-    if (n_used > 5L) {
+    if (n_used > N_RE_SLOTS) {
       stop(sprintf(
-        "sccomp says: the replicate model needs %d RE slot(s) but only 5 are available.",
-        n_used
+        "sccomp says: the replicate model needs %d RE slot(s) but only %d are available.",
+        n_used, N_RE_SLOTS
       ))
     }
     # Replace placeholder slots `[n_explicit_re + 1 .. n_used]` with smooths.
@@ -416,7 +416,7 @@ prepare_replicate_data = function(X,
   }
   
   # setup default unknown_grouping variable for generated quantities
-  unknown_grouping = rep(0L, 5L)
+  unknown_grouping = rep(0L, N_RE_SLOTS)
   
   list(
     X        = new_X,
@@ -430,18 +430,21 @@ prepare_replicate_data = function(X,
     X_random_effect_3 = replicate_slots[[3]]$X,
     X_random_effect_4 = replicate_slots[[4]]$X,
     X_random_effect_5 = replicate_slots[[5]]$X,
+    X_random_effect_6 = replicate_slots[[6]]$X,
     
     X_random_effect_1_unseen = replicate_slots[[1]]$X_unseen,
     X_random_effect_2_unseen = replicate_slots[[2]]$X_unseen,
     X_random_effect_3_unseen = replicate_slots[[3]]$X_unseen,
     X_random_effect_4_unseen = replicate_slots[[4]]$X_unseen,
     X_random_effect_5_unseen = replicate_slots[[5]]$X_unseen,
+    X_random_effect_6_unseen = replicate_slots[[6]]$X_unseen,
     
     X_random_effect_which_1 = replicate_slots[[1]]$which,
     X_random_effect_which_2 = replicate_slots[[2]]$which,
     X_random_effect_which_3 = replicate_slots[[3]]$which,
     X_random_effect_which_4 = replicate_slots[[4]]$which,
     X_random_effect_which_5 = replicate_slots[[5]]$which,
+    X_random_effect_which_6 = replicate_slots[[6]]$which,
     
     ncol_X_random_eff_new    = map_int(replicate_slots, ~ ncol(.x$X)),
     ncol_X_random_eff_unseen = map_int(replicate_slots, ~ ncol(.x$X_unseen)),
@@ -507,7 +510,7 @@ replicate_data = function(.data,
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect_slots = lapply(seq_len(5L), function(k)
+    X_random_effect_slots = lapply(seq_len(N_RE_SLOTS), function(k)
       model_input[[paste0("X_random_effect_", k)]]),
     .sample = !!.sample,
     .cell_group = !!.cell_group,
@@ -533,8 +536,8 @@ replicate_data = function(.data,
   model_input$N        = prepared_data$N
   model_input$exposure = prepared_data$exposure
   
-  # Per-slot RE design + unseen + which-indices (5 slots)
-  for (k in seq_len(5L)) {
+  # Per-slot RE design + unseen + which-indices
+  for (k in seq_len(N_RE_SLOTS)) {
     model_input[[paste0("X_random_effect_", k)]]            = prepared_data[[paste0("X_random_effect_", k)]]
     model_input[[paste0("X_random_effect_", k, "_unseen")]] = prepared_data[[paste0("X_random_effect_", k, "_unseen")]]
     model_input[[paste0("X_random_effect_which_", k)]]      = prepared_data[[paste0("X_random_effect_which_", k)]]
@@ -549,9 +552,9 @@ replicate_data = function(.data,
   model_input$X_which         = prepared_data$X_which
   model_input$XA_which        = prepared_data$XA_which
   
-  # Length-5 vector of which-index lengths for the random-effect slots
+  # One which-index length per random-effect slot
   model_input$length_X_random_effect_which =
-    map_int(seq_len(5L), ~ length(prepared_data[[paste0("X_random_effect_which_", .x)]]))
+    map_int(seq_len(N_RE_SLOTS), ~ length(prepared_data[[paste0("X_random_effect_which_", .x)]]))
   
   # Should I create an intercept for generate quantities?
   model_input$create_intercept = prepared_data$create_intercept

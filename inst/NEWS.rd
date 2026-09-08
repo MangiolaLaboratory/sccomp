@@ -1,6 +1,11 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.5.2}{
+\itemize{
+    \item Increased the random-effect slot budget from 5 to 6. This admits models combining a factor-smooth with several explicit RE clauses, such as \code{s(x, g, bs = "fs")} (which alone expands into three penalty blocks, one per slot) together with three \code{(... | group)} terms.
+}}
+
 \section{News in version 2.5.1}{
 \itemize{
     \item Increased the random-effect slot budget from 4 to 5 so multiple smooth terms (e.g. a global \code{s()} plus a factor-smooth \code{bs = "fs"}) can coexist with an explicit RE clause.

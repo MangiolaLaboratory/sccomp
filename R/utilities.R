@@ -32,6 +32,22 @@
 #' @export
 sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
 
+#' Number of random-effect slots in the Stan models
+#'
+#' The Stan models declare a fixed number of uniform random-effect "slots".
+#' Every explicit `(... | group)` clause takes one slot, and every penalised
+#' basis block of a smooth takes one more (a multi-penalty smooth such as
+#' `t2()` or `bs = "fs"` contributes several blocks).
+#'
+#' To change this number, add a matching slot block to
+#' `inst/stan/glm_multi_beta_binomial.stan` and
+#' `inst/stan/glm_multi_beta_binomial_generate_data.stan`, bump the `array[n]`
+#' lengths there, and update this constant.
+#'
+#' @keywords internal
+#' @noRd
+N_RE_SLOTS = 6L
+
 #' Add attribute to abject
 #'
 #' @keywords internal
@@ -1060,7 +1076,9 @@ get_variability_to_composition_map = function(X, Xa) {
     }
   }
 
-  as.integer(variability_to_composition_map)
+  # `as.array()` keeps a single variability column (the `~ 1` default) from being
+  # written to JSON as a scalar, which Stan rejects against `array[A] int`.
+  as.array(as.integer(variability_to_composition_map))
 }
 
 #'
@@ -1173,7 +1191,7 @@ data_spread_to_model_input =
     cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% colnames()
     
     # ----------------------------------------------------------------------
-    # Random effect blocks: 4 uniform "slots", one block per slot.
+    # Random effect blocks: 6 uniform "slots", one block per slot.
     #
     # Each random-effect clause in the formula (e.g. `(1 + age | tissue)` and
     # `(1 | dataset)`) becomes one slot. Slots are independent: each has its
@@ -1184,7 +1202,6 @@ data_spread_to_model_input =
     # so the Stan-side data list is uniformly shaped regardless of how many
     # clauses the user wrote.
     # ----------------------------------------------------------------------
-    N_RE_SLOTS = 5L
     n_rows_design = nrow(.data_spread)
     
     empty_re_slot = list(
@@ -1296,6 +1313,7 @@ data_spread_to_model_input =
     X_random_effect_3 = re_slots[[3]]$X
     X_random_effect_4 = re_slots[[4]]$X
     X_random_effect_5 = re_slots[[5]]$X
+    X_random_effect_6 = re_slots[[6]]$X
     
     # NOTE: per-slot $X_unseen matrices are available in `re_slots[[k]]$X_unseen`
     # but are not shipped via data_for_model (downstream replicate / outlier
@@ -1306,6 +1324,7 @@ data_spread_to_model_input =
     group_factor_indexes_for_covariance_3 = re_slots[[3]]$gfi
     group_factor_indexes_for_covariance_4 = re_slots[[4]]$gfi
     group_factor_indexes_for_covariance_5 = re_slots[[5]]$gfi
+    group_factor_indexes_for_covariance_6 = re_slots[[6]]$gfi
     
     ncol_X_random_eff                 = map_int(re_slots, "ncol")
     n_groups                          = map_int(re_slots, "n_groups")
@@ -1345,22 +1364,24 @@ data_spread_to_model_input =
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
         
-        # Random intercept - 5 uniform slots (see Stan glm_multi_beta_binomial.stan)
+        # Random intercept - 6 uniform slots (see Stan glm_multi_beta_binomial.stan)
         is_random_effect = is_random_effect,
         n_random_eff     = n_random_eff,
-        ncol_X_random_eff = ncol_X_random_eff,                # length 5
-        n_groups          = n_groups,                          # length 5
-        how_many_factors_in_random_design = how_many_factors_in_random_design,  # length 5
+        ncol_X_random_eff = ncol_X_random_eff,                # length 6
+        n_groups          = n_groups,                          # length 6
+        how_many_factors_in_random_design = how_many_factors_in_random_design,  # length 6
         X_random_effect_1 = X_random_effect_1,
         X_random_effect_2 = X_random_effect_2,
         X_random_effect_3 = X_random_effect_3,
         X_random_effect_4 = X_random_effect_4,
         X_random_effect_5 = X_random_effect_5,
+        X_random_effect_6 = X_random_effect_6,
         group_factor_indexes_for_covariance_1 = group_factor_indexes_for_covariance_1,
         group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
         group_factor_indexes_for_covariance_3 = group_factor_indexes_for_covariance_3,
         group_factor_indexes_for_covariance_4 = group_factor_indexes_for_covariance_4,
         group_factor_indexes_for_covariance_5 = group_factor_indexes_for_covariance_5,
+        group_factor_indexes_for_covariance_6 = group_factor_indexes_for_covariance_6,
         
         # For parallel chains
         grainsize = 1,
@@ -1452,8 +1473,8 @@ data_spread_to_model_input =
         nrow()
     }
     
-    # Default all grouping known (five RE slots; see glm_multi_beta_binomial_generate_data.stan)
-    data_for_model$unknown_grouping = rep(0L, 5L)
+    # Default all grouping known (one entry per RE slot; see glm_multi_beta_binomial_generate_data.stan)
+    data_for_model$unknown_grouping = rep(0L, N_RE_SLOTS)
     
     # Smooth-term metadata is R-only (mgcv `smoothCon` / `smooth2random`
     # objects, used by prediction / replicate helpers). It is NOT shipped to
