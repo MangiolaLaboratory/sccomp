@@ -32,6 +32,22 @@
 #' @export
 sccomp_stan_models_cache_dir = file.path(path.expand("~"), ".sccomp_models")
 
+#' Number of random-effect slots in the Stan models
+#'
+#' The Stan models declare a fixed number of uniform random-effect "slots".
+#' Every explicit `(... | group)` clause takes one slot, and every penalised
+#' basis block of a smooth takes one more (a multi-penalty smooth such as
+#' `t2()` or `bs = "fs"` contributes several blocks).
+#'
+#' To change this number, add a matching slot block to
+#' `inst/stan/glm_multi_beta_binomial.stan` and
+#' `inst/stan/glm_multi_beta_binomial_generate_data.stan`, bump the `array[n]`
+#' lengths there, and update this constant.
+#'
+#' @keywords internal
+#' @noRd
+N_RE_SLOTS = 6L
+
 #' Add attribute to abject
 #'
 #' @keywords internal
@@ -670,13 +686,18 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 #' @noRd
 get_random_effect_design3 = function(
   .data_, formula, grouping, .sample, 
-  accept_NA_as_average_effect = FALSE 
+  accept_NA_as_average_effect = FALSE,
+  scaling_reference = NULL
 ){
   
   # Define the variables as NULL to avoid CRAN NOTES
   .sample = enquo(.sample)
   
-  mydesign = .data_ |> get_design_matrix(formula, !!.sample, accept_NA_as_average_effect = accept_NA_as_average_effect)
+  mydesign = .data_ |> get_design_matrix(
+    formula, !!.sample, 
+    accept_NA_as_average_effect = accept_NA_as_average_effect,
+    scaling_reference = scaling_reference
+  )
   
   # Create a matrix of group assignments
   group_matrix = .data_ |> 
@@ -731,6 +752,83 @@ get_random_effect_design3 = function(
   result_long
 }
 
+#' Z-score the continuous covariates of a design
+#'
+#' Continuous covariates are z-scored before the design matrix is built. When
+#' the design matrix is built for new data, the centre and the scale have to be
+#' those of the fitted samples, otherwise the columns end up on a different
+#' scale from the one the coefficients were estimated against. `reference` is
+#' the data frame those two statistics are taken from, and defaults to the data
+#' being scaled, which is the right choice at fit time.
+#'
+#' @details
+#' Only the numeric columns named in `variables` are touched; factors, the
+#' sample column and anything absent from `reference` are returned untouched. A
+#' covariate that is constant in `reference` becomes zeros rather than `NaN`.
+#'
+#' ```
+#' training = tibble(sample = c("S1", "S2", "S3"), age = c(30, 40, 50))
+#'
+#' scale_numeric_covariates(training, "age")
+#' # # A tibble: 3 x 2
+#' #   sample   age
+#' #   <chr>  <dbl>
+#' # 1 S1        -1
+#' # 2 S2         0
+#' # 3 S3         1
+#'
+#' # The same age is given the same column value whatever else is in the grid
+#' scale_numeric_covariates(
+#'   tibble(sample = "g1", age = c(40)), "age", reference = training
+#' )
+#' # # A tibble: 1 x 2
+#' #   sample   age
+#' #   <chr>  <dbl>
+#' # 1 g1         0
+#' ```
+#'
+#' @param .data_spread A data frame with one row per sample.
+#' @param variables Character vector of covariate names to consider.
+#' @param reference Data frame the centre and scale are computed from. When
+#'   `NULL` they are computed from `.data_spread` itself.
+#'
+#' @return `.data_spread`, with its numeric covariates z-scored.
+#'
+#' @importFrom dplyr select
+#' @importFrom dplyr where
+#' @importFrom dplyr any_of
+#' @importFrom stats sd
+#' @noRd
+scale_numeric_covariates = function(.data_spread, variables, reference = NULL){
+  
+  if(is.null(reference)) reference = .data_spread
+  
+  columns =
+    .data_spread |>
+    select(any_of(variables)) |>
+    select(where(is.numeric)) |>
+    colnames() |>
+    intersect(colnames(reference))
+  
+  for(column in columns){
+    centre = mean(reference[[column]], na.rm = TRUE)
+    spread = sd(reference[[column]], na.rm = TRUE)
+    
+    # A covariate constant across samples carries no information; keep it
+    # finite rather than dividing by zero
+    if(is.na(spread) || spread == 0) spread = 1
+    
+    .data_spread[[column]] = (.data_spread[[column]] - centre) / spread
+  }
+  
+  .data_spread
+}
+
+#' @param scaling_reference Data frame whose continuous covariates give the
+#'   centre and the scale, passed to [scale_numeric_covariates()]. When `NULL`
+#'   they come from `.data_spread` itself; supply the fitted samples when
+#'   building a design matrix for new data.
+#'
 #' @importFrom glue glue
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate
@@ -739,14 +837,14 @@ get_random_effect_design3 = function(
 #' @importFrom dplyr where
 #' @importFrom rlang enquo
 #' @noRd
-get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE){
+get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE, scaling_reference = NULL){
   
   .sample = enquo(.sample)
   
   .data_spread = .data_spread %>%
     
     select(!!.sample, parse_formula(formula)) |>
-    mutate(across(where(is.numeric),  scale)) 
+    scale_numeric_covariates(parse_formula(formula), reference = scaling_reference)
 
   # Check for NAs in the data
   has_na = any(is.na(.data_spread |> select(parse_formula(formula))))
@@ -978,7 +1076,9 @@ get_variability_to_composition_map = function(X, Xa) {
     }
   }
 
-  as.integer(variability_to_composition_map)
+  # `as.array()` keeps a single variability column (the `~ 1` default) from being
+  # written to JSON as a scalar, which Stan rejects against `array[A] int`.
+  as.array(as.integer(variability_to_composition_map))
 }
 
 #'
@@ -1091,7 +1191,7 @@ data_spread_to_model_input =
     cell_cluster_names = .data_spread %>% select(-!!.sample, -any_of(factor_names), -exposure, -!!.grouping_for_random_effect) %>% colnames()
     
     # ----------------------------------------------------------------------
-    # Random effect blocks: 4 uniform "slots", one block per slot.
+    # Random effect blocks: 6 uniform "slots", one block per slot.
     #
     # Each random-effect clause in the formula (e.g. `(1 + age | tissue)` and
     # `(1 | dataset)`) becomes one slot. Slots are independent: each has its
@@ -1102,7 +1202,6 @@ data_spread_to_model_input =
     # so the Stan-side data list is uniformly shaped regardless of how many
     # clauses the user wrote.
     # ----------------------------------------------------------------------
-    N_RE_SLOTS = 4L
     n_rows_design = nrow(.data_spread)
     
     empty_re_slot = list(
@@ -1213,6 +1312,8 @@ data_spread_to_model_input =
     X_random_effect_2 = re_slots[[2]]$X
     X_random_effect_3 = re_slots[[3]]$X
     X_random_effect_4 = re_slots[[4]]$X
+    X_random_effect_5 = re_slots[[5]]$X
+    X_random_effect_6 = re_slots[[6]]$X
     
     # NOTE: per-slot $X_unseen matrices are available in `re_slots[[k]]$X_unseen`
     # but are not shipped via data_for_model (downstream replicate / outlier
@@ -1222,6 +1323,8 @@ data_spread_to_model_input =
     group_factor_indexes_for_covariance_2 = re_slots[[2]]$gfi
     group_factor_indexes_for_covariance_3 = re_slots[[3]]$gfi
     group_factor_indexes_for_covariance_4 = re_slots[[4]]$gfi
+    group_factor_indexes_for_covariance_5 = re_slots[[5]]$gfi
+    group_factor_indexes_for_covariance_6 = re_slots[[6]]$gfi
     
     ncol_X_random_eff                 = map_int(re_slots, "ncol")
     n_groups                          = map_int(re_slots, "n_groups")
@@ -1261,20 +1364,24 @@ data_spread_to_model_input =
         bimodal_mean_variability_association = bimodal_mean_variability_association,
         use_data = use_data,
         
-        # Random intercept - 4 uniform slots (see Stan glm_multi_beta_binomial.stan)
+        # Random intercept - 6 uniform slots (see Stan glm_multi_beta_binomial.stan)
         is_random_effect = is_random_effect,
         n_random_eff     = n_random_eff,
-        ncol_X_random_eff = ncol_X_random_eff,                # length 4
-        n_groups          = n_groups,                          # length 4
-        how_many_factors_in_random_design = how_many_factors_in_random_design,  # length 4
+        ncol_X_random_eff = ncol_X_random_eff,                # length 6
+        n_groups          = n_groups,                          # length 6
+        how_many_factors_in_random_design = how_many_factors_in_random_design,  # length 6
         X_random_effect_1 = X_random_effect_1,
         X_random_effect_2 = X_random_effect_2,
         X_random_effect_3 = X_random_effect_3,
         X_random_effect_4 = X_random_effect_4,
+        X_random_effect_5 = X_random_effect_5,
+        X_random_effect_6 = X_random_effect_6,
         group_factor_indexes_for_covariance_1 = group_factor_indexes_for_covariance_1,
         group_factor_indexes_for_covariance_2 = group_factor_indexes_for_covariance_2,
         group_factor_indexes_for_covariance_3 = group_factor_indexes_for_covariance_3,
         group_factor_indexes_for_covariance_4 = group_factor_indexes_for_covariance_4,
+        group_factor_indexes_for_covariance_5 = group_factor_indexes_for_covariance_5,
+        group_factor_indexes_for_covariance_6 = group_factor_indexes_for_covariance_6,
         
         # For parallel chains
         grainsize = 1,
@@ -1366,8 +1473,8 @@ data_spread_to_model_input =
         nrow()
     }
     
-    # Default all grouping known (four RE slots; see glm_multi_beta_binomial_generate_data.stan)
-    data_for_model$unknown_grouping = rep(0L, 4L)
+    # Default all grouping known (one entry per RE slot; see glm_multi_beta_binomial_generate_data.stan)
+    data_for_model$unknown_grouping = rep(0L, N_RE_SLOTS)
     
     # Smooth-term metadata is R-only (mgcv `smoothCon` / `smooth2random`
     # objects, used by prediction / replicate helpers). It is NOT shipped to

@@ -69,12 +69,12 @@ fit_model = function(
     init_list$prec_slope_2 = rep(0, data_for_model$A)
   }
 
-  # Random effect inits - 4 uniform slots (one per non-empty random-effect block).
+  # Random effect inits - one per non-empty random-effect slot.
   # Each slot gets zero-initialised raws + an identity-like correlation Cholesky.
   if (data_for_model$n_random_eff > 0) {
     init_list$zero_random_effect = rep(0, size = 1) |> as.array()
     
-    for (k in seq_len(4L)) {
+    for (k in seq_len(N_RE_SLOTS)) {
       if (data_for_model$ncol_X_random_eff[k] == 0) next
       K = data_for_model$how_many_factors_in_random_design[k]
       

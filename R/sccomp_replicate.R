@@ -126,7 +126,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' @param Xa Original variability design matrix
 #' @param N Original number of samples
 #' @param intercept_in_design Whether intercept is in design
-#' @param X_random_effect_slots Length-4 list of original random-effect design
+#' @param X_random_effect_slots Length-5 list of original random-effect design
 #'   matrices (one per slot). Empty slots are zero-column matrices.
 #' @param .sample Quosure for the sample identifier column
 #' @param .cell_group Quosure for the cell group column
@@ -150,7 +150,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' - model_input: The prepared model input data
 #' - X_which: Indices for the composition design matrix
 #' - XA_which: Indices for the variability design matrix
-#' - X_random_effect_which_1..4: per-slot indices into the original RE design matrix
+#' - X_random_effect_which_1..5: per-slot indices into the original RE design matrix
 #' - create_intercept: Boolean indicating if intercept should be created
 #' 
 #' @noRd
@@ -251,7 +251,12 @@ prepare_replicate_data = function(X,
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
-      accept_NA_as_average_effect = TRUE
+      accept_NA_as_average_effect = TRUE,
+      # Continuous covariates are z-scored here. The centre and the scale have
+      # to come from the fitted samples alone: taking them from `new_data`,
+      # which carries the old rows too, would make the prediction at a given
+      # covariate value depend on the range and density of the requested grid.
+      scaling_reference = old_data
     ) |>
     tail(nrow_new_data) %>%
     # Remove columns that are not in the original design matrix
@@ -294,7 +299,8 @@ prepare_replicate_data = function(X,
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
-      accept_NA_as_average_effect = TRUE
+      accept_NA_as_average_effect = TRUE,
+      scaling_reference = old_data
     ) |>
     tail(nrow_new_data) %>%
     # Remove columns that are not in the original design matrix
@@ -328,13 +334,14 @@ prepare_replicate_data = function(X,
     mutate(design = map2(
       formula, grouping,
       ~ get_random_effect_design3(new_data, .x, .y, !!.sample,
-                                  accept_NA_as_average_effect = TRUE)
+                                  accept_NA_as_average_effect = TRUE,
+                                  scaling_reference = old_data)
     ))
   
   # ----------------------------------------------------------------------
   # Build the per-slot replicate design matrices.
   #
-  # For each of the 4 slots: if the slot was active in the original fit
+  # For each of the 5 slots: if the slot was active in the original fit
   # (original_grouping_names[k] exists) and the new formula references it,
   # build a new design matrix restricted to the columns the model saw, and
   # an index vector mapping new columns back to those of the original matrix.
@@ -387,7 +394,7 @@ prepare_replicate_data = function(X,
     list(X = X_new, X_unseen = X_new_unseen, which = which_idx)
   }
   
-  replicate_slots = map(seq_len(4L), build_replicate_slot)
+  replicate_slots = map(seq_len(N_RE_SLOTS), build_replicate_slot)
   
   # Append smooth-derived replicate slots (one per smooth term in the
   # composition formula). They occupy whichever slots come after the
@@ -396,10 +403,10 @@ prepare_replicate_data = function(X,
     n_explicit_re = length(original_grouping_names)
     n_smooth      = length(smooth_replicate_slots)
     n_used        = n_explicit_re + n_smooth
-    if (n_used > 4L) {
+    if (n_used > N_RE_SLOTS) {
       stop(sprintf(
-        "sccomp says: the replicate model needs %d RE slot(s) but only 4 are available.",
-        n_used
+        "sccomp says: the replicate model needs %d RE slot(s) but only %d are available.",
+        n_used, N_RE_SLOTS
       ))
     }
     # Replace placeholder slots `[n_explicit_re + 1 .. n_used]` with smooths.
@@ -409,7 +416,7 @@ prepare_replicate_data = function(X,
   }
   
   # setup default unknown_grouping variable for generated quantities
-  unknown_grouping = rep(0L, 4L)
+  unknown_grouping = rep(0L, N_RE_SLOTS)
   
   list(
     X        = new_X,
@@ -422,16 +429,22 @@ prepare_replicate_data = function(X,
     X_random_effect_2 = replicate_slots[[2]]$X,
     X_random_effect_3 = replicate_slots[[3]]$X,
     X_random_effect_4 = replicate_slots[[4]]$X,
+    X_random_effect_5 = replicate_slots[[5]]$X,
+    X_random_effect_6 = replicate_slots[[6]]$X,
     
     X_random_effect_1_unseen = replicate_slots[[1]]$X_unseen,
     X_random_effect_2_unseen = replicate_slots[[2]]$X_unseen,
     X_random_effect_3_unseen = replicate_slots[[3]]$X_unseen,
     X_random_effect_4_unseen = replicate_slots[[4]]$X_unseen,
+    X_random_effect_5_unseen = replicate_slots[[5]]$X_unseen,
+    X_random_effect_6_unseen = replicate_slots[[6]]$X_unseen,
     
     X_random_effect_which_1 = replicate_slots[[1]]$which,
     X_random_effect_which_2 = replicate_slots[[2]]$which,
     X_random_effect_which_3 = replicate_slots[[3]]$which,
     X_random_effect_which_4 = replicate_slots[[4]]$which,
+    X_random_effect_which_5 = replicate_slots[[5]]$which,
+    X_random_effect_which_6 = replicate_slots[[6]]$which,
     
     ncol_X_random_eff_new    = map_int(replicate_slots, ~ ncol(.x$X)),
     ncol_X_random_eff_unseen = map_int(replicate_slots, ~ ncol(.x$X_unseen)),
@@ -497,7 +510,7 @@ replicate_data = function(.data,
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect_slots = lapply(seq_len(4L), function(k)
+    X_random_effect_slots = lapply(seq_len(N_RE_SLOTS), function(k)
       model_input[[paste0("X_random_effect_", k)]]),
     .sample = !!.sample,
     .cell_group = !!.cell_group,
@@ -523,8 +536,8 @@ replicate_data = function(.data,
   model_input$N        = prepared_data$N
   model_input$exposure = prepared_data$exposure
   
-  # Per-slot RE design + unseen + which-indices (4 slots)
-  for (k in seq_len(4L)) {
+  # Per-slot RE design + unseen + which-indices
+  for (k in seq_len(N_RE_SLOTS)) {
     model_input[[paste0("X_random_effect_", k)]]            = prepared_data[[paste0("X_random_effect_", k)]]
     model_input[[paste0("X_random_effect_", k, "_unseen")]] = prepared_data[[paste0("X_random_effect_", k, "_unseen")]]
     model_input[[paste0("X_random_effect_which_", k)]]      = prepared_data[[paste0("X_random_effect_which_", k)]]
@@ -539,9 +552,9 @@ replicate_data = function(.data,
   model_input$X_which         = prepared_data$X_which
   model_input$XA_which        = prepared_data$XA_which
   
-  # Length-4 vector of which-index lengths for the random-effect slots
+  # One which-index length per random-effect slot
   model_input$length_X_random_effect_which =
-    map_int(seq_len(4L), ~ length(prepared_data[[paste0("X_random_effect_which_", .x)]]))
+    map_int(seq_len(N_RE_SLOTS), ~ length(prepared_data[[paste0("X_random_effect_which_", .x)]]))
   
   # Should I create an intercept for generate quantities?
   model_input$create_intercept = prepared_data$create_intercept

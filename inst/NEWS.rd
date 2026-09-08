@@ -1,6 +1,17 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.5.2}{
+\itemize{
+    \item Increased the random-effect slot budget from 5 to 6. This admits models combining a factor-smooth with several explicit RE clauses, such as \code{s(x, g, bs = "fs")} (which alone expands into three penalty blocks, one per slot) together with three \code{(... | group)} terms.
+}}
+
+\section{News in version 2.5.1}{
+\itemize{
+    \item Increased the random-effect slot budget from 4 to 5 so multiple smooth terms (e.g. a global \code{s()} plus a factor-smooth \code{bs = "fs"}) can coexist with an explicit RE clause.
+    \item Fixed the scaling of continuous covariates in \code{sccomp_predict()} and \code{sccomp_replicate()}. Continuous covariates were being z-scored using the fitted samples and the new data pooled together, so the prediction at a given covariate value shifted with the range and the density of the requested grid. The centre and scale of the fitted samples are now used, making predictions a function of the model and the covariate value alone. Smooth terms were never affected, as they are evaluated against the fit-time basis.
+}}
+
 \section{News in version 2.1.34}{
 \itemize{
     \item Exported \code{sccomp_scatterplot()} for visualising cell-group proportions against a continuous covariate, complementing \code{sccomp_boxplot()} for discrete factors. The function accepts \code{.data}, \code{factor}, \code{significance_threshold}, and \code{remove_unwanted_effects}, and is used by the \code{plot()} method for numeric covariates.

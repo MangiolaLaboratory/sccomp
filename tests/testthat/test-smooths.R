@@ -390,13 +390,80 @@ test_that("fs factor smooth fits and predicts end-to-end (multi-block)", {
 })
 
 
+test_that("global smooth + fs smooth + REs fill all 6 slots end-to-end", {
+  # Motivating case for the slot budget: one global age smooth, one
+  # factor-smooth (3 penalty blocks), and two explicit RE clauses.
+  skip_if_not_installed("mgcv")
+  skip_cmdstan()
+  data("counts_obj")
+  
+  set.seed(42)
+  samples <- levels(counts_obj$sample)
+  covs <- tibble::tibble(
+    sample           = samples,
+    age_days_scaled  = as.numeric(scale(seq_along(samples))),
+    tissue_groups    = factor(rep(c("blood", "lymph", "tumor"),
+                                  length.out = length(samples))),
+    dataset_id       = factor(rep(c("ds1", "ds2"),
+                                  length.out = length(samples))),
+    batch            = factor(rep(c("b1", "b2", "b3"),
+                                  length.out = length(samples)))
+  )
+  counts_age <- counts_obj |> dplyr::left_join(covs, by = "sample")
+  
+  fit <- sccomp_estimate(
+    counts_age,
+    formula_composition =
+      ~ s(age_days_scaled, k = 5) +
+        s(age_days_scaled, tissue_groups, bs = "fs", k = 5) +
+        (1 | dataset_id) +
+        (1 | batch),
+    formula_variability = ~ 1,
+    sample              = "sample",
+    cell_group          = "cell_group",
+    abundance           = "count",
+    cores               = 1,
+    inference_method    = "pathfinder",
+    max_sampling_iterations = 200,
+    mcmc_seed           = 42,
+    verbose             = FALSE
+  )
+  
+  mi <- attr(fit, "model_input")
+  sr <- sccomp:::get_smooth_results(fit)
+  
+  # 1 global smooth + 3 fs blocks + 2 REs = 6 occupied slots
+  expect_equal(length(sr$smooth_labels), 2L)
+  expect_equal(sum(mi$ncol_X_random_eff > 0L), 6L)
+  expect_equal(mi$n_random_eff, 6L)
+  expect_true(all(mi$ncol_X_random_eff > 0L))
+  
+  # Predict across age x tissue; grouping factors held at seen levels.
+  grid <- expand.grid(
+    age_days_scaled = seq(min(covs$age_days_scaled),
+                          max(covs$age_days_scaled), length.out = 15),
+    tissue_groups   = levels(covs$tissue_groups),
+    dataset_id      = covs$dataset_id[1],
+    batch           = covs$batch[1]
+  ) |>
+    tibble::as_tibble() |>
+    dplyr::mutate(sample = sprintf("grid_%03d", dplyr::row_number()))
+  
+  pred <- sccomp_predict(fit, new_data = grid, number_of_draws = 50)
+  expect_true(all(c("age_days_scaled", "tissue_groups", "proportion_mean")
+                  %in% names(pred)))
+  expect_equal(nrow(pred), nrow(grid) * length(unique(counts_obj$cell_group)))
+  expect_true(all(is.finite(pred$proportion_mean)))
+})
+
+
 test_that("smooth slot count beyond N_RE_SLOTS errors cleanly", {
   skip_if_not_installed("mgcv")
   skip_cmdstan()
   data("seurat_obj")
   
-  # 4 smooths + 1 RE clause needs 5 slots; budget is 4. Use the same
-  # continuous_covariate four times under different `k` (parser doesn't
+  # 6 smooths + 1 RE clause needs 7 slots; budget is 6. Use the same
+  # continuous_covariate six times under different `k` (parser doesn't
   # de-duplicate intentionally — each call is a fresh basis).
   expect_error(
     sccomp_estimate(
@@ -406,6 +473,8 @@ test_that("smooth slot count beyond N_RE_SLOTS errors cleanly", {
           s(continuous_covariate, k = 4) +
           s(continuous_covariate, k = 5) +
           s(continuous_covariate, k = 6) +
+          s(continuous_covariate, k = 7) +
+          s(continuous_covariate, k = 8) +
           (1 | group__),
       formula_variability = ~ 1,
       sample = "sample", cell_group = "cell_group",
