@@ -285,7 +285,15 @@ build_smooth_test_newdata <- function(fit, smooth, from_grid, to_grid, at, .samp
   formula_composition <- attr(fit, "formula_composition")
 
   covariates <- parse_formula(formula_composition)
-  other_covs <- setdiff(covariates, smooth)
+  
+  # `parse_formula()` reports the parametric and smooth covariates but not the
+  # grouping columns of the random-effect clauses, which the design build still
+  # selects by name. Held constant they cancel in the contrast like any other
+  # non-varied covariate, but left out entirely the design cannot be built at
+  # all for a model whose grouping is not also a fixed or smooth covariate.
+  random_effect_groupings <- formula_to_random_effect_formulae(formula_composition)$grouping
+  
+  other_covs <- setdiff(unique(c(covariates, random_effect_groupings)), smooth)
 
   # Defaults for non-varied covariates: `at` override, else first observed.
   ref_row <- count_data |> distinct(!!.sample, .keep_all = TRUE) |> head(1)

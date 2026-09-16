@@ -486,11 +486,18 @@ build_stan_parameter_subset <- function(contrasts, design_columns, stan_paramete
 
   n_M <- ncol(model_input$y)
   C_idx <- match(matched, design_columns)
-  g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
+
+  # Expand over positions within `matched`, not over the design-matrix indices
+  # themselves: `C_idx` are positions in `design_columns`, so using them to
+  # subset `matched` returns NA for every term that is not among the first
+  # `length(matched)` design columns. The random-effect path filters its draws
+  # by these names, so NAs there drop the columns and the contrast fails with
+  # "object not found".
+  g <- expand.grid(i = seq_along(matched), M = seq_len(n_M), stringsAsFactors = FALSE)
 
   tibble::tibble(
-    parameter = matched[g$C],
-    variable = sprintf("%s[%d,%d]", stan_parameter, g$C, g$M)
+    parameter = matched[g$i],
+    variable = sprintf("%s[%d,%d]", stan_parameter, C_idx[g$i], g$M)
   )
 }
 
