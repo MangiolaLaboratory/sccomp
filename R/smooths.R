@@ -210,18 +210,47 @@ parse_formula_smooths <- function(fm, data) {
     # smooth doesn't fight the intercept (matches brms).
     # diagonal.penalty = TRUE re-parameterises so the penalty matrix is
     # diagonal, which makes the random-effect prior N(0, sds^2 I) clean.
-    sm <- tryCatch(
+    sm_list <- tryCatch(
       mgcv::smoothCon(
         sm_spec,
         data            = smooth_data,
         absorb.cons     = TRUE,
         diagonal.penalty = TRUE
-      )[[1]],
+      ),
       error = function(e) stop(sprintf(
         "sccomp says: failed to build smooth basis for `%s`: %s",
         label, conditionMessage(e)
       ))
     )
+    
+    # `smoothCon()` returns a list, and a factor `by` makes it one smooth per
+    # level of that factor. Everything downstream holds a single smooth per
+    # formula term: `smooth_specs[[k]]`, the slot labels, and
+    # `predict_smooth_at_newdata()`. Taking the first and dropping the rest
+    # would fit silently and wrongly, because a factor `by` zeroes the basis
+    # outside its own level, so every other level would end up with no smooth.
+    if (length(sm_list) > 1L) {
+      by_variable <- if (!is.null(sm_spec$by) && !identical(sm_spec$by, "NA")) sm_spec$by else NULL
+      
+      stop(sprintf(
+        paste0(
+          "sccomp says: the smooth `%s` expands into %d separate smooths (%s). ",
+          "sccomp supports one smooth per formula term, so only the first would ",
+          "be fitted and every other level would silently get no smooth at all. ",
+          "%sCombine the two factors into a single grouping and pass that as the ",
+          "one factor of a `bs = \"fs\"` smooth, e.g. ",
+          "`interaction(f1, f2, drop = TRUE)`; the number of random-effect slots ",
+          "a factor smooth needs depends only on `k`, not on how many levels the ",
+          "factor has, so this costs nothing extra."
+        ),
+        label,
+        length(sm_list),
+        paste(vapply(sm_list, function(z) sprintf("`%s`", z$label), character(1)), collapse = ", "),
+        if (is.null(by_variable)) "" else sprintf("This is caused by `by = %s` being a factor. ", by_variable)
+      ))
+    }
+    
+    sm <- sm_list[[1]]
     
     re <- mgcv::smooth2random(sm, vnames = "", type = 2)
     
@@ -438,7 +467,7 @@ build_smooth_slot <- function(Xr, label) {
 #' Build replicate-time smooth design pieces from fit-time metadata
 #'
 #' For every `s()` / `t2()` term recorded in `smooth_results`, evaluates the
-#' basis at `new_data_tail` via [predict_smooth_at_newdata()] and packages the
+#' basis at `new_data` via [predict_smooth_at_newdata()] and packages the
 #' two design contributions that `prepare_replicate_data()` needs:
 #'
 #' * the unpenalised (null-space) columns are renamed `<label>__lin*` and
@@ -455,7 +484,7 @@ build_smooth_slot <- function(Xr, label) {
 #' @param parametric_X Numeric matrix; the parametric (non-smooth) design
 #'   matrix evaluated on the replicate rows. New unpenalised smooth columns
 #'   are appended on the right.
-#' @param new_data_tail Data frame of the replicate rows (must contain every
+#' @param new_data Data frame of the replicate rows (must contain every
 #'   variable referenced by any smooth term).
 #' @param smooth_results A list with `smooth_specs`, `smooth_re_objs`, and
 #'   `smooth_labels` (parallel lists captured at fit time), or `NULL` /
@@ -468,7 +497,7 @@ build_smooth_slot <- function(Xr, label) {
 #' @keywords internal
 #' @noRd
 build_smooth_replicate_design <- function(parametric_X,
-                                          new_data_tail,
+                                          new_data,
                                           smooth_results) {
   smooth_specs   <- smooth_results$smooth_specs
   smooth_re_objs <- smooth_results$smooth_re_objs
@@ -483,7 +512,7 @@ build_smooth_replicate_design <- function(parametric_X,
   smooth_evals <- purrr::pmap(
     list(spec = smooth_specs, re = smooth_re_objs, label = smooth_labels),
     function(spec, re, label) {
-      pred <- predict_smooth_at_newdata(spec, re, new_data_tail)
+      pred <- predict_smooth_at_newdata(spec, re, new_data)
       pred$label <- label
       pred
     }

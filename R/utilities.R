@@ -841,13 +841,15 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
   
   .sample = enquo(.sample)
   
+  variables = parse_formula(formula)
+  
   .data_spread = .data_spread %>%
     
-    select(!!.sample, parse_formula(formula)) |>
-    scale_numeric_covariates(parse_formula(formula), reference = scaling_reference)
+    select(!!.sample, variables) |>
+    scale_numeric_covariates(variables, reference = scaling_reference)
 
   # Check for NAs in the data
-  has_na = any(is.na(.data_spread |> select(parse_formula(formula))))
+  has_na = any(is.na(.data_spread |> select(variables)))
   
   # If NAs are present and we don't accept them as average effects, throw an error
   if(has_na && !accept_NA_as_average_effect){
@@ -856,7 +858,17 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
 
   # Check if we should handle NAs as average effects
   if(accept_NA_as_average_effect && has_na){
-    return(get_design_matrix_with_na_handling(.data_spread, formula, !!.sample))
+    
+    # The NA handling spreads an unknown value evenly over the levels of its
+    # factor and replaces an unknown number by the mean, so it needs the fitted
+    # rows on the same scale as `.data_spread` to read those off.
+    reference_spread =
+      if(is.null(scaling_reference)) NULL
+      else scaling_reference |> scale_numeric_covariates(variables, reference = scaling_reference)
+    
+    return(get_design_matrix_with_na_handling(
+      .data_spread, formula, !!.sample, reference = reference_spread
+    ))
   }
   
   design_matrix =
@@ -881,6 +893,9 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
 #' @param .data_spread A data frame containing the data.
 #' @param formula The formula to use for creating the design matrix.
 #' @param .sample A quosure representing the sample variable.
+#' @param reference Optional data frame of the fitted rows, on the same scale as
+#'   `.data_spread`, supplying the factor levels and the continuous means used to
+#'   resolve NAs. When `NULL` they are read from `.data_spread` itself.
 #' 
 #' @return A design matrix with rows named by the sample variable.
 #' 
@@ -891,12 +906,12 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
 #' @importFrom dplyr where
 #' @importFrom rlang enquo
 #' @noRd
-get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
+get_design_matrix_with_na_handling = function(.data_spread, formula, .sample, reference = NULL){
   
   .sample = enquo(.sample)
   
   # Convert NA to a factor level "NA" for categorical variables
-  data_with_na <- handle_missing_values(.data_spread)
+  data_with_na <- handle_missing_values(.data_spread, reference = reference)
   
   # Create design matrix
   design_matrix = model.matrix(formula, data = data_with_na, na.action = NULL)
@@ -990,7 +1005,12 @@ calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_
         if(data_with_na[[factor_name]] |> is.numeric())
           factor_levels = factor_name
         else{
-          factor_levels = levels(factor(data_with_na[[factor_name]]))
+          # The weight given to each level is 1/(number of levels), so the
+          # levels have to be the declared ones. Re-factoring here would drop
+          # any level absent from the rows being predicted and inflate the rest.
+          factor_levels =
+            if(is.factor(data_with_na[[factor_name]])) levels(data_with_na[[factor_name]])
+            else levels(factor(data_with_na[[factor_name]]))
           factor_levels = factor_levels[factor_levels != "NA"]
           if(factor_levels |> length() == 0) factor_levels = ""
         }
@@ -1857,10 +1877,23 @@ inv_softmax = function(proportions) {
 #' Handle missing values in a data frame
 #' 
 #' @param data A data frame to process
+#' @param reference Optional data frame supplying the factor levels and the
+#'   continuous means. When `NULL` they are read from `data` itself, which is
+#'   only correct when `data` holds the fitted rows.
 #' @return A data frame with missing values handled:
 #'   - For categorical variables (factor/character): NA values are converted to a factor level "NA"
 #'   - For numeric variables: NA values are replaced with the mean of the column
-handle_missing_values <- function(data) {
+#' @importFrom dplyr cur_column
+handle_missing_values <- function(data, reference = NULL) {
+  
+  # Both the level set and the mean describe the fitted covariates, not the rows
+  # being predicted. Reading them off `data` alone would make the effect of an
+  # NA depend on which rows were requested, and would drop the design column of
+  # any level those rows happen not to contain.
+  reference_column <- function(column) {
+    if (!is.null(reference) && column %in% colnames(reference)) reference[[column]] else NULL
+  }
+  
   data %>%
     mutate(
       # 1) Handle factor/character: turn NA into a real "NA" level, last in the ordering
@@ -1870,10 +1903,14 @@ handle_missing_values <- function(data) {
           if (any(is.na(.x))) {
             x_char <- as.character(.x)
             x_char[is.na(x_char)] <- "NA"
-            f <- factor(x_char)
-            non_na_levels <- setdiff(levels(f), "NA")
-            new_levels <- c(non_na_levels, "NA")
-            factor(f, levels = new_levels)
+            
+            # A factor keeps its declared order, which is the order the model
+            # was fitted with and so decides what the columns are called.
+            declared <-
+              if (is.factor(.x)) levels(.x)
+              else sort(unique(c(x_char, as.character(reference_column(cur_column())))))
+            
+            factor(x_char, levels = c(setdiff(declared, "NA"), "NA"))
           } else {
             .x
           }
@@ -1884,7 +1921,8 @@ handle_missing_values <- function(data) {
         where(is.numeric),
         ~{
           if (any(is.na(.x))) {
-            mean_val <- mean(.x, na.rm = TRUE) 
+            from_reference <- reference_column(cur_column())
+            mean_val <- mean(if (is.null(from_reference)) .x else from_reference, na.rm = TRUE)
             ifelse(is.na(.x), mean_val, .x)  # Only replace NAs, keep original values
           } else {
             .x

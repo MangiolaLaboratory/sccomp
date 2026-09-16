@@ -208,17 +208,17 @@ prepare_replicate_data = function(X,
     deframe() |>
     as.array()
   
-  # Update data, merge with old data because
-  # I need the same ordering of the design matrix
-  old_data = original_count_data |>
-    
-    # Change sample names to make unique
-    mutate(dummy = "OLD") |>
-    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___")
+  # The fitted rows are the reference for the covariate level sets and for the
+  # continuous centre and scale. They are deliberately not bound onto
+  # `new_data`: every design below is built from the requested rows alone, one
+  # row in and one row out, so nothing has to be recovered by position
+  # afterwards.
+  old_data = original_count_data
   
-  # Harmonise factors
-  new_data = new_data |> as_tibble() |> harmonise_factor_levels(old_data)
+  new_data = new_data |> as_tibble()
   
+  # This has to run before the levels are declared, because afterwards an
+  # unrecognised value has already become NA and would pass unnoticed.
   # check that for each column of the old data. The new data has values that are found in the old data, omit NA , ignore !!.sample column
   map(
     old_data %>%
@@ -235,7 +235,7 @@ prepare_replicate_data = function(X,
     }
   )
   
-  new_data =  old_data |> bind_rows( new_data ) 
+  new_data = new_data |> declare_fitted_levels(old_data, exclude = quo_name(.sample))
   
   # Smooth columns are evaluated separately via PredictMat below; keep the
   # random-effect clauses so the later RE parsing still sees the same formula.
@@ -253,12 +253,11 @@ prepare_replicate_data = function(X,
       !!.sample, 
       accept_NA_as_average_effect = TRUE,
       # Continuous covariates are z-scored here. The centre and the scale have
-      # to come from the fitted samples alone: taking them from `new_data`,
-      # which carries the old rows too, would make the prediction at a given
-      # covariate value depend on the range and density of the requested grid.
+      # to come from the fitted samples alone: taking them from the requested
+      # rows would make the prediction at a given covariate value depend on the
+      # range and density of the grid that was asked for.
       scaling_reference = old_data
-    ) |>
-    tail(nrow_new_data) %>%
+    ) %>%
     # Remove columns that are not in the original design matrix
     .[,colnames(.) %in% colnames(X), drop=FALSE]
   
@@ -267,7 +266,7 @@ prepare_replicate_data = function(X,
   # penalised block) using the fit-time `smoothCon` / `smooth2random` objects.
   smooth_design = build_smooth_replicate_design(
     parametric_X   = new_X,
-    new_data_tail  = new_data |> tail(nrow_new_data),
+    new_data       = new_data,
     smooth_results = smooth_results
   )
   new_X                  = smooth_design$new_X
@@ -301,8 +300,7 @@ prepare_replicate_data = function(X,
       !!.sample, 
       accept_NA_as_average_effect = TRUE,
       scaling_reference = old_data
-    ) |>
-    tail(nrow_new_data) %>%
+    ) %>%
     # Remove columns that are not in the original design matrix
     .[,colnames(.) %in% colnames(Xa), drop=FALSE]
   
@@ -365,21 +363,44 @@ prepare_replicate_data = function(X,
       ))
     }
     
-    X_new = random_effect_grouping |>
+    # One slot per random-effect clause, so several slots can share the same
+    # grouping variable, e.g. `(1 + sex | tissue) + (0 + ethnicity | tissue)`.
+    # Pooling every clause on this grouping and then keeping only the columns
+    # this slot was fitted with resolves each slot to its own clause; reading a
+    # single clause instead would leave the later slots with no columns, which
+    # silently drops their random effects from the prediction.
+    slot_design_long = random_effect_grouping |>
       filter(grouping == grouping_for_slot) |>
-      mutate(design_matrix = map(
-        design,
-        ~ ..1 |>
-          select(!!.sample, group___label, value) |>
-          # Combinations not present in the original fit have no parameters
-          filter(group___label %in% colnames(X_original_slot)) |>
-          pivot_wider(names_from = group___label, values_from = value) |>
-          mutate(across(everything(), ~ .x |> replace_na(0)))
-      )) |>
-      pull(design_matrix) |>
-      _[[1]] |>
-      column_to_rownames(quo_name(.sample)) |>
-      tail(nrow_new_data)
+      pull(design) |>
+      map(~ .x |> select(!!.sample, group___label, value)) |>
+      bind_rows() |>
+      # Combinations not present in the original fit have no parameters
+      filter(group___label %in% colnames(X_original_slot)) |>
+      distinct(!!.sample, group___label, .keep_all = TRUE)
+    
+    # Joining onto the full sample list keeps one row per sample of `new_data`,
+    # in the order of `new_data`. A sample contributes no row above when its
+    # grouping level was never fitted, or when `new_data` leaves the grouping
+    # column empty; without the join it would drop out of the design entirely
+    # and shift every subsequent sample onto the wrong row.
+    X_new = new_data |>
+      distinct(!!.sample) |>
+      left_join(
+        slot_design_long |>
+          pivot_wider(names_from = group___label, values_from = value),
+        by = quo_name(.sample)
+      ) |>
+      mutate(across(everything(), ~ .x |> replace_na(0))) |>
+      column_to_rownames(quo_name(.sample))
+    
+    # Keep every column the slot was fitted with, zero where no requested row
+    # sits at that level. Such a column contributes nothing either way, but
+    # dropping it changes the width of the slot, and a slot that narrows to zero
+    # columns is a needless edge case to hand to Stan. This happens whenever the
+    # grouping column of `new_data` is left empty.
+    missing_fitted_columns = setdiff(colnames(X_original_slot), colnames(X_new))
+    if (length(missing_fitted_columns) > 0)
+      X_new[missing_fitted_columns] = 0
     
     is_NA_col = str_detect(colnames(X_new), "___NA$")
     X_new_unseen = X_new[,  is_NA_col, drop = FALSE]
@@ -619,72 +640,55 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
   
 }
 
-#' harmonise_factor_levels
+#' Declare the fitted covariate levels on new data
 #'
 #' @description
-#' A helper function to make sure that factor levels in new data match the old data
+#' `model.matrix()` reads its columns off `levels()`, not off the values it is
+#' given, so a covariate level that the requested rows happen not to contain
+#' still needs to be declared or its column silently disappears from the design.
+#' A character column is factored by observed value, which is why the level set
+#' has to come from the fitted rows rather than from `new_data`.
 #'
-#' @param new_data A data frame containing potential factor variables
-#' @param old_data A data frame containing the reference factor levels
+#' Declaring the levels here is what lets the design be built from `new_data`
+#' alone. Binding the fitted rows on and slicing them back off afterwards would
+#' have the same effect on the level set, but it makes every row of the result
+#' positional.
 #'
-#' @return A data frame with the same dimensions as `new_data`
+#' @param new_data A data frame whose covariate columns are to be declared
+#' @param old_data The fitted rows, supplying the level set
+#' @param exclude Columns to leave untouched, typically the sample identifier,
+#'   whose values are by design absent from `old_data`
+#'
+#' @return `new_data`, with its categorical covariates as factors whose levels
+#'   are those of `old_data`
 #' @noRd
-#'
-harmonise_factor_levels <- function(new_data, old_data) {
+declare_fitted_levels <- function(new_data, old_data, exclude = character()) {
   if (!is.data.frame(new_data) || !is.data.frame(old_data)) {
     stop("Both new_data and old_data must be data frames")
   }
-  
-  # Ensure arguments are in the correct order
-  if (!identical(names(formals(harmonise_factor_levels))[1:2], c("new_data", "old_data"))) {
-    warning("Arguments appear to be in the wrong order. 'new_data' should be the data to be harmonized, 'old_data' is the reference.")
+
+  categorical <-
+    old_data |>
+    select(where(~ is.factor(.x) || is.character(.x))) |>
+    colnames() |>
+    setdiff(exclude) |>
+    intersect(colnames(new_data))
+
+  for (column in categorical) {
+    reference_values <- old_data[[column]]
+
+    # A factor keeps the order it was fitted with, since that order decides
+    # which level is the reference and therefore what the fitted columns are
+    # called. A character has no declared order, so it takes the same sorted
+    # order `model.matrix()` would have given it.
+    reference_levels <-
+      if (is.factor(reference_values)) levels(reference_values)
+      else sort(unique(as.character(reference_values)))
+
+    new_data[[column]] <- factor(as.character(new_data[[column]]), levels = reference_levels)
   }
-  
-  # Original implementation follows
-  f_old <- sapply(old_data, is.factor)
-  f_new <- sapply(new_data, is.factor)
-  
-  # Get the common factor column names
-  common_f <- intersect(names(old_data)[f_old], names(new_data)[f_new])
-  
-  # If there are no common factor columns, return the new_data as is
-  if (length(common_f) == 0) {
-    return(new_data)
-  }
-  
-  # For each common factor column
-  for (col in common_f) {
-    # Get all unique levels from both datasets
-    all_levels <- unique(c(levels(old_data[[col]]), levels(new_data[[col]])))
-    
-    # Check if there are new levels in new_data that don't exist in old_data
-    new_levels <- setdiff(levels(new_data[[col]]), levels(old_data[[col]]))
-    if (length(new_levels) > 0) {
-      message(paste("sccomp says: New levels found in column", col, ":", paste(new_levels, collapse = ", ")))
-    }
-    
-    # Set levels of new_data to match old_data, adding any missing levels
-    new_data[[col]] <- factor(new_data[[col]], levels = levels(old_data[[col]]))
-  }
-  
-  # Also check for character columns in new_data that are factors in old_data
-  char_new <- sapply(new_data, is.character)
-  factor_cols_in_old <- names(old_data)[f_old]
-  
-  char_to_factor <- intersect(names(new_data)[char_new], factor_cols_in_old)
-  
-  for (col in char_to_factor) {
-    # Convert character to factor with the same levels as in old_data
-    new_data[[col]] <- factor(new_data[[col]], levels = levels(old_data[[col]]))
-    
-    # Check if there are values in new_data that don't exist in old_data's levels
-    invalid_values <- setdiff(unique(as.character(new_data[[col]])), levels(old_data[[col]]))
-    if (length(invalid_values) > 0 && !all(is.na(invalid_values))) {
-      warning(paste("sccomp says: Values in column", col, "not found in reference levels:", paste(invalid_values[!is.na(invalid_values)], collapse = ", ")))
-    }
-  }
-  
-  return(new_data)
+
+  new_data
 }
 
 #' Get Output Samples from a Stan Fit Object

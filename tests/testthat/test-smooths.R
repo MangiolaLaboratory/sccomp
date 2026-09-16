@@ -199,6 +199,35 @@ test_that("parse_formula_smooths accepts character fs grouping columns", {
 })
 
 
+test_that("parse_formula_smooths rejects a factor `by`, which mgcv splits per level", {
+  skip_if_not_installed("mgcv")
+
+  dat <- data.frame(
+    x = seq(0, 6, length.out = 36),
+    sex = rep(c("female", "male"), length.out = 36),
+    tissue = factor(rep(c("blood", "lymph", "tumor"), length.out = 36))
+  )
+
+  # Keeping only the first of the three smooths would fit silently, and a factor
+  # `by` zeroes the basis outside its own level, so lymph and tumor would end up
+  # with no smooth at all.
+  expect_error(
+    sccomp:::parse_formula_smooths(
+      ~ s(x, sex, bs = "fs", k = 5, by = tissue),
+      dat
+    ),
+    regexp = "expands into 3 separate smooths"
+  )
+
+  # A numeric `by` produces one smooth, so it stays allowed
+  dat$weight <- seq(1, 2, length.out = 36)
+  expect_length(
+    sccomp:::parse_formula_smooths(~ s(x, k = 5, by = weight), dat)$smooth_specs,
+    1L
+  )
+})
+
+
 test_that("parse_formula_smooths returns identity for smooth-free formulas", {
   dat <- data.frame(type = letters[1:5], age = 1:5)
   res <- sccomp:::parse_formula_smooths(~ type + age, dat)
