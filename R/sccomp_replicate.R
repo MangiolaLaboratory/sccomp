@@ -126,7 +126,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' @param Xa Original variability design matrix
 #' @param N Original number of samples
 #' @param intercept_in_design Whether intercept is in design
-#' @param X_random_effect_slots Length-4 list of original random-effect design
+#' @param X_random_effect_slots Length-5 list of original random-effect design
 #'   matrices (one per slot). Empty slots are zero-column matrices.
 #' @param .sample Quosure for the sample identifier column
 #' @param .cell_group Quosure for the cell group column
@@ -150,7 +150,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' - model_input: The prepared model input data
 #' - X_which: Indices for the composition design matrix
 #' - XA_which: Indices for the variability design matrix
-#' - X_random_effect_which_1..4: per-slot indices into the original RE design matrix
+#' - X_random_effect_which_1..5: per-slot indices into the original RE design matrix
 #' - create_intercept: Boolean indicating if intercept should be created
 #' 
 #' @noRd
@@ -208,23 +208,23 @@ prepare_replicate_data = function(X,
     deframe() |>
     as.array()
   
-  # Update data, merge with old data because
-  # I need the same ordering of the design matrix
-  old_data = original_count_data |>
-    
-    # Change sample names to make unique
-    mutate(dummy = "OLD") |>
-    tidyr::unite(!!.sample, c(!!.sample, dummy), sep="___")
+  # The fitted rows are the reference for the covariate level sets and for the
+  # continuous centre and scale. They are deliberately not bound onto
+  # `new_data`: every design below is built from the requested rows alone, one
+  # row in and one row out, so nothing has to be recovered by position
+  # afterwards.
+  old_data = original_count_data
   
-  # Harmonise factors
-  new_data = new_data |> as_tibble() |> harmonise_factor_levels(old_data)
+  new_data = new_data |> as_tibble()
   
+  # This has to run before the levels are declared, because afterwards an
+  # unrecognised value has already become NA and would pass unnoticed.
   # check that for each column of the old data. The new data has values that are found in the old data, omit NA , ignore !!.sample column
   map(
-    old_data %>%
+    old_data |>
       # Just apply to categorical
-      select(where(~ is.factor(.) || is.character(.))) %>%
-      names() %>%
+      select(where(~ is.factor(.x) || is.character(.x))) |>
+      names() |>
       setdiff(quo_name(.sample)),
     ~ if (any(!new_data[[.x]][!is.na(new_data[[.x]])] %in% old_data[[.x]])) {
       stop(
@@ -235,7 +235,17 @@ prepare_replicate_data = function(X,
     }
   )
   
-  new_data =  old_data |> bind_rows( new_data ) 
+  new_data = new_data |> declare_fitted_levels(old_data, exclude = quo_name(.sample))
+  
+  # One z-score for the whole prediction, centred and scaled on the fitted
+  # rows. Done before the smooths are stripped so `s(age)` and `~ age` see the
+  # same numbers, and it is the only scaling step: `get_design_matrix()` takes
+  # its input as already scaled.
+  new_data = new_data |>
+    scale_numeric_covariates(
+      formula_numeric_variables(formula_composition, formula_variability),
+      reference = old_data
+    )
   
   # Smooth columns are evaluated separately via PredictMat below; keep the
   # random-effect clauses so the later RE parsing still sees the same formula.
@@ -252,17 +262,17 @@ prepare_replicate_data = function(X,
         as.formula(),
       !!.sample, 
       accept_NA_as_average_effect = TRUE
-    ) |>
-    tail(nrow_new_data) %>%
-    # Remove columns that are not in the original design matrix
-    .[,colnames(.) %in% colnames(X), drop=FALSE]
+    )
+  
+  # Remove columns that are not in the original design matrix
+  new_X = new_X[, colnames(new_X) %in% colnames(X), drop = FALSE]
   
   # Evaluate any smooth bases on the replicate rows and merge the resulting
   # design pieces (unpenalised columns appended to `new_X`, one RE slot per
   # penalised block) using the fit-time `smoothCon` / `smooth2random` objects.
   smooth_design = build_smooth_replicate_design(
     parametric_X   = new_X,
-    new_data_tail  = new_data |> tail(nrow_new_data),
+    new_data       = new_data,
     smooth_results = smooth_results
   )
   new_X                  = smooth_design$new_X
@@ -276,10 +286,7 @@ prepare_replicate_data = function(X,
   
   X_which =
     colnames(new_X) |>
-    match(
-      X %>%
-        colnames()
-    ) |>
+    match(colnames(X)) |>
     na.omit() |>
     as.array()
   
@@ -295,17 +302,14 @@ prepare_replicate_data = function(X,
         as.formula(),
       !!.sample, 
       accept_NA_as_average_effect = TRUE
-    ) |>
-    tail(nrow_new_data) %>%
-    # Remove columns that are not in the original design matrix
-    .[,colnames(.) %in% colnames(Xa), drop=FALSE]
+    )
+  
+  # Remove columns that are not in the original design matrix
+  new_Xa = new_Xa[, colnames(new_Xa) %in% colnames(Xa), drop = FALSE]
   
   XA_which =
     colnames(new_Xa) |>
-    match(
-      Xa %>%
-        colnames()
-    ) |>
+    match(colnames(Xa)) |>
     na.omit() |>
     as.array()
   
@@ -334,7 +338,7 @@ prepare_replicate_data = function(X,
   # ----------------------------------------------------------------------
   # Build the per-slot replicate design matrices.
   #
-  # For each of the 4 slots: if the slot was active in the original fit
+  # For each of the 5 slots: if the slot was active in the original fit
   # (original_grouping_names[k] exists) and the new formula references it,
   # build a new design matrix restricted to the columns the model saw, and
   # an index vector mapping new columns back to those of the original matrix.
@@ -358,21 +362,44 @@ prepare_replicate_data = function(X,
       ))
     }
     
-    X_new = random_effect_grouping |>
+    # One slot per random-effect clause, so several slots can share the same
+    # grouping variable, e.g. `(1 + sex | tissue) + (0 + ethnicity | tissue)`.
+    # Pooling every clause on this grouping and then keeping only the columns
+    # this slot was fitted with resolves each slot to its own clause; reading a
+    # single clause instead would leave the later slots with no columns, which
+    # silently drops their random effects from the prediction.
+    slot_design_long = random_effect_grouping |>
       filter(grouping == grouping_for_slot) |>
-      mutate(design_matrix = map(
-        design,
-        ~ ..1 |>
-          select(!!.sample, group___label, value) |>
-          # Combinations not present in the original fit have no parameters
-          filter(group___label %in% colnames(X_original_slot)) |>
-          pivot_wider(names_from = group___label, values_from = value) |>
-          mutate(across(everything(), ~ .x |> replace_na(0)))
-      )) |>
-      pull(design_matrix) |>
-      _[[1]] |>
-      column_to_rownames(quo_name(.sample)) |>
-      tail(nrow_new_data)
+      pull(design) |>
+      map(~ .x |> select(!!.sample, group___label, value)) |>
+      bind_rows() |>
+      # Combinations not present in the original fit have no parameters
+      filter(group___label %in% colnames(X_original_slot)) |>
+      distinct(!!.sample, group___label, .keep_all = TRUE)
+    
+    # Joining onto the full sample list keeps one row per sample of `new_data`,
+    # in the order of `new_data`. A sample contributes no row above when its
+    # grouping level was never fitted, or when `new_data` leaves the grouping
+    # column empty; without the join it would drop out of the design entirely
+    # and shift every subsequent sample onto the wrong row.
+    X_new = new_data |>
+      distinct(!!.sample) |>
+      left_join(
+        slot_design_long |>
+          pivot_wider(names_from = group___label, values_from = value),
+        by = quo_name(.sample)
+      ) |>
+      mutate(across(everything(), ~ .x |> replace_na(0))) |>
+      column_to_rownames(quo_name(.sample))
+    
+    # Keep every column the slot was fitted with, zero where no requested row
+    # sits at that level. Such a column contributes nothing either way, but
+    # dropping it changes the width of the slot, and a slot that narrows to zero
+    # columns is a needless edge case to hand to Stan. This happens whenever the
+    # grouping column of `new_data` is left empty.
+    missing_fitted_columns = setdiff(colnames(X_original_slot), colnames(X_new))
+    if (length(missing_fitted_columns) > 0)
+      X_new[missing_fitted_columns] = 0
     
     is_NA_col = str_detect(colnames(X_new), "___NA$")
     X_new_unseen = X_new[,  is_NA_col, drop = FALSE]
@@ -387,7 +414,7 @@ prepare_replicate_data = function(X,
     list(X = X_new, X_unseen = X_new_unseen, which = which_idx)
   }
   
-  replicate_slots = map(seq_len(4L), build_replicate_slot)
+  replicate_slots = map(seq_len(N_RE_SLOTS), build_replicate_slot)
   
   # Append smooth-derived replicate slots (one per smooth term in the
   # composition formula). They occupy whichever slots come after the
@@ -396,10 +423,10 @@ prepare_replicate_data = function(X,
     n_explicit_re = length(original_grouping_names)
     n_smooth      = length(smooth_replicate_slots)
     n_used        = n_explicit_re + n_smooth
-    if (n_used > 4L) {
+    if (n_used > N_RE_SLOTS) {
       stop(sprintf(
-        "sccomp says: the replicate model needs %d RE slot(s) but only 4 are available.",
-        n_used
+        "sccomp says: the replicate model needs %d RE slot(s) but only %d are available.",
+        n_used, N_RE_SLOTS
       ))
     }
     # Replace placeholder slots `[n_explicit_re + 1 .. n_used]` with smooths.
@@ -409,7 +436,7 @@ prepare_replicate_data = function(X,
   }
   
   # setup default unknown_grouping variable for generated quantities
-  unknown_grouping = rep(0L, 4L)
+  unknown_grouping = rep(0L, N_RE_SLOTS)
   
   list(
     X        = new_X,
@@ -422,16 +449,22 @@ prepare_replicate_data = function(X,
     X_random_effect_2 = replicate_slots[[2]]$X,
     X_random_effect_3 = replicate_slots[[3]]$X,
     X_random_effect_4 = replicate_slots[[4]]$X,
+    X_random_effect_5 = replicate_slots[[5]]$X,
+    X_random_effect_6 = replicate_slots[[6]]$X,
     
     X_random_effect_1_unseen = replicate_slots[[1]]$X_unseen,
     X_random_effect_2_unseen = replicate_slots[[2]]$X_unseen,
     X_random_effect_3_unseen = replicate_slots[[3]]$X_unseen,
     X_random_effect_4_unseen = replicate_slots[[4]]$X_unseen,
+    X_random_effect_5_unseen = replicate_slots[[5]]$X_unseen,
+    X_random_effect_6_unseen = replicate_slots[[6]]$X_unseen,
     
     X_random_effect_which_1 = replicate_slots[[1]]$which,
     X_random_effect_which_2 = replicate_slots[[2]]$which,
     X_random_effect_which_3 = replicate_slots[[3]]$which,
     X_random_effect_which_4 = replicate_slots[[4]]$which,
+    X_random_effect_which_5 = replicate_slots[[5]]$which,
+    X_random_effect_which_6 = replicate_slots[[6]]$which,
     
     ncol_X_random_eff_new    = map_int(replicate_slots, ~ ncol(.x$X)),
     ncol_X_random_eff_unseen = map_int(replicate_slots, ~ ncol(.x$X_unseen)),
@@ -497,7 +530,7 @@ replicate_data = function(.data,
     Xa = model_input$Xa,
     N = model_input$N,
     intercept_in_design = model_input$intercept_in_design,
-    X_random_effect_slots = lapply(seq_len(4L), function(k)
+    X_random_effect_slots = lapply(seq_len(N_RE_SLOTS), function(k)
       model_input[[paste0("X_random_effect_", k)]]),
     .sample = !!.sample,
     .cell_group = !!.cell_group,
@@ -523,8 +556,8 @@ replicate_data = function(.data,
   model_input$N        = prepared_data$N
   model_input$exposure = prepared_data$exposure
   
-  # Per-slot RE design + unseen + which-indices (4 slots)
-  for (k in seq_len(4L)) {
+  # Per-slot RE design + unseen + which-indices
+  for (k in seq_len(N_RE_SLOTS)) {
     model_input[[paste0("X_random_effect_", k)]]            = prepared_data[[paste0("X_random_effect_", k)]]
     model_input[[paste0("X_random_effect_", k, "_unseen")]] = prepared_data[[paste0("X_random_effect_", k, "_unseen")]]
     model_input[[paste0("X_random_effect_which_", k)]]      = prepared_data[[paste0("X_random_effect_which_", k)]]
@@ -539,9 +572,9 @@ replicate_data = function(.data,
   model_input$X_which         = prepared_data$X_which
   model_input$XA_which        = prepared_data$XA_which
   
-  # Length-4 vector of which-index lengths for the random-effect slots
+  # One which-index length per random-effect slot
   model_input$length_X_random_effect_which =
-    map_int(seq_len(4L), ~ length(prepared_data[[paste0("X_random_effect_which_", .x)]]))
+    map_int(seq_len(N_RE_SLOTS), ~ length(prepared_data[[paste0("X_random_effect_which_", .x)]]))
   
   # Should I create an intercept for generate quantities?
   model_input$create_intercept = prepared_data$create_intercept
@@ -596,82 +629,64 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
   M <- NULL
   generated_proportions <- NULL
   
-  draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) %>%
-    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/max(1, sum(.value)))) %>%
-    filter(.draw<= number_of_draws) %>%
-    rename(generated_counts = .value, replicate = .draw) %>%
-    
-    mutate(generated_counts = as.integer(generated_counts)) %>%
+  draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) |>
+    with_groups(c(.draw, N), ~ .x |> mutate(generated_proportions = .value/max(1, sum(.value)))) |>
+    filter(.draw<= number_of_draws) |>
+    rename(generated_counts = .value, replicate = .draw) |>
+    mutate(generated_counts = as.integer(generated_counts)) |>
     select(M, N, generated_proportions, generated_counts, replicate)
   
 }
 
-#' harmonise_factor_levels
+#' Declare the fitted covariate levels on new data
 #'
 #' @description
-#' A helper function to make sure that factor levels in new data match the old data
+#' `model.matrix()` reads its columns off `levels()`, not off the values it is
+#' given, so a covariate level that the requested rows happen not to contain
+#' still needs to be declared or its column silently disappears from the design.
+#' A character column is factored by observed value, which is why the level set
+#' has to come from the fitted rows rather than from `new_data`.
 #'
-#' @param new_data A data frame containing potential factor variables
-#' @param old_data A data frame containing the reference factor levels
+#' Declaring the levels here is what lets the design be built from `new_data`
+#' alone. Binding the fitted rows on and slicing them back off afterwards would
+#' have the same effect on the level set, but it makes every row of the result
+#' positional.
 #'
-#' @return A data frame with the same dimensions as `new_data`
+#' @param new_data A data frame whose covariate columns are to be declared
+#' @param old_data The fitted rows, supplying the level set
+#' @param exclude Columns to leave untouched, typically the sample identifier,
+#'   whose values are by design absent from `old_data`
+#'
+#' @return `new_data`, with its categorical covariates as factors whose levels
+#'   are those of `old_data`
 #' @noRd
-#'
-harmonise_factor_levels <- function(new_data, old_data) {
+declare_fitted_levels <- function(new_data, old_data, exclude = character()) {
   if (!is.data.frame(new_data) || !is.data.frame(old_data)) {
     stop("Both new_data and old_data must be data frames")
   }
-  
-  # Ensure arguments are in the correct order
-  if (!identical(names(formals(harmonise_factor_levels))[1:2], c("new_data", "old_data"))) {
-    warning("Arguments appear to be in the wrong order. 'new_data' should be the data to be harmonized, 'old_data' is the reference.")
+
+  categorical <-
+    old_data |>
+    select(where(~ is.factor(.x) || is.character(.x))) |>
+    colnames() |>
+    setdiff(exclude) |>
+    intersect(colnames(new_data))
+
+  for (column in categorical) {
+    reference_values <- old_data[[column]]
+
+    # A factor keeps the order it was fitted with, since that order decides
+    # which level is the reference and therefore what the fitted columns are
+    # called. A character has no declared order, so it takes the same sorted
+    # order `model.matrix()` would have given it.
+    reference_levels <-
+      if (is.factor(reference_values)) levels(reference_values)
+      else sort(unique(as.character(reference_values)))
+
+    new_data[[column]] <- factor(as.character(new_data[[column]]), levels = reference_levels)
   }
-  
-  # Original implementation follows
-  f_old <- sapply(old_data, is.factor)
-  f_new <- sapply(new_data, is.factor)
-  
-  # Get the common factor column names
-  common_f <- intersect(names(old_data)[f_old], names(new_data)[f_new])
-  
-  # If there are no common factor columns, return the new_data as is
-  if (length(common_f) == 0) {
-    return(new_data)
-  }
-  
-  # For each common factor column
-  for (col in common_f) {
-    # Get all unique levels from both datasets
-    all_levels <- unique(c(levels(old_data[[col]]), levels(new_data[[col]])))
-    
-    # Check if there are new levels in new_data that don't exist in old_data
-    new_levels <- setdiff(levels(new_data[[col]]), levels(old_data[[col]]))
-    if (length(new_levels) > 0) {
-      message(paste("sccomp says: New levels found in column", col, ":", paste(new_levels, collapse = ", ")))
-    }
-    
-    # Set levels of new_data to match old_data, adding any missing levels
-    new_data[[col]] <- factor(new_data[[col]], levels = levels(old_data[[col]]))
-  }
-  
-  # Also check for character columns in new_data that are factors in old_data
-  char_new <- sapply(new_data, is.character)
-  factor_cols_in_old <- names(old_data)[f_old]
-  
-  char_to_factor <- intersect(names(new_data)[char_new], factor_cols_in_old)
-  
-  for (col in char_to_factor) {
-    # Convert character to factor with the same levels as in old_data
-    new_data[[col]] <- factor(new_data[[col]], levels = levels(old_data[[col]]))
-    
-    # Check if there are values in new_data that don't exist in old_data's levels
-    invalid_values <- setdiff(unique(as.character(new_data[[col]])), levels(old_data[[col]]))
-    if (length(invalid_values) > 0 && !all(is.na(invalid_values))) {
-      warning(paste("sccomp says: Values in column", col, "not found in reference levels:", paste(invalid_values[!is.na(invalid_values)], collapse = ", ")))
-    }
-  }
-  
-  return(new_data)
+
+  new_data
 }
 
 #' Get Output Samples from a Stan Fit Object
