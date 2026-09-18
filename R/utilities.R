@@ -686,8 +686,7 @@ summary_to_tibble = function(fit, par, x, y = NULL, probs = c(0.025, 0.25, 0.50,
 #' @noRd
 get_random_effect_design3 = function(
   .data_, formula, grouping, .sample, 
-  accept_NA_as_average_effect = FALSE,
-  scaling_reference = NULL
+  accept_NA_as_average_effect = FALSE
 ){
   
   # Define the variables as NULL to avoid CRAN NOTES
@@ -695,8 +694,7 @@ get_random_effect_design3 = function(
   
   mydesign = .data_ |> get_design_matrix(
     formula, !!.sample, 
-    accept_NA_as_average_effect = accept_NA_as_average_effect,
-    scaling_reference = scaling_reference
+    accept_NA_as_average_effect = accept_NA_as_average_effect
   )
   
   # Create a matrix of group assignments
@@ -824,11 +822,16 @@ scale_numeric_covariates = function(.data_spread, variables, reference = NULL){
   .data_spread
 }
 
-#' @param scaling_reference Data frame whose continuous covariates give the
-#'   centre and the scale, passed to [scale_numeric_covariates()]. When `NULL`
-#'   they come from `.data_spread` itself; supply the fitted samples when
-#'   building a design matrix for new data.
+#' Numeric formula columns to z-score
 #'
+#' `parse_formula()` already expands `s()` / `t2()` to their covariates, so
+#' this is the same column set whether the model has smooths or not.
+#'
+#' @noRd
+formula_numeric_variables <- function(...) {
+  unique(unlist(lapply(list(...), parse_formula), use.names = FALSE))
+}
+
 #' @importFrom glue glue
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate
@@ -837,16 +840,18 @@ scale_numeric_covariates = function(.data_spread, variables, reference = NULL){
 #' @importFrom dplyr where
 #' @importFrom rlang enquo
 #' @noRd
-get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE, scaling_reference = NULL){
+get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_average_effect = FALSE){
   
   .sample = enquo(.sample)
   
   variables = parse_formula(formula)
   
   .data_spread = .data_spread %>%
-    
-    select(!!.sample, variables) |>
-    scale_numeric_covariates(variables, reference = scaling_reference)
+    select(!!.sample, variables)
+
+  # Continuous covariates are z-scored once on the data, at estimation and
+  # at prediction, before this helper runs. Scaling again here would apply
+  # a second transform to parametric columns and still miss smooth columns.
 
   # Check for NAs in the data
   has_na = any(is.na(.data_spread |> select(variables)))
@@ -859,15 +864,11 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
   # Check if we should handle NAs as average effects
   if(accept_NA_as_average_effect && has_na){
     
-    # The NA handling spreads an unknown value evenly over the levels of its
-    # factor and replaces an unknown number by the mean, so it needs the fitted
-    # rows on the same scale as `.data_spread` to read those off.
-    reference_spread =
-      if(is.null(scaling_reference)) NULL
-      else scaling_reference |> scale_numeric_covariates(variables, reference = scaling_reference)
-    
+    # The fitted level set travels on the factor columns and the fitted mean of
+    # a z-scored covariate is 0, so the NA handling needs nothing from the
+    # fitted rows.
     return(get_design_matrix_with_na_handling(
-      .data_spread, formula, !!.sample, reference = reference_spread
+      .data_spread, formula, !!.sample
     ))
   }
   
@@ -906,12 +907,12 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
 #' @importFrom dplyr where
 #' @importFrom rlang enquo
 #' @noRd
-get_design_matrix_with_na_handling = function(.data_spread, formula, .sample, reference = NULL){
+get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
   
   .sample = enquo(.sample)
   
   # Convert NA to a factor level "NA" for categorical variables
-  data_with_na <- handle_missing_values(.data_spread, reference = reference)
+  data_with_na <- handle_missing_values(.data_spread)
   
   # Create design matrix
   design_matrix = model.matrix(formula, data = data_with_na, na.action = NULL)
@@ -1141,6 +1142,14 @@ data_spread_to_model_input =
       unique() 
     
     if (length(.grouping_for_random_effect)==0 ) .grouping_for_random_effect = "random_effect"
+    
+    # One z-score for the whole estimation: parametric terms, smooths, and
+    # random-effect slopes all read this scaled copy. count_data keeps the
+    # original units so prediction can apply the same centre and scale.
+    .data_spread = .data_spread |>
+      scale_numeric_covariates(
+        formula_numeric_variables(formula, formula_variability)
+      )
     
     # ----------------------------------------------------------------------
     # Smooth terms: parse `s()` / `t2()` out of the composition formula so
@@ -1875,25 +1884,20 @@ inv_softmax = function(proportions) {
 }
 
 #' Handle missing values in a data frame
-#' 
-#' @param data A data frame to process
-#' @param reference Optional data frame supplying the factor levels and the
-#'   continuous means. When `NULL` they are read from `data` itself, which is
-#'   only correct when `data` holds the fitted rows.
+#'
+#' An NA means the covariate is unknown for that row, so it resolves to the
+#' average of the fitted covariate: evenly over the levels of a factor, and to
+#' the mean of a continuous one.
+#'
+#' @param data A data frame holding the formula covariates, with categorical
+#'   columns already declared as factors over the fitted levels and continuous
+#'   columns already z-scored against the fitted rows
 #' @return A data frame with missing values handled:
-#'   - For categorical variables (factor/character): NA values are converted to a factor level "NA"
-#'   - For numeric variables: NA values are replaced with the mean of the column
-#' @importFrom dplyr cur_column
-handle_missing_values <- function(data, reference = NULL) {
-  
-  # Both the level set and the mean describe the fitted covariates, not the rows
-  # being predicted. Reading them off `data` alone would make the effect of an
-  # NA depend on which rows were requested, and would drop the design column of
-  # any level those rows happen not to contain.
-  reference_column <- function(column) {
-    if (!is.null(reference) && column %in% colnames(reference)) reference[[column]] else NULL
-  }
-  
+#'   - categorical: NA becomes a real "NA" level, last in the ordering, which the
+#'     caller spreads evenly over the declared levels
+#'   - continuous: NA becomes 0
+handle_missing_values <- function(data) {
+
   data %>%
     mutate(
       # 1) Handle factor/character: turn NA into a real "NA" level, last in the ordering
@@ -1904,11 +1908,13 @@ handle_missing_values <- function(data, reference = NULL) {
             x_char <- as.character(.x)
             x_char[is.na(x_char)] <- "NA"
             
-            # A factor keeps its declared order, which is the order the model
-            # was fitted with and so decides what the columns are called.
+            # A factor keeps its declared order, which is the order the model was
+            # fitted with and so decides what the columns are called. Predicted
+            # rows arrive already factored over the fitted levels, so a level the
+            # rows happen not to contain still gets its design column.
             declared <-
               if (is.factor(.x)) levels(.x)
-              else sort(unique(c(x_char, as.character(reference_column(cur_column())))))
+              else sort(unique(x_char))
             
             factor(x_char, levels = c(setdiff(declared, "NA"), "NA"))
           } else {
@@ -1916,19 +1922,9 @@ handle_missing_values <- function(data, reference = NULL) {
           }
         }
       ),
-      # 2) Handle numeric: replace NA by the (non-NA) mean of that column
-      across(
-        where(is.numeric),
-        ~{
-          if (any(is.na(.x))) {
-            from_reference <- reference_column(cur_column())
-            mean_val <- mean(if (is.null(from_reference)) .x else from_reference, na.rm = TRUE)
-            ifelse(is.na(.x), mean_val, .x)  # Only replace NAs, keep original values
-          } else {
-            .x
-          }
-        }
-      )
+      # 2) Handle numeric: z-scoring against the fitted rows puts the fitted mean
+      # at 0, so the average effect is 0 whichever rows are being predicted.
+      across(where(is.numeric), ~ ifelse(is.na(.x), 0, .x))
     )
 }
 

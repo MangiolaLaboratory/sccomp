@@ -237,6 +237,16 @@ prepare_replicate_data = function(X,
   
   new_data = new_data |> declare_fitted_levels(old_data, exclude = quo_name(.sample))
   
+  # One z-score for the whole prediction, centred and scaled on the fitted
+  # rows. Done before the smooths are stripped so `s(age)` and `~ age` see the
+  # same numbers, and it is the only scaling step: `get_design_matrix()` takes
+  # its input as already scaled.
+  new_data = new_data |>
+    scale_numeric_covariates(
+      formula_numeric_variables(formula_composition, formula_variability),
+      reference = old_data
+    )
+  
   # Smooth columns are evaluated separately via PredictMat below; keep the
   # random-effect clauses so the later RE parsing still sees the same formula.
   formula_composition = strip_smooth_terms(formula_composition)
@@ -251,14 +261,9 @@ prepare_replicate_data = function(X,
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
-      accept_NA_as_average_effect = TRUE,
-      # Continuous covariates are z-scored here. The centre and the scale have
-      # to come from the fitted samples alone: taking them from the requested
-      # rows would make the prediction at a given covariate value depend on the
-      # range and density of the grid that was asked for.
-      scaling_reference = old_data
     ) %>%
-    # Remove columns that are not in the original design matrix
+      accept_NA_as_average_effect = TRUE
+    #  Remove columns that are not in the original design matrix
     .[,colnames(.) %in% colnames(X), drop=FALSE]
   
   # Evaluate any smooth bases on the replicate rows and merge the resulting
@@ -298,8 +303,7 @@ prepare_replicate_data = function(X,
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
-      accept_NA_as_average_effect = TRUE,
-      scaling_reference = old_data
+      accept_NA_as_average_effect = TRUE
     ) %>%
     # Remove columns that are not in the original design matrix
     .[,colnames(.) %in% colnames(Xa), drop=FALSE]
@@ -332,8 +336,7 @@ prepare_replicate_data = function(X,
     mutate(design = map2(
       formula, grouping,
       ~ get_random_effect_design3(new_data, .x, .y, !!.sample,
-                                  accept_NA_as_average_effect = TRUE,
-                                  scaling_reference = old_data)
+                                  accept_NA_as_average_effect = TRUE)
     ))
   
   # ----------------------------------------------------------------------
