@@ -221,10 +221,10 @@ prepare_replicate_data = function(X,
   # unrecognised value has already become NA and would pass unnoticed.
   # check that for each column of the old data. The new data has values that are found in the old data, omit NA , ignore !!.sample column
   map(
-    old_data %>%
+    old_data |>
       # Just apply to categorical
-      select(where(~ is.factor(.) || is.character(.))) %>%
-      names() %>%
+      select(where(~ is.factor(.x) || is.character(.x))) |>
+      names() |>
       setdiff(quo_name(.sample)),
     ~ if (any(!new_data[[.x]][!is.na(new_data[[.x]])] %in% old_data[[.x]])) {
       stop(
@@ -261,10 +261,11 @@ prepare_replicate_data = function(X,
         paste(collapse="") |>
         as.formula(),
       !!.sample, 
-    ) %>%
       accept_NA_as_average_effect = TRUE
-    #  Remove columns that are not in the original design matrix
-    .[,colnames(.) %in% colnames(X), drop=FALSE]
+    )
+  
+  # Remove columns that are not in the original design matrix
+  new_X = new_X[, colnames(new_X) %in% colnames(X), drop = FALSE]
   
   # Evaluate any smooth bases on the replicate rows and merge the resulting
   # design pieces (unpenalised columns appended to `new_X`, one RE slot per
@@ -285,10 +286,7 @@ prepare_replicate_data = function(X,
   
   X_which =
     colnames(new_X) |>
-    match(
-      X %>%
-        colnames()
-    ) |>
+    match(colnames(X)) |>
     na.omit() |>
     as.array()
   
@@ -304,16 +302,14 @@ prepare_replicate_data = function(X,
         as.formula(),
       !!.sample, 
       accept_NA_as_average_effect = TRUE
-    ) %>%
-    # Remove columns that are not in the original design matrix
-    .[,colnames(.) %in% colnames(Xa), drop=FALSE]
+    )
+  
+  # Remove columns that are not in the original design matrix
+  new_Xa = new_Xa[, colnames(new_Xa) %in% colnames(Xa), drop = FALSE]
   
   XA_which =
     colnames(new_Xa) |>
-    match(
-      Xa %>%
-        colnames()
-    ) |>
+    match(colnames(Xa)) |>
     na.omit() |>
     as.array()
   
@@ -633,12 +629,11 @@ parse_generated_quantities = function(rng, number_of_draws = 1){
   M <- NULL
   generated_proportions <- NULL
   
-  draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) %>%
-    with_groups(c(.draw, N), ~ .x %>% mutate(generated_proportions = .value/max(1, sum(.value)))) %>%
-    filter(.draw<= number_of_draws) %>%
-    rename(generated_counts = .value, replicate = .draw) %>%
-    
-    mutate(generated_counts = as.integer(generated_counts)) %>%
+  draws_to_tibble_x_y(rng, "counts", "N", "M", number_of_draws) |>
+    with_groups(c(.draw, N), ~ .x |> mutate(generated_proportions = .value/max(1, sum(.value)))) |>
+    filter(.draw<= number_of_draws) |>
+    rename(generated_counts = .value, replicate = .draw) |>
+    mutate(generated_counts = as.integer(generated_counts)) |>
     select(M, N, generated_proportions, generated_counts, replicate)
   
 }

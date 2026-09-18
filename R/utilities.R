@@ -846,7 +846,7 @@ get_design_matrix = function(.data_spread, formula, .sample, accept_NA_as_averag
   
   variables = parse_formula(formula)
   
-  .data_spread = .data_spread %>%
+  .data_spread = .data_spread |>
     select(!!.sample, variables)
 
   # Continuous covariates are z-scored once on the data, at estimation and
@@ -1898,7 +1898,7 @@ inv_softmax = function(proportions) {
 #'   - continuous: NA becomes 0
 handle_missing_values <- function(data) {
 
-  data %>%
+  data |>
     mutate(
       # 1) Handle factor/character: turn NA into a real "NA" level, last in the ordering
       across(
