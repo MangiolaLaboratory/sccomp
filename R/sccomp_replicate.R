@@ -247,6 +247,13 @@ prepare_replicate_data = function(X,
       reference = old_data
     )
   
+  # Which smooths the caller asked for, read before they are stripped. A
+  # sub-formula selects among the fitted smooths the same way it selects among
+  # the `(... | g)` clauses: the ones it leaves out are set to zero rather than
+  # silently rebuilt. Naming none of them drops them all, which is how a
+  # parametric-only sub-formula stays parametric.
+  smooth_keep_labels = formula_smooth_labels(formula_composition)
+
   # Smooth columns are evaluated separately via PredictMat below; keep the
   # random-effect clauses so the later RE parsing still sees the same formula.
   formula_composition = strip_smooth_terms(formula_composition)
@@ -273,7 +280,8 @@ prepare_replicate_data = function(X,
   smooth_design = build_smooth_replicate_design(
     parametric_X   = new_X,
     new_data       = new_data,
-    smooth_results = smooth_results
+    smooth_results = smooth_results,
+    keep_labels    = smooth_keep_labels
   )
   new_X                  = smooth_design$new_X
   smooth_replicate_slots = smooth_design$smooth_replicate_slots
@@ -416,9 +424,11 @@ prepare_replicate_data = function(X,
   
   replicate_slots = map(seq_len(N_RE_SLOTS), build_replicate_slot)
   
-  # Append smooth-derived replicate slots (one per smooth term in the
-  # composition formula). They occupy whichever slots come after the
-  # explicit RE clauses, mirroring the slot ordering used at fit time.
+  # Append smooth-derived replicate slots (one per penalised block of the
+  # fitted smooths). They occupy whichever slots come after the explicit RE
+  # clauses, mirroring the slot ordering used at fit time. `n_explicit_re`
+  # comes from the *original* formula, so the offset does not move when the
+  # prediction sub-formula drops RE clauses.
   if (length(smooth_replicate_slots) > 0) {
     n_explicit_re = length(original_grouping_names)
     n_smooth      = length(smooth_replicate_slots)
@@ -430,7 +440,10 @@ prepare_replicate_data = function(X,
       ))
     }
     # Replace placeholder slots `[n_explicit_re + 1 .. n_used]` with smooths.
+    # A NULL entry is a smooth the sub-formula dropped: its slot keeps the
+    # empty placeholder built above, which is what zeroes that effect.
     for (k in seq_len(n_smooth)) {
+      if (is.null(smooth_replicate_slots[[k]])) next
       replicate_slots[[n_explicit_re + k]] = smooth_replicate_slots[[k]]
     }
   }

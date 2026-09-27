@@ -38,6 +38,33 @@ has_smooth_terms <- function(fm) {
 }
 
 
+#' Deparsed labels of the smooth specials in a formula
+#'
+#' The single place where an `s()` / `t2()` call is turned into the string that
+#' identifies it. Fit time stores these as `smooth_labels`, and prediction
+#' matches a sub-formula against them, so both sides must deparse the same way:
+#' going through the parsed call normalises spacing, which is why `s(x, k=8)`
+#' and `s(x, k = 8)` are the same smooth. Argument order is not normalised.
+#'
+#' @param fm A one-sided formula, or NULL.
+#' @return A character vector of deparsed smooth calls, possibly empty.
+#' @keywords internal
+#' @noRd
+formula_smooth_labels <- function(fm) {
+  if (is.null(fm)) return(character(0))
+  trm <- stats::terms(fm, specials = c("s", "t2"))
+  smooth_idx <- unlist(attr(trm, "specials"))
+  if (length(smooth_idx) == 0) return(character(0))
+  
+  vars <- attr(trm, "variables")
+  vapply(
+    smooth_idx + 1L,
+    function(i) deparse(vars[[i]], width.cutoff = 500L),
+    character(1)
+  ) |> unname()
+}
+
+
 #' Strip smooth specials from a formula
 #'
 #' Returns a new formula with `s()` / `t2()` term labels removed. All other
@@ -52,18 +79,7 @@ has_smooth_terms <- function(fm) {
 strip_smooth_terms <- function(fm) {
   if (is.null(fm)) return(fm)
   trm <- stats::terms(fm, specials = c("s", "t2"))
-  smooth_idx <- unlist(attr(trm, "specials"))
-  
-  vars <- attr(trm, "variables")
-  smooth_labels <- if (length(smooth_idx) > 0) {
-    vapply(
-      smooth_idx + 1L,
-      function(i) deparse(vars[[i]], width.cutoff = 500L),
-      character(1)
-    )
-  } else {
-    character(0)
-  }
+  smooth_labels <- formula_smooth_labels(fm)
   
   all_labels <- attr(trm, "term.labels")
   keep_labels <- setdiff(all_labels, smooth_labels)
@@ -489,61 +505,101 @@ build_smooth_slot <- function(Xr, label) {
 #' @param smooth_results A list with `smooth_specs`, `smooth_re_objs`, and
 #'   `smooth_labels` (parallel lists captured at fit time), or `NULL` /
 #'   length-0 to signal "no smooths".
+#' @param keep_labels Character vector of fit-time smooth labels to evaluate,
+#'   or `NULL` to evaluate all of them. Smooths left out contribute nothing:
+#'   their unpenalised columns are not appended and their penalised blocks are
+#'   returned as `NULL`, which the caller leaves as an empty slot so the model
+#'   sets that effect to zero. This is what lets a prediction sub-formula drop
+#'   a smooth, the way dropping a `(... | g)` clause drops a random effect.
 #' @return A list with:
 #'   * `new_X` — `parametric_X` with the unpenalised smooth columns appended.
-#'   * `smooth_replicate_slots` — flat list of slot lists (one per penalised
-#'     block, in fit-time order), each with `X`, `X_unseen`, `which`.
+#'   * `smooth_replicate_slots` — list with one entry per *fit-time* penalised
+#'     block, in fit-time order, each either a slot list (`X`, `X_unseen`,
+#'     `which`) or `NULL` for a dropped smooth. Positions are fit-time
+#'     positions, not a compacted sequence, because the slot index is what
+#'     selects the fitted parameters.
 #'
 #' @keywords internal
 #' @noRd
 build_smooth_replicate_design <- function(parametric_X,
                                           new_data,
-                                          smooth_results) {
+                                          smooth_results,
+                                          keep_labels = NULL) {
   smooth_specs   <- smooth_results$smooth_specs
   smooth_re_objs <- smooth_results$smooth_re_objs
   smooth_labels  <- smooth_results$smooth_labels
-  
+
+  if (!is.null(keep_labels)) {
+    unknown <- setdiff(keep_labels, smooth_labels)
+    if (length(unknown) > 0) {
+      stop(sprintf(
+        paste0(
+          "sccomp says: the smooth term(s) %s are not in the fitted model, so there ",
+          "are no parameters to predict from. A prediction formula can only select ",
+          "among the smooths that were fitted%s. Note the term has to be written the ",
+          "same way, including argument order."
+        ),
+        paste(sprintf("`%s`", unknown), collapse = ", "),
+        if (length(smooth_labels) == 0) " (this model has none)"
+        else sprintf(" (%s)", paste(sprintf("`%s`", smooth_labels), collapse = ", "))
+      ))
+    }
+  }
+
   if (length(smooth_specs) == 0L) {
     return(list(new_X = parametric_X, smooth_replicate_slots = list()))
   }
-  
-  # One basis evaluation per smooth term, carrying the label alongside the
-  # (Xf, Xr_blocks) pair so the downstream maps don't need parallel vectors.
+
+  keep <- if (is.null(keep_labels)) rep(TRUE, length(smooth_labels))
+          else smooth_labels %in% keep_labels
+
+  # Where each smooth's blocks sit in the fit-time flat ordering. Taken from the
+  # stored `re$rand` rather than from the evaluation below, so that a dropped
+  # smooth still occupies its positions and the ones after it do not shift onto
+  # another smooth's parameters.
+  n_blocks    <- vapply(smooth_re_objs, function(re) length(re$rand), integer(1))
+  first_block <- cumsum(c(0L, n_blocks))[seq_along(smooth_labels)]
+
+  # Only the kept smooths are evaluated, so a dropped one cannot fail on a
+  # column its grouping factor needs but the replicate rows do not carry.
   smooth_evals <- purrr::pmap(
-    list(spec = smooth_specs, re = smooth_re_objs, label = smooth_labels),
-    function(spec, re, label) {
+    list(spec = smooth_specs, re = smooth_re_objs, label = smooth_labels, use = keep),
+    function(spec, re, label, use) {
+      if (!use) return(NULL)
       pred <- predict_smooth_at_newdata(spec, re, new_data)
       pred$label <- label
       pred
     }
   )
-  
+
   # Append unpenalised (Xf) columns in fit-time order.
   new_X <- purrr::reduce(smooth_evals, .init = parametric_X, function(X, e) {
-    if (ncol(e$Xf) == 0L) return(X)
+    if (is.null(e) || ncol(e$Xf) == 0L) return(X)
     colnames(e$Xf) <- sprintf("%s__lin%d", e$label, seq_len(ncol(e$Xf)))
     cbind(X, e$Xf)
   })
-  
-  # One slot per penalised block, flattened across smooths.
-  smooth_replicate_slots <- smooth_evals |>
-    purrr::map(function(e) {
-      n_blocks <- length(e$Xr_blocks)
-      purrr::map2(e$Xr_blocks, seq_along(e$Xr_blocks), function(Xr_b, b) {
-        colnames(Xr_b) <- if (n_blocks == 1L) {
-          sprintf("%s___basis%02d", e$label, seq_len(ncol(Xr_b)))
-        } else {
-          sprintf("%s__b%d___basis%02d", e$label, b, seq_len(ncol(Xr_b)))
-        }
-        list(
-          X        = Xr_b,
-          X_unseen = Xr_b[, integer(0), drop = FALSE],
-          which    = seq_len(ncol(Xr_b)) |> as.array()
-        )
-      })
-    }) |>
-    unlist(recursive = FALSE)
-  
+
+  # One slot per fit-time penalised block; NULL where the smooth was dropped.
+  smooth_replicate_slots <- vector("list", sum(n_blocks))
+  for (k in seq_along(smooth_evals)) {
+    e <- smooth_evals[[k]]
+    if (is.null(e)) next
+    n_b <- length(e$Xr_blocks)
+    for (b in seq_len(n_b)) {
+      Xr_b <- e$Xr_blocks[[b]]
+      colnames(Xr_b) <- if (n_b == 1L) {
+        sprintf("%s___basis%02d", e$label, seq_len(ncol(Xr_b)))
+      } else {
+        sprintf("%s__b%d___basis%02d", e$label, b, seq_len(ncol(Xr_b)))
+      }
+      smooth_replicate_slots[[first_block[k] + b]] <- list(
+        X        = Xr_b,
+        X_unseen = Xr_b[, integer(0), drop = FALSE],
+        which    = seq_len(ncol(Xr_b)) |> as.array()
+      )
+    }
+  }
+
   list(new_X = new_X, smooth_replicate_slots = smooth_replicate_slots)
 }
 
