@@ -199,6 +199,35 @@ test_that("parse_formula_smooths accepts character fs grouping columns", {
 })
 
 
+test_that("parse_formula_smooths rejects a factor `by`, which mgcv splits per level", {
+  skip_if_not_installed("mgcv")
+
+  dat <- data.frame(
+    x = seq(0, 6, length.out = 36),
+    sex = rep(c("female", "male"), length.out = 36),
+    tissue = factor(rep(c("blood", "lymph", "tumor"), length.out = 36))
+  )
+
+  # Keeping only the first of the three smooths would fit silently, and a factor
+  # `by` zeroes the basis outside its own level, so lymph and tumor would end up
+  # with no smooth at all.
+  expect_error(
+    sccomp:::parse_formula_smooths(
+      ~ s(x, sex, bs = "fs", k = 5, by = tissue),
+      dat
+    ),
+    regexp = "expands into 3 separate smooths"
+  )
+
+  # A numeric `by` produces one smooth, so it stays allowed
+  dat$weight <- seq(1, 2, length.out = 36)
+  expect_length(
+    sccomp:::parse_formula_smooths(~ s(x, k = 5, by = weight), dat)$smooth_specs,
+    1L
+  )
+})
+
+
 test_that("parse_formula_smooths returns identity for smooth-free formulas", {
   dat <- data.frame(type = letters[1:5], age = 1:5)
   res <- sccomp:::parse_formula_smooths(~ type + age, dat)
@@ -390,13 +419,183 @@ test_that("fs factor smooth fits and predicts end-to-end (multi-block)", {
 })
 
 
+test_that("global smooth + fs smooth + REs fill all 6 slots end-to-end", {
+  # Motivating case for the slot budget: one global age smooth, one
+  # factor-smooth (3 penalty blocks), and two explicit RE clauses.
+  skip_if_not_installed("mgcv")
+  skip_cmdstan()
+  data("counts_obj")
+  
+  set.seed(42)
+  samples <- levels(counts_obj$sample)
+  covs <- tibble::tibble(
+    sample           = samples,
+    age_days_scaled  = as.numeric(scale(seq_along(samples))),
+    tissue_groups    = factor(rep(c("blood", "lymph", "tumor"),
+                                  length.out = length(samples))),
+    dataset_id       = factor(rep(c("ds1", "ds2"),
+                                  length.out = length(samples))),
+    batch            = factor(rep(c("b1", "b2", "b3"),
+                                  length.out = length(samples)))
+  )
+  counts_age <- counts_obj |> dplyr::left_join(covs, by = "sample")
+  
+  fit <- sccomp_estimate(
+    counts_age,
+    formula_composition =
+      ~ s(age_days_scaled, k = 5) +
+        s(age_days_scaled, tissue_groups, bs = "fs", k = 5) +
+        (1 | dataset_id) +
+        (1 | batch),
+    formula_variability = ~ 1,
+    sample              = "sample",
+    cell_group          = "cell_group",
+    abundance           = "count",
+    cores               = 1,
+    inference_method    = "pathfinder",
+    max_sampling_iterations = 200,
+    mcmc_seed           = 42,
+    verbose             = FALSE
+  )
+  
+  mi <- attr(fit, "model_input")
+  sr <- sccomp:::get_smooth_results(fit)
+  
+  # 1 global smooth + 3 fs blocks + 2 REs = 6 occupied slots
+  expect_equal(length(sr$smooth_labels), 2L)
+  expect_equal(sum(mi$ncol_X_random_eff > 0L), 6L)
+  expect_equal(mi$n_random_eff, 6L)
+  expect_true(all(mi$ncol_X_random_eff > 0L))
+  
+  # Predict across age x tissue; grouping factors held at seen levels.
+  grid <- expand.grid(
+    age_days_scaled = seq(min(covs$age_days_scaled),
+                          max(covs$age_days_scaled), length.out = 15),
+    tissue_groups   = levels(covs$tissue_groups),
+    dataset_id      = covs$dataset_id[1],
+    batch           = covs$batch[1]
+  ) |>
+    tibble::as_tibble() |>
+    dplyr::mutate(sample = sprintf("grid_%03d", dplyr::row_number()))
+  
+  pred <- sccomp_predict(fit, new_data = grid, number_of_draws = 50)
+  expect_true(all(c("age_days_scaled", "tissue_groups", "proportion_mean")
+                  %in% names(pred)))
+  expect_equal(nrow(pred), nrow(grid) * length(unique(counts_obj$cell_group)))
+  expect_true(all(is.finite(pred$proportion_mean)))
+
+  # A prediction sub-formula selects among the fitted smooths, the same way it
+  # selects among the `(... | g)` clauses. Keeping only the global smooth is
+  # the fixed-effect prediction: the fs deviations are the only tissue-varying
+  # term left, so dropping them has to make the curve identical across tissues.
+  # Within a draw, so that posterior spread is not mistaken for tissue spread.
+  pred_population <- sccomp_predict(
+    fit,
+    formula_composition = ~ s(age_days_scaled, k = 5),
+    new_data = grid, number_of_draws = 50, mcmc_seed = 42,
+    summary_instead_of_draws = FALSE
+  ) |>
+    dplyr::summarise(
+      spread = diff(range(unconstrained)),
+      .by = c(cell_group, age_days_scaled, .draw)
+    )
+  expect_true(all(pred_population$spread < 1e-8))
+
+  # ... and keeping the fs term has to bring that variation back.
+  pred_both <- sccomp_predict(
+    fit,
+    formula_composition = ~ s(age_days_scaled, k = 5) +
+      s(age_days_scaled, tissue_groups, bs = "fs", k = 5),
+    new_data = grid, number_of_draws = 50, mcmc_seed = 42,
+    summary_instead_of_draws = FALSE
+  ) |>
+    dplyr::summarise(
+      spread = diff(range(unconstrained)),
+      .by = c(cell_group, age_days_scaled, .draw)
+    )
+  expect_gt(max(pred_both$spread), 1e-6)
+
+  # Dropping the fs term drops its grouping factor from what new_data must
+  # carry, which is the point of selecting: a body-level grid has no tissue.
+  grid_no_tissue <- grid |>
+    dplyr::distinct(age_days_scaled, dataset_id, batch) |>
+    dplyr::mutate(sample = sprintf("nt_%03d", dplyr::row_number()))
+  expect_no_error(
+    sccomp_predict(
+      fit,
+      formula_composition = ~ s(age_days_scaled, k = 5),
+      new_data = grid_no_tissue, number_of_draws = 50
+    )
+  )
+
+  # Naming a smooth the model does not have is a silent wrong answer if it is
+  # let through, because the term would simply be stripped and ignored.
+  expect_error(
+    sccomp_predict(
+      fit,
+      formula_composition = ~ s(age_days_scaled, k = 9),
+      new_data = grid, number_of_draws = 50
+    ),
+    regexp = "not in the fitted model"
+  )
+})
+
+
+test_that("dropping a smooth leaves the later smooths on their own slots", {
+  # The slot index is what picks the fitted parameters, so a dropped smooth has
+  # to leave a hole rather than let the ones after it slide down onto its
+  # blocks. Here smooth 1 is the global (1 block) and smooth 2 the fs
+  # (3 blocks), so keeping only the fs must fill positions 2:4, not 1:3.
+  skip_if_not_installed("mgcv")
+  skip_cmdstan()
+  data("counts_obj")
+
+  samples <- levels(counts_obj$sample)
+  covs <- tibble::tibble(
+    sample          = samples,
+    age_days_scaled = as.numeric(scale(seq_along(samples))),
+    tissue_groups   = factor(rep(c("blood", "lymph", "tumor"),
+                                 length.out = length(samples)))
+  )
+
+  pieces <- sccomp:::parse_formula_smooths(
+    ~ s(age_days_scaled, k = 5) +
+      s(age_days_scaled, tissue_groups, bs = "fs", k = 5),
+    covs
+  )
+  smooth_results <- list(
+    smooth_specs   = pieces$smooth_specs,
+    smooth_re_objs = pieces$smooth_re_objs,
+    smooth_labels  = pieces$smooth_labels
+  )
+  expect_equal(length(pieces$Xr_list), 4L)
+
+  parametric_X <- matrix(1, nrow = nrow(covs), ncol = 1,
+                         dimnames = list(NULL, "(Intercept)"))
+  keep_fs_only <- sccomp:::build_smooth_replicate_design(
+    parametric_X   = parametric_X,
+    new_data       = covs,
+    smooth_results = smooth_results,
+    keep_labels    = 's(age_days_scaled, tissue_groups, bs = "fs", k = 5)'
+  )
+
+  slots <- keep_fs_only$smooth_replicate_slots
+  expect_equal(length(slots), 4L)
+  expect_null(slots[[1]])
+  expect_true(all(!vapply(slots[2:4], is.null, logical(1))))
+
+  # The dropped global smooth also takes its unpenalised column with it.
+  expect_false(any(grepl("__lin", colnames(keep_fs_only$new_X))))
+})
+
+
 test_that("smooth slot count beyond N_RE_SLOTS errors cleanly", {
   skip_if_not_installed("mgcv")
   skip_cmdstan()
   data("seurat_obj")
   
-  # 4 smooths + 1 RE clause needs 5 slots; budget is 4. Use the same
-  # continuous_covariate four times under different `k` (parser doesn't
+  # 6 smooths + 1 RE clause needs 7 slots; budget is 6. Use the same
+  # continuous_covariate six times under different `k` (parser doesn't
   # de-duplicate intentionally — each call is a fresh basis).
   expect_error(
     sccomp_estimate(
@@ -406,6 +605,8 @@ test_that("smooth slot count beyond N_RE_SLOTS errors cleanly", {
           s(continuous_covariate, k = 4) +
           s(continuous_covariate, k = 5) +
           s(continuous_covariate, k = 6) +
+          s(continuous_covariate, k = 7) +
+          s(continuous_covariate, k = 8) +
           (1 | group__),
       formula_variability = ~ 1,
       sample = "sample", cell_group = "cell_group",

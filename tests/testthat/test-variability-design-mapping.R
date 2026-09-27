@@ -11,7 +11,7 @@ test_that("get_variability_to_composition_map matches by column name", {
 
   expect_equal(
     sccomp:::get_variability_to_composition_map(X, Xa),
-    c(1L, 3L, 4L, 2L)
+    as.array(c(1L, 3L, 4L, 2L))
   )
 })
 
@@ -22,7 +22,7 @@ test_that("get_variability_to_composition_map maps ~1 variability when compositi
   Xa <- matrix(0, nrow = 2, ncol = 1)
   colnames(Xa) <- "(Intercept)"
 
-  expect_equal(sccomp:::get_variability_to_composition_map(X, Xa), 1L)
+  expect_equal(sccomp:::get_variability_to_composition_map(X, Xa), as.array(1L))
 })
 
 test_that("get_variability_to_composition_map still errors if (Intercept) is extra among multiple variability columns", {
@@ -92,7 +92,7 @@ test_that("variability design maps to composition design by name", {
       random_effect_elements = tibble(factor = character(), grouping = character())
     )
 
-  expected_map <- match(colnames(model_input$Xa), colnames(model_input$X))
+  expected_map <- as.array(match(colnames(model_input$Xa), colnames(model_input$X)))
   expect_equal(model_input$variability_to_composition_map, expected_map)
 })
 

@@ -1085,8 +1085,8 @@ sccomp_glm_data_frame_counts = function(.data,
         "beta", "alpha",
         "prec_intercept_1", "prec_slope_1", "prec_intercept_2", "prec_slope_2",
         "prec_sd",
-        # Random effect outputs - one per slot (1..4)
-        "random_effect_1", "random_effect_2", "random_effect_3", "random_effect_4",
+        # Random effect outputs - one per slot
+        paste0("random_effect_", seq_len(N_RE_SLOTS)),
         "log_lik"
       ),
       sig_figs = sig_figs,

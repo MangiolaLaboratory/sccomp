@@ -3,9 +3,9 @@ library(dplyr)
 library(tidyr)
 library(sccomp)
 
-# Four-slot RE design (see prepare_replicate_data(X_random_effect_slots = ))
+# Per-slot RE design (see prepare_replicate_data(X_random_effect_slots = ))
 re_slots_from_mi <- function(mi) {
-  lapply(seq_len(4L), function(k) mi[[paste0("X_random_effect_", k)]])
+  lapply(seq_len(sccomp:::N_RE_SLOTS), function(k) mi[[paste0("X_random_effect_", k)]])
 }
 
 test_that("replicate_data works correctly", {
