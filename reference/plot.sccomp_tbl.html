@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -133,18 +133,18 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Precompiled model not found. Compiling the model...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Running make /tmp/RtmptQvYct/model-394f79334a03 "STAN_THREADS=TRUE" \</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   "STANCFLAGS += --include-paths=/tmp/RtmptQvYct/temp_libpath394f59aa5450/sccomp/stan --name='glm_multi_beta_binomial_model'"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Running make /tmp/Rtmpg0L6gY/model-39e5ed4a311 "STAN_THREADS=TRUE" \</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "STANCFLAGS += --include-paths=/tmp/Rtmpg0L6gY/temp_libpath39e545776141/sccomp/stan --name='glm_multi_beta_binomial_model'"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Translating Stan model to C++ code ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> bin/stanc --include-paths=/tmp/RtmptQvYct/temp_libpath394f59aa5450/sccomp/stan --name='glm_multi_beta_binomial_model' --o=/tmp/RtmptQvYct/model-394f79334a03.hpp /tmp/RtmptQvYct/model-394f79334a03.stan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> bin/stanc --include-paths=/tmp/Rtmpg0L6gY/temp_libpath39e545776141/sccomp/stan --name='glm_multi_beta_binomial_model' --o=/tmp/Rtmpg0L6gY/model-39e5ed4a311.hpp /tmp/Rtmpg0L6gY/model-39e5ed4a311.stan</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Compiling C++ code ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmptQvYct/model-394f79334a03.o /tmp/RtmptQvYct/model-394f79334a03.hpp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/Rtmpg0L6gY/model-39e5ed4a311.o /tmp/Rtmpg0L6gY/model-39e5ed4a311.hpp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Linking model ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmptQvYct/model-394f79334a03.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmptQvYct/model-394f79334a03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rm /tmp/RtmptQvYct/model-394f79334a03.hpp /tmp/RtmptQvYct/model-394f79334a03.o</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"      /tmp/Rtmpg0L6gY/model-39e5ed4a311.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/Rtmpg0L6gY/model-39e5ed4a311</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rm /tmp/Rtmpg0L6gY/model-39e5ed4a311.o /tmp/Rtmpg0L6gY/model-39e5ed4a311.hpp</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Model compiled and saved to cache successfully.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [1] :Initial log joint density = -482684.608336 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
@@ -157,15 +157,15 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [3] :Initial log joint density = -481749.189963 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              71      -4.787e+05      9.061e-03   2.076e-01    1.000e+00  1.000e+00      4488 -3.689e+03 -3.690e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [3] :Best Iter: [68] ELBO (-3689.253919) evaluations: (4488) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [3] :Best Iter: [68] ELBO (-3689.253918) evaluations: (4488) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [4] :Initial log joint density = -483320.748753 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              59      -4.787e+05      7.086e-03   2.663e-01    1.000e+00  1.000e+00      3527 -3.690e+03 -3.699e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [4] :Best Iter: [55] ELBO (-3690.190567) evaluations: (3527) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [4] :Best Iter: [55] ELBO (-3690.190568) evaluations: (3527) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [5] :Initial log joint density = -482399.422218 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [5] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              65      -4.787e+05      6.119e-03   2.000e-01    1.000e+00  1.000e+00      3930 -3.689e+03 -3.696e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [5] :Best Iter: [62] ELBO (-3688.734423) evaluations: (3930) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [5] :Best Iter: [62] ELBO (-3688.734422) evaluations: (3930) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [6] :Initial log joint density = -483019.809595 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [6] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              60      -4.787e+05      8.618e-03   3.440e-01    4.259e-01  1.000e+00      3505 -3.686e+03 -3.699e+03                   </span>
@@ -181,11 +181,11 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [9] :Initial log joint density = -482059.982656 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [9] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              72      -4.787e+05      8.454e-03   2.236e-01    1.000e+00  1.000e+00      4693 -3.682e+03 -3.692e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [9] :Best Iter: [69] ELBO (-3682.237067) evaluations: (4693) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [9] :Best Iter: [69] ELBO (-3682.237068) evaluations: (4693) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [10] :Initial log joint density = -481409.068382 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [10] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              57      -4.787e+05      1.637e-02   2.779e-01    1.000e+00  1.000e+00      3335 -3.694e+03 -3.691e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [10] :Best Iter: [57] ELBO (-3691.140906) evaluations: (3335) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [10] :Best Iter: [57] ELBO (-3691.140907) evaluations: (3335) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [11] :Initial log joint density = -481523.925214 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [11] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              75      -4.787e+05      1.510e-02   2.129e-01    1.000e+00  1.000e+00      4890 -3.682e+03 -3.687e+03                   </span>
@@ -201,7 +201,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [14] :Initial log joint density = -481496.498206 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [14] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              71      -4.787e+05      7.280e-03   2.011e-01    1.000e+00  1.000e+00      4537 -3.689e+03 -3.693e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [14] :Best Iter: [63] ELBO (-3688.720073) evaluations: (4537) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [14] :Best Iter: [63] ELBO (-3688.720071) evaluations: (4537) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [15] :Initial log joint density = -481822.682912 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [15] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              71      -4.787e+05      7.476e-03   2.028e-01    8.173e-01  8.173e-01      4509 -3.685e+03 -3.697e+03                   </span>
@@ -249,7 +249,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [26] :Initial log joint density = -481468.123512 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [26] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              68      -4.787e+05      1.397e-02   1.991e-01    1.000e+00  1.000e+00      4320 -3.687e+03 -3.692e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [26] :Best Iter: [66] ELBO (-3686.863068) evaluations: (4320) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [26] :Best Iter: [66] ELBO (-3686.863070) evaluations: (4320) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [27] :Initial log joint density = -482124.310358 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [27] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              63      -4.787e+05      1.468e-02   2.620e-01    1.000e+00  1.000e+00      3964 -3.686e+03 -3.691e+03                   </span>
@@ -265,11 +265,11 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [30] :Initial log joint density = -485163.608998 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [30] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              68      -4.787e+05      6.165e-03   1.612e-01    9.780e-01  9.780e-01      4321 -3.684e+03 -3.695e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [30] :Best Iter: [66] ELBO (-3684.379081) evaluations: (4321) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [30] :Best Iter: [66] ELBO (-3684.379082) evaluations: (4321) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [31] :Initial log joint density = -482114.883887 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [31] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              71      -4.787e+05      1.067e-02   2.287e-01    1.000e+00  1.000e+00      4570 -3.687e+03 -3.694e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [31] :Best Iter: [69] ELBO (-3687.291662) evaluations: (4570) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [31] :Best Iter: [69] ELBO (-3687.291664) evaluations: (4570) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [32] :Initial log joint density = -481698.523713 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [32] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              58      -4.787e+05      1.012e-02   2.423e-01    1.000e+00  1.000e+00      3281 -3.687e+03 -3.693e+03                   </span>
@@ -277,7 +277,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [33] :Initial log joint density = -482712.657755 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [33] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              63      -4.787e+05      1.160e-02   2.371e-01    1.000e+00  1.000e+00      3756 -3.687e+03 -3.692e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [33] :Best Iter: [60] ELBO (-3687.481926) evaluations: (3756) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [33] :Best Iter: [60] ELBO (-3687.481927) evaluations: (3756) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [34] :Initial log joint density = -481370.061339 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [34] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              55      -4.787e+05      1.273e-02   2.371e-01    1.000e+00  1.000e+00      3026 -3.694e+03 -3.703e+03                   </span>
@@ -293,7 +293,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [37] :Initial log joint density = -484269.036972 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [37] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              70      -4.787e+05      1.170e-02   1.713e-01    8.561e-01  8.561e-01      4475 -3.686e+03 -3.697e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [37] :Best Iter: [63] ELBO (-3685.606470) evaluations: (4475) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [37] :Best Iter: [63] ELBO (-3685.606471) evaluations: (4475) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [38] :Initial log joint density = -481638.597791 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [38] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              57      -4.787e+05      1.509e-02   3.169e-01    1.000e+00  1.000e+00      3388 -3.688e+03 -3.691e+03                   </span>
@@ -317,7 +317,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [43] :Initial log joint density = -481528.626810 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [43] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              56      -4.787e+05      9.730e-03   2.784e-01    7.574e-01  7.574e-01      3251 -3.691e+03 -3.706e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [43] :Best Iter: [55] ELBO (-3691.404418) evaluations: (3251) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [43] :Best Iter: [55] ELBO (-3691.404400) evaluations: (3251) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [44] :Initial log joint density = -481357.142392 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [44] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              69      -4.787e+05      7.798e-03   1.619e-01    1.000e+00  1.000e+00      4486 -3.684e+03 -3.689e+03                   </span>
@@ -329,15 +329,15 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [46] :Initial log joint density = -481644.339052 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [46] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              66      -4.787e+05      1.802e-02   2.480e-01    9.323e-01  9.323e-01      4183 -3.684e+03 -3.697e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [46] :Best Iter: [63] ELBO (-3684.389588) evaluations: (4183) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [46] :Best Iter: [63] ELBO (-3684.389586) evaluations: (4183) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [47] :Initial log joint density = -481506.371585 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [47] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              65      -4.787e+05      1.493e-02   2.401e-01    1.000e+00  1.000e+00      3965 -3.686e+03 -3.685e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [47] :Best Iter: [65] ELBO (-3685.498397) evaluations: (3965) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [47] :Best Iter: [65] ELBO (-3685.498398) evaluations: (3965) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [48] :Initial log joint density = -481438.352186 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [48] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              73      -4.787e+05      2.003e-02   1.814e-01    1.000e+00  1.000e+00      4739 -3.683e+03 -3.686e+03                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Path [48] :Best Iter: [69] ELBO (-3683.477908) evaluations: (4739) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Path [48] :Best Iter: [69] ELBO (-3683.477907) evaluations: (4739) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [49] :Initial log joint density = -481644.254142 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [49] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              64      -4.787e+05      1.149e-02   2.204e-01    8.773e-01  8.773e-01      3823 -3.686e+03 -3.699e+03                   </span>
@@ -346,7 +346,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              76      -4.787e+05      1.231e-02   2.136e-01    1.000e+00  1.000e+00      5085 -3.682e+03 -3.692e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [69] ELBO (-3682.357712) evaluations: (5085) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  15.5 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  16.1 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
@@ -356,22 +356,22 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: from version 2.1.25, the default `significance_statistic` for boxplots is `pH0` (previously `FDR`). Set `significance_statistic = "FDR"` to use the previous default.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Precompiled model not found. Compiling the model...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Running make /tmp/RtmptQvYct/model-394f3be83c7d "STAN_THREADS=TRUE" \</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   "STANCFLAGS += --include-paths=/tmp/RtmptQvYct/temp_libpath394f59aa5450/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model'"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Running make /tmp/Rtmpg0L6gY/model-39e56b56453b "STAN_THREADS=TRUE" \</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "STANCFLAGS += --include-paths=/tmp/Rtmpg0L6gY/temp_libpath39e545776141/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model'"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Translating Stan model to C++ code ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> bin/stanc --include-paths=/tmp/RtmptQvYct/temp_libpath394f59aa5450/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model' --o=/tmp/RtmptQvYct/model-394f3be83c7d.hpp /tmp/RtmptQvYct/model-394f3be83c7d.stan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> bin/stanc --include-paths=/tmp/Rtmpg0L6gY/temp_libpath39e545776141/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model' --o=/tmp/Rtmpg0L6gY/model-39e56b56453b.hpp /tmp/Rtmpg0L6gY/model-39e56b56453b.stan</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Compiling C++ code ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmptQvYct/model-394f3be83c7d.o /tmp/RtmptQvYct/model-394f3be83c7d.hpp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/Rtmpg0L6gY/model-39e56b56453b.o /tmp/Rtmpg0L6gY/model-39e56b56453b.hpp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Linking model ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.87.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.39.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmptQvYct/model-394f3be83c7d.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmptQvYct/model-394f3be83c7d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rm /tmp/RtmptQvYct/model-394f3be83c7d.o /tmp/RtmptQvYct/model-394f3be83c7d.hpp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"      /tmp/Rtmpg0L6gY/model-39e56b56453b.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/Rtmpg0L6gY/model-39e56b56453b</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rm /tmp/Rtmpg0L6gY/model-39e56b56453b.hpp /tmp/Rtmpg0L6gY/model-39e56b56453b.o</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Model compiled and saved to cache successfully.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.112 seconds (Generated Quantities) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.118 seconds (Generated Quantities) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 finished in 0.0 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(cell_group, sample)`</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(cell_group, type)`</span>

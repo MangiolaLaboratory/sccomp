@@ -44,6 +44,8 @@
   : Default cache directory for Stan models
 - [`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md)
   : sccomp_test
+- [`sccomp_test_smooth()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test_smooth.md)
+  : Test differences along a smooth term
 - [`sccomp_theme()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_theme.md)
   : Create a multipanel theme compatible with ggplot2 4.0.0 S7 system
 - [`sce_obj`](https://mangiolalaboratory.github.io/sccomp/reference/sce_obj.md)

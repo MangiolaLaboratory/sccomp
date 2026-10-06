@@ -112,7 +112,7 @@ print(residuals)
 #> Loading model from cache...
 #> Init values were only set for a subset of parameters. 
 #> Missing init values for the following parameters:
-#> prec_slope_2, random_effect_raw_1, random_effect_sigma_raw_1, sigma_correlation_factor_1, random_effect_raw_2, random_effect_sigma_raw_2, sigma_correlation_factor_2, random_effect_raw_3, random_effect_sigma_raw_3, sigma_correlation_factor_3, random_effect_raw_4, random_effect_sigma_raw_4, sigma_correlation_factor_4, random_effect_sigma_mu, random_effect_sigma_sigma, zero_random_effect
+#> prec_slope_2, random_effect_raw_1, random_effect_sigma_raw_1, sigma_correlation_factor_1, random_effect_raw_2, random_effect_sigma_raw_2, sigma_correlation_factor_2, random_effect_raw_3, random_effect_sigma_raw_3, sigma_correlation_factor_3, random_effect_raw_4, random_effect_sigma_raw_4, sigma_correlation_factor_4, random_effect_raw_5, random_effect_sigma_raw_5, sigma_correlation_factor_5, random_effect_raw_6, random_effect_sigma_raw_6, sigma_correlation_factor_6, random_effect_sigma_mu, random_effect_sigma_sigma, zero_random_effect
 #> 
 #> To disable this message use options(cmdstanr_warn_inits = FALSE).
 #> ------------------------------------------------------------ 
@@ -120,8 +120,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000365 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.65 seconds. 
+#> Gradient evaluation took 0.000367 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.67 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -141,7 +141,7 @@ print(residuals)
 #>    700        -3699.562             0.180            0.002   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
-#> Finished in  2.5 seconds.
+#> Finished in  2.6 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -150,7 +150,7 @@ print(residuals)
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.557 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.591 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 720 × 5
 #>    sample cell_group residuals exposure residuals_unconstrained

@@ -221,7 +221,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [2] :Initial log joint density = -481513.420270 
 #> Path [2] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              66      -4.787e+05      1.849e-02   1.775e-01    1.000e+00  1.000e+00      4037 -3.688e+03 -3.692e+03                   
-#> Path [2] :Best Iter: [62] ELBO (-3687.908869) evaluations: (4037) 
+#> Path [2] :Best Iter: [62] ELBO (-3687.908868) evaluations: (4037) 
 #> Path [3] :Initial log joint density = -481408.821776 
 #> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              66      -4.787e+05      8.076e-03   2.380e-01    1.000e+00  1.000e+00      4081 -3.684e+03 -3.695e+03                   
@@ -237,7 +237,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [6] :Initial log joint density = -482185.180770 
 #> Path [6] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              77      -4.787e+05      1.137e-02   2.088e-01    1.000e+00  1.000e+00      5268 -3.685e+03 -3.687e+03                   
-#> Path [6] :Best Iter: [75] ELBO (-3685.028490) evaluations: (5268) 
+#> Path [6] :Best Iter: [75] ELBO (-3685.028491) evaluations: (5268) 
 #> Path [7] :Initial log joint density = -481522.595269 
 #> Path [7] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              55      -4.787e+05      5.956e-03   2.357e-01    4.852e-01  1.000e+00      3200 -3.696e+03 -3.699e+03                   
@@ -273,7 +273,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [15] :Initial log joint density = -481635.174219 
 #> Path [15] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.787e+05      1.747e-02   1.341e-01    1.000e+00  1.000e+00      4312 -3.686e+03 -3.686e+03                   
-#> Path [15] :Best Iter: [68] ELBO (-3685.622004) evaluations: (4312) 
+#> Path [15] :Best Iter: [68] ELBO (-3685.622005) evaluations: (4312) 
 #> Path [16] :Initial log joint density = -481759.906029 
 #> Path [16] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.787e+05      9.332e-03   1.952e-01    8.180e-01  8.180e-01      4419 -3.683e+03 -3.695e+03                   
@@ -297,7 +297,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [21] :Initial log joint density = -481779.053237 
 #> Path [21] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              72      -4.787e+05      1.196e-02   2.141e-01    1.000e+00  1.000e+00      4599 -3.685e+03 -3.686e+03                   
-#> Path [21] :Best Iter: [71] ELBO (-3685.258243) evaluations: (4599) 
+#> Path [21] :Best Iter: [71] ELBO (-3685.258244) evaluations: (4599) 
 #> Path [22] :Initial log joint density = -481573.863095 
 #> Path [22] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.787e+05      2.936e-03   2.500e-01    3.086e-01  3.086e-01      4334 -3.687e+03 -3.690e+03                   
@@ -309,7 +309,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [24] :Initial log joint density = -481732.272823 
 #> Path [24] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              56      -4.787e+05      6.043e-03   2.305e-01    1.000e+00  1.000e+00      3214 -3.693e+03 -3.690e+03                   
-#> Path [24] :Best Iter: [56] ELBO (-3690.175239) evaluations: (3214) 
+#> Path [24] :Best Iter: [56] ELBO (-3690.175240) evaluations: (3214) 
 #> Path [25] :Initial log joint density = -481609.790473 
 #> Path [25] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              61      -4.787e+05      7.869e-03   1.930e-01    1.000e+00  1.000e+00      3509 -3.685e+03 -3.694e+03                   
@@ -329,7 +329,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [29] :Initial log joint density = -481565.379052 
 #> Path [29] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.787e+05      1.025e-02   2.214e-01    1.000e+00  1.000e+00      4332 -3.685e+03 -3.690e+03                   
-#> Path [29] :Best Iter: [65] ELBO (-3685.072403) evaluations: (4332) 
+#> Path [29] :Best Iter: [65] ELBO (-3685.072404) evaluations: (4332) 
 #> Path [30] :Initial log joint density = -482111.151556 
 #> Path [30] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              67      -4.787e+05      6.654e-03   2.577e-01    1.000e+00  1.000e+00      4179 -3.687e+03 -3.698e+03                   
@@ -341,7 +341,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [32] :Initial log joint density = -481695.751006 
 #> Path [32] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              67      -4.787e+05      8.283e-03   2.529e-01    1.000e+00  1.000e+00      4195 -3.688e+03 -3.695e+03                   
-#> Path [32] :Best Iter: [64] ELBO (-3688.394435) evaluations: (4195) 
+#> Path [32] :Best Iter: [64] ELBO (-3688.394434) evaluations: (4195) 
 #> Path [33] :Initial log joint density = -481534.139293 
 #> Path [33] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              67      -4.787e+05      4.501e-03   2.319e-01    6.858e-01  6.858e-01      4197 -3.685e+03 -3.705e+03                   
@@ -361,7 +361,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [37] :Initial log joint density = -481850.507464 
 #> Path [37] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              74      -4.787e+05      8.469e-03   1.673e-01    1.000e+00  1.000e+00      4814 -3.687e+03 -3.699e+03                   
-#> Path [37] :Best Iter: [71] ELBO (-3687.207731) evaluations: (4814) 
+#> Path [37] :Best Iter: [71] ELBO (-3687.207738) evaluations: (4814) 
 #> Path [38] :Initial log joint density = -481843.920829 
 #> Path [38] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              71      -4.787e+05      1.200e-02   2.535e-01    1.000e+00  1.000e+00      4602 -3.684e+03 -3.686e+03                   
@@ -384,8 +384,8 @@ print("cmdstanr is needed to run this example.")
 #> Path [42] :Best Iter: [61] ELBO (-3685.233207) evaluations: (3735) 
 #> Path [43] :Initial log joint density = -485826.136157 
 #> Path [43] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              76      -4.787e+05      1.970e-02   2.254e-01    1.000e+00  1.000e+00      5050 -3.680e+03 -3.684e+03                   
-#> Path [43] :Best Iter: [75] ELBO (-3680.138378) evaluations: (5050) 
+#>              76      -4.787e+05      1.961e-02   2.282e-01    1.000e+00  1.000e+00      5050 -3.680e+03 -3.684e+03                   
+#> Path [43] :Best Iter: [75] ELBO (-3680.108585) evaluations: (5050) 
 #> Path [44] :Initial log joint density = -481508.117302 
 #> Path [44] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.787e+05      3.975e-03   1.813e-01    7.658e-01  7.658e-01      4304 -3.686e+03 -3.692e+03                   
@@ -393,7 +393,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [45] :Initial log joint density = -481391.337336 
 #> Path [45] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.787e+05      2.283e-02   2.862e-01    1.000e+00  1.000e+00      4435 -3.684e+03 -3.689e+03                   
-#> Path [45] :Best Iter: [59] ELBO (-3683.847581) evaluations: (4435) 
+#> Path [45] :Best Iter: [59] ELBO (-3683.847584) evaluations: (4435) 
 #> Path [46] :Initial log joint density = -481583.206700 
 #> Path [46] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              58      -4.787e+05      6.200e-03   1.795e-01    1.000e+00  1.000e+00      3328 -3.687e+03 -3.687e+03                   
@@ -409,12 +409,12 @@ print("cmdstanr is needed to run this example.")
 #> Path [49] :Initial log joint density = -481598.814745 
 #> Path [49] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              55      -4.787e+05      7.512e-03   1.682e-01    9.082e-01  9.082e-01      3131 -3.695e+03 -3.698e+03                   
-#> Path [49] :Best Iter: [53] ELBO (-3695.499233) evaluations: (3131) 
+#> Path [49] :Best Iter: [53] ELBO (-3695.499234) evaluations: (3131) 
 #> Path [50] :Initial log joint density = -481344.977960 
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              54      -4.787e+05      1.441e-02   2.392e-01    1.000e+00  1.000e+00      2988 -3.694e+03 -3.694e+03                   
 #> Path [50] :Best Iter: [54] ELBO (-3693.549752) evaluations: (2988) 
-#> Finished in  15.5 seconds.
+#> Finished in  16.0 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -423,7 +423,7 @@ print("cmdstanr is needed to run this example.")
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 4.593 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 4.792 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> sccomp says: outlier identification - step 1/2
 #> Loading model from cache...
@@ -438,7 +438,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [3] :Initial log joint density = -430354.859811 
 #> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              80      -4.262e+05      2.013e-02   2.640e-01    4.676e-01  1.000e+00      5599 -3.291e+03 -3.300e+03                   
-#> Path [3] :Best Iter: [78] ELBO (-3290.607673) evaluations: (5599) 
+#> Path [3] :Best Iter: [78] ELBO (-3290.607675) evaluations: (5599) 
 #> Path [4] :Initial log joint density = -429355.554519 
 #> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              85      -4.262e+05      3.895e-03   2.079e-01    6.796e-01  6.796e-01      6146 -3.290e+03 -3.309e+03                   
@@ -446,7 +446,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [5] :Initial log joint density = -431078.660627 
 #> Path [5] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.262e+05      8.088e-03   3.151e-01    4.431e-01  1.000e+00      4340 -3.292e+03 -3.299e+03                   
-#> Path [5] :Best Iter: [63] ELBO (-3292.144341) evaluations: (4340) 
+#> Path [5] :Best Iter: [63] ELBO (-3292.144342) evaluations: (4340) 
 #> Path [6] :Initial log joint density = -428752.521719 
 #> Path [6] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.262e+05      8.297e-03   2.492e-01    1.000e+00  1.000e+00      4342 -3.294e+03 -3.302e+03                   
@@ -462,7 +462,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [9] :Initial log joint density = -429110.490191 
 #> Path [9] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              84      -4.262e+05      9.184e-03   2.163e-01    1.000e+00  1.000e+00      5755 -3.293e+03 -3.305e+03                   
-#> Path [9] :Best Iter: [77] ELBO (-3292.974876) evaluations: (5755) 
+#> Path [9] :Best Iter: [77] ELBO (-3292.974875) evaluations: (5755) 
 #> Path [10] :Initial log joint density = -429582.055966 
 #> Path [10] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              85      -4.262e+05      3.138e-03   2.127e-01    7.241e-01  7.241e-01      6145 -3.290e+03 -3.301e+03                   
@@ -470,7 +470,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [11] :Initial log joint density = -429473.757820 
 #> Path [11] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              76      -4.262e+05      7.246e-03   2.444e-01    1.000e+00  1.000e+00      4972 -3.293e+03 -3.298e+03                   
-#> Path [11] :Best Iter: [72] ELBO (-3293.246618) evaluations: (4972) 
+#> Path [11] :Best Iter: [72] ELBO (-3293.246621) evaluations: (4972) 
 #> Path [12] :Initial log joint density = -429235.427887 
 #> Path [12] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              81      -4.262e+05      7.164e-03   3.159e-01    4.324e-01  1.000e+00      5646 -3.292e+03 -3.304e+03                   
@@ -482,7 +482,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [14] :Initial log joint density = -429065.666965 
 #> Path [14] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              77      -4.262e+05      2.408e-03   1.606e-01    7.308e-01  7.308e-01      5122 -3.292e+03 -3.309e+03                   
-#> Path [14] :Best Iter: [75] ELBO (-3291.591358) evaluations: (5122) 
+#> Path [14] :Best Iter: [75] ELBO (-3291.591359) evaluations: (5122) 
 #> Path [15] :Initial log joint density = -428765.253947 
 #> Path [15] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              79      -4.262e+05      8.342e-03   2.209e-01    1.000e+00  1.000e+00      5242 -3.292e+03 -3.296e+03                   
@@ -490,7 +490,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [16] :Initial log joint density = -429686.434714 
 #> Path [16] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              87      -4.262e+05      6.633e-03   2.000e-01    1.000e+00  1.000e+00      6408 -3.291e+03 -3.291e+03                   
-#> Path [16] :Best Iter: [84] ELBO (-3290.905251) evaluations: (6408) 
+#> Path [16] :Best Iter: [84] ELBO (-3290.905403) evaluations: (6408) 
 #> Path [17] :Initial log joint density = -428740.439809 
 #> Path [17] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.262e+05      6.625e-03   2.051e-01    1.000e+00  1.000e+00      4204 -3.296e+03 -3.301e+03                   
@@ -502,7 +502,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [19] :Initial log joint density = -430205.214053 
 #> Path [19] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.262e+05      1.028e-02   2.951e-01    1.000e+00  1.000e+00      4346 -3.292e+03 -3.295e+03                   
-#> Path [19] :Best Iter: [68] ELBO (-3292.331434) evaluations: (4346) 
+#> Path [19] :Best Iter: [68] ELBO (-3292.331435) evaluations: (4346) 
 #> Path [20] :Initial log joint density = -428579.292940 
 #> Path [20] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              74      -4.262e+05      4.089e-03   2.700e-01    6.048e-01  6.048e-01      4907 -3.292e+03 -3.302e+03                   
@@ -514,11 +514,11 @@ print("cmdstanr is needed to run this example.")
 #> Path [22] :Initial log joint density = -429548.061087 
 #> Path [22] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              93      -4.262e+05      3.364e-03   1.584e-01    6.835e-01  6.835e-01      7091 -3.290e+03 -3.304e+03                   
-#> Path [22] :Best Iter: [90] ELBO (-3290.060592) evaluations: (7091) 
+#> Path [22] :Best Iter: [90] ELBO (-3290.060593) evaluations: (7091) 
 #> Path [23] :Initial log joint density = -429506.987691 
 #> Path [23] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              93      -4.262e+05      1.646e-02   3.729e-01    1.000e+00  1.000e+00      7028 -3.288e+03 -3.293e+03                   
-#> Path [23] :Best Iter: [92] ELBO (-3288.236588) evaluations: (7028) 
+#> Path [23] :Best Iter: [92] ELBO (-3288.236591) evaluations: (7028) 
 #> Path [24] :Initial log joint density = -428935.909162 
 #> Path [24] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.262e+05      1.361e-02   2.861e-01    1.000e+00  1.000e+00      4347 -3.295e+03 -3.299e+03                   
@@ -534,15 +534,15 @@ print("cmdstanr is needed to run this example.")
 #> Path [27] :Initial log joint density = -429236.745400 
 #> Path [27] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              89      -4.262e+05      1.107e-02   3.626e-01    1.000e+00  1.000e+00      6438 -3.293e+03 -3.300e+03                   
-#> Path [27] :Best Iter: [83] ELBO (-3293.009607) evaluations: (6438) 
+#> Path [27] :Best Iter: [83] ELBO (-3293.009586) evaluations: (6438) 
 #> Path [28] :Initial log joint density = -429287.119198 
 #> Path [28] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              82      -4.262e+05      6.132e-03   2.310e-01    1.000e+00  1.000e+00      5739 -3.292e+03 -3.306e+03                   
-#> Path [28] :Best Iter: [74] ELBO (-3292.463058) evaluations: (5739) 
+#> Path [28] :Best Iter: [74] ELBO (-3292.463055) evaluations: (5739) 
 #> Path [29] :Initial log joint density = -429067.071925 
 #> Path [29] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              83      -4.262e+05      3.363e-03   2.821e-01    7.480e-01  7.480e-01      5875 -3.291e+03 -3.306e+03                   
-#> Path [29] :Best Iter: [81] ELBO (-3291.485481) evaluations: (5875) 
+#> Path [29] :Best Iter: [81] ELBO (-3291.485483) evaluations: (5875) 
 #> Path [30] :Initial log joint density = -428891.401145 
 #> Path [30] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.262e+05      1.406e-02   2.327e-01    1.000e+00  1.000e+00      4436 -3.292e+03 -3.296e+03                   
@@ -550,7 +550,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [31] :Initial log joint density = -429208.178933 
 #> Path [31] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              83      -4.262e+05      1.245e-02   2.920e-01    1.000e+00  1.000e+00      5719 -3.292e+03 -3.302e+03                   
-#> Path [31] :Best Iter: [81] ELBO (-3292.211556) evaluations: (5719) 
+#> Path [31] :Best Iter: [81] ELBO (-3292.211554) evaluations: (5719) 
 #> Path [32] :Initial log joint density = -428901.903684 
 #> Path [32] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.262e+05      4.200e-03   2.958e-01    6.693e-01  6.693e-01      4238 -3.296e+03 -3.308e+03                   
@@ -566,7 +566,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [35] :Initial log joint density = -430649.980518 
 #> Path [35] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              79      -4.262e+05      6.447e-03   2.416e-01    6.663e-01  6.663e-01      5382 -3.286e+03 -3.305e+03                   
-#> Path [35] :Best Iter: [76] ELBO (-3286.496477) evaluations: (5382) 
+#> Path [35] :Best Iter: [76] ELBO (-3286.496479) evaluations: (5382) 
 #> Path [36] :Initial log joint density = -428861.654734 
 #> Path [36] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              86      -4.262e+05      1.057e-02   3.172e-01    1.000e+00  1.000e+00      6143 -3.291e+03 -3.294e+03                   
@@ -586,15 +586,15 @@ print("cmdstanr is needed to run this example.")
 #> Path [40] :Initial log joint density = -429536.784005 
 #> Path [40] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              93      -4.262e+05      3.211e-03   1.678e-01    7.145e-01  7.145e-01      7189 -3.290e+03 -3.303e+03                   
-#> Path [40] :Best Iter: [91] ELBO (-3289.578334) evaluations: (7189) 
+#> Path [40] :Best Iter: [91] ELBO (-3289.578349) evaluations: (7189) 
 #> Path [41] :Initial log joint density = -429150.903194 
 #> Path [41] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              75      -4.262e+05      8.236e-03   2.094e-01    1.000e+00  1.000e+00      4941 -3.293e+03 -3.303e+03                   
-#> Path [41] :Best Iter: [72] ELBO (-3292.642946) evaluations: (4941) 
+#> Path [41] :Best Iter: [72] ELBO (-3292.642949) evaluations: (4941) 
 #> Path [42] :Initial log joint density = -429254.287623 
 #> Path [42] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              87      -4.262e+05      1.411e-02   3.420e-01    1.000e+00  1.000e+00      6455 -3.289e+03 -3.296e+03                   
-#> Path [42] :Best Iter: [86] ELBO (-3289.449731) evaluations: (6455) 
+#>              87      -4.262e+05      1.411e-02   3.421e-01    1.000e+00  1.000e+00      6455 -3.289e+03 -3.296e+03                   
+#> Path [42] :Best Iter: [86] ELBO (-3289.449713) evaluations: (6455) 
 #> Path [43] :Initial log joint density = -428858.867993 
 #> Path [43] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              63      -4.262e+05      1.204e-02   4.500e-01    1.000e+00  1.000e+00      3838 -3.296e+03 -3.308e+03                   
@@ -606,7 +606,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [45] :Initial log joint density = -430332.557992 
 #> Path [45] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              74      -4.262e+05      2.964e-02   2.447e-01    1.000e+00  1.000e+00      4971 -3.292e+03 -3.293e+03                   
-#> Path [45] :Best Iter: [71] ELBO (-3291.507757) evaluations: (4971) 
+#> Path [45] :Best Iter: [71] ELBO (-3291.507756) evaluations: (4971) 
 #> Path [46] :Initial log joint density = -428809.592495 
 #> Path [46] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.262e+05      5.287e-03   2.202e-01    1.000e+00  1.000e+00      4449 -3.296e+03 -3.308e+03                   
@@ -614,7 +614,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [47] :Initial log joint density = -429190.080380 
 #> Path [47] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              88      -4.262e+05      7.348e-03   2.180e-01    1.000e+00  1.000e+00      6446 -3.291e+03 -3.296e+03                   
-#> Path [47] :Best Iter: [85] ELBO (-3290.752147) evaluations: (6446) 
+#> Path [47] :Best Iter: [85] ELBO (-3290.752145) evaluations: (6446) 
 #> Path [48] :Initial log joint density = -429049.541562 
 #> Path [48] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              73      -4.262e+05      7.733e-03   2.219e-01    1.000e+00  1.000e+00      4858 -3.294e+03 -3.296e+03                   
@@ -627,10 +627,10 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.262e+05      1.385e-02   2.135e-01    1.000e+00  1.000e+00      4493 -3.292e+03 -3.296e+03                   
 #> Path [50] :Best Iter: [68] ELBO (-3291.640161) evaluations: (4493) 
-#> Finished in  24.3 seconds.
+#> Finished in  25.4 seconds.
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 22.92 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 24.043 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> sccomp says: outlier-free model fitting - step 2/2
 #> sccomp says: the composition design matrix has columns: (Intercept), typecancer
@@ -647,7 +647,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [3] :Initial log joint density = -430354.859811 
 #> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              80      -4.262e+05      2.013e-02   2.640e-01    4.676e-01  1.000e+00      5599 -3.291e+03 -3.300e+03                   
-#> Path [3] :Best Iter: [78] ELBO (-3290.607673) evaluations: (5599) 
+#> Path [3] :Best Iter: [78] ELBO (-3290.607675) evaluations: (5599) 
 #> Path [4] :Initial log joint density = -429355.554519 
 #> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              85      -4.262e+05      3.895e-03   2.079e-01    6.796e-01  6.796e-01      6146 -3.290e+03 -3.309e+03                   
@@ -655,7 +655,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [5] :Initial log joint density = -431078.660627 
 #> Path [5] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.262e+05      8.088e-03   3.151e-01    4.431e-01  1.000e+00      4340 -3.292e+03 -3.299e+03                   
-#> Path [5] :Best Iter: [63] ELBO (-3292.144341) evaluations: (4340) 
+#> Path [5] :Best Iter: [63] ELBO (-3292.144342) evaluations: (4340) 
 #> Path [6] :Initial log joint density = -428752.521719 
 #> Path [6] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.262e+05      8.297e-03   2.492e-01    1.000e+00  1.000e+00      4342 -3.294e+03 -3.302e+03                   
@@ -671,7 +671,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [9] :Initial log joint density = -429110.490191 
 #> Path [9] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              84      -4.262e+05      9.184e-03   2.163e-01    1.000e+00  1.000e+00      5755 -3.293e+03 -3.305e+03                   
-#> Path [9] :Best Iter: [77] ELBO (-3292.974876) evaluations: (5755) 
+#> Path [9] :Best Iter: [77] ELBO (-3292.974875) evaluations: (5755) 
 #> Path [10] :Initial log joint density = -429582.055966 
 #> Path [10] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              85      -4.262e+05      3.138e-03   2.127e-01    7.241e-01  7.241e-01      6145 -3.290e+03 -3.301e+03                   
@@ -679,7 +679,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [11] :Initial log joint density = -429473.757820 
 #> Path [11] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              76      -4.262e+05      7.246e-03   2.444e-01    1.000e+00  1.000e+00      4972 -3.293e+03 -3.298e+03                   
-#> Path [11] :Best Iter: [72] ELBO (-3293.246618) evaluations: (4972) 
+#> Path [11] :Best Iter: [72] ELBO (-3293.246621) evaluations: (4972) 
 #> Path [12] :Initial log joint density = -429235.427887 
 #> Path [12] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              81      -4.262e+05      7.164e-03   3.159e-01    4.324e-01  1.000e+00      5646 -3.292e+03 -3.304e+03                   
@@ -691,7 +691,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [14] :Initial log joint density = -429065.666965 
 #> Path [14] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              77      -4.262e+05      2.408e-03   1.606e-01    7.308e-01  7.308e-01      5122 -3.292e+03 -3.309e+03                   
-#> Path [14] :Best Iter: [75] ELBO (-3291.591358) evaluations: (5122) 
+#> Path [14] :Best Iter: [75] ELBO (-3291.591359) evaluations: (5122) 
 #> Path [15] :Initial log joint density = -428765.253947 
 #> Path [15] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              79      -4.262e+05      8.342e-03   2.209e-01    1.000e+00  1.000e+00      5242 -3.292e+03 -3.296e+03                   
@@ -699,7 +699,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [16] :Initial log joint density = -429686.434714 
 #> Path [16] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              87      -4.262e+05      6.633e-03   2.000e-01    1.000e+00  1.000e+00      6408 -3.291e+03 -3.291e+03                   
-#> Path [16] :Best Iter: [84] ELBO (-3290.905251) evaluations: (6408) 
+#> Path [16] :Best Iter: [84] ELBO (-3290.905403) evaluations: (6408) 
 #> Path [17] :Initial log joint density = -428740.439809 
 #> Path [17] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.262e+05      6.625e-03   2.051e-01    1.000e+00  1.000e+00      4204 -3.296e+03 -3.301e+03                   
@@ -711,7 +711,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [19] :Initial log joint density = -430205.214053 
 #> Path [19] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.262e+05      1.028e-02   2.951e-01    1.000e+00  1.000e+00      4346 -3.292e+03 -3.295e+03                   
-#> Path [19] :Best Iter: [68] ELBO (-3292.331434) evaluations: (4346) 
+#> Path [19] :Best Iter: [68] ELBO (-3292.331435) evaluations: (4346) 
 #> Path [20] :Initial log joint density = -428579.292940 
 #> Path [20] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              74      -4.262e+05      4.089e-03   2.700e-01    6.048e-01  6.048e-01      4907 -3.292e+03 -3.302e+03                   
@@ -723,11 +723,11 @@ print("cmdstanr is needed to run this example.")
 #> Path [22] :Initial log joint density = -429548.061087 
 #> Path [22] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              93      -4.262e+05      3.364e-03   1.584e-01    6.835e-01  6.835e-01      7091 -3.290e+03 -3.304e+03                   
-#> Path [22] :Best Iter: [90] ELBO (-3290.060592) evaluations: (7091) 
+#> Path [22] :Best Iter: [90] ELBO (-3290.060593) evaluations: (7091) 
 #> Path [23] :Initial log joint density = -429506.987691 
 #> Path [23] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              93      -4.262e+05      1.646e-02   3.729e-01    1.000e+00  1.000e+00      7028 -3.288e+03 -3.293e+03                   
-#> Path [23] :Best Iter: [92] ELBO (-3288.236588) evaluations: (7028) 
+#> Path [23] :Best Iter: [92] ELBO (-3288.236591) evaluations: (7028) 
 #> Path [24] :Initial log joint density = -428935.909162 
 #> Path [24] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.262e+05      1.361e-02   2.861e-01    1.000e+00  1.000e+00      4347 -3.295e+03 -3.299e+03                   
@@ -743,15 +743,15 @@ print("cmdstanr is needed to run this example.")
 #> Path [27] :Initial log joint density = -429236.745400 
 #> Path [27] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              89      -4.262e+05      1.107e-02   3.626e-01    1.000e+00  1.000e+00      6438 -3.293e+03 -3.300e+03                   
-#> Path [27] :Best Iter: [83] ELBO (-3293.009607) evaluations: (6438) 
+#> Path [27] :Best Iter: [83] ELBO (-3293.009586) evaluations: (6438) 
 #> Path [28] :Initial log joint density = -429287.119198 
 #> Path [28] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              82      -4.262e+05      6.132e-03   2.310e-01    1.000e+00  1.000e+00      5739 -3.292e+03 -3.306e+03                   
-#> Path [28] :Best Iter: [74] ELBO (-3292.463058) evaluations: (5739) 
+#> Path [28] :Best Iter: [74] ELBO (-3292.463055) evaluations: (5739) 
 #> Path [29] :Initial log joint density = -429067.071925 
 #> Path [29] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              83      -4.262e+05      3.363e-03   2.821e-01    7.480e-01  7.480e-01      5875 -3.291e+03 -3.306e+03                   
-#> Path [29] :Best Iter: [81] ELBO (-3291.485481) evaluations: (5875) 
+#> Path [29] :Best Iter: [81] ELBO (-3291.485483) evaluations: (5875) 
 #> Path [30] :Initial log joint density = -428891.401145 
 #> Path [30] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.262e+05      1.406e-02   2.327e-01    1.000e+00  1.000e+00      4436 -3.292e+03 -3.296e+03                   
@@ -759,7 +759,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [31] :Initial log joint density = -429208.178933 
 #> Path [31] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              83      -4.262e+05      1.245e-02   2.920e-01    1.000e+00  1.000e+00      5719 -3.292e+03 -3.302e+03                   
-#> Path [31] :Best Iter: [81] ELBO (-3292.211556) evaluations: (5719) 
+#> Path [31] :Best Iter: [81] ELBO (-3292.211554) evaluations: (5719) 
 #> Path [32] :Initial log joint density = -428901.903684 
 #> Path [32] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.262e+05      4.200e-03   2.958e-01    6.693e-01  6.693e-01      4238 -3.296e+03 -3.308e+03                   
@@ -775,7 +775,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [35] :Initial log joint density = -430649.980518 
 #> Path [35] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              79      -4.262e+05      6.447e-03   2.416e-01    6.663e-01  6.663e-01      5382 -3.286e+03 -3.305e+03                   
-#> Path [35] :Best Iter: [76] ELBO (-3286.496477) evaluations: (5382) 
+#> Path [35] :Best Iter: [76] ELBO (-3286.496479) evaluations: (5382) 
 #> Path [36] :Initial log joint density = -428861.654734 
 #> Path [36] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              86      -4.262e+05      1.057e-02   3.172e-01    1.000e+00  1.000e+00      6143 -3.291e+03 -3.294e+03                   
@@ -795,15 +795,15 @@ print("cmdstanr is needed to run this example.")
 #> Path [40] :Initial log joint density = -429536.784005 
 #> Path [40] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              93      -4.262e+05      3.211e-03   1.678e-01    7.145e-01  7.145e-01      7189 -3.290e+03 -3.303e+03                   
-#> Path [40] :Best Iter: [91] ELBO (-3289.578334) evaluations: (7189) 
+#> Path [40] :Best Iter: [91] ELBO (-3289.578349) evaluations: (7189) 
 #> Path [41] :Initial log joint density = -429150.903194 
 #> Path [41] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              75      -4.262e+05      8.236e-03   2.094e-01    1.000e+00  1.000e+00      4941 -3.293e+03 -3.303e+03                   
-#> Path [41] :Best Iter: [72] ELBO (-3292.642946) evaluations: (4941) 
+#> Path [41] :Best Iter: [72] ELBO (-3292.642949) evaluations: (4941) 
 #> Path [42] :Initial log joint density = -429254.287623 
 #> Path [42] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
-#>              87      -4.262e+05      1.411e-02   3.420e-01    1.000e+00  1.000e+00      6455 -3.289e+03 -3.296e+03                   
-#> Path [42] :Best Iter: [86] ELBO (-3289.449731) evaluations: (6455) 
+#>              87      -4.262e+05      1.411e-02   3.421e-01    1.000e+00  1.000e+00      6455 -3.289e+03 -3.296e+03                   
+#> Path [42] :Best Iter: [86] ELBO (-3289.449713) evaluations: (6455) 
 #> Path [43] :Initial log joint density = -428858.867993 
 #> Path [43] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              63      -4.262e+05      1.204e-02   4.500e-01    1.000e+00  1.000e+00      3838 -3.296e+03 -3.308e+03                   
@@ -815,7 +815,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [45] :Initial log joint density = -430332.557992 
 #> Path [45] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              74      -4.262e+05      2.964e-02   2.447e-01    1.000e+00  1.000e+00      4971 -3.292e+03 -3.293e+03                   
-#> Path [45] :Best Iter: [71] ELBO (-3291.507757) evaluations: (4971) 
+#> Path [45] :Best Iter: [71] ELBO (-3291.507756) evaluations: (4971) 
 #> Path [46] :Initial log joint density = -428809.592495 
 #> Path [46] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.262e+05      5.287e-03   2.202e-01    1.000e+00  1.000e+00      4449 -3.296e+03 -3.308e+03                   
@@ -823,7 +823,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [47] :Initial log joint density = -429190.080380 
 #> Path [47] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              88      -4.262e+05      7.348e-03   2.180e-01    1.000e+00  1.000e+00      6446 -3.291e+03 -3.296e+03                   
-#> Path [47] :Best Iter: [85] ELBO (-3290.752147) evaluations: (6446) 
+#> Path [47] :Best Iter: [85] ELBO (-3290.752145) evaluations: (6446) 
 #> Path [48] :Initial log joint density = -429049.541562 
 #> Path [48] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              73      -4.262e+05      7.733e-03   2.219e-01    1.000e+00  1.000e+00      4858 -3.294e+03 -3.296e+03                   
@@ -836,7 +836,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.262e+05      1.385e-02   2.135e-01    1.000e+00  1.000e+00      4493 -3.292e+03 -3.296e+03                   
 #> Path [50] :Best Iter: [68] ELBO (-3291.640161) evaluations: (4493) 
-#> Finished in  21.0 seconds.
+#> Finished in  21.9 seconds.
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 # }
 ```

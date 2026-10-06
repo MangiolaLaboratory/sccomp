@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2026-08-19</h4>
+            <h4 data-toc-skip class="date">2026-10-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/splines.Rmd" class="external-link"><code>vignettes/splines.Rmd</code></a></small>
       <div class="d-none name"><code>splines.Rmd</code></div>
@@ -213,16 +213,16 @@ s(pseudotime, k = 5)___basis03</code></pre>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 216 × 6</span></span></span>
 <span><span class="co">#&gt;    cell_group parameter                      c_lower c_effect c_upper    c_FDR</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> B1         (Intercept)                      0.918   1.19     1.46  0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> B1         typecancer                      -<span style="color: #BB0000;">0.859</span>  -<span style="color: #BB0000;">0.559</span>   -<span style="color: #BB0000;">0.229</span> 0.000<span style="text-decoration: underline;">625</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> B1         s(pseudotime, k = 5)__lin1      -<span style="color: #BB0000;">0.445</span>  -<span style="color: #BB0000;">0.036</span><span style="color: #BB0000; text-decoration: underline;">7</span>   0.321 0.222   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> B1         s(pseudotime, k = 5)___basis01  -<span style="color: #BB0000;">1.90</span>   -<span style="color: #BB0000;">0.653</span>    0.172 0.058<span style="text-decoration: underline;">5</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> B1         s(pseudotime, k = 5)___basis02  -<span style="color: #BB0000;">1.56</span>   -<span style="color: #BB0000;">0.338</span>    0.399 0.151   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> B1         s(pseudotime, k = 5)___basis03  -<span style="color: #BB0000;">0.944</span>  -<span style="color: #BB0000;">0.242</span>    0.419 0.143   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> B2         (Intercept)                      0.534   0.849    1.15  0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> B2         typecancer                      -<span style="color: #BB0000;">1.16</span>   -<span style="color: #BB0000;">0.811</span>   -<span style="color: #BB0000;">0.445</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> B2         s(pseudotime, k = 5)__lin1      -<span style="color: #BB0000;">0.256</span>   0.211    0.603 0.068<span style="text-decoration: underline;">4</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> B2         s(pseudotime, k = 5)___basis01  -<span style="color: #BB0000;">2.22</span>   -<span style="color: #BB0000;">1.10</span>    -<span style="color: #BB0000;">0.165</span> 0.011<span style="text-decoration: underline;">3</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> B1         (Intercept)                      0.918   1.19    1.46   0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> B1         typecancer                      -<span style="color: #BB0000;">0.891</span>  -<span style="color: #BB0000;">0.576</span>  -<span style="color: #BB0000;">0.256</span>  0.000<span style="text-decoration: underline;">594</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> B1         s(pseudotime, k = 5)__lin1      -<span style="color: #BB0000;">0.439</span>  -<span style="color: #BB0000;">0.036</span><span style="color: #BB0000; text-decoration: underline;">5</span>  0.316  0.218   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> B1         s(pseudotime, k = 5)___basis01  -<span style="color: #BB0000;">1.88</span>   -<span style="color: #BB0000;">0.654</span>   0.072<span style="text-decoration: underline;">4</span> 0.030<span style="text-decoration: underline;">0</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> B1         s(pseudotime, k = 5)___basis02  -<span style="color: #BB0000;">1.48</span>   -<span style="color: #BB0000;">0.269</span>   0.420  0.167   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> B1         s(pseudotime, k = 5)___basis03  -<span style="color: #BB0000;">0.894</span>  -<span style="color: #BB0000;">0.262</span>   0.340  0.096<span style="text-decoration: underline;">5</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> B2         (Intercept)                      0.555   0.841   1.13   0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> B2         typecancer                      -<span style="color: #BB0000;">1.17</span>   -<span style="color: #BB0000;">0.797</span>  -<span style="color: #BB0000;">0.425</span>  0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> B2         s(pseudotime, k = 5)__lin1      -<span style="color: #BB0000;">0.188</span>   0.207   0.584  0.072<span style="text-decoration: underline;">6</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> B2         s(pseudotime, k = 5)___basis01  -<span style="color: #BB0000;">2.15</span>   -<span style="color: #BB0000;">1.09</span>   -<span style="color: #BB0000;">0.241</span>  0.005<span style="text-decoration: underline;">12</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 206 more rows</span></span></span></code></pre></div>
 <p>These parameters cannot be interpreted directly, on the contrary of
 other parameter in the linear model.</p>
@@ -245,19 +245,19 @@ covariates the formula needs — here, <code>type</code>):</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.329 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.383 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 10</span></span></span>
 <span><span class="co">#&gt;   pseudotime type   sample   cell_group proportion_mean proportion_lower</span></span>
 <span><span class="co">#&gt;        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B1                 0.061<span style="text-decoration: underline;">2</span>           0.043<span style="text-decoration: underline;">6</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B2                 0.029<span style="text-decoration: underline;">8</span>           0.018<span style="text-decoration: underline;">4</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B3                 0.008<span style="text-decoration: underline;">12</span>          0.005<span style="text-decoration: underline;">01</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 BM                 0.008<span style="text-decoration: underline;">45</span>          0.005<span style="text-decoration: underline;">49</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 CD4 1              0.025<span style="text-decoration: underline;">6</span>           0.018<span style="text-decoration: underline;">8</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 CD4 2              0.037<span style="text-decoration: underline;">0</span>           0.025<span style="text-decoration: underline;">7</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B1                 0.061<span style="text-decoration: underline;">4</span>           0.039<span style="text-decoration: underline;">7</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B2                 0.029<span style="text-decoration: underline;">7</span>           0.020<span style="text-decoration: underline;">2</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B3                 0.008<span style="text-decoration: underline;">15</span>          0.004<span style="text-decoration: underline;">65</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 BM                 0.008<span style="text-decoration: underline;">55</span>          0.005<span style="text-decoration: underline;">96</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 CD4 1              0.025<span style="text-decoration: underline;">8</span>           0.020<span style="text-decoration: underline;">0</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 CD4 2              0.037<span style="text-decoration: underline;">6</span>           0.026<span style="text-decoration: underline;">1</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more variables: proportion_upper &lt;dbl&gt;, unconstrained_mean &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   unconstrained_lower &lt;dbl&gt;, unconstrained_upper &lt;dbl&gt;</span></span></span></code></pre></div>
 <p><code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> already returns the
@@ -297,14 +297,100 @@ e.g. CD8 1 peaks around pseudotime ≈ 4 — which a purely linear
 <code>~ type + pseudotime</code> model could not capture.</p>
 </div>
 <div class="section level3">
-<h3 id="lets-use-a-smaller-basis-k-3">3. Let’s use a smaller basis (<code>k = 3</code>)<a class="anchor" aria-label="anchor" href="#lets-use-a-smaller-basis-k-3"></a>
+<h3 id="test-differences-along-the-curve">3. Test differences along the curve<a class="anchor" aria-label="anchor" href="#test-differences-along-the-curve"></a>
+</h3>
+<p>The individual <code>s(pseudotime, k = 5)__*</code> parameters from
+<code><a href="../reference/sccomp_test.html">sccomp_test()</a></code> cannot be interpreted one-by-one. The
+scientific question is usually “does composition differ between two
+points (or intervals) of pseudotime?”. <code><a href="../reference/sccomp_test_smooth.html">sccomp_test_smooth()</a></code>
+answers exactly that: it predicts the <strong>mean</strong> composition
+(logit scale) at the two positions, forms the per-draw contrast
+<code>mu(to) - mu(from)</code>, and runs it through the same
+probability-of-null / FDR machinery as <code><a href="../reference/sccomp_test.html">sccomp_test()</a></code> — so
+<code>c_effect</code>, <code>c_pH0</code> and <code>c_FDR</code> mean
+the same thing here as everywhere else in sccomp.</p>
+<p>Because the linear predictor is additive, any covariate held constant
+between the two positions (e.g. <code>type</code>) cancels out of the
+contrast, so the test isolates the pseudotime effect.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_test_smooth.html">sccomp_test_smooth</a></span><span class="op">(</span></span>
+<span>    smooth <span class="op">=</span> <span class="st">"pseudotime"</span>,</span>
+<span>    from   <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    to     <span class="op">=</span> <span class="fl">5</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">c_FDR</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">cell_group</span>, <span class="va">from</span>, <span class="va">to</span>, <span class="va">c_effect</span>, <span class="va">c_lower</span>, <span class="va">c_upper</span>, <span class="va">c_FDR</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Loading model from cache...</span></span>
+<span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.098 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 7</span></span></span>
+<span><span class="co">#&gt;    cell_group from  to    c_effect c_lower c_upper    c_FDR</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> CD4 2      1     5        0.691   0.349   1.09  0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> CD4 3      1     5       -<span style="color: #BB0000;">1.17</span>   -<span style="color: #BB0000;">1.69</span>   -<span style="color: #BB0000;">0.741</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> M5         1     5       -<span style="color: #BB0000;">0.929</span>  -<span style="color: #BB0000;">1.65</span>   -<span style="color: #BB0000;">0.356</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> M9         1     5       -<span style="color: #BB0000;">0.732</span>  -<span style="color: #BB0000;">1.23</span>   -<span style="color: #BB0000;">0.342</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> TM3        1     5       -<span style="color: #BB0000;">0.998</span>  -<span style="color: #BB0000;">1.84</span>   -<span style="color: #BB0000;">0.410</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> CD8 3      1     5        0.578   0.238   1.03  0.000<span style="text-decoration: underline;">667</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> CD8 1      1     5        0.617   0.244   1.01  0.001<span style="text-decoration: underline;">43</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> H3         1     5       -<span style="color: #BB0000;">0.580</span>  -<span style="color: #BB0000;">1.02</span>   -<span style="color: #BB0000;">0.210</span> 0.002<span style="text-decoration: underline;">50</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> M8         1     5        0.552   0.172   0.966 0.003<span style="text-decoration: underline;">33</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> CD8 5      1     5        0.612   0.120   1.31  0.005<span style="text-decoration: underline;">00</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 26 more rows</span></span></span></code></pre></div>
+<p>A positive <code>c_effect</code> means the cell group is (on the
+logit scale) more abundant at pseudotime 5 than at pseudotime 1;
+<code>c_FDR</code> controls the false-discovery rate across cell
+groups.</p>
+<p>Because the curve can wiggle, comparing two single points can be
+sensitive to the exact positions. Use
+<code>comparison = "average"</code> to contrast the average of the curve
+over two <strong>intervals</strong> instead (each sampled at
+<code>resolution</code> points):</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/sccomp_test_smooth.html">sccomp_test_smooth</a></span><span class="op">(</span></span>
+<span>    smooth     <span class="op">=</span> <span class="st">"pseudotime"</span>,</span>
+<span>    from       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span>,   <span class="co"># early interval</span></span>
+<span>    to         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span>,   <span class="co"># late interval</span></span>
+<span>    comparison <span class="op">=</span> <span class="st">"average"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">c_FDR</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">cell_group</span>, <span class="va">from</span>, <span class="va">to</span>, <span class="va">c_effect</span>, <span class="va">c_lower</span>, <span class="va">c_upper</span>, <span class="va">c_FDR</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Loading model from cache...</span></span>
+<span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.192 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 7</span></span></span>
+<span><span class="co">#&gt;    cell_group from   to     c_effect c_lower c_upper    c_FDR</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> CD4 2      [0, 2] [4, 6]    0.640   0.316   1.03  0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> CD4 3      [0, 2] [4, 6]   -<span style="color: #BB0000;">1.11</span>   -<span style="color: #BB0000;">1.60</span>   -<span style="color: #BB0000;">0.693</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> M5         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.860</span>  -<span style="color: #BB0000;">1.49</span>   -<span style="color: #BB0000;">0.339</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> M9         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.696</span>  -<span style="color: #BB0000;">1.06</span>   -<span style="color: #BB0000;">0.379</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> TM3        [0, 2] [4, 6]   -<span style="color: #BB0000;">0.929</span>  -<span style="color: #BB0000;">1.68</span>   -<span style="color: #BB0000;">0.387</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> CD8 1      [0, 2] [4, 6]    0.585   0.267   0.919 0.000<span style="text-decoration: underline;">667</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> CD8 3      [0, 2] [4, 6]    0.532   0.188   0.958 0.001<span style="text-decoration: underline;">43</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> M8         [0, 2] [4, 6]    0.522   0.187   0.923 0.002<span style="text-decoration: underline;">00</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> H3         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.554</span>  -<span style="color: #BB0000;">0.932</span>  -<span style="color: #BB0000;">0.178</span> 0.003<span style="text-decoration: underline;">11</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> CD8 5      [0, 2] [4, 6]    0.560   0.122   1.23  0.004<span style="text-decoration: underline;">40</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 26 more rows</span></span></span></code></pre></div>
+<p>For factor smooths (next section) the grouping factor selects
+<em>which</em> curve is tested — pass it via <code>at</code>,
+e.g. <code>at = list(tissue = "tumor")</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="lets-use-a-smaller-basis-k-3">4. Let’s use a smaller basis (<code>k = 3</code>)<a class="anchor" aria-label="anchor" href="#lets-use-a-smaller-basis-k-3"></a>
 </h3>
 <p>The same parametric + smooth layout works with a lower
 <code>k</code>. Fewer basis functions mean a smoother curve and less
 risk of over-fitting when sample size is modest. Here <code>k = 3</code>
 yields one unpenalised linear column and a single wiggly basis
 column.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_k3</span> <span class="op">&lt;-</span> <span class="va">counts_pt</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="va">type</span> <span class="op">+</span> <span class="fu">s</span><span class="op">(</span><span class="va">pseudotime</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
@@ -316,14 +402,14 @@ column.</p>
 <span>    verbose             <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    max_sampling_iterations <span class="op">=</span> <span class="fl">2000</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_k3</span> <span class="op">&lt;-</span> <span class="va">fit_k3</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.31 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.365 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span></code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_k3</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cell_group</span> <span class="op"><a href="https://mc-stan.org/posterior/reference/match.html" class="external-link">%in%</a></span> <span class="va">top_cgs</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">pseudotime</span>, <span class="va">proportion_mean</span>, colour <span class="op">=</span> <span class="va">type</span>, fill <span class="op">=</span> <span class="va">type</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -340,13 +426,13 @@ capacity to bend, which is appropriate when you want a gentle pseudotime
 trend on top of the <code>type</code> effect.</p>
 </div>
 <div class="section level3">
-<h3 id="under-the-hood-what-s-actually-decomposes-into">4. Under the hood: What <code>s()</code> actually decomposes
+<h3 id="under-the-hood-what-s-actually-decomposes-into">5. Under the hood: What <code>s()</code> actually decomposes
 into<a class="anchor" aria-label="anchor" href="#under-the-hood-what-s-actually-decomposes-into"></a>
 </h3>
 <p>The smooth metadata used to fit the model is stored on the result, so
 we can re-evaluate the basis at any new pseudotime value. This is
 exactly what <code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> does internally.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">smooth_meta</span>    <span class="op">&lt;-</span> <span class="fu">sccomp</span><span class="fu">:::</span><span class="fu">get_smooth_results</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="va">smooth_specs</span>   <span class="op">&lt;-</span> <span class="va">smooth_meta</span><span class="op">$</span><span class="va">smooth_specs</span></span>
 <span><span class="va">smooth_re_objs</span> <span class="op">&lt;-</span> <span class="va">smooth_meta</span><span class="op">$</span><span class="va">smooth_re_objs</span></span>
@@ -406,7 +492,7 @@ jointly by a small set of smoothing parameters.</p>
 <p>We extend <code>counts_obj</code> with a synthetic
 <code>tissue</code> factor (3 levels) on top of the existing
 <code>pseudotime</code>:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span>
 <span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">counts_obj</span><span class="op">$</span><span class="va">sample</span><span class="op">)</span></span>
 <span><span class="va">covs</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
@@ -427,7 +513,7 @@ jointly by a small set of smoothing parameters.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> SCP345_580   benign     0.879  blood </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> SCP345_860   benign     1.32   lymph </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> SCP424_pbmc1 benign     1.53   tumor</span></span></code></pre></div>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_fs</span> <span class="op">&lt;-</span> <span class="va">counts_tissue</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/sccomp_estimate.html">sccomp_estimate</a></span><span class="op">(</span></span>
 <span>    formula_composition <span class="op">=</span> <span class="op">~</span> <span class="fu">s</span><span class="op">(</span><span class="va">pseudotime</span>, <span class="va">tissue</span>, bs <span class="op">=</span> <span class="st">"fs"</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span>
@@ -443,7 +529,7 @@ jointly by a small set of smoothing parameters.</p>
 <span><span class="co"># This one smooth occupies 3 RE slots (one per mgcv penalty block);</span></span>
 <span><span class="co"># you can confirm via:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">fit_fs</span>, <span class="st">"model_input"</span><span class="op">)</span><span class="op">$</span><span class="va">ncol_X_random_eff</span></span>
-<span><span class="co">#&gt; [1] 9 3 3 0</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 9 3 3 0 0 0</span></span></code></pre></div>
 <p>The three non-zero entries correspond to the wiggly main block (9
 columns for <code>k = 5</code> × 3 tissues) and two smaller per-level
 deviation blocks.</p>
@@ -453,7 +539,7 @@ deviation blocks.</p>
 </h3>
 <p><code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> takes a grid that crosses
 <code>pseudotime</code> with <code>tissue</code>:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">grid_fs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
 <span>  pseudotime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">covs</span><span class="op">$</span><span class="va">pseudotime</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">covs</span><span class="op">$</span><span class="va">pseudotime</span><span class="op">)</span>,</span>
 <span>                   length.out <span class="op">=</span> <span class="fl">60</span><span class="op">)</span>,</span>
@@ -466,24 +552,24 @@ deviation blocks.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid_fs</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.991 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 2.074 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred_fs</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 10</span></span></span>
 <span><span class="co">#&gt;   pseudotime tissue sample      cell_group proportion_mean proportion_lower</span></span>
 <span><span class="co">#&gt;        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B1                 0.065<span style="text-decoration: underline;">7</span>           0.039<span style="text-decoration: underline;">9</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B2                 0.024<span style="text-decoration: underline;">0</span>           0.012<span style="text-decoration: underline;">0</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B3                 0.010<span style="text-decoration: underline;">3</span>           0.006<span style="text-decoration: underline;">74</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 BM                 0.006<span style="text-decoration: underline;">80</span>          0.004<span style="text-decoration: underline;">20</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 CD4 1              0.028<span style="text-decoration: underline;">0</span>           0.018<span style="text-decoration: underline;">3</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 CD4 2              0.042<span style="text-decoration: underline;">0</span>           0.027<span style="text-decoration: underline;">6</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B1                 0.066<span style="text-decoration: underline;">9</span>           0.044<span style="text-decoration: underline;">7</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B2                 0.023<span style="text-decoration: underline;">1</span>           0.012<span style="text-decoration: underline;">1</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B3                 0.009<span style="text-decoration: underline;">85</span>          0.006<span style="text-decoration: underline;">36</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 BM                 0.006<span style="text-decoration: underline;">46</span>          0.004<span style="text-decoration: underline;">14</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 CD4 1              0.028<span style="text-decoration: underline;">0</span>           0.018<span style="text-decoration: underline;">9</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 CD4 2              0.043<span style="text-decoration: underline;">4</span>           0.024<span style="text-decoration: underline;">1</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more variables: proportion_upper &lt;dbl&gt;, unconstrained_mean &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   unconstrained_lower &lt;dbl&gt;, unconstrained_upper &lt;dbl&gt;</span></span></span></code></pre></div>
 <p>Pick the most pseudotime-responsive cell groups and plot one curve
 per tissue:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">top_cgs_fs</span> <span class="op">&lt;-</span> <span class="va">pred_fs</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">cell_group</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>rng <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">proportion_mean</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">proportion_mean</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -537,7 +623,7 @@ misleading.</p>
 </h2>
 <p><code>sccomp</code> can model up to two splines together with random
 effects.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">~</span> <span class="va">type</span> <span class="op">+</span></span>
 <span>  <span class="fu">s</span><span class="op">(</span><span class="va">pseudotime</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">s</span><span class="op">(</span><span class="va">age</span>,        k <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">+</span></span>
@@ -548,7 +634,7 @@ effects.</p>
 </h2>
 <pre><code><span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.5 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Matrix products: default</span></span>
 <span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -567,7 +653,7 @@ effects.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] sccomp_2.5.0      instantiate_0.2.3 ggplot2_4.0.3     tidyr_1.3.2      </span></span>
+<span><span class="co">#&gt; [1] sccomp_2.5.2      instantiate_0.2.3 ggplot2_4.0.3     tidyr_1.3.2      </span></span>
 <span><span class="co">#&gt; [5] dplyr_1.2.1      </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
@@ -579,16 +665,16 @@ effects.</p>
 <span><span class="co">#&gt; [11] posterior_1.7.0             compiler_4.6.1             </span></span>
 <span><span class="co">#&gt; [13] rlang_1.3.0                 sass_0.4.10                </span></span>
 <span><span class="co">#&gt; [15] tools_4.6.1                 utf8_1.2.6                 </span></span>
-<span><span class="co">#&gt; [17] yaml_2.3.12                 data.table_1.18.4          </span></span>
-<span><span class="co">#&gt; [19] knitr_1.51                  labeling_0.4.3             </span></span>
-<span><span class="co">#&gt; [21] S4Arrays_1.12.0             htmlwidgets_1.6.4          </span></span>
+<span><span class="co">#&gt; [17] yaml_2.3.12                 data.table_1.18.6.1        </span></span>
+<span><span class="co">#&gt; [19] knitr_1.52                  labeling_0.4.3             </span></span>
+<span><span class="co">#&gt; [21] S4Arrays_1.12.1             htmlwidgets_1.6.4          </span></span>
 <span><span class="co">#&gt; [23] DelayedArray_0.38.2         RColorBrewer_1.1-3         </span></span>
 <span><span class="co">#&gt; [25] cmdstanr_0.9.0              abind_1.4-8                </span></span>
 <span><span class="co">#&gt; [27] withr_3.0.3                 purrr_1.2.2                </span></span>
 <span><span class="co">#&gt; [29] BiocGenerics_0.58.1         desc_1.4.3                 </span></span>
 <span><span class="co">#&gt; [31] grid_4.6.1                  stats4_4.6.1               </span></span>
 <span><span class="co">#&gt; [33] scales_1.4.0                SummarizedExperiment_1.42.0</span></span>
-<span><span class="co">#&gt; [35] cli_3.6.6                   rmarkdown_2.31             </span></span>
+<span><span class="co">#&gt; [35] cli_3.6.6                   rmarkdown_2.32             </span></span>
 <span><span class="co">#&gt; [37] crayon_1.5.3                ragg_1.5.2                 </span></span>
 <span><span class="co">#&gt; [39] generics_0.1.4              otel_0.2.0                 </span></span>
 <span><span class="co">#&gt; [41] tzdb_0.5.0                  cachem_1.1.0               </span></span>
@@ -598,11 +684,11 @@ effects.</p>
 <span><span class="co">#&gt; [49] Matrix_1.7-5                jsonlite_2.0.0             </span></span>
 <span><span class="co">#&gt; [51] callr_3.8.0                 IRanges_2.46.0             </span></span>
 <span><span class="co">#&gt; [53] hms_1.1.4                   patchwork_1.3.2            </span></span>
-<span><span class="co">#&gt; [55] S4Vectors_0.50.1            ggrepel_0.9.8              </span></span>
+<span><span class="co">#&gt; [55] S4Vectors_0.50.3            ggrepel_0.9.8              </span></span>
 <span><span class="co">#&gt; [57] systemfonts_1.3.2           jquerylib_0.1.4            </span></span>
 <span><span class="co">#&gt; [59] glue_1.8.1                  ggside_0.4.1               </span></span>
 <span><span class="co">#&gt; [61] pkgdown_2.2.1               ps_1.9.3                   </span></span>
-<span><span class="co">#&gt; [63] distributional_0.8.1        stringi_1.8.9              </span></span>
+<span><span class="co">#&gt; [63] distributional_0.9.0        stringi_1.8.9              </span></span>
 <span><span class="co">#&gt; [65] gtable_0.3.6                GenomicRanges_1.64.0       </span></span>
 <span><span class="co">#&gt; [67] tibble_3.3.1                pillar_1.11.1              </span></span>
 <span><span class="co">#&gt; [69] htmltools_0.5.9             Seqinfo_1.2.0              </span></span>
@@ -611,8 +697,8 @@ effects.</p>
 <span><span class="co">#&gt; [75] lattice_0.22-9              readr_2.2.0                </span></span>
 <span><span class="co">#&gt; [77] backports_1.5.1             bslib_0.12.0               </span></span>
 <span><span class="co">#&gt; [79] Rcpp_1.1.2                  nlme_3.1-169               </span></span>
-<span><span class="co">#&gt; [81] SparseArray_1.12.2          checkmate_2.3.4            </span></span>
-<span><span class="co">#&gt; [83] mgcv_1.9-4                  xfun_0.60                  </span></span>
+<span><span class="co">#&gt; [81] SparseArray_1.12.3          checkmate_2.3.4            </span></span>
+<span><span class="co">#&gt; [83] mgcv_1.9-4                  xfun_0.61                  </span></span>
 <span><span class="co">#&gt; [85] fs_2.1.0                    MatrixGenerics_1.24.0      </span></span>
 <span><span class="co">#&gt; [87] forcats_1.0.1               prettydoc_0.4.1            </span></span>
 <span><span class="co">#&gt; [89] pkgconfig_2.0.3</span></span></code></pre>
