@@ -88,16 +88,20 @@ functions{
         matrix beta,
         int M,
 
-      // Random effects (up to 4 uniform slots)
+      // Random effects (up to 6 uniform slots)
       array[] int ncol_X_random_eff,
       matrix X_random_effect_1,   // Sliced
       matrix X_random_effect_2,   // Sliced
       matrix X_random_effect_3,   // Sliced
       matrix X_random_effect_4,   // Sliced
+      matrix X_random_effect_5,   // Sliced
+      matrix X_random_effect_6,   // Sliced
       matrix random_effect_1,
       matrix random_effect_2,
       matrix random_effect_3,
       matrix random_effect_4,
+      matrix random_effect_5,
+      matrix random_effect_6,
 
       // truncation
       array[,] int truncation_not_idx_minimal
@@ -112,6 +116,8 @@ functions{
         if(ncol_X_random_eff[2]>0) mu = mu + (X_random_effect_2[idx_y,] * random_effect_2)';
         if(ncol_X_random_eff[3]>0) mu = mu + (X_random_effect_3[idx_y,] * random_effect_3)';
         if(ncol_X_random_eff[4]>0) mu = mu + (X_random_effect_4[idx_y,] * random_effect_4)';
+        if(ncol_X_random_eff[5]>0) mu = mu + (X_random_effect_5[idx_y,] * random_effect_5)';
+        if(ncol_X_random_eff[6]>0) mu = mu + (X_random_effect_6[idx_y,] * random_effect_6)';
 
           for(n in 1:N)  mu[,n] = softmax(mu[,n]);
 
@@ -334,32 +340,36 @@ data{
   int <lower=0, upper=1> intercept_in_design;
 
   // ----------------------------------------------------------------------
-  // Random effect blocks: up to 4 uniform "slots", one block per slot.
+  // Random effect blocks: up to 6 uniform "slots", one block per slot.
   // Each slot has its own n_factors (K) so that no padding is needed across
   // slots. A slot with ncol_X_random_eff[k] == 0 is unused (its arrays have
   // length 0 and no parameters get sampled).
   //
-  //   slot 1 -> *_1     slot 2 -> *_2     slot 3 -> *_3     slot 4 -> *_4
+  //   slot 1 -> *_1 ... slot 6 -> *_6
   //
-  // To go past 4 slots, paste another "slot 4" block in this file and bump
-  // the array length below from 4 to 5. There is no other architectural
-  // limit.
+  // To go past 6 slots, paste another "slot 6" block in this file and bump
+  // the array length below. There is no other architectural limit. Keep
+  // N_RE_SLOTS in R/utilities.R in sync with the array length.
   // ----------------------------------------------------------------------
   int is_random_effect;
 
-  array[4] int ncol_X_random_eff;
+  array[6] int ncol_X_random_eff;
   matrix[N, ncol_X_random_eff[1]] X_random_effect_1;
   matrix[N, ncol_X_random_eff[2]] X_random_effect_2;
   matrix[N, ncol_X_random_eff[3]] X_random_effect_3;
   matrix[N, ncol_X_random_eff[4]] X_random_effect_4;
+  matrix[N, ncol_X_random_eff[5]] X_random_effect_5;
+  matrix[N, ncol_X_random_eff[6]] X_random_effect_6;
 
   // Covariance setup (per slot)
-  array[4] int n_groups;
-  array[4] int how_many_factors_in_random_design;
+  array[6] int n_groups;
+  array[6] int how_many_factors_in_random_design;
   array[how_many_factors_in_random_design[1], n_groups[1]] int group_factor_indexes_for_covariance_1;
   array[how_many_factors_in_random_design[2], n_groups[2]] int group_factor_indexes_for_covariance_2;
   array[how_many_factors_in_random_design[3], n_groups[3]] int group_factor_indexes_for_covariance_3;
   array[how_many_factors_in_random_design[4], n_groups[4]] int group_factor_indexes_for_covariance_4;
+  array[how_many_factors_in_random_design[5], n_groups[5]] int group_factor_indexes_for_covariance_5;
+  array[how_many_factors_in_random_design[6], n_groups[6]] int group_factor_indexes_for_covariance_6;
 
   // LOO
   int<lower=0, upper=1> enable_loo;
@@ -374,6 +384,8 @@ transformed data{
   int ncol_X_random_eff_safe_2 = max(ncol_X_random_eff[2], 1);
   int ncol_X_random_eff_safe_3 = max(ncol_X_random_eff[3], 1);
   int ncol_X_random_eff_safe_4 = max(ncol_X_random_eff[4], 1);
+  int ncol_X_random_eff_safe_5 = max(ncol_X_random_eff[5], 1);
+  int ncol_X_random_eff_safe_6 = max(ncol_X_random_eff[6], 1);
 
   // For parallelisation
   array[N] int array_N;
@@ -397,7 +409,7 @@ parameters{
   real<lower=0, upper=1> mix_p;
 
   // ----------------------------------------------------------------------
-  // Random effect parameters - 4 uniform slots.
+  // Random effect parameters - 6 uniform slots.
   //
   // For each slot k:
   //   * random_effect_raw_k       : sum_to_zero_vector[M] per design column
@@ -405,7 +417,7 @@ parameters{
   //   * sigma_correlation_factor_k: per-category Cholesky of correlation matrix
   //                                  (n_factors[k] x n_factors[k]; 1x1 = no LKJ work)
   //
-  // Hyperprior scalars sigma_mu / sigma_sigma are shared in length-4 arrays.
+  // Hyperprior scalars sigma_mu / sigma_sigma are shared in length-6 arrays.
   // ----------------------------------------------------------------------
 
   // Slot 1
@@ -428,9 +440,19 @@ parameters{
   array[M * (ncol_X_random_eff[4]>0)] vector[how_many_factors_in_random_design[4]]  random_effect_sigma_raw_4;
   array[M * (ncol_X_random_eff[4]>0)] cholesky_factor_corr[how_many_factors_in_random_design[4] * (ncol_X_random_eff[4]>0)] sigma_correlation_factor_4;
 
+  // Slot 5
+  array[ncol_X_random_eff[5] * (ncol_X_random_eff[5]>0)] sum_to_zero_vector[M] random_effect_raw_5;
+  array[M * (ncol_X_random_eff[5]>0)] vector[how_many_factors_in_random_design[5]]  random_effect_sigma_raw_5;
+  array[M * (ncol_X_random_eff[5]>0)] cholesky_factor_corr[how_many_factors_in_random_design[5] * (ncol_X_random_eff[5]>0)] sigma_correlation_factor_5;
+
+  // Slot 6
+  array[ncol_X_random_eff[6] * (ncol_X_random_eff[6]>0)] sum_to_zero_vector[M] random_effect_raw_6;
+  array[M * (ncol_X_random_eff[6]>0)] vector[how_many_factors_in_random_design[6]]  random_effect_sigma_raw_6;
+  array[M * (ncol_X_random_eff[6]>0)] cholesky_factor_corr[how_many_factors_in_random_design[6] * (ncol_X_random_eff[6]>0)] sigma_correlation_factor_6;
+
   // Shared hyperprior scalars (one mu, one sigma per slot)
-  array[4 * (is_random_effect>0)] real random_effect_sigma_mu;
-  array[4 * (is_random_effect>0)] real random_effect_sigma_sigma;
+  array[6 * (is_random_effect>0)] real random_effect_sigma_mu;
+  array[6 * (is_random_effect>0)] real random_effect_sigma_sigma;
 
   // For models with a single group (kept from the original design)
   array[is_random_effect>0] real zero_random_effect;
@@ -472,6 +494,8 @@ transformed parameters{
   matrix[ncol_X_random_eff_safe_2 * (is_random_effect>0), M] random_effect_2;
   matrix[ncol_X_random_eff_safe_3 * (is_random_effect>0), M] random_effect_3;
   matrix[ncol_X_random_eff_safe_4 * (is_random_effect>0), M] random_effect_4;
+  matrix[ncol_X_random_eff_safe_5 * (is_random_effect>0), M] random_effect_5;
+  matrix[ncol_X_random_eff_safe_6 * (is_random_effect>0), M] random_effect_6;
 
   if (ncol_X_random_eff[1] > 0) {
     array[ncol_X_random_eff[1]] vector[M] raw_vec;
@@ -516,6 +540,28 @@ transformed parameters{
       random_effect_sigma_raw_4, sigma_correlation_factor_4
     );
   }
+
+  if (ncol_X_random_eff[5] > 0) {
+    array[ncol_X_random_eff[5]] vector[M] raw_vec;
+    for (i in 1:ncol_X_random_eff[5]) raw_vec[i] = to_vector(random_effect_raw_5[i]);
+    random_effect_5 = build_re_block(
+      M, n_groups[5], how_many_factors_in_random_design[5], ncol_X_random_eff[5],
+      group_factor_indexes_for_covariance_5, raw_vec,
+      random_effect_sigma_mu[5], random_effect_sigma_sigma[5],
+      random_effect_sigma_raw_5, sigma_correlation_factor_5
+    );
+  }
+
+  if (ncol_X_random_eff[6] > 0) {
+    array[ncol_X_random_eff[6]] vector[M] raw_vec;
+    for (i in 1:ncol_X_random_eff[6]) raw_vec[i] = to_vector(random_effect_raw_6[i]);
+    random_effect_6 = build_re_block(
+      M, n_groups[6], how_many_factors_in_random_design[6], ncol_X_random_eff[6],
+      group_factor_indexes_for_covariance_6, raw_vec,
+      random_effect_sigma_mu[6], random_effect_sigma_sigma[6],
+      random_effect_sigma_raw_6, sigma_correlation_factor_6
+    );
+  }
 }
 model{
   // Fit main distribution
@@ -541,16 +587,20 @@ model{
       beta,
       M,
 
-      // Random effects (4 uniform slots)
+      // Random effects (6 uniform slots)
       ncol_X_random_eff,
       X_random_effect_1,
       X_random_effect_2,
       X_random_effect_3,
       X_random_effect_4,
+      X_random_effect_5,
+      X_random_effect_6,
       random_effect_1,
       random_effect_2,
       random_effect_3,
       random_effect_4,
+      random_effect_5,
+      random_effect_6,
 
       //truncation
       truncation_not_idx_minimal
@@ -643,6 +693,18 @@ model{
     for (m in 1:M) random_effect_sigma_raw_4[m] ~ std_normal();
     for (m in 1:M) sigma_correlation_factor_4[m] ~ lkj_corr_cholesky(2);
   }
+
+  if (ncol_X_random_eff[5] > 0) {
+    for (m in 1:M) random_effect_raw_5[,m] ~ normal(0, inv(sqrt(1 - inv(M))));
+    for (m in 1:M) random_effect_sigma_raw_5[m] ~ std_normal();
+    for (m in 1:M) sigma_correlation_factor_5[m] ~ lkj_corr_cholesky(2);
+  }
+
+  if (ncol_X_random_eff[6] > 0) {
+    for (m in 1:M) random_effect_raw_6[,m] ~ normal(0, inv(sqrt(1 - inv(M))));
+    for (m in 1:M) random_effect_sigma_raw_6[m] ~ std_normal();
+    for (m in 1:M) sigma_correlation_factor_6[m] ~ lkj_corr_cholesky(2);
+  }
   }
 generated quantities {
   // LOO
@@ -663,6 +725,8 @@ generated quantities {
     if(ncol_X_random_eff[2]>0) mu = mu + (X_random_effect_2 * random_effect_2)';
     if(ncol_X_random_eff[3]>0) mu = mu + (X_random_effect_3 * random_effect_3)';
     if(ncol_X_random_eff[4]>0) mu = mu + (X_random_effect_4 * random_effect_4)';
+    if(ncol_X_random_eff[5]>0) mu = mu + (X_random_effect_5 * random_effect_5)';
+    if(ncol_X_random_eff[6]>0) mu = mu + (X_random_effect_6 * random_effect_6)';
 
 
     // Calculate proportions

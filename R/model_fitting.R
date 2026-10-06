@@ -69,12 +69,12 @@ fit_model = function(
     init_list$prec_slope_2 = rep(0, data_for_model$A)
   }
 
-  # Random effect inits - 4 uniform slots (one per non-empty random-effect block).
+  # Random effect inits - one per non-empty random-effect slot.
   # Each slot gets zero-initialised raws + an identity-like correlation Cholesky.
   if (data_for_model$n_random_eff > 0) {
     init_list$zero_random_effect = rep(0, size = 1) |> as.array()
     
-    for (k in seq_len(4L)) {
+    for (k in seq_len(N_RE_SLOTS)) {
       if (data_for_model$ncol_X_random_eff[k] == 0) next
       K = data_for_model$how_many_factors_in_random_design[k]
       
@@ -220,13 +220,33 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
   if (file.exists(cache_file) && !force) {
     mod <- readRDS(cache_file)
     stan_file <- tryCatch(mod$stan_file(), error = function(e) "")
+    exe_file  <- tryCatch(mod$exe_file(),  error = function(e) "")
 
-    if (!is.null(stan_file) && nzchar(stan_file) && file.exists(stan_file)) {
+    exists_and_set <- function(path) !is.null(path) && nzchar(path) && file.exists(path)
+
+    # The cache holds only the CmdStanModel object; the executable it points at
+    # lives in the package's own `inst/stan`, which a reinstall replaces. The
+    # cache directory is keyed by package version, so a dev build installed
+    # without a version bump leaves an entry whose binary is gone. Returning it
+    # would look like a cache hit and then fail at first use: cmdstanr reports
+    # "Model not compiled", and the recompile cannot recover because
+    # CmdStanModel$compile() drops include_paths on a recompile, so
+    # `#include common_functions.stan` cannot be resolved and stanc exits with
+    # the opaque "System command 'stanc' failed". Treat a missing binary as a
+    # cache miss and take the full compile path below, which sets include paths.
+    if (exists_and_set(stan_file) && exists_and_set(exe_file)) {
       message("Loading model from cache...")
       return(mod)
     } else {
-      message("Cached model missing source Stan file. Recompiling...")
-      clear_stan_model_cache(cache_dir = cache_dir)
+      if (!exists_and_set(stan_file))
+        message("Cached model missing source Stan file. Recompiling...")
+      else
+        message("Cached model missing its compiled executable. Recompiling...")
+
+      # Drop this entry only. clear_stan_model_cache() removes the whole
+      # version directory, which both throws away the other models' caches and
+      # deletes the directory `saveRDS()` below is about to write into.
+      file.remove(cache_file)
     }
   }
 
@@ -248,7 +268,9 @@ load_model <- function(name, cache_dir = sccomp_stan_models_cache_dir, force=FAL
     cpp_options = list(stan_threads = TRUE)
   ) |> suppressWarnings()
 
-  # Save the compiled model object to cache
+  # Save the compiled model object to cache. Re-assert the directory: a
+  # concurrent clear_stan_model_cache() may have removed it since we started.
+  dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
   saveRDS(mod, file = cache_file)
   message("Model compiled and saved to cache successfully.")
 
@@ -458,8 +480,19 @@ sample_safe <- function(model, fx, ...) {
       # Check if the error message is "model not compiled"
       if (grepl("Model not compiled", e$message)) {
         message("Model not compiled. Compiling.")
-        # Load the model with force=TRUE
-        model <- model$compile(cpp_options = list(stan_threads = TRUE)) # load_model("glm_multi_beta_binomial_generate_data", force = TRUE)
+
+        # include_paths has to be given explicitly. CmdStanModel$compile() falls
+        # back to its remembered paths only while the model has never been
+        # compiled; once it has, that memory is cleared and the NULL default
+        # overwrites the recorded paths. Our models all open with
+        # `#include common_functions.stan`, which sits beside them, so without
+        # this stanc fails with "Could not find include file".
+        include_paths <- tryCatch(dirname(model$stan_file()), error = function(e) NULL)
+
+        model <- model$compile(
+          cpp_options = list(stan_threads = TRUE),
+          include_paths = include_paths
+        )
         # Retry the arbitrary fx with additional arguments
         result <- fx(model, ...)
         return(result)

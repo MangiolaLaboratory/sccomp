@@ -352,8 +352,8 @@ sccomp_summarise_posterior_for_estimate <- function(
       prefix = "c_"
     )
   )
-  # Random effect blocks: append a summary for each non-empty slot (1..4).
-  for (k in seq_len(4L)) {
+  # Random effect blocks: append a summary for each non-empty slot.
+  for (k in seq_len(N_RE_SLOTS)) {
     if (model_input$ncol_X_random_eff[k] == 0) next
     X_slot <- model_input[[paste0("X_random_effect_", k)]]
     abundance_parts <- c(
@@ -486,16 +486,23 @@ build_stan_parameter_subset <- function(contrasts, design_columns, stan_paramete
 
   n_M <- ncol(model_input$y)
   C_idx <- match(matched, design_columns)
-  g <- expand.grid(C = C_idx, M = seq_len(n_M), stringsAsFactors = FALSE)
+
+  # Expand over positions within `matched`, not over the design-matrix indices
+  # themselves: `C_idx` are positions in `design_columns`, so using them to
+  # subset `matched` returns NA for every term that is not among the first
+  # `length(matched)` design columns. The random-effect path filters its draws
+  # by these names, so NAs there drop the columns and the contrast fails with
+  # "object not found".
+  g <- expand.grid(i = seq_along(matched), M = seq_len(n_M), stringsAsFactors = FALSE)
 
   tibble::tibble(
-    parameter = matched[g$C],
-    variable = sprintf("%s[%d,%d]", stan_parameter, g$C, g$M)
+    parameter = matched[g$i],
+    variable = sprintf("%s[%d,%d]", stan_parameter, C_idx[g$i], g$M)
   )
 }
 
 # ----------------------------------------------------------------------
-# Random effect draws: extract one slot at a time (1..4) and left-join into
+# Random effect draws: extract one slot at a time (1..5) and left-join into
 # `draws`. Per-slot logic is identical, so we loop over a helper instead of
 # duplicating the block once per slot.
 # ----------------------------------------------------------------------
@@ -611,7 +618,7 @@ get_abundance_contrast_draws = function(.data, contrasts = NULL){
     
   random_effect_covariates_all = character(0)
 
-  for (k in seq_len(4L)) {
+  for (k in seq_len(N_RE_SLOTS)) {
     if (model_input$ncol_X_random_eff[k] == 0) next
     res <- add_random_effect_draws(draws, contrasts, model_input, k, attr(.data, "fit"))
     draws <- res$draws
