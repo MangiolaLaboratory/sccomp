@@ -532,6 +532,13 @@ sccomp_estimate.DFrame <- function(.data,
     )
 }
 
+#' @export
+sccomp_estimate.tbl_duckdb_connection <- function(.data, ...) {
+  check_and_install_packages(c("duckdb", "dbplyr"))
+
+  sccomp_estimate.data.frame(.data, ...)
+}
+
 
 #' @importFrom purrr when
 #' @importFrom rlang is_symbolic
@@ -908,8 +915,8 @@ sccomp_glm_data_frame_counts = function(.data,
                                         mcmc_seed = sample_seed(),
                                         max_sampling_iterations = 20000,
                                                                                  pass_fit = TRUE,
-                                         sig_figs = 9,
-                                         cache_stan_model = sccomp_stan_models_cache_dir,
+                                                                                 sig_figs = 9,
+                                                                                 cache_stan_model = sccomp_stan_models_cache_dir,
                                         ...) {
   
   # Prepare column same enquo
@@ -948,7 +955,12 @@ sccomp_glm_data_frame_counts = function(.data,
   
   
   # Make rectangular data
-  .data = .data |> make_rectangular_data(!!.sample, !!.cell_group, !!.count, formula_composition)
+  .data = .data |> make_rectangular_data(
+    !!.sample,
+    !!.cell_group,
+    !!.count,
+    formula_composition
+  )
   
   # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
   if(test_composition_above_logit_fold_change <= 0)
@@ -1157,10 +1169,11 @@ make_rectangular_data = function(.data, .sample, .cell_group, .count, formula_co
   .cell_group = enquo(.cell_group)
   .count = enquo(.count)
   
-  if(
-    .data |> count(!!.sample) |> distinct(n) |> nrow() > 1 || 
-    .data |> count(!!.cell_group) |> distinct(n) |> nrow() > 1 
-  ){
+  sample_counts <- .data |> count(!!.sample) |> distinct(n)
+  cell_group_counts <- .data |> count(!!.cell_group) |> distinct(n)
+  if (is(.data, "tbl_duckdb_connection")) .data <- dplyr::collect(.data)
+
+  if (sample_counts |> nrow() > 1 || cell_group_counts |> nrow() > 1) {
     warning(sprintf("sccomp says: the input data frame does not have the same number of `%s`, for all `%s`. We have made it so, adding 0s for the missing sample/feature pairs.", quo_name(.cell_group), quo_name(.sample)))
     
     .data |> 
