@@ -33,7 +33,7 @@
 #' @param abundance A column name as a character string for the cell-group abundance, which can be counts (> 0) or proportions (between 0 and 1, summing to 1 across `cell_group`). Replaces the deprecated `.abundance` and `.count`.
 #' @param cores Number of cores to use for parallel calculations.
 #' @param bimodal_mean_variability_association Logical, whether to model mean-variability as bimodal.
-#' @param prior_mean A list specifying prior knowledge about the mean distribution, including intercept and coefficients.
+#' @param prior_mean A list with numeric length-2 vectors `intercept` and `coefficients`, giving the location and scale of the Student-t (3 degrees of freedom) priors on the CLR-scale intercept and on the remaining composition coefficients. The default intercept scale of 2 keeps rare cell groups (e.g. 0.1-1\% abundance, CLR around -2 to -4) plausible a priori; the heavy tails let large effects escape shrinkage.
 #' @param prior_overdispersion_mean_association A named list with numeric length-2 vectors
 #'   `intercept`, `slope`, and `standard_deviation` passed to the Stan Student-t / Normal
 #'   hyperpriors on `prec_intercept`, `prec_slope`, and `log_prec_sd`. Use `NULL` for
@@ -162,7 +162,7 @@ sccomp_estimate <- function(.data,
                             bimodal_mean_variability_association = FALSE,
                             percent_false_positive = 5,
                             inference_method = "pathfinder",
-                            prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                            prior_mean = list(intercept = c(0, 2), coefficients = c(0, 1)),
                             prior_overdispersion_mean_association = list(
                               intercept = c(4, 2),
                               slope = c(0, 2),
@@ -256,7 +256,7 @@ sccomp_estimate.Seurat <- function(.data,
                                    bimodal_mean_variability_association = FALSE,
                                    percent_false_positive = 5,
                                    inference_method = "pathfinder",
-                                   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                   prior_mean = list(intercept = c(0, 2), coefficients = c(0, 1)),
                                    prior_overdispersion_mean_association = list(
                                      intercept = c(4, 2),
                                      slope = c(0, 2),
@@ -355,7 +355,7 @@ sccomp_estimate.SingleCellExperiment <- function(.data,
                                                  bimodal_mean_variability_association = FALSE,
                                                  percent_false_positive = 5,
                                                  inference_method = "pathfinder",
-                                                 prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                                 prior_mean = list(intercept = c(0, 2), coefficients = c(0, 1)),
                                                  prior_overdispersion_mean_association = list(
                                                    intercept = c(4, 2),
                                                    slope = c(0, 2),
@@ -455,7 +455,7 @@ sccomp_estimate.DFrame <- function(.data,
                                    bimodal_mean_variability_association = FALSE,
                                    percent_false_positive = 5,
                                    inference_method = "pathfinder",
-                                   prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                   prior_mean = list(intercept = c(0, 2), coefficients = c(0, 1)),
                                    prior_overdispersion_mean_association = list(
                                      intercept = c(4, 2),
                                      slope = c(0, 2),
@@ -549,7 +549,7 @@ sccomp_estimate.data.frame <- function(.data,
                                        bimodal_mean_variability_association = FALSE,
                                        percent_false_positive = 5,
                                        inference_method = "pathfinder",
-                                       prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+                                       prior_mean = list(intercept = c(0, 2), coefficients = c(0, 1)),
                                        prior_overdispersion_mean_association = list(
                                          intercept = c(4, 2),
                                          slope = c(0, 2),
@@ -777,7 +777,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      
                                      # Secondary arguments
                                      contrasts = NULL,
-                                     prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                     prior_mean = list(intercept = c(0, 2), coefficients = c(0, 1)),                        
                                      prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2), standard_deviation = c(1, 0.5)),
                                      percent_false_positive =  5,
                                      check_outliers = TRUE,
@@ -891,7 +891,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         # Secondary arguments
                                         contrasts = NULL,
                                         #.grouping_for_random_effect = NULL,
-                                        prior_mean = list(intercept = c(0,1), coefficients = c(0,1)),                        
+                                        prior_mean = list(intercept = c(0, 2), coefficients = c(0, 1)),                        
                                         prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2), standard_deviation = c(1, 0.5)),
                                         percent_false_positive = 5,
                                         check_outliers = TRUE,

@@ -15,7 +15,7 @@ sccomp_estimate(
   bimodal_mean_variability_association = FALSE,
   percent_false_positive = 5,
   inference_method = "pathfinder",
-  prior_mean = list(intercept = c(0, 1), coefficients = c(0, 1)),
+  prior_mean = list(intercept = c(0, 2), coefficients = c(0, 1)),
   prior_overdispersion_mean_association = list(intercept = c(4, 2), slope = c(0, 2),
     standard_deviation = c(1, 0.5)),
   .sample_cell_group_pairs_to_exclude = NULL,
@@ -63,7 +63,7 @@ abundance column (counts or proportions), and factor columns.}
 
 \item{inference_method}{Character string specifying the inference method to use ('pathfinder', 'hmc', or 'variational'). Replaces the deprecated \code{approximate_posterior_inference} and \code{variational_inference}.}
 
-\item{prior_mean}{A list specifying prior knowledge about the mean distribution, including intercept and coefficients.}
+\item{prior_mean}{A list with numeric length-2 vectors \code{intercept} and \code{coefficients}, giving the location and scale of the Student-t (3 degrees of freedom) priors on the CLR-scale intercept and on the remaining composition coefficients. The default intercept scale of 2 keeps rare cell groups (e.g. 0.1-1\% abundance, CLR around -2 to -4) plausible a priori; the heavy tails let large effects escape shrinkage.}
 
 \item{prior_overdispersion_mean_association}{A named list with numeric length-2 vectors
 \code{intercept}, \code{slope}, and \code{standard_deviation} passed to the Stan Student-t / Normal
