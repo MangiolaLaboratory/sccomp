@@ -1,6 +1,13 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.5.3}{
+\itemize{
+    \item \strong{Clearer design-matrix reporting.} \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} now report the composition and variability design matrices with their parameter count followed by a preview of the first 10 parameters, so wide designs no longer flood the console.
+    \item Random-effect design matrices are now reported as well, one per line, each labelled with what it models: the clause the user wrote (e.g. \code{(1 + type | donor)}), a smooth term, or a single penalty block of a grouped smooth such as \code{s(x, group, bs = "fs")}. This makes it visible how many random-effect slots a formula consumes.
+    \item \code{model_input} gained a \code{random_effect_design_terms} table mapping each occupied random-effect slot to the term it models.
+}}
+
 \section{News in version 2.5.2}{
 \itemize{
     \item Increased the random-effect slot budget from 5 to 6. This admits models combining a factor-smooth with several explicit RE clauses, such as \code{s(x, g, bs = "fs")} (which alone expands into three penalty blocks, one per slot) together with three \code{(... | group)} terms.
@@ -8,7 +15,7 @@
 
 \section{News in version 2.5.1}{
 \itemize{
-    \item Increased the random-effect slot budget from 4 to 5 so multiple smooth terms (e.g. a global \code{s()} plus a factor-smooth \code{bs = "fs"}) can coexist with an explicit RE clause.
+     \item Increased the random-effect slot budget from 4 to 5 so multiple smooth terms (e.g. a global \code{s()} plus a factor-smooth \code{bs = "fs"}) can coexist with an explicit RE clause.
     \item Fixed the scaling of continuous covariates in \code{sccomp_predict()} and \code{sccomp_replicate()}. Continuous covariates were being z-scored using the fitted samples and the new data pooled together, so the prediction at a given covariate value shifted with the range and the density of the requested grid. The centre and scale of the fitted samples are now used, making predictions a function of the model and the covariate value alone. Smooth terms were never affected, as they are evaluated against the fit-time basis.
 }}
 
@@ -240,7 +247,7 @@
 
 \section{News in version 1.0.0, Bioconductor 3.14 Release}{
 \itemize{
-    \item Blog post here: https://tidyomics.github.io/tidyomicsBlog/post/2023-12-07-tidy-sccomp/. Introduction of a new modular, tidy framework. This modularise estimation |> outlier exclusion |> hypothesis testing |> visualisation |> simulation(). New functionalities have also been added such as, removal of unwanted variation.
+    \item Introduction of a new modular, tidy framework. This modularise estimation |> outlier exclusion |> hypothesis testing |> visualisation |> simulation(). New functionalities have also been added such as, removal of unwanted variation.
     \item Commit ID: dcc1b2624aaba990b882ed9a2c0e5142bc9aa037
 }}
 

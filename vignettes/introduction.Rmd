@@ -21,10 +21,10 @@ vignette: >
 ---
 
 <!-- badges: start -->
-[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![R build status](https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/sccomp/actions/)
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing) [![R build status](https://github.com/MangiolaLaboratory/sccomp/actions/workflows/workflow_with_cmdstanr.yml/badge.svg)](https://github.com/MangiolaLaboratory/sccomp/actions/workflows/workflow_with_cmdstanr.yml)
 <!-- badges: end -->
 
-# <img src="../inst/logo-01.png" height="139px" width="120px"/>
+# <img src="logo-01.png" height="139px" width="120px"/>
 
 **sccomp** is a powerful R package designed for comprehensive differential composition and variability analysis in single-cell genomics, proteomics, and microbiomics data. 
 
@@ -32,7 +32,7 @@ vignette: >
 
 For cellular omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce **sccomp**, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, while being robust to outliers.
 
-<img src="../inst/cartoon_methods.png" width="100%"/>
+<img src="cartoon_methods.png" width="100%"/>
 
 ### Comprehensive Method Comparison
 
