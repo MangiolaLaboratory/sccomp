@@ -111,18 +111,19 @@ print("cmdstanr is needed to run this example.")
 #> sccomp says: the composition design matrix has columns: (Intercept), typecancer
 #> sccomp says: the variability design matrix has columns: (Intercept)
 #> Precompiled model not found. Compiling the model...
-#> Running make /tmp/Rtmpg0L6gY/model-39e5ed4a311 "STAN_THREADS=TRUE" \
-#>   "STANCFLAGS += --include-paths=/tmp/Rtmpg0L6gY/temp_libpath39e545776141/sccomp/stan --name='glm_multi_beta_binomial_model'"
+#> Warning: The "threads" argument of stan_package_compile() was deprecated on 2026-04-07 (instantiate version 0.2.3.9003). Alternative: Set threads in cpp_options, e.g. cpp_options = list(stan_threads = TRUE).
+#> Running make /tmp/RtmpWNmDs5/model-383047be489a "STAN_THREADS=TRUE" \
+#>   "STANCFLAGS += --include-paths=/tmp/RtmpWNmDs5/temp_libpath3830431e73ca/sccomp/stan --name='glm_multi_beta_binomial_model'"
 #> 
 #> --- Translating Stan model to C++ code ---
-#> bin/stanc --include-paths=/tmp/Rtmpg0L6gY/temp_libpath39e545776141/sccomp/stan --name='glm_multi_beta_binomial_model' --o=/tmp/Rtmpg0L6gY/model-39e5ed4a311.hpp /tmp/Rtmpg0L6gY/model-39e5ed4a311.stan
+#> bin/stanc --include-paths=/tmp/RtmpWNmDs5/temp_libpath3830431e73ca/sccomp/stan --name='glm_multi_beta_binomial_model' --o=/tmp/RtmpWNmDs5/model-383047be489a.hpp /tmp/RtmpWNmDs5/model-383047be489a.stan
 #> 
 #> --- Compiling C++ code ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/Rtmpg0L6gY/model-39e5ed4a311.o /tmp/Rtmpg0L6gY/model-39e5ed4a311.hpp
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmpWNmDs5/model-383047be489a.o /tmp/RtmpWNmDs5/model-383047be489a.hpp
 #> 
 #> --- Linking model ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"      /tmp/Rtmpg0L6gY/model-39e5ed4a311.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/Rtmpg0L6gY/model-39e5ed4a311
-#> rm /tmp/Rtmpg0L6gY/model-39e5ed4a311.o /tmp/Rtmpg0L6gY/model-39e5ed4a311.hpp
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmpWNmDs5/model-383047be489a.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmpWNmDs5/model-383047be489a
+#> rm /tmp/RtmpWNmDs5/model-383047be489a.hpp /tmp/RtmpWNmDs5/model-383047be489a.o
 #> Model compiled and saved to cache successfully.
 #> Path [1] :Initial log joint density = -482684.608336 
 #> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
@@ -135,7 +136,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [3] :Initial log joint density = -481749.189963 
 #> Path [3] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              71      -4.787e+05      9.061e-03   2.076e-01    1.000e+00  1.000e+00      4488 -3.689e+03 -3.690e+03                   
-#> Path [3] :Best Iter: [68] ELBO (-3689.253918) evaluations: (4488) 
+#> Path [3] :Best Iter: [68] ELBO (-3689.253919) evaluations: (4488) 
 #> Path [4] :Initial log joint density = -483320.748753 
 #> Path [4] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              59      -4.787e+05      7.086e-03   2.663e-01    1.000e+00  1.000e+00      3527 -3.690e+03 -3.699e+03                   
@@ -143,7 +144,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [5] :Initial log joint density = -482399.422218 
 #> Path [5] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              65      -4.787e+05      6.119e-03   2.000e-01    1.000e+00  1.000e+00      3930 -3.689e+03 -3.696e+03                   
-#> Path [5] :Best Iter: [62] ELBO (-3688.734422) evaluations: (3930) 
+#> Path [5] :Best Iter: [62] ELBO (-3688.734423) evaluations: (3930) 
 #> Path [6] :Initial log joint density = -483019.809595 
 #> Path [6] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              60      -4.787e+05      8.618e-03   3.440e-01    4.259e-01  1.000e+00      3505 -3.686e+03 -3.699e+03                   
@@ -159,7 +160,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [9] :Initial log joint density = -482059.982656 
 #> Path [9] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              72      -4.787e+05      8.454e-03   2.236e-01    1.000e+00  1.000e+00      4693 -3.682e+03 -3.692e+03                   
-#> Path [9] :Best Iter: [69] ELBO (-3682.237068) evaluations: (4693) 
+#> Path [9] :Best Iter: [69] ELBO (-3682.237066) evaluations: (4693) 
 #> Path [10] :Initial log joint density = -481409.068382 
 #> Path [10] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              57      -4.787e+05      1.637e-02   2.779e-01    1.000e+00  1.000e+00      3335 -3.694e+03 -3.691e+03                   
@@ -179,7 +180,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [14] :Initial log joint density = -481496.498206 
 #> Path [14] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              71      -4.787e+05      7.280e-03   2.011e-01    1.000e+00  1.000e+00      4537 -3.689e+03 -3.693e+03                   
-#> Path [14] :Best Iter: [63] ELBO (-3688.720071) evaluations: (4537) 
+#> Path [14] :Best Iter: [63] ELBO (-3688.720074) evaluations: (4537) 
 #> Path [15] :Initial log joint density = -481822.682912 
 #> Path [15] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              71      -4.787e+05      7.476e-03   2.028e-01    8.173e-01  8.173e-01      4509 -3.685e+03 -3.697e+03                   
@@ -227,7 +228,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [26] :Initial log joint density = -481468.123512 
 #> Path [26] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.787e+05      1.397e-02   1.991e-01    1.000e+00  1.000e+00      4320 -3.687e+03 -3.692e+03                   
-#> Path [26] :Best Iter: [66] ELBO (-3686.863070) evaluations: (4320) 
+#> Path [26] :Best Iter: [66] ELBO (-3686.863064) evaluations: (4320) 
 #> Path [27] :Initial log joint density = -482124.310358 
 #> Path [27] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              63      -4.787e+05      1.468e-02   2.620e-01    1.000e+00  1.000e+00      3964 -3.686e+03 -3.691e+03                   
@@ -239,15 +240,15 @@ print("cmdstanr is needed to run this example.")
 #> Path [29] :Initial log joint density = -481516.987702 
 #> Path [29] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.787e+05      1.463e-02   2.083e-01    9.644e-01  9.644e-01      4279 -3.682e+03 -3.690e+03                   
-#> Path [29] :Best Iter: [63] ELBO (-3682.254477) evaluations: (4279) 
+#> Path [29] :Best Iter: [63] ELBO (-3682.254476) evaluations: (4279) 
 #> Path [30] :Initial log joint density = -485163.608998 
 #> Path [30] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.787e+05      6.165e-03   1.612e-01    9.780e-01  9.780e-01      4321 -3.684e+03 -3.695e+03                   
-#> Path [30] :Best Iter: [66] ELBO (-3684.379082) evaluations: (4321) 
+#> Path [30] :Best Iter: [66] ELBO (-3684.379081) evaluations: (4321) 
 #> Path [31] :Initial log joint density = -482114.883887 
 #> Path [31] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              71      -4.787e+05      1.067e-02   2.287e-01    1.000e+00  1.000e+00      4570 -3.687e+03 -3.694e+03                   
-#> Path [31] :Best Iter: [69] ELBO (-3687.291664) evaluations: (4570) 
+#> Path [31] :Best Iter: [69] ELBO (-3687.291667) evaluations: (4570) 
 #> Path [32] :Initial log joint density = -481698.523713 
 #> Path [32] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              58      -4.787e+05      1.012e-02   2.423e-01    1.000e+00  1.000e+00      3281 -3.687e+03 -3.693e+03                   
@@ -271,7 +272,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [37] :Initial log joint density = -484269.036972 
 #> Path [37] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.787e+05      1.170e-02   1.713e-01    8.561e-01  8.561e-01      4475 -3.686e+03 -3.697e+03                   
-#> Path [37] :Best Iter: [63] ELBO (-3685.606471) evaluations: (4475) 
+#> Path [37] :Best Iter: [63] ELBO (-3685.606470) evaluations: (4475) 
 #> Path [38] :Initial log joint density = -481638.597791 
 #> Path [38] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              57      -4.787e+05      1.509e-02   3.169e-01    1.000e+00  1.000e+00      3388 -3.688e+03 -3.691e+03                   
@@ -295,7 +296,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [43] :Initial log joint density = -481528.626810 
 #> Path [43] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              56      -4.787e+05      9.730e-03   2.784e-01    7.574e-01  7.574e-01      3251 -3.691e+03 -3.706e+03                   
-#> Path [43] :Best Iter: [55] ELBO (-3691.404400) evaluations: (3251) 
+#> Path [43] :Best Iter: [55] ELBO (-3691.404399) evaluations: (3251) 
 #> Path [44] :Initial log joint density = -481357.142392 
 #> Path [44] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              69      -4.787e+05      7.798e-03   1.619e-01    1.000e+00  1.000e+00      4486 -3.684e+03 -3.689e+03                   
@@ -311,11 +312,11 @@ print("cmdstanr is needed to run this example.")
 #> Path [47] :Initial log joint density = -481506.371585 
 #> Path [47] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              65      -4.787e+05      1.493e-02   2.401e-01    1.000e+00  1.000e+00      3965 -3.686e+03 -3.685e+03                   
-#> Path [47] :Best Iter: [65] ELBO (-3685.498398) evaluations: (3965) 
+#> Path [47] :Best Iter: [65] ELBO (-3685.498397) evaluations: (3965) 
 #> Path [48] :Initial log joint density = -481438.352186 
 #> Path [48] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              73      -4.787e+05      2.003e-02   1.814e-01    1.000e+00  1.000e+00      4739 -3.683e+03 -3.686e+03                   
-#> Path [48] :Best Iter: [69] ELBO (-3683.477907) evaluations: (4739) 
+#> Path [48] :Best Iter: [69] ELBO (-3683.477908) evaluations: (4739) 
 #> Path [49] :Initial log joint density = -481644.254142 
 #> Path [49] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              64      -4.787e+05      1.149e-02   2.204e-01    8.773e-01  8.773e-01      3823 -3.686e+03 -3.699e+03                   
@@ -324,7 +325,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              76      -4.787e+05      1.231e-02   2.136e-01    1.000e+00  1.000e+00      5085 -3.682e+03 -3.692e+03                   
 #> Path [50] :Best Iter: [69] ELBO (-3682.357712) evaluations: (5085) 
-#> Finished in  16.1 seconds.
+#> Finished in  8.0 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -334,22 +335,23 @@ print("cmdstanr is needed to run this example.")
 #> sccomp says: When visualising proportions, especially for complex models, consider setting `remove_unwanted_effects=TRUE`. This will adjust the proportions, preserving only the observed effect.
 #> sccomp says: from version 2.1.25, the default `significance_statistic` for boxplots is `pH0` (previously `FDR`). Set `significance_statistic = "FDR"` to use the previous default.
 #> Precompiled model not found. Compiling the model...
-#> Running make /tmp/Rtmpg0L6gY/model-39e56b56453b "STAN_THREADS=TRUE" \
-#>   "STANCFLAGS += --include-paths=/tmp/Rtmpg0L6gY/temp_libpath39e545776141/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model'"
+#> Warning: The "threads" argument of stan_package_compile() was deprecated on 2026-04-07 (instantiate version 0.2.3.9003). Alternative: Set threads in cpp_options, e.g. cpp_options = list(stan_threads = TRUE).
+#> Running make /tmp/RtmpWNmDs5/model-3830330db443 "STAN_THREADS=TRUE" \
+#>   "STANCFLAGS += --include-paths=/tmp/RtmpWNmDs5/temp_libpath3830431e73ca/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model'"
 #> 
 #> --- Translating Stan model to C++ code ---
-#> bin/stanc --include-paths=/tmp/Rtmpg0L6gY/temp_libpath39e545776141/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model' --o=/tmp/Rtmpg0L6gY/model-39e56b56453b.hpp /tmp/Rtmpg0L6gY/model-39e56b56453b.stan
+#> bin/stanc --include-paths=/tmp/RtmpWNmDs5/temp_libpath3830431e73ca/sccomp/stan --name='glm_multi_beta_binomial_generate_data_model' --o=/tmp/RtmpWNmDs5/model-3830330db443.hpp /tmp/RtmpWNmDs5/model-3830330db443.stan
 #> 
 #> --- Compiling C++ code ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/Rtmpg0L6gY/model-39e56b56453b.o /tmp/Rtmpg0L6gY/model-39e56b56453b.hpp
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /tmp/RtmpWNmDs5/model-3830330db443.o /tmp/RtmpWNmDs5/model-3830330db443.hpp
 #> 
 #> --- Linking model ---
-#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"      /tmp/Rtmpg0L6gY/model-39e56b56453b.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/Rtmpg0L6gY/model-39e56b56453b
-#> rm /tmp/Rtmpg0L6gY/model-39e56b56453b.hpp /tmp/Rtmpg0L6gY/model-39e56b56453b.o
+#> g++ -Wno-deprecated-declarations -std=c++17 -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes -Wno-class-memaccess     -DSTAN_THREADS -isystem stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -isystem stan/lib/stan_math/lib/eigen_5.0.1 -isystem stan/lib/stan_math/lib/boost_1.87.0 -isystem stan/lib/stan_math/lib/sundials_6.1.1/include -isystem stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS               -Wl,-L,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"   -Wl,-rpath,"/home/runner/.cmdstan/cmdstan-2.40.0/stan/lib/stan_math/lib/tbb"      /tmp/RtmpWNmDs5/model-3830330db443.o src/cmdstan/main_threads.o       -ltbb   stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.1.1/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /tmp/RtmpWNmDs5/model-3830330db443
+#> rm /tmp/RtmpWNmDs5/model-3830330db443.hpp /tmp/RtmpWNmDs5/model-3830330db443.o
 #> Model compiled and saved to cache successfully.
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.118 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.061 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> Joining with `by = join_by(cell_group, sample)`
 #> Joining with `by = join_by(cell_group, type)`

@@ -152,7 +152,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [10] :Initial log joint density = -481339.631442 
 #> Path [10] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              67      -4.787e+05      1.519e-02   2.650e-01    1.000e+00  1.000e+00      4088 -3.686e+03 -3.690e+03                   
-#> Path [10] :Best Iter: [66] ELBO (-3686.333369) evaluations: (4088) 
+#> Path [10] :Best Iter: [66] ELBO (-3686.333368) evaluations: (4088) 
 #> Path [11] :Initial log joint density = -482265.411111 
 #> Path [11] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              76      -4.787e+05      2.253e-02   3.300e-01    1.000e+00  1.000e+00      5222 -3.683e+03 -3.689e+03                   
@@ -160,7 +160,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [12] :Initial log joint density = -481579.684868 
 #> Path [12] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.787e+05      3.408e-03   1.712e-01    7.450e-01  7.450e-01      4500 -3.685e+03 -3.698e+03                   
-#> Path [12] :Best Iter: [64] ELBO (-3684.934496) evaluations: (4500) 
+#> Path [12] :Best Iter: [64] ELBO (-3684.934495) evaluations: (4500) 
 #> Path [13] :Initial log joint density = -481811.078367 
 #> Path [13] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              73      -4.787e+05      1.084e-02   1.200e-01    1.000e+00  1.000e+00      4742 -3.684e+03 -3.685e+03                   
@@ -252,7 +252,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [35] :Initial log joint density = -481796.634549 
 #> Path [35] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              61      -4.787e+05      1.376e-02   3.035e-01    1.000e+00  1.000e+00      3666 -3.686e+03 -3.692e+03                   
-#> Path [35] :Best Iter: [55] ELBO (-3686.459477) evaluations: (3666) 
+#> Path [35] :Best Iter: [55] ELBO (-3686.459476) evaluations: (3666) 
 #> Path [36] :Initial log joint density = -482015.028319 
 #> Path [36] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              71      -4.787e+05      1.075e-02   1.899e-01    1.000e+00  1.000e+00      4473 -3.684e+03 -3.690e+03                   
@@ -268,11 +268,11 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [39] :Initial log joint density = -481635.684920 
 #> Path [39] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              56      -4.787e+05      7.278e-03   2.814e-01    4.074e-01  1.000e+00      3155 -3.691e+03 -3.700e+03                   
-#> Path [39] :Best Iter: [55] ELBO (-3690.814601) evaluations: (3155) 
+#> Path [39] :Best Iter: [55] ELBO (-3690.814597) evaluations: (3155) 
 #> Path [40] :Initial log joint density = -481425.963944 
 #> Path [40] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              66      -4.787e+05      1.551e-02   2.072e-01    1.000e+00  1.000e+00      4175 -3.686e+03 -3.692e+03                   
-#> Path [40] :Best Iter: [64] ELBO (-3685.546964) evaluations: (4175) 
+#> Path [40] :Best Iter: [64] ELBO (-3685.546965) evaluations: (4175) 
 #> Path [41] :Initial log joint density = -481664.384315 
 #> Path [41] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              60      -4.787e+05      1.229e-02   1.502e-01    1.000e+00  1.000e+00      3451 -3.688e+03 -3.691e+03                   
@@ -280,7 +280,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [42] :Initial log joint density = -481639.856277 
 #> Path [42] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              62      -4.787e+05      1.139e-02   2.751e-01    1.000e+00  1.000e+00      3923 -3.688e+03 -3.699e+03                   
-#> Path [42] :Best Iter: [58] ELBO (-3688.378484) evaluations: (3923) 
+#> Path [42] :Best Iter: [58] ELBO (-3688.378485) evaluations: (3923) 
 #> Path [43] :Initial log joint density = -481470.165009 
 #> Path [43] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              77      -4.787e+05      1.485e-02   2.558e-01    1.000e+00  1.000e+00      5130 -3.682e+03 -3.689e+03                   
@@ -300,11 +300,11 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [47] :Initial log joint density = -482797.368267 
 #> Path [47] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              71      -4.787e+05      1.652e-02   2.094e-01    1.000e+00  1.000e+00      4521 -3.683e+03 -3.685e+03                   
-#> Path [47] :Best Iter: [68] ELBO (-3683.368839) evaluations: (4521) 
+#> Path [47] :Best Iter: [68] ELBO (-3683.368847) evaluations: (4521) 
 #> Path [48] :Initial log joint density = -481650.636114 
 #> Path [48] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              65      -4.787e+05      6.972e-03   2.582e-01    6.606e-01  6.606e-01      4024 -3.686e+03 -3.698e+03                   
-#> Path [48] :Best Iter: [62] ELBO (-3686.159314) evaluations: (4024) 
+#> Path [48] :Best Iter: [62] ELBO (-3686.159313) evaluations: (4024) 
 #> Path [49] :Initial log joint density = -482801.782611 
 #> Path [49] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              61      -4.787e+05      7.187e-03   2.655e-01    7.732e-01  7.732e-01      3592 -3.686e+03 -3.703e+03                   
@@ -313,7 +313,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              66      -4.787e+05      3.656e-03   2.647e-01    6.911e-01  6.911e-01      4140 -3.683e+03 -3.703e+03                   
 #> Path [50] :Best Iter: [63] ELBO (-3682.656652) evaluations: (4140) 
-#> Finished in  15.8 seconds.
+#> Finished in  7.9 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -325,7 +325,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.117 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.061 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> Joining with `by = join_by(cell_group, sample)`
 #> Joining with `by = join_by(cell_group, type)`

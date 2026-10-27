@@ -159,7 +159,7 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.383 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.718 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
@@ -249,7 +249,7 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.098 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.049 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from  to    c_effect c_lower c_upper    c_FDR
@@ -290,7 +290,7 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.192 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.596 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from   to     c_effect c_lower c_upper    c_FDR
@@ -339,7 +339,7 @@ pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.365 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.725 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -500,19 +500,19 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 2.074 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.134 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)
 #> # A tibble: 6 × 10
 #>   pseudotime tissue sample      cell_group proportion_mean proportion_lower
 #>        <dbl> <fct>  <chr>       <chr>                <dbl>            <dbl>
-#> 1    -0.0296 blood  fs_grid_001 B1                 0.0669           0.0447 
-#> 2    -0.0296 blood  fs_grid_001 B2                 0.0231           0.0121 
-#> 3    -0.0296 blood  fs_grid_001 B3                 0.00985          0.00636
-#> 4    -0.0296 blood  fs_grid_001 BM                 0.00646          0.00414
-#> 5    -0.0296 blood  fs_grid_001 CD4 1              0.0280           0.0189 
-#> 6    -0.0296 blood  fs_grid_001 CD4 2              0.0434           0.0241 
+#> 1    -0.0296 blood  fs_grid_001 B1                 0.0677           0.0434 
+#> 2    -0.0296 blood  fs_grid_001 B2                 0.0222           0.0112 
+#> 3    -0.0296 blood  fs_grid_001 B3                 0.0101           0.00587
+#> 4    -0.0296 blood  fs_grid_001 BM                 0.00643          0.00382
+#> 5    -0.0296 blood  fs_grid_001 CD4 1              0.0279           0.0151 
+#> 6    -0.0296 blood  fs_grid_001 CD4 2              0.0418           0.0215 
 #> # ℹ 4 more variables: proportion_upper <dbl>, unconstrained_mean <dbl>,
 #> #   unconstrained_lower <dbl>, unconstrained_upper <dbl>
 ```
@@ -586,11 +586,11 @@ would be misleading.
 
     #> R version 4.6.1 (2026-06-24)
     #> Platform: x86_64-pc-linux-gnu
-    #> Running under: Ubuntu 24.04.5 LTS
+    #> Running under: Ubuntu 26.04.1 LTS
     #> 
     #> Matrix products: default
     #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
-    #> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+    #> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so;  LAPACK version 3.12.0
     #> 
     #> locale:
     #>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
@@ -605,7 +605,7 @@ would be misleading.
     #> [1] stats     graphics  grDevices utils     datasets  methods   base     
     #> 
     #> other attached packages:
-    #> [1] sccomp_2.5.2      instantiate_0.2.3 ggplot2_4.0.3     tidyr_1.3.2      
+    #> [1] sccomp_2.5.2      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      
     #> [5] dplyr_1.2.1      
     #> 
     #> loaded via a namespace (and not attached):
@@ -650,7 +650,7 @@ would be misleading.
     #> [77] backports_1.5.1             bslib_0.12.0               
     #> [79] Rcpp_1.1.2                  nlme_3.1-169               
     #> [81] SparseArray_1.12.3          checkmate_2.3.4            
-    #> [83] mgcv_1.9-4                  xfun_0.61                  
+    #> [83] mgcv_1.9-4                  xfun_0.62                  
     #> [85] fs_2.1.0                    MatrixGenerics_1.24.0      
     #> [87] forcats_1.0.1               prettydoc_0.4.1            
     #> [89] pkgconfig_2.0.3

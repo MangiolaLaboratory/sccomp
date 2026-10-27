@@ -328,12 +328,12 @@ sccomp_result =
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.377 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 1.205 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.371 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 1.198 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ### Visualization and Summary Plots
@@ -358,7 +358,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.117 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.059 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -379,17 +379,17 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.585 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.303 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.587 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.294 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.117 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.058 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -420,7 +420,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.117 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.06 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -445,7 +445,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.117 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.059 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -606,7 +606,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 1.005 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.517 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning: `position_jitterdodge()` requires non-overlapping x intervals.
@@ -892,7 +892,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.096 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.049 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## # A tibble: 30 × 2
@@ -1013,9 +1013,9 @@ loo_compare(
 )
 ```
 
-    ##   model elpd_diff se_diff p_worse diag_diff       diag_elpd
-    ##  model1       0.0     0.0      NA           10 k_psis > 0.7
-    ##  model2     -80.7    10.8    1.00            6 k_psis > 0.7
+    ##   model elpd_diff se_diff p_worse diag_diff      diag_elpd
+    ##  model1       0.0     0.0      NA           9 k_psis > 0.7
+    ##  model2     -81.7    10.6    1.00           6 k_psis > 0.7
 
 ### Differential Variability Analysis
 
@@ -1081,7 +1081,7 @@ plots = res |> sccomp_test() |> plot()
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.099 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.052 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -1193,11 +1193,11 @@ sessionInfo()
 
     ## R version 4.6.1 (2026-06-24)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.5 LTS
+    ## Running under: Ubuntu 26.04.1 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
-    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so;  LAPACK version 3.12.0
     ## 
     ## locale:
     ##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
@@ -1214,7 +1214,7 @@ sessionInfo()
     ## other attached packages:
     ##  [1] bayesplot_1.16.0  posterior_1.7.0   cmdstanr_0.9.0    loo_2.10.1       
     ##  [5] tidyr_1.3.2       forcats_1.0.1     ggplot2_4.0.3     sccomp_2.5.2     
-    ##  [9] instantiate_0.2.3 dplyr_1.2.1      
+    ##  [9] instantiate_0.2.4 dplyr_1.2.1      
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] rlang_1.3.0                 magrittr_2.0.5             
@@ -1228,7 +1228,7 @@ sessionInfo()
     ## [17] labeling_0.4.3              utf8_1.2.6                 
     ## [19] rmarkdown_2.32              tzdb_0.5.0                 
     ## [21] ps_1.9.3                    ragg_1.5.2                 
-    ## [23] purrr_1.2.2                 xfun_0.61                  
+    ## [23] purrr_1.2.2                 xfun_0.62                  
     ## [25] cachem_1.1.0                jsonlite_2.0.0             
     ## [27] DelayedArray_0.38.2         parallel_4.6.1             
     ## [29] R6_2.6.1                    bslib_0.12.0               
@@ -1236,7 +1236,7 @@ sessionInfo()
     ## [33] parallelly_1.48.0           GenomicRanges_1.64.0       
     ## [35] jquerylib_0.1.4             Rcpp_1.1.2                 
     ## [37] Seqinfo_1.2.0               SummarizedExperiment_1.42.0
-    ## [39] knitr_1.52                  future.apply_1.20.2        
+    ## [39] knitr_1.52                  future.apply_1.21.0        
     ## [41] readr_2.2.0                 IRanges_2.46.0             
     ## [43] Matrix_1.7-5                splines_4.6.1              
     ## [45] tidyselect_1.2.1            abind_1.4-8                
@@ -1245,14 +1245,14 @@ sessionInfo()
     ## [51] plyr_1.8.9                  lattice_0.22-9             
     ## [53] tibble_3.3.1                Biobase_2.72.0             
     ## [55] withr_3.0.3                 S7_0.2.2                   
-    ## [57] evaluate_1.0.5              future_1.76.0              
+    ## [57] evaluate_1.0.5              future_1.80.0              
     ## [59] desc_1.4.3                  pillar_1.11.1              
     ## [61] MatrixGenerics_1.24.0       tensorA_0.36.2.1           
     ## [63] checkmate_2.3.4             stats4_4.6.1               
     ## [65] distributional_0.9.0        generics_0.1.4             
-    ## [67] sp_2.2-3                    S4Vectors_0.50.3           
+    ## [67] sp_2.2-4                    S4Vectors_0.50.3           
     ## [69] hms_1.1.4                   scales_1.4.0               
-    ## [71] globals_0.19.1              glue_1.8.1                 
+    ## [71] globals_0.20.0              glue_1.8.1                 
     ## [73] tools_4.6.1                 data.table_1.18.6.1        
     ## [75] ggside_0.4.1                fs_2.1.0                   
     ## [77] dotCall64_1.2               grid_4.6.1                 
@@ -1261,7 +1261,7 @@ sessionInfo()
     ## [83] textshaping_1.0.5           spam_2.11-4                
     ## [85] S4Arrays_1.12.1             gtable_0.3.6               
     ## [87] sass_0.4.10                 digest_0.6.39              
-    ## [89] progressr_1.0.0             BiocGenerics_0.58.1        
+    ## [89] progressr_1.1.0             BiocGenerics_0.58.1        
     ## [91] SparseArray_1.12.3          ggrepel_0.9.8              
     ## [93] htmlwidgets_1.6.4           SeuratObject_5.4.0         
     ## [95] farver_2.1.2                htmltools_0.5.9            
