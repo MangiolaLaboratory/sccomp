@@ -13,6 +13,7 @@
 #' @importFrom patchwork wrap_plots
 #' @importFrom forcats fct_reorder fct_inorder
 #' @importFrom tidyr drop_na
+#' @importFrom purrr pmap
 #'
 #' @export
 #'

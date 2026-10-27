@@ -1,6 +1,13 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.5.3}{
+\itemize{
+    \item New \code{sccomp_simulate()} for simulating counts from a fitted model. Abundance coefficients can be supplied as a cell-group by design-column table (\code{coefficients}), and the mean-variability association can be set with \code{mean_dispersion_slope} and \code{mean_dispersion_intercept}, either as one number for every variability term or as a vector named by term. Variability is derived from the abundance coefficients through the association, so changing the coefficients changes the simulated variability as the model expects.
+    \item The simulation model was rebuilt on the current parameterisation (per-term \code{prec_intercept} and \code{prec_slope}, the variability-to-composition map, and six random-effect slots). The previous \code{simulate_data()} could no longer run against fits from recent versions.
+    \item \code{simulate_data()} is deprecated in favour of \code{sccomp_simulate()} and now calls it. Its default \code{variability_multiplier} changed from 5 to 1, so the fitted variability is preserved unless asked otherwise.
+}}
+
 \section{News in version 2.5.2}{
 \itemize{
     \item Increased the random-effect slot budget from 5 to 6. This admits models combining a factor-smooth with several explicit RE clauses, such as \code{s(x, g, bs = "fs")} (which alone expands into three penalty blocks, one per slot) together with three \code{(... | group)} terms.
