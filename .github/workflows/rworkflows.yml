@@ -38,7 +38,12 @@ jobs:
           cont: ~
           rspm: ~
     steps:
-    - uses: neurogenomics/rworkflows@master
+    # Checkout so the local composite action below is on disk before it runs,
+    # including inside the Bioconductor container job.
+    - uses: actions/checkout@v4
+    # Local copy of neurogenomics/rworkflows@6aaf493. Upstream still references
+    # catchpoint/workflow-telemetry-action, which 404s and fails job setup.
+    - uses: ./.github/actions/rworkflows
       with:
         run_bioccheck: ${{ false }}
         run_rcmdcheck: ${{ true }}
