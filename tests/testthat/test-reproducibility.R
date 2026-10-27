@@ -6,6 +6,18 @@ methods <- c("pathfinder", "hmc")
 test_that("sccomp_estimate is reproducible with fixed mcmc_seed", {
   skip_cmdstan()
   
+  # An sccomp tibble carries the cmdstanr fit as an attribute, and
+  # `expect_identical()` compares attributes: that would demand two runs agree
+  # on their start timestamps, temporary file paths and sampling wall times,
+  # which no pair of runs ever does. `as.list()` is not enough here because
+  # `as.list.data.frame()` only unclasses; `lapply()` returns a fresh list
+  # carrying nothing but the column names.
+  estimates_of <- function(fit)
+    fit |>
+      dplyr::arrange(cell_group, parameter) |>
+      dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper) |>
+      lapply(identity)
+  
   for (method in methods) {
     fit1 <-
       counts_obj |>
@@ -42,12 +54,8 @@ test_that("sccomp_estimate is reproducible with fixed mcmc_seed", {
     )
     
     expect_identical(
-      fit1 |>
-        dplyr::arrange(cell_group, parameter) |>
-        dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper),
-      fit2 |>
-        dplyr::arrange(cell_group, parameter) |>
-        dplyr::select(cell_group, parameter, c_effect, c_lower, c_upper),
+      estimates_of(fit1),
+      estimates_of(fit2),
       info = method
     )
   }
