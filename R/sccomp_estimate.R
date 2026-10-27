@@ -1036,9 +1036,8 @@ sccomp_glm_data_frame_counts = function(.data,
       random_effect_elements
     )
   
-  # Print design matrix
-  message(sprintf("sccomp says: the composition design matrix has columns: %s", data_for_model$X %>% colnames %>% paste(collapse=", ")))
-  message(sprintf("sccomp says: the variability design matrix has columns: %s", data_for_model$Xa %>% colnames %>% paste(collapse=", ")))
+  # Preview fixed- and random-effect design matrices.
+  message_design_matrices(data_for_model)
   
   # Force outliers, Get the truncation index
   data_for_model$user_forced_truncation_not_idx = 

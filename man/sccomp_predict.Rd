@@ -19,7 +19,7 @@ sccomp_predict(
 
 \item{formula_composition}{A formula. The formula describing the model for differential abundance, for example ~treatment. This formula can be a sub-formula of your estimated model; in this case all other factor will be factored out.}
 
-\item{new_data}{A sample-wise data frame including the column that represent the factors in your formula. If you want to predict proportions for 10 samples, there should be 10 rows. T}
+\item{new_data}{A sample-wise data frame including the column that represent the factors in your formula. If you want to predict proportions for 10 samples, there should be 10 rows. Continuous covariates, including those inside \code{s()} / \code{t2()}, should be in the original units of the fitted data. They are z-scored once from those fitted samples before the design is built.}
 
 \item{number_of_draws}{An integer. How may copies of the data you want to draw from the model joint posterior distribution.}
 
