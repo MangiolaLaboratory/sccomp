@@ -20,6 +20,7 @@ sccomp_simulate(
   cores = detectCores(),
   sig_figs = 9,
   cache_stan_model = sccomp_stan_models_cache_dir,
+  variability_scatter = TRUE,
   .coefficients = NULL
 )
 }
@@ -56,6 +57,8 @@ sccomp_simulate(
 The sccomp version will be automatically appended to ensure version isolation.
 Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
 
+\item{variability_scatter}{Logical. If \code{TRUE} (default), each cell group's variability is drawn around the mean-variability trend with the fitted residual standard deviation (\code{prec_sd}), as fitted cell groups scatter around it. If \code{FALSE}, every cell group sits exactly on the trend.}
+
 \item{.coefficients}{(Deprecated) The column names for coefficients in new_data, for example, c(b_0, b_1). Use the 'coefficients' parameter instead. This parameter is placed last for backward compatibility.}
 }
 \value{
@@ -72,10 +75,11 @@ Simulate counts from a fitted sccomp model, optionally replacing
 the abundance coefficients and the mean-variability association with
 user-chosen values. Variability is not taken from the posterior: for every
 variability term it is derived from the abundance coefficient it is
-associated with, \code{alpha = beta * slope + intercept}, so changing the
-abundance coefficients changes the simulated variability as the model
-expects. Random effects and the remaining parameters come from the
-posterior draws.
+associated with, \code{alpha = beta * slope + intercept}, plus the fitted
+residual scatter around that trend (see \code{variability_scatter}), so
+changing the abundance coefficients changes the simulated variability as
+the model expects. Random effects and the remaining parameters come from
+the posterior draws.
 }
 \examples{
 

@@ -4,10 +4,11 @@
 #'   the abundance coefficients and the mean-variability association with
 #'   user-chosen values. Variability is not taken from the posterior: for every
 #'   variability term it is derived from the abundance coefficient it is
-#'   associated with, `alpha = beta * slope + intercept`, so changing the
-#'   abundance coefficients changes the simulated variability as the model
-#'   expects. Random effects and the remaining parameters come from the
-#'   posterior draws.
+#'   associated with, `alpha = beta * slope + intercept`, plus the fitted
+#'   residual scatter around that trend (see `variability_scatter`), so
+#'   changing the abundance coefficients changes the simulated variability as
+#'   the model expects. Random effects and the remaining parameters come from
+#'   the posterior draws.
 #'
 #' @import dplyr
 #' @importFrom rlang quo_is_null sym
@@ -30,6 +31,7 @@
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. 
 #'                        The sccomp version will be automatically appended to ensure version isolation.
 #'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
+#' @param variability_scatter Logical. If `TRUE` (default), each cell group's variability is drawn around the mean-variability trend with the fitted residual standard deviation (`prec_sd`), as fitted cell groups scatter around it. If `FALSE`, every cell group sits exactly on the trend.
 #' @param .coefficients (Deprecated) The column names for coefficients in new_data, for example, c(b_0, b_1). Use the 'coefficients' parameter instead. This parameter is placed last for backward compatibility.
 #' 
 #' @return The rows of `new_data` (expanded to every cell group if `new_data`
@@ -90,6 +92,7 @@ sccomp_simulate <- function(fit,
                             cores = detectCores(),
                             sig_figs = 9,
                             cache_stan_model = sccomp_stan_models_cache_dir,
+                            variability_scatter = TRUE,
                             .coefficients = NULL) {
   
   # Run the function
@@ -115,6 +118,7 @@ sccomp_simulate.sccomp_tbl = function(fit,
                                       cores = detectCores(),
                                       sig_figs = 9,
                                       cache_stan_model = sccomp_stan_models_cache_dir,
+                                      variability_scatter = TRUE,
                                       .coefficients = NULL) {
   
   .coefficients = enquo(.coefficients)
@@ -141,7 +145,8 @@ sccomp_simulate.sccomp_tbl = function(fit,
     number_of_draws = number_of_draws,
     mcmc_seed = mcmc_seed,
     sig_figs = sig_figs,
-    cache_stan_model = cache_stan_model
+    cache_stan_model = cache_stan_model,
+    variability_scatter = variability_scatter
   )
 }
 
@@ -166,7 +171,8 @@ simulate_counts = function(fit,
                            number_of_draws = 1,
                            mcmc_seed = sample_seed(),
                            sig_figs = 9,
-                           cache_stan_model = sccomp_stan_models_cache_dir) {
+                           cache_stan_model = sccomp_stan_models_cache_dir,
+                           variability_scatter = TRUE) {
   
   .sample = column_quo_or_default(enquo(.sample), attr(fit, ".sample"))
   .cell_group = column_quo_or_default(enquo(.cell_group), attr(fit, ".cell_group"))
@@ -189,7 +195,8 @@ simulate_counts = function(fit,
     number_of_draws = number_of_draws,
     mcmc_seed = mcmc_seed,
     sig_figs = sig_figs,
-    cache_stan_model = cache_stan_model
+    cache_stan_model = cache_stan_model,
+    variability_scatter = variability_scatter
   )
   
   # Without a cell_group column, every sample is simulated for every cell group
@@ -321,7 +328,8 @@ simulate_data_rng = function(fit,
                              number_of_draws = 1,
                              mcmc_seed = sample_seed(),
                              sig_figs = 9,
-                             cache_stan_model = sccomp_stan_models_cache_dir) {
+                             cache_stan_model = sccomp_stan_models_cache_dir,
+                             variability_scatter = TRUE) {
   
   .sample = enquo(.sample)
   .cell_group = enquo(.cell_group)
@@ -422,7 +430,8 @@ simulate_data_rng = function(fit,
       slope_provided = slope$values,
       user_provided_intercept = intercept$provided,
       intercept_provided = intercept$values,
-      variability_multiplier = variability_multiplier
+      variability_multiplier = variability_multiplier,
+      variability_scatter = as.integer(isTRUE(variability_scatter))
     )
   )
   

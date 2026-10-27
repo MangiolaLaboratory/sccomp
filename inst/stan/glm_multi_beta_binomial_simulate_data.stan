@@ -51,6 +51,7 @@ data {
   array[A] real intercept_provided;
 
   real<lower=0> variability_multiplier;
+  int<lower=0, upper=1> variability_scatter;
 
   int is_random_effect;
 
@@ -227,6 +228,8 @@ generated quantities {
   // Variability follows the abundance it is associated with, through the
   // first (main) component of the mean-variability association. The posterior
   // alpha is not used, which is what lets user-provided coefficients move it.
+  // With scatter, each cell group deviates from the trend by the residual SD
+  // of the association, as fitted cell groups do.
   matrix[A, M] alpha_simulated;
   for (a in 1:A) {
     real slope =
@@ -235,6 +238,9 @@ generated quantities {
     real intercept =
       user_provided_intercept[a] == 1 ? intercept_provided[a] : prec_intercept[a][1];
     alpha_simulated[a, ] = beta_simulated[variability_to_composition_map[a], ] * slope + intercept;
+    if (variability_scatter == 1)
+      for (m in 1:M)
+        alpha_simulated[a, m] = normal_rng(alpha_simulated[a, m], exp(log_prec_sd[a]));
   }
 
   matrix[M, N] mu = (X * beta_simulated[X_which, ])';

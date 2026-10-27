@@ -128,12 +128,51 @@ test_that("simulated variability is beta * slope + intercept of the provided val
     simulate_fit_v1, ~ type, ~ 1,
     new_data = simulate_samples, coefficients = simulate_coefficients,
     mean_dispersion_slope = -0.7, mean_dispersion_intercept = 5,
-    .sample = sample, .cell_group = cell_group, number_of_draws = 3, mcmc_seed = 42
+    .sample = sample, .cell_group = cell_group, number_of_draws = 3, mcmc_seed = 42,
+    variability_scatter = FALSE
   )
 
   expected = simulate_coefficients$`(Intercept)` * -0.7 + 5
   alpha = alpha_simulated_draws(rng, 1)
   expect_equal(alpha, matrix(expected, nrow(alpha), simulate_M, byrow = TRUE), tolerance = 1e-8)
+})
+
+test_that("variability scatters around the trend with the fitted residual SD by default", {
+  skip_cmdstan()
+
+  rng = sccomp:::simulate_data_rng(
+    simulate_fit_v1, ~ type, ~ 1,
+    new_data = simulate_samples, coefficients = simulate_coefficients,
+    mean_dispersion_slope = -0.7, mean_dispersion_intercept = 5,
+    .sample = sample, .cell_group = cell_group, number_of_draws = 20, mcmc_seed = 42
+  )
+
+  alpha = alpha_simulated_draws(rng, 1)
+  residuals = sweep(alpha, 2, simulate_coefficients$`(Intercept)` * -0.7 + 5)
+  fitted_prec_sd = attr(simulate_fit_v1, "fit")$summary("prec_sd", "mean")$mean[1]
+
+  expect_gt(sd(residuals), 0.5 * fitted_prec_sd)
+  expect_lt(sd(residuals), 2 * fitted_prec_sd)
+  expect_lt(abs(mean(residuals)), 0.5 * fitted_prec_sd)
+})
+
+test_that("variability scatters around the trend with the fitted residual SD by default", {
+  skip_cmdstan()
+
+  rng = sccomp:::simulate_data_rng(
+    simulate_fit_v1, ~ type, ~ 1,
+    new_data = simulate_samples, coefficients = simulate_coefficients,
+    mean_dispersion_slope = -0.7, mean_dispersion_intercept = 5,
+    .sample = sample, .cell_group = cell_group, number_of_draws = 20, mcmc_seed = 42
+  )
+
+  alpha = alpha_simulated_draws(rng, 1)
+  residuals = sweep(alpha, 2, simulate_coefficients$`(Intercept)` * -0.7 + 5)
+  fitted_prec_sd = attr(simulate_fit_v1, "fit")$summary("prec_sd", "mean")$mean[1]
+
+  expect_gt(sd(residuals), 0.5 * fitted_prec_sd)
+  expect_lt(sd(residuals), 2 * fitted_prec_sd)
+  expect_lt(abs(mean(residuals)), 0.5 * fitted_prec_sd)
 })
 
 test_that("a named slope overrides only its variability term", {
@@ -143,7 +182,8 @@ test_that("a named slope overrides only its variability term", {
     simulate_fit_vt, ~ type, ~ type,
     new_data = simulate_samples, coefficients = simulate_coefficients,
     mean_dispersion_slope = c(typecancer = 2), mean_dispersion_intercept = c(typecancer = 0.5),
-    .sample = sample, .cell_group = cell_group, number_of_draws = 3, mcmc_seed = 42
+    .sample = sample, .cell_group = cell_group, number_of_draws = 3, mcmc_seed = 42,
+    variability_scatter = FALSE
   )
 
   alpha_type = alpha_simulated_draws(rng, 2)
@@ -163,7 +203,8 @@ test_that("a model fitted without the mean-variability association simulates wit
   rng = sccomp:::simulate_data_rng(
     simulate_fit_exclude, ~ type, ~ type,
     new_data = simulate_samples, coefficients = simulate_coefficients,
-    .sample = sample, .cell_group = cell_group, number_of_draws = 3, mcmc_seed = 42
+    .sample = sample, .cell_group = cell_group, number_of_draws = 3, mcmc_seed = 42,
+    variability_scatter = FALSE
   )
 
   alpha = alpha_simulated_draws(rng, 1)
@@ -200,7 +241,8 @@ test_that("simulated proportions follow the provided coefficients", {
     simulate_fit_v1, ~ type, ~ 1,
     new_data = simulate_samples, coefficients = simulate_coefficients,
     mean_dispersion_slope = 0, mean_dispersion_intercept = 8,
-    number_of_draws = 50, cores = 1, mcmc_seed = 1
+    number_of_draws = 50, cores = 1, mcmc_seed = 1,
+    variability_scatter = FALSE
   )
 
   expected =
