@@ -12,16 +12,15 @@ sccomp_simulate(
   coefficients = NULL,
   mean_dispersion_slope = NULL,
   mean_dispersion_intercept = NULL,
-  .sample = NULL,
-  .cell_group = NULL,
+  sample = NULL,
+  cell_group = NULL,
   variability_multiplier = 1,
   number_of_draws = 1,
   mcmc_seed = sample_seed(),
   cores = detectCores(),
   sig_figs = 9,
   cache_stan_model = sccomp_stan_models_cache_dir,
-  variability_scatter = TRUE,
-  .coefficients = NULL
+  variability_scatter = TRUE
 )
 }
 \arguments{
@@ -39,9 +38,9 @@ sccomp_simulate(
 
 \item{mean_dispersion_intercept}{Optional intercept of the mean-variability association, in the same forms as \code{mean_dispersion_slope}. If NULL, the posterior intercepts are used, except for terms whose slope is overridden, which take their posterior-mean intercept so that only the slope changes.}
 
-\item{.sample}{A column name as symbol. The sample identifier. If NULL, taken from the fit.}
+\item{sample}{A column name as a character string for the sample identifier. If NULL, the one used for the fit.}
 
-\item{.cell_group}{A column name as symbol. The cell_group identifier. If NULL, taken from the fit.}
+\item{cell_group}{A column name as a character string for the cell-group identifier. If NULL, the one used for the fit.}
 
 \item{variability_multiplier}{A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.}
 
@@ -58,8 +57,6 @@ The sccomp version will be automatically appended to ensure version isolation.
 Default is \code{sccomp_stan_models_cache_dir} which points to \verb{~/.sccomp_models}.}
 
 \item{variability_scatter}{Logical. If \code{TRUE} (default), each cell group's variability is drawn around the mean-variability trend with the fitted residual standard deviation (\code{prec_sd}), as fitted cell groups scatter around it. If \code{FALSE}, every cell group sits exactly on the trend.}
-
-\item{.coefficients}{(Deprecated) The column names for coefficients in new_data, for example, c(b_0, b_1). Use the 'coefficients' parameter instead. This parameter is placed last for backward compatibility.}
 }
 \value{
 The rows of \code{new_data} (expanded to every cell group if \code{new_data}

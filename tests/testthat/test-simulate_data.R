@@ -313,6 +313,26 @@ test_that("sccomp_simulate works on a subset of samples", {
   expect_equal(nrow(result), 3 * simulate_M)
 })
 
+test_that("sccomp_simulate takes sample and cell_group as character strings", {
+  skip_cmdstan()
+
+  result = sccomp_simulate(
+    simulate_fit_v1, ~ type, ~ 1,
+    new_data = simulate_samples, coefficients = simulate_coefficients,
+    sample = "sample", cell_group = "cell_group", cores = 1
+  )
+  expect_equal(nrow(result), nrow(simulate_samples) * simulate_M)
+
+  expect_error(
+    sccomp_simulate(
+      simulate_fit_v1, ~ type, ~ 1,
+      new_data = simulate_samples, coefficients = simulate_coefficients,
+      sample = 1, cores = 1
+    ),
+    "`sample` must be a single character string"
+  )
+})
+
 test_that("sccomp_simulate works with random effects", {
   skip_cmdstan()
 

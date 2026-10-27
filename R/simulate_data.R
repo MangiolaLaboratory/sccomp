@@ -21,8 +21,8 @@
 #' @param coefficients A data frame/tibble with cell-type specific coefficients. Must contain a column matching the cell_group column name with every fitted cell group, and columns matching the design matrix column names (e.g., "(Intercept)", "typecancer"). Design columns that are absent are set to zero. For each design column, the coefficients must sum to zero across cell groups. If NULL, the posterior coefficients are used.
 #' @param mean_dispersion_slope Optional slope of the mean-variability association. Either a single number, applied to every variability term, or a vector named by variability design column (e.g. `c("(Intercept)" = -0.7)`), in which case unnamed terms keep their posterior slope. If NULL, the posterior slopes are used, or 0 for a model fitted with `exclude_mean_variability_association = TRUE`.
 #' @param mean_dispersion_intercept Optional intercept of the mean-variability association, in the same forms as `mean_dispersion_slope`. If NULL, the posterior intercepts are used, except for terms whose slope is overridden, which take their posterior-mean intercept so that only the slope changes.
-#' @param .sample A column name as symbol. The sample identifier. If NULL, taken from the fit.
-#' @param .cell_group A column name as symbol. The cell_group identifier. If NULL, taken from the fit.
+#' @param sample A column name as a character string for the sample identifier. If NULL, the one used for the fit.
+#' @param cell_group A column name as a character string for the cell-group identifier. If NULL, the one used for the fit.
 #' @param variability_multiplier A real scalar. This can be used for artificially increasing the variability of the simulation for benchmarking purposes.
 #' @param number_of_draws An integer. How may copies of the data you want to draw from the model joint posterior distribution.
 #' @param mcmc_seed An integer. Used for Markov-chain Monte Carlo reproducibility. By default a random number is sampled from 1 to 999999. This itself can be controlled by set.seed()
@@ -32,7 +32,6 @@
 #'                        The sccomp version will be automatically appended to ensure version isolation.
 #'                        Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`.
 #' @param variability_scatter Logical. If `TRUE` (default), each cell group's variability is drawn around the mean-variability trend with the fitted residual standard deviation (`prec_sd`), as fitted cell groups scatter around it. If `FALSE`, every cell group sits exactly on the trend.
-#' @param .coefficients (Deprecated) The column names for coefficients in new_data, for example, c(b_0, b_1). Use the 'coefficients' parameter instead. This parameter is placed last for backward compatibility.
 #' 
 #' @return The rows of `new_data` (expanded to every cell group if `new_data`
 #'   has no cell_group column), with the following columns added:
@@ -84,16 +83,15 @@ sccomp_simulate <- function(fit,
                             coefficients = NULL,
                             mean_dispersion_slope = NULL,
                             mean_dispersion_intercept = NULL,
-                            .sample = NULL,
-                            .cell_group = NULL,
+                            sample = NULL,
+                            cell_group = NULL,
                             variability_multiplier = 1,
                             number_of_draws = 1,
                             mcmc_seed = sample_seed(),
                             cores = detectCores(),
                             sig_figs = 9,
                             cache_stan_model = sccomp_stan_models_cache_dir,
-                            variability_scatter = TRUE,
-                            .coefficients = NULL) {
+                            variability_scatter = TRUE) {
   
   # Run the function
   check_and_install_cmdstanr()
@@ -110,25 +108,15 @@ sccomp_simulate.sccomp_tbl = function(fit,
                                       coefficients = NULL,
                                       mean_dispersion_slope = NULL,
                                       mean_dispersion_intercept = NULL,
-                                      .sample = NULL,
-                                      .cell_group = NULL,
+                                      sample = NULL,
+                                      cell_group = NULL,
                                       variability_multiplier = 1,
                                       number_of_draws = 1,
                                       mcmc_seed = sample_seed(),
                                       cores = detectCores(),
                                       sig_figs = 9,
                                       cache_stan_model = sccomp_stan_models_cache_dir,
-                                      variability_scatter = TRUE,
-                                      .coefficients = NULL) {
-  
-  .coefficients = enquo(.coefficients)
-  
-  if(!quo_is_null(.coefficients))
-    lifecycle::deprecate_warn(
-      "2.5.3",
-      "sccomp_simulate(.coefficients)",
-      details = "sccomp says: please use the `coefficients` argument with a data frame/tibble instead. See ?sccomp_simulate for details."
-    )
+                                      variability_scatter = TRUE) {
   
   simulate_counts(
     fit,
@@ -136,11 +124,10 @@ sccomp_simulate.sccomp_tbl = function(fit,
     formula_variability = formula_variability,
     new_data = new_data,
     coefficients = coefficients,
-    coefficient_columns = if(quo_is_null(.coefficients)) NULL else quo_names(.coefficients),
     mean_dispersion_slope = mean_dispersion_slope,
     mean_dispersion_intercept = mean_dispersion_intercept,
-    .sample = !!enquo(.sample),
-    .cell_group = !!enquo(.cell_group),
+    sample = sample,
+    cell_group = cell_group,
     variability_multiplier = variability_multiplier,
     number_of_draws = number_of_draws,
     mcmc_seed = mcmc_seed,
@@ -153,7 +140,10 @@ sccomp_simulate.sccomp_tbl = function(fit,
 #' Simulate counts and join them onto the requested rows
 #'
 #' @description Shared by `sccomp_simulate()` and the deprecated
-#'   `simulate_data()`, so the latter does not also warn about `.coefficients`.
+#'   `simulate_data()`, which alone accepts coefficient columns of `new_data`.
+#'
+#' @param sample,cell_group Column names as character strings, or NULL for
+#'   the ones used for the fit
 #'
 #' @keywords internal
 #' @noRd
@@ -165,8 +155,8 @@ simulate_counts = function(fit,
                            coefficient_columns = NULL,
                            mean_dispersion_slope = NULL,
                            mean_dispersion_intercept = NULL,
-                           .sample = NULL,
-                           .cell_group = NULL,
+                           sample = NULL,
+                           cell_group = NULL,
                            variability_multiplier = 1,
                            number_of_draws = 1,
                            mcmc_seed = sample_seed(),
@@ -174,8 +164,8 @@ simulate_counts = function(fit,
                            cache_stan_model = sccomp_stan_models_cache_dir,
                            variability_scatter = TRUE) {
   
-  .sample = column_quo_or_default(enquo(.sample), attr(fit, ".sample"))
-  .cell_group = column_quo_or_default(enquo(.cell_group), attr(fit, ".cell_group"))
+  .sample = column_quo_or_default(sample, attr(fit, ".sample"), "sample")
+  .cell_group = column_quo_or_default(cell_group, attr(fit, ".cell_group"), "cell_group")
   
   if(is.null(formula_variability)) formula_variability = attr(fit, "formula_variability")
   if(is.null(new_data)) new_data = attr(fit, "count_data")
@@ -266,6 +256,8 @@ simulate_data <- function(.data,
   
   check_and_install_cmdstanr()
   
+  .sample = enquo(.sample)
+  .cell_group = enquo(.cell_group)
   .coefficients = enquo(.coefficients)
   
   simulate_counts(
@@ -274,8 +266,8 @@ simulate_data <- function(.data,
     formula_variability = formula_variability,
     new_data = .data,
     coefficient_columns = if(quo_is_null(.coefficients)) NULL else quo_names(.coefficients),
-    .sample = !!enquo(.sample),
-    .cell_group = !!enquo(.cell_group),
+    sample = if(quo_is_null(.sample)) NULL else quo_name(.sample),
+    cell_group = if(quo_is_null(.cell_group)) NULL else quo_name(.cell_group),
     variability_multiplier = variability_multiplier,
     number_of_draws = number_of_draws,
     mcmc_seed = mcmc_seed,
@@ -284,16 +276,23 @@ simulate_data <- function(.data,
   )
 }
 
-#' Use a column argument, or fall back to the one recorded on the fit
+#' Use a column name, or fall back to the one recorded on the fit
 #'
-#' @param column_quo Quosure of the argument as supplied, a symbol or a string
+#' @param column Column name as a character string, or NULL
 #' @param default Quosure recorded on the fit
+#' @param argument Argument name, for error messages
+#'
+#' @return A quosure of the column
 #'
 #' @keywords internal
 #' @noRd
-column_quo_or_default = function(column_quo, default) {
-  if(!quo_is_null(column_quo)) return(quo(!!sym(quo_name(column_quo))))
-  if(is.null(default)) stop("sccomp says: the column could not be found in the fit; please provide it.")
+column_quo_or_default = function(column, default, argument) {
+  if(!is.null(column)) {
+    if(!is.character(column) || length(column) != 1)
+      stop(sprintf("sccomp says: `%s` must be a single character string.", argument))
+    return(quo(!!sym(column)))
+  }
+  if(is.null(default)) stop(sprintf("sccomp says: `%s` could not be found in the fit; please provide it.", argument))
   default
 }
 
