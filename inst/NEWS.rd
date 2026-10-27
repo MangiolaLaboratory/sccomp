@@ -240,7 +240,7 @@
 
 \section{News in version 1.0.0, Bioconductor 3.14 Release}{
 \itemize{
-    \item Blog post here: https://tidyomics.github.io/tidyomicsBlog/post/2023-12-07-tidy-sccomp/. Introduction of a new modular, tidy framework. This modularise estimation |> outlier exclusion |> hypothesis testing |> visualisation |> simulation(). New functionalities have also been added such as, removal of unwanted variation.
+    \item Introduction of a new modular, tidy framework. This modularise estimation |> outlier exclusion |> hypothesis testing |> visualisation |> simulation(). New functionalities have also been added such as, removal of unwanted variation.
     \item Commit ID: dcc1b2624aaba990b882ed9a2c0e5142bc9aa037
 }}
 
