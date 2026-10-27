@@ -6,12 +6,11 @@ Stefano Mangiola
 
 <!-- badges: start -->
 
-[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
-[![R build
-status](https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg)](https://github.com/stemangiola/sccomp/actions/)
+[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
+[![R build status](https://github.com/MangiolaLaboratory/sccomp/actions/workflows/workflow_with_cmdstanr.yml/badge.svg)](https://github.com/MangiolaLaboratory/sccomp/actions/workflows/workflow_with_cmdstanr.yml)
 <!-- badges: end -->
 
-# <img src="inst/logo-01.png" height="139px" width="120px"/>
+# <img src="man/figures/logo-01.png" height="139px" width="120px"/>
 
 **sccomp** is a powerful R package designed for comprehensive
 differential composition and variability analysis in single-cell
@@ -27,7 +26,7 @@ variability analyses capable of jointly modelling data count
 distribution, compositionality, group-specific variability, and
 proportion mean-variability association, while being robust to outliers.
 
-<img src="inst/cartoon_methods.png" width="100%"/>
+<img src="man/figures/cartoon_methods.png" width="100%"/>
 
 ### Comprehensive Method Comparison
 
@@ -335,7 +334,7 @@ sccomp_result |>
     ## 
     ## Chain 1 finished in 0.0 seconds.
 
-![](inst/figures/unnamed-chunk-8-1.png)<!-- -->
+![](man/figures/unnamed-chunk-8-1.png)<!-- -->
 
 You can plot proportions adjusted for unwanted effects. This is helpful
 especially for complex models, where multiple factors can significantly
@@ -358,7 +357,7 @@ sccomp_result |>
     ## 
     ## Chain 1 finished in 0.0 seconds.
 
-![](inst/figures/unnamed-chunk-9-1.png)<!-- -->
+![](man/figures/unnamed-chunk-9-1.png)<!-- -->
 
 A plot of estimates of differential composition (c\_) on the x-axis and
 differential variability (v\_) on the y-axis. The error bars represent
@@ -372,7 +371,7 @@ sccomp_result |>
   sccomp_plot_intervals_1D()
 ```
 
-![](inst/figures/unnamed-chunk-10-1.png)<!-- -->
+![](man/figures/unnamed-chunk-10-1.png)<!-- -->
 
 We can plot the relationship between abundance and variability. As we
 can see below, they are positively correlated. sccomp models this
@@ -385,7 +384,7 @@ sccomp_result |>
   sccomp_plot_intervals_2D()
 ```
 
-![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
+![](man/figures/unnamed-chunk-11-1.png)<!-- -->
 
 You can produce the series of plots calling the `plot` method.
 
@@ -882,7 +881,7 @@ plots = res |> sccomp_test() |> plot()
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-23-1.png)<!-- -->
+![](man/figures/unnamed-chunk-23-1.png)<!-- -->
 
 **Plot 2D significance plot** Data points are cell groups. Error bars
 are the 95% credible interval. The dashed lines represent the default
@@ -902,7 +901,7 @@ uncorrelated.
 plots$credible_intervals_2D
 ```
 
-![](inst/figures/unnamed-chunk-24-1.png)<!-- -->
+![](man/figures/unnamed-chunk-24-1.png)<!-- -->
 
 # Recommended Settings for Different Data Types
 
@@ -939,7 +938,7 @@ draws <- as_draws_array(fit$draws("beta[2,1]"))
 mcmc_trace(draws, pars = "beta[2,1]") + theme_bw()
 ```
 
-![](inst/figures/unnamed-chunk-25-1.png)<!-- -->
+![](man/figures/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 sessionInfo()
