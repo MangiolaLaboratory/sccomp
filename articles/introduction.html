@@ -78,10 +78,10 @@ Mangiola</h4>
     </div>
     
 <!-- badges: start -->
-<p><a href="https://www.tidyverse.org/lifecycle/#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a> <a href="https://github.com/stemangiola/sccomp/actions/" class="external-link"><img src="https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg" alt="R build status"></a> <!-- badges: end --></p>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a> <a href="https://github.com/MangiolaLaboratory/sccomp/actions/workflows/workflow_with_cmdstanr.yml" class="external-link"><img src="https://github.com/MangiolaLaboratory/sccomp/actions/workflows/workflow_with_cmdstanr.yml/badge.svg" alt="R build status"></a> <!-- badges: end --></p>
 <div class="section level2">
 <h2 id="section">
-<img src="../inst/logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
+<img src="logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
 </h2>
 <p><strong>sccomp</strong> is a powerful R package designed for
 comprehensive differential composition and variability analysis in
@@ -97,7 +97,7 @@ composition and variability analyses capable of jointly modelling data
 count distribution, compositionality, group-specific variability, and
 proportion mean-variability association, while being robust to
 outliers.</p>
-<p><img src="../inst/cartoon_methods.png" width="100%"></p>
+<p><img src="cartoon_methods.png" width="100%"></p>
 <div class="section level4">
 <h4 id="comprehensive-method-comparison">Comprehensive Method Comparison<a class="anchor" aria-label="anchor" href="#comprehensive-method-comparison"></a>
 </h4>
@@ -607,11 +607,11 @@ exclude them from the estimation.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 1.205 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 2.119 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 1.198 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 2.115 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 </div>
 <div class="section level3">
@@ -631,7 +631,7 @@ significant associations for composition and/or variability.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.059 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
@@ -645,15 +645,15 @@ significantly impact the proportions.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_boxplot.html">sccomp_boxplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"type"</span>, remove_unwanted_effects <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.303 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.519 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.294 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.518 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.058 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.104 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
@@ -676,7 +676,7 @@ labels showing FDR values or other statistics:</p>
 <span>             size <span class="op">=</span> <span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.06 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
@@ -694,7 +694,7 @@ labels showing FDR values or other statistics:</p>
 <span>             size <span class="op">=</span> <span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.059 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>
@@ -819,7 +819,7 @@ is the posterior predictive trend.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_scatterplot.html">sccomp_scatterplot</a></span><span class="op">(</span>factor <span class="op">=</span> <span class="st">"continuous_covariate"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.517 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.895 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning: `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
 <span><span class="co">## `position_jitterdodge()` requires non-overlapping <span style="color: #00BB00;">x</span> intervals.</span></span>
@@ -1074,7 +1074,7 @@ are categories.</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">cell_group</span>, <span class="va">statement</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.049 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.086 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 30 × 2</span></span></span>
 <span><span class="co">##    cell_group           statement                                </span></span>
@@ -1247,7 +1247,7 @@ and so test differences in variability</p>
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">=</span> <span class="va">res</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/sccomp_test.html">sccomp_test</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1  Elapsed Time: 0.052 seconds (Generated Quantities) </span></span>
+<span><span class="co">## Chain 1  Elapsed Time: 0.088 seconds (Generated Quantities) </span></span>
 <span><span class="co">## Chain 1 finished in 0.0 seconds.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),</span></span>
 <span><span class="co">## generated_proportions), : Ignoring unknown parameters:</span></span>

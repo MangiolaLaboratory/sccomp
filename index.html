@@ -56,14 +56,14 @@
 
 <div class="section level1">
 <div class="page-header"><h1 id="section">
-<img src="inst/logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
+<img src="reference/figures/logo-01.png" height="139px" width="120px"><a class="anchor" aria-label="anchor" href="#section"></a>
 </h1></div>
 <p><strong>sccomp</strong> is a powerful R package designed for comprehensive differential composition and variability analysis in single-cell genomics, proteomics, and microbiomics data.</p>
 <div class="section level2">
 <h2 id="why-sccomp">Why sccomp?<a class="anchor" aria-label="anchor" href="#why-sccomp"></a>
 </h2>
 <p>For cellular omic data, no method for differential variability analysis exists, and methods for differential composition analysis only take a few fundamental data properties into account. Here we introduce <strong>sccomp</strong>, a generalised method for differential composition and variability analyses capable of jointly modelling data count distribution, compositionality, group-specific variability, and proportion mean-variability association, while being robust to outliers.</p>
-<p><img src="inst/cartoon_methods.png" width="100%"></p>
+<p><img src="reference/figures/cartoon_methods.png" width="100%"></p>
 <div class="section level3">
 <h3 id="comprehensive-method-comparison">Comprehensive Method Comparison<a class="anchor" aria-label="anchor" href="#comprehensive-method-comparison"></a>
 </h3>
@@ -541,7 +541,7 @@
 <div class="sourceCode" id="cb13"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="do">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="do">## Chain 1 finished in 0.0 seconds.</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-8-1.png"><!-- --></p>
+<p><img src="reference/figures/unnamed-chunk-8-1.png"><!-- --></p>
 <p>You can plot proportions adjusted for unwanted effects. This is helpful especially for complex models, where multiple factors can significantly impact the proportions.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
@@ -557,17 +557,17 @@
 <span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="do">## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="do">## Chain 1 finished in 0.0 seconds.</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-9-1.png"><!-- --></p>
+<p><img src="reference/figures/unnamed-chunk-9-1.png"><!-- --></p>
 <p>A plot of estimates of differential composition (c_) on the x-axis and differential variability (v_) on the y-axis. The error bars represent 95% credible intervals. The dashed lines represent the minimal effect that the hypothesis test is based on. An effect is labelled as significant if it exceeds the minimal effect according to the 95% credible interval. Facets represent the covariates in the model.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="reference/sccomp_plot_intervals_1D.html">sccomp_plot_intervals_1D</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-10-1.png"><!-- --></p>
+<p><img src="reference/figures/unnamed-chunk-10-1.png"><!-- --></p>
 <p>We can plot the relationship between abundance and variability. As we can see below, they are positively correlated. sccomp models this relationship to obtain a shrinkage effect on the estimates of both the abundance and the variability. This shrinkage is adaptive as it is modelled jointly, thanks to Bayesian inference.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="reference/sccomp_plot_intervals_2D.html">sccomp_plot_intervals_2D</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-11-1.png"><!-- --></p>
+<p><img src="reference/figures/unnamed-chunk-11-1.png"><!-- --></p>
 <p>You can produce the series of plots calling the <code>plot</code> method.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sccomp_result</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
@@ -989,12 +989,12 @@
 <span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a><span class="do">## Chain 1 finished in 0.0 seconds.</span></span></code></pre></div>
 <div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_1D</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-23-1.png"><!-- --></p>
+<p><img src="reference/figures/unnamed-chunk-23-1.png"><!-- --></p>
 <p><strong>Plot 2D significance plot</strong> Data points are cell groups. Error bars are the 95% credible interval. The dashed lines represent the default threshold fold change for which the probabilities (c_pH0, v_pH0) are calculated. pH0 of 0 represent the rejection of the null hypothesis that no effect is observed.</p>
 <p>This plot is provided only if differential variability has been tested. The differential variability estimates are reliable only if the linear association between mean and variability for <code>(intercept)</code> (left-hand side facet) is satisfied. A scatterplot (besides the Intercept) is provided for each category of interest. For each category of interest, the composition and variability effects should be generally uncorrelated.</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">$</span><span class="va">credible_intervals_2D</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-24-1.png"><!-- --></p>
+<p><img src="reference/figures/unnamed-chunk-24-1.png"><!-- --></p>
 </div>
 </div>
 <div class="section level1">
@@ -1027,7 +1027,7 @@
 <span></span>
 <span><span class="co"># Create a traceplot for 'beta[2,1]'</span></span>
 <span><span class="fu"><a href="https://mc-stan.org/bayesplot/reference/MCMC-traces.html" class="external-link">mcmc_trace</a></span><span class="op">(</span><span class="va">draws</span>, pars <span class="op">=</span> <span class="st">"beta[2,1]"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inst/figures/unnamed-chunk-25-1.png"><!-- --></p>
+<p><img src="reference/figures/unnamed-chunk-25-1.png"><!-- --></p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb44"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" tabindex="-1"></a><span class="do">## R version 4.5.0 (2025-04-11)</span></span>
@@ -1144,8 +1144,8 @@
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://www.tidyverse.org/lifecycle/#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a></li>
-<li><a href="https://github.com/stemangiola/sccomp/actions/" class="external-link"><img src="https://github.com/stemangiola/sccomp/workflows/R-CMD-check/badge.svg" alt="R build status"></a></li>
+<li><a href="https://lifecycle.r-lib.org/articles/stages.html#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a></li>
+<li><a href="https://github.com/MangiolaLaboratory/sccomp/actions/workflows/workflow_with_cmdstanr.yml" class="external-link"><img src="https://github.com/MangiolaLaboratory/sccomp/actions/workflows/workflow_with_cmdstanr.yml/badge.svg" alt="R build status"></a></li>
 </ul>
 </div>
 
