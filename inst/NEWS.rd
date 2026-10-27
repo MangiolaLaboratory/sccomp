@@ -6,6 +6,10 @@
     \item New \code{sccomp_simulate()} for simulating counts from a fitted model. Abundance coefficients can be supplied as a cell-group by design-column table (\code{coefficients}), and the mean-variability association can be set with \code{mean_dispersion_slope} and \code{mean_dispersion_intercept}, either as one number for every variability term or as a vector named by term. Variability is derived from the abundance coefficients through the association, so changing the coefficients changes the simulated variability as the model expects. By default (\code{variability_scatter = TRUE}) each cell group also deviates from that trend by the fitted residual standard deviation, as real cell groups do. By default (\code{variability_scatter = TRUE}) each cell group also deviates from that trend by the fitted residual standard deviation, as real cell groups do.
     \item The simulation model was rebuilt on the current parameterisation (per-term \code{prec_intercept} and \code{prec_slope}, the variability-to-composition map, and six random-effect slots). The previous \code{simulate_data()} could no longer run against fits from recent versions.
     \item \code{simulate_data()} is deprecated in favour of \code{sccomp_simulate()} and now calls it. Its default \code{variability_multiplier} changed from 5 to 1, so the fitted variability is preserved unless asked otherwise.
+
+    \item \strong{Clearer design-matrix reporting.} \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} now report the composition and variability design matrices with their parameter count followed by a preview of the first 10 parameters, so wide designs no longer flood the console.
+    \item Random-effect design matrices are now reported as well, one per line, each labelled with what it models: the clause the user wrote (e.g. \code{(1 + type | donor)}), a smooth term, or a single penalty block of a grouped smooth such as \code{s(x, group, bs = "fs")}. This makes it visible how many random-effect slots a formula consumes.
+    \item \code{model_input} gained a \code{random_effect_design_terms} table mapping each occupied random-effect slot to the term it models.
 }}
 
 \section{News in version 2.5.2}{
@@ -15,7 +19,7 @@
 
 \section{News in version 2.5.1}{
 \itemize{
-    \item Increased the random-effect slot budget from 4 to 5 so multiple smooth terms (e.g. a global \code{s()} plus a factor-smooth \code{bs = "fs"}) can coexist with an explicit RE clause.
+     \item Increased the random-effect slot budget from 4 to 5 so multiple smooth terms (e.g. a global \code{s()} plus a factor-smooth \code{bs = "fs"}) can coexist with an explicit RE clause.
     \item Fixed the scaling of continuous covariates in \code{sccomp_predict()} and \code{sccomp_replicate()}. Continuous covariates were being z-scored using the fitted samples and the new data pooled together, so the prediction at a given covariate value shifted with the range and the density of the requested grid. The centre and scale of the fitted samples are now used, making predictions a function of the model and the covariate value alone. Smooth terms were never affected, as they are evaluated against the fit-time basis.
 }}
 
