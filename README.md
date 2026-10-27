@@ -335,7 +335,7 @@ sccomp_result |>
     ## 
     ## Chain 1 finished in 0.0 seconds.
 
-![](inst/figures/unnamed-chunk-8-1.png)<!-- -->
+![](man/figures/unnamed-chunk-8-1.png)<!-- -->
 
 You can plot proportions adjusted for unwanted effects. This is helpful
 especially for complex models, where multiple factors can significantly
@@ -358,7 +358,7 @@ sccomp_result |>
     ## 
     ## Chain 1 finished in 0.0 seconds.
 
-![](inst/figures/unnamed-chunk-9-1.png)<!-- -->
+![](man/figures/unnamed-chunk-9-1.png)<!-- -->
 
 A plot of estimates of differential composition (c\_) on the x-axis and
 differential variability (v\_) on the y-axis. The error bars represent
@@ -372,7 +372,7 @@ sccomp_result |>
   sccomp_plot_intervals_1D()
 ```
 
-![](inst/figures/unnamed-chunk-10-1.png)<!-- -->
+![](man/figures/unnamed-chunk-10-1.png)<!-- -->
 
 We can plot the relationship between abundance and variability. As we
 can see below, they are positively correlated. sccomp models this
@@ -385,7 +385,7 @@ sccomp_result |>
   sccomp_plot_intervals_2D()
 ```
 
-![](inst/figures/unnamed-chunk-11-1.png)<!-- -->
+![](man/figures/unnamed-chunk-11-1.png)<!-- -->
 
 You can produce the series of plots calling the `plot` method.
 
@@ -882,7 +882,7 @@ plots = res |> sccomp_test() |> plot()
 plots$credible_intervals_1D
 ```
 
-![](inst/figures/unnamed-chunk-23-1.png)<!-- -->
+![](man/figures/unnamed-chunk-23-1.png)<!-- -->
 
 **Plot 2D significance plot** Data points are cell groups. Error bars
 are the 95% credible interval. The dashed lines represent the default
@@ -902,7 +902,7 @@ uncorrelated.
 plots$credible_intervals_2D
 ```
 
-![](inst/figures/unnamed-chunk-24-1.png)<!-- -->
+![](man/figures/unnamed-chunk-24-1.png)<!-- -->
 
 # Recommended Settings for Different Data Types
 
@@ -939,7 +939,7 @@ draws <- as_draws_array(fit$draws("beta[2,1]"))
 mcmc_trace(draws, pars = "beta[2,1]") + theme_bw()
 ```
 
-![](inst/figures/unnamed-chunk-25-1.png)<!-- -->
+![](man/figures/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 sessionInfo()
