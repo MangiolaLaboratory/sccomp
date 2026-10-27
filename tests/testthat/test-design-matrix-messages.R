@@ -73,16 +73,16 @@ test_that("design matrix messages identify every modelled matrix", {
   )
   
   expect_length(messages, 1L)
-  expect_match(messages, "composition X - 2 parameters", fixed = TRUE)
-  expect_match(messages, "variability Xa - 1 parameter", fixed = TRUE)
+  expect_match(messages, "composition X: 2 parameters", fixed = TRUE)
+  expect_match(messages, "variability Xa: 1 parameter", fixed = TRUE)
   expect_match(
     messages,
-    "random effect X1 [(1 + age | donor)] - 4 parameters",
+    "random effect X1 [(1 + age | donor)]: 4 parameters",
     fixed = TRUE
   )
   expect_match(
     messages,
-    "random effect X2 [smooth s(age, k = 5)] - 3 parameters",
+    "random effect X2 [smooth s(age, k = 5)]: 3 parameters",
     fixed = TRUE
   )
   expect_false(grepl("random effect X3", messages, fixed = TRUE))
@@ -104,7 +104,7 @@ test_that("design matrix messages survive fits without recorded terms", {
   
   expect_message(
     sccomp:::message_design_matrices(model_input),
-    "random effect X1 [slot 1] - 1 parameter",
+    "random effect X1 [slot 1]: 1 parameter",
     fixed = TRUE
   )
 })
