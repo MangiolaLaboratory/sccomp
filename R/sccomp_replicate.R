@@ -153,6 +153,7 @@ sccomp_replicate.sccomp_tbl = function(fit,
 #' - X_random_effect_which_1..5: per-slot indices into the original RE design matrix
 #' - create_intercept: Boolean indicating if intercept should be created
 #' 
+#' @importFrom purrr map_dbl
 #' @noRd
 prepare_replicate_data = function(X,
                                   Xa,

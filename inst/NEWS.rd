@@ -1,6 +1,13 @@
 \name{NEWS}
 \title{News for Package \pkg{sccomp}}
 
+\section{News in version 2.5.4}{
+\itemize{
+    \item New \code{sccomp_simulate()} for simulating counts from a fitted model. Abundance coefficients can be supplied as a cell-group by design-column table (\code{coefficients}), and the mean-variability association can be set with \code{mean_dispersion_slope} and \code{mean_dispersion_intercept}, either as one number for every variability term or as a vector named by term. Variability is derived from the abundance coefficients through the association, so changing the coefficients changes the simulated variability as the model expects. By default (\code{variability_scatter = TRUE}) each cell group also deviates from that trend by the fitted residual standard deviation, as real cell groups do.
+    \item The simulation model was rebuilt on the current parameterisation (per-term \code{prec_intercept} and \code{prec_slope}, the variability-to-composition map, and six random-effect slots). The previous \code{simulate_data()} could no longer run against fits from recent versions.
+    \item \code{simulate_data()} is deprecated in favour of \code{sccomp_simulate()} and now calls it. Its default \code{variability_multiplier} changed from 5 to 1, so the fitted variability is preserved unless asked otherwise.
+}}
+
 \section{News in version 2.5.3}{
 \itemize{
     \item \strong{Clearer design-matrix reporting.} \code{sccomp_estimate()} and \code{sccomp_remove_outliers()} now report the composition and variability design matrices with their parameter count followed by a preview of the first 10 parameters, so wide designs no longer flood the console.
