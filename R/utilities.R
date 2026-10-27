@@ -314,11 +314,11 @@ message_design_matrices <- function(model_input, max_parameters = 10L) {
   lines <- c(
     "sccomp says: model design matrices",
     sprintf(
-      "  composition X - %s",
+      "  composition X: %s",
       format_design_matrix_preview(model_input$X, max_parameters)
     ),
     sprintf(
-      "  variability Xa - %s",
+      "  variability Xa: %s",
       format_design_matrix_preview(model_input$Xa, max_parameters)
     )
   )
@@ -326,7 +326,7 @@ message_design_matrices <- function(model_input, max_parameters = 10L) {
   active_slots <- which(model_input$ncol_X_random_eff > 0L)
   
   if (length(active_slots) == 0L) {
-    lines <- c(lines, "  random effects - none")
+    lines <- c(lines, "  random effects: none")
   } else {
     # Fits produced before the design terms were recorded still report their
     # matrices, just without the originating formula clause.
@@ -336,7 +336,7 @@ message_design_matrices <- function(model_input, max_parameters = 10L) {
     slot_terms[is.na(slot_terms)] <- sprintf("slot %d", which(is.na(slot_terms)))
     
     lines <- c(lines, sprintf(
-      "  random effect X%d [%s] - %s",
+      "  random effect X%d [%s]: %s",
       active_slots,
       slot_terms[active_slots],
       map_chr(
