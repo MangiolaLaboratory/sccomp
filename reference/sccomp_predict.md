@@ -33,7 +33,10 @@ sccomp_predict(
 
   A sample-wise data frame including the column that represent the
   factors in your formula. If you want to predict proportions for 10
-  samples, there should be 10 rows. T
+  samples, there should be 10 rows. Continuous covariates, including
+  those inside `s()` / `t2()`, should be in the original units of the
+  fitted data. They are z-scored once from those fitted samples before
+  the design is built.
 
 - number_of_draws:
 
@@ -129,8 +132,10 @@ print("cmdstanr is needed to run this example.")
   }
 #> sccomp says: count column is an integer. The sum-constrained beta binomial model will be used
 #> sccomp says: estimation
-#> sccomp says: the composition design matrix has columns: (Intercept), typecancer
-#> sccomp says: the variability design matrix has columns: (Intercept)
+#> sccomp says: model design matrices
+#>   composition X: 2 parameters: (Intercept), typecancer
+#>   variability Xa: 1 parameter: (Intercept)
+#>   random effects: none
 #> Loading model from cache...
 #> Path [1] :Initial log joint density = -482932.383905 
 #> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
@@ -332,7 +337,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              66      -4.787e+05      8.152e-03   2.171e-01    1.000e+00  1.000e+00      3966 -3.684e+03 -3.691e+03                   
 #> Path [50] :Best Iter: [63] ELBO (-3683.778625) evaluations: (3966) 
-#> Finished in  14.2 seconds.
+#> Finished in  14.0 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -341,7 +346,7 @@ print("cmdstanr is needed to run this example.")
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.519 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.532 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 720 × 9
 #>    sample type   cell_group proportion_mean proportion_lower proportion_upper

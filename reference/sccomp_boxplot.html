@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -128,8 +128,10 @@
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: count column is an integer. The sum-constrained beta binomial model will be used</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: estimation</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the composition design matrix has columns: (Intercept), typecancer</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: the variability design matrix has columns: (Intercept)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: model design matrices</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   composition X: 2 parameters: (Intercept), typecancer</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   variability Xa: 1 parameter: (Intercept)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   random effects: none</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading model from cache...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [1] :Initial log joint density = -482884.236146 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
@@ -331,7 +333,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              66      -4.787e+05      3.656e-03   2.647e-01    6.911e-01  6.911e-01      4140 -3.683e+03 -3.703e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [63] ELBO (-3682.656652) evaluations: (4140) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  13.9 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  14.0 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>

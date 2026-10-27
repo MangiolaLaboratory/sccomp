@@ -110,8 +110,10 @@ if (instantiate::stan_cmdstan_exists()) {
 }
 #> sccomp says: count column is an integer. The sum-constrained beta binomial model will be used
 #> sccomp says: estimation
-#> sccomp says: the composition design matrix has columns: (Intercept), typecancer
-#> sccomp says: the variability design matrix has columns: (Intercept)
+#> sccomp says: model design matrices
+#>   composition X: 2 parameters: (Intercept), typecancer
+#>   variability Xa: 1 parameter: (Intercept)
+#>   random effects: none
 #> Loading model from cache...
 #> Path [1] :Initial log joint density = -482884.236146 
 #> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
@@ -313,7 +315,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              66      -4.787e+05      3.656e-03   2.647e-01    6.911e-01  6.911e-01      4140 -3.683e+03 -3.703e+03                   
 #> Path [50] :Best Iter: [63] ELBO (-3682.656652) evaluations: (4140) 
-#> Finished in  13.9 seconds.
+#> Finished in  14.0 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.

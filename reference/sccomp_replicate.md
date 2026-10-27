@@ -106,8 +106,10 @@ print("cmdstanr is needed to run this example.")
   }
 #> sccomp says: count column is an integer. The sum-constrained beta binomial model will be used
 #> sccomp says: estimation
-#> sccomp says: the composition design matrix has columns: (Intercept), typecancer
-#> sccomp says: the variability design matrix has columns: (Intercept)
+#> sccomp says: model design matrices
+#>   composition X: 2 parameters: (Intercept), typecancer
+#>   variability Xa: 1 parameter: (Intercept)
+#>   random effects: none
 #> Loading model from cache...
 #> Path [1] :Initial log joint density = -481509.193778 
 #> Path [1] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
@@ -309,7 +311,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              76      -4.787e+05      9.050e-03   2.577e-01    1.000e+00  1.000e+00      4980 -3.688e+03 -3.690e+03                   
 #> Path [50] :Best Iter: [73] ELBO (-3688.443320) evaluations: (4980) 
-#> Finished in  14.2 seconds.
+#> Finished in  13.9 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.

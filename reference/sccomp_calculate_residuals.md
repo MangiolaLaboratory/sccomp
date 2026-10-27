@@ -107,8 +107,10 @@ print(residuals)
 #>   approximate_posterior_inference.
 #> sccomp says: count column is an integer. The sum-constrained beta binomial model will be used
 #> sccomp says: estimation
-#> sccomp says: the composition design matrix has columns: (Intercept), typecancer
-#> sccomp says: the variability design matrix has columns: (Intercept)
+#> sccomp says: model design matrices
+#>   composition X: 2 parameters: (Intercept), typecancer
+#>   variability Xa: 1 parameter: (Intercept)
+#>   random effects: none
 #> Loading model from cache...
 #> Init values were only set for a subset of parameters. 
 #> Missing init values for the following parameters:
@@ -120,8 +122,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000323 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.23 seconds. 
+#> Gradient evaluation took 0.000318 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.18 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -141,7 +143,7 @@ print(residuals)
 #>    700        -3699.562             0.180            0.002   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
-#> Finished in  2.4 seconds.
+#> Finished in  2.3 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -150,7 +152,7 @@ print(residuals)
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.518 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.532 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 720 × 5
 #>    sample cell_group residuals exposure residuals_unconstrained

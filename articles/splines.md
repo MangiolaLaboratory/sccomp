@@ -122,18 +122,18 @@ fit |>
 #>   scale reduction factor on split chains (at convergence, R_k_hat = 1).
 #> 
 #> # A tibble: 216 × 6
-#>    cell_group parameter                      c_lower c_effect c_upper     c_FDR
-#>    <chr>      <chr>                            <dbl>    <dbl>   <dbl>     <dbl>
-#>  1 B1         (Intercept)                      0.910   1.18    1.45   0        
-#>  2 B1         typecancer                      -0.867  -0.567  -0.257  0.000250 
-#>  3 B1         s(pseudotime, k = 5)__lin1      -0.477  -0.0350  0.332  0.194    
-#>  4 B1         s(pseudotime, k = 5)___basis01  -1.76   -0.626   0.141  0.0373   
-#>  5 B1         s(pseudotime, k = 5)___basis02  -0.423   0.267   1.49   0.144    
-#>  6 B1         s(pseudotime, k = 5)___basis03  -0.944  -0.253   0.372  0.140    
-#>  7 B2         (Intercept)                      0.558   0.845   1.14   0        
-#>  8 B2         typecancer                      -1.16   -0.799  -0.411  0.0000417
-#>  9 B2         s(pseudotime, k = 5)__lin1      -0.208   0.218   0.574  0.0504   
-#> 10 B2         s(pseudotime, k = 5)___basis01  -2.05   -1.11   -0.0872 0.0105   
+#>    cell_group parameter                      c_lower c_effect c_upper    c_FDR
+#>    <chr>      <chr>                            <dbl>    <dbl>   <dbl>    <dbl>
+#>  1 B1         (Intercept)                      0.918   1.19    1.46   0       
+#>  2 B1         typecancer                      -0.891  -0.576  -0.256  0.000594
+#>  3 B1         s(pseudotime, k = 5)__lin1      -0.439  -0.0365  0.316  0.218   
+#>  4 B1         s(pseudotime, k = 5)___basis01  -1.88   -0.654   0.0724 0.0300  
+#>  5 B1         s(pseudotime, k = 5)___basis02  -1.48   -0.269   0.420  0.167   
+#>  6 B1         s(pseudotime, k = 5)___basis03  -0.894  -0.262   0.340  0.0965  
+#>  7 B2         (Intercept)                      0.555   0.841   1.13   0       
+#>  8 B2         typecancer                      -1.17   -0.797  -0.425  0       
+#>  9 B2         s(pseudotime, k = 5)__lin1      -0.188   0.207   0.584  0.0726  
+#> 10 B2         s(pseudotime, k = 5)___basis01  -2.15   -1.09   -0.241  0.00512 
 #> # ℹ 206 more rows
 ```
 
@@ -159,19 +159,19 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.226 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.291 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
 #> # A tibble: 6 × 10
 #>   pseudotime type   sample   cell_group proportion_mean proportion_lower
 #>        <dbl> <fct>  <chr>    <chr>                <dbl>            <dbl>
-#> 1    -0.0313 benign grid_001 B1                 0.0628           0.0387 
-#> 2    -0.0313 benign grid_001 B2                 0.0291           0.0176 
-#> 3    -0.0313 benign grid_001 B3                 0.00783          0.00401
-#> 4    -0.0313 benign grid_001 BM                 0.00860          0.00599
-#> 5    -0.0313 benign grid_001 CD4 1              0.0256           0.0191 
-#> 6    -0.0313 benign grid_001 CD4 2              0.0375           0.0263 
+#> 1    -0.0313 benign grid_001 B1                 0.0614           0.0397 
+#> 2    -0.0313 benign grid_001 B2                 0.0297           0.0202 
+#> 3    -0.0313 benign grid_001 B3                 0.00815          0.00465
+#> 4    -0.0313 benign grid_001 BM                 0.00855          0.00596
+#> 5    -0.0313 benign grid_001 CD4 1              0.0258           0.0200 
+#> 6    -0.0313 benign grid_001 CD4 2              0.0376           0.0261 
 #> # ℹ 4 more variables: proportion_upper <dbl>, unconstrained_mean <dbl>,
 #> #   unconstrained_lower <dbl>, unconstrained_upper <dbl>
 ```
@@ -249,21 +249,21 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.087 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.085 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from  to    c_effect c_lower c_upper    c_FDR
 #>    <chr>      <chr> <chr>    <dbl>   <dbl>   <dbl>    <dbl>
-#>  1 CD4 2      1     5        0.706   0.336   1.14  0       
-#>  2 CD4 3      1     5       -1.14   -1.64   -0.764 0       
-#>  3 CD8 1      1     5        0.596   0.224   1.01  0       
-#>  4 M5         1     5       -0.957  -1.70   -0.414 0       
-#>  5 M9         1     5       -0.746  -1.17   -0.356 0       
-#>  6 TM3        1     5       -1.03   -1.92   -0.357 0       
-#>  7 CD8 3      1     5        0.572   0.202   0.998 0.000857
-#>  8 H3         1     5       -0.577  -0.993  -0.200 0.00175 
-#>  9 H1         1     5       -0.460  -0.853  -0.136 0.00311 
-#> 10 CD8 5      1     5        0.628   0.140   1.32  0.00460 
+#>  1 CD4 2      1     5        0.691   0.349   1.09  0       
+#>  2 CD4 3      1     5       -1.17   -1.69   -0.741 0       
+#>  3 M5         1     5       -0.929  -1.65   -0.356 0       
+#>  4 M9         1     5       -0.732  -1.23   -0.342 0       
+#>  5 TM3        1     5       -0.998  -1.84   -0.410 0       
+#>  6 CD8 3      1     5        0.578   0.238   1.03  0.000667
+#>  7 CD8 1      1     5        0.617   0.244   1.01  0.00143 
+#>  8 H3         1     5       -0.580  -1.02   -0.210 0.00250 
+#>  9 M8         1     5        0.552   0.172   0.966 0.00333 
+#> 10 CD8 5      1     5        0.612   0.120   1.31  0.00500 
 #> # ℹ 26 more rows
 ```
 
@@ -290,21 +290,21 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.063 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.138 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from   to     c_effect c_lower c_upper    c_FDR
 #>    <chr>      <chr>  <chr>     <dbl>   <dbl>   <dbl>    <dbl>
-#>  1 CD4 3      [0, 2] [4, 6]   -1.11   -1.55   -0.769 0       
-#>  2 M5         [0, 2] [4, 6]   -0.893  -1.54   -0.330 0       
-#>  3 M9         [0, 2] [4, 6]   -0.701  -1.15   -0.398 0       
-#>  4 TM3        [0, 2] [4, 6]   -0.959  -1.72   -0.337 0       
-#>  5 CD4 2      [0, 2] [4, 6]    0.662   0.328   1.04  0.000400
-#>  6 CD8 1      [0, 2] [4, 6]    0.579   0.217   0.981 0.000667
-#>  7 CD8 3      [0, 2] [4, 6]    0.532   0.208   0.959 0.00143 
-#>  8 H3         [0, 2] [4, 6]   -0.558  -0.943  -0.218 0.00200 
-#>  9 H1         [0, 2] [4, 6]   -0.446  -0.842  -0.114 0.00378 
-#> 10 NK3        [0, 2] [4, 6]    0.455   0.124   0.825 0.00520 
+#>  1 CD4 2      [0, 2] [4, 6]    0.640   0.316   1.03  0       
+#>  2 CD4 3      [0, 2] [4, 6]   -1.11   -1.60   -0.693 0       
+#>  3 M5         [0, 2] [4, 6]   -0.860  -1.49   -0.339 0       
+#>  4 M9         [0, 2] [4, 6]   -0.696  -1.06   -0.379 0       
+#>  5 TM3        [0, 2] [4, 6]   -0.929  -1.68   -0.387 0       
+#>  6 CD8 1      [0, 2] [4, 6]    0.585   0.267   0.919 0.000667
+#>  7 CD8 3      [0, 2] [4, 6]    0.532   0.188   0.958 0.00143 
+#>  8 M8         [0, 2] [4, 6]    0.522   0.187   0.923 0.00200 
+#>  9 H3         [0, 2] [4, 6]   -0.554  -0.932  -0.178 0.00311 
+#> 10 CD8 5      [0, 2] [4, 6]    0.560   0.122   1.23  0.00440 
 #> # ℹ 26 more rows
 ```
 
@@ -339,7 +339,7 @@ pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.221 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.277 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -500,19 +500,19 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.867 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.929 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)
 #> # A tibble: 6 × 10
 #>   pseudotime tissue sample      cell_group proportion_mean proportion_lower
 #>        <dbl> <fct>  <chr>       <chr>                <dbl>            <dbl>
-#> 1    -0.0296 blood  fs_grid_001 B1                 0.0668           0.0418 
-#> 2    -0.0296 blood  fs_grid_001 B2                 0.0229           0.0128 
-#> 3    -0.0296 blood  fs_grid_001 B3                 0.0102           0.00634
-#> 4    -0.0296 blood  fs_grid_001 BM                 0.00664          0.00402
-#> 5    -0.0296 blood  fs_grid_001 CD4 1              0.0277           0.0164 
-#> 6    -0.0296 blood  fs_grid_001 CD4 2              0.0427           0.0235 
+#> 1    -0.0296 blood  fs_grid_001 B1                 0.0677           0.0434 
+#> 2    -0.0296 blood  fs_grid_001 B2                 0.0222           0.0112 
+#> 3    -0.0296 blood  fs_grid_001 B3                 0.0101           0.00587
+#> 4    -0.0296 blood  fs_grid_001 BM                 0.00643          0.00382
+#> 5    -0.0296 blood  fs_grid_001 CD4 1              0.0279           0.0151 
+#> 6    -0.0296 blood  fs_grid_001 CD4 2              0.0418           0.0215 
 #> # ℹ 4 more variables: proportion_upper <dbl>, unconstrained_mean <dbl>,
 #> #   unconstrained_lower <dbl>, unconstrained_upper <dbl>
 ```
@@ -605,7 +605,7 @@ would be misleading.
     #> [1] stats     graphics  grDevices utils     datasets  methods   base     
     #> 
     #> other attached packages:
-    #> [1] sccomp_2.5.2      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      
+    #> [1] sccomp_2.5.3      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      
     #> [5] dplyr_1.2.1      
     #> 
     #> loaded via a namespace (and not attached):
