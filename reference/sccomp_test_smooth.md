@@ -359,7 +359,7 @@ differ?".
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              72      -4.787e+05      3.573e-03   2.246e-01    6.625e-01  6.625e-01      4603 -3.856e+03 -3.895e+03                   
 #> Path [50] :Best Iter: [46] ELBO (-3856.403656) evaluations: (4603) 
-#> Finished in  25.9 seconds.
+#> Finished in  21.4 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -368,7 +368,7 @@ differ?".
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.08 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.065 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 12
 #>    cell_group smooth from  to    c_lower c_effect c_upper   c_pH0   c_FDR c_rhat

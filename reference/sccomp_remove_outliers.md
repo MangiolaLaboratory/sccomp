@@ -416,7 +416,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              54      -4.787e+05      1.441e-02   2.392e-01    1.000e+00  1.000e+00      2988 -3.694e+03 -3.694e+03                   
 #> Path [50] :Best Iter: [54] ELBO (-3693.549752) evaluations: (2988) 
-#> Finished in  13.7 seconds.
+#> Finished in  11.0 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -425,7 +425,7 @@ print("cmdstanr is needed to run this example.")
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 4.327 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 3.159 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> sccomp says: outlier identification - step 1/2
 #> Loading model from cache...
@@ -629,10 +629,10 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.262e+05      1.385e-02   2.135e-01    1.000e+00  1.000e+00      4493 -3.292e+03 -3.296e+03                   
 #> Path [50] :Best Iter: [68] ELBO (-3291.640161) evaluations: (4493) 
-#> Finished in  21.1 seconds.
+#> Finished in  16.9 seconds.
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 21.386 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 15.666 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> sccomp says: outlier-free model fitting - step 2/2
 #> sccomp says: model design matrices
@@ -840,7 +840,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.262e+05      1.385e-02   2.135e-01    1.000e+00  1.000e+00      4493 -3.292e+03 -3.296e+03                   
 #> Path [50] :Best Iter: [68] ELBO (-3291.640161) evaluations: (4493) 
-#> Finished in  18.2 seconds.
+#> Finished in  14.9 seconds.
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 # }
 ```

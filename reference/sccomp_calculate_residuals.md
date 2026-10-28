@@ -122,8 +122,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000318 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 3.18 seconds. 
+#> Gradient evaluation took 0.000263 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 2.63 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -143,7 +143,7 @@ print(residuals)
 #>    700        -3699.562             0.180            0.002   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
-#> Finished in  2.3 seconds.
+#> Finished in  1.8 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -152,7 +152,7 @@ print(residuals)
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.532 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.384 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 720 × 5
 #>    sample cell_group residuals exposure residuals_unconstrained

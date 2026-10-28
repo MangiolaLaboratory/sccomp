@@ -1,6 +1,8 @@
-# simulate_data
+# DEPRECATED: simulate_data
 
-This function simulates data from a fitted model.
+This function is DEPRECATED. Please use
+[`sccomp_simulate`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_simulate.md)
+instead.
 
 ## Usage
 
@@ -13,7 +15,7 @@ simulate_data(
   .sample = NULL,
   .cell_group = NULL,
   .coefficients = NULL,
-  variability_multiplier = 5,
+  variability_multiplier = 1,
   number_of_draws = 1,
   mcmc_seed = sample_seed(),
   cores = detectCores(),
@@ -55,7 +57,10 @@ simulate_data(
 
 - .coefficients:
 
-  The column names for coefficients, for example, c(b_0, b_1)
+  The column names for coefficients, for example, c(b_0, b_1). Use the
+  `coefficients` argument of
+  [`sccomp_simulate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_simulate.md)
+  instead.
 
 - variability_multiplier:
 
@@ -91,67 +96,5 @@ simulate_data(
 
 ## Value
 
-A tibble (`tbl`) with the following columns:
-
-- **sample** - A character column representing the sample name.
-
-- **type** - A factor column representing the type of the sample.
-
-- **phenotype** - A factor column representing the phenotype in the
-  data.
-
-- **count** - An integer column representing the original cell counts.
-
-- **cell_group** - A character column representing the cell group
-  identifier.
-
-- **b_0** - A numeric column representing the first coefficient used for
-  simulation.
-
-- **b_1** - A numeric column representing the second coefficient used
-  for simulation.
-
-- **generated_proportions** - A numeric column representing the
-  generated proportions from the simulation.
-
-- **generated_counts** - An integer column representing the generated
-  cell counts from the simulation.
-
-- **replicate** - An integer column representing the replicate number
-  for each draw from the posterior distribution.
-
-## References
-
-S. Mangiola, A.J. Roth-Schulze, M. Trussart, E. Zozaya-Valdés, M. Ma, Z.
-Gao, A.F. Rubin, T.P. Speed, H. Shim, & A.T. Papenfuss, sccomp: Robust
-differential composition and variability analysis for single-cell data,
-Proc. Natl. Acad. Sci. U.S.A. 120 (33) e2203828120,
-https://doi.org/10.1073/pnas.2203828120 (2023).
-
-## Examples
-
-``` r
-
-# print("cmdstanr is needed to run this example.")
-# Note: Before running the example, ensure that the 'cmdstanr' package is installed:
-# install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))
-
-# \donttest{
-#   if (instantiate::stan_cmdstan_exists()) {
-#     data("counts_obj")
-#     library(dplyr)
-
-#     estimate = sccomp_estimate(
-#       counts_obj,
-#       ~ type, ~1, "sample", "cell_group", "count",
-#       cores = 1
-#     )
-
-#     # Set coefficients for cell_groups. In this case all coefficients are 0 for simplicity.
-#     counts_obj = counts_obj |> mutate(b_0 = 0, b_1 = 0)
-
-#     # Simulate data
-#     simulate_data(counts_obj, estimate, ~type, ~1, sample, cell_group, c(b_0, b_1))
-#   }
-# }
-```
+See
+[`sccomp_simulate`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_simulate.md).

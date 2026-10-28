@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2026-10-27</h4>
+            <h4 data-toc-skip class="date">2026-10-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/splines.Rmd" class="external-link"><code>vignettes/splines.Rmd</code></a></small>
       <div class="d-none name"><code>splines.Rmd</code></div>
@@ -244,7 +244,7 @@ covariates the formula needs — here, <code>type</code>):</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.291 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.955 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span>
@@ -323,7 +323,7 @@ contrast, so the test isolates the pseudotime effect.</p>
 <span><span class="co">#&gt; Loading model from cache...</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.085 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.068 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 7</span></span></span>
 <span><span class="co">#&gt;    cell_group from  to    c_effect c_lower c_upper    c_FDR</span></span>
@@ -361,7 +361,7 @@ over two <strong>intervals</strong> instead (each sampled at
 <span><span class="co">#&gt; Loading model from cache...</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.138 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.805 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 7</span></span></span>
 <span><span class="co">#&gt;    cell_group from   to     c_effect c_lower c_upper    c_FDR</span></span>
@@ -406,7 +406,7 @@ column.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.277 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.939 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_k3</span> <span class="op">|&gt;</span></span>
@@ -551,7 +551,7 @@ deviation blocks.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid_fs</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.929 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.421 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred_fs</span><span class="op">)</span></span>
@@ -652,7 +652,7 @@ effects.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] sccomp_2.5.3      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      </span></span>
+<span><span class="co">#&gt; [1] sccomp_2.5.4      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      </span></span>
 <span><span class="co">#&gt; [5] dplyr_1.2.1      </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>

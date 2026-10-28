@@ -159,7 +159,7 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.291 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.955 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
@@ -249,7 +249,7 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.085 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.068 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from  to    c_effect c_lower c_upper    c_FDR
@@ -290,7 +290,7 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.138 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.805 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from   to     c_effect c_lower c_upper    c_FDR
@@ -339,7 +339,7 @@ pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.277 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.939 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -500,7 +500,7 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.929 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.421 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)
@@ -605,7 +605,7 @@ would be misleading.
     #> [1] stats     graphics  grDevices utils     datasets  methods   base     
     #> 
     #> other attached packages:
-    #> [1] sccomp_2.5.3      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      
+    #> [1] sccomp_2.5.4      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      
     #> [5] dplyr_1.2.1      
     #> 
     #> loaded via a namespace (and not attached):

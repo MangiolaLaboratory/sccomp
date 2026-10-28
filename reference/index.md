@@ -40,6 +40,8 @@
   : sccomp_replicate
 - [`sccomp_scatterplot()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_scatterplot.md)
   : sccomp_scatterplot
+- [`sccomp_simulate()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_simulate.md)
+  : sccomp_simulate
 - [`sccomp_stan_models_cache_dir`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_stan_models_cache_dir.md)
   : Default cache directory for Stan models
 - [`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md)
@@ -53,4 +55,4 @@
 - [`seurat_obj`](https://mangiolalaboratory.github.io/sccomp/reference/seurat_obj.md)
   : seurat_obj
 - [`simulate_data()`](https://mangiolalaboratory.github.io/sccomp/reference/simulate_data.md)
-  : simulate_data
+  : DEPRECATED: simulate_data
