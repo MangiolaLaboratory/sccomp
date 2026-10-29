@@ -1950,7 +1950,7 @@ sample_seed = function(){
 
 #' Inverse softmax transform (log-ratio transform with sum-to-zero normalization)
 #' 
-#' Transforms proportions to unconstrained (logit) scale by applying the inverse
+#' Transforms proportions to unconstrained (centered log-ratio) scale by applying the inverse
 #' of the softmax function. This is the inverse operation of softmax, which converts
 #' a vector of real numbers to a probability distribution.
 #' 
@@ -1965,7 +1965,7 @@ sample_seed = function(){
 #'   Values should be positive and non-zero (log(0) is undefined).
 #' 
 #' @return A numeric vector of the same length as `proportions`, containing the
-#'   unconstrained (logit) values normalized to sum-to-zero.
+#'   unconstrained (centered log-ratio) values normalized to sum-to-zero.
 #' 
 #' @examples
 #' # Example proportions

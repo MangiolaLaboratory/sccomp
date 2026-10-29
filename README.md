@@ -669,7 +669,7 @@ res
 The estimated effects are expressed in the unconstrained space of the
 parameters, similar to differential expression analysis that expresses
 changes in terms of log fold change. However, for differences in
-proportion, logit fold change must be used, which is harder to interpret
+proportion, centered log-ratio fold change must be used, which is harder to interpret
 and understand.
 
 Therefore, we provide a more intuitive proportional fold change that can

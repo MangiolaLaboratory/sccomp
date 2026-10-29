@@ -24,7 +24,7 @@ sccomp_boxplot(
 
 \item{significance_statistic}{Character vector indicating which statistic is used to colour significant groups. Defaults to \code{c("pH0", "FDR")}.}
 
-\item{test_composition_above_logit_fold_change}{A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10\% for a cell type with a baseline proportion of 50\% (e.g., from 45\% to 55\%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.}
+\item{test_composition_above_logit_fold_change}{A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10\% for a cell type with a baseline proportion of 50\% (e.g., from 45\% to 55\%). This threshold is consistent on the centered log-ratio-unconstrained scale, even when the baseline proportion is close to 0 or 1.}
 
 \item{remove_unwanted_effects}{A logical value indicating whether to remove unwanted variation from the data before plotting. Defaults to \code{FALSE}.}
 

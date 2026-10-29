@@ -22,7 +22,7 @@
 
 \item{significance_threshold}{Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.}
 
-\item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
+\item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the centered log-ratio uncontrained scale.}
 
 \item{significance_statistic}{Character vector indicating which statistic to highlight. Default is "pH0".}
 

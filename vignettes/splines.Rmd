@@ -186,7 +186,7 @@ The individual `s(pseudotime, k = 5)__*` parameters from `sccomp_test()`
 cannot be interpreted one-by-one. The scientific question is usually "does
 composition differ between two points (or intervals) of pseudotime?".
 `sccomp_test_smooth()` answers exactly that: it predicts the **mean**
-composition (logit scale) at the two positions, forms the per-draw contrast
+composition (centered log-ratio scale) at the two positions, forms the per-draw contrast
 `mu(to) - mu(from)`, and runs it through the same probability-of-null /
 FDR machinery as `sccomp_test()` — so `c_effect`, `c_pH0` and `c_FDR` mean
 the same thing here as everywhere else in sccomp.
@@ -206,7 +206,7 @@ fit |>
   select(cell_group, from, to, c_effect, c_lower, c_upper, c_FDR)
 ```
 
-A positive `c_effect` means the cell group is (on the logit scale) more
+A positive `c_effect` means the cell group is (on the centered log-ratio scale) more
 abundant at pseudotime 5 than at pseudotime 1; `c_FDR` controls the
 false-discovery rate across cell groups.
 

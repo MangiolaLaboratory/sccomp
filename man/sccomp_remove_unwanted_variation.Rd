@@ -30,7 +30,7 @@ A tibble (\code{tbl}) with the following columns:
 \item \strong{cell_group} - A character column representing the cell group being tested.
 \item \strong{adjusted_proportion} - A numeric column representing the adjusted proportion after removing unwanted variation.
 \item \strong{adjusted_counts} - A numeric column representing the adjusted counts after removing unwanted variation.
-\item \strong{logit_residuals} - A numeric column representing the logit residuals calculated after adjustment.
+\item \strong{logit_residuals} - A numeric column representing the centered log-ratio residuals calculated after adjustment.
 }
 }
 \description{
