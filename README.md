@@ -159,7 +159,7 @@ sccomp_result |> sccomp_boxplot(factor = "type", cache_stan_model = "/opt/sccomp
 |----|----|
 | `sccomp_estimate` | Fit the model onto the data, and estimate the coefficients |
 | `sccomp_remove_outliers` | Identify outliers probabilistically based on the model fit, and exclude them from the estimation |
-| `sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change) |
+| `sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_CLR_fold_change) |
 | `sccomp_replicate` | Simulate data from the model, or part of the model |
 | `sccomp_predict` | Predicts proportions, based on the model, or part of the model |
 | `sccomp_remove_unwanted_effects` | Removes the variability for unwanted factors |

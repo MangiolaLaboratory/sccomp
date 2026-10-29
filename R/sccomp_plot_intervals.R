@@ -5,7 +5,7 @@
 #'
 #' @param .data Data frame containing the main data.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences.
-#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the centered log-ratio uncontrained scale.
+#' @param test_composition_above_CLR_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the centered log-ratio uncontrained scale.
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
 #' @param factor Optional character string selecting one model factor to plot. If provided, plots are restricted to that factor plus `(Intercept)`.
@@ -48,7 +48,7 @@ sccomp_plot_intervals_1D = function(
     .data,
     factor = NULL,
     significance_threshold = 0.05,
-    test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"),
+    test_composition_above_CLR_fold_change = .data |> attr("test_composition_above_CLR_fold_change"),
     show_fdr_message = TRUE,
   significance_statistic = c("pH0", "FDR"),
   sort_by = c("none", "effect", "significance", "alphabetical")
@@ -122,8 +122,8 @@ sccomp_plot_intervals_1D = function(
         }
 
         ggplot(plot_data, aes(x = effect, y = y_var)) +
-          geom_vline(xintercept = test_composition_above_logit_fold_change, colour = "grey") +
-          geom_vline(xintercept = -test_composition_above_logit_fold_change, colour = "grey") +
+          geom_vline(xintercept = test_composition_above_CLR_fold_change, colour = "grey") +
+          geom_vline(xintercept = -test_composition_above_CLR_fold_change, colour = "grey") +
           geom_errorbar(color_aes) +
           geom_point() +
           color_scale +
@@ -166,7 +166,7 @@ sccomp_plot_intervals_1D = function(
 #'
 #' @param .data Data frame containing the main data.
 #' @param significance_threshold Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.
-#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test.
+#' @param test_composition_above_CLR_fold_change A positive integer. It is the effect threshold used for the hypothesis test.
 #' @param show_fdr_message Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.
 #' @param significance_statistic Character vector indicating which statistic to highlight. Default is "pH0".
 #' @param factor Optional character string selecting one model factor to plot. If provided, plots are restricted to that factor plus `(Intercept)`.
@@ -213,8 +213,8 @@ sccomp_plot_intervals_2D <- function(
     .data,
     factor = NULL,
     significance_threshold = 0.05,
-    test_composition_above_logit_fold_change =
-      .data |> attr("test_composition_above_logit_fold_change"),
+    test_composition_above_CLR_fold_change =
+      .data |> attr("test_composition_above_CLR_fold_change"),
     show_fdr_message = TRUE,
     significance_statistic = c("pH0", "FDR"),
     add_marginal_density = TRUE,
@@ -619,15 +619,15 @@ sccomp_plot_intervals_2D <- function(
         mutate(parameter = factor(as.character(parameter), levels = param_order))
     }
 
-    # Decision boundary at ± test_composition_above_logit_fold_change: cells
+    # Decision boundary at ± test_composition_above_CLR_fold_change: cells
     # outside this box are the only ones a hypothesis test could call significant.
     p <- ggplot(plot_data, aes(c_effect, v_effect)) +
       geom_vline(
-        xintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change),
+        xintercept = c(-test_composition_above_CLR_fold_change, test_composition_above_CLR_fold_change),
         colour = "grey", linetype = "dashed", linewidth = 0.3
       ) +
       geom_hline(
-        yintercept = c(-test_composition_above_logit_fold_change, test_composition_above_logit_fold_change),
+        yintercept = c(-test_composition_above_CLR_fold_change, test_composition_above_CLR_fold_change),
         colour = "grey", linetype = "dashed", linewidth = 0.3
       )
 

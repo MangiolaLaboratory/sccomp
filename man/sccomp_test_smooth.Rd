@@ -12,7 +12,7 @@ sccomp_test_smooth(
   comparison = c("endpoints", "average"),
   at = NULL,
   resolution = 20L,
-  test_composition_above_logit_fold_change = 0.1,
+  test_composition_above_CLR_fold_change = 0.1,
   percent_false_positive = 5,
   number_of_draws = 500,
   mcmc_seed = sample_seed(),
@@ -43,7 +43,7 @@ at their first observed value (which cancels for non-grouping covariates).}
 \item{resolution}{Integer. Number of grid points used to approximate each
 interval average when \code{comparison = "average"}.}
 
-\item{test_composition_above_logit_fold_change}{Positive numeric. Effect
+\item{test_composition_above_CLR_fold_change}{Positive numeric. Effect
 threshold for the hypothesis test, on the centered log-ratio scale — identical meaning
 to the argument of \code{\link[=sccomp_test]{sccomp_test()}}.}
 
