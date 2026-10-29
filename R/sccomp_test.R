@@ -5,7 +5,7 @@
 #' @param .data A tibble. The result of sccomp_estimate.
 #' @param contrasts A vector of character strings. For example if your formula is `~ 0 + treatment` and the factor treatment has values `yes` and `no`, your contrast could be "constrasts = c(treatmentyes - treatmentno)".
 #' @param percent_false_positive A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.
-#' @param test_composition_above_logit_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.
+#' @param test_composition_above_CLR_fold_change A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the centered log-ratio uncontrained scale.
 #' @param pass_fit A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.
 #'
 #' @return A tibble (`tbl`), with the following columns:
@@ -16,7 +16,7 @@
 #'   \item c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.
 #'   \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
 #'   \item c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.
-#'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_logit_fold_change` argument.
+#'   \item c_pH0 - Probability of the c_effect being smaller or bigger than the `test_composition_above_CLR_fold_change` argument.
 #'   \item c_FDR - False-discovery rate of the null hypothesis (no difference) for a composition (c).
 #'   \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better.
 #'   \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.
@@ -57,7 +57,7 @@
 sccomp_test <- function(.data,
                         contrasts = NULL,
                         percent_false_positive = 5,
-                        test_composition_above_logit_fold_change = 0.1,
+                        test_composition_above_CLR_fold_change = 0.1,
                         pass_fit = TRUE) {
   
   # Run the function
@@ -76,7 +76,7 @@ sccomp_test <- function(.data,
 sccomp_test.sccomp_tbl = function(.data,
                                   contrasts = NULL,
                                   percent_false_positive = 5,
-                                  test_composition_above_logit_fold_change = 0.1,
+                                  test_composition_above_CLR_fold_change = 0.1,
                                   pass_fit = TRUE){
   
 
@@ -92,7 +92,7 @@ sccomp_test.sccomp_tbl = function(.data,
     get_abundance_contrast_draws(.data, contrasts) |>
       draws_to_statistics(
         percent_false_positive / 100,
-        test_composition_above_logit_fold_change,
+        test_composition_above_CLR_fold_change,
         !!.cell_group,
         "c_"
       )
@@ -107,7 +107,7 @@ sccomp_test.sccomp_tbl = function(.data,
       variability_draws |>
         draws_to_statistics(
           percent_false_positive / 100,
-          test_composition_above_logit_fold_change,
+          test_composition_above_CLR_fold_change,
           !!.cell_group,
           "v_"
         )
@@ -137,7 +137,7 @@ sccomp_test.sccomp_tbl = function(.data,
     # TEMPORARILY DROPPING KHAT
     # select(-contains("n_eff"), -contains("_hat")) |> 
     
-    add_attr(test_composition_above_logit_fold_change, "test_composition_above_logit_fold_change") |>
+    add_attr(test_composition_above_CLR_fold_change, "test_composition_above_CLR_fold_change") |>
     
     # Attach association mean concentration
     add_attr(.data |> attr("model_input") , "model_input") |>
@@ -832,7 +832,7 @@ mutate_from_expr_list = function(x, formula_expr, ignore_errors = TRUE){
 #' @importFrom dplyr pull
 #' @importFrom posterior as_draws_df summarise_draws rhat ess_bulk ess_tail
 #' @noRd
-draws_to_statistics = function(draws, false_positive_rate, test_composition_above_logit_fold_change, .cell_group, prefix = ""){
+draws_to_statistics = function(draws, false_positive_rate, test_composition_above_CLR_fold_change, .cell_group, prefix = ""){
   
   # Define the variables as NULL to avoid CRAN NOTES
   M <- NULL
@@ -887,8 +887,8 @@ draws_to_statistics = function(draws, false_positive_rate, test_composition_abov
     draws %>%
     group_by(!!.cell_group, M, parameter) %>%
     summarise(
-      bigger_zero = sum(.value > test_composition_above_logit_fold_change, na.rm = TRUE),
-      smaller_zero = sum(.value < -test_composition_above_logit_fold_change, na.rm = TRUE),
+      bigger_zero = sum(.value > test_composition_above_CLR_fold_change, na.rm = TRUE),
+      smaller_zero = sum(.value < -test_composition_above_CLR_fold_change, na.rm = TRUE),
       n = n(),
       .groups = "drop"
     )

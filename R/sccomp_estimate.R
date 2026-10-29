@@ -736,7 +736,7 @@ sccomp_estimate.data.frame <- function(.data,
     )
   
   message("sccomp says: to do hypothesis testing run `sccomp_test()`,
-  the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+  the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).")
   
@@ -783,7 +783,7 @@ sccomp_glm_data_frame_raw = function(.data,
                                      check_outliers = TRUE,
                                      variational_inference = NULL,
                                      inference_method = "variational",
-                                     test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
+                                     test_composition_above_CLR_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                      output_directory = "sccomp_draws_files",
                                      verbose = FALSE,
                                      exclude_mean_variability_association = FALSE,
@@ -868,7 +868,7 @@ sccomp_glm_data_frame_raw = function(.data,
       enable_loo = enable_loo,
       use_data = use_data,
       cores = cores,
-      test_composition_above_logit_fold_change = test_composition_above_logit_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
+      test_composition_above_CLR_fold_change = test_composition_above_CLR_fold_change, .sample_cell_group_pairs_to_exclude = !!.sample_cell_group_pairs_to_exclude,
       verbose = verbose,
       output_directory = output_directory,
       mcmc_seed = mcmc_seed,
@@ -897,7 +897,7 @@ sccomp_glm_data_frame_counts = function(.data,
                                         check_outliers = TRUE,
                                         variational_inference = NULL,
                                         inference_method = "variational",
-                                        test_composition_above_logit_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
+                                        test_composition_above_CLR_fold_change = 0.1, .sample_cell_group_pairs_to_exclude = NULL,
                                         output_directory = "sccomp_draws_files",
                                         verbose = FALSE,
                                         exclude_mean_variability_association = FALSE,
@@ -950,9 +950,9 @@ sccomp_glm_data_frame_counts = function(.data,
   # Make rectangular data
   .data = .data |> make_rectangular_data(!!.sample, !!.cell_group, !!.count, formula_composition)
   
-  # Check if test_composition_above_logit_fold_change is 0, as the Bayesian FDR does not allow it
-  if(test_composition_above_logit_fold_change <= 0)
-    stop("sccomp says: test_composition_above_logit_fold_change should be > 0 for the FDR to be calculated in the Bayesian context (doi: 10.1093/biostatistics/kxw041). Also, testing for > 0 differences avoids significant but meaningless (because of the small magnitude) estimates.")
+  # Check if test_composition_above_CLR_fold_change is 0, as the Bayesian FDR does not allow it
+  if(test_composition_above_CLR_fold_change <= 0)
+    stop("sccomp says: test_composition_above_CLR_fold_change should be > 0 for the FDR to be calculated in the Bayesian context (doi: 10.1093/biostatistics/kxw041). Also, testing for > 0 differences avoids significant but meaningless (because of the small magnitude) estimates.")
   
   
   # Check if any column is NA or null

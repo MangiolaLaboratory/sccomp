@@ -6,9 +6,9 @@
 #' that accounts for the model's uncertainty and covariate effects.
 #' 
 #' Note! This statistic is descriptive and should not be used to define significance - use sccomp_test() for that. 
-#' While fold changes in proportions are easier to interpret than changes in logit space, they are not linear 
+#' While fold changes in proportions are easier to interpret than changes in centered log-ratio space, they are not linear 
 #' (the same proportional change has different meaning for rare vs abundant cell types). In contrast, 
-#' the logit scale used internally by sccomp provides linear effects that are more appropriate for statistical inference.
+#' the centered log-ratio scale used internally by sccomp provides linear effects that are more appropriate for statistical inference.
 #'
 #' @param .data A sccomp estimate object (of class 'sccomp_tbl') obtained from running sccomp_estimate().
 #'              This object contains the fitted model and estimated effects.

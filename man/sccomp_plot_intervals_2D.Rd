@@ -8,8 +8,8 @@ sccomp_plot_intervals_2D(
   .data,
   factor = NULL,
   significance_threshold = 0.05,
-  test_composition_above_logit_fold_change = attr(.data,
-    "test_composition_above_logit_fold_change"),
+  test_composition_above_CLR_fold_change = attr(.data,
+    "test_composition_above_CLR_fold_change"),
   show_fdr_message = TRUE,
   significance_statistic = c("pH0", "FDR"),
   add_marginal_density = TRUE,
@@ -23,7 +23,7 @@ sccomp_plot_intervals_2D(
 
 \item{significance_threshold}{Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.}
 
-\item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test.}
+\item{test_composition_above_CLR_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test.}
 
 \item{show_fdr_message}{Logical. Whether to show the Bayesian FDR interpretation message on the plot. Default is TRUE.}
 
