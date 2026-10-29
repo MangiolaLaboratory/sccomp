@@ -12,7 +12,7 @@
 #' @param factor A character string specifying the factor of interest included in the model for stratifying the boxplot.
 #' @param significance_threshold A numeric value indicating the threshold for labeling significant cell-groups. Defaults to 0.05.
 #' @param significance_statistic Character vector indicating which statistic is used to colour significant groups. Defaults to `c("pH0", "FDR")`.
-#' @param test_composition_above_logit_fold_change A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10% for a cell type with a baseline proportion of 50% (e.g., from 45% to 55%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.
+#' @param test_composition_above_CLR_fold_change A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10% for a cell type with a baseline proportion of 50% (e.g., from 45% to 55%). This threshold is consistent on the centered log-ratio-unconstrained scale, even when the baseline proportion is close to 0 or 1.
 #' @param remove_unwanted_effects A logical value indicating whether to remove unwanted variation from the data before plotting. Defaults to `FALSE`.
 #' @param cache_stan_model A character string specifying the cache directory for compiled Stan models. Default is `sccomp_stan_models_cache_dir` which points to `~/.sccomp_models`. Use a custom path in restricted environments where the default is not writable.
 #'
@@ -56,7 +56,7 @@ sccomp_boxplot = function(
     factor, 
     significance_threshold = 0.05, 
     significance_statistic = c("pH0", "FDR"),
-    test_composition_above_logit_fold_change = .data |> attr("test_composition_above_logit_fold_change"),
+    test_composition_above_CLR_fold_change = .data |> attr("test_composition_above_CLR_fold_change"),
     remove_unwanted_effects = FALSE,
     cache_stan_model = sccomp_stan_models_cache_dir
 ){

@@ -8,7 +8,7 @@ sccomp_test(
   .data,
   contrasts = NULL,
   percent_false_positive = 5,
-  test_composition_above_logit_fold_change = 0.1,
+  test_composition_above_CLR_fold_change = 0.1,
   pass_fit = TRUE
 )
 }
@@ -19,7 +19,7 @@ sccomp_test(
 
 \item{percent_false_positive}{A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.}
 
-\item{test_composition_above_logit_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.}
+\item{test_composition_above_CLR_fold_change}{A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10\% for a cell type with baseline proportion of 50\%. That is, a cell type goes from 45\% to 50\%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the centered log-ratio uncontrained scale.}
 
 \item{pass_fit}{A boolean. Whether to pass the Stan fit as attribute in the output. Because the Stan fit can be very large, setting this to FALSE can be used to lower the memory imprint to save the output.}
 }
@@ -32,7 +32,7 @@ A tibble (\code{tbl}), with the following columns:
 \item c_lower - Lower (2.5\%) quantile of the posterior distribution for a composition (c) parameter.
 \item c_effect - Mean of the posterior distribution for a composition (c) parameter.
 \item c_upper - Upper (97.5\%) quantile of the posterior distribution for a composition (c) parameter.
-\item c_pH0 - Probability of the c_effect being smaller or bigger than the \code{test_composition_above_logit_fold_change} argument.
+\item c_pH0 - Probability of the c_effect being smaller or bigger than the \code{test_composition_above_CLR_fold_change} argument.
 \item c_FDR - False-discovery rate of the null hypothesis (no difference) for a composition (c).
 \item c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better.
 \item c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.

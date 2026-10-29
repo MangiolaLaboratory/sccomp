@@ -12,7 +12,7 @@ sccomp_test_smooth(
   comparison = c("endpoints", "average"),
   at = NULL,
   resolution = 20L,
-  test_composition_above_logit_fold_change = 0.1,
+  test_composition_above_CLR_fold_change = 0.1,
   percent_false_positive = 5,
   number_of_draws = 500,
   mcmc_seed = sample_seed(),
@@ -43,8 +43,8 @@ at their first observed value (which cancels for non-grouping covariates).}
 \item{resolution}{Integer. Number of grid points used to approximate each
 interval average when \code{comparison = "average"}.}
 
-\item{test_composition_above_logit_fold_change}{Positive numeric. Effect
-threshold for the hypothesis test, on the logit scale — identical meaning
+\item{test_composition_above_CLR_fold_change}{Positive numeric. Effect
+threshold for the hypothesis test, on the centered log-ratio scale — identical meaning
 to the argument of \code{\link[=sccomp_test]{sccomp_test()}}.}
 
 \item{percent_false_positive}{Numeric in (0, 100). Used for the credible
@@ -66,7 +66,7 @@ A tibble with one row per cell group:
 \item \code{smooth} — the continuous covariate tested.
 \item \code{from}, \code{to} — the compared positions (as labels).
 \item \code{c_lower}, \code{c_effect}, \code{c_upper} — 95\% CI and posterior
-mean of the logit-scale contrast \eqn{\mu(\code{to}) - \mu(\code{from})}.
+mean of the centered log-ratio-scale contrast \eqn{\mu(\code{to}) - \mu(\code{from})}.
 \item \code{c_pH0} — probability the effect is within the null region.
 \item \code{c_FDR} — false-discovery rate across cell groups.
 }
@@ -74,7 +74,7 @@ mean of the logit-scale contrast \eqn{\mu(\code{to}) - \mu(\code{from})}.
 \description{
 Tests whether the mean cell-group composition differs between two positions
 (or two intervals) of a continuous covariate modelled with a smooth \code{s()}
-term. The test is a contrast of the model's mean prediction on the logit
+term. The test is a contrast of the model's mean prediction on the centered log-ratio
 scale, evaluated at the two positions and summarised with the same
 probability-of-null (\code{pH0}) and false-discovery-rate (\code{FDR}) machinery as
 \code{\link[=sccomp_test]{sccomp_test()}}.
@@ -92,7 +92,7 @@ values; the contrast is \eqn{\mu(\code{to}) - \mu(\code{from})}.
 }
 
 Any covariate not being varied cancels out of the contrast because the
-logit-scale predictor is additive; it therefore does not matter what value
+centered log-ratio-scale predictor is additive; it therefore does not matter what value
 those covariates take, as long as it is held constant. For factor smooths
 (\code{s(x, g, bs = "fs")}) or by-factor smooths (\code{s(x, by = g)}) the
 grouping factor selects \emph{which} curve is tested; set it via \code{at},
