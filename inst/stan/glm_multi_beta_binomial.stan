@@ -656,8 +656,8 @@ model{
   for(a in 1:A) log_prec_sd[a] ~ normal(prior_prec_sd[1], prior_prec_sd[2]);
 
   // // Priors abundance - use correct scale for sum_to_zero_vector
-  for(c in 1:B_intercept_columns) beta_raw[c] ~ normal ( prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
-  if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) beta_raw[c] ~ normal ( prior_mean_coefficients[1], prior_mean_coefficients[2] * inv(sqrt(1 - inv(M))) );
+  for(c in 1:B_intercept_columns) beta_raw[c] ~ student_t ( 3, prior_mean_intercept[1], prior_mean_intercept[2] * inv(sqrt(1 - inv(M))) );
+  if(C>B_intercept_columns) for(c in (B_intercept_columns+1):C) beta_raw[c] ~ student_t ( 3, prior_mean_coefficients[1], prior_mean_coefficients[2] * inv(sqrt(1 - inv(M))) );
   
   // ----------------------------------------------------------------------
   // Random effect priors. Per-slot block, same pattern; the `if` keeps an
