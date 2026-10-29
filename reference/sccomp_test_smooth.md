@@ -3,9 +3,9 @@
 Tests whether the mean cell-group composition differs between two
 positions (or two intervals) of a continuous covariate modelled with a
 smooth `s()` term. The test is a contrast of the model's mean prediction
-on the logit scale, evaluated at the two positions and summarised with
-the same probability-of-null (`pH0`) and false-discovery-rate (`FDR`)
-machinery as
+on the centered log-ratio scale, evaluated at the two positions and
+summarised with the same probability-of-null (`pH0`) and
+false-discovery-rate (`FDR`) machinery as
 [`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md).
 
 ## Usage
@@ -19,7 +19,7 @@ sccomp_test_smooth(
   comparison = c("endpoints", "average"),
   at = NULL,
   resolution = 20L,
-  test_composition_above_logit_fold_change = 0.1,
+  test_composition_above_CLR_fold_change = 0.1,
   percent_false_positive = 5,
   number_of_draws = 500,
   mcmc_seed = sample_seed(),
@@ -67,10 +67,10 @@ sccomp_test_smooth(
   Integer. Number of grid points used to approximate each interval
   average when `comparison = "average"`.
 
-- test_composition_above_logit_fold_change:
+- test_composition_above_CLR_fold_change:
 
   Positive numeric. Effect threshold for the hypothesis test, on the
-  logit scale — identical meaning to the argument of
+  centered log-ratio scale — identical meaning to the argument of
   [`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md).
 
 - percent_false_positive:
@@ -103,7 +103,8 @@ A tibble with one row per cell group:
 - `from`, `to` — the compared positions (as labels).
 
 - `c_lower`, `c_effect`, `c_upper` — 95% CI and posterior mean of the
-  logit-scale contrast \\\mu(\code{to}) - \mu(\code{from})\\.
+  centered log-ratio-scale contrast \\\mu(\code{to}) -
+  \mu(\code{from})\\.
 
 - `c_pH0` — probability the effect is within the null region.
 
@@ -123,11 +124,11 @@ interval" is ambiguous. Two comparison modes are provided:
   `resolution` points).
 
 Any covariate not being varied cancels out of the contrast because the
-logit-scale predictor is additive; it therefore does not matter what
-value those covariates take, as long as it is held constant. For factor
-smooths (`s(x, g, bs = "fs")`) or by-factor smooths (`s(x, by = g)`) the
-grouping factor selects *which* curve is tested; set it via `at`, e.g.
-`at = list(tissue = "tumor")`.
+centered log-ratio-scale predictor is additive; it therefore does not
+matter what value those covariates take, as long as it is held constant.
+For factor smooths (`s(x, g, bs = "fs")`) or by-factor smooths
+(`s(x, by = g)`) the grouping factor selects *which* curve is tested;
+set it via `at`, e.g. `at = list(tissue = "tumor")`.
 
 The test is about the **mean** composition: it uses the expected linear
 predictor (`mu_unconstrained`), not the overdispersed beta-binomial
@@ -359,16 +360,16 @@ differ?".
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              72      -4.787e+05      3.573e-03   2.246e-01    6.625e-01  6.625e-01      4603 -3.856e+03 -3.895e+03                   
 #> Path [50] :Best Iter: [46] ELBO (-3856.403656) evaluations: (4603) 
-#> Finished in  21.4 seconds.
+#> Finished in  14.7 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
-#>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+#>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.065 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.046 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 12
 #>    cell_group smooth from  to    c_lower c_effect c_upper   c_pH0   c_FDR c_rhat

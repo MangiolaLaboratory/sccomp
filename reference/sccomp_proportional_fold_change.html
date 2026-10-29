@@ -3,15 +3,15 @@
 The fold changes are derived from the model's posterior predictions rather than raw counts, providing a more robust estimate
 that accounts for the model's uncertainty and covariate effects.
 Note! This statistic is descriptive and should not be used to define significance - use sccomp_test() for that.
-While fold changes in proportions are easier to interpret than changes in logit space, they are not linear
+While fold changes in proportions are easier to interpret than changes in centered log-ratio space, they are not linear
 (the same proportional change has different meaning for rare vs abundant cell types). In contrast,
-the logit scale used internally by sccomp provides linear effects that are more appropriate for statistical inference."><meta property="og:description" content="This function calculates the proportional fold change between two conditions using the estimated effects from a sccomp model.
+the centered log-ratio scale used internally by sccomp provides linear effects that are more appropriate for statistical inference."><meta property="og:description" content="This function calculates the proportional fold change between two conditions using the estimated effects from a sccomp model.
 The fold changes are derived from the model's posterior predictions rather than raw counts, providing a more robust estimate
 that accounts for the model's uncertainty and covariate effects.
 Note! This statistic is descriptive and should not be used to define significance - use sccomp_test() for that.
-While fold changes in proportions are easier to interpret than changes in logit space, they are not linear
+While fold changes in proportions are easier to interpret than changes in centered log-ratio space, they are not linear
 (the same proportional change has different meaning for rare vs abundant cell types). In contrast,
-the logit scale used internally by sccomp provides linear effects that are more appropriate for statistical inference."></head><body>
+the centered log-ratio scale used internally by sccomp provides linear effects that are more appropriate for statistical inference."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -54,9 +54,9 @@ the logit scale used internally by sccomp provides linear effects that are more 
 The fold changes are derived from the model's posterior predictions rather than raw counts, providing a more robust estimate
 that accounts for the model's uncertainty and covariate effects.</p>
 <p>Note! This statistic is descriptive and should not be used to define significance - use sccomp_test() for that.
-While fold changes in proportions are easier to interpret than changes in logit space, they are not linear
+While fold changes in proportions are easier to interpret than changes in centered log-ratio space, they are not linear
 (the same proportional change has different meaning for rare vs abundant cell types). In contrast,
-the logit scale used internally by sccomp provides linear effects that are more appropriate for statistical inference.</p>
+the centered log-ratio scale used internally by sccomp provides linear effects that are more appropriate for statistical inference.</p>
     </div>
 
     <div class="section level2">
@@ -335,16 +335,16 @@ Positive values indicate increases, negative values indicate decreases.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              70      -4.787e+05      9.221e-03   2.334e-01    1.000e+00  1.000e+00      4468 -3.688e+03 -3.698e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [67] ELBO (-3688.114007) evaluations: (4468) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  11.1 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  7.6 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading model from cache...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.05 seconds (Generated Quantities) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.038 seconds (Generated Quantities) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 finished in 0.0 seconds.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 36 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    cell_group proportion_fold_change average_uncertainty statement              </span>

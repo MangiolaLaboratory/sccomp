@@ -59,7 +59,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2026-10-28</h4>
+            <h4 data-toc-skip class="date">2026-10-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/splines.Rmd" class="external-link"><code>vignettes/splines.Rmd</code></a></small>
       <div class="d-none name"><code>splines.Rmd</code></div>
@@ -244,7 +244,7 @@ covariates the formula needs — here, <code>type</code>):</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.955 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.7 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span>
@@ -303,8 +303,8 @@ e.g. CD8 1 peaks around pseudotime ≈ 4 — which a purely linear
 scientific question is usually “does composition differ between two
 points (or intervals) of pseudotime?”. <code><a href="../reference/sccomp_test_smooth.html">sccomp_test_smooth()</a></code>
 answers exactly that: it predicts the <strong>mean</strong> composition
-(logit scale) at the two positions, forms the per-draw contrast
-<code>mu(to) - mu(from)</code>, and runs it through the same
+(centered log-ratio scale) at the two positions, forms the per-draw
+contrast <code>mu(to) - mu(from)</code>, and runs it through the same
 probability-of-null / FDR machinery as <code><a href="../reference/sccomp_test.html">sccomp_test()</a></code> — so
 <code>c_effect</code>, <code>c_pH0</code> and <code>c_FDR</code> mean
 the same thing here as everywhere else in sccomp.</p>
@@ -323,7 +323,7 @@ contrast, so the test isolates the pseudotime effect.</p>
 <span><span class="co">#&gt; Loading model from cache...</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.068 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.048 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 7</span></span></span>
 <span><span class="co">#&gt;    cell_group from  to    c_effect c_lower c_upper    c_FDR</span></span>
@@ -340,9 +340,9 @@ contrast, so the test isolates the pseudotime effect.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> CD8 5      1     5        0.612   0.120   1.31  0.005<span style="text-decoration: underline;">00</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 26 more rows</span></span></span></code></pre></div>
 <p>A positive <code>c_effect</code> means the cell group is (on the
-logit scale) more abundant at pseudotime 5 than at pseudotime 1;
-<code>c_FDR</code> controls the false-discovery rate across cell
-groups.</p>
+centered log-ratio scale) more abundant at pseudotime 5 than at
+pseudotime 1; <code>c_FDR</code> controls the false-discovery rate
+across cell groups.</p>
 <p>Because the curve can wiggle, comparing two single points can be
 sensitive to the exact positions. Use
 <code>comparison = "average"</code> to contrast the average of the curve
@@ -361,7 +361,7 @@ over two <strong>intervals</strong> instead (each sampled at
 <span><span class="co">#&gt; Loading model from cache...</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.805 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.59 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 7</span></span></span>
 <span><span class="co">#&gt;    cell_group from   to     c_effect c_lower c_upper    c_FDR</span></span>
@@ -406,7 +406,7 @@ column.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.939 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.7 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_k3</span> <span class="op">|&gt;</span></span>
@@ -551,7 +551,7 @@ deviation blocks.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid_fs</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.421 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.061 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred_fs</span><span class="op">)</span></span>

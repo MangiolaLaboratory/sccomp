@@ -11,8 +11,8 @@ sccomp_plot_intervals_2D(
   .data,
   factor = NULL,
   significance_threshold = 0.05,
-  test_composition_above_logit_fold_change = attr(.data,
-    "test_composition_above_logit_fold_change"),
+  test_composition_above_CLR_fold_change = attr(.data,
+    "test_composition_above_CLR_fold_change"),
   show_fdr_message = TRUE,
   significance_statistic = c("pH0", "FDR"),
   add_marginal_density = TRUE,
@@ -36,7 +36,7 @@ sccomp_plot_intervals_2D(
   Numeric value specifying the significance threshold for highlighting
   differences. Default is 0.05.
 
-- test_composition_above_logit_fold_change:
+- test_composition_above_CLR_fold_change:
 
   A positive integer. It is the effect threshold used for the hypothesis
   test.
@@ -299,10 +299,10 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>             100      -4.787e+05      1.032e-01   7.250e+02    5.717e-01  5.717e-01      8218 -3.798e+03 -4.113e+03                   
 #> Path [50] :Best Iter: [35] ELBO (-3797.706566) evaluations: (8218) 
-#> Finished in  18.8 seconds.
+#> Finished in  13.2 seconds.
 #> Warning: Dropping 'draws_df' class as required metadata was removed.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
-#>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+#>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'

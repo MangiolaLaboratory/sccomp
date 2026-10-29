@@ -61,8 +61,8 @@ A tibble (`tbl`) with the following columns:
 - **adjusted_counts** - A numeric column representing the adjusted
   counts after removing unwanted variation.
 
-- **logit_residuals** - A numeric column representing the logit
-  residuals calculated after adjustment.
+- **logit_residuals** - A numeric column representing the centered
+  log-ratio residuals calculated after adjustment.
 
 ## References
 
@@ -302,9 +302,9 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              60      -4.787e+05      2.667e-03   2.269e-01    6.204e-01  6.204e-01      3577 -3.687e+03 -3.701e+03                   
 #> Path [50] :Best Iter: [58] ELBO (-3687.314444) evaluations: (3577) 
-#> Finished in  10.8 seconds.
+#> Finished in  7.5 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
-#>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+#>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
@@ -312,13 +312,13 @@ print("cmdstanr is needed to run this example.")
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.386 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.374 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> sccomp says: regressing out unwanted factors
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.385 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.295 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 # }
 ```

@@ -50,8 +50,8 @@ It highlights significant differences based on a given significance threshold.</
 <span>  <span class="va">.data</span>,</span>
 <span>  factor <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  significance_threshold <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  test_composition_above_logit_fold_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">.data</span>,</span>
-<span>    <span class="st">"test_composition_above_logit_fold_change"</span><span class="op">)</span>,</span>
+<span>  test_composition_above_CLR_fold_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">.data</span>,</span>
+<span>    <span class="st">"test_composition_above_CLR_fold_change"</span><span class="op">)</span>,</span>
 <span>  show_fdr_message <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  significance_statistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pH0"</span>, <span class="st">"FDR"</span><span class="op">)</span>,</span>
 <span>  add_marginal_density <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -75,7 +75,7 @@ It highlights significant differences based on a given significance threshold.</
 <dd><p>Numeric value specifying the significance threshold for highlighting differences. Default is 0.05.</p></dd>
 
 
-<dt id="arg-test-composition-above-logit-fold-change">test_composition_above_logit_fold_change<a class="anchor" aria-label="anchor" href="#arg-test-composition-above-logit-fold-change"></a></dt>
+<dt id="arg-test-composition-above-clr-fold-change">test_composition_above_CLR_fold_change<a class="anchor" aria-label="anchor" href="#arg-test-composition-above-clr-fold-change"></a></dt>
 <dd><p>A positive integer. It is the effect threshold used for the hypothesis test.</p></dd>
 
 
@@ -333,10 +333,10 @@ It highlights significant differences based on a given significance threshold.</
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             100      -4.787e+05      1.032e-01   7.250e+02    5.717e-01  5.717e-01      8218 -3.798e+03 -4.113e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [35] ELBO (-3797.706566) evaluations: (8218) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  18.8 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  13.2 seconds.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Dropping 'draws_df' class as required metadata was removed.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>

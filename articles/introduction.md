@@ -171,7 +171,7 @@ sccomp_result |> sccomp_boxplot(factor = "type", cache_stan_model = "/opt/sccomp
 |----|----|
 | `sccomp_estimate` | Fit the model onto the data, and estimate the coefficients |
 | `sccomp_remove_outliers` | Identify outliers probabilistically based on the model fit, and exclude them from the estimation |
-| `sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change) |
+| `sccomp_test` | Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_CLR_fold_change) |
 | `sccomp_replicate` | Simulate data from the model, or part of the model |
 | `sccomp_predict` | Predicts proportions, based on the model, or part of the model |
 | `sccomp_remove_unwanted_effects` | Removes the variability for unwanted factors |
@@ -328,12 +328,12 @@ sccomp_result =
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 1.572 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 1.239 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 1.569 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 1.205 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ### Visualization and Summary Plots
@@ -358,7 +358,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.077 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.058 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -379,17 +379,17 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.387 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.292 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.384 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.318 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.077 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.059 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -420,7 +420,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.077 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.058 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -445,7 +445,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.078 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.062 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -606,7 +606,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.685 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.529 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning: `position_jitterdodge()` requires non-overlapping x intervals.
@@ -862,8 +862,8 @@ res
 The estimated effects are expressed in the unconstrained space of the
 parameters, similar to differential expression analysis that expresses
 changes in terms of log fold change. However, for differences in
-proportion, logit fold change must be used, which is harder to interpret
-and understand.
+proportion, centered log-ratio fold change must be used, which is harder
+to interpret and understand.
 
 Therefore, we provide a more intuitive proportional fold change that can
 be more easily understood. However, these cannot be used to infer
@@ -892,7 +892,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.068 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.049 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## # A tibble: 30 × 2
@@ -1081,7 +1081,7 @@ plots = res |> sccomp_test() |> plot()
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.067 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.051 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),

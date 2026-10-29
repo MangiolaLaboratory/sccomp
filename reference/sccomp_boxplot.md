@@ -13,8 +13,8 @@ sccomp_boxplot(
   factor,
   significance_threshold = 0.05,
   significance_statistic = c("pH0", "FDR"),
-  test_composition_above_logit_fold_change = attr(.data,
-    "test_composition_above_logit_fold_change"),
+  test_composition_above_CLR_fold_change = attr(.data,
+    "test_composition_above_CLR_fold_change"),
   remove_unwanted_effects = FALSE,
   cache_stan_model = sccomp_stan_models_cache_dir
 )
@@ -43,14 +43,14 @@ sccomp_boxplot(
   Character vector indicating which statistic is used to colour
   significant groups. Defaults to `c("pH0", "FDR")`.
 
-- test_composition_above_logit_fold_change:
+- test_composition_above_CLR_fold_change:
 
   A positive numeric value representing the effect size threshold used
   in the hypothesis test. A value of 0.2 corresponds to a change in cell
   proportion of approximately 10% for a cell type with a baseline
   proportion of 50% (e.g., from 45% to 55%). This threshold is
-  consistent on the logit-unconstrained scale, even when the baseline
-  proportion is close to 0 or 1.
+  consistent on the centered log-ratio-unconstrained scale, even when
+  the baseline proportion is close to 0 or 1.
 
 - remove_unwanted_effects:
 
@@ -315,9 +315,9 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              66      -4.787e+05      3.656e-03   2.647e-01    6.911e-01  6.911e-01      4140 -3.683e+03 -3.703e+03                   
 #> Path [50] :Best Iter: [63] ELBO (-3682.656652) evaluations: (4140) 
-#> Finished in  10.9 seconds.
+#> Finished in  8.2 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
-#>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+#>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
@@ -327,7 +327,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.078 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.062 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> Joining with `by = join_by(cell_group, sample)`
 #> Joining with `by = join_by(cell_group, type)`

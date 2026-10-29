@@ -9,7 +9,7 @@ sccomp_test(
   .data,
   contrasts = NULL,
   percent_false_positive = 5,
-  test_composition_above_logit_fold_change = 0.1,
+  test_composition_above_CLR_fold_change = 0.1,
   pass_fit = TRUE
 )
 ```
@@ -31,14 +31,14 @@ sccomp_test(
   A real between 0 and 100 non included. This used to identify outliers
   with a specific false positive rate.
 
-- test_composition_above_logit_fold_change:
+- test_composition_above_CLR_fold_change:
 
   A positive integer. It is the effect threshold used for the hypothesis
   test. A value of 0.2 correspond to a change in cell proportion of 10%
   for a cell type with baseline proportion of 50%. That is, a cell type
   goes from 45% to 50%. When the baseline proportion is closer to 0 or 1
-  this effect thrshold has consistent value in the logit uncontrained
-  scale.
+  this effect thrshold has consistent value in the centered log-ratio
+  uncontrained scale.
 
 - pass_fit:
 
@@ -68,7 +68,7 @@ A tibble (`tbl`), with the following columns:
   composition (c) parameter.
 
 - c_pH0 - Probability of the c_effect being smaller or bigger than the
-  `test_composition_above_logit_fold_change` argument.
+  `test_composition_above_CLR_fold_change` argument.
 
 - c_FDR - False-discovery rate of the null hypothesis (no difference)
   for a composition (c).
@@ -335,9 +335,9 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              48      -4.788e+05      1.212e-02   2.345e-01    7.925e-01  7.925e-01      2618 -3.698e+03 -3.703e+03                   
 #> Path [50] :Best Iter: [47] ELBO (-3697.722031) evaluations: (2618) 
-#> Finished in  8.9 seconds.
+#> Finished in  6.2 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
-#>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+#>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'

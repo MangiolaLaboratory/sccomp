@@ -8,11 +8,11 @@ model's uncertainty and covariate effects.
 
 Note! This statistic is descriptive and should not be used to define
 significance - use sccomp_test() for that. While fold changes in
-proportions are easier to interpret than changes in logit space, they
-are not linear (the same proportional change has different meaning for
-rare vs abundant cell types). In contrast, the logit scale used
-internally by sccomp provides linear effects that are more appropriate
-for statistical inference.
+proportions are easier to interpret than changes in centered log-ratio
+space, they are not linear (the same proportional change has different
+meaning for rare vs abundant cell types). In contrast, the centered
+log-ratio scale used internally by sccomp provides linear effects that
+are more appropriate for statistical inference.
 
 ## Usage
 
@@ -300,16 +300,16 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              70      -4.787e+05      9.221e-03   2.334e-01    1.000e+00  1.000e+00      4468 -3.688e+03 -3.698e+03                   
 #> Path [50] :Best Iter: [67] ELBO (-3688.114007) evaluations: (4468) 
-#> Finished in  11.1 seconds.
+#> Finished in  7.6 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
-#>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+#>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.05 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.038 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 4
 #>    cell_group proportion_fold_change average_uncertainty statement              

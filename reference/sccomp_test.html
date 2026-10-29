@@ -47,7 +47,7 @@
 <span>  <span class="va">.data</span>,</span>
 <span>  contrasts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  percent_false_positive <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  test_composition_above_logit_fold_change <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  test_composition_above_CLR_fold_change <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  pass_fit <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -68,8 +68,8 @@
 <dd><p>A real between 0 and 100 non included. This used to identify outliers with a specific false positive rate.</p></dd>
 
 
-<dt id="arg-test-composition-above-logit-fold-change">test_composition_above_logit_fold_change<a class="anchor" aria-label="anchor" href="#arg-test-composition-above-logit-fold-change"></a></dt>
-<dd><p>A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the logit uncontrained scale.</p></dd>
+<dt id="arg-test-composition-above-clr-fold-change">test_composition_above_CLR_fold_change<a class="anchor" aria-label="anchor" href="#arg-test-composition-above-clr-fold-change"></a></dt>
+<dd><p>A positive integer. It is the effect threshold used for the hypothesis test. A value of 0.2 correspond to a change in cell proportion of 10% for a cell type with baseline proportion of 50%. That is, a cell type goes from 45% to 50%. When the baseline proportion is closer to 0 or 1 this effect thrshold has consistent value in the centered log-ratio uncontrained scale.</p></dd>
 
 
 <dt id="arg-pass-fit">pass_fit<a class="anchor" aria-label="anchor" href="#arg-pass-fit"></a></dt>
@@ -84,7 +84,7 @@
 <li><p>c_lower - Lower (2.5%) quantile of the posterior distribution for a composition (c) parameter.</p></li>
 <li><p>c_effect - Mean of the posterior distribution for a composition (c) parameter.</p></li>
 <li><p>c_upper - Upper (97.5%) quantile of the posterior distribution for a composition (c) parameter.</p></li>
-<li><p>c_pH0 - Probability of the c_effect being smaller or bigger than the <code>test_composition_above_logit_fold_change</code> argument.</p></li>
+<li><p>c_pH0 - Probability of the c_effect being smaller or bigger than the <code>test_composition_above_CLR_fold_change</code> argument.</p></li>
 <li><p>c_FDR - False-discovery rate of the null hypothesis (no difference) for a composition (c).</p></li>
 <li><p>c_n_eff - Effective sample size - the number of independent draws in the sample, the higher the better.</p></li>
 <li><p>c_R_k_hat - R statistic, a measure of chain equilibrium, should be within 0.05 of 1.0.</p></li>
@@ -328,9 +328,9 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              48      -4.788e+05      1.212e-02   2.345e-01    7.925e-01  7.925e-01      2618 -3.698e+03 -3.703e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [47] ELBO (-3697.722031) evaluations: (2618) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  8.9 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  6.2 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>

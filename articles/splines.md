@@ -159,7 +159,7 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.955 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.7 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
@@ -225,9 +225,10 @@ cannot be interpreted one-by-one. The scientific question is usually
 “does composition differ between two points (or intervals) of
 pseudotime?”.
 [`sccomp_test_smooth()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test_smooth.md)
-answers exactly that: it predicts the **mean** composition (logit scale)
-at the two positions, forms the per-draw contrast `mu(to) - mu(from)`,
-and runs it through the same probability-of-null / FDR machinery as
+answers exactly that: it predicts the **mean** composition (centered
+log-ratio scale) at the two positions, forms the per-draw contrast
+`mu(to) - mu(from)`, and runs it through the same probability-of-null /
+FDR machinery as
 [`sccomp_test()`](https://mangiolalaboratory.github.io/sccomp/reference/sccomp_test.md)
 — so `c_effect`, `c_pH0` and `c_FDR` mean the same thing here as
 everywhere else in sccomp.
@@ -249,7 +250,7 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.068 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.048 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from  to    c_effect c_lower c_upper    c_FDR
@@ -267,9 +268,9 @@ fit |>
 #> # ℹ 26 more rows
 ```
 
-A positive `c_effect` means the cell group is (on the logit scale) more
-abundant at pseudotime 5 than at pseudotime 1; `c_FDR` controls the
-false-discovery rate across cell groups.
+A positive `c_effect` means the cell group is (on the centered log-ratio
+scale) more abundant at pseudotime 5 than at pseudotime 1; `c_FDR`
+controls the false-discovery rate across cell groups.
 
 Because the curve can wiggle, comparing two single points can be
 sensitive to the exact positions. Use `comparison = "average"` to
@@ -290,7 +291,7 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.805 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.59 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from   to     c_effect c_lower c_upper    c_FDR
@@ -339,7 +340,7 @@ pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.939 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.7 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -500,7 +501,7 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.421 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.061 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)

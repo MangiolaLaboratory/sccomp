@@ -77,7 +77,7 @@
 <li><p><strong>cell_group</strong> - A character column representing the cell group being tested.</p></li>
 <li><p><strong>adjusted_proportion</strong> - A numeric column representing the adjusted proportion after removing unwanted variation.</p></li>
 <li><p><strong>adjusted_counts</strong> - A numeric column representing the adjusted counts after removing unwanted variation.</p></li>
-<li><p><strong>logit_residuals</strong> - A numeric column representing the logit residuals calculated after adjustment.</p></li>
+<li><p><strong>logit_residuals</strong> - A numeric column representing the centered log-ratio residuals calculated after adjustment.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -310,9 +310,9 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              59      -4.787e+05      7.319e-03   2.118e-01    1.000e+00  1.000e+00      3417 -3.691e+03 -3.693e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [56] ELBO (-3691.219029) evaluations: (3417) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  11.3 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  8.0 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>
@@ -320,13 +320,13 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading model from cache...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.387 seconds (Generated Quantities) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.295 seconds (Generated Quantities) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 finished in 0.0 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: regressing out unwanted factors</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading model from cache...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.386 seconds (Generated Quantities) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.302 seconds (Generated Quantities) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 finished in 0.0 seconds.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

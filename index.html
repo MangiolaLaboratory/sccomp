@@ -368,7 +368,7 @@
 </tr>
 <tr>
 <td><code>sccomp_test</code></td>
-<td>Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_logit_fold_change)</td>
+<td>Calculate the probability that the coefficients are outside the H0 interval (i.e. test_composition_above_CLR_fold_change)</td>
 </tr>
 <tr>
 <td><code>sccomp_replicate</code></td>
@@ -815,7 +815,7 @@
 <div class="section level2">
 <h2 id="result-interpretation-and-communication">Result Interpretation and Communication<a class="anchor" aria-label="anchor" href="#result-interpretation-and-communication"></a>
 </h2>
-<p>The estimated effects are expressed in the unconstrained space of the parameters, similar to differential expression analysis that expresses changes in terms of log fold change. However, for differences in proportion, logit fold change must be used, which is harder to interpret and understand.</p>
+<p>The estimated effects are expressed in the unconstrained space of the parameters, similar to differential expression analysis that expresses changes in terms of log fold change. However, for differences in proportion, centered log-ratio fold change must be used, which is harder to interpret and understand.</p>
 <p>Therefore, we provide a more intuitive proportional fold change that can be more easily understood. However, these cannot be used to infer significance (use sccomp_test() instead), and a lot of care must be taken given the nonlinearity of these measures (a 1-fold increase from 0.0001 to 0.0002 carries a different weight than a 1-fold increase from 0.4 to 0.8).</p>
 <p>From your estimates, you can specify which effects you are interested in (this can be a subset of the full model if you wish to exclude unwanted effects), and the two points you would like to compare.</p>
 <p>In the case of a categorical variable, the starting and ending points are categories.</p>

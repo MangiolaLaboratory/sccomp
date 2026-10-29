@@ -11,8 +11,8 @@ sccomp_plot_intervals_1D(
   .data,
   factor = NULL,
   significance_threshold = 0.05,
-  test_composition_above_logit_fold_change = attr(.data,
-    "test_composition_above_logit_fold_change"),
+  test_composition_above_CLR_fold_change = attr(.data,
+    "test_composition_above_CLR_fold_change"),
   show_fdr_message = TRUE,
   significance_statistic = c("pH0", "FDR"),
   sort_by = c("none", "effect", "significance", "alphabetical")
@@ -35,14 +35,14 @@ sccomp_plot_intervals_1D(
   Numeric value specifying the significance threshold for highlighting
   differences.
 
-- test_composition_above_logit_fold_change:
+- test_composition_above_CLR_fold_change:
 
   A positive integer. It is the effect threshold used for the hypothesis
   test. A value of 0.2 correspond to a change in cell proportion of 10%
   for a cell type with baseline proportion of 50%. That is, a cell type
   goes from 45% to 50%. When the baseline proportion is closer to 0 or 1
-  this effect thrshold has consistent value in the logit uncontrained
-  scale.
+  this effect thrshold has consistent value in the centered log-ratio
+  uncontrained scale.
 
 - show_fdr_message:
 
@@ -297,9 +297,9 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              55      -4.787e+05      6.388e-03   1.668e-01    1.000e+00  1.000e+00      3026 -3.693e+03 -3.703e+03                   
 #> Path [50] :Best Iter: [52] ELBO (-3693.399316) evaluations: (3026) 
-#> Finished in  11.0 seconds.
+#> Finished in  7.9 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
-#>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and
+#>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
 #>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).
 #> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'

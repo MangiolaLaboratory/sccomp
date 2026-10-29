@@ -48,8 +48,8 @@
 <span>  <span class="va">factor</span>,</span>
 <span>  significance_threshold <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  significance_statistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pH0"</span>, <span class="st">"FDR"</span><span class="op">)</span>,</span>
-<span>  test_composition_above_logit_fold_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">.data</span>,</span>
-<span>    <span class="st">"test_composition_above_logit_fold_change"</span><span class="op">)</span>,</span>
+<span>  test_composition_above_CLR_fold_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">.data</span>,</span>
+<span>    <span class="st">"test_composition_above_CLR_fold_change"</span><span class="op">)</span>,</span>
 <span>  remove_unwanted_effects <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  cache_stan_model <span class="op">=</span> <span class="va">sccomp_stan_models_cache_dir</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -75,8 +75,8 @@
 <dd><p>Character vector indicating which statistic is used to colour significant groups. Defaults to <code>c("pH0", "FDR")</code>.</p></dd>
 
 
-<dt id="arg-test-composition-above-logit-fold-change">test_composition_above_logit_fold_change<a class="anchor" aria-label="anchor" href="#arg-test-composition-above-logit-fold-change"></a></dt>
-<dd><p>A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10% for a cell type with a baseline proportion of 50% (e.g., from 45% to 55%). This threshold is consistent on the logit-unconstrained scale, even when the baseline proportion is close to 0 or 1.</p></dd>
+<dt id="arg-test-composition-above-clr-fold-change">test_composition_above_CLR_fold_change<a class="anchor" aria-label="anchor" href="#arg-test-composition-above-clr-fold-change"></a></dt>
+<dd><p>A positive numeric value representing the effect size threshold used in the hypothesis test. A value of 0.2 corresponds to a change in cell proportion of approximately 10% for a cell type with a baseline proportion of 50% (e.g., from 45% to 55%). This threshold is consistent on the centered log-ratio-unconstrained scale, even when the baseline proportion is close to 0 or 1.</p></dd>
 
 
 <dt id="arg-remove-unwanted-effects">remove_unwanted_effects<a class="anchor" aria-label="anchor" href="#arg-remove-unwanted-effects"></a></dt>
@@ -333,9 +333,9 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              66      -4.787e+05      3.656e-03   2.647e-01    6.911e-01  6.911e-01      4140 -3.683e+03 -3.703e+03                   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Path [50] :Best Iter: [63] ELBO (-3682.656652) evaluations: (4140) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  10.9 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  8.2 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_logit_fold_change` = 0.1 equates to a change of ~10%, and</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Use `sccomp_proportional_fold_change` to convert c_effect (linear) to proportion difference (non-linear).</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: auto-cleanup removed 1 draw files from 'sccomp_draws_files'</span>
@@ -345,7 +345,7 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading model from cache...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.078 seconds (Generated Quantities) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.062 seconds (Generated Quantities) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 finished in 0.0 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(cell_group, sample)`</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Joining with `by = join_by(cell_group, type)`</span>
