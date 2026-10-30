@@ -122,18 +122,18 @@ fit |>
 #>   scale reduction factor on split chains (at convergence, R_k_hat = 1).
 #> 
 #> # A tibble: 216 × 6
-#>    cell_group parameter                      c_lower c_effect c_upper    c_FDR
-#>    <chr>      <chr>                            <dbl>    <dbl>   <dbl>    <dbl>
-#>  1 B1         (Intercept)                      0.918   1.19    1.46   0       
-#>  2 B1         typecancer                      -0.891  -0.576  -0.256  0.000594
-#>  3 B1         s(pseudotime, k = 5)__lin1      -0.439  -0.0365  0.316  0.218   
-#>  4 B1         s(pseudotime, k = 5)___basis01  -1.88   -0.654   0.0724 0.0300  
-#>  5 B1         s(pseudotime, k = 5)___basis02  -1.48   -0.269   0.420  0.167   
-#>  6 B1         s(pseudotime, k = 5)___basis03  -0.894  -0.262   0.340  0.0965  
-#>  7 B2         (Intercept)                      0.555   0.841   1.13   0       
-#>  8 B2         typecancer                      -1.17   -0.797  -0.425  0       
-#>  9 B2         s(pseudotime, k = 5)__lin1      -0.188   0.207   0.584  0.0726  
-#> 10 B2         s(pseudotime, k = 5)___basis01  -2.15   -1.09   -0.241  0.00512 
+#>    cell_group parameter                      c_lower c_effect c_upper     c_FDR
+#>    <chr>      <chr>                            <dbl>    <dbl>   <dbl>     <dbl>
+#>  1 B1         (Intercept)                     0.967    1.22    1.48   0        
+#>  2 B1         typecancer                     -0.880   -0.575  -0.268  0.000300 
+#>  3 B1         s(pseudotime, k = 5)__lin1     -0.323    0.0352  0.341  0.242    
+#>  4 B1         s(pseudotime, k = 5)___basis01 -1.98    -0.740  -0.0224 0.0173   
+#>  5 B1         s(pseudotime, k = 5)___basis02 -0.427    0.342   1.65   0.129    
+#>  6 B1         s(pseudotime, k = 5)___basis03 -0.906   -0.243   0.420  0.125    
+#>  7 B2         (Intercept)                     0.602    0.883   1.17   0        
+#>  8 B2         typecancer                     -1.18    -0.817  -0.446  0.0000417
+#>  9 B2         s(pseudotime, k = 5)__lin1     -0.0833   0.267   0.609  0.0648   
+#> 10 B2         s(pseudotime, k = 5)___basis01 -2.10    -1.20   -0.413  0.00150  
 #> # ℹ 206 more rows
 ```
 
@@ -159,19 +159,19 @@ pred <- fit |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.7 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.218 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred)
 #> # A tibble: 6 × 10
 #>   pseudotime type   sample   cell_group proportion_mean proportion_lower
 #>        <dbl> <fct>  <chr>    <chr>                <dbl>            <dbl>
-#> 1    -0.0313 benign grid_001 B1                 0.0614           0.0397 
-#> 2    -0.0313 benign grid_001 B2                 0.0297           0.0202 
-#> 3    -0.0313 benign grid_001 B3                 0.00815          0.00465
-#> 4    -0.0313 benign grid_001 BM                 0.00855          0.00596
-#> 5    -0.0313 benign grid_001 CD4 1              0.0258           0.0200 
-#> 6    -0.0313 benign grid_001 CD4 2              0.0376           0.0261 
+#> 1    -0.0313 benign grid_001 B1                 0.0610           0.0416 
+#> 2    -0.0313 benign grid_001 B2                 0.0284           0.0193 
+#> 3    -0.0313 benign grid_001 B3                 0.00763          0.00442
+#> 4    -0.0313 benign grid_001 BM                 0.00899          0.00618
+#> 5    -0.0313 benign grid_001 CD4 1              0.0258           0.0185 
+#> 6    -0.0313 benign grid_001 CD4 2              0.0376           0.0259 
 #> # ℹ 4 more variables: proportion_upper <dbl>, unconstrained_mean <dbl>,
 #> #   unconstrained_lower <dbl>, unconstrained_upper <dbl>
 ```
@@ -250,21 +250,21 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.048 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.088 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from  to    c_effect c_lower c_upper    c_FDR
 #>    <chr>      <chr> <chr>    <dbl>   <dbl>   <dbl>    <dbl>
-#>  1 CD4 2      1     5        0.691   0.349   1.09  0       
-#>  2 CD4 3      1     5       -1.17   -1.69   -0.741 0       
-#>  3 M5         1     5       -0.929  -1.65   -0.356 0       
-#>  4 M9         1     5       -0.732  -1.23   -0.342 0       
-#>  5 TM3        1     5       -0.998  -1.84   -0.410 0       
-#>  6 CD8 3      1     5        0.578   0.238   1.03  0.000667
-#>  7 CD8 1      1     5        0.617   0.244   1.01  0.00143 
-#>  8 H3         1     5       -0.580  -1.02   -0.210 0.00250 
-#>  9 M8         1     5        0.552   0.172   0.966 0.00333 
-#> 10 CD8 5      1     5        0.612   0.120   1.31  0.00500 
+#>  1 CD4 3      1     5       -1.09   -1.54   -0.617 0       
+#>  2 CD8 1      1     5        0.633   0.278   1.03  0       
+#>  3 M5         1     5       -1.06   -1.87   -0.490 0       
+#>  4 M9         1     5       -0.762  -1.26   -0.396 0       
+#>  5 TM3        1     5       -1.18   -2.21   -0.503 0       
+#>  6 CD4 2      1     5        0.740   0.343   1.14  0.000667
+#>  7 CD8 5      1     5        0.711   0.184   1.55  0.00143 
+#>  8 CD8 3      1     5        0.631   0.231   1.11  0.00225 
+#>  9 NK3        1     5        0.509   0.179   0.978 0.00311 
+#> 10 Dm         1     5       -0.497  -0.903  -0.137 0.00420 
 #> # ℹ 26 more rows
 ```
 
@@ -291,21 +291,21 @@ fit |>
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.59 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.048 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 36 × 7
 #>    cell_group from   to     c_effect c_lower c_upper    c_FDR
 #>    <chr>      <chr>  <chr>     <dbl>   <dbl>   <dbl>    <dbl>
-#>  1 CD4 2      [0, 2] [4, 6]    0.640   0.316   1.03  0       
-#>  2 CD4 3      [0, 2] [4, 6]   -1.11   -1.60   -0.693 0       
-#>  3 M5         [0, 2] [4, 6]   -0.860  -1.49   -0.339 0       
-#>  4 M9         [0, 2] [4, 6]   -0.696  -1.06   -0.379 0       
-#>  5 TM3        [0, 2] [4, 6]   -0.929  -1.68   -0.387 0       
-#>  6 CD8 1      [0, 2] [4, 6]    0.585   0.267   0.919 0.000667
-#>  7 CD8 3      [0, 2] [4, 6]    0.532   0.188   0.958 0.00143 
-#>  8 M8         [0, 2] [4, 6]    0.522   0.187   0.923 0.00200 
-#>  9 H3         [0, 2] [4, 6]   -0.554  -0.932  -0.178 0.00311 
-#> 10 CD8 5      [0, 2] [4, 6]    0.560   0.122   1.23  0.00440 
+#>  1 CD4 3      [0, 2] [4, 6]   -1.04   -1.47   -0.632 0       
+#>  2 M5         [0, 2] [4, 6]   -0.997  -1.76   -0.445 0       
+#>  3 M9         [0, 2] [4, 6]   -0.729  -1.13   -0.355 0       
+#>  4 TM3        [0, 2] [4, 6]   -1.12   -2.02   -0.451 0       
+#>  5 CD4 2      [0, 2] [4, 6]    0.712   0.319   1.12  0.000400
+#>  6 CD8 1      [0, 2] [4, 6]    0.613   0.282   0.977 0.000667
+#>  7 CD8 3      [0, 2] [4, 6]    0.599   0.249   1.04  0.00114 
+#>  8 CD8 5      [0, 2] [4, 6]    0.656   0.155   1.38  0.00225 
+#>  9 H3         [0, 2] [4, 6]   -0.543  -0.911  -0.177 0.00356 
+#> 10 M8         [0, 2] [4, 6]    0.480   0.125   0.935 0.00460 
 #> # ℹ 26 more rows
 ```
 
@@ -340,7 +340,7 @@ pred_k3 <- fit_k3 |>
   sccomp_predict(new_data = grid, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.7 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.22 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 ```
 
@@ -501,19 +501,19 @@ pred_fs <- fit_fs |>
   sccomp_predict(new_data = grid_fs, number_of_draws = 200)
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 1.061 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 1.829 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 
 head(pred_fs)
 #> # A tibble: 6 × 10
 #>   pseudotime tissue sample      cell_group proportion_mean proportion_lower
 #>        <dbl> <fct>  <chr>       <chr>                <dbl>            <dbl>
-#> 1    -0.0296 blood  fs_grid_001 B1                 0.0677           0.0434 
-#> 2    -0.0296 blood  fs_grid_001 B2                 0.0222           0.0112 
-#> 3    -0.0296 blood  fs_grid_001 B3                 0.0101           0.00587
-#> 4    -0.0296 blood  fs_grid_001 BM                 0.00643          0.00382
-#> 5    -0.0296 blood  fs_grid_001 CD4 1              0.0279           0.0151 
-#> 6    -0.0296 blood  fs_grid_001 CD4 2              0.0418           0.0215 
+#> 1    -0.0296 blood  fs_grid_001 B1                 0.0655           0.0398 
+#> 2    -0.0296 blood  fs_grid_001 B2                 0.0228           0.0125 
+#> 3    -0.0296 blood  fs_grid_001 B3                 0.00986          0.00578
+#> 4    -0.0296 blood  fs_grid_001 BM                 0.00670          0.00409
+#> 5    -0.0296 blood  fs_grid_001 CD4 1              0.0283           0.0166 
+#> 6    -0.0296 blood  fs_grid_001 CD4 2              0.0417           0.0243 
 #> # ℹ 4 more variables: proportion_upper <dbl>, unconstrained_mean <dbl>,
 #> #   unconstrained_lower <dbl>, unconstrained_upper <dbl>
 ```
@@ -585,7 +585,7 @@ would be misleading.
 
 ## Session info
 
-    #> R version 4.6.1 (2026-06-24)
+    #> R version 4.6.2 (2026-10-29)
     #> Platform: x86_64-pc-linux-gnu
     #> Running under: Ubuntu 26.04.1 LTS
     #> 
@@ -606,7 +606,7 @@ would be misleading.
     #> [1] stats     graphics  grDevices utils     datasets  methods   base     
     #> 
     #> other attached packages:
-    #> [1] sccomp_2.5.4      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      
+    #> [1] sccomp_2.5.5      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      
     #> [5] dplyr_1.2.1      
     #> 
     #> loaded via a namespace (and not attached):
@@ -615,9 +615,9 @@ would be misleading.
     #>  [5] SingleCellExperiment_1.34.0 tensorA_0.36.2.1           
     #>  [7] digest_0.6.39               lifecycle_1.0.5            
     #>  [9] processx_3.9.0              magrittr_2.0.5             
-    #> [11] posterior_1.7.0             compiler_4.6.1             
+    #> [11] posterior_1.7.0             compiler_4.6.2             
     #> [13] rlang_1.3.0                 sass_0.4.10                
-    #> [15] tools_4.6.1                 utf8_1.2.6                 
+    #> [15] tools_4.6.2                 utf8_1.2.6                 
     #> [17] yaml_2.3.12                 data.table_1.18.6.1        
     #> [19] knitr_1.52                  labeling_0.4.3             
     #> [21] S4Arrays_1.12.1             htmlwidgets_1.6.4          
@@ -625,16 +625,16 @@ would be misleading.
     #> [25] cmdstanr_0.9.0              abind_1.4-8                
     #> [27] withr_3.0.3                 purrr_1.2.2                
     #> [29] BiocGenerics_0.58.1         desc_1.4.3                 
-    #> [31] grid_4.6.1                  stats4_4.6.1               
+    #> [31] grid_4.6.2                  stats4_4.6.2               
     #> [33] scales_1.4.0                SummarizedExperiment_1.42.0
     #> [35] cli_3.6.6                   rmarkdown_2.32             
     #> [37] crayon_1.5.3                ragg_1.5.2                 
     #> [39] generics_0.1.4              otel_0.2.0                 
     #> [41] tzdb_0.5.0                  cachem_1.1.0               
-    #> [43] stringr_1.6.0               splines_4.6.1              
-    #> [45] parallel_4.6.1              XVector_0.52.0             
+    #> [43] stringr_1.6.0               splines_4.6.2              
+    #> [45] parallel_4.6.2              XVector_0.52.0             
     #> [47] matrixStats_1.5.0           vctrs_0.7.3                
-    #> [49] Matrix_1.7-5                jsonlite_2.0.0             
+    #> [49] Matrix_1.7-6                jsonlite_2.0.0             
     #> [51] callr_3.8.0                 IRanges_2.46.0             
     #> [53] hms_1.1.4                   patchwork_1.3.2            
     #> [55] S4Vectors_0.50.3            ggrepel_0.9.8              
@@ -647,9 +647,9 @@ would be misleading.
     #> [69] htmltools_0.5.9             Seqinfo_1.2.0              
     #> [71] R6_2.6.1                    textshaping_1.0.5          
     #> [73] evaluate_1.0.5              Biobase_2.72.0             
-    #> [75] lattice_0.22-9              readr_2.2.0                
+    #> [75] lattice_0.23-1              readr_2.2.0                
     #> [77] backports_1.5.1             bslib_0.12.0               
-    #> [79] Rcpp_1.1.2                  nlme_3.1-169               
+    #> [79] Rcpp_1.1.2                  nlme_3.1-171               
     #> [81] SparseArray_1.12.3          checkmate_2.3.4            
     #> [83] mgcv_1.9-4                  xfun_0.62                  
     #> [85] fs_2.1.0                    MatrixGenerics_1.24.0      

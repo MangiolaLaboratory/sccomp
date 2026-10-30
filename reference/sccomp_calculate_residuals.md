@@ -122,8 +122,8 @@ print(residuals)
 #>   This procedure has not been thoroughly tested and may be unstable 
 #>   or buggy. The interface is subject to change. 
 #> ------------------------------------------------------------ 
-#> Gradient evaluation took 0.000227 seconds 
-#> 1000 transitions using 10 leapfrog steps per transition would take 2.27 seconds. 
+#> Gradient evaluation took 0.000314 seconds 
+#> 1000 transitions using 10 leapfrog steps per transition would take 3.14 seconds. 
 #> Adjust your expectations accordingly! 
 #> Begin eta adaptation. 
 #> Iteration:   1 / 250 [  0%]  (Adaptation) 
@@ -134,16 +134,16 @@ print(residuals)
 #> Success! Found best value [eta = 1] earlier than expected. 
 #> Begin stochastic gradient ascent. 
 #>   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes  
-#>    100        -4668.733             1.000            1.000 
-#>    200        -3777.042             0.618            1.000 
-#>    300        -3704.740             0.419            0.236 
-#>    400        -3698.475             0.314            0.236 
-#>    500        -3694.261             0.252            0.020 
-#>    600        -3694.743             0.210            0.020 
-#>    700        -3699.562             0.180            0.002   MEDIAN ELBO CONVERGED 
+#>    100        -4901.127             1.000            1.000 
+#>    200        -3950.328             0.620            1.000 
+#>    300        -3730.316             0.433            0.241 
+#>    400        -3709.997             0.326            0.241 
+#>    500        -3712.115             0.261            0.059 
+#>    600        -3713.270             0.218            0.059 
+#>    700        -3714.021             0.187            0.005   MEDIAN ELBO CONVERGED 
 #> Drawing a sample of size 4000 from the approximate posterior...  
 #> COMPLETED. 
-#> Finished in  1.5 seconds.
+#> Finished in  2.4 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -152,20 +152,20 @@ print(residuals)
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.316 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.519 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 720 × 5
 #>    sample cell_group residuals exposure residuals_unconstrained
 #>    <chr>  <chr>          <dbl>    <int>                   <dbl>
-#>  1 10x_6K B1          0.0158       5030                 0.286  
-#>  2 10x_6K B2         -0.0289       5030                -1.23   
-#>  3 10x_6K B3         -0.00521      5030                -0.466  
-#>  4 10x_6K BM          0.00159      5030                 0.248  
-#>  5 10x_6K CD4 1      -0.000806     5030                 0.00530
-#>  6 10x_6K CD4 2      -0.0128       5030                -0.272  
-#>  7 10x_6K CD4 3       0.0588       5030                 0.586  
-#>  8 10x_6K CD4 4      -0.00107      5030                -0.991  
-#>  9 10x_6K CD4 5       0.00235      5030                 0.120  
-#> 10 10x_6K CD8 1      -0.0204       5030                -0.179  
+#>  1 10x_6K B1          0.0144       5030                  0.232 
+#>  2 10x_6K B2         -0.0285       5030                 -1.25  
+#>  3 10x_6K B3         -0.00532      5030                 -0.504 
+#>  4 10x_6K BM          0.00147      5030                  0.202 
+#>  5 10x_6K CD4 1      -0.00214      5030                 -0.0734
+#>  6 10x_6K CD4 2      -0.0141       5030                 -0.328 
+#>  7 10x_6K CD4 3       0.0557       5030                  0.521 
+#>  8 10x_6K CD4 4      -0.000870     5030                 -0.890 
+#>  9 10x_6K CD4 5       0.00196      5030                  0.0768
+#> 10 10x_6K CD8 1      -0.0230       5030                 -0.232 
 #> # ℹ 710 more rows
 ```

@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
                         <h4 data-toc-skip class="author">Stefano
 Mangiola</h4>
             
-            <h4 data-toc-skip class="date">2026-10-29</h4>
+            <h4 data-toc-skip class="date">2026-10-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/MangiolaLaboratory/sccomp/blob/master/vignettes/splines.Rmd" class="external-link"><code>vignettes/splines.Rmd</code></a></small>
       <div class="d-none name"><code>splines.Rmd</code></div>
@@ -210,18 +210,18 @@ s(pseudotime, k = 5)___basis03</code></pre>
 <span><span class="co">#&gt;   scale reduction factor on split chains (at convergence, R_k_hat = 1).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 216 × 6</span></span></span>
-<span><span class="co">#&gt;    cell_group parameter                      c_lower c_effect c_upper    c_FDR</span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> B1         (Intercept)                      0.918   1.19    1.46   0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> B1         typecancer                      -<span style="color: #BB0000;">0.891</span>  -<span style="color: #BB0000;">0.576</span>  -<span style="color: #BB0000;">0.256</span>  0.000<span style="text-decoration: underline;">594</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> B1         s(pseudotime, k = 5)__lin1      -<span style="color: #BB0000;">0.439</span>  -<span style="color: #BB0000;">0.036</span><span style="color: #BB0000; text-decoration: underline;">5</span>  0.316  0.218   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> B1         s(pseudotime, k = 5)___basis01  -<span style="color: #BB0000;">1.88</span>   -<span style="color: #BB0000;">0.654</span>   0.072<span style="text-decoration: underline;">4</span> 0.030<span style="text-decoration: underline;">0</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> B1         s(pseudotime, k = 5)___basis02  -<span style="color: #BB0000;">1.48</span>   -<span style="color: #BB0000;">0.269</span>   0.420  0.167   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> B1         s(pseudotime, k = 5)___basis03  -<span style="color: #BB0000;">0.894</span>  -<span style="color: #BB0000;">0.262</span>   0.340  0.096<span style="text-decoration: underline;">5</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> B2         (Intercept)                      0.555   0.841   1.13   0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> B2         typecancer                      -<span style="color: #BB0000;">1.17</span>   -<span style="color: #BB0000;">0.797</span>  -<span style="color: #BB0000;">0.425</span>  0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> B2         s(pseudotime, k = 5)__lin1      -<span style="color: #BB0000;">0.188</span>   0.207   0.584  0.072<span style="text-decoration: underline;">6</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> B2         s(pseudotime, k = 5)___basis01  -<span style="color: #BB0000;">2.15</span>   -<span style="color: #BB0000;">1.09</span>   -<span style="color: #BB0000;">0.241</span>  0.005<span style="text-decoration: underline;">12</span> </span></span>
+<span><span class="co">#&gt;    cell_group parameter                      c_lower c_effect c_upper     c_FDR</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> B1         (Intercept)                     0.967    1.22    1.48   0        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> B1         typecancer                     -<span style="color: #BB0000;">0.880</span>   -<span style="color: #BB0000;">0.575</span>  -<span style="color: #BB0000;">0.268</span>  0.000<span style="text-decoration: underline;">300</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> B1         s(pseudotime, k = 5)__lin1     -<span style="color: #BB0000;">0.323</span>    0.035<span style="text-decoration: underline;">2</span>  0.341  0.242    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> B1         s(pseudotime, k = 5)___basis01 -<span style="color: #BB0000;">1.98</span>    -<span style="color: #BB0000;">0.740</span>  -<span style="color: #BB0000;">0.022</span><span style="color: #BB0000; text-decoration: underline;">4</span> 0.017<span style="text-decoration: underline;">3</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> B1         s(pseudotime, k = 5)___basis02 -<span style="color: #BB0000;">0.427</span>    0.342   1.65   0.129    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> B1         s(pseudotime, k = 5)___basis03 -<span style="color: #BB0000;">0.906</span>   -<span style="color: #BB0000;">0.243</span>   0.420  0.125    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> B2         (Intercept)                     0.602    0.883   1.17   0        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> B2         typecancer                     -<span style="color: #BB0000;">1.18</span>    -<span style="color: #BB0000;">0.817</span>  -<span style="color: #BB0000;">0.446</span>  0.000<span style="text-decoration: underline;">041</span>7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> B2         s(pseudotime, k = 5)__lin1     -<span style="color: #BB0000;">0.083</span><span style="color: #BB0000; text-decoration: underline;">3</span>   0.267   0.609  0.064<span style="text-decoration: underline;">8</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> B2         s(pseudotime, k = 5)___basis01 -<span style="color: #BB0000;">2.10</span>    -<span style="color: #BB0000;">1.20</span>   -<span style="color: #BB0000;">0.413</span>  0.001<span style="text-decoration: underline;">50</span>  </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 206 more rows</span></span></span></code></pre></div>
 <p>These parameters cannot be interpreted directly, on the contrary of
 other parameter in the linear model.</p>
@@ -244,19 +244,19 @@ covariates the formula needs — here, <code>type</code>):</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.7 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.218 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 10</span></span></span>
 <span><span class="co">#&gt;   pseudotime type   sample   cell_group proportion_mean proportion_lower</span></span>
 <span><span class="co">#&gt;        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B1                 0.061<span style="text-decoration: underline;">4</span>           0.039<span style="text-decoration: underline;">7</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B2                 0.029<span style="text-decoration: underline;">7</span>           0.020<span style="text-decoration: underline;">2</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B3                 0.008<span style="text-decoration: underline;">15</span>          0.004<span style="text-decoration: underline;">65</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 BM                 0.008<span style="text-decoration: underline;">55</span>          0.005<span style="text-decoration: underline;">96</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 CD4 1              0.025<span style="text-decoration: underline;">8</span>           0.020<span style="text-decoration: underline;">0</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 CD4 2              0.037<span style="text-decoration: underline;">6</span>           0.026<span style="text-decoration: underline;">1</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B1                 0.061<span style="text-decoration: underline;">0</span>           0.041<span style="text-decoration: underline;">6</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B2                 0.028<span style="text-decoration: underline;">4</span>           0.019<span style="text-decoration: underline;">3</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 B3                 0.007<span style="text-decoration: underline;">63</span>          0.004<span style="text-decoration: underline;">42</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 BM                 0.008<span style="text-decoration: underline;">99</span>          0.006<span style="text-decoration: underline;">18</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 CD4 1              0.025<span style="text-decoration: underline;">8</span>           0.018<span style="text-decoration: underline;">5</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>    -<span style="color: #BB0000;">0.031</span><span style="color: #BB0000; text-decoration: underline;">3</span> benign grid_001 CD4 2              0.037<span style="text-decoration: underline;">6</span>           0.025<span style="text-decoration: underline;">9</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more variables: proportion_upper &lt;dbl&gt;, unconstrained_mean &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   unconstrained_lower &lt;dbl&gt;, unconstrained_upper &lt;dbl&gt;</span></span></span></code></pre></div>
 <p><code><a href="../reference/sccomp_predict.html">sccomp_predict()</a></code> already returns the
@@ -323,21 +323,21 @@ contrast, so the test isolates the pseudotime effect.</p>
 <span><span class="co">#&gt; Loading model from cache...</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.048 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.088 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 7</span></span></span>
 <span><span class="co">#&gt;    cell_group from  to    c_effect c_lower c_upper    c_FDR</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> CD4 2      1     5        0.691   0.349   1.09  0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> CD4 3      1     5       -<span style="color: #BB0000;">1.17</span>   -<span style="color: #BB0000;">1.69</span>   -<span style="color: #BB0000;">0.741</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> M5         1     5       -<span style="color: #BB0000;">0.929</span>  -<span style="color: #BB0000;">1.65</span>   -<span style="color: #BB0000;">0.356</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> M9         1     5       -<span style="color: #BB0000;">0.732</span>  -<span style="color: #BB0000;">1.23</span>   -<span style="color: #BB0000;">0.342</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> TM3        1     5       -<span style="color: #BB0000;">0.998</span>  -<span style="color: #BB0000;">1.84</span>   -<span style="color: #BB0000;">0.410</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> CD8 3      1     5        0.578   0.238   1.03  0.000<span style="text-decoration: underline;">667</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> CD8 1      1     5        0.617   0.244   1.01  0.001<span style="text-decoration: underline;">43</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> H3         1     5       -<span style="color: #BB0000;">0.580</span>  -<span style="color: #BB0000;">1.02</span>   -<span style="color: #BB0000;">0.210</span> 0.002<span style="text-decoration: underline;">50</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> M8         1     5        0.552   0.172   0.966 0.003<span style="text-decoration: underline;">33</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> CD8 5      1     5        0.612   0.120   1.31  0.005<span style="text-decoration: underline;">00</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> CD4 3      1     5       -<span style="color: #BB0000;">1.09</span>   -<span style="color: #BB0000;">1.54</span>   -<span style="color: #BB0000;">0.617</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> CD8 1      1     5        0.633   0.278   1.03  0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> M5         1     5       -<span style="color: #BB0000;">1.06</span>   -<span style="color: #BB0000;">1.87</span>   -<span style="color: #BB0000;">0.490</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> M9         1     5       -<span style="color: #BB0000;">0.762</span>  -<span style="color: #BB0000;">1.26</span>   -<span style="color: #BB0000;">0.396</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> TM3        1     5       -<span style="color: #BB0000;">1.18</span>   -<span style="color: #BB0000;">2.21</span>   -<span style="color: #BB0000;">0.503</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> CD4 2      1     5        0.740   0.343   1.14  0.000<span style="text-decoration: underline;">667</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> CD8 5      1     5        0.711   0.184   1.55  0.001<span style="text-decoration: underline;">43</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> CD8 3      1     5        0.631   0.231   1.11  0.002<span style="text-decoration: underline;">25</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> NK3        1     5        0.509   0.179   0.978 0.003<span style="text-decoration: underline;">11</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> Dm         1     5       -<span style="color: #BB0000;">0.497</span>  -<span style="color: #BB0000;">0.903</span>  -<span style="color: #BB0000;">0.137</span> 0.004<span style="text-decoration: underline;">20</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 26 more rows</span></span></span></code></pre></div>
 <p>A positive <code>c_effect</code> means the cell group is (on the
 centered log-ratio scale) more abundant at pseudotime 5 than at
@@ -361,21 +361,21 @@ over two <strong>intervals</strong> instead (each sampled at
 <span><span class="co">#&gt; Loading model from cache...</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.59 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.048 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 36 × 7</span></span></span>
 <span><span class="co">#&gt;    cell_group from   to     c_effect c_lower c_upper    c_FDR</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> CD4 2      [0, 2] [4, 6]    0.640   0.316   1.03  0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> CD4 3      [0, 2] [4, 6]   -<span style="color: #BB0000;">1.11</span>   -<span style="color: #BB0000;">1.60</span>   -<span style="color: #BB0000;">0.693</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> M5         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.860</span>  -<span style="color: #BB0000;">1.49</span>   -<span style="color: #BB0000;">0.339</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> M9         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.696</span>  -<span style="color: #BB0000;">1.06</span>   -<span style="color: #BB0000;">0.379</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> TM3        [0, 2] [4, 6]   -<span style="color: #BB0000;">0.929</span>  -<span style="color: #BB0000;">1.68</span>   -<span style="color: #BB0000;">0.387</span> 0       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> CD8 1      [0, 2] [4, 6]    0.585   0.267   0.919 0.000<span style="text-decoration: underline;">667</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> CD8 3      [0, 2] [4, 6]    0.532   0.188   0.958 0.001<span style="text-decoration: underline;">43</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> M8         [0, 2] [4, 6]    0.522   0.187   0.923 0.002<span style="text-decoration: underline;">00</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> H3         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.554</span>  -<span style="color: #BB0000;">0.932</span>  -<span style="color: #BB0000;">0.178</span> 0.003<span style="text-decoration: underline;">11</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> CD8 5      [0, 2] [4, 6]    0.560   0.122   1.23  0.004<span style="text-decoration: underline;">40</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> CD4 3      [0, 2] [4, 6]   -<span style="color: #BB0000;">1.04</span>   -<span style="color: #BB0000;">1.47</span>   -<span style="color: #BB0000;">0.632</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> M5         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.997</span>  -<span style="color: #BB0000;">1.76</span>   -<span style="color: #BB0000;">0.445</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> M9         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.729</span>  -<span style="color: #BB0000;">1.13</span>   -<span style="color: #BB0000;">0.355</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> TM3        [0, 2] [4, 6]   -<span style="color: #BB0000;">1.12</span>   -<span style="color: #BB0000;">2.02</span>   -<span style="color: #BB0000;">0.451</span> 0       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> CD4 2      [0, 2] [4, 6]    0.712   0.319   1.12  0.000<span style="text-decoration: underline;">400</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> CD8 1      [0, 2] [4, 6]    0.613   0.282   0.977 0.000<span style="text-decoration: underline;">667</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> CD8 3      [0, 2] [4, 6]    0.599   0.249   1.04  0.001<span style="text-decoration: underline;">14</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> CD8 5      [0, 2] [4, 6]    0.656   0.155   1.38  0.002<span style="text-decoration: underline;">25</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> H3         [0, 2] [4, 6]   -<span style="color: #BB0000;">0.543</span>  -<span style="color: #BB0000;">0.911</span>  -<span style="color: #BB0000;">0.177</span> 0.003<span style="text-decoration: underline;">56</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> M8         [0, 2] [4, 6]    0.480   0.125   0.935 0.004<span style="text-decoration: underline;">60</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 26 more rows</span></span></span></code></pre></div>
 <p>For factor smooths (next section) the grouping factor selects
 <em>which</em> curve is tested — pass it via <code>at</code>,
@@ -406,7 +406,7 @@ column.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 0.7 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.22 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_k3</span> <span class="op">|&gt;</span></span>
@@ -551,19 +551,19 @@ deviation blocks.</p>
 <span>  <span class="fu"><a href="../reference/sccomp_predict.html">sccomp_predict</a></span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">grid_fs</span>, number_of_draws <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.061 seconds (Generated Quantities) </span></span>
+<span><span class="co">#&gt; Chain 1  Elapsed Time: 1.829 seconds (Generated Quantities) </span></span>
 <span><span class="co">#&gt; Chain 1 finished in 0.0 seconds.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pred_fs</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 10</span></span></span>
 <span><span class="co">#&gt;   pseudotime tissue sample      cell_group proportion_mean proportion_lower</span></span>
 <span><span class="co">#&gt;        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B1                 0.067<span style="text-decoration: underline;">7</span>           0.043<span style="text-decoration: underline;">4</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B2                 0.022<span style="text-decoration: underline;">2</span>           0.011<span style="text-decoration: underline;">2</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B3                 0.010<span style="text-decoration: underline;">1</span>           0.005<span style="text-decoration: underline;">87</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 BM                 0.006<span style="text-decoration: underline;">43</span>          0.003<span style="text-decoration: underline;">82</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 CD4 1              0.027<span style="text-decoration: underline;">9</span>           0.015<span style="text-decoration: underline;">1</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 CD4 2              0.041<span style="text-decoration: underline;">8</span>           0.021<span style="text-decoration: underline;">5</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B1                 0.065<span style="text-decoration: underline;">5</span>           0.039<span style="text-decoration: underline;">8</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B2                 0.022<span style="text-decoration: underline;">8</span>           0.012<span style="text-decoration: underline;">5</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 B3                 0.009<span style="text-decoration: underline;">86</span>          0.005<span style="text-decoration: underline;">78</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 BM                 0.006<span style="text-decoration: underline;">70</span>          0.004<span style="text-decoration: underline;">09</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 CD4 1              0.028<span style="text-decoration: underline;">3</span>           0.016<span style="text-decoration: underline;">6</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>    -<span style="color: #BB0000;">0.029</span><span style="color: #BB0000; text-decoration: underline;">6</span> blood  fs_grid_001 CD4 2              0.041<span style="text-decoration: underline;">7</span>           0.024<span style="text-decoration: underline;">3</span> </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more variables: proportion_upper &lt;dbl&gt;, unconstrained_mean &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   unconstrained_lower &lt;dbl&gt;, unconstrained_upper &lt;dbl&gt;</span></span></span></code></pre></div>
 <p>Pick the most pseudotime-responsive cell groups and plot one curve
@@ -631,7 +631,7 @@ effects.</p>
 <div class="section level2">
 <h2 id="session-info">Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<pre><code><span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<pre><code><span><span class="co">#&gt; R version 4.6.2 (2026-10-29)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
 <span><span class="co">#&gt; Running under: Ubuntu 26.04.1 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -652,7 +652,7 @@ effects.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] sccomp_2.5.4      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      </span></span>
+<span><span class="co">#&gt; [1] sccomp_2.5.5      instantiate_0.2.4 ggplot2_4.0.3     tidyr_1.3.2      </span></span>
 <span><span class="co">#&gt; [5] dplyr_1.2.1      </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
@@ -661,9 +661,9 @@ effects.</p>
 <span><span class="co">#&gt;  [5] SingleCellExperiment_1.34.0 tensorA_0.36.2.1           </span></span>
 <span><span class="co">#&gt;  [7] digest_0.6.39               lifecycle_1.0.5            </span></span>
 <span><span class="co">#&gt;  [9] processx_3.9.0              magrittr_2.0.5             </span></span>
-<span><span class="co">#&gt; [11] posterior_1.7.0             compiler_4.6.1             </span></span>
+<span><span class="co">#&gt; [11] posterior_1.7.0             compiler_4.6.2             </span></span>
 <span><span class="co">#&gt; [13] rlang_1.3.0                 sass_0.4.10                </span></span>
-<span><span class="co">#&gt; [15] tools_4.6.1                 utf8_1.2.6                 </span></span>
+<span><span class="co">#&gt; [15] tools_4.6.2                 utf8_1.2.6                 </span></span>
 <span><span class="co">#&gt; [17] yaml_2.3.12                 data.table_1.18.6.1        </span></span>
 <span><span class="co">#&gt; [19] knitr_1.52                  labeling_0.4.3             </span></span>
 <span><span class="co">#&gt; [21] S4Arrays_1.12.1             htmlwidgets_1.6.4          </span></span>
@@ -671,16 +671,16 @@ effects.</p>
 <span><span class="co">#&gt; [25] cmdstanr_0.9.0              abind_1.4-8                </span></span>
 <span><span class="co">#&gt; [27] withr_3.0.3                 purrr_1.2.2                </span></span>
 <span><span class="co">#&gt; [29] BiocGenerics_0.58.1         desc_1.4.3                 </span></span>
-<span><span class="co">#&gt; [31] grid_4.6.1                  stats4_4.6.1               </span></span>
+<span><span class="co">#&gt; [31] grid_4.6.2                  stats4_4.6.2               </span></span>
 <span><span class="co">#&gt; [33] scales_1.4.0                SummarizedExperiment_1.42.0</span></span>
 <span><span class="co">#&gt; [35] cli_3.6.6                   rmarkdown_2.32             </span></span>
 <span><span class="co">#&gt; [37] crayon_1.5.3                ragg_1.5.2                 </span></span>
 <span><span class="co">#&gt; [39] generics_0.1.4              otel_0.2.0                 </span></span>
 <span><span class="co">#&gt; [41] tzdb_0.5.0                  cachem_1.1.0               </span></span>
-<span><span class="co">#&gt; [43] stringr_1.6.0               splines_4.6.1              </span></span>
-<span><span class="co">#&gt; [45] parallel_4.6.1              XVector_0.52.0             </span></span>
+<span><span class="co">#&gt; [43] stringr_1.6.0               splines_4.6.2              </span></span>
+<span><span class="co">#&gt; [45] parallel_4.6.2              XVector_0.52.0             </span></span>
 <span><span class="co">#&gt; [47] matrixStats_1.5.0           vctrs_0.7.3                </span></span>
-<span><span class="co">#&gt; [49] Matrix_1.7-5                jsonlite_2.0.0             </span></span>
+<span><span class="co">#&gt; [49] Matrix_1.7-6                jsonlite_2.0.0             </span></span>
 <span><span class="co">#&gt; [51] callr_3.8.0                 IRanges_2.46.0             </span></span>
 <span><span class="co">#&gt; [53] hms_1.1.4                   patchwork_1.3.2            </span></span>
 <span><span class="co">#&gt; [55] S4Vectors_0.50.3            ggrepel_0.9.8              </span></span>
@@ -693,9 +693,9 @@ effects.</p>
 <span><span class="co">#&gt; [69] htmltools_0.5.9             Seqinfo_1.2.0              </span></span>
 <span><span class="co">#&gt; [71] R6_2.6.1                    textshaping_1.0.5          </span></span>
 <span><span class="co">#&gt; [73] evaluate_1.0.5              Biobase_2.72.0             </span></span>
-<span><span class="co">#&gt; [75] lattice_0.22-9              readr_2.2.0                </span></span>
+<span><span class="co">#&gt; [75] lattice_0.23-1              readr_2.2.0                </span></span>
 <span><span class="co">#&gt; [77] backports_1.5.1             bslib_0.12.0               </span></span>
-<span><span class="co">#&gt; [79] Rcpp_1.1.2                  nlme_3.1-169               </span></span>
+<span><span class="co">#&gt; [79] Rcpp_1.1.2                  nlme_3.1-171               </span></span>
 <span><span class="co">#&gt; [81] SparseArray_1.12.3          checkmate_2.3.4            </span></span>
 <span><span class="co">#&gt; [83] mgcv_1.9-4                  xfun_0.62                  </span></span>
 <span><span class="co">#&gt; [85] fs_2.1.0                    MatrixGenerics_1.24.0      </span></span>

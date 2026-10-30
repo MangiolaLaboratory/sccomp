@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sccomp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.5.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -122,8 +122,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>   This procedure has not been thoroughly tested and may be unstable </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   or buggy. The interface is subject to change. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------ </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Gradient evaluation took 0.000227 seconds </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1000 transitions using 10 leapfrog steps per transition would take 2.27 seconds. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Gradient evaluation took 0.000314 seconds </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1000 transitions using 10 leapfrog steps per transition would take 3.14 seconds. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Adjust your expectations accordingly! </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Begin eta adaptation. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration:   1 / 250 [  0%]  (Adaptation) </span>
@@ -134,16 +134,16 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Success! Found best value [eta = 1] earlier than expected. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Begin stochastic gradient ascent. </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    100        -4668.733             1.000            1.000 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    200        -3777.042             0.618            1.000 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    300        -3704.740             0.419            0.236 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    400        -3698.475             0.314            0.236 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    500        -3694.261             0.252            0.020 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    600        -3694.743             0.210            0.020 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    700        -3699.562             0.180            0.002   MEDIAN ELBO CONVERGED </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    100        -4901.127             1.000            1.000 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    200        -3950.328             0.620            1.000 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    300        -3730.316             0.433            0.241 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    400        -3709.997             0.326            0.241 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    500        -3712.115             0.261            0.059 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    600        -3713.270             0.218            0.059 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    700        -3714.021             0.187            0.005   MEDIAN ELBO CONVERGED </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Drawing a sample of size 4000 from the approximate posterior...  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> COMPLETED. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  1.5 seconds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished in  2.4 seconds.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> sccomp says: to do hypothesis testing run `sccomp_test()`,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.</span>
@@ -152,21 +152,21 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading model from cache...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.316 seconds (Generated Quantities) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1  Elapsed Time: 0.519 seconds (Generated Quantities) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 finished in 0.0 seconds.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 720 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    sample cell_group residuals exposure residuals_unconstrained</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K B1          0.015<span style="text-decoration: underline;">8</span>       <span style="text-decoration: underline;">5</span>030                 0.286  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K B2         -<span style="color: #BB0000;">0.028</span><span style="color: #BB0000; text-decoration: underline;">9</span>       <span style="text-decoration: underline;">5</span>030                -<span style="color: #BB0000;">1.23</span>   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K B3         -<span style="color: #BB0000;">0.005</span><span style="color: #BB0000; text-decoration: underline;">21</span>      <span style="text-decoration: underline;">5</span>030                -<span style="color: #BB0000;">0.466</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K BM          0.001<span style="text-decoration: underline;">59</span>      <span style="text-decoration: underline;">5</span>030                 0.248  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K CD4 1      -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">806</span>     <span style="text-decoration: underline;">5</span>030                 0.005<span style="text-decoration: underline;">30</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K CD4 2      -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">8</span>       <span style="text-decoration: underline;">5</span>030                -<span style="color: #BB0000;">0.272</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K CD4 3       0.058<span style="text-decoration: underline;">8</span>       <span style="text-decoration: underline;">5</span>030                 0.586  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K CD4 4      -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">07</span>      <span style="text-decoration: underline;">5</span>030                -<span style="color: #BB0000;">0.991</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K CD4 5       0.002<span style="text-decoration: underline;">35</span>      <span style="text-decoration: underline;">5</span>030                 0.120  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K CD8 1      -<span style="color: #BB0000;">0.020</span><span style="color: #BB0000; text-decoration: underline;">4</span>       <span style="text-decoration: underline;">5</span>030                -<span style="color: #BB0000;">0.179</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 10x_6K B1          0.014<span style="text-decoration: underline;">4</span>       <span style="text-decoration: underline;">5</span>030                  0.232 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 10x_6K B2         -<span style="color: #BB0000;">0.028</span><span style="color: #BB0000; text-decoration: underline;">5</span>       <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">1.25</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 10x_6K B3         -<span style="color: #BB0000;">0.005</span><span style="color: #BB0000; text-decoration: underline;">32</span>      <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.504</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 10x_6K BM          0.001<span style="text-decoration: underline;">47</span>      <span style="text-decoration: underline;">5</span>030                  0.202 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 10x_6K CD4 1      -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">14</span>      <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.073</span><span style="color: #BB0000; text-decoration: underline;">4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 10x_6K CD4 2      -<span style="color: #BB0000;">0.014</span><span style="color: #BB0000; text-decoration: underline;">1</span>       <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.328</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 10x_6K CD4 3       0.055<span style="text-decoration: underline;">7</span>       <span style="text-decoration: underline;">5</span>030                  0.521 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 10x_6K CD4 4      -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">870</span>     <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.890</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 10x_6K CD4 5       0.001<span style="text-decoration: underline;">96</span>      <span style="text-decoration: underline;">5</span>030                  0.076<span style="text-decoration: underline;">8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 10x_6K CD8 1      -<span style="color: #BB0000;">0.023</span><span style="color: #BB0000; text-decoration: underline;">0</span>       <span style="text-decoration: underline;">5</span>030                 -<span style="color: #BB0000;">0.232</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 710 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
