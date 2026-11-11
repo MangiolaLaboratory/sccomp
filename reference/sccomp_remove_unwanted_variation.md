@@ -302,7 +302,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              62      -4.787e+05      8.107e-03   2.502e-01    1.000e+00  1.000e+00      3734 -3.704e+03 -3.712e+03                   
 #> Path [50] :Best Iter: [58] ELBO (-3704.039987) evaluations: (3734) 
-#> Finished in  14.7 seconds.
+#> Finished in  8.6 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -312,13 +312,13 @@ print("cmdstanr is needed to run this example.")
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.517 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.317 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> sccomp says: regressing out unwanted factors
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.52 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.318 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 # }
 ```

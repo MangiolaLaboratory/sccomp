@@ -328,12 +328,12 @@ sccomp_result =
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.121 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 1.309 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 2.116 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 1.326 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ### Visualization and Summary Plots
@@ -358,7 +358,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.064 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -379,17 +379,17 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.521 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.322 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.524 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.33 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.104 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.064 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -420,7 +420,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.104 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.064 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -445,7 +445,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.104 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.064 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -606,7 +606,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.898 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.55 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning: `position_jitterdodge()` requires non-overlapping x intervals.
@@ -892,7 +892,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.087 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.06 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## # A tibble: 30 × 2
@@ -1081,7 +1081,7 @@ plots = res |> sccomp_test() |> plot()
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.088 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.054 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -1218,7 +1218,7 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] rlang_1.3.0                 magrittr_2.0.5             
-    ##  [3] otel_0.2.0                  matrixStats_1.5.0          
+    ##  [3] otel_0.3.0                  matrixStats_1.5.0          
     ##  [5] compiler_4.6.2              mgcv_1.9-4                 
     ##  [7] reshape2_1.4.5              systemfonts_1.3.2          
     ##  [9] callr_3.8.0                 vctrs_0.7.3                
@@ -1233,7 +1233,7 @@ sessionInfo()
     ## [27] DelayedArray_0.38.2         parallel_4.6.2             
     ## [29] R6_2.6.1                    bslib_0.12.0               
     ## [31] stringi_1.8.9               RColorBrewer_1.1-3         
-    ## [33] parallelly_1.48.0           GenomicRanges_1.64.0       
+    ## [33] parallelly_1.50.0           GenomicRanges_1.64.0       
     ## [35] jquerylib_0.1.4             Rcpp_1.1.2                 
     ## [37] Seqinfo_1.2.0               SummarizedExperiment_1.42.0
     ## [39] knitr_1.52                  future.apply_1.21.0        
@@ -1245,7 +1245,7 @@ sessionInfo()
     ## [51] plyr_1.8.9                  lattice_0.23-1             
     ## [53] tibble_3.3.1                Biobase_2.72.0             
     ## [55] withr_3.0.3                 S7_0.2.2                   
-    ## [57] evaluate_1.0.5              future_1.80.0              
+    ## [57] evaluate_1.0.5              future_1.82.0              
     ## [59] desc_1.4.3                  pillar_1.11.1              
     ## [61] MatrixGenerics_1.24.0       tensorA_0.36.2.1           
     ## [63] checkmate_2.3.4             stats4_4.6.2               
