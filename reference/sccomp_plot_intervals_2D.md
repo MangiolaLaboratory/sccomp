@@ -299,7 +299,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>             100      -4.786e+05      5.875e-02   8.855e+02    5.196e-01  5.196e-01      8085 -3.814e+03 -4.137e+03                   
 #> Path [50] :Best Iter: [35] ELBO (-3813.968967) evaluations: (8085) 
-#> Finished in  14.1 seconds.
+#> Finished in  23.7 seconds.
 #> Warning: Dropping 'draws_df' class as required metadata was removed.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and

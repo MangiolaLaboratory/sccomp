@@ -291,7 +291,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              45      -3.823e+05      1.411e-02   1.132e-01    9.517e-01  9.517e-01      2242 -3.252e+03 -3.251e+03                   
 #> Path [50] :Best Iter: [45] ELBO (-3251.054018) evaluations: (2242) 
-#> Finished in  4.8 seconds.
+#> Finished in  7.8 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -302,7 +302,7 @@ if (instantiate::stan_cmdstan_exists()) {
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.551 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.892 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> Joining with `by = join_by(cell_group, sample)`
 #> Joining with `by = join_by(cell_group, sample, continuous_covariate)`

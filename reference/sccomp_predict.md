@@ -337,7 +337,7 @@ print("cmdstanr is needed to run this example.")
 #> Path [50] : Iter      log prob        ||dx||      ||grad||     alpha      alpha0      # evals       ELBO    Best ELBO        Notes  
 #>              68      -4.787e+05      1.453e-02   2.714e-01    9.621e-01  9.621e-01      4155 -3.700e+03 -3.708e+03                   
 #> Path [50] :Best Iter: [64] ELBO (-3699.740226) evaluations: (4155) 
-#> Finished in  9.0 seconds.
+#> Finished in  14.8 seconds.
 #> sccomp says: to do hypothesis testing run `sccomp_test()`,
 #>   the `test_composition_above_CLR_fold_change` = 0.1 equates to a change of ~10%, and
 #>   0.7 equates to ~100% increase, if the baseline is ~0.1 proportion.
@@ -346,7 +346,7 @@ print("cmdstanr is needed to run this example.")
 #> Loading model from cache...
 #> Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
 #> 
-#> Chain 1  Elapsed Time: 0.323 seconds (Generated Quantities) 
+#> Chain 1  Elapsed Time: 0.52 seconds (Generated Quantities) 
 #> Chain 1 finished in 0.0 seconds.
 #> # A tibble: 720 × 9
 #>    sample type   cell_group proportion_mean proportion_lower proportion_upper

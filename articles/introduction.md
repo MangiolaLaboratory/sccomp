@@ -328,12 +328,12 @@ sccomp_result =
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 1.309 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 2.132 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 1.326 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 2.127 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
 ### Visualization and Summary Plots
@@ -358,7 +358,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.064 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.104 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -379,17 +379,17 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.322 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.519 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.33 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.517 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.064 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.11 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -420,7 +420,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.064 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.104 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -445,7 +445,7 @@ sccomp_result |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.064 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.103 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
@@ -606,7 +606,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.55 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.892 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning: `position_jitterdodge()` requires non-overlapping x intervals.
@@ -892,7 +892,7 @@ res |>
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.06 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.087 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## # A tibble: 30 × 2
@@ -1081,7 +1081,7 @@ plots = res |> sccomp_test() |> plot()
 
     ## Running standalone generated quantities after 1 MCMC chain, with 1 thread(s) per chain...
     ## 
-    ## Chain 1  Elapsed Time: 0.054 seconds (Generated Quantities) 
+    ## Chain 1  Elapsed Time: 0.089 seconds (Generated Quantities) 
     ## Chain 1 finished in 0.0 seconds.
 
     ## Warning in stat_summary(aes(!!as.symbol(factor_of_interest),
