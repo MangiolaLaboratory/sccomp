@@ -52,7 +52,7 @@ Suggests:
     bayesplot,
     remotes
 Additional_repositories:
-    https://mc-stan.org/r-packages/
+    https://stan-dev.r-universe.dev/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan), C++14
 biocViews: Bayesian, Regression, DifferentialExpression, SingleCell, Metagenomics, FlowCytometry, Spatial
 LazyData: true
