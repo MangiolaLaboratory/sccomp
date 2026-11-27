@@ -988,51 +988,56 @@ get_design_matrix_with_na_handling = function(.data_spread, formula, .sample){
   
   .sample = enquo(.sample)
   
-  # Convert NA to a factor level "NA" for categorical variables
-  data_with_na <- handle_missing_values(.data_spread)
+  # Choose a sentinel level that cannot collide with real column names or factor levels
+  existing_tokens <- c(
+    colnames(.data_spread),
+    unlist(lapply(.data_spread, function(col) {
+      if (is.factor(col)) levels(col) else if (is.character(col)) unique(col[!is.na(col)])
+    }), use.names = FALSE)
+  )
+  na_level <- ".__sccomp_NA__"
+  while (any(grepl(na_level, existing_tokens, fixed = TRUE))) {
+    na_level <- paste0(na_level, "_")
+  }
+  
+  # Convert NA to the sentinel level for categorical variables
+  data_with_na <- handle_missing_values(.data_spread, na_level = na_level)
   
   # Create design matrix
   design_matrix = model.matrix(formula, data = data_with_na, na.action = NULL)
   
-  # Here I get
- # design_matrix |> tail()
- #  (Intercept) group2__GROUP22 typehealthy typeNA group2__GROUP22:typehealthy group2__GROUP22:typeNA
- # 16           1               0           0      0                           0                      0
- # 17           1               1           0      0                           0                      0
- # 18           1               0           0      0                           0                      0
- # 19           1               0           1      0                           0                      0
- # 20           1               0           1      0                           0                      0
- # 21           1               0           0      1                           0                      0
+  is_na_design_col <- vapply(
+    colnames(design_matrix),
+    function(col) any(endsWith(strsplit(col, ":", fixed = TRUE)[[1]], na_level)),
+    logical(1)
+  )
+  na_col_indices <- which(is_na_design_col)
 
-# Split the design matrix into two parts:
-# 1. The part that is not affected by NA values
-# 2. The columns that are affected by NA values
+  na_rows = which(rowSums(design_matrix[, na_col_indices, drop = FALSE] != 0) > 0) |> unique()
 
+  # Loop over na_rows and calculate the fraction contribution for each row
+  for(row in na_rows) { 
 
-na_rows = which(rowSums(design_matrix[, grep("NA$|NA:", colnames(design_matrix)), drop=FALSE]) > 0) |> unique()
+    # Select the columns that are affected by NA values and also have a non-zero value in the design matrix
+    na_cols = na_col_indices[design_matrix[row, na_col_indices] != 0]
+    
+    if(length(na_cols) == 0) next
+    
+    my_design_matrix = design_matrix[row,, drop = FALSE]
+   
+    fraction_contribution = calculate_na_fraction_contribution(
+      my_design_matrix, na_cols, design_matrix, data_with_na, na_level = na_level
+    )
 
-# Loop over na_rows and calculate the fraction contribution for each row
-for(row in na_rows) { 
-
-  # Select the columns that are affected by NA values and also have a non-zero value in the design matrix
-  na_cols = grep("NA$|NA:", colnames(design_matrix[row, , drop = FALSE]))
-  na_cols = na_cols[design_matrix[row, na_cols] != 0]
-  
-  if(length(na_cols) == 0) next
-  
-  my_design_matrix = design_matrix[row,, drop = FALSE]
- 
-  fraction_contribution = calculate_na_fraction_contribution(my_design_matrix, na_cols, design_matrix, data_with_na)
-
-  # Now for every row in fraction_contribution, I want to add the fraction contribution to the design matrix according to the factor_name
-  for(fraction_contribution_row in 1:nrow(fraction_contribution)) {
-    my_col = which(colnames(design_matrix) == (fraction_contribution[fraction_contribution_row,,drop=FALSE] |> select(all_of("factor_name")) |> pull(1)))
-    design_matrix[row, my_col] = design_matrix[row, my_col] + (fraction_contribution[fraction_contribution_row,,drop=FALSE] |> select(all_of("fraction_contribution")) |> pull(1))
+    # Now for every row in fraction_contribution, I want to add the fraction contribution to the design matrix according to the factor_name
+    for(fraction_contribution_row in seq_len(nrow(fraction_contribution))) {
+      my_col = which(colnames(design_matrix) == fraction_contribution$factor_name[[fraction_contribution_row]])
+      design_matrix[row, my_col] = design_matrix[row, my_col] + fraction_contribution$fraction_contribution[[fraction_contribution_row]]
+    }
   }
-}
 
-rownames(design_matrix) = .data_spread |> pull(!!.sample)
-design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FALSE]
+  rownames(design_matrix) = .data_spread |> pull(!!.sample)
+  design_matrix[, !is_na_design_col, drop = FALSE]
 
 }
 
@@ -1042,7 +1047,7 @@ design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FAL
 #' For each column in the design matrix that contains NA values (either directly or in interactions),
 #' it:
 #' 1. Splits the column name into its components
-#' 2. For each component containing "NA", replaces it with all possible factor levels
+#' 2. For each component ending with the NA sentinel, replaces it with all possible factor levels
 #' 3. Creates all possible combinations of these levels
 #' 4. Calculates the fraction of the effect that should be attributed to each combination
 #' 5. Filters to only keep combinations that exist in the original design matrix
@@ -1050,6 +1055,7 @@ design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FAL
 #' @param design_with_na A matrix containing columns with NA values
 #' @param design_matrix The original design matrix
 #' @param data_with_na The data frame containing the original data with NA values handled
+#' @param na_level Sentinel factor level name used for missing values
 #'
 #' @importFrom stringr str_remove
 #' @importFrom stringr str_split
@@ -1057,6 +1063,7 @@ design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FAL
 #' @importFrom tidyr crossing
 #' @importFrom tibble enframe
 #' @importFrom dplyr rowwise
+#' @importFrom dplyr ungroup
 #' @importFrom dplyr c_across
 #' @importFrom dplyr filter
 #' @importFrom dplyr select
@@ -1065,57 +1072,62 @@ design_matrix[,grep("NA$|NA:", colnames(design_matrix), invert = TRUE), drop=FAL
 #' @importFrom purrr map
 #' @importFrom purrr reduce
 #' 
-#' @return A list of tibbles, each containing the factor combinations and their fraction contributions
+#' @return A tibble containing the factor combinations and their fraction contributions
 #' @noRd
-calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_matrix, data_with_na) {
+calculate_na_fraction_contribution = function(my_design_matrix, na_cols, design_matrix, data_with_na, na_level = "NA") {
   
   design_with_na = my_design_matrix[, na_cols, drop = FALSE]
   
   map(colnames(design_with_na), function(col) {
     
+    col_value <- my_design_matrix[1, col]
+    parts <- strsplit(col, ":", fixed = TRUE)[[1]]
+    
     list_of_contributions = 
-      str_split(col, ":", simplify = TRUE) |>
-      map(function(x) {
-
-        factor_name = x[1] |> str_remove("NA$")
-        
-        # Now I want to count the possible values of the factor in the input data
-        if(data_with_na[[factor_name]] |> is.numeric())
-          factor_levels = factor_name
-        else{
-          # The weight given to each level is 1/(number of levels), so the
-          # levels have to be the declared ones. Re-factoring here would drop
-          # any level absent from the rows being predicted and inflate the rest.
-          factor_levels =
-            if(is.factor(data_with_na[[factor_name]])) levels(data_with_na[[factor_name]])
-            else levels(factor(data_with_na[[factor_name]]))
-          factor_levels = factor_levels[factor_levels != "NA"]
-          if(factor_levels |> length() == 0) factor_levels = ""
+      map(parts, function(x) {
+        if (endsWith(x, na_level)) {
+          factor_name <- substr(x, 1L, nchar(x) - nchar(na_level))
+          lookup_name <- gsub("^`|`$", "", factor_name)
+          col_data <- data_with_na[[lookup_name]]
+          
+          if (is.numeric(col_data)) {
+            expanded_names <- factor_name
+          } else {
+            # The weight given to each level is 1/(number of levels), so the
+            # levels have to be the declared ones. Re-factoring here would drop
+            # any level absent from the rows being predicted and inflate the rest.
+            factor_levels <-
+              if (is.factor(col_data)) levels(col_data)
+              else levels(factor(col_data))
+            factor_levels <- factor_levels[factor_levels != na_level]
+            expanded_names <- if (length(factor_levels) == 0L) character(0) else paste0(factor_name, factor_levels)
+          }
+          
+          tibble::tibble(
+            factor_name = expanded_names,
+            fraction_contribution = if (length(expanded_names) == 0L) numeric(0) else rep(1 / length(expanded_names), length(expanded_names))
+          )
+        } else {
+          tibble::tibble(
+            factor_name = x,
+            fraction_contribution = 1
+          )
         }
-       
-        
-        str_replace_all(x, "NA", factor_levels) |> 
-          enframe(value = "factor_name") |> 
-          select(-name) |> 
-          mutate(fraction_contribution = 1/n()) |> 
-          mutate(fraction_contribution = fraction_contribution * my_design_matrix[,x ])
       }) 
     
     # Parse contribution
     list_of_contributions |>
-      
-      purrr::reduce(crossing,  .name_repair = "unique")  |> 
-      suppressMessages() |> 
-      rowwise() |> 
+      purrr::reduce(crossing, .name_repair = "unique") |>
+      suppressMessages() |>
+      rowwise() |>
       mutate(
-        fraction_contribution = prod( c_across(matches("fraction_contribution")) ),
-        factor_name = paste0( c_across(matches("factor_name")), collapse=":" )
-      ) |> 
-      
-      filter(factor_name %in% colnames(design_matrix)) |> 
+        fraction_contribution = prod(c_across(matches("fraction_contribution"))) * col_value,
+        factor_name = paste0(c_across(matches("factor_name")), collapse = ":")
+      ) |>
+      ungroup() |>
+      filter(factor_name %in% colnames(design_matrix)) |>
       select(factor_name, fraction_contribution)
   }) |>
-    
     bind_rows()
 }
 
@@ -1999,17 +2011,17 @@ inv_softmax = function(proportions) {
 #'   - categorical: NA becomes a real "NA" level, last in the ordering, which the
 #'     caller spreads evenly over the declared levels
 #'   - continuous: NA becomes 0
-handle_missing_values <- function(data) {
+handle_missing_values <- function(data, na_level = "NA") {
 
   data |>
     mutate(
-      # 1) Handle factor/character: turn NA into a real "NA" level, last in the ordering
+      # 1) Handle factor/character: turn NA into a real sentinel level, last in the ordering
       across(
         where(~ is.factor(.x) || is.character(.x)),
         ~{
           if (any(is.na(.x))) {
             x_char <- as.character(.x)
-            x_char[is.na(x_char)] <- "NA"
+            x_char[is.na(x_char)] <- na_level
             
             # A factor keeps its declared order, which is the order the model was
             # fitted with and so decides what the columns are called. Predicted
@@ -2019,7 +2031,7 @@ handle_missing_values <- function(data) {
               if (is.factor(.x)) levels(.x)
               else sort(unique(x_char))
             
-            factor(x_char, levels = c(setdiff(declared, "NA"), "NA"))
+            factor(x_char, levels = c(setdiff(declared, na_level), na_level))
           } else {
             .x
           }
